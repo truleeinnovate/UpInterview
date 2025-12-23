@@ -1,5 +1,21 @@
 
 // v1.0.0 - Venkatesh - Added hold transaction tracking and settlement status fields for interview payment management
+// Policy usage:
+// This schema is the main source of truth for applying interview reschedule / cancellation / no-show policies
+// during payout settlement. The WalletControllers.settleInterviewPayment function reads:
+// - status (Completed / Cancelled / NoShow / InCompleted / Incomplete)
+// - currentAction (e.g. Interviewer_NoShow)
+// - history[] (schedule / reschedule / cancel timestamps)
+// - dateTime (scheduled start)
+// to decide which policy bracket should be applied for that round.
+// Policy usage note:
+// This model is the main source of truth for applying interview reschedule / cancellation / no-show policies
+// during settlement. The WalletControllers.settleInterviewPayment function reads:
+// - status (Completed / Cancelled / NoShow / InCompleted / Incomplete)
+// - currentAction (e.g. Interviewer_NoShow)
+// - history[] (schedule / reschedule / cancel timestamps)
+// - dateTime (scheduled start)
+// to determine the correct payout bracket and refund behaviour.
 
 const mongoose = require("mongoose");
 
@@ -15,11 +31,19 @@ const participantSchema = new mongoose.Schema(
 );
 
 // Only schedule / reschedule / cancel info
-const roundScheduleSchema = new mongoose.Schema(
+// Each history entry represents one policy-relevant event (Scheduled / Rescheduled / Cancelled)
+// and is used by settlement logic to calculate how many hours before the interview
+// the change happened, so the correct time bracket (>24h, 12–24h, 2–12h, <2h) can be applied.
+// Each entry here represents one policy-relevant event (Scheduled / Rescheduled / Cancelled)
+// and is used by settlement logic to calculate how many hours before the interview
+// a cancellation happened, so that the correct policy bracket can be applied.
+const roundHistorySchema = new mongoose.Schema(
     {
         scheduledAt: { type: Date, required: true },
-        action: { type: String, enum: ["Scheduled", "Rescheduled"], required: true },
-        reason: { type: String },
+        action: { type: String, enum: ["Scheduled", "Rescheduled", "Cancelled"], required: true },
+        // reason: { type: String },
+        reasonCode: { type: String },      // e.g. "candidate_requested"
+        comment: { type: String },         // only when reasonCode === "other"
         participants: [participantSchema],
         updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         updatedAt: { type: Date, default: Date.now },
@@ -75,32 +99,21 @@ const interviewRoundSchema = new mongoose.Schema({
     },
 
     // Track last and current actions + reasons
-    currentAction: {
-        type: String,
-        enum: [
-            "Candidate_NoShow",
-            "Interviewer_NoShow",
-            "Technical_Issue"
-        ],
-        default: null,
-    },
-    previousAction: {
-        type: String,
-        enum: [
-            "Candidate_NoShow",
-            "Interviewer_NoShow",
-            "Technical_Issue"
-        ],
-        default: null,
-    },
-    currentActionReason: { type: String },
-    previousActionReason: { type: String },
-    supportTickets: [{ type: mongoose.Schema.Types.ObjectId, ref: "SupportUser" }],
+ /* ------------------------------------
+     * Current Action Tracking
+     * ---------------------------------- */
+    currentAction: { type: String },          // e.g. Rescheduled
+    currentActionReason: { type: String },    // reasonCode
+    comments: { type: String },               // only for "other"
 
-    // Full history of all scheduling attempts
-    history: [roundScheduleSchema],
+    /* ------------------------------------
+     * History (append-only)
+     * ---------------------------------- */
+    history: [roundHistorySchema],
 
-    // Extra
+    /* ------------------------------------
+     * Meeting / Assessment
+     * ---------------------------------- */
     meetingId: String,
     meetPlatform: String,
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
@@ -108,18 +121,20 @@ const interviewRoundSchema = new mongoose.Schema({
     scheduleAssessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "ScheduledAssessment" },
     rejectionReason: String,
 
-    // Hold transaction reference for payment tracking
-    holdTransactionId: { type: String },  // Store the transaction ID from wallet hold
-
     // Settlement tracking
+    // These fields are updated by WalletControllers.settleInterviewPayment after
+    // interview policy has been applied. Super Admin UI (table + sidebar) reads
+    // settlementStatus/settlementDate to display whether payout was settled.
+    // These fields are set by WalletControllers.settleInterviewPayment to reflect
+    // the final outcome of policy-based settlement for this round. They are also
+    // surfaced in Super Admin UI (table + sidebar) to show per-round settlement status.
     settlementStatus: {
         type: String,
         enum: ['pending', 'completed', 'failed'],
         default: 'pending'
     },
     settlementDate: { type: Date },
-    settlementTransactionId: { type: String },  // Credit transaction ID in interviewer's wallet
-    
+
     // External system identifier
     externalId: { type: String, sparse: true, index: true }, // External system identifier
 }, { timestamps: true });

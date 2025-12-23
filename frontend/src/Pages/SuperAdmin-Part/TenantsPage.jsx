@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - fixed proper loading views
 // v1.0.1 - Ashok - adjusted table height to fit better in viewport and fixed style issues
+// v1.0.2 - Ashok - added data formatter from utils
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
@@ -11,9 +12,17 @@ import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx
 import { useMediaQuery } from "react-responsive";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
-import KanbanView from "./Tenant/KanbanView.jsx";
+// import KanbanView from "./Tenant/KanbanView.jsx";
+import KanbanView from "../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import DropdownSelect from "../../Components/Dropdowns/DropdownSelect.jsx";
-import { Eye, Mail, ChevronUp, ChevronDown, Trash } from "lucide-react";
+import {
+  Eye,
+  Mail,
+  ChevronUp,
+  ChevronDown,
+  Trash,
+  MoreVertical,
+} from "lucide-react";
 // import axios from "axios";
 // import { config } from "../../config.js";
 import { usePermissions } from "../../Context/PermissionsContext";
@@ -26,6 +35,107 @@ import DeleteConfirmModal from "../../Pages/Dashboard-Part/Tabs/CommonCode-AllTa
 import { notify } from "../../services/toastService.js";
 import { useMasterData } from "../../apiHooks/useMasterData.js";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../utils/dateFormatter.js";
+
+
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // 1. UPDATED FILTER: Include 'view' and 'delete' in mainActions
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "delete"].includes(a.key)
+  );
+  
+  // 2. UPDATED FILTER: Overflow actions are everything else
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "delete"].includes(a.key)
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions: View and Delete */}
+      {mainActions.map((action) => {
+        const baseClasses = "p-1.5 rounded-lg transition-colors";
+        
+        // 3. STYLING: Logic for Blue (View) and Red (Delete)
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "delete"
+            ? "text-red-600 hover:bg-red-50" // Red for delete
+            : "text-gray-600 hover:bg-gray-100";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
+
+      {/* More button (shows dropdown for Edit and others) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 function TenantsPage() {
   const [deleteTenant, setDeleteTenant] = useState(null);
@@ -454,7 +564,7 @@ function TenantsPage() {
       key: "lastActivity",
       header: "Last Activity",
       render: (value, row) => (
-        <span>{row ? formatDate(row?.updatedAt) : "N/A"}</span>
+        <span>{row ? formatDateTime(row?.updatedAt) : "N/A"}</span>
       ),
     },
     {
@@ -471,7 +581,7 @@ function TenantsPage() {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
           },
         ]
@@ -552,10 +662,10 @@ function TenantsPage() {
 
     {
       key: "yearsOfExperience",
-      header: "Years of Experience",
+      header: "Experience",
       render: (value, row) => {
         return row?.contact?.yearsOfExperience
-          ? row?.contact?.yearsOfExperience + " years"
+          ? row?.contact?.yearsOfExperience + " Years"
           : "N/A";
       },
     },
@@ -568,30 +678,30 @@ function TenantsPage() {
       ),
     },
 
-    {
-      key: "organizations",
-      header: "Users",
-      render: (value, row) => {
-        return row.usersCount || 0;
-      },
-    },
+    // {
+    //   key: "organizations",
+    //   header: "Users",
+    //   render: (value, row) => {
+    //     return row.usersCount || 0;
+    //   },
+    // },
     // {
     //   key: "activeJobs",
     //   header: "Active Jobs",
     //   render: (value) => value || "0",
     // },
-    {
-      key: "activeUsersCount",
-      header: "Active Candidates",
-      render: (value, row) => {
-        return row?.activeUsersCount ? row.activeUsersCount : "0";
-      },
-    },
+    // {
+    //   key: "activeUsersCount",
+    //   header: "Active Candidates",
+    //   render: (value, row) => {
+    //     return row?.activeUsersCount ? row.activeUsersCount : "0";
+    //   },
+    // },
     {
       key: "lastActivity",
       header: "Last Activity",
       render: (value, row) => {
-        return row ? formatDate(row?.updatedAt) : "N/A";
+        return row ? formatDateTime(row?.updatedAt) : "N/A";
       },
     },
 
@@ -683,6 +793,39 @@ function TenantsPage() {
       )}
     </div>
   );
+
+  const kanbanActions = [
+    // View Details
+    ...(superAdminPermissions?.Tenants?.View
+      ? [
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: (item, e) => {
+              e.stopPropagation();
+              navigate(`/tenants/${item._id}`);
+            },
+          },
+        ]
+      : []),
+
+    // Delete (shown only if NOT loading and has View permission)
+    ...(!isLoading && superAdminPermissions?.Tenants?.View
+      ? [
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (item, e) => {
+              e.stopPropagation();
+              setShowDeleteConfirmModal(true);
+              setDeleteTenant(item);
+            },
+          },
+        ]
+      : []),
+  ];
 
   // Render Filter Content
   const renderFilterContent = () => {
@@ -1031,12 +1174,21 @@ function TenantsPage() {
                       title: tenant.firstName || "N/A",
                       subtitle: tenant.lastName || "N/A",
                       avatar: tenant?.contact?.imageData?.path || null,
+                      navigateTo: `/tenants/${tenant._id}`,
                     }))}
                     tenants={tenants}
                     columns={kanbanColumns}
                     loading={isLoading}
-                    renderActions={renderKanbanActions}
+                    // renderActions={renderKanbanActions}
+                    renderActions={(item) => (
+                      <KanbanActionsMenu
+                        item={item}
+                        kanbanActions={kanbanActions}
+                      />
+                    )}
                     emptyState="No Tenants Found."
+                    kanbanTitle="Tenant"
+                    customHeight="calc(100vh - 380px)"
                   />
                 </div>
               )}

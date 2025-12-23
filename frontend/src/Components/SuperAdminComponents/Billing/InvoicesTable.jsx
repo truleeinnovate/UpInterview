@@ -42,6 +42,8 @@ import {
 // v1.0.0 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.0 -------------------------------------------------------------------------
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../../utils/dateFormatter.js";
 
 function InvoicesTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
@@ -64,14 +66,15 @@ function InvoicesTable({ organizationId, viewMode }) {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
   // const [invoices, setInvoices] = useState([]);
   const rowsPerPage = 10;
-  const toApiInvoiceStatus = (arr) => arr.map((s) => (s === "partially Paid" ? "partially_paid" : s)).join(",");
+  const toApiInvoiceStatus = (arr) =>
+    arr.map((s) => (s === "partially Paid" ? "partially_paid" : s)).join(",");
   const { invoices, pagination, stats, isLoading } = useInvoices({
     page: currentPage,
     limit: rowsPerPage,
     search: searchQuery,
     status: toApiInvoiceStatus(selectedStatus),
     tenantId: organizationId || "",
-    organizationId
+    organizationId,
   }); // from apiHooks
   const { invoice: selectedInvoice } = useInvoiceById(selectedInvoiceId); // from apiHooks
 
@@ -132,7 +135,6 @@ function InvoicesTable({ organizationId, viewMode }) {
     setFilterPopupOpen(false);
   };
 
-
   useEffect(() => {
     if (viewMode === "collapsed") {
       setView("kanban");
@@ -153,8 +155,6 @@ function InvoicesTable({ organizationId, viewMode }) {
     }
   };
 
-  
-
   const totalPages = pagination?.totalPages || 0;
   const nextPage = () => {
     if (pagination?.hasNext) {
@@ -166,8 +166,6 @@ function InvoicesTable({ organizationId, viewMode }) {
       setCurrentPage((prevPage) => prevPage - 1);
     }
   };
-
-  
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -203,9 +201,6 @@ function InvoicesTable({ organizationId, viewMode }) {
   //   }
   // };
 
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
   const tableColumns = [
     {
       key: "invoiceCode",
@@ -230,7 +225,7 @@ function InvoicesTable({ organizationId, viewMode }) {
           {row.type.replace("_", " ")}
           {row.type === "subscription" && (
             <div className="text-xs text-gray-500">
-              {formatDate(row.startDate)} - {formatDate(row.endDate)}
+              {formatDateTime(row.startDate)} - {formatDateTime(row.endDate)}
             </div>
           )}
         </div>
@@ -279,7 +274,7 @@ function InvoicesTable({ organizationId, viewMode }) {
     {
       key: "endDate",
       header: "Due Date",
-      render: (value, row) => formatDate(row?.endDate) || "N/A",
+      render: (value, row) => formatDateTime(row?.endDate) || "N/A",
     },
   ];
 
@@ -294,7 +289,6 @@ function InvoicesTable({ organizationId, viewMode }) {
         setIsPopupOpen(true);
       },
     },
-    
   ];
 
   // Kanban Columns Configuration
@@ -312,6 +306,11 @@ function InvoicesTable({ organizationId, viewMode }) {
       render: (value) => <div>{formatCurrency(value)}</div>,
     },
     {
+      key: "endDate",
+      header: "Due Date",
+      render: (value, row) => formatDateTime(row?.endDate) || "N/A",
+    },
+    {
       key: "status",
       header: "Status",
       render: (value) => <StatusBadge status={capitalizeFirstLetter(value)} />,
@@ -319,7 +318,7 @@ function InvoicesTable({ organizationId, viewMode }) {
   ];
 
   // Shared Actions Configuration for Table and Kanban
-  const actions = [
+  const kanbanActions = [
     {
       key: "view",
       label: "View Details",
@@ -329,13 +328,12 @@ function InvoicesTable({ organizationId, viewMode }) {
         setIsPopupOpen(true);
       },
     },
-    
   ];
 
   // Render Actions for Kanban
   const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      {actions.map((action) => (
+      {kanbanActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -627,25 +625,48 @@ function InvoicesTable({ organizationId, viewMode }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Invoices</div>
-            <div className="text-xl font-semibold">{stats?.totalInvoices ?? invoices?.length ?? 0}</div>
+            <div className="text-xl font-semibold">
+              {stats?.totalInvoices ?? invoices?.length ?? 0}
+            </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Amount</div>
-            <div className="text-xl font-semibold">{formatCurrency(stats?.totalAmount ?? invoices.reduce((sum, i) => sum + (i.totalAmount || 0), 0))}</div>
+            <div className="text-xl font-semibold">
+              {formatCurrency(
+                stats?.totalAmount ??
+                  invoices.reduce((sum, i) => sum + (i.totalAmount || 0), 0)
+              )}
+            </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Outstanding</div>
-            <div className="text-xl font-semibold text-error-600">{formatCurrency(stats?.totalOutstanding ?? invoices.reduce((sum, i) => sum + (i.outstandingAmount || 0), 0))}</div>
+            <div className="text-xl font-semibold text-error-600">
+              {formatCurrency(
+                stats?.totalOutstanding ??
+                  invoices.reduce(
+                    (sum, i) => sum + (i.outstandingAmount || 0),
+                    0
+                  )
+              )}
+            </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Collection Rate</div>
-            <div className="text-xl font-semibold">{typeof stats?.collectionRate === "number" ? stats.collectionRate.toFixed(1) : (invoices.length !== 0
+            <div className="text-xl font-semibold">
+              {typeof stats?.collectionRate === "number"
+                ? stats.collectionRate.toFixed(1)
+                : invoices.length !== 0
                 ? (
                     (invoices.reduce((sum, i) => sum + (i.amountPaid || 0), 0) /
-                      invoices.reduce((sum, i) => sum + (i.totalAmount || 0), 0)) *
+                      invoices.reduce(
+                        (sum, i) => sum + (i.totalAmount || 0),
+                        0
+                      )) *
                     100
                   ).toFixed(1)
-                : 0)}%</div>
+                : 0}
+              %
+            </div>
           </div>
         </div>
 
@@ -698,7 +719,7 @@ function InvoicesTable({ organizationId, viewMode }) {
                         ...invoice,
                         id: invoice._id,
                         title: invoice.invoiceCode || "N/A",
-                        subtitle: invoice.type || "N/A",
+                        subtitle: capitalizeFirstLetter(invoice.type) || "N/A",
                       }))}
                       invoices={invoices}
                       columns={kanbanColumns}
@@ -706,6 +727,10 @@ function InvoicesTable({ organizationId, viewMode }) {
                       renderActions={renderKanbanActions}
                       emptyState="No invoices found."
                       viewMode={viewMode}
+                      onTitleClick={(item) => {
+                        setSelectedInvoiceId(item?._id);
+                        setIsPopupOpen(true);
+                      }}
                     />
                   </div>
                 )}

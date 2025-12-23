@@ -17,15 +17,115 @@ import {
   // Pencil,
   ChevronUp,
   ChevronDown,
+  MoreVertical,
 } from "lucide-react";
 
 import InterviewerDetails from "./InterviewerDetails.jsx";
 // import { useCustomContext } from "../../Context/Contextfetch.js";
-import KanbanView from "../../Pages/Outsource-Interviewer-Request/Kanban/KanbanView.jsx";
+// import KanbanView from "../../Pages/Outsource-Interviewer-Request/Kanban/KanbanView.jsx";
+import KanbanView from "../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 // import { config } from "../../config.js";
 // import axios from "axios";
 import { usePermissions } from "../../Context/PermissionsContext.js";
 import { useOutsourceInterviewers } from "../../apiHooks/superAdmin/useOutsourceInterviewers";
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const OutsourceInterviewers = () => {
   const { superAdminPermissions } = usePermissions();
@@ -192,9 +292,6 @@ const OutsourceInterviewers = () => {
   //   return new Date(dateString).toLocaleDateString("en-US", options);
   // };
 
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
   const formatStatus = (status = "") => {
     return status
       .toString()
@@ -240,10 +337,21 @@ const OutsourceInterviewers = () => {
       key: "name",
       header: "Name",
       render: (vale, row) => (
-        <span>
+        <span
+          title={`${capitalizeFirstLetter(row?.contactId?.firstName)}${
+            row?.contactId?.lastName
+              ? ` ${capitalizeFirstLetter(row?.contactId?.lastName)}`
+              : ""
+          }`}
+          className="block cursor-default truncate max-w-[160px]"
+        >
           {row?.contactId?.firstName
-            ? row?.contactId?.firstName
-            : row?.contactId?.lastName}
+            ? `${capitalizeFirstLetter(row?.contactId?.firstName)}${
+                row?.contactId?.lastName
+                  ? ` ${capitalizeFirstLetter(row?.contactId?.lastName)}`
+                  : ""
+              }`
+            : "N/A"}
         </span>
       ),
     },
@@ -251,7 +359,9 @@ const OutsourceInterviewers = () => {
       key: "currentRole",
       header: "Current Role",
       render: (value, row) => (
-        <span>{row?.contactId?.currentRole || "N/A"}</span>
+        <span className="block cursor-default truncate max-w-[160px]">
+          {capitalizeFirstLetter(row?.contactId?.currentRole) || "N/A"}
+        </span>
       ),
     },
     {
@@ -261,15 +371,15 @@ const OutsourceInterviewers = () => {
         const skills = row?.contactId?.skills || [];
 
         return skills.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {/* First skill badge */}
-            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+          <div
+            title={skills.join(", ")}
+            className="flex flex-wrap gap-1 cursor-default"
+          >
+            <span className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue text-xs rounded-full">
               {skills[0]?.length > 12
                 ? skills[0].slice(0, 12) + "..."
                 : skills[0]}
             </span>
-
-            {/* "+N more" label if more than one skill */}
             {skills.length > 1 && (
               <span className="text-gray-500 text-xs">
                 +{skills.length - 1} more
@@ -286,9 +396,17 @@ const OutsourceInterviewers = () => {
       key: "experience",
       header: "Experience",
       render: (value, row) => (
+        // <span>
+        //   {row?.contactId?.yearsOfExperience
+        //     ? row?.contactId?.yearsOfExperience + " years"
+        //     : "N/A"}
+        // </span>
         <span>
-          {row?.contactId?.yearsOfExperience
-            ? row?.contactId?.yearsOfExperience + " years"
+          {row?.contactId?.yearsOfExperience ||
+          row?.contactId?.yearsOfExperience === 0
+            ? `${row?.contactId?.yearsOfExperience} ${
+                row?.contactId?.yearsOfExperience === "1" ? "Year" : "Years"
+              }`
             : "N/A"}
         </span>
       ),
@@ -351,7 +469,7 @@ const OutsourceInterviewers = () => {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => {
               setSelectedInterviewerId(row._id);
               setIsPopupOpen(true);
@@ -390,28 +508,44 @@ const OutsourceInterviewers = () => {
       key: "name",
       header: "Name",
       render: (vale, row) => (
-        <span>
+        // <span>
+        //   {row?.contactId?.firstName
+        //     ? row?.contactId?.firstName
+        //     : row?.contactId?.lastName}
+        // </span>
+        <span
+          title={`${capitalizeFirstLetter(row?.contactId?.firstName)}${
+            row?.contactId?.lastName
+              ? ` ${capitalizeFirstLetter(row?.contactId?.lastName)}`
+              : ""
+          }`}
+          className="block cursor-default truncate max-w-[160px]"
+        >
           {row?.contactId?.firstName
-            ? row?.contactId?.firstName
-            : row?.contactId?.lastName}
+            ? `${capitalizeFirstLetter(row?.contactId?.firstName)}${
+                row?.contactId?.lastName
+                  ? ` ${capitalizeFirstLetter(row?.contactId?.lastName)}`
+                  : ""
+              }`
+            : "N/A"}
         </span>
       ),
     },
     {
-      key: "currentRole",
-      header: "Current Role",
-      render: (value, row) => (
-        <span>{row?.contactId?.currentRole || "N/A"}</span>
-      ),
-    },
-
-    {
       key: "experience",
       header: "Experience",
       render: (value, row) => (
+        // <span>
+        //   {row?.contactId?.yearsOfExperience
+        //     ? row?.contactId?.yearsOfExperience + " years"
+        //     : "N/A"}
+        // </span>
         <span>
-          {row?.contactId?.yearsOfExperience
-            ? row?.contactId?.yearsOfExperience + " years"
+          {row?.contactId?.yearsOfExperience ||
+          row?.contactId?.yearsOfExperience === 0
+            ? `${row?.contactId?.yearsOfExperience} ${
+                row?.contactId?.yearsOfExperience === "1" ? "Year" : "Years"
+              }`
             : "N/A"}
         </span>
       ),
@@ -435,15 +569,15 @@ const OutsourceInterviewers = () => {
         const skills = row?.contactId?.skills || [];
 
         return skills.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {/* First skill badge */}
-            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+          <div className="flex flex-wrap gap-1 cursor-default">
+            <span
+              title={skills.join(", ")}
+              className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue text-xs rounded-full"
+            >
               {skills[0]?.length > 12
                 ? skills[0].slice(0, 12) + "..."
                 : skills[0]}
             </span>
-
-            {/* "+N more" label if more than one skill */}
             {skills.length > 1 && (
               <span className="text-gray-500 text-xs">
                 +{skills.length - 1} more
@@ -463,13 +597,13 @@ const OutsourceInterviewers = () => {
   ];
 
   // Shared Actions Configuration for Table and Kanban
-  const actions = [
+  const kanbanActions = [
     ...(superAdminPermissions?.OutsourceInterviewerRequest?.View
       ? [
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => {
               handleOpenPopup(row);
               setIsPopupOpen(true);
@@ -499,7 +633,7 @@ const OutsourceInterviewers = () => {
   // Render Actions for Kanban
   const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      {actions.map((action) => (
+      {kanbanActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -647,20 +781,25 @@ const OutsourceInterviewers = () => {
                   data={currentFilteredRows.map((interview) => ({
                     ...interview,
                     id: interview._id,
-                    title:
-                      interview.interviewerNo ||
-                      `TEMP-${interview?._id?.slice(-6) || "NA"}`,
-                    subtitle:
-                      interview?.contactId?.firstName &&
-                      interview?.contactId?.lastName
-                        ? `${interview?.contactId.firstName} ${interview?.contactId.lastName}`
-                        : "N/A",
+                    title: interview.outsourceRequestCode || "NA",
+                    subtitle: interview?.contactId?.currentRole || "N/A",
                   }))}
                   outsourceInterviewers={outsourceInterviewers}
                   columns={kanbanColumns}
                   loading={isLoading}
-                  renderActions={renderKanbanActions}
+                  // renderActions={renderKanbanActions}
+                  renderActions={(item) => (
+                    <KanbanActionsMenu
+                      item={item}
+                      kanbanActions={kanbanActions}
+                    />
+                  )}
+                  onTitleClick={(row) => {
+                    handleOpenPopup(row);
+                    setIsPopupOpen(true);
+                  }}
                   emptyState="No interviewer requests found."
+                  kanbanTitle="Outsource Interviewer"
                 />
               </div>
             )}

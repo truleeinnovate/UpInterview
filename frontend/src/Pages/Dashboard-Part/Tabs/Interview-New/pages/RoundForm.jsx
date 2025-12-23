@@ -170,7 +170,6 @@ const RoundFormInterviews = () => {
 
   const [ownerData, setOwnerData] = useState(null);
   const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
-  const queryClient = useQueryClient();
 
   const handleAssessmentMenuScrollToBottom = () => {
     if (isAssessmentQueryLoading) return;
@@ -695,6 +694,7 @@ const RoundFormInterviews = () => {
   // while editing
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
+  console.log("roundEditData roundEditData", roundEditData);
 
   const editingAssessmentId =
     isEditing && roundEditData && roundEditData.assessmentId
@@ -1321,6 +1321,7 @@ const RoundFormInterviews = () => {
         // ✅ ADD THESE TWO LINES (VERY IMPORTANT) - KEPT EXACTLY AS REQUESTED
         selectedInterviewers, // ← backend uses this to create requests
         expiryDateTime, // ← backend uses frontend expiry
+        selectedAssessmentData,
       };
 
       const validationErrors = validateInterviewRoundData(roundData);
@@ -1394,151 +1395,151 @@ const RoundFormInterviews = () => {
 
       const targetRoundId = response?.savedRound?._id || roundId;
 
+      // console.log("assessment reespone", response);
+
       if (payload.round.roundTitle === "Assessment") {
-        // Calculate link expiry days
-        let linkExpiryDays = null;
-        if (selectedAssessmentData?.ExpiryDate) {
-          const expiryDate = new Date(selectedAssessmentData.ExpiryDate);
-          const today = new Date();
-          const diffTime = expiryDate.getTime() - today.getTime();
-          linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
-        }
-
-        // setIsLoading(true);
-        const result = await shareAssessmentAPI({
-          assessmentId: assessmentTemplate?.assessmentId,
-          selectedCandidates: [interview?.candidateId],
-          linkExpiryDays,
-          userId: userId,
-          organizationId: orgId,
-          setErrors,
-          queryClient,
-
-          // onClose: onCloseshare,
-          // setErrors,
-          // setIsLoading,
-          // organizationId,
-          // userId,
-        });
-        if (result.success) {
-          const updatedRoundData = {
-            ...roundData,
-            scheduleAssessmentId: result.data?.scheduledAssessmentId,
-            // meetingId: data?.start_url || meetingLink,
-          };
-          const updatePayload = {
-            interviewId,
-            roundId: targetRoundId,
-            round: updatedRoundData,
-            ...(isEditing ? { questions: interviewQuestionsList } : {}),
-          };
-
-          response = await updateInterviewRound(updatePayload);
-
-          if (response.status === "ok") {
-            navigate(`/interviews/${interviewId}`);
-          }
-          // response = await updateInterviewRound(updatePayload);
-          // navigate(`/interviews/${interviewId}`);
-          // toast.success('Assessment shared successfully!');
+        if (response.status === "ok") {
+          navigate(`/interviews/${interviewId}`);
         }
       }
+      //   // Calculate link expiry days
+      //   let linkExpiryDays = null;
+      //   if (selectedAssessmentData?.ExpiryDate) {
+      //     const expiryDate = new Date(selectedAssessmentData.ExpiryDate);
+      //     const today = new Date();
+      //     const diffTime = expiryDate.getTime() - today.getTime();
+      //     linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
+      //   }
+
+      //   // setIsLoading(true);
+      //   const result = await shareAssessmentAPI({
+      //     assessmentId: assessmentTemplate?.assessmentId,
+      //     selectedCandidates: [interview?.candidateId],
+      //     linkExpiryDays,
+      //     userId: userId,
+      //     organizationId: orgId,
+      //     setErrors,
+      //     queryClient,
+
+      //     // onClose: onCloseshare,
+      //     // setErrors,
+      //     // setIsLoading,
+      //     // organizationId,
+      //     // userId,
+      //   });
+      //   if (result.success) {
+      //     const updatedRoundData = {
+      //       ...roundData,
+      //       scheduleAssessmentId: result.data?.scheduledAssessmentId,
+      //       // meetingId: data?.start_url || meetingLink,
+      //     };
+      //     const updatePayload = {
+      //       interviewId,
+      //       roundId: targetRoundId,
+      //       round: updatedRoundData,
+      //       ...(isEditing ? { questions: interviewQuestionsList } : {}),
+      //     };
+
+      //     response = await updateInterviewRound(updatePayload);
+
+      //     if (response.status === "ok") {
+      //       navigate(`/interviews/${interviewId}`);
+      //     }
+      //     // response = await updateInterviewRound(updatePayload);
+      //     // navigate(`/interviews/${interviewId}`);
+      //     // toast.success('Assessment shared successfully!');
+      //   }
+      // }
 
       if (payload.round.roundTitle !== "Assessment") {
         //  out sourced email sent
-        if (payload?.round?.interviewMode !== "Face to Face") {
-          //   // Handle outsource request if interviewers are selected
-          //   if (selectedInterviewers && selectedInterviewers.length > 0) {
-          //     const isInternal = selectedInterviewType === "Internal";
-
-          //     for (const interviewer of selectedInterviewers) {
-
-          //       const interviewDateTime = new Date(combinedDateTime);
-          //       const expiryDateTime = calculateExpiryDate(interviewDateTime);
-          //       const outsourceRequestData = {
-          //         tenantId: orgId,
-          //         ownerId: userId,
-          //         scheduledInterviewId: interviewId,
-          //         interviewerType: selectedInterviewType,
-          //         interviewerId: interviewer.contact?._id || interviewer._id,
-          //         // status: isInternal ? "accepted" : "inprogress",
-          //         dateTime: combinedDateTime,
-          //         duration,
-          //         candidateId: candidate?._id,
-          //         positionId: position?._id,
-          //         roundId: response.savedRound._id,
-          //         isMockInterview: false,
-          //         requestMessage: isInternal
-          //           ? "Internal interview request"
-          //           : "Outsource interview request",
-          //         expiryDateTime
-          //       };
-
-          //       await axios.post(
-          //         `${config.REACT_APP_API_URL}/interviewrequest`,
-          //         outsourceRequestData,
-          //         {
-          //           headers: {
-          //             "Content-Type": "application/json",
-          //             Authorization: `Bearer ${Cookies.get("authToken")}`,
-          //           },
-          //         }
-          //       );
-          //     }
-
-          //     // Send outsource interview request emails if this is an outsource round
-          if (
-            selectedInterviewType !== "Internal" &&
-            selectedInterviewers &&
-            selectedInterviewers.length > 0
-          ) {
-            try {
-              const interviewerIds = selectedInterviewers.map(
-                (interviewer) => interviewer.contact?._id || interviewer._id
-              );
-
-              const emailResponse = await axios.post(
-                `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
-                {
-                  interviewId: interviewId,
-                  roundId: response.savedRound._id || targetRoundId,
-                  interviewerIds: interviewerIds,
-                  candidateId: candidate?._id,
-                  positionId: position?._id,
-                  dateTime: combinedDateTime,
-                  type: "interview",
-                  // duration: duration,
-                  // roundTitle: roundTitle,
-                },
-                {
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${Cookies.get("authToken")}`,
-                  },
-                }
-              );
-
-              if (emailResponse.data.success) {
-                // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
-                if (emailResponse.data.data.failedEmails > 0) {
-                  notify.warning(
-                    `${emailResponse.data.data.failedEmails} emails failed to send`
-                  );
-                }
-              } else {
-                notify.error(
-                  "Failed to send outsource interview request emails"
-                );
-              }
-            } catch (emailError) {
-              console.error(
-                "Error sending outsource interview request emails:",
-                emailError
-              );
-              notify.error("Failed to send outsource interview request emails");
-            }
-          }
-        }
+        // if (payload?.round?.interviewMode !== "Face to Face") {
+        //   //   // Handle outsource request if interviewers are selected
+        //   //   if (selectedInterviewers && selectedInterviewers.length > 0) {
+        //   //     const isInternal = selectedInterviewType === "Internal";
+        //   //     for (const interviewer of selectedInterviewers) {
+        //   //       const interviewDateTime = new Date(combinedDateTime);
+        //   //       const expiryDateTime = calculateExpiryDate(interviewDateTime);
+        //   //       const outsourceRequestData = {
+        //   //         tenantId: orgId,
+        //   //         ownerId: userId,
+        //   //         scheduledInterviewId: interviewId,
+        //   //         interviewerType: selectedInterviewType,
+        //   //         interviewerId: interviewer.contact?._id || interviewer._id,
+        //   //         // status: isInternal ? "accepted" : "inprogress",
+        //   //         dateTime: combinedDateTime,
+        //   //         duration,
+        //   //         candidateId: candidate?._id,
+        //   //         positionId: position?._id,
+        //   //         roundId: response.savedRound._id,
+        //   //         isMockInterview: false,
+        //   //         requestMessage: isInternal
+        //   //           ? "Internal interview request"
+        //   //           : "Outsource interview request",
+        //   //         expiryDateTime
+        //   //       };
+        //   //       await axios.post(
+        //   //         `${config.REACT_APP_API_URL}/interviewrequest`,
+        //   //         outsourceRequestData,
+        //   //         {
+        //   //           headers: {
+        //   //             "Content-Type": "application/json",
+        //   //             Authorization: `Bearer ${Cookies.get("authToken")}`,
+        //   //           },
+        //   //         }
+        //   //       );
+        //   //     }
+        //   //     // Send outsource interview request emails if this is an outsource round
+        //   // if (
+        //   //   selectedInterviewType !== "Internal" &&
+        //   //   selectedInterviewers &&
+        //   //   selectedInterviewers.length > 0
+        //   // ) {
+        //   //   try {
+        //   //     const interviewerIds = selectedInterviewers.map(
+        //   //       (interviewer) => interviewer.contact?._id || interviewer._id
+        //   //     );
+        //   //     const emailResponse = await axios.post(
+        //   //       `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
+        //   //       {
+        //   //         interviewId: interviewId,
+        //   //         roundId: response.savedRound._id || targetRoundId,
+        //   //         interviewerIds: interviewerIds,
+        //   //         candidateId: candidate?._id,
+        //   //         positionId: position?._id,
+        //   //         dateTime: combinedDateTime,
+        //   //         type: "interview",
+        //   //         // duration: duration,
+        //   //         // roundTitle: roundTitle,
+        //   //       },
+        //   //       {
+        //   //         headers: {
+        //   //           "Content-Type": "application/json",
+        //   //           Authorization: `Bearer ${Cookies.get("authToken")}`,
+        //   //         },
+        //   //       }
+        //   //     );
+        //   //     if (emailResponse.data.success) {
+        //   //       // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
+        //   //       if (emailResponse.data.data.failedEmails > 0) {
+        //   //         notify.warning(
+        //   //           `${emailResponse.data.data.failedEmails} emails failed to send`
+        //   //         );
+        //   //       }
+        //   //     } else {
+        //   //       notify.error(
+        //   //         "Failed to send outsource interview request emails"
+        //   //       );
+        //   //     }
+        //   //   } catch (emailError) {
+        //   //     console.error(
+        //   //       "Error sending outsource interview request emails:",
+        //   //       emailError
+        //   //     );
+        //   //     notify.error("Failed to send outsource interview request emails");
+        //   //   }
+        //   // }
+        // }
 
         // don't remove this code related to agora video room
         // if (response.status === 'ok'){
@@ -1561,7 +1562,6 @@ const RoundFormInterviews = () => {
             selectedInterviewers.length > 0;
 
           let meetingLink = null;
-
           try {
             // v1.0.3 <-----------------------------------------------------------
             setMeetingCreationProgress("Creating links...");
@@ -1596,38 +1596,51 @@ const RoundFormInterviews = () => {
                 // ========================================
               } else if (selectedMeetingPlatform === "zoom") {
                 // Format helper
-                function formatStartTimeToUTC(startTimeStr) {
-                  if (!startTimeStr) return undefined;
-                  try {
-                    const parsed = new Date(startTimeStr);
-                    if (isNaN(parsed.getTime()))
-                      throw new Error("Invalid date");
+                function formatStartTimeForZoom(input) {
+                  if (!input || typeof input !== "string") return undefined;
 
-                    const year = parsed.getUTCFullYear();
-                    const month = String(parsed.getUTCMonth() + 1).padStart(
-                      2,
-                      "0"
-                    );
-                    const day = String(parsed.getUTCDate()).padStart(2, "0");
-                    const hours = String(parsed.getUTCHours()).padStart(2, "0");
-                    const minutes = String(parsed.getUTCMinutes()).padStart(
-                      2,
-                      "0"
-                    );
-                    const seconds = String(parsed.getUTCSeconds()).padStart(
-                      2,
-                      "0"
-                    );
+                  // Expected: "20-12-2025 07:36 PM - 08:36 PM"
+                  const match = input.match(
+                    /^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})\s+(AM|PM)/
+                  );
 
-                    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-                  } catch (error) {
-                    console.error("Error parsing date:", error);
-                    return undefined;
-                  }
+                  if (!match) return undefined;
+
+                  let [, day, month, year, hh, mm, meridiem] = match;
+
+                  day = Number(day);
+                  month = Number(month);
+                  year = Number(year);
+
+                  let hours = Number(hh);
+                  const minutes = Number(mm);
+
+                  if (meridiem === "PM" && hours !== 12) hours += 12;
+                  if (meridiem === "AM" && hours === 12) hours = 0;
+
+                  const localDate = new Date(
+                    year,
+                    month - 1,
+                    day,
+                    hours,
+                    minutes,
+                    0
+                  );
+
+                  if (isNaN(localDate.getTime())) return undefined;
+
+                  // Zoom expects LOCAL time when timezone is provided
+                  return (
+                    `${localDate.getFullYear()}-` +
+                    `${String(localDate.getMonth() + 1).padStart(2, "0")}-` +
+                    `${String(localDate.getDate()).padStart(2, "0")}T` +
+                    `${String(localDate.getHours()).padStart(2, "0")}:` +
+                    `${String(localDate.getMinutes()).padStart(2, "0")}:00`
+                  );
                 }
 
                 const formattedStartTime =
-                  formatStartTimeToUTC(combinedDateTime);
+                  formatStartTimeForZoom(combinedDateTime);
                 if (!formattedStartTime)
                   throw new Error("Invalid start time format");
 
@@ -1677,7 +1690,6 @@ const RoundFormInterviews = () => {
                 await updateInterviewRound(updatePayload);
               }
             }
-
             // Handle Face to Face (no meeting link)
             if (!shouldGenerateMeeting && selectedInterviewers?.length > 0) {
               const faceToFaceRoundData = {

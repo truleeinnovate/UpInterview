@@ -26,6 +26,8 @@ import Cookies from "js-cookie";
 import { notify } from "../../../../services/toastService";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 // v1.0.0 ------------------------------------------------------------------------>
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { formatDateTime } from "../../../../utils/dateFormatter.js";
 
 // Helper function to map master data types to query keys
 const getMasterDataKey = (type) => {
@@ -283,9 +285,6 @@ const MasterTable = ({ permissions = {} }) => {
     setView(isTablet ? "kanban" : "table");
   }, [isTablet]);
 
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
   const getPageTitle = (t) => {
     if (!t) return "Master";
     switch (t) {
@@ -535,7 +534,7 @@ const MasterTable = ({ permissions = {} }) => {
       header: "Created Date",
       render: (value, row) => {
         return row.createdAt ? (
-          <span>{new Date(row.createdAt).toLocaleDateString()}</span>
+          <span>{formatDateTime(row.createdAt)}</span>
         ) : (
           "N/A"
         );
@@ -559,7 +558,7 @@ const MasterTable = ({ permissions = {} }) => {
       header: "Updated Date",
       render: (value, row) => {
         return row.updatedAt ? (
-          <span>{new Date(row.updatedAt).toLocaleDateString()}</span>
+          <span>{formatDateTime(row.updatedAt)}</span>
         ) : (
           "N/A"
         );
@@ -575,7 +574,7 @@ const MasterTable = ({ permissions = {} }) => {
     {
       key: "view",
       label: "View",
-      icon: <Eye className="w-4 h-4 text-green-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (item) => {
         setSelectedMaster(item);
         setPopupMode("edit");
@@ -675,9 +674,11 @@ const MasterTable = ({ permissions = {} }) => {
       key: "createdAt",
       header: "Created Date",
       render: (value, row) => {
-        if (!row?.createdAt) return "N/A";
-        const d = new Date(row.createdAt);
-        return Number.isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
+        return row.createdAt ? (
+          <span>{formatDateTime(row.createdAt)}</span>
+        ) : (
+          "N/A"
+        );
       },
     },
     {
@@ -698,7 +699,7 @@ const MasterTable = ({ permissions = {} }) => {
       header: "Updated Date",
       render: (value, row) => {
         return row.updatedAt ? (
-          <span>{new Date(row.updatedAt).toLocaleDateString()}</span>
+          <span>{capitalizeFirstLetter(row.updatedAt)}</span>
         ) : (
           "N/A"
         );

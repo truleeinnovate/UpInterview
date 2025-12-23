@@ -431,11 +431,6 @@ const CombinedNavbar = React.memo(() => {
           permissionKey: "Feedback.ViewTab",
         },
         {
-          path: "/code-editor",
-          label: "Code Editor",
-          permissionKey: "CodeEditor.ViewTab", // Ensure this matches your permission key in DB
-        },
-        {
           path: "/support-desk",
           label: "Support Desk",
           permissionKey: "SupportDesk.ViewTab",
@@ -1394,8 +1389,7 @@ const CombinedNavbar = React.memo(() => {
                           {(isActive("/analytics") ||
                             isActive("/support-desk") ||
                             isActive("/feedback") ||
-                            isActive("/question-bank") ||
-                            isActive("/code-editor")) && (
+                            isActive("/question-bank")) && (
                             <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                           )}
                         </button>
@@ -1411,14 +1405,6 @@ const CombinedNavbar = React.memo(() => {
                                       {
                                         to: "/question-bank",
                                         label: "Question Bank",
-                                      },
-                                    ]
-                                  : []),
-                                ...(enhancedCheckPermission("CodeEditor")
-                                  ? [
-                                      {
-                                        to: "/code-editor",
-                                        label: "Code Editor",
                                       },
                                     ]
                                   : []),

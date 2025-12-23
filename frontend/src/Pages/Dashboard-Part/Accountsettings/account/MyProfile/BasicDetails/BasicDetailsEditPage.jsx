@@ -938,7 +938,7 @@ const BasicDetailsEditPage = ({
             <LoadingButton
               type="submit"
               isLoading={loading}
-              loadingText="updating..."
+              loadingText="Updating..."
             >
               Save Changes
             </LoadingButton>

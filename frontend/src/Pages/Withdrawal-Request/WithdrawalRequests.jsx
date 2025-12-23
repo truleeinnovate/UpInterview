@@ -25,6 +25,7 @@ import {
   useWithdrawalRequests,
   useWithdrawalRequestById,
 } from "../../apiHooks/superAdmin/useWithdrawalRequests.js";
+import { formatDateTime } from "../../utils/dateFormatter.js";
 
 const WithdrawalRequests = () => {
   const { superAdminPermissions } = usePermissions();
@@ -102,23 +103,58 @@ const WithdrawalRequests = () => {
         cancelledNetAmount: stats.cancelledNetAmount || 0,
       }
     : {
-        pending: (withdrawalRequests || []).filter((r) => r.status === "pending").length,
-        processing: (withdrawalRequests || []).filter((r) => r.status === "processing").length,
-        completed: (withdrawalRequests || []).filter((r) => r.status === "completed").length,
-        failed: (withdrawalRequests || []).filter((r) => r.status === "failed").length,
-        cancelled: (withdrawalRequests || []).filter((r) => r.status === "cancelled").length,
-        totalAmount: (withdrawalRequests || []).reduce((sum, r) => sum + (r.amount || 0), 0),
-        totalNetAmount: (withdrawalRequests || []).reduce((sum, r) => sum + (r.netAmount || 0), 0),
-        pendingAmount: (withdrawalRequests || []).filter((r) => r.status === "pending").reduce((sum, r) => sum + (r.amount || 0), 0),
-        processingAmount: (withdrawalRequests || []).filter((r) => r.status === "processing").reduce((sum, r) => sum + (r.amount || 0), 0),
-        completedAmount: (withdrawalRequests || []).filter((r) => r.status === "completed").reduce((sum, r) => sum + (r.amount || 0), 0),
-        failedAmount: (withdrawalRequests || []).filter((r) => r.status === "failed").reduce((sum, r) => sum + (r.amount || 0), 0),
-        cancelledAmount: (withdrawalRequests || []).filter((r) => r.status === "cancelled").reduce((sum, r) => sum + (r.amount || 0), 0),
-        pendingNetAmount: (withdrawalRequests || []).filter((r) => r.status === "pending").reduce((sum, r) => sum + (r.netAmount || 0), 0),
-        processingNetAmount: (withdrawalRequests || []).filter((r) => r.status === "processing").reduce((sum, r) => sum + (r.netAmount || 0), 0),
-        completedNetAmount: (withdrawalRequests || []).filter((r) => r.status === "completed").reduce((sum, r) => sum + (r.netAmount || 0), 0),
-        failedNetAmount: (withdrawalRequests || []).filter((r) => r.status === "failed").reduce((sum, r) => sum + (r.netAmount || 0), 0),
-        cancelledNetAmount: (withdrawalRequests || []).filter((r) => r.status === "cancelled").reduce((sum, r) => sum + (r.netAmount || 0), 0),
+        pending: (withdrawalRequests || []).filter(
+          (r) => r.status === "pending"
+        ).length,
+        processing: (withdrawalRequests || []).filter(
+          (r) => r.status === "processing"
+        ).length,
+        completed: (withdrawalRequests || []).filter(
+          (r) => r.status === "completed"
+        ).length,
+        failed: (withdrawalRequests || []).filter((r) => r.status === "failed")
+          .length,
+        cancelled: (withdrawalRequests || []).filter(
+          (r) => r.status === "cancelled"
+        ).length,
+        totalAmount: (withdrawalRequests || []).reduce(
+          (sum, r) => sum + (r.amount || 0),
+          0
+        ),
+        totalNetAmount: (withdrawalRequests || []).reduce(
+          (sum, r) => sum + (r.netAmount || 0),
+          0
+        ),
+        pendingAmount: (withdrawalRequests || [])
+          .filter((r) => r.status === "pending")
+          .reduce((sum, r) => sum + (r.amount || 0), 0),
+        processingAmount: (withdrawalRequests || [])
+          .filter((r) => r.status === "processing")
+          .reduce((sum, r) => sum + (r.amount || 0), 0),
+        completedAmount: (withdrawalRequests || [])
+          .filter((r) => r.status === "completed")
+          .reduce((sum, r) => sum + (r.amount || 0), 0),
+        failedAmount: (withdrawalRequests || [])
+          .filter((r) => r.status === "failed")
+          .reduce((sum, r) => sum + (r.amount || 0), 0),
+        cancelledAmount: (withdrawalRequests || [])
+          .filter((r) => r.status === "cancelled")
+          .reduce((sum, r) => sum + (r.amount || 0), 0),
+        pendingNetAmount: (withdrawalRequests || [])
+          .filter((r) => r.status === "pending")
+          .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+        processingNetAmount: (withdrawalRequests || [])
+          .filter((r) => r.status === "processing")
+          .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+        completedNetAmount: (withdrawalRequests || [])
+          .filter((r) => r.status === "completed")
+          .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+        failedNetAmount: (withdrawalRequests || [])
+          .filter((r) => r.status === "failed")
+          .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+        cancelledNetAmount: (withdrawalRequests || [])
+          .filter((r) => r.status === "cancelled")
+          .reduce((sum, r) => sum + (r.netAmount || 0), 0),
       };
 
   // Debug logging to check what's being calculated
@@ -364,46 +400,56 @@ const WithdrawalRequests = () => {
       render: (value, row) => (
         <div className="flex items-center space-x-1">
           <Calendar className="h-3 w-3 text-gray-400" />
-          <span className="text-sm">
-            {new Date(row.createdAt).toLocaleDateString()}
-          </span>
+          <span className="text-sm">{formatDateTime(row.createdAt)}</span>
         </div>
       ),
       sortable: true,
     },
+    // {
+    //   key: "actions",
+    //   header: "Actions",
+    //   render: (value, row) => (
+    //     <div className="flex space-x-2">
+    //       <button
+    //         onClick={(e) => {
+    //           e.stopPropagation();
+    //           setSelectedRequestId(row._id);
+    //           setIsPopupOpen(true);
+    //         }}
+    //         className="p-1 hover:bg-gray-100 rounded"
+    //         title="View Details"
+    //       >
+    //         <Eye className="h-4 w-4 text-custom-blue" />
+    //       </button>
+    //       {/* {superAdminPermissions?.WithdrawalRequest?.Edit && 
+    //        (row.status === "pending" || row.status === "processing") && (
+    //         <button
+    //           onClick={(e) => {
+    //             e.stopPropagation();
+    //             setSelectedRequestId(row._id);
+    //             setIsPopupOpen(true);
+    //           }}
+    //           className="p-1 hover:bg-gray-100 rounded"
+    //           title="Process"
+    //         >
+    //           <Pencil className="h-4 w-4 text-blue-600" />
+    //         </button>
+    //       )} */}
+    //     </div>
+    //   ),
+    //   sortable: false,
+    // },
+  ];
+
+  const tableActions = [
     {
-      key: "actions",
-      header: "Actions",
-      render: (value, row) => (
-        <div className="flex space-x-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedRequestId(row._id);
-              setIsPopupOpen(true);
-            }}
-            className="p-1 hover:bg-gray-100 rounded"
-            title="View Details"
-          >
-            <Eye className="h-4 w-4 text-gray-600" />
-          </button>
-          {/* {superAdminPermissions?.WithdrawalRequest?.Edit && 
-           (row.status === "pending" || row.status === "processing") && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedRequestId(row._id);
-                setIsPopupOpen(true);
-              }}
-              className="p-1 hover:bg-gray-100 rounded"
-              title="Process"
-            >
-              <Pencil className="h-4 w-4 text-blue-600" />
-            </button>
-          )} */}
-        </div>
-      ),
-      sortable: false,
+      key: "view",
+      label: "View Details",
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
+      onClick: (item) => {
+        setSelectedRequestId(item?._id);
+        setIsPopupOpen(true);
+      },
     },
   ];
 
@@ -670,6 +716,7 @@ const WithdrawalRequests = () => {
         <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
           <TableView
             data={withdrawalRequests}
+            actions={tableActions}
             columns={columns}
             onRowClick={handleRowClick}
             currentPage={currentPage}

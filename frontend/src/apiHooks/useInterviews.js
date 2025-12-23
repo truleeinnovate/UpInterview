@@ -371,7 +371,7 @@ export const useInterviews = (
 
   const updateRoundStatus = useMutation({
     mutationFn: async ({ roundId, status, ...otherFields }) => {
-      const payload = { status };
+      const payload = { status, ...otherFields };
 
       // Add other fields only if they are provided
       // if (otherFields.currentAction !== undefined) payload.currentAction = otherFields.currentAction;

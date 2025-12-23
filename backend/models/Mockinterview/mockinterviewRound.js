@@ -1,4 +1,9 @@
 // v1.0.0 - Venkatesh - Added hold transaction tracking and settlement status fields for mock interview payment management
+// Policy usage note:
+// MockInterviewRound is used by the same settlement pipeline as normal InterviewRounds.
+// WalletControllers.settleInterviewPayment loads this model when isMockInterview=true
+// and applies the mock-specific policy brackets (>12h: 0%, 2-12h: 25%, <2h/NoShow: 50%).
+// The settlementStatus/settlementDate fields track the final outcome for each mock round.
 
 const mongoose = require("mongoose");
 
@@ -17,7 +22,7 @@ const participantSchema = new mongoose.Schema(
 const roundScheduleSchema = new mongoose.Schema(
   {
     scheduledAt: { type: Date, required: true },
-    action: { type: String, enum: ["Scheduled", "Rescheduled"], required: true },
+    action: { type: String, enum: ["Scheduled", "Rescheduled", "Cancelled"], required: true },
     reason: { type: String },
     participants: [participantSchema],
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -93,9 +98,6 @@ currentAction: {
   meetingId: String,
   rejectionReason: String,
   
-  // Hold transaction reference for payment tracking
-  holdTransactionId: { type: String },  // Store the transaction ID from wallet hold
-  
   // Settlement tracking
   settlementStatus: { 
     type: String, 
@@ -103,7 +105,7 @@ currentAction: {
     default: 'pending'
   },
   settlementDate: { type: Date },
-  settlementTransactionId: { type: String }  // Credit transaction ID in interviewer's wallet
+
 },{ timestamps: true });
 
 // Check if model is already defined to avoid overwriting

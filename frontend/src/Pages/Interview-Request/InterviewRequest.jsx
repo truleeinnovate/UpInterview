@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - changed some fields at table and added cards at top section
 // v1.0.1 - Ashok - commented top two sections and adjusted table height
 // v1.0.2 - Ashok - corrected name from Interview Requests to Interviewer Requests
+// v1.0.3 - Ashok - used common kanban component for interview requests kanban view
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
@@ -9,7 +10,8 @@ import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx
 import { useMediaQuery } from "react-responsive";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
-import KanbanView from "../../Pages/Interview-Request/InterviewKanban.jsx";
+// import KanbanView from "../../Pages/Interview-Request/InterviewKanban.jsx";
+import KanbanView from "../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import StatusBadge from "../../Components/SuperAdminComponents/common/StatusBadge";
 import {
   Eye,
@@ -29,6 +31,7 @@ import {
   Timer,
   HelpCircle,
   CircleDot,
+  MoreVertical,
 } from "lucide-react";
 
 // import axios from "axios";
@@ -39,6 +42,105 @@ import {
   useInterviewRequests,
   useInterviewRequestById,
 } from "../../apiHooks/superAdmin/useInterviewRequests.js";
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../utils/dateFormatter.js";
+
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const InternalRequest = () => {
   const { superAdminPermissions } = usePermissions();
@@ -77,12 +179,14 @@ const InternalRequest = () => {
     limit: ITEMS_PER_PAGE,
     search: debouncedSearch,
     status: selectedFilters.status.join(","),
-    type: (typeof selectedType === 'string' && selectedType !== 'all') ? selectedType : "",
+    type:
+      typeof selectedType === "string" && selectedType !== "all"
+        ? selectedType
+        : "",
   }); // server-side
   // console.log("interviewRequests==",interviewRequests);
   const { interviewRequest } = useInterviewRequestById(selectedRequestId); // from apiHooks
   // console.log("interviewRequest==========",interviewRequest);
-
 
   useEffect(() => {
     const handleResize = () => {
@@ -158,7 +262,6 @@ const InternalRequest = () => {
     }
   }, [isTablet]);
 
-
   const dataToUse = interviewRequests || [];
 
   const handleFilterIconClick = () => {
@@ -181,26 +284,24 @@ const InternalRequest = () => {
     }
   };
 
-  const currentFilteredRows = selectedType === 'all'
-    ? dataToUse
-    : dataToUse.filter((request) =>
-        request.interviewerType?.toLowerCase() === selectedType.toLowerCase()
-      );
+  const currentFilteredRows =
+    selectedType === "all"
+      ? dataToUse
+      : dataToUse.filter(
+          (request) =>
+            request.interviewerType?.toLowerCase() ===
+            selectedType.toLowerCase()
+        );
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(0); // Reset to first page on search (debounced fetch)
   };
 
-  
-
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
-
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
   const formatStatus = (status = "") => {
     return status
@@ -263,10 +364,17 @@ const InternalRequest = () => {
       key: "interviewerName",
       header: "Interviewer Name",
       render: (value, row) => (
-        <span>
+        <span
+          className="block cursor-default truncate max-w-[160px]"
+          title={`${
+            capitalizeFirstLetter(row?.interviewerId?.lastName) || ""
+          } ${
+            capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
+          }`.trim()}
+        >
           {row?.interviewerId?.firstName || row?.interviewerId?.lastName
-            ? `${row?.interviewerId?.lastName || ""} ${
-                row?.interviewerId?.firstName || ""
+            ? `${capitalizeFirstLetter(row?.interviewerId?.lastName) || ""} ${
+                capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
               }`.trim()
             : "N/A"}
         </span>
@@ -284,7 +392,14 @@ const InternalRequest = () => {
       key: "position",
       header: "Position",
       render: (value, row) => (
-        <span>{row?.positionId ? row?.positionId?.title : "N/A"}</span>
+        <span
+          className="block cursor-default truncate max-w-[160px]"
+          title={capitalizeFirstLetter(row?.positionId?.title)}
+        >
+          {row?.positionId
+            ? capitalizeFirstLetter(row?.positionId?.title)
+            : "N/A"}
+        </span>
       ),
     },
     {
@@ -296,7 +411,7 @@ const InternalRequest = () => {
       key: "requestedAt",
       header: " Requested At",
       render: (value, row) => (
-        <span>{row ? formatDate(row?.requestedAt) : "N/A"}</span>
+        <span>{row ? formatDateTime(row?.requestedAt) : "N/A"}</span>
       ),
     },
   ];
@@ -308,7 +423,7 @@ const InternalRequest = () => {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => {
               setSelectedRequestId(row._id);
               setIsPopupOpen(true);
@@ -343,10 +458,46 @@ const InternalRequest = () => {
   // Kanban Columns Configuration
   const kanbanColumns = [
     {
+      key: "interviewerName",
+      header: "Interviewer Name",
+      render: (value, row) => (
+        <span
+          className="block cursor-default truncate max-w-[160px]"
+          title={`${
+            capitalizeFirstLetter(row?.interviewerId?.lastName) || ""
+          } ${
+            capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
+          }`.trim()}
+        >
+          {row?.interviewerId?.firstName || row?.interviewerId?.lastName
+            ? `${capitalizeFirstLetter(row?.interviewerId?.lastName) || ""} ${
+                capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
+              }`.trim()
+            : "N/A"}
+        </span>
+      ),
+    },
+    {
       key: "interviewerTyp",
       header: "Interviewer Type",
       render: (value, row) => (
-        <div className="font-medium">{row.interviewerType || "N/A"}</div>
+        <div className="font-medium">
+          {capitalizeFirstLetter(row?.interviewerType) || "N/A"}
+        </div>
+      ),
+    },
+    {
+      key: "position",
+      header: "Position",
+      render: (value, row) => (
+        <span
+          className="block cursor-default truncate max-w-[160px]"
+          title={capitalizeFirstLetter(row?.positionId?.title)}
+        >
+          {row?.positionId
+            ? capitalizeFirstLetter(row?.positionId?.title)
+            : "N/A"}
+        </span>
       ),
     },
     {
@@ -357,13 +508,13 @@ const InternalRequest = () => {
   ];
 
   // Shared Actions Configuration for Table and Kanban
-  const actions = [
+  const kanbanActions = [
     ...(superAdminPermissions?.InterviewRequest?.View
       ? [
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => {
               setSelectedRequestId(row._id);
               setIsPopupOpen(true);
@@ -393,7 +544,7 @@ const InternalRequest = () => {
   // Render Actions for Kanban
   const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      {actions.map((action) => (
+      {kanbanActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -793,8 +944,20 @@ const InternalRequest = () => {
                     interviewRequests={interviewRequests}
                     columns={kanbanColumns}
                     loading={isLoading}
-                    renderActions={renderKanbanActions}
+                    renderActions={(item) => (
+                      <KanbanActionsMenu
+                        item={item}
+                        kanbanActions={kanbanActions}
+                      />
+                    )}
+                    // renderActions={renderKanbanActions}
+                    onTitleClick={(row) => {
+                      setSelectedRequestId(row._id);
+                      setIsPopupOpen(true);
+                    }}
                     emptyState="No Interview Requests Found."
+                    kanbanTitle="Interviewer Request"
+                    customHeight = "calc(100vh - 250px)"
                   />
                 </div>
               )}

@@ -75,6 +75,22 @@ const SchedulerSectionComponent = ({
 
   // Initialize state variables
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");
+  
+  // Helper to map backend/stored answerType to UI label
+  const mapAnswerTypeToLabel = (type) => {
+    if (!type) return "Not Answered";
+    if (type === "correct" || type === "Fully Answered") return "Fully Answered";
+    if (type === "partial" || type === "Partially Answered")
+      return "Partially Answered";
+    if (
+      type === "incorrect" ||
+      type === "wrong" ||
+      type === "Not Answered" ||
+      type === "not answered"
+    )
+      return "Not Answered";
+    return "Not Answered";
+  };
   const [schedulerQuestionsData, setSchedulerQuestionsData] = useState(() => {
     return schedulerQuestions.map((q) => {
       // Find feedback for this question
@@ -87,6 +103,9 @@ const SchedulerSectionComponent = ({
       );
 
       if (feedback) {
+        const backendAnswerType =
+          feedback.candidateAnswer?.answerType ||
+          q.candidateAnswer?.answerType;
         return {
           ...q,
           candidateAnswer:
@@ -94,18 +113,8 @@ const SchedulerSectionComponent = ({
           interviewerFeedback:
             feedback.interviewerFeedback || q.interviewerFeedback || null,
           isAnswered:
-            feedback.candidateAnswer?.answerType ||
-            q.candidateAnswer?.answerType
-              ? feedback.candidateAnswer.answerType ||
-                q.candidateAnswer?.answerType === "correct"
-                ? "Fully Answered"
-                : feedback.candidateAnswer.answerType ||
-                  q.candidateAnswer?.answerType === "partial"
-                ? "Partially Answered"
-                : feedback.candidateAnswer.answerType ||
-                  q.candidateAnswer?.answerType === "incorrect"
-                ? "Not Answered"
-                : "Not Answered"
+            backendAnswerType
+              ? mapAnswerTypeToLabel(backendAnswerType)
               : preselectedResponse?.isAnswered || "Not Answered",
           isLiked:
             feedback.interviewerFeedback?.liked ||

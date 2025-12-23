@@ -4,6 +4,7 @@
 // v1.0.4 - Venkatesh - Changed Basic Information to Round Information and added Candidate/Position details
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { Calendar, Clock, User, Briefcase, Users, Hash, KeyRound, Stamp, PictureInPicture, StampIcon, User2, CreditCard, DollarSign, FileText, CheckCircle, ChevronRight, ListChecks, AlertCircle, History, Mail, Phone, GraduationCap, Building2, MapPin, School, Circle } from 'lucide-react';
 import SidebarPopup from '../../../Components/Shared/SidebarPopup/SidebarPopup.jsx';
 import StatusBadge from '../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
@@ -24,11 +25,17 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
   const [loading, setLoading] = useState(false);
   const [transactionData, setTransactionData] = useState(null);
   const [transactionLoading, setTransactionLoading] = useState(false);
+  const [showSettlementModal, setShowSettlementModal] = useState(false);
+  const [settlementPreview, setSettlementPreview] = useState(null);
+  const [settlementResult, setSettlementResult] = useState(null);
+  const [settlementLoading, setSettlementLoading] = useState(false);
+  const [settlementError, setSettlementError] = useState(null);
 
   // Fetch transaction data only when the sidebar is opened and transaction tab is active
   useEffect(() => {
     const fetchTransactionData = async () => {
-      if (!isOpen || !interviewData?._id || !interviewData?.holdTransactionId) {
+      // Only proceed if sidebar is open and we have a valid round id
+      if (!isOpen || !interviewData?._id) {
         return;
       }
       
@@ -58,7 +65,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
     };
     
     fetchTransactionData();
-  }, [isOpen, activeTab, interviewData?._id, interviewData?.holdTransactionId, transactionData, transactionLoading]);
+  }, [isOpen, activeTab, interviewData?._id, transactionData, transactionLoading]);
 
   // Clear transaction data when sidebar closes or interview data changes
   useEffect(() => {
@@ -66,6 +73,11 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
       setTransactionData(null);
       setTransactionLoading(false);
       setActiveTab('round'); // Reset to default tab
+      setShowSettlementModal(false);
+      setSettlementPreview(null);
+      setSettlementResult(null);
+      setSettlementError(null);
+      setSettlementLoading(false);
     }
   }, [isOpen]);
 
@@ -194,32 +206,101 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
   
   if (!interviewData) return null;
 
+  const txData = transactionData?.holdTransactionData || interviewData.holdTransactionData;
+  const txId = transactionData?.holdTransactionId || interviewData.holdTransactionId;
+
+  const formatAmount = (val) =>
+    typeof val === 'number' && !Number.isNaN(val) ? val.toFixed(2) : 'N/A';
+
   const handleEdit = () => {
     navigate(`/superadmin/interviews/edit/${interviewData._id}`);
     onClose();
   };
 
+  const buildSettlementRequestBody = () => {
+    if (!txData || !txId) {
+      return { error: 'No transaction data available for settlement' };
+    }
+
+    // Get interviewer's ownerId for wallet operations (wallet is tied to ownerId, not _id)
+    const interviewerContactId =
+      interviewData.interviewers && interviewData.interviewers[0]?.ownerId;
+
+    if (!interviewerContactId) {
+      return { error: 'Interviewer information not found' };
+    }
+
+    return {
+      roundId: interviewData._id,
+      transactionId: txId,
+      interviewerContactId,
+      companyName: interviewData.position?.company || 'Company',
+      roundTitle: interviewData.roundTitle || `Round ${interviewData._id}`,
+      positionTitle: interviewData.position?.title || 'Position',
+      interviewerTenantId: interviewData.interviewers[0]?.tenantId,
+    };
+  };
+
+  // Preview settlement calculations without applying them
+  const handleSettlementPreview = async () => {
+    const payload = buildSettlementRequestBody();
+    if (!payload || payload.error) {
+      setSettlementError(payload?.error || 'Unable to prepare settlement request');
+      setShowSettlementModal(true);
+      return;
+    }
+
+    setShowSettlementModal(true);
+    setSettlementLoading(true);
+    setSettlementError(null);
+    setSettlementResult(null);
+    setSettlementPreview(null);
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/wallet/settle-interview`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            ...payload,
+            previewOnly: true,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        const result = data.data || {};
+        setSettlementPreview(result);
+        setSettlementError(null);
+      } else {
+        setSettlementError(
+          data.message || 'Failed to calculate settlement preview. Please try again.'
+        );
+      }
+    } catch (error) {
+      console.error('Settlement preview error:', error);
+      setSettlementError('Failed to calculate settlement preview. Please try again.');
+    } finally {
+      setSettlementLoading(false);
+    }
+  };
+
   // Handle settlement button click
   const handleSettlement = async () => {
-    if (!interviewData.holdTransactionData || !interviewData.holdTransactionId) {
-      alert('No transaction data available for settlement');
+    const payload = buildSettlementRequestBody();
+    if (!payload || payload.error) {
+      setSettlementError(payload?.error || 'Unable to prepare settlement request');
       return;
     }
-    
-    // Get interviewer's ownerId for wallet operations (wallet is tied to ownerId, not _id)
-    const interviewerContactId = interviewData.interviewers && interviewData.interviewers[0]?.ownerId;
-    
-    if (!interviewerContactId) {
-      alert('Interviewer information not found');
-      return;
-    }
-    
-    const confirmSettlement = window.confirm(
-      `Are you sure you want to settle ₹${interviewData.holdTransactionData.amount} to the interviewer?`
-    );
-    
-    if (!confirmSettlement) return;
-    
+
+    setSettlementLoading(true);
+    setSettlementError(null);
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/wallet/settle-interview`, {
         method: 'POST',
@@ -227,29 +308,22 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({
-          roundId: interviewData._id,
-          transactionId: interviewData.holdTransactionId,
-          interviewerContactId: interviewerContactId,
-          companyName: interviewData.position?.company || 'Company',
-          roundTitle: interviewData.roundTitle || `Round ${interviewData._id}`,
-          positionTitle: interviewData.position?.title || 'Position',
-          interviewerTenantId:interviewData.interviewers[0]?.tenantId
-        })
+        body: JSON.stringify(payload)
       });
       
       const data = await response.json();
-      
       if (response.ok && data.success) {
-        alert('Payment settled successfully!');
-        // Optionally refresh the data or close the sidebar
-        window.location.reload(); // Simple reload to refresh data
+        const result = data.data || {};
+        setSettlementResult(result);
+        setSettlementError(null);
       } else {
-        alert(`Settlement failed: ${data.message || 'Unknown error'}`);
+        setSettlementError(data.message || 'Settlement failed. Please try again.');
       }
     } catch (error) {
       console.error('Settlement error:', error);
-      alert('Failed to process settlement. Please try again.');
+      setSettlementError('Failed to process settlement. Please try again.');
+    } finally {
+      setSettlementLoading(false);
     }
   };
 
@@ -580,15 +654,25 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
       showEdit={false}
       onEdit={handleEdit}
       icon={<Calendar className="w-5 h-5" />}
-      headerAction={activeTab === 'transactions' && interviewData.holdTransactionData && interviewData.settlementStatus !== 'completed' && (interviewData.status === "Completed" || interviewData.status === "Cancelled") && (
+      headerAction={
+        activeTab === 'transactions' &&
+        (transactionData?.holdTransactionData || interviewData.holdTransactionData) &&
+        interviewData.settlementStatus !== 'completed' &&
+        (interviewData.status === "Completed" || interviewData.status === "Cancelled") && (
         <button
-          onClick={handleSettlement}
+          onClick={() => {
+            setSettlementPreview(null);
+            setSettlementResult(null);
+            setSettlementError(null);
+            handleSettlementPreview();
+          }}
           className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
         >
           <CheckCircle className="w-4 h-4" />
           Settlement
         </button>
-      )}
+        )
+      }
     >
       <div className="bg-gray-50 min-h-full">
         {/* Tab Navigation */}
@@ -614,7 +698,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                 }`}
               >
                 Transactions
-                {interviewData.holdTransactionData && (
+                {(transactionData?.holdTransactionData || interviewData.holdTransactionData) && (
                   <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     1
                   </span>
@@ -946,11 +1030,6 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                   value={interviewData.holdTransactionId || 'N/A'}
                   icon={<Hash className="w-4 h-4" />}
                 />
-                <DetailItem 
-                  label="Settlement Transaction ID" 
-                  value={interviewData.settlementTransactionId || 'N/A'}
-                  icon={<Hash className="w-4 h-4" />}
-                />
               </div>
             </DetailSection>
           )}
@@ -1131,6 +1210,223 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
         </div>
       </div>
     </SidebarPopup>
+
+    {showSettlementModal &&
+      createPortal(
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <h3 className="text-sm font-semibold text-gray-900">
+                Settle Interview Payment
+              </h3>
+            </div>
+            <button
+              onClick={() => {
+                setShowSettlementModal(false);
+                setSettlementResult(null);
+                setSettlementError(null);
+              }}
+              className="text-gray-400 hover:text-gray-600 text-sm"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="px-5 py-4">
+            {settlementError && (
+              <div className="mb-3 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
+                {settlementError}
+              </div>
+            )}
+
+            {settlementLoading && (
+              <p className="text-sm text-gray-600">Calculating settlement, please wait...</p>
+            )}
+
+            {/* Preview state: show detailed calculation before actual settlement */}
+            {!settlementLoading && !settlementResult && (
+              <>
+                <p className="text-sm text-gray-600 mb-3">
+                  Preview of settlement calculation as per policy (including service charge and GST). Confirm to apply this settlement.
+                </p>
+                {txData && (
+                  <div className="bg-gray-50 border border-gray-100 rounded-md px-3 py-2 text-sm text-gray-700 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Held amount</span>
+                      <span className="font-medium">₹{formatAmount(txData.amount)}</span>
+                    </div>
+
+                    {settlementPreview && (
+                      <>
+                        {typeof settlementPreview.grossSettlementAmount === 'number' && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Gross payout (before charges)</span>
+                            <span className="font-medium">
+                              ₹{formatAmount(settlementPreview.grossSettlementAmount)}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Service charge (10% of gross)</span>
+                          <span className="font-medium">
+                            ₹{formatAmount(settlementPreview.serviceCharge)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">GST on service charge (18%)</span>
+                          <span className="font-medium">
+                            ₹{formatAmount(settlementPreview.serviceChargeGst)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Net paid to interviewer</span>
+                          <span className="font-medium">
+                            ₹{formatAmount(settlementPreview.settlementAmount)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Refund to organization wallet</span>
+                          <span className="font-medium">
+                            ₹{formatAmount(settlementPreview.refundAmount)}
+                          </span>
+                        </div>
+
+                        {typeof settlementPreview.payPercent === 'number' && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Payout percentage</span>
+                            <span className="font-medium">{settlementPreview.payPercent}%</span>
+                          </div>
+                        )}
+
+                        {settlementPreview.settlementScenario && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Scenario</span>
+                            <span className="font-medium capitalize">
+                              {settlementPreview.settlementScenario}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {!settlementPreview && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Settlement preview will appear here once calculated.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {!settlementLoading && settlementResult && (
+              <>
+                <p className="text-sm text-gray-600 mb-3">
+                  Settlement completed as per policy. Here is the breakdown:
+                </p>
+                <div className="bg-gray-50 border border-gray-100 rounded-md px-3 py-2 text-sm text-gray-700 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Paid to interviewer</span>
+                    <span className="font-medium">
+                      ₹{formatAmount(settlementResult.settlementAmount)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Refund to organization wallet</span>
+                    <span className="font-medium">
+                      ₹{formatAmount(settlementResult.refundAmount)}
+                    </span>
+                  </div>
+                  {typeof settlementResult.payPercent === "number" && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Payout percentage</span>
+                      <span className="font-medium">{settlementResult.payPercent}%</span>
+                    </div>
+                  )}
+                  {typeof settlementResult.serviceCharge === "number" &&
+                    settlementResult.serviceCharge > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Service charge (10% of payout)</span>
+                        <span className="font-medium">
+                          ₹{formatAmount(settlementResult.serviceCharge)}
+                        </span>
+                      </div>
+                    )}
+                  {settlementResult.settlementScenario && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Scenario</span>
+                      <span className="font-medium capitalize">
+                        {settlementResult.settlementScenario}
+                      </span>
+                    </div>
+                  )}
+                  {typeof settlementResult.payPercent === "number" &&
+                    settlementResult.payPercent === 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Note: As per policy this resulted in a full refund (no payout to interviewer).
+                      </p>
+                    )}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="px-5 py-3 border-t border-gray-100 flex justify-end gap-2">
+            {!settlementLoading && !settlementResult && (
+              <>
+                <button
+                  onClick={() => {
+                    setShowSettlementModal(false);
+                    setSettlementResult(null);
+                    setSettlementError(null);
+                  }}
+                  className="px-3 py-1.5 text-xs rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSettlement}
+                  className="px-3 py-1.5 text-xs rounded-md bg-green-600 text-white hover:bg-green-700 flex items-center gap-1"
+                >
+                  <CheckCircle className="w-3 h-3" />
+                  Settle Now
+                </button>
+              </>
+            )}
+
+            {!settlementLoading && settlementResult && (
+              <>
+                <button
+                  onClick={() => {
+                    setShowSettlementModal(false);
+                    setSettlementResult(null);
+                    setSettlementError(null);
+                  }}
+                  className="px-3 py-1.5 text-xs rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    window.location.reload();
+                  }}
+                  className="px-3 py-1.5 text-xs rounded-md bg-custom-blue text-white hover:bg-custom-blue/90"
+                >
+                  Close & Refresh
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
 
     {/* Separate Candidate Details Sidebar */}
     {showCandidateSidebar && (

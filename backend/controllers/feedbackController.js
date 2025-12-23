@@ -231,10 +231,17 @@ const createFeedback = async (req, res) => {
           const src = original.source || actual.source || "custom";
           const mand = original.mandatory || actual.mandatory || "false";
 
+          // For interviewer-added questions, ownerId should align with interviewerId
+          // so that getFeedbackByRoundId (which filters by interviewerId) returns them.
+          const questionOwnerId =
+            (interviewerId && interviewerId.toString()) ||
+            (ownerId && ownerId.toString()) ||
+            "";
+
           // Avoid duplicates in draft updates
           const exists = await InterviewQuestions.findOne({
             roundId: interviewRoundId,
-            ownerId,
+            ownerId: questionOwnerId,
             questionId: normalizedQuestionId,
             addedBy: "interviewer",
           }).lean();
@@ -246,7 +253,7 @@ const createFeedback = async (req, res) => {
               order: i + 1,
               mandatory: mand,
               tenantId: tenantId || "",
-              ownerId: ownerId || "",
+              ownerId: questionOwnerId,
               questionId: normalizedQuestionId,
               source: src,
               snapshot: actual || {},
@@ -777,6 +784,11 @@ const updateFeedback = async (req, res) => {
 
     const updateData = validatedData;
 
+    // Preserve original questionFeedback from request for interviewer question processing
+    const originalQuestionFeedback = Array.isArray(req.body?.questionFeedback)
+      ? req.body.questionFeedback
+      : [];
+
     // Normalize questionFeedback.questionId on updates (stringify IDs)
     if (
       updateData.questionFeedback &&
@@ -811,14 +823,86 @@ const updateFeedback = async (req, res) => {
         "FirstName LastName Email Phone skills CurrentExperience"
       )
       .populate("interviewerId", "FirstName LastName Email Phone")
-      .populate("positionId", "title companyname")
-      .populate("interviewRoundId");
+      .populate("positionId", "title companyname");
 
     if (!updatedFeedback) {
       return res.status(404).json({
         success: false,
         message: "Feedback not found",
       });
+    }
+
+    // When updating, also ensure newly added interviewer questions are persisted
+    // in SelectedInterviewQuestion collection (mirrors createFeedback behavior)
+    if (originalQuestionFeedback && originalQuestionFeedback.length > 0) {
+      const interviewRoundId = updatedFeedback.interviewRoundId;
+      const tenantId = updatedFeedback.tenantId;
+      const ownerId = updatedFeedback.ownerId;
+      const interviewerId = updatedFeedback.interviewerId;
+
+      let resolvedInterviewId = null;
+      try {
+        if (interviewRoundId) {
+          const roundDoc = await InterviewRounds.findById(interviewRoundId).select(
+            "interviewId"
+          );
+          resolvedInterviewId = roundDoc?.interviewId || null;
+        }
+      } catch (e) {
+        console.warn(
+          "Unable to resolve interviewId during feedback update:",
+          interviewRoundId,
+          e?.message
+        );
+      }
+
+      if (interviewRoundId && ownerId) {
+        for (let i = 0; i < originalQuestionFeedback.length; i++) {
+          const original = originalQuestionFeedback[i]?.questionId;
+
+          // Only process interviewer-added questions sent as full objects
+          if (original && typeof original === "object") {
+            const actual = original.snapshot || original;
+            const normalizedQuestionId =
+              original.questionId || original._id || original.id || "";
+
+            if (!normalizedQuestionId) continue;
+
+            const src = original.source || actual.source || "custom";
+            const mand = original.mandatory || actual.mandatory || "false";
+
+            // Align SelectedInterviewQuestion.ownerId with interviewerId when available
+            const questionOwnerId =
+              (interviewerId && interviewerId.toString()) ||
+              (ownerId && ownerId.toString()) ||
+              "";
+
+            const exists = await InterviewQuestions.findOne({
+              roundId: interviewRoundId,
+              ownerId: questionOwnerId,
+              questionId: normalizedQuestionId,
+              addedBy: "interviewer",
+            }).lean();
+
+            if (!exists) {
+              const doc = new InterviewQuestions({
+                interviewId: resolvedInterviewId,
+                roundId: interviewRoundId,
+                order: i + 1,
+                mandatory: mand,
+                tenantId: tenantId || "",
+                ownerId: questionOwnerId,
+                questionId: normalizedQuestionId,
+                source: src,
+                snapshot: actual || {},
+                addedBy: "interviewer",
+              });
+
+              await doc.save();
+            }
+          }
+        }
+      }
     }
 
     // Trigger webhook for feedback status update if status changed to submitted
