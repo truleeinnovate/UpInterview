@@ -8,18 +8,20 @@ const {
 const updateInterviewRoundStatus = async (req, res) => {
   try {
     const { roundId } = req.params;
-    const {
-      status,
-      //   currentAction,
-      //   currentActionReason,
-      //   previousAction,
-      //   previousActionReason,
-      //   rejectionReason,
-      //   settlementStatus,
-      //   settlementDate,
-      //   settlementTransactionId,
-      //   holdTransactionId,
-    } = req.body;
+    // const {
+    //   status,
+    //   //   currentAction,
+    //   //   currentActionReason,
+    //   //   previousAction,
+    //   //   previousActionReason,
+    //   //   rejectionReason,
+    //   //   settlementStatus,
+    //   //   settlementDate,
+    //   //   settlementTransactionId,
+    //   //   holdTransactionId,
+    // } = req.body;
+
+    console.log(" req.body status", req.body);
 
     const { actingAsUserId, actingAsTenantId } = res.locals.auth;
 
@@ -53,7 +55,7 @@ const updateInterviewRoundStatus = async (req, res) => {
       "NoShow",
     ];
 
-    if (status && !validStatuses.includes(status)) {
+    if (req?.body?.status && !validStatuses.includes(req?.body?.status)) {
       return res.status(400).json({
         success: false,
         message: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
@@ -103,24 +105,13 @@ const updateInterviewRoundStatus = async (req, res) => {
     // Build update object
     const updateData = {};
 
-    if (status !== undefined) updateData.status = status;
-    // if (currentAction !== undefined) updateData.currentAction = currentAction;
-    // if (currentActionReason !== undefined)
-    //   updateData.currentActionReason = currentActionReason;
-    // if (previousAction !== undefined)
-    //   updateData.previousAction = previousAction;
-    // if (previousActionReason !== undefined)
-    //   updateData.previousActionReason = previousActionReason;
-    // if (rejectionReason !== undefined)
-    //   updateData.rejectionReason = rejectionReason;
-    // if (settlementStatus !== undefined)
-    //   updateData.settlementStatus = settlementStatus;
-    // if (settlementDate !== undefined)
-    //   updateData.settlementDate = settlementDate;
-    // if (settlementTransactionId !== undefined)
-    //   updateData.settlementTransactionId = settlementTransactionId;
-    // if (holdTransactionId !== undefined)
-    //   updateData.holdTransactionId = holdTransactionId;
+    if (req.body?.status !== undefined) updateData.status = req.body?.status;
+
+    if (req.body?.status === "Cancelled") {
+      updateData.currentActionReason = req.body?.cancellationReason;
+      updateData.comments = req.body?.comment || null;
+      updateData.currentAction = req.body?.status;
+    }
 
     // Update the round
     const updatedRound = await InterviewRounds.findByIdAndUpdate(
@@ -137,11 +128,18 @@ const updateInterviewRoundStatus = async (req, res) => {
         message: "Interview round not found",
       });
     }
-    // console.log("updatedRound", updatedRound);
+    console.log("updatedRound", updatedRound);
 
     // If round was cancelled, append a history entry capturing the cancellation time
-    if (status === "Cancelled" && updatedRound && updatedRound.dateTime) {
-      const scheduledAt = new Date(updatedRound.dateTime);
+    if (
+      req.body?.status === "Cancelled" &&
+      updatedRound &&
+      updatedRound.dateTime
+    ) {
+      // const scheduledAt = new Date(updatedRound.dateTime);
+      const scheduledAt = parseDateTimeString(updatedRound.dateTime);
+
+      console.log("scheduledAt ", scheduledAt);
 
       if (!isNaN(scheduledAt.getTime())) {
         await InterviewRounds.findByIdAndUpdate(
@@ -151,8 +149,11 @@ const updateInterviewRoundStatus = async (req, res) => {
               history: {
                 scheduledAt,
                 action: "Cancelled",
-                reasonCode: undefined,
-                comment: undefined,
+                reasonCode: req?.body?.cancellationReason,
+                comment:
+                  req?.body?.cancellationReason === "Other"
+                    ? req?.body?.comment
+                    : null,
                 participants: [],
                 updatedBy: actingAsUserId,
                 updatedAt: new Date(),
@@ -231,6 +232,39 @@ const updateInterviewRoundStatus = async (req, res) => {
       message: "Internal server error",
       error: error.message,
     });
+  }
+};
+
+// Helper function to parse dateTime string
+const parseDateTimeString = (dateTimeStr) => {
+  if (!dateTimeStr) return null;
+
+  try {
+    // Check the format first
+    if (dateTimeStr.includes(" - ")) {
+      // Format: '27-12-2025 06:13 PM - 07:13 PM'
+      // Extract the start date part
+      const startDateTimeStr = dateTimeStr.split(" - ")[0]; // '27-12-2025 06:13 PM'
+
+      // Parse day-month-year time with AM/PM
+      const [datePart, timePart, meridiem] = startDateTimeStr.split(" ");
+      const [day, month, year] = datePart.split("-").map(Number);
+
+      let [hours, minutes] = timePart.split(":").map(Number);
+
+      // Convert to 24-hour format
+      if (meridiem === "PM" && hours < 12) hours += 12;
+      if (meridiem === "AM" && hours === 12) hours = 0;
+
+      // Create Date object (month is 0-indexed in JavaScript)
+      return new Date(year, month - 1, day, hours, minutes);
+    } else {
+      // Try direct Date parsing for other formats
+      return new Date(dateTimeStr);
+    }
+  } catch (error) {
+    console.error("Error parsing dateTime:", error);
+    return null;
   }
 };
 
