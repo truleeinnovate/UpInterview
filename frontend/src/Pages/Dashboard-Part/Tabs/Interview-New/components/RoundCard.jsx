@@ -216,7 +216,11 @@ const RoundCard = ({
     });
   };
 
-  const handleStatusChange = async (newStatus, cancellationReason = null) => {
+  const handleStatusChange = async (
+    newStatus,
+    cancellationReason = null,
+    comment = null
+  ) => {
     // const roundData = {
     //   status: newStatus,
     //   completedDate: newStatus === "Completed",
@@ -256,7 +260,10 @@ const RoundCard = ({
       // Add cancellation reason if provided
       if (newStatus === "Cancelled" && cancellationReason) {
         payload.cancellationReason = cancellationReason;
+        payload.comment = comment || null;
       }
+
+      console.log("payload payload", payload);
 
       await updateRoundStatus(payload);
 
@@ -276,10 +283,12 @@ const RoundCard = ({
   const handleCancelWithReason = async () => {
     // Determine the final reason to send
     let finalReason = cancelReason;
+    let comment = otherReason;
 
     // If user selected "Other" and typed something, use that
     if (cancelReason === "Other" && otherReason.trim()) {
-      finalReason = otherReason;
+      // finalReason = otherReason;
+      comment = otherReason;
     }
 
     if (!finalReason.trim()) {
@@ -288,7 +297,7 @@ const RoundCard = ({
     }
 
     try {
-      await handleStatusChange("Cancelled", finalReason);
+      await handleStatusChange("Cancelled", finalReason, comment);
       setShowCancelModal(false);
       setCancelReason("");
       setOtherReason("");
@@ -855,6 +864,11 @@ const RoundCard = ({
       canResendLink: false,
       canShareLink: false,
     },
+    //  added by ranjith new status validation
+    InProgress: {
+      canEdit: false,
+      canDelete: false,
+    },
     Cancelled: {
       canEdit: false,
       canDelete: false,
@@ -925,6 +939,8 @@ const RoundCard = ({
   // Helper to get permissions for current round status
   const getRoundPermissions = (status) =>
     roundActionPermissions[status] || roundActionPermissions["Draft"];
+
+  console.log("roundActionPermissions", round.status);
 
   const permissions = getRoundPermissions(round.status);
 
