@@ -11,7 +11,8 @@ import { useMediaQuery } from "react-responsive";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
-import KanbanView from "../../Pages/SuperAdmin-Part/IntegrationLogs/Kanban.jsx";
+// import KanbanView from "../../Pages/SuperAdmin-Part/IntegrationLogs/Kanban.jsx";
+import KanbanView from "../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import {
   Eye,
   // Mail,
@@ -19,6 +20,7 @@ import {
   Pencil,
   ChevronUp,
   ChevronDown,
+  MoreVertical,
 } from "lucide-react";
 // import axios from "axios";
 // import { config } from "../../config.js";
@@ -28,6 +30,105 @@ import {
   useIntegrationLogs,
   useIntegrationLogById,
 } from "../../apiHooks/superAdmin/useIntegrationLogs";
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../utils/dateFormatter.js";
+
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 function IntegrationsPage() {
   const { superAdminPermissions } = usePermissions();
@@ -219,9 +320,6 @@ function IntegrationsPage() {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
   const normalizeMessage = (message) => {
     if (!message) return "";
     if (typeof message === "string") return message;
@@ -266,7 +364,11 @@ function IntegrationsPage() {
       header: "Status",
       render: (value, row) => (
         <div className="font-medium">
-          {row?.status ? <StatusBadge status={row?.status} /> : "N/A"}
+          {row?.status ? (
+            <StatusBadge status={capitalizeFirstLetter(row?.status)} />
+          ) : (
+            "N/A"
+          )}
         </div>
       ),
     },
@@ -275,7 +377,11 @@ function IntegrationsPage() {
       header: "Severity",
       render: (value, row) => (
         <div className="font-medium">
-          {row?.severity ? <StatusBadge status={row.severity} /> : "N/A"}
+          {row?.severity ? (
+            <StatusBadge status={capitalizeFirstLetter(row.severity)} />
+          ) : (
+            "N/A"
+          )}
         </div>
       ),
     },
@@ -290,8 +396,11 @@ function IntegrationsPage() {
         const fullMessage = value || "";
         const preview = truncateMessage(fullMessage);
         return (
-          <span className="text-sm" title={fullMessage}>
-            {preview}
+          <span
+            className="text-sm block truncate max-w-[200px] cursor-default"
+            title={fullMessage}
+          >
+            {capitalizeFirstLetter(preview)}
           </span>
         );
       },
@@ -303,7 +412,7 @@ function IntegrationsPage() {
     {
       key: "timestamp",
       header: "Timestamp",
-      render: (vale, row) => formatDate(row.timeStamp),
+      render: (vale, row) => formatDateTime(row.timeStamp),
     },
   ];
 
@@ -322,9 +431,6 @@ function IntegrationsPage() {
           },
         ]
       : []),
-    
-
-    
   ];
 
   // Kanban Columns Configuration
@@ -334,23 +440,51 @@ function IntegrationsPage() {
       header: "Severity",
       render: (value, row) => (
         <div className="font-medium">
-          {row?.severity ? <StatusBadge status={row?.severity} /> : "N/A"}
+          {row?.severity ? (
+            <StatusBadge status={capitalizeFirstLetter(row?.severity)} />
+          ) : (
+            "N/A"
+          )}
         </div>
       ),
+    },
+    {
+      key: "processName",
+      header: "Process",
+    },
+    {
+      key: "message",
+      header: "Message",
+      render: (value) => {
+        const fullMessage = value || "";
+        const preview = truncateMessage(fullMessage);
+        return (
+          <span
+            className="text-sm block truncate max-w-[160px] cursor-default"
+            title={fullMessage}
+          >
+            {capitalizeFirstLetter(preview)}
+          </span>
+        );
+      },
     },
     {
       key: "status",
       header: "Status",
       render: (value, row) => (
         <div className="font-medium">
-          {row?.status ? <StatusBadge status={row?.status} /> : "N/A"}
+          {row?.status ? (
+            <StatusBadge status={capitalizeFirstLetter(row?.status)} />
+          ) : (
+            "N/A"
+          )}
         </div>
       ),
     },
   ];
 
   // Shared Actions Configuration for Table and Kanban
-  const actions = [
+  const kanbanActions = [
     ...(superAdminPermissions?.IntegrationLogs?.View
       ? [
           {
@@ -364,14 +498,12 @@ function IntegrationsPage() {
           },
         ]
       : []),
-
-    
   ];
 
   // Render Actions for Kanban
   const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      {actions.map((action) => (
+      {kanbanActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -667,7 +799,9 @@ function IntegrationsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Logs</div>
-            <div className="text-xl font-semibold">{pagination?.totalItems ?? 0}</div>
+            <div className="text-xl font-semibold">
+              {pagination?.totalItems ?? 0}
+            </div>
           </div>
           {/* v1.0.0 <------------------------------------------------------------------------------------------ */}
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
@@ -730,17 +864,31 @@ function IntegrationsPage() {
                 ) : (
                   <div className="w-full">
                     <KanbanView
-                      data={(Array.isArray(dataToUse) ? dataToUse : []).map((integrationLog) => ({
-                        ...integrationLog,
-                        id: integrationLog._id,
-                        title: integrationLog.logId || "N/A",
-                        subtitle: formatDate(integrationLog?.timeStamp),
-                      }))}
+                      data={(Array.isArray(dataToUse) ? dataToUse : []).map(
+                        (integrationLog) => ({
+                          ...integrationLog,
+                          id: integrationLog._id,
+                          title: integrationLog.logId || "N/A",
+                          subtitle: formatDateTime(integrationLog?.timeStamp),
+                        })
+                      )}
                       integrations={integrations}
                       columns={kanbanColumns}
                       loading={isLoading}
-                      renderActions={renderKanbanActions}
+                      // renderActions={renderKanbanActions}
+                      renderActions={(item) => (
+                        <KanbanActionsMenu
+                          item={item}
+                          kanbanActions={kanbanActions}
+                        />
+                      )}
                       emptyState="No logs found."
+                      onTitleClick={(item) => {
+                        setSelectedLogId(item._id);
+                        setIsPopupOpen(true);
+                      }}
+                      kanbanTitle="Integration Log"
+                      customHeight="calc(100vh - 320px)"
                     />
                   </div>
                 )}

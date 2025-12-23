@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - fixed proper loading views
 // v1.0.1 - Ashok - adjusted table height to fit better in viewport and fixed style issues
+// v1.0.2 - Ashok - added data formatter from utils
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
@@ -34,19 +35,23 @@ import DeleteConfirmModal from "../../Pages/Dashboard-Part/Tabs/CommonCode-AllTa
 import { notify } from "../../services/toastService.js";
 import { useMasterData } from "../../apiHooks/useMasterData.js";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../utils/dateFormatter.js";
+
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
   const menuRef = useRef(null);
 
+  // 1. UPDATED FILTER: Include 'view' and 'delete' in mainActions
   const mainActions = kanbanActions.filter((a) =>
-    ["view", "edit"].includes(a.key)
+    ["view", "delete"].includes(a.key)
   );
+  
+  // 2. UPDATED FILTER: Overflow actions are everything else
   const overflowActions = kanbanActions.filter(
-    (a) => !["view", "edit"].includes(a.key)
+    (a) => !["view", "delete"].includes(a.key)
   );
 
-  //  Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -59,16 +64,17 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
 
   return (
     <div ref={menuRef} className="flex items-center gap-2 relative">
-      {/* Always visible actions */}
+      {/* Always visible actions: View and Delete */}
       {mainActions.map((action) => {
-        const baseClasses =
-          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const baseClasses = "p-1.5 rounded-lg transition-colors";
+        
+        // 3. STYLING: Logic for Blue (View) and Red (Delete)
         const bgClass =
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
-            : action.key === "edit"
-            ? "text-green-600 hover:bg-green-600/10"
-            : "text-blue-600 bg-green-600/10";
+            : action.key === "delete"
+            ? "text-red-600 hover:bg-red-50" // Red for delete
+            : "text-gray-600 hover:bg-gray-100";
 
         return (
           <button
@@ -85,7 +91,7 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
         );
       })}
 
-      {/* More button (shows dropdown) */}
+      {/* More button (shows dropdown for Edit and others) */}
       {overflowActions.length > 0 && (
         <div className="relative">
           <button
@@ -99,7 +105,6 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
             <MoreVertical className="w-4 h-4" />
           </button>
 
-          {/* Dropdown Menu */}
           {isKanbanMoreOpen && (
             <div
               className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
@@ -559,7 +564,7 @@ function TenantsPage() {
       key: "lastActivity",
       header: "Last Activity",
       render: (value, row) => (
-        <span>{row ? formatDate(row?.updatedAt) : "N/A"}</span>
+        <span>{row ? formatDateTime(row?.updatedAt) : "N/A"}</span>
       ),
     },
     {
@@ -576,7 +581,7 @@ function TenantsPage() {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
           },
         ]
@@ -673,30 +678,30 @@ function TenantsPage() {
       ),
     },
 
-    {
-      key: "organizations",
-      header: "Users",
-      render: (value, row) => {
-        return row.usersCount || 0;
-      },
-    },
+    // {
+    //   key: "organizations",
+    //   header: "Users",
+    //   render: (value, row) => {
+    //     return row.usersCount || 0;
+    //   },
+    // },
     // {
     //   key: "activeJobs",
     //   header: "Active Jobs",
     //   render: (value) => value || "0",
     // },
-    {
-      key: "activeUsersCount",
-      header: "Active Candidates",
-      render: (value, row) => {
-        return row?.activeUsersCount ? row.activeUsersCount : "0";
-      },
-    },
+    // {
+    //   key: "activeUsersCount",
+    //   header: "Active Candidates",
+    //   render: (value, row) => {
+    //     return row?.activeUsersCount ? row.activeUsersCount : "0";
+    //   },
+    // },
     {
       key: "lastActivity",
       header: "Last Activity",
       render: (value, row) => {
-        return row ? formatDate(row?.updatedAt) : "N/A";
+        return row ? formatDateTime(row?.updatedAt) : "N/A";
       },
     },
 
@@ -796,7 +801,7 @@ function TenantsPage() {
           {
             key: "view",
             label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (item, e) => {
               e.stopPropagation();
               navigate(`/tenants/${item._id}`);

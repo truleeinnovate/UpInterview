@@ -7,13 +7,15 @@ import { useMediaQuery } from "react-responsive";
 import { FilterPopup } from "../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import { motion } from "framer-motion";
 import TableView from "../../Components/Shared/Table/TableView.jsx";
-import KanbanView from "../../Pages/SuperAdmin-Part/InternalLogs/Kanban.jsx";
+// import KanbanView from "../../Pages/SuperAdmin-Part/InternalLogs/Kanban.jsx";
+import KanbanView from "../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import {
   Eye,
   // Mail,
   Pencil,
   ChevronUp,
   ChevronDown,
+  MoreVertical,
 } from "lucide-react";
 // import axios from "axios";
 // import { config } from "../../config.js";
@@ -23,6 +25,105 @@ import {
   useInternalLogs,
   useInternalLogById,
 } from "../../apiHooks/superAdmin/useInternalLogs";
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../utils/dateFormatter.js";
+
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 function InternalLogsPage() {
   const { superAdminPermissions } = usePermissions();
@@ -36,7 +137,7 @@ function InternalLogsPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
-    severity: []
+    severity: [],
   });
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const ITEMS_PER_PAGE = 10;
@@ -67,14 +168,10 @@ function InternalLogsPage() {
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     search: debouncedSearch,
-    status: selectedFilters.status.join(','),
-    severity: selectedFilters.severity.join(',')
+    status: selectedFilters.status.join(","),
+    severity: selectedFilters.severity.join(","),
   });
   const { log: selectedLog } = useInternalLogById(selectedLogId); // from apiHooks
-  // v1.0.0 <------------------------------------------------------------------------
-  console.log("2. INTERNAL LOGS AFTER RESPONSE: ", logs);
-  console.log("4. SELECTED INTERNAL LOG BY ID: ", selectedLog);
-  // v1.0.0 ------------------------------------------------------------------------>
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -112,7 +209,7 @@ function InternalLogsPage() {
   const handleClearAll = () => {
     const clearedFilters = {
       status: [],
-      severity: []
+      severity: [],
     };
     setSelectedStatus([]);
     setSelectedSeverity([]);
@@ -125,13 +222,11 @@ function InternalLogsPage() {
   const handleApplyFilters = () => {
     const filters = {
       status: selectedStatus,
-      severity: selectedSeverity
+      severity: selectedSeverity,
     };
     setSelectedFilters(filters);
     setCurrentPage(0);
-    setIsFilterActive(
-      filters.status.length > 0 || filters.severity.length > 0
-    );
+    setIsFilterActive(filters.status.length > 0 || filters.severity.length > 0);
     setFilterPopupOpen(false);
   };
 
@@ -265,9 +360,6 @@ function InternalLogsPage() {
   //   }
   // };
 
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
   const tableColumns = [
     {
       key: "logId",
@@ -318,7 +410,7 @@ function InternalLogsPage() {
     {
       key: "timestamp",
       header: "Timestamp",
-      render: (vale, row) => formatDate(row.timeStamp),
+      render: (vale, row) => formatDateTime(row.timeStamp),
     },
   ];
 
@@ -337,8 +429,6 @@ function InternalLogsPage() {
           },
         ]
       : []),
-
-   
   ];
 
   // Kanban Columns Configuration
@@ -348,9 +438,27 @@ function InternalLogsPage() {
       header: "Severity",
       render: (value, row) => (
         <div className="font-medium">
-          {<StatusBadge status={row?.severity} /> || "N/A"}
+          {<StatusBadge status={capitalizeFirstLetter(row?.severity)} /> ||
+            "N/A"}
         </div>
       ),
+    },
+    {
+      key: "processName",
+      header: "Process",
+    },
+    {
+      key: "message",
+      header: "Message",
+    },
+    {
+      key: "executionTime",
+      header: "Execution Time",
+    },
+    {
+      key: "timestamp",
+      header: "Timestamp",
+      render: (vale, row) => formatDateTime(row.timeStamp),
     },
     {
       key: "status",
@@ -362,7 +470,7 @@ function InternalLogsPage() {
   ];
 
   // Shared Actions Configuration for Table and Kanban
-  const actions = [
+  const kanbanActions = [
     ...(superAdminPermissions?.InternalLogs?.View
       ? [
           {
@@ -376,14 +484,12 @@ function InternalLogsPage() {
           },
         ]
       : []),
-
-    
   ];
 
   // Render Actions for Kanban
   const renderKanbanActions = (item) => (
     <div className="flex items-center gap-1">
-      {actions.map((action) => (
+      {kanbanActions.map((action) => (
         <button
           key={action.key}
           onClick={(e) => {
@@ -761,14 +867,26 @@ function InternalLogsPage() {
                         id: log?._id,
                         title: log?.logId ? log?.logId : "N/A",
                         subtitle: log?.timeStamp
-                          ? formatDate(log?.timeStamp)
+                          ? formatDateTime(log?.timeStamp)
                           : "N/A",
                       }))}
                       logs={logs}
                       columns={kanbanColumns}
                       loading={isLoading}
-                      renderActions={renderKanbanActions}
+                      // renderActions={renderKanbanActions}
+                      renderActions={(item) => (
+                        <KanbanActionsMenu
+                          item={item}
+                          kanbanActions={kanbanActions}
+                        />
+                      )}
                       emptyState="No logs found."
+                      onTitleClick={(item) => {
+                        setSelectedLogId(item._id);
+                        setIsPopupOpen(true);
+                      }}
+                      kanbanTitle="Internal Log"
+                      customHeight="calc(100vh - 320px)"
                     />
                   </div>
                 )}

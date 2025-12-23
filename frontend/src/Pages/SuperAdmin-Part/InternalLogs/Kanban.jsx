@@ -12,6 +12,7 @@ const KanbanView = ({
   loading = false,
   renderActions = () => null,
   emptyState = "No Data Found",
+  onTitleClick = () => {},
 }) => {
   return (
     <motion.div
@@ -47,9 +48,15 @@ const KanbanView = ({
                   <div className="flex justify-between items-start mb-4 gap-2">
                     <div className="flex items-start gap-3">
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-custom-blue truncate">
-                          {capitalizeFirstLetter(item?.title) || "N/A"}
-                        </h4>
+                        <button
+                          type="button"
+                          onClick={() => onTitleClick(item)}
+                          className="w-full text-left focus:outline-none"
+                        >
+                          <h4 className="text-sm font-bold text-custom-blue truncate">
+                            {capitalizeFirstLetter(item?.title) || "N/A"}
+                          </h4>
+                        </button>
                         <p className="text-sm text-gray-600 truncate">
                           {item?.subtitle || "N/A"}
                         </p>

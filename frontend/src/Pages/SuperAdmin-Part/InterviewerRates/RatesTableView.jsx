@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock";
 import { notify } from "../../../services/toastService";
 // v1.0.1 ------------------------------------------------------------>
+import { formatDateTime } from "../../../utils/dateFormatter.js";
 
 function RatesTableView({ filterCategory, onEdit, onView }) {
   // v1.0.0 <--------------------------------------------------------
@@ -235,10 +236,6 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
     return `${symbol}${amount.toLocaleString()}`;
   };
 
-  console.log(
-    "FILTERED RATE CARDS ===============================> ",
-    filteredRateCards
-  );
 
   // const getRateRangeDisplay = (levels, currency) => {
   //   const juniorRate = levels.find((l) => l.level === "Junior");
@@ -387,7 +384,7 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
     {
       field: "createdAt",
       header: "Created",
-      render: (row) => formatDate(row?.createdAt),
+      render: (row) => formatDateTime(row?.createdAt),
     },
     {
       field: "actions",

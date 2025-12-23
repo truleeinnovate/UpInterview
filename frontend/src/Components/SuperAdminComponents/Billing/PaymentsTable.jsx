@@ -37,6 +37,8 @@ import {
 // v1.0.0 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../apiHooks/scrollHook/useScrollLock.js";
 // v1.0.0 -------------------------------------------------------------------------
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../../utils/dateFormatter.js";
 
 function PaymentsTable({ organizationId, viewMode }) {
   const [view, setView] = useState("table");
@@ -61,14 +63,15 @@ function PaymentsTable({ organizationId, viewMode }) {
   const [selectedStatus, setSelectedStatus] = useState([]);
 
   const rowsPerPage = 10;
-  const toApiPaymentStatus = (arr) => arr.map((s) => (s === "success" ? "captured" : s)).join(",");
+  const toApiPaymentStatus = (arr) =>
+    arr.map((s) => (s === "success" ? "captured" : s)).join(",");
   const { payments, pagination, stats, isLoading } = usePayments({
     page: currentPage,
     limit: rowsPerPage,
     search: searchQuery,
     status: toApiPaymentStatus(selectedStatus),
     tenantId: organizationId || "",
-    organizationId
+    organizationId,
   }); // from apiHooks
   const { payment: selectedPayment } = usePaymentById(selectedPaymentId); // from apiHooks
 
@@ -81,7 +84,7 @@ function PaymentsTable({ organizationId, viewMode }) {
   };
 
   const [isCurrentStatusOpen, setIsCurrentStatusOpen] = useState(false);
-  
+
   const [selectedCurrentStatus, setCurrentStatus] = useState("active");
 
   // Reset filters when popup opens
@@ -200,8 +203,6 @@ function PaymentsTable({ organizationId, viewMode }) {
     }
   };
 
-  
-
   const totalPages = pagination?.totalPages || 0;
   const nextPage = () => {
     if (pagination?.hasNext) {
@@ -213,8 +214,6 @@ function PaymentsTable({ organizationId, viewMode }) {
       setCurrentPage((prevPage) => prevPage - 1);
     }
   };
-
-  
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -246,9 +245,6 @@ function PaymentsTable({ organizationId, viewMode }) {
   //       return "neutral";
   //   }
   // };
-
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
 
   const tableColumns = [
     {
@@ -284,7 +280,9 @@ function PaymentsTable({ organizationId, viewMode }) {
       key: "paymentMethod",
       header: "Payment Method",
       render: (value, row) => (
-        <div className="capitalize">{row?.paymentMethod?.replace("-", " ")}</div>
+        <div className="capitalize">
+          {row?.paymentMethod?.replace("-", " ")}
+        </div>
       ),
     },
     {
@@ -297,12 +295,12 @@ function PaymentsTable({ organizationId, viewMode }) {
     {
       key: "transactionDate",
       header: "Transaction Date",
-      render: (value, row) => formatDate(row.transactionDate),
+      render: (value, row) => formatDateTime(row.transactionDate),
     },
     {
       key: "paidAt",
       header: "Paid At",
-      render: (value, row) => (row.paidAt ? formatDate(row.paidAt) : "-"),
+      render: (value, row) => (row.paidAt ? formatDateTime(row.paidAt) : "-"),
     },
   ];
 
@@ -317,7 +315,6 @@ function PaymentsTable({ organizationId, viewMode }) {
         setIsPopupOpen(true);
       },
     },
-    
   ];
 
   // Kanban Columns Configuration
@@ -332,7 +329,17 @@ function PaymentsTable({ organizationId, viewMode }) {
     {
       key: "paymentMethod",
       header: "Payment Method",
-      render: (value) => <div>{value || "N/A"}</div>,
+      render: (value) => <div>{capitalizeFirstLetter(value) || "N/A"}</div>,
+    },
+    {
+      key: "transactionDate",
+      header: "Transaction Date",
+      render: (value, row) => formatDateTime(row.transactionDate),
+    },
+    {
+      key: "paidAt",
+      header: "Paid At",
+      render: (value, row) => (row.paidAt ? formatDateTime(row.paidAt) : "-"),
     },
     {
       key: "status",
@@ -352,7 +359,6 @@ function PaymentsTable({ organizationId, viewMode }) {
         setIsPopupOpen(true);
       },
     },
-    
   ];
 
   // Render Actions for Kanban
@@ -679,19 +685,30 @@ function PaymentsTable({ organizationId, viewMode }) {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4 px-4 mb-4">
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Payments</div>
-            <div className="text-xl font-semibold">{stats?.totalPayments ?? payments?.length ?? 0}</div>
+            <div className="text-xl font-semibold">
+              {stats?.totalPayments ?? payments?.length ?? 0}
+            </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Successful</div>
-            <div className="text-xl font-semibold text-success-600">{stats?.successfulPayments ?? (payments?.filter((p) => p.status === "captured").length || 0)}</div>
+            <div className="text-xl font-semibold text-success-600">
+              {stats?.successfulPayments ??
+                (payments?.filter((p) => p.status === "captured").length || 0)}
+            </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Pending</div>
-            <div className="text-xl font-semibold text-warning-600">{stats?.pendingPayments ?? (payments?.filter((p) => p.status === "pending").length || 0)}</div>
+            <div className="text-xl font-semibold text-warning-600">
+              {stats?.pendingPayments ??
+                (payments?.filter((p) => p.status === "pending").length || 0)}
+            </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Failed</div>
-            <div className="text-xl font-semibold text-error-600">{stats?.failedPayments ?? (payments?.filter((p) => p.status === "failed").length || 0)}</div>
+            <div className="text-xl font-semibold text-error-600">
+              {stats?.failedPayments ??
+                (payments?.filter((p) => p.status === "failed").length || 0)}
+            </div>
           </div>
         </div>
 
@@ -745,6 +762,10 @@ function PaymentsTable({ organizationId, viewMode }) {
                       renderActions={renderKanbanActions}
                       emptyState="No payments found."
                       viewMode={viewMode}
+                      onTitleClick={(item) => {
+                        setSelectedPaymentId(item?._id);
+                        setIsPopupOpen(true);
+                      }}
                     />
                   </div>
                 )}

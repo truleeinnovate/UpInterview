@@ -14,6 +14,8 @@ import {
   MessageSquare,
 } from "lucide-react";
 import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge";
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../../utils/dateFormatter.js";
 
 const ContactUsKanban = ({
   contactMessages = [],
@@ -27,18 +29,19 @@ const ContactUsKanban = ({
 }) => {
   const isServerPaged = itemsPerPage <= 0;
   const startIndex = isServerPaged ? 0 : currentPage * itemsPerPage;
-  const endIndex = isServerPaged ? contactMessages.length : startIndex + itemsPerPage;
+  const endIndex = isServerPaged
+    ? contactMessages.length
+    : startIndex + itemsPerPage;
   const paginatedMessages = isServerPaged
     ? contactMessages
     : contactMessages.slice(startIndex, endIndex);
-
 
   const formatDate = (date) => {
     const d = new Date(date);
     const now = new Date();
     const diffTime = Math.abs(now - d);
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
       const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
       if (diffHours === 0) {
@@ -56,21 +59,25 @@ const ContactUsKanban = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-6">
       {/* Page indicator */}
-      {(
-        (isServerPaged && totalItems > paginatedMessages.length) ||
-        (!isServerPaged && contactMessages.length > itemsPerPage)
-      ) && (
+      {((isServerPaged && totalItems > paginatedMessages.length) ||
+        (!isServerPaged && contactMessages.length > itemsPerPage)) && (
         <div className="text-sm text-gray-600 text-center">
           {isServerPaged
-            ? `Page ${currentPage + 1} - Showing ${paginatedMessages.length} of ${totalItems}`
-            : `Page ${currentPage + 1} - Showing ${startIndex + 1} to ${Math.min(endIndex, contactMessages.length)} of ${contactMessages.length}`}
+            ? `Page ${currentPage + 1} - Showing ${
+                paginatedMessages.length
+              } of ${totalItems}`
+            : `Page ${currentPage + 1} - Showing ${
+                startIndex + 1
+              } to ${Math.min(endIndex, contactMessages.length)} of ${
+                contactMessages.length
+              }`}
         </div>
       )}
 
       {/* Kanban grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
         {paginatedMessages.length > 0 ? (
           paginatedMessages.map((message, index) => (
             <motion.div
@@ -84,11 +91,15 @@ const ContactUsKanban = ({
               <div className="space-y-2 mb-3">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-gray-400" />
-                  <span className="font-medium text-gray-900">{message.name || 'N/A'}</span>
+                  <span className="font-medium text-gray-900">
+                    {capitalizeFirstLetter(message.name) || "N/A"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-600 truncate">{message.email || 'N/A'}</span>
+                  <span className="text-sm text-gray-600 truncate">
+                    {message.email || "N/A"}
+                  </span>
                 </div>
               </div>
 
@@ -97,7 +108,7 @@ const ContactUsKanban = ({
                 <div className="flex items-start gap-2">
                   <MessageSquare className="h-4 w-4 text-gray-400 mt-0.5" />
                   <p className="text-sm text-gray-600 line-clamp-3">
-                    {message.message || 'No message'}
+                    {capitalizeFirstLetter(message.message) || "No message"}
                   </p>
                 </div>
               </div>
@@ -106,9 +117,9 @@ const ContactUsKanban = ({
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <div className="flex items-center gap-1 text-xs text-gray-500">
                   <Calendar className="h-3 w-3" />
-                  <span>{formatDate(message.createdAt)}</span>
+                  <span>{formatDateTime(message.createdAt)}</span>
                 </div>
-                
+
                 {/* Action buttons */}
                 <div className="flex gap-1">
                   {permissions?.View !== false && (
@@ -117,7 +128,7 @@ const ContactUsKanban = ({
                       className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                       title="View"
                     >
-                      <Eye className="h-4 w-4 text-gray-600" />
+                      <Eye className="h-4 w-4 text-custom-blue" />
                     </button>
                   )}
                   {/* {permissions?.Edit && (
