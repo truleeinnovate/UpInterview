@@ -204,7 +204,10 @@ const FeedbackFormModel = lazy(() =>
 
 // Code Editor
 const CodeEditor = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/CodeEditor/CodeEditor.jsx")
+  import("./Pages/Dashboard-Part/Tabs/CodeEditor/Editor.jsx")
+);
+const WhiteBoard = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/CodeEditor/Whiteboard.jsx")
 );
 
 const MyProfile = lazy(() =>
@@ -495,9 +498,13 @@ const ContactUsViewPage = lazy(() =>
 // v1.0.8 ------------------------------------------------------------------------------->
 // v1.0.9 ------------------------------------------------------------------------------->
 
-const VideoSDKDashboard = lazy(() => import('../src/VideoSDK/Dashboard.jsx'));
-const VideoSDKJoinMeeting = lazy(() => import('../src/VideoSDK/JoinMeeting.jsx'));
-const VideoSDKMeetingRoom = lazy(() => import('../src/VideoSDK/MeetingRoom.jsx'));
+const VideoSDKDashboard = lazy(() => import("../src/VideoSDK/Dashboard.jsx"));
+const VideoSDKJoinMeeting = lazy(() =>
+  import("../src/VideoSDK/JoinMeeting.jsx")
+);
+const VideoSDKMeetingRoom = lazy(() =>
+  import("../src/VideoSDK/MeetingRoom.jsx")
+);
 
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
@@ -553,6 +560,7 @@ const AuthRoutes = () => (
       }
     />
     <Route path="/code-editor" element={<CodeEditor />} />
+    <Route path="/white-board" element={<WhiteBoard />} />
   </Routes>
 );
 
@@ -1496,6 +1504,8 @@ const App = () => {
       "/callback",
       "/oauth2callback",
       "/join-meeting",
+      "/code-editor",
+      "/white-board",
     ].some(
       (path) =>
         location.pathname === path ||
