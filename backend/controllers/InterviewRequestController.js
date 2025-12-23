@@ -578,10 +578,18 @@ exports.acceptInterviewRequest = async (req, res) => {
         return res.status(404).json({ message: "Interview round not found" });
       }
     }
+    //schedule only update for 1 st time from second time rescheduled will update
+    // Decide schedule action based on history
+    const hasScheduledOnce = round.history?.some(
+      h => h.action === "Scheduled"
+    );
+
+    const scheduleAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
+
 
     if (!round.interviewers.includes(contactId)) {
       round.interviewers.push(contactId);
-      round.status = "Scheduled";
+      round.status = scheduleAction;
       await round.save();
     } else {
     }
