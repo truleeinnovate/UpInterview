@@ -469,13 +469,8 @@ const deletePosition = async (req, res) => {
 };
 
 const getPositionById = async (req, res) => {
-  
   try {
     const { id } = req.params; // Position ID from URL params
-    const {
-      actingAsUserId,
-      actingAsTenantId,
-    } = res.locals.auth;
 
     if (!id) {
       return res.status(400).json({
@@ -484,12 +479,13 @@ const getPositionById = async (req, res) => {
       });
     }
 
-    if (!actingAsUserId || !actingAsTenantId) {
-      return res.status(400).json({ message: "OwnerId or TenantId ID is required" });
-    }
+    const auth = res.locals.auth || {};
+    const { actingAsTenantId } = auth;
 
-    const query = { _id: id };
-
+    // Base query by ID; if we have a tenant scope from auth, enforce it
+    const query = actingAsTenantId
+      ? { _id: id, tenantId: actingAsTenantId }
+      : { _id: id };
 
     const position = await Position.findOne(query)
       .populate({

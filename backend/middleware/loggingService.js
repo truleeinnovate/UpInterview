@@ -131,7 +131,7 @@ exports.internalLoggingMiddleware = async (req, res, next) => {
                 requestMethod: req.method,
                 responseStatusCode: res.statusCode.toString(),
                 responseError: res.statusCode >= 400
-                    ? { message: body?.message || 'Error occurred', stack: body?.stack || null }
+                    ? JSON.stringify({ message: body?.message || 'Error occurred', stack: body?.stack || null })
                     : null, // Error details for failures
                 responseMessage: body?.message || null,
             };
