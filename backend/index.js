@@ -1936,7 +1936,7 @@ app.post("/create-meeting/", (req, res) => {
 
   fetch(url, options)
     .then((response) => response.json())
-    .then((result) => res.json(result))roomId
+    .then((result) => res.json(result))
     .catch((error) => console.error("error", error));
 });
 
@@ -1954,7 +1954,7 @@ app.post("/validate-meeting/:meetingId", (req, res) => {
 
   fetch(url, options)
     .then((response) => response.json())
-    .then((result) => res.json(result))roomId
+    .then((result) => res.json(result))
     .catch((error) => console.error("error", error));
 });
 
