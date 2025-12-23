@@ -2,6 +2,22 @@
 const mongoose = require("mongoose");
 const Usage = require("../models/Usage");
 
+async function findLatestUsageForTenant(tenantId) {
+  const allUsages = await Usage.find({ tenantId });
+  if (!allUsages || allUsages.length === 0) {
+    return null;
+  }
+
+  let latest = allUsages[0];
+  for (let i = 1; i < allUsages.length; i++) {
+    if (allUsages[i].toDate > latest.toDate) {
+      latest = allUsages[i];
+    }
+  }
+
+  return latest;
+}
+
 /**
  * Updates usage count for internal interviews
  * @param {string} tenantId - Tenant ID
@@ -33,7 +49,7 @@ async function updateInternalInterviewUsage(
 
     // If no current period, find the latest one
     if (!usage) {
-      usage = await Usage.findOne({ tenantId }).sort({ toDate: -1 });
+      usage = await findLatestUsageForTenant(tenantId);
     }
 
     if (!usage) {
@@ -108,7 +124,7 @@ async function checkInternalInterviewUsageLimit(tenantId, ownerId) {
 
     // If no current period, find the latest one
     if (!usage) {
-      usage = await Usage.findOne({ tenantId }).sort({ toDate: -1 });
+      usage = await findLatestUsageForTenant(tenantId);
     }
 
     if (!usage) {
@@ -273,7 +289,7 @@ async function getInternalInterviewUsageStats(tenantId, ownerId) {
 
     // If no current period, find the latest one
     if (!usage) {
-      usage = await Usage.findOne({ tenantId }).sort({ toDate: -1 });
+      usage = await findLatestUsageForTenant(tenantId);
     }
 
     if (!usage) {
@@ -373,7 +389,7 @@ async function recalculateInterviewUsage(tenantId) {
 
     // If no current period, find the latest one
     if (!usage) {
-      usage = await Usage.findOne({ tenantId }).sort({ toDate: -1 });
+      usage = await findLatestUsageForTenant(tenantId);
     }
 
     if (!usage) {

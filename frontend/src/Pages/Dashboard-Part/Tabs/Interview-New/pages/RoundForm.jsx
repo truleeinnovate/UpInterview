@@ -52,6 +52,9 @@ import { ROUND_TITLES } from "../../CommonCode-AllTabs/roundTitlesConfig.js";
 // import InternalInterviewUsageDisplay from "../../../../../Components/InternalInterviewUsageDisplay.jsx";
 import { useVideoSettingsQuery } from "../../../../../apiHooks/VideoDetail.js";
 import { useGroupsQuery } from "../../../../../apiHooks/useInterviewerGroups.js";
+const {
+  calculateExpiryDate,
+} = require("../../../../../utils/calculateExpiryDateForInterviewRequests.js");
 
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
@@ -929,7 +932,28 @@ const RoundFormInterviews = () => {
         setSequence(maxSequence + 1);
       }
     }
-  }, [rounds, roundId, isEditing, editingAssessment, groups]);
+  }, [
+    rounds,
+    roundId,
+    assessmentTemplate,
+    isEditing,
+    duration,
+    editingAssessment,
+    groups,
+    externalInterviewers,
+    instructions,
+    internalInterviewers,
+    interviewMode,
+    interviewQuestionsList,
+    interviewType,
+    interviewerGroupId,
+    interviewerGroupName,
+    interviewerViewType,
+    roundTitle,
+    selectedInterviewType,
+    sequence,
+    status,
+  ]);
 
   // Add this useEffect hook after your existing useEffect hooks
   useEffect(() => {
@@ -1225,12 +1249,14 @@ const RoundFormInterviews = () => {
 
     setIsSubmitting(true);
 
+    const successMessages = []; // To collect and show success messages sequentially
+
     try {
-      // Clean interviewers data to remove undefined fields
-      const cleanInterviewer = (interviewer) => {
-        const { availability, ...rest } = interviewer;
-        return rest;
-      };
+      // Clean interviewers data to remove undefined fields (commented as per original)
+      // const cleanInterviewer = (interviewer) => {
+      //   const { availability, ...rest } = interviewer;
+      //   return rest;
+      // };
       // const cleanedInterviewers = selectedInterviewersData.map(cleanInterviewer);
 
       // Format interviewers data based on view type
@@ -1256,6 +1282,9 @@ const RoundFormInterviews = () => {
       } else if (isEditing) {
         updatedRescheduleCount = roundEditData?.rescheduleCount || 0;
       }
+
+      const interviewDateTime = new Date(combinedDateTime);
+      const expiryDateTime = calculateExpiryDate(interviewDateTime);
 
       const roundData = {
         roundTitle: roundTitle === "Other" ? customRoundTitle : roundTitle,
@@ -1289,6 +1318,9 @@ const RoundFormInterviews = () => {
         ...(selectedInterviewType !== "external" && {
           interviewers: formattedInterviewers || [],
         }),
+        // ✅ ADD THESE TWO LINES (VERY IMPORTANT) - KEPT EXACTLY AS REQUESTED
+        selectedInterviewers, // ← backend uses this to create requests
+        expiryDateTime, // ← backend uses frontend expiry
       };
 
       const validationErrors = validateInterviewRoundData(roundData);
@@ -1350,7 +1382,6 @@ const RoundFormInterviews = () => {
       }
 
       // Use saveInterviewRound mutation from useInterviews hook
-
       let response;
       if (isEditing) {
         response = await updateInterviewRound(payload);
@@ -1359,8 +1390,9 @@ const RoundFormInterviews = () => {
       }
 
       // ✅ Collect success messages instead of showing immediately
-      const successMessages = [];
       successMessages.push("Interview round created successfully!");
+
+      const targetRoundId = response?.savedRound?._id || roundId;
 
       if (payload.round.roundTitle === "Assessment") {
         // Calculate link expiry days
@@ -1394,7 +1426,6 @@ const RoundFormInterviews = () => {
             scheduleAssessmentId: result.data?.scheduledAssessmentId,
             // meetingId: data?.start_url || meetingLink,
           };
-          const targetRoundId = response?.savedRound?._id || roundId;
           const updatePayload = {
             interviewId,
             roundId: targetRoundId,
@@ -1412,38 +1443,73 @@ const RoundFormInterviews = () => {
           // toast.success('Assessment shared successfully!');
         }
       }
+
       if (payload.round.roundTitle !== "Assessment") {
         //  out sourced email sent
         if (payload?.round?.interviewMode !== "Face to Face") {
-          // Handle outsource request if interviewers are selected
-          if (selectedInterviewers && selectedInterviewers.length > 0) {
-            const isInternal = selectedInterviewType === "Internal";
+          //   // Handle outsource request if interviewers are selected
+          //   if (selectedInterviewers && selectedInterviewers.length > 0) {
+          //     const isInternal = selectedInterviewType === "Internal";
 
-            for (const interviewer of selectedInterviewers) {
-              const outsourceRequestData = {
-                tenantId: orgId,
-                ownerId: userId,
-                scheduledInterviewId: interviewId,
-                interviewerType: selectedInterviewType,
-                interviewerId: interviewer.contact?._id || interviewer._id,
-                status: isInternal ? "accepted" : "RequestSent",
-                dateTime: combinedDateTime,
-                duration,
-                candidateId: candidate?._id,
-                positionId: position?._id,
-                roundId: response.savedRound._id,
-                isMockInterview: false,
-                requestMessage: isInternal
-                  ? "Internal interview request"
-                  : "Outsource interview request",
-                expiryDateTime: new Date(
-                  Date.now() + 24 * 60 * 60 * 1000
-                ).toISOString(),
-              };
+          //     for (const interviewer of selectedInterviewers) {
 
-              await axios.post(
-                `${config.REACT_APP_API_URL}/interviewrequest`,
-                outsourceRequestData,
+          //       const interviewDateTime = new Date(combinedDateTime);
+          //       const expiryDateTime = calculateExpiryDate(interviewDateTime);
+          //       const outsourceRequestData = {
+          //         tenantId: orgId,
+          //         ownerId: userId,
+          //         scheduledInterviewId: interviewId,
+          //         interviewerType: selectedInterviewType,
+          //         interviewerId: interviewer.contact?._id || interviewer._id,
+          //         // status: isInternal ? "accepted" : "inprogress",
+          //         dateTime: combinedDateTime,
+          //         duration,
+          //         candidateId: candidate?._id,
+          //         positionId: position?._id,
+          //         roundId: response.savedRound._id,
+          //         isMockInterview: false,
+          //         requestMessage: isInternal
+          //           ? "Internal interview request"
+          //           : "Outsource interview request",
+          //         expiryDateTime
+          //       };
+
+          //       await axios.post(
+          //         `${config.REACT_APP_API_URL}/interviewrequest`,
+          //         outsourceRequestData,
+          //         {
+          //           headers: {
+          //             "Content-Type": "application/json",
+          //             Authorization: `Bearer ${Cookies.get("authToken")}`,
+          //           },
+          //         }
+          //       );
+          //     }
+
+          //     // Send outsource interview request emails if this is an outsource round
+          if (
+            selectedInterviewType !== "Internal" &&
+            selectedInterviewers &&
+            selectedInterviewers.length > 0
+          ) {
+            try {
+              const interviewerIds = selectedInterviewers.map(
+                (interviewer) => interviewer.contact?._id || interviewer._id
+              );
+
+              const emailResponse = await axios.post(
+                `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
+                {
+                  interviewId: interviewId,
+                  roundId: response.savedRound._id || targetRoundId,
+                  interviewerIds: interviewerIds,
+                  candidateId: candidate?._id,
+                  positionId: position?._id,
+                  dateTime: combinedDateTime,
+                  type: "interview",
+                  // duration: duration,
+                  // roundTitle: roundTitle,
+                },
                 {
                   headers: {
                     "Content-Type": "application/json",
@@ -1451,61 +1517,25 @@ const RoundFormInterviews = () => {
                   },
                 }
               );
-            }
 
-            // Send outsource interview request emails if this is an outsource round
-            if (
-              !isInternal &&
-              selectedInterviewers &&
-              selectedInterviewers.length > 0
-            ) {
-              try {
-                const interviewerIds = selectedInterviewers.map(
-                  (interviewer) => interviewer.contact?._id || interviewer._id
-                );
-
-                const emailResponse = await axios.post(
-                  `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
-                  {
-                    interviewId: interviewId,
-                    roundId: response.savedRound._id,
-                    interviewerIds: interviewerIds,
-                    candidateId: candidate?._id,
-                    positionId: position?._id,
-                    dateTime: combinedDateTime,
-                    type: "interview",
-                    // duration: duration,
-                    // roundTitle: roundTitle,
-                  },
-                  {
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${Cookies.get("authToken")}`,
-                    },
-                  }
-                );
-
-                if (emailResponse.data.success) {
-                  // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
-                  if (emailResponse.data.data.failedEmails > 0) {
-                    notify.warning(
-                      `${emailResponse.data.data.failedEmails} emails failed to send`
-                    );
-                  }
-                } else {
-                  notify.error(
-                    "Failed to send outsource interview request emails"
+              if (emailResponse.data.success) {
+                // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
+                if (emailResponse.data.data.failedEmails > 0) {
+                  notify.warning(
+                    `${emailResponse.data.data.failedEmails} emails failed to send`
                   );
                 }
-              } catch (emailError) {
-                console.error(
-                  "Error sending outsource interview request emails:",
-                  emailError
-                );
+              } else {
                 notify.error(
                   "Failed to send outsource interview request emails"
                 );
               }
+            } catch (emailError) {
+              console.error(
+                "Error sending outsource interview request emails:",
+                emailError
+              );
+              notify.error("Failed to send outsource interview request emails");
             }
           }
         }
@@ -1530,6 +1560,8 @@ const RoundFormInterviews = () => {
             Array.isArray(selectedInterviewers) &&
             selectedInterviewers.length > 0;
 
+          let meetingLink = null;
+
           try {
             // v1.0.3 <-----------------------------------------------------------
             setMeetingCreationProgress("Creating links...");
@@ -1539,13 +1571,12 @@ const RoundFormInterviews = () => {
               "../../../../../utils/meetingPlatforms.js"
             );
 
-            let meetingLink;
             if (shouldGenerateMeeting) {
               setIsMeetingCreationLoading(true);
               // ========================================
               // Google Meet creation
               // ========================================
-              if (selectedMeetingPlatform === "googlemeet") {
+              if (selectedMeetingPlatform === "google-meet") {
                 meetingLink = await createMeeting(
                   "googlemeet",
                   {
@@ -1595,7 +1626,8 @@ const RoundFormInterviews = () => {
                   }
                 }
 
-                const formattedStartTime = formatStartTimeToUTC(startTime);
+                const formattedStartTime =
+                  formatStartTimeToUTC(combinedDateTime);
                 if (!formattedStartTime)
                   throw new Error("Invalid start time format");
 
@@ -1625,42 +1657,32 @@ const RoundFormInterviews = () => {
                 );
               }
 
-              const data = await meetingLink;
+              // Fixed: was using undefined 'data'
+              if (meetingLink) {
+                const updatedRoundData = {
+                  ...roundData,
+                  meetingId: meetingLink?.start_url
+                    ? meetingLink?.start_url
+                    : meetingLink,
+                  meetPlatform: selectedMeetingPlatform,
+                };
+                const updatePayload = {
+                  interviewId,
+                  roundId: targetRoundId,
+                  round: updatedRoundData,
+                  ...(isEditing ? { questions: interviewQuestionsList } : {}),
+                };
+
+                // 🔹 Call PATCH mutation instead of POST
+                await updateInterviewRound(updatePayload);
+              }
             }
 
-            // Persist meeting link on the round (avoid reassigning consts)
-            if (data) {
-              const updatedRoundData = {
-                ...roundData,
-                meetingId: meetingLink?.start_url
-                  ? meetingLink?.start_url
-                  : meetingLink,
-                meetPlatform: selectedMeetingPlatform,
-              };
-              const targetRoundId = response?.savedRound?._id || roundId;
-              const updatePayload = {
-                interviewId,
-                roundId: targetRoundId,
-                round: updatedRoundData,
-                ...(isEditing ? { questions: interviewQuestionsList } : {}),
-              };
-
-              // 🔹 Call PATCH mutation instead of POST
-              const updateResponse = await updateInterviewRound(updatePayload);
-            } else if (
-              Array.isArray(selectedInterviewers) &&
-              selectedInterviewers.length > 0
-            ) {
-              // Handle Face to Face interview
-
-              const targetRoundId = response?.savedRound?._id || roundId;
-
-              // have to add email template for face to face round
-
-              // Update the round with proper status
+            // Handle Face to Face (no meeting link)
+            if (!shouldGenerateMeeting && selectedInterviewers?.length > 0) {
               const faceToFaceRoundData = {
                 ...roundData,
-                status: isReschedule ? "Rescheduled" : "Scheduled", // Use the current status from state
+                status: isReschedule ? "Rescheduled" : "Scheduled",
               };
 
               const updatePayload = {
@@ -1670,86 +1692,63 @@ const RoundFormInterviews = () => {
                 ...(isEditing ? { questions: interviewQuestionsList } : {}),
               };
 
-              // Update the round status
-              const updateResponse = await updateInterviewRound(updatePayload);
-
-              // navigate(`/interviews/${interviewId}`);
-              // notify.success("Interview Round Created successfully");
+              await updateInterviewRound(updatePayload);
             }
 
-            // ✅ CHANGES START HERE - Email sending logic
-
-            // Use the new utility to generate and save meeting URLs
+            // ✅ Email sending logic (internal interviewers)
             try {
               const isInternal = selectedInterviewType === "Internal";
 
-              // Determine if we should send emails
               const shouldSendEmails =
-                // payload?.round?.interviewMode !== "Face to Face" && // Only for Virtual mode
+                payload?.round?.interviewMode !== "Face to Face" &&
                 Array.isArray(selectedInterviewers) &&
                 selectedInterviewers.length > 0;
 
-              if (shouldSendEmails) {
-                // Send emails after meeting links are generated
-                try {
-                  if (isInternal) {
-                    const emailResponse = await axios.post(
-                      `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
-                      {
-                        interviewId: interviewId,
-                        roundId: response.savedRound._id,
-                        sendEmails: true,
-                      },
-                      {
-                        headers: {
-                          "Content-Type": "application/json",
-                          Authorization: `Bearer ${Cookies.get("authToken")}`,
-                        },
-                      }
-                    );
-
-                    // Show success toast for emails
-                    if (emailResponse.data.success) {
-                      successMessages.push(
-                        "Interview round created and emails sent successfully!"
-                      );
-                      if (emailResponse.data.data.emailsSent > 0) {
-                        successMessages.push(
-                          `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
-                        );
-                        navigate(`/interviews/${interviewId}`);
-                      }
-                    } else {
-                      notify.error("Round created but email sending failed");
-                    }
+              if (shouldSendEmails && isInternal) {
+                const emailResponse = await axios.post(
+                  `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
+                  {
+                    interviewId: interviewId,
+                    roundId: targetRoundId,
+                    sendEmails: true,
+                  },
+                  {
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${Cookies.get("authToken")}`,
+                    },
                   }
-                } catch (emailError) {
-                  console.error("Error sending emails:", emailError);
+                );
+
+                if (emailResponse.data.success) {
+                  successMessages.push(
+                    "Interview round created and emails sent successfully!"
+                  );
+                  if (emailResponse.data.data.emailsSent > 0) {
+                    successMessages.push(
+                      `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
+                    );
+                  }
+                } else {
                   notify.error("Round created but email sending failed");
                 }
-              } else {
-                successMessages.push("Interview round created successfully!");
               }
-
-              // ✅ Show toasts one by one after everything finishes
-              for (const [i, msg] of successMessages.entries()) {
-                setTimeout(() => {
-                  notify.success(msg);
-                }, i * 1000); // gap of 1s between each toast
-              }
-
-              // ✅ Navigate after showing toasts
-              setTimeout(() => {
-                navigate(`/interviews/${interviewId}`);
-              }, successMessages.length * 1000);
-            } catch (urlError) {
-              console.error("Error processing meeting URLs:", urlError);
-              console.error("URL Error details:", {
-                message: urlError.message,
-                stack: urlError.stack,
-                response: urlError.response?.data,
-              });
+            } catch (emailError) {
+              console.error("Error sending emails:", emailError);
+              notify.error("Round created but email sending failed");
             }
+
+            // ✅ Show all collected success messages sequentially
+            for (const [i, msg] of successMessages.entries()) {
+              setTimeout(() => {
+                notify.success(msg);
+              }, i * 1000);
+            }
+
+            // ✅ Navigate only once, after toasts
+            setTimeout(() => {
+              navigate(`/interviews/${interviewId}`);
+            }, successMessages.length * 1000 + 500);
           } catch (err) {
             console.error("Error in meeting creation:", err);
             setErrors({
@@ -1760,8 +1759,8 @@ const RoundFormInterviews = () => {
             setMeetingCreationProgress("");
           }
 
-          // notify.success("Selected interview mode is Face to Face");
-          navigate(`/interviews/${interviewId}`);
+          // Removed duplicate navigate here to prevent double navigation
+          // navigate(`/interviews/${interviewId}`);
         }
       }
     } catch (err) {
@@ -2630,6 +2629,43 @@ const RoundFormInterviews = () => {
                           </div>
                         )}
 
+                        {/* Add this note when instant interview and outsourced interviewers are selected */}
+                        {interviewType === "instant" &&
+                          externalInterviewers.length > 0 && (
+                            <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                              <div className="flex">
+                                <div className="flex-shrink-0">
+                                  <svg
+                                    className="h-5 w-5 text-yellow-400"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </div>
+                                <div className="ml-3">
+                                  <p className="text-sm text-yellow-700">
+                                    <span className="font-medium">
+                                      Instant Interview Note:
+                                    </span>
+                                    <br />
+                                    • 15 minute interview schedule
+                                    <br />
+                                    • If interview is not accepted within 15
+                                    minutes, the round will be cancelled and
+                                    request will be automatically cancelled
+                                    <br />• Ensure interviewers are available
+                                    immediately
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                         {interviewType === "scheduled" && scheduledDate && (
                           <div className="mt-4 p-4 bg-green-50 rounded-md">
                             <div className="flex items-center">
@@ -2953,15 +2989,17 @@ const RoundFormInterviews = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-3">
                                   {externalInterviewers?.map((interviewer) => (
                                     <div
-                                      key={interviewer.id}
+                                      key={interviewer._id || interviewer?.id}
                                       className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 p-3 shadow-sm hover:shadow-md transition-shadow duration-200 min-w-0"
 
                                       // className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
                                     >
                                       <div className="flex items-center min-w-0 flex-1">
                                         <span className="ml-2 text-sm text-orange-800 truncate">
-                                          {interviewer?.contact?.firstName}{" "}
-                                          {interviewer?.contact?.lastName}{" "}
+                                          {interviewer?.contact?.firstName ||
+                                            interviewer?.firstName}{" "}
+                                          {interviewer?.contact?.lastName ||
+                                            interviewer?.lastName}{" "}
                                           (Outsourced)
                                         </span>
                                       </div>
@@ -3162,11 +3200,10 @@ const RoundFormInterviews = () => {
         <OutsourcedInterviewerModal
           onClose={() => setShowOutsourcePopup(false)}
           dateTime={combinedDateTime}
-          positionData={position}
-          candidateData={candidate}
-          onProceed={handleExternalInterviewerSelect}
+          skills={position?.skills}
           candidateExperience={candidate?.CurrentExperience}
-          isMockInterview={false}
+          currentRole={candidate?.CurrentRole}
+          onProceed={handleExternalInterviewerSelect}
           previousSelectedInterviewers={externalInterviewers}
           navigatedfrom="interviewRound"
         />

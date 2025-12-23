@@ -119,16 +119,17 @@ const Home = () => {
             setSelectedFilter={setSelectedFilter}
           />
         </motion.div>
+        <div className="w-full mb-6">
+          {/* showding outsource request status for user when user is freelancer */}
+          {!outsourceLoading && freelancer && (
+            <OutsourceInterviewerRequestStatus status={outsourceStatus} />
+          )}
+        </div>
 
         <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row gap-6 lg:gap-8">
           {/* Main Content Area */}
           {/* <---------v1.0.0 */}
           <div className="flex-1 space-y-6 lg:space-y-8">
-            {/* showding outsource request status for user when user is freelancer */}
-            {!outsourceLoading && freelancer && (
-              <OutsourceInterviewerRequestStatus status={outsourceStatus} />
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 lg:gap-6">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}

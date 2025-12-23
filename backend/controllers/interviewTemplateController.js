@@ -7,6 +7,9 @@ const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
 
 // Create a new interview template
 exports.createInterviewTemplate = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Interview Template";
+
   try {
     const { tenantId } = req.body;
     // Generate interview template code using centralized service with tenant ID
@@ -26,19 +29,52 @@ exports.createInterviewTemplate = async (req, res) => {
     });
 
     const savedTemplate = await template.save();
+
+    res.locals.logData = {
+      tenantId: savedTemplate.tenantId?.toString() || tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Interview Template",
+      requestBody: req.body,
+      status: "success",
+      message: "Interview template created successfully",
+      responseBody: savedTemplate,
+    };
+
     res.status(201).json({
       status: "success",
       data: savedTemplate,
     });
   } catch (error) {
-    res.status(400).json({
-      status: false,
+    // Do not log 4xx validation errors
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        status: false,
+        message: error.message,
+      });
+    }
+
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Interview Template",
+      requestBody: req.body,
+      status: "error",
       message: error.message,
+    };
+
+    res.status(500).json({
+      status: false,
+      message:
+        error.message ||
+        "Internal server error while creating interview template",
     });
   }
 };
 
 exports.updateTemplate = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Interview Template";
+
   try {
     // Validate required fields
     // if (!req.body.tenantId) {
@@ -130,13 +166,40 @@ exports.updateTemplate = async (req, res) => {
       });
     }
 
+    res.locals.logData = {
+      tenantId: template.tenantId?.toString() || req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Interview Template",
+      requestBody: req.body,
+      status: "success",
+      message: "Interview template updated successfully",
+      responseBody: template,
+    };
+
     res.status(200).json({
       status: "success",
       data: template,
     });
   } catch (error) {
     console.error("Error updating template:", error);
-    res.status(400).json({
+    // Do not log 4xx validation errors
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        status: false,
+        message: error.message || "Failed to update template",
+      });
+    }
+
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Interview Template",
+      requestBody: req.body,
+      status: "error",
+      message: error.message || "Failed to update template",
+    };
+
+    res.status(500).json({
       status: false,
       message: error.message || "Failed to update template",
     });

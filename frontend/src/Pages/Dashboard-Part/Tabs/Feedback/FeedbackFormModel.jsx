@@ -43,6 +43,7 @@ const FeedbackFormModal = () => {
 
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
+    console.log("Adding question to round:", question);
     if (question && question.questionId && question.snapshot) {
       setInterviewerSectionData((prevList) => {
         if (prevList.some((q) => q.questionId === question.questionId)) {
@@ -64,7 +65,6 @@ const FeedbackFormModal = () => {
   };
 
   const handleRemoveQuestion = (questionId) => {
-
     // Remove question from interviewer section data
     setInterviewerSectionData((prev) =>
       prev.filter((q) => (q.questionId || q.id) !== questionId)
@@ -75,7 +75,6 @@ const FeedbackFormModal = () => {
   };
 
   const handleToggleMandatory = (questionId) => {
-
     // Toggle mandatory status for the question
     setInterviewerSectionData((prev) => {
       const updated = prev.map((q) => {

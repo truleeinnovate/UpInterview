@@ -30,9 +30,23 @@ export const config = {
   REACT_APP_GOOGLE_SCOPES: process.env.REACT_APP_GOOGLE_SCOPES,
  
  
-  // REACT_APP_SUPABASE_URL: process.env.REACT_APP_SUPABASE_URL,
-  // REACT_APP_SUPABASE_ANON_KEY: process.env.REACT_APP_SUPABASE_ANON_KEY,
-  // REACT_APP_VIDEOSDK_API_KEY: process.env.REACT_APP_VIDEOSDK_API_KEY
+//   REACT_APP_SUPABASE_URL: process.env.REACT_APP_SUPABASE_URL,
+//   REACT_APP_SUPABASE_ANON_KEY: process.env.REACT_APP_SUPABASE_ANON_KEY,
+//   REACT_APP_VIDEOSDK_API_KEY: process.env.REACT_APP_VIDEOSDK_API_KEY,
+
+
+  // interviewrequest expire dynamic hours
+
+  INSTANT_EXPIRE_BEFORE_MINUTES: 5,
+
+  SCHEDULED_SLA_RULES: [
+    { minHoursLeft: 48, acceptHours: 24 },
+    { minHoursLeft: 24, acceptHours: 12 },
+    { minHoursLeft: 6,  acceptHours: 6 },
+    { minHoursLeft: 2,  acceptHours: 2 }
+  ],
+
+  DEFAULT_ACCEPT_HOURS: 2
 };
 
 
@@ -43,3 +57,4 @@ export const linkedInConfig = {
   scope: 'openid profile email w_member_social',
   state: Math.random().toString(36).substring(7)
 };
+

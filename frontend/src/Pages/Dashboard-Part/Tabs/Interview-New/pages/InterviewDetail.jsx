@@ -929,7 +929,7 @@ const InterviewDetail = () => {
                     {canAddRound() && (
                       <button
                         onClick={handleAddRound}
-                        className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue  "
                       >
                         <Plus className="h-4 w-4 mr-1" />
                         Add First Round

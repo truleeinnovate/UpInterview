@@ -11,14 +11,21 @@ const {
   getTemplateById,
 } = require("../controllers/interviewTemplateController");
 
+const loggingService = require("../middleware/loggingService");
+
 // Create and get all templates
-router.route("/").post(createInterviewTemplate);
+router
+  .route("/")
+  .post(
+    loggingService.internalLoggingMiddleware,
+    createInterviewTemplate
+  );
 
 // Get, update and delete template by ID
 router
   .route("/:id")
   // .get(getTemplateById)
-  .patch(updateTemplate)
+  .patch(loggingService.internalLoggingMiddleware, updateTemplate)
   .delete(deleteTemplate);
 
 router.get("/template/:id", getTemplateById);

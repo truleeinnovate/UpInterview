@@ -19,7 +19,7 @@ const getVideoCallingSettings = async (req, res) => {
 
     // ✅ Build query safely with proper ObjectId validation
     const query = {};
-    
+
     if (tenantId) {
       if (!mongoose.Types.ObjectId.isValid(tenantId)) {
         return res.status(400).json({
@@ -29,7 +29,7 @@ const getVideoCallingSettings = async (req, res) => {
       }
       query.tenantId = new mongoose.Types.ObjectId(tenantId);
     }
-    
+
     if (ownerId) {
       if (!mongoose.Types.ObjectId.isValid(ownerId)) {
         return res.status(400).json({
@@ -94,7 +94,7 @@ const getVideoCallingSettings = async (req, res) => {
       data: settings,
     });
   } catch (err) {
-    console.error('❌ Error in getVideoCallingSettings:', err);
+    console.error("❌ Error in getVideoCallingSettings:", err);
     res.status(500).json({
       success: false,
       message: "Internal server error: " + err.message,
@@ -104,14 +104,18 @@ const getVideoCallingSettings = async (req, res) => {
 
 // ✅ Test Connection Controller
 const VideoCallTestConnection = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Test Video Calling Connection";
+
   try {
     const { provider, credentials, tenantId: bodyTenantId, ownerId } = req.body;
     const tenantId = req.user?.tenantId || bodyTenantId;
 
     if (!tenantId) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Tenant ID required" 
+      return res.status(400).json({
+        success: false,
+        message: "Tenant ID required",
       });
     }
 
@@ -141,13 +145,35 @@ const VideoCallTestConnection = async (req, res) => {
       { upsert: true, new: true }
     );
 
+    // Structured internal log for successful test
+    res.locals.logData = {
+      tenantId: tenantId || req.body?.tenantId || "",
+      ownerId: ownerId || req.body?.ownerId || "",
+      processName: "Test Video Calling Connection",
+      requestBody: req.body,
+      status: "success",
+      message:
+        updated.testConnection?.message || "Video calling connection tested",
+      responseBody: updated,
+    };
+
     res.json({
       success: isValid,
       message: updated.testConnection.message,
       data: updated,
     });
   } catch (error) {
-    console.error('❌ Error testing connection:', error);
+    console.error("❌ Error testing connection:", error);
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Test Video Calling Connection",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
     res.status(500).json({
       success: false,
       message: "Error testing connection: " + error.message,
@@ -157,43 +183,74 @@ const VideoCallTestConnection = async (req, res) => {
 
 // ✅ Save Credentials Controller
 const VideoCallTestCredentials = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Save Video Calling Credentials";
+
   try {
     const { provider, credentials } = req.body;
     const tenantId = req.user?.tenantId;
+    const ownerId = req.user?.ownerId;
 
     if (!tenantId) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Tenant ID required" 
-      });
-    }
-    
-    const settings = await VideoCallingDetails.findOne({ tenantId });
-    
-    if (!settings) {
-      return res.status(404).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'Settings not found' 
+        message: "Tenant ID required",
       });
     }
-    
+
+    const settings = await VideoCallingDetails.findOne({ tenantId });
+
+    if (!settings) {
+      return res.status(404).json({
+        success: false,
+        message: "Settings not found",
+      });
+    }
+
     // Update credentials
     if (settings.updateCredentials) {
       await settings.updateCredentials(provider, credentials);
     }
-    
-    res.json({ 
-      success: true, 
-      message: 'Credentials saved successfully',
-      hasConfiguredCredentials: settings.hasConfiguredCredentials 
-        ? settings.hasConfiguredCredentials(provider) 
-        : false
+
+    const hasConfigured = settings.hasConfiguredCredentials
+      ? settings.hasConfiguredCredentials(provider)
+      : false;
+
+    // Structured internal log for successful credential save
+    res.locals.logData = {
+      tenantId: tenantId || "",
+      ownerId: ownerId || "",
+      processName: "Save Video Calling Credentials",
+      requestBody: req.body,
+      status: "success",
+      message: "Credentials saved successfully",
+      responseBody: {
+        provider,
+        hasConfiguredCredentials: hasConfigured,
+      },
+    };
+
+    res.json({
+      success: true,
+      message: "Credentials saved successfully",
+      hasConfiguredCredentials: hasConfigured,
     });
   } catch (error) {
-    console.error('❌ Error saving credentials:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error saving credentials: ' + error.message 
+    console.error("❌ Error saving credentials:", error);
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.user?.tenantId || "",
+      ownerId: req.user?.ownerId || "",
+      processName: "Save Video Calling Credentials",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
+    res.status(500).json({
+      success: false,
+      message: "Error saving credentials: " + error.message,
     });
   }
 };
@@ -202,23 +259,23 @@ const VideoCallTestCredentials = async (req, res) => {
 async function testVideoProviderConnection(provider, credentials) {
   // Implement actual connection testing logic here
   // This is a mock implementation
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(() => {
       resolve(Math.random() > 0.3); // 70% success rate for demo
     }, 2000);
   });
 }
 
+const updateVideoCallingSettings = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Video Calling Settings";
 
- const updateVideoCallingSettings = async (req, res) => {
   try {
-    const { 
-      defaultProvider, 
-      credentialType, 
-      credentials, 
-      tenantId, 
-      ownerId 
-    } = req.body;
+    const { defaultProvider, credentialType, credentials, tenantId, ownerId } =
+      req.body;
+
+    // console.log("📥 Received request with:", req.body);
 
     // Validate required fields
     if (!tenantId && !ownerId) {
@@ -252,24 +309,44 @@ async function testVideoProviderConnection(provider, credentials) {
           defaultProvider,
           credentialType,
           credentials,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       },
-      { 
-        upsert: true, 
+      {
+        upsert: true,
         new: true,
-        runValidators: true 
+        runValidators: true,
       }
     );
+
+    // Structured internal log for successful settings update
+    res.locals.logData = {
+      tenantId: tenantId || req.body?.tenantId || "",
+      ownerId: ownerId || req.body?.ownerId || "",
+      processName: "Update Video Calling Settings",
+      requestBody: req.body,
+      status: "success",
+      message: "Settings updated successfully",
+      responseBody: updatedSettings,
+    };
 
     res.json({
       success: true,
       message: "Settings updated successfully",
-      data: updatedSettings
+      data: updatedSettings,
     });
-
   } catch (err) {
-    console.error('Error updating settings:', err);
+    console.error("Error updating settings:", err);
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Video Calling Settings",
+      requestBody: req.body,
+      status: "error",
+      message: err.message,
+    };
+
     res.status(500).json({
       success: false,
       message: "Internal server error: " + err.message,
@@ -279,8 +356,6 @@ async function testVideoProviderConnection(provider, credentials) {
 
 // ✅ Create default Zoom settings
 
-
- 
 /**
 
 * Create or get default Zoom video calling settings
@@ -294,37 +369,28 @@ async function testVideoProviderConnection(provider, credentials) {
 */
 
 const CreateOrGetVideoCallingSettings = async (tenantId, ownerId) => {
-
   try {
-
     if (!tenantId || !ownerId) {
-
       throw new Error("tenantId and ownerId are required");
-
     }
- 
+
     // ✅ Check if it already exists
 
     const existing = await VideoCallingDetails.findOne({ tenantId, ownerId });
 
     if (existing) {
-
       return {
-
         created: false,
 
         message: "✅ Video calling settings already exist for this tenant.",
 
-        data: existing
-
+        data: existing,
       };
-
     }
- 
+
     // ✅ Create default Zoom settings
 
     const newSettings = new VideoCallingDetails({
-
       tenantId,
 
       ownerId,
@@ -334,89 +400,71 @@ const CreateOrGetVideoCallingSettings = async (tenantId, ownerId) => {
       credentialType: "platform",
 
       credentials: {
-
         zoom: {
-
           apiKey: "",
 
           apiSecret: "",
 
           accountId: "",
 
-          isConfigured: false
-
+          isConfigured: false,
         },
 
         googleMeet: {
-
           clientId: "",
 
           clientSecret: "",
 
           refreshToken: "",
 
-          isConfigured: false
-
+          isConfigured: false,
         },
 
         teams: {
-
           tenantId: "",
 
           clientId: "",
 
           clientSecret: "",
 
-          isConfigured: false
-
-        }
-
+          isConfigured: false,
+        },
       },
 
       testConnection: {
-
         status: null,
 
         message: "",
 
-        lastTested: null
-
+        lastTested: null,
       },
 
       uiState: {
-
         lastConfiguredProvider: "zoom",
 
         showCredentialHelp: true,
 
-        credentialPopupsDismissed: 0
-
-      }
-
+        credentialPopupsDismissed: 0,
+      },
     });
- 
-    const saved = await newSettings.save();
- 
-    return {
 
+    const saved = await newSettings.save();
+
+    return {
       created: true,
 
       message: "✅ Default Zoom video calling settings created successfully.",
 
-      data: saved
-
+      data: saved,
     };
-
   } catch (error) {
-
     console.error("❌ Error in createOrGetVideoCallingSettings:", error);
 
-    throw new Error(error.message || "Error creating or fetching video calling settings");
-
+    throw new Error(
+      error.message || "Error creating or fetching video calling settings"
+    );
   }
-
-}
- 
+};
 
 // ✅ Export using CommonJS
 module.exports = {
@@ -424,5 +472,5 @@ module.exports = {
   VideoCallTestConnection,
   VideoCallTestCredentials,
   updateVideoCallingSettings,
-  CreateOrGetVideoCallingSettings
+  CreateOrGetVideoCallingSettings,
 };

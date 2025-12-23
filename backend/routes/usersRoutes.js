@@ -17,6 +17,7 @@ const Users = require("../models/Users");
 const RoleOverrides = require("../models/roleOverrides.js");
 const Tenant = require("../models/Tenant");
 const { permissionMiddleware } = require("../middleware/permissionMiddleware");
+const loggingService = require("../middleware/loggingService.js");
 
 router.get("/permissions", permissionMiddleware, async (req, res) => {
   try {
@@ -66,6 +67,10 @@ router.get("/:tenantId", getUsersByTenant);
 router.get("/interviewers/:tenantId", getInterviewers);
 
 // UpdateUser
-router.patch("/:id/status", UpdateUser);
+router.patch(
+  "/:id/status",
+  loggingService.internalLoggingMiddleware,
+  UpdateUser
+);
 
 module.exports = router;

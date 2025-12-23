@@ -126,6 +126,9 @@ const getModel = (type) => {
 // };
 
 const createMaster = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Master";
+
   try {
     const { type } = req.params;
     const Model = getModel(type);
@@ -141,6 +144,27 @@ const createMaster = async (req, res) => {
 
       // Bulk insert (CSV upload)
       result = await Model.insertMany(bulkData, { ordered: false });
+
+      // Structured internal log for successful create (single or bulk)
+      const isBulk = Array.isArray(req.body);
+      const tenantId = isBulk
+        ? req.body[0]?.tenantId || ""
+        : result?.tenantId || req.body?.tenantId || "";
+      const ownerId = isBulk
+        ? req.body[0]?.ownerId || ""
+        : result?.ownerId || req.body?.ownerId || "";
+
+      res.locals.logData = {
+        tenantId,
+        ownerId,
+        processName: "Create Master",
+        requestBody: req.body,
+        status: "success",
+        message: isBulk
+          ? `Master records created successfully (count: ${Array.isArray(result) ? result.length : 0})`
+          : "Master record created successfully",
+        responseBody: result,
+      };
 
       // Feed data for bulk creation
       // res.locals.feedData = {
@@ -182,6 +206,27 @@ const createMaster = async (req, res) => {
 
       const newDoc = new Model(data);
       result = await newDoc.save();
+
+      // Structured internal log for successful create (single or bulk)
+      const isBulk = Array.isArray(req.body);
+      const tenantId = isBulk
+        ? req.body[0]?.tenantId || ""
+        : result?.tenantId || req.body?.tenantId || "";
+      const ownerId = isBulk
+        ? req.body[0]?.ownerId || ""
+        : result?.ownerId || req.body?.ownerId || "";
+
+      res.locals.logData = {
+        tenantId,
+        ownerId,
+        processName: "Create Master",
+        requestBody: req.body,
+        status: "success",
+        message: isBulk
+          ? `Master records created successfully (count: ${Array.isArray(result) ? result.length : 0})`
+          : "Master record created successfully",
+        responseBody: result,
+      };
 
       // Feed data for single creation
       // res.locals.feedData = {
@@ -235,13 +280,10 @@ const getAllMasters = async (req, res) => {
       limit = 10,
       search = "",
       status, // for category (isActive) or others with status field
-      sortBy = "createdAt",
-      sortOrder = "desc",
+      // sortBy = "createdAt",
+      // sortOrder = "desc",
       pageType,
     } = req.query;
-
-    console.log("pageType", pageType);
-    console.log("req.query", req.query);
 
     if (pageType !== "adminPortal") {
       const Model = getModel(type);
@@ -258,7 +300,7 @@ const getAllMasters = async (req, res) => {
               { TechnologyMasterName: { $regex: search, $options: "i" } },
               { SkillName: { $regex: search, $options: "i" } },
               { LocationName: { $regex: search, $options: "i" } },
-              { RoleName: { $regex: search, $options: "i" } },
+              { roleName: { $regex: search, $options: "i" } },
               { QualificationName: { $regex: search, $options: "i" } },
               { University_CollegeName: { $regex: search, $options: "i" } },
               { CompanyName: { $regex: search, $options: "i" } },
@@ -326,6 +368,9 @@ const getAllMasters = async (req, res) => {
 
 // ✅ UPDATE
 const updateMaster = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Master";
+
   try {
     const { type, id } = req.params;
     const Model = getModel(type);
@@ -343,6 +388,16 @@ const updateMaster = async (req, res) => {
     // v1.0.1 --------------------------------------------->
 
     if (!updated) return res.status(404).json({ error: "Not found" });
+
+    res.locals.logData = {
+      tenantId: updated.tenantId || req.body?.tenantId || "",
+      ownerId: updated.updatedBy || req.body?.ownerId || "",
+      processName: "Update Master",
+      requestBody: req.body,
+      status: "success",
+      message: "Master record updated successfully",
+      responseBody: updated,
+    };
 
     res.json(updated);
   } catch (error) {

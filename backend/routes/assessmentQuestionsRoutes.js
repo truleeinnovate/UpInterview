@@ -2,10 +2,11 @@
 
 const express = require('express')
 const AssessmentQuestionsController = require('../controllers/assessmentQuestionsController')
+const loggingService = require('../middleware/loggingService')
 
 const router = express.Router()
 //assessment realted
-router.post('/upsert',AssessmentQuestionsController.upsertAssessmentQuestions)
+router.post('/upsert', loggingService.internalLoggingMiddleware, AssessmentQuestionsController.upsertAssessmentQuestions)
 
 //using in assessment test
 // Get questions by assessment ID

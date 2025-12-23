@@ -21,7 +21,7 @@ router.get("/get-ticket/:id", getTicketBasedonId);
 router.patch("/update-ticket/:id",loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, updateTicketById);
 
 // Update the route to use the correct path
-router.patch("/update-ticket/:id/status", updateSupportTicket);
+router.patch("/update-ticket/:id/status", loggingService.internalLoggingMiddleware, updateSupportTicket);
 
 // <---------- SUPER ADMIN added by Ashok ---------------------
 router.get("/all-tickets", getAllTickets);

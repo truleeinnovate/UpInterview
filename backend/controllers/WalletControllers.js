@@ -757,6 +757,10 @@ const walletVerifyPayment = async (req, res) => {
 
 // Add or update bank account
 const addBankAccount = async (req, res) => {
+  // Structured logging context
+  res.locals.loggedByController = true;
+  res.locals.processName = "Add Bank Account";
+
   try {
     const {
       ownerId,
@@ -875,6 +879,17 @@ const addBankAccount = async (req, res) => {
       createdBy: ownerId,
     });
 
+    // Internal log: success
+    res.locals.logData = {
+      tenantId,
+      ownerId,
+      processName: "Add Bank Account",
+      status: "success",
+      message: "Bank account added successfully",
+      requestBody: req.body,
+      responseBody: bankAccount,
+    };
+
     res.status(201).json({
       success: true,
       bankAccount,
@@ -882,6 +897,20 @@ const addBankAccount = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding bank account:", error);
+
+    // Internal log: error
+    res.locals.logData = {
+      tenantId: req?.body?.tenantId || "",
+      ownerId: req?.body?.ownerId,
+      processName: "Add Bank Account",
+      status: "error",
+      message: "Failed to add bank account",
+      requestBody: req.body,
+      responseBody: {
+        error: error.message,
+      },
+    };
+
     res.status(500).json({
       error: "Failed to add bank account",
       details: error.message,
@@ -924,6 +953,10 @@ const getBankAccounts = async (req, res) => {
 
 // Delete bank account
 const deleteBankAccount = async (req, res) => {
+  // Structured logging context
+  res.locals.loggedByController = true;
+  res.locals.processName = "Delete Bank Account";
+
   try {
     const { bankAccountId } = req.params;
     const { ownerId } = req.body || req.query; // Accept ownerId from body or query
@@ -963,6 +996,17 @@ const deleteBankAccount = async (req, res) => {
       bankAccount.updatedBy = ownerId || "system";
       await bankAccount.save();
 
+      // Internal log: soft delete success
+      res.locals.logData = {
+        tenantId: bankAccount.tenantId || req?.body?.tenantId || "",
+        ownerId: bankAccount.ownerId,
+        processName: "Delete Bank Account",
+        status: "success",
+        message: "Bank account deactivated (has withdrawal history)",
+        requestBody: req.body || req.query,
+        responseBody: bankAccount,
+      };
+
       return res.status(200).json({
         success: true,
         message: "Bank account deactivated (has withdrawal history)",
@@ -973,12 +1017,44 @@ const deleteBankAccount = async (req, res) => {
     // Hard delete if no withdrawal history
     await BankAccount.findByIdAndDelete(bankAccountId);
 
+    // Internal log: hard delete success
+    res.locals.logData = {
+      tenantId: bankAccount.tenantId || req?.body?.tenantId || "",
+      ownerId: bankAccount.ownerId,
+      processName: "Delete Bank Account",
+      status: "success",
+      message: "Bank account removed successfully",
+      requestBody: req.body || req.query,
+      responseBody: {
+        bankAccountId,
+        bankAccount,
+      },
+    };
+
     res.status(200).json({
       success: true,
       message: "Bank account removed successfully",
     });
   } catch (error) {
     console.error("Error deleting bank account:", error);
+
+    // Internal log: error
+    res.locals.logData = {
+      tenantId: req?.body?.tenantId || "",
+      ownerId: req?.body?.ownerId || null,
+      processName: "Delete Bank Account",
+      status: "error",
+      message: "Failed to delete bank account",
+      requestBody: {
+        params: req.params,
+        body: req.body,
+        query: req.query,
+      },
+      responseBody: {
+        error: error.message,
+      },
+    };
+
     res.status(500).json({
       error: "Failed to delete bank account",
       details: error.message,
@@ -988,6 +1064,10 @@ const deleteBankAccount = async (req, res) => {
 
 // Verify bank account using Razorpay Penny Drop (Fund Account Validation)
 const verifyBankAccount = async (req, res) => {
+  // Structured logging context
+  res.locals.loggedByController = true;
+  res.locals.processName = "Verify Bank Account";
+
   try {
     const { bankAccountId } = req.params;
 
@@ -1014,6 +1094,18 @@ const verifyBankAccount = async (req, res) => {
         note: "Auto-verified due to missing Razorpay configuration",
       };
       await bankAccount.save();
+
+      // Internal log: success (dev mode)
+      res.locals.logData = {
+        tenantId: bankAccount.tenantId || "",
+        ownerId: bankAccount.ownerId,
+        processName: "Verify Bank Account",
+        status: "success",
+        message: "Bank account verified (development mode)",
+        requestBody: req.body,
+        responseBody: bankAccount,
+      };
+
       return res.status(200).json({
         message: "Bank account verified (development mode)",
         bankAccount,
@@ -1068,6 +1160,18 @@ const verifyBankAccount = async (req, res) => {
             note: "Auto-verified: Razorpay contacts API not available",
           };
           await bankAccount.save();
+
+          // Internal log: success (contacts API not available)
+          res.locals.logData = {
+            tenantId: bankAccount.tenantId || "",
+            ownerId: bankAccount.ownerId,
+            processName: "Verify Bank Account",
+            status: "success",
+            message: "Bank account verified (contacts API not available)",
+            requestBody: req.body,
+            responseBody: bankAccount,
+          };
+
           return res.status(200).json({
             message: "Bank account verified (contacts API not available)",
             bankAccount,
@@ -1137,6 +1241,18 @@ const verifyBankAccount = async (req, res) => {
           error: e.message,
         };
         await bankAccount.save();
+
+        // Internal log: success (contact creation failed but auto-verified)
+        res.locals.logData = {
+          tenantId: bankAccount.tenantId || "",
+          ownerId: bankAccount.ownerId,
+          processName: "Verify Bank Account",
+          status: "success",
+          message: "Bank account verified (contact creation failed)",
+          requestBody: req.body,
+          responseBody: bankAccount,
+        };
+
         return res.status(200).json({
           message: "Bank account verified (contact creation failed)",
           bankAccount,
@@ -1257,6 +1373,18 @@ const verifyBankAccount = async (req, res) => {
           note: "Auto-verified: RazorpayX not enabled on account",
         };
         await bankAccount.save();
+
+        // Internal log: success (RazorpayX not enabled)
+        res.locals.logData = {
+          tenantId: bankAccount.tenantId || "",
+          ownerId: bankAccount.ownerId,
+          processName: "Verify Bank Account",
+          status: "success",
+          message: "Bank account verified (RazorpayX not available)",
+          requestBody: req.body,
+          responseBody: bankAccount,
+        };
+
         return res.status(200).json({
           message: "Bank account verified (RazorpayX not available)",
           bankAccount,
@@ -1304,6 +1432,17 @@ const verifyBankAccount = async (req, res) => {
       bankAccount.verificationMethod = "penny_drop";
       await bankAccount.save();
 
+      // Internal log: success (penny drop verified)
+      res.locals.logData = {
+        tenantId: bankAccount.tenantId || "",
+        ownerId: bankAccount.ownerId,
+        processName: "Verify Bank Account",
+        status: "success",
+        message: "Bank account verified successfully via penny drop",
+        requestBody: req.body,
+        responseBody: bankAccount,
+      };
+
       return res.status(200).json({
         success: true,
         bankAccount,
@@ -1332,6 +1471,18 @@ const verifyBankAccount = async (req, res) => {
     bankAccount.verificationMethod = "penny_drop";
     await bankAccount.save();
 
+    // Internal log: success (verification initiated)
+    res.locals.logData = {
+      tenantId: bankAccount.tenantId || "",
+      ownerId: bankAccount.ownerId,
+      processName: "Verify Bank Account",
+      status: "success",
+      message:
+        "Verification initiated. It may take a few minutes to complete.",
+      requestBody: req.body,
+      responseBody: bankAccount,
+    };
+
     return res.status(202).json({
       success: true,
       bankAccount,
@@ -1339,6 +1490,24 @@ const verifyBankAccount = async (req, res) => {
     });
   } catch (error) {
     console.error("Error verifying bank account:", error);
+
+    // Internal log: error
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: null,
+      processName: "Verify Bank Account",
+      status: "error",
+      message: "Failed to verify bank account",
+      requestBody: {
+        params: req.params,
+        body: req.body,
+      },
+      responseBody: {
+        error: "Failed to verify bank account",
+        details: error.message,
+      },
+    };
+
     return res.status(500).json({
       error: "Failed to verify bank account",
       details: error.message,
@@ -1781,6 +1950,10 @@ const createWithdrawalRequest = async (req, res) => {
 // Manual processing functions for superadmin
 // Function to mark a withdrawal as failed and refund the amount
 const failManualWithdrawal = async (req, res) => {
+  // Structured logging context
+  res.locals.loggedByController = true;
+  res.locals.processName = "Fail Manual Withdrawal";
+
   try {
     const { withdrawalRequestId } = req.params;
     const { failureReason, failedBy, adminNotes } = req.body;
@@ -1909,6 +2082,21 @@ const failManualWithdrawal = async (req, res) => {
       // Don't fail the process if notification fails
     }
 
+    // Internal log: success
+    res.locals.logData = {
+      tenantId: withdrawalRequest.tenantId || "",
+      ownerId: withdrawalRequest.ownerId,
+      processName: "Fail Manual Withdrawal",
+      status: "success",
+      message: "Withdrawal marked as failed and amount refunded",
+      requestBody: req.body,
+      responseBody: {
+        withdrawalRequest,
+        wallet,
+        walletUpdate,
+      },
+    };
+
     res.status(200).json({
       success: true,
       withdrawalRequest,
@@ -1916,6 +2104,23 @@ const failManualWithdrawal = async (req, res) => {
     });
   } catch (error) {
     console.error("Error failing withdrawal:", error);
+    // Internal log: error
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: null,
+      processName: "Fail Manual Withdrawal",
+      status: "error",
+      message: "Failed to process withdrawal failure",
+      requestBody: {
+        params: req.params,
+        body: req.body,
+      },
+      responseBody: {
+        error: "Failed to process withdrawal failure",
+        details: error.message,
+      },
+    };
+
     res.status(500).json({
       error: "Failed to process withdrawal failure",
       details: error.message,
@@ -1924,6 +2129,10 @@ const failManualWithdrawal = async (req, res) => {
 };
 
 const processManualWithdrawal = async (req, res) => {
+  // Structured logging context
+  res.locals.loggedByController = true;
+  res.locals.processName = "Process Manual Withdrawal";
+
   try {
     const { withdrawalRequestId } = req.params;
     const {
@@ -2037,6 +2246,20 @@ const processManualWithdrawal = async (req, res) => {
       // Don't fail the process if notification fails
     }
 
+    // Internal log: success
+    res.locals.logData = {
+      tenantId: withdrawalRequest.tenantId || "",
+      ownerId: withdrawalRequest.ownerId,
+      processName: "Process Manual Withdrawal",
+      status: "success",
+      message: "Withdrawal processed successfully",
+      requestBody: req.body,
+      responseBody: {
+        withdrawalRequest,
+        wallet,
+      },
+    };
+
     res.status(200).json({
       success: true,
       withdrawalRequest,
@@ -2044,6 +2267,23 @@ const processManualWithdrawal = async (req, res) => {
     });
   } catch (error) {
     console.error("Error processing manual withdrawal:", error);
+    // Internal log: error
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: null,
+      processName: "Process Manual Withdrawal",
+      status: "error",
+      message: "Failed to process withdrawal",
+      requestBody: {
+        params: req.params,
+        body: req.body,
+      },
+      responseBody: {
+        error: "Failed to process withdrawal",
+        details: error.message,
+      },
+    };
+
     res.status(500).json({
       error: "Failed to process withdrawal",
       details: error.message,
@@ -2352,6 +2592,10 @@ const getWithdrawalRequests = async (req, res) => {
 
 // Cancel withdrawal request
 const cancelWithdrawalRequest = async (req, res) => {
+  // Structured logging context
+  res.locals.loggedByController = true;
+  res.locals.processName = "Cancel Withdrawal Request";
+
   try {
     const { withdrawalRequestId } = req.params;
     const { reason } = req.body;
@@ -2435,6 +2679,20 @@ const cancelWithdrawalRequest = async (req, res) => {
       // Don't fail the cancellation if notification fails
     }
 
+    // Internal log: success
+    res.locals.logData = {
+      tenantId: withdrawalRequest.tenantId || "",
+      ownerId: withdrawalRequest.ownerId,
+      processName: "Cancel Withdrawal Request",
+      status: "success",
+      message: "Withdrawal request cancelled successfully",
+      requestBody: req.body,
+      responseBody: {
+        withdrawalRequest,
+        wallet,
+      },
+    };
+
     res.status(200).json({
       success: true,
       withdrawalRequest,
@@ -2442,6 +2700,24 @@ const cancelWithdrawalRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Error cancelling withdrawal request:", error);
+
+    // Internal log: error
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: null,
+      processName: "Cancel Withdrawal Request",
+      status: "error",
+      message: "Failed to cancel withdrawal request",
+      requestBody: {
+        params: req.params,
+        body: req.body,
+      },
+      responseBody: {
+        error: "Failed to cancel withdrawal request",
+        details: error.message,
+      },
+    };
+
     res.status(500).json({
       error: "Failed to cancel withdrawal request",
       details: error.message,
@@ -2587,6 +2863,10 @@ const handlePayoutWebhook = async (req, res) => {
 
 // Utility function to fix existing verified accounts that might not have isActive set
 const fixVerifiedBankAccounts = async (req, res) => {
+  // Structured logging context
+  res.locals.loggedByController = true;
+  res.locals.processName = "Fix Verified Bank Accounts";
+
   try {
     // First, let's see what bank accounts exist
     const allAccounts = await BankAccount.find({}).select(
@@ -2615,6 +2895,20 @@ const fixVerifiedBankAccounts = async (req, res) => {
     const totalFixed = result.modifiedCount + result2.modifiedCount;
     //console.log(`Fixed ${totalFixed} bank accounts`);
 
+    // Internal log: success
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: null,
+      processName: "Fix Verified Bank Accounts",
+      status: "success",
+      message: `Fixed ${totalFixed} bank accounts to be active`,
+      requestBody: req.body,
+      responseBody: {
+        modifiedCount: totalFixed,
+        totalAccounts: allAccounts.length,
+      },
+    };
+
     return res.status(200).json({
       success: true,
       message: `Fixed ${totalFixed} bank accounts to be active`,
@@ -2626,6 +2920,20 @@ const fixVerifiedBankAccounts = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fixing verified bank accounts:", error);
+    // Internal log: error
+    res.locals.logData = {
+      tenantId: "",
+      ownerId: null,
+      processName: "Fix Verified Bank Accounts",
+      status: "error",
+      message: "Failed to fix verified bank accounts",
+      requestBody: req.body,
+      responseBody: {
+        error: "Failed to fix verified bank accounts",
+        details: error.message,
+      },
+    };
+
     return res.status(500).json({
       error: "Failed to fix verified bank accounts",
       details: error.message,
@@ -2635,6 +2943,10 @@ const fixVerifiedBankAccounts = async (req, res) => {
 
 // Settlement function for interview rounds
 const settleInterviewPayment = async (req, res) => {
+  // Structured logging context
+  res.locals.loggedByController = true;
+  res.locals.processName = "Settle Interview Payment";
+
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -2856,28 +3168,54 @@ const settleInterviewPayment = async (req, res) => {
 
     // console.log("[settleInterviewPayment] Settlement completed successfully");
 
+    const responseData = {
+      settlementAmount,
+      organizationWallet: {
+        ownerId: updatedOrgWallet.ownerId,
+        balance: updatedOrgWallet.balance,
+        holdAmount: updatedOrgWallet.holdAmount,
+      },
+      interviewerWallet: {
+        ownerId: updatedInterviewerWallet.ownerId,
+        balance: updatedInterviewerWallet.balance,
+        creditTransactionId: creditTransaction._id,
+      },
+      roundId,
+      originalTransactionId: transactionId,
+    };
+
+    // Internal log: success
+    res.locals.logData = {
+      tenantId: interviewerTenantId || req?.body?.tenantId || "",
+      ownerId: interviewerContactId,
+      processName: "Settle Interview Payment",
+      status: "success",
+      message: "Interview payment settled successfully",
+      requestBody: req.body,
+      responseBody: responseData,
+    };
+
     return res.status(200).json({
       success: true,
       message: "Interview payment settled successfully",
-      data: {
-        settlementAmount,
-        organizationWallet: {
-          ownerId: updatedOrgWallet.ownerId,
-          balance: updatedOrgWallet.balance,
-          holdAmount: updatedOrgWallet.holdAmount,
-        },
-        interviewerWallet: {
-          ownerId: updatedInterviewerWallet.ownerId,
-          balance: updatedInterviewerWallet.balance,
-          creditTransactionId: creditTransaction._id,
-        },
-        roundId,
-        originalTransactionId: transactionId,
-      },
+      data: responseData,
     });
   } catch (error) {
     await session.abortTransaction();
     console.error("[settleInterviewPayment] Error:", error);
+    // Internal log: error
+    res.locals.logData = {
+      tenantId: req?.body?.tenantId || "",
+      ownerId: req?.body?.interviewerContactId || null,
+      processName: "Settle Interview Payment",
+      status: "error",
+      message: "Failed to settle interview payment",
+      requestBody: req.body,
+      responseBody: {
+        error: error.message,
+      },
+    };
+
     return res.status(500).json({
       success: false,
       message: "Failed to settle interview payment",

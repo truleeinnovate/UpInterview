@@ -121,6 +121,9 @@ const getPaginatedGroups = async (req, res) => {
 };
 
 const createGroup = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Interviewer Group";
+
   try {
     const { name, users, description, status, tenantId } = req.body;
     // name, users, description, status, tenantId
@@ -140,7 +143,7 @@ const createGroup = async (req, res) => {
       status,
       tenantId,
     });
-    await group.save();
+    const savedGroup = await group.save();
 
     // Populate the users data after saving
     // const populatedGroup = await Group.findById(group._id)
@@ -160,15 +163,38 @@ const createGroup = async (req, res) => {
     //     userIds: populatedGroup.users.map(user => user._id)// Add user IDs
     // };
 
+    res.locals.logData = {
+      tenantId: savedGroup.tenantId?.toString() || tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Interviewer Group",
+      requestBody: req.body,
+      status: "success",
+      message: "Interviewer group created successfully",
+      responseBody: savedGroup,
+    };
+
     res.status(201).json("Group Created Successfully!");
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    // Do not log manual 4xx validation responses above
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Interviewer Group",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
+    res.status(500).json({ error: error.message });
   }
 };
 
 // update group api call
 
 const updateGroup = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Interviewer Group";
+
   try {
     const { id } = req.params;
     const { name, users, description, status } = req.body;
@@ -195,9 +221,28 @@ const updateGroup = async (req, res) => {
       return res.status(404).json({ error: "Group not found" });
     }
 
+    res.locals.logData = {
+      tenantId: updatedGroup.tenantId?.toString() || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Interviewer Group",
+      requestBody: req.body,
+      status: "success",
+      message: "Interviewer group updated successfully",
+      responseBody: updatedGroup,
+    };
+
     res.status(200).json("Group Updated Successfully!");
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Interviewer Group",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
+    res.status(500).json({ error: error.message });
   }
 };
 

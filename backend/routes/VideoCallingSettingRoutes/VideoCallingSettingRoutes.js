@@ -7,15 +7,16 @@ const {
   getVideoCallingSettings,
   updateVideoCallingSettings,
 } = require("../../controllers/VideoCallingSettingControllers/VideoCallingSettingController.js");
+const loggingService = require("../../middleware/loggingService.js");
 
 const videoRouter = express.Router();
 
 // ✅ Define routes with logging
-videoRouter.post("/test-connection", (req, res, next) => {
+videoRouter.post("/test-connection", loggingService.internalLoggingMiddleware, (req, res, next) => {
   VideoCallTestConnection(req, res, next);
 });
 
-videoRouter.post("/credentials", (req, res, next) => {
+videoRouter.post("/credentials", loggingService.internalLoggingMiddleware, (req, res, next) => {
   VideoCallTestCredentials(req, res, next);
 });
 
@@ -24,7 +25,11 @@ videoRouter.get("/get-settings", (req, res, next) => {
 });
 
 // PATCH route to update video settings
-videoRouter.patch("/update-settings", updateVideoCallingSettings);
+videoRouter.patch(
+  "/update-settings",
+  loggingService.internalLoggingMiddleware,
+  updateVideoCallingSettings
+);
 
 // ✅ Export using CommonJS
 module.exports = videoRouter;

@@ -6,7 +6,7 @@ const emailTemplateModel = require("../../models/EmailTemplatemodel");
 const config = require("../../config");
 
 const mongoose = require("mongoose");
-const cron = require("node-cron");
+// const cron = require("node-cron");
 const moment = require("moment");
 const Tenant = require("../../models/Tenant.js");
 const { generateEmailVerificationToken } = require("../../utils/jwt");
@@ -193,141 +193,141 @@ exports.forgotPasswordSendEmail = async (req, res) => {
   }
 };
 
-cron.schedule("0 0 * * *", async () => {
-  try {
-    const submittedOrganizations = await Organization.find({
-      status: "submitted",
-    });
+// cron.schedule("0 0 * * *", async () => {
+//   try {
+//     const submittedOrganizations = await Organization.find({
+//       status: "submitted",
+//     });
 
-    const emailTemplateSubmitted = await emailTemplateModel.findOne({
-      category: "submitted_status_reminder",
-      isActive: true,
-      isSystemTemplate: true,
-    });
+//     const emailTemplateSubmitted = await emailTemplateModel.findOne({
+//       category: "submitted_status_reminder",
+//       isActive: true,
+//       isSystemTemplate: true,
+//     });
 
-    if (!emailTemplateSubmitted) {
-      console.error(
-        "[ERROR] No email template found for submitted_status_reminder"
-      );
-      return;
-    }
+//     if (!emailTemplateSubmitted) {
+//       console.error(
+//         "[ERROR] No email template found for submitted_status_reminder"
+//       );
+//       return;
+//     }
 
-    for (const organization of submittedOrganizations) {
-      const createdAt = moment(organization.createdAt);
-      const now = moment();
+//     for (const organization of submittedOrganizations) {
+//       const createdAt = moment(organization.createdAt);
+//       const now = moment();
 
-      // const secondsSinceCreation = now.diff(createdAt, 'seconds');
-      const hoursSinceCreation = now.diff(createdAt, "hours");
-      const daysSinceCreation = now.diff(createdAt, "days");
+//       // const secondsSinceCreation = now.diff(createdAt, 'seconds');
+//       const hoursSinceCreation = now.diff(createdAt, "hours");
+//       const daysSinceCreation = now.diff(createdAt, "days");
 
-      const reminderTriggers = [
-        // secondsSinceCreation >= 10 && secondsSinceCreation <= 20,
-        hoursSinceCreation === 24,
-        hoursSinceCreation === 48,
-        daysSinceCreation === 7,
-        daysSinceCreation === 30,
-      ];
+//       const reminderTriggers = [
+//         // secondsSinceCreation >= 10 && secondsSinceCreation <= 20,
+//         hoursSinceCreation === 24,
+//         hoursSinceCreation === 48,
+//         daysSinceCreation === 7,
+//         daysSinceCreation === 30,
+//       ];
 
-      if (reminderTriggers.some((trigger) => trigger)) {
-        const user = await Users.findOne({ _id: organization.ownerId });
+//       if (reminderTriggers.some((trigger) => trigger)) {
+//         const user = await Users.findOne({ _id: organization.ownerId });
 
-        if (!user || !user.email) {
-          console.warn(
-            `[WARNING] No user or email found for ownerId: ${organization.ownerId}`
-          );
-          continue;
-        }
+//         if (!user || !user.email) {
+//           console.warn(
+//             `[WARNING] No user or email found for ownerId: ${organization.ownerId}`
+//           );
+//           continue;
+//         }
 
-        const userName =
-          (user.firstName ? user.firstName + " " : "") + (user.lastName || "");
+//         const userName =
+//           (user.firstName ? user.firstName + " " : "") + (user.lastName || "");
 
-        const emailSubject = emailTemplateSubmitted.subject;
-        // .replace('{{companyName}}', process.env.COMPANY_NAME);
-        const emailBody = emailTemplateSubmitted.body
-          .replace(/{{userName}}/g, userName)
-          .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
-          .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
-          .replace(
-            /{{paymentLink}}/g,
-            `${config.REACT_APP_API_URL_FRONTEND}/account-settings/payment`
-          );
+//         const emailSubject = emailTemplateSubmitted.subject;
+//         // .replace('{{companyName}}', process.env.COMPANY_NAME);
+//         const emailBody = emailTemplateSubmitted.body
+//           .replace(/{{userName}}/g, userName)
+//           .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+//           .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
+//           .replace(
+//             /{{paymentLink}}/g,
+//             `${config.REACT_APP_API_URL_FRONTEND}/account-settings/payment`
+//           );
 
-        const emailResponse = await sendEmail(
-          user.email,
-          emailSubject,
-          emailBody
-        );
-      } else {
-      }
-    }
+//         const emailResponse = await sendEmail(
+//           user.email,
+//           emailSubject,
+//           emailBody
+//         );
+//       } else {
+//       }
+//     }
 
-    const draftOrganizations = await Organization.find({ status: "draft" });
+//     const draftOrganizations = await Organization.find({ status: "draft" });
 
-    const emailTemplateDraft = await emailTemplateModel.findOne({
-      category: "draft_status_reminder",
-      isActive: true,
-      isSystemTemplate: true,
-    });
+//     const emailTemplateDraft = await emailTemplateModel.findOne({
+//       category: "draft_status_reminder",
+//       isActive: true,
+//       isSystemTemplate: true,
+//     });
 
-    if (!emailTemplateDraft) {
-      console.error(
-        "[ERROR] No email template found for draft_status_reminder"
-      );
-      return;
-    }
+//     if (!emailTemplateDraft) {
+//       console.error(
+//         "[ERROR] No email template found for draft_status_reminder"
+//       );
+//       return;
+//     }
 
-    for (const organization of draftOrganizations) {
-      const createdAt = moment(organization.createdAt);
-      const now = moment();
+//     for (const organization of draftOrganizations) {
+//       const createdAt = moment(organization.createdAt);
+//       const now = moment();
 
-      const hoursSinceCreation = now.diff(createdAt, "hours");
-      const daysSinceCreation = now.diff(createdAt, "days");
+//       const hoursSinceCreation = now.diff(createdAt, "hours");
+//       const daysSinceCreation = now.diff(createdAt, "days");
 
-      const reminderTriggers = [
-        hoursSinceCreation === 24,
-        hoursSinceCreation === 48,
-        daysSinceCreation === 7,
-        daysSinceCreation === 30,
-      ];
+//       const reminderTriggers = [
+//         hoursSinceCreation === 24,
+//         hoursSinceCreation === 48,
+//         daysSinceCreation === 7,
+//         daysSinceCreation === 30,
+//       ];
 
-      if (reminderTriggers.some((trigger) => trigger)) {
-        const user = await Users.findOne({ _id: organization.ownerId });
+//       if (reminderTriggers.some((trigger) => trigger)) {
+//         const user = await Users.findOne({ _id: organization.ownerId });
 
-        if (!user || !user.email) {
-          console.warn(
-            `[WARNING] No user or email found for ownerId: ${organization.ownerId}`
-          );
-          continue;
-        }
+//         if (!user || !user.email) {
+//           console.warn(
+//             `[WARNING] No user or email found for ownerId: ${organization.ownerId}`
+//           );
+//           continue;
+//         }
 
-        const userName =
-          (user.firstName ? user.firstName + " " : "") + (user.lastName || "");
+//         const userName =
+//           (user.firstName ? user.firstName + " " : "") + (user.lastName || "");
 
-        const emailSubject = emailTemplateDraft.subject.replace(
-          "{{companyName}}",
-          process.env.COMPANY_NAME
-        );
-        const emailBody = emailTemplateDraft.body
-          .replace(/{{userName}}/g, userName)
-          .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
-          .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
-          .replace(
-            /{{profileLink}}/g,
-            `${config.REACT_APP_API_URL_FRONTEND}/account-settings/profile`
-          );
+//         const emailSubject = emailTemplateDraft.subject.replace(
+//           "{{companyName}}",
+//           process.env.COMPANY_NAME
+//         );
+//         const emailBody = emailTemplateDraft.body
+//           .replace(/{{userName}}/g, userName)
+//           .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
+//           .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
+//           .replace(
+//             /{{profileLink}}/g,
+//             `${config.REACT_APP_API_URL_FRONTEND}/account-settings/profile`
+//           );
 
-        const emailResponse = await sendEmail(
-          user.email,
-          emailSubject,
-          emailBody
-        );
-      } else {
-      }
-    }
-  } catch (error) {
-    console.error("\n❌ Organization Status Email Reminder Job Error:", error);
-  }
-});
+//         const emailResponse = await sendEmail(
+//           user.email,
+//           emailSubject,
+//           emailBody
+//         );
+//       } else {
+//       }
+//     }
+//   } catch (error) {
+//     console.error("\n❌ Organization Status Email Reminder Job Error:", error);
+//   }
+// });
 
 // First, define the sendVerificationEmail function (can be at the top of the file)
 const sendVerificationEmail = async ({ type, to, data }) => {

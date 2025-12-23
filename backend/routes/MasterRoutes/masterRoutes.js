@@ -12,10 +12,19 @@ const {
 
 const loggingService = require("../../middleware/loggingService.js");
 
-router.post("/:type", loggingService.FeedsMiddleware, createMaster);
+router.post(
+  "/:type",
+  loggingService.internalLoggingMiddleware,
+  loggingService.FeedsMiddleware,
+  createMaster
+);
 router.get("/:type/:id", getMasterById);
 router.get("/:type", getAllMasters);
-router.put("/:type/:id", updateMaster);
+router.put(
+  "/:type/:id",
+  loggingService.internalLoggingMiddleware,
+  updateMaster
+);
 router.delete("/:type/:id", deleteMaster);
 
 module.exports = router;
