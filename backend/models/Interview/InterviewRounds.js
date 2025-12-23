@@ -1,5 +1,21 @@
 
 // v1.0.0 - Venkatesh - Added hold transaction tracking and settlement status fields for interview payment management
+// Policy usage:
+// This schema is the main source of truth for applying interview reschedule / cancellation / no-show policies
+// during payout settlement. The WalletControllers.settleInterviewPayment function reads:
+// - status (Completed / Cancelled / NoShow / InCompleted / Incomplete)
+// - currentAction (e.g. Interviewer_NoShow)
+// - history[] (schedule / reschedule / cancel timestamps)
+// - dateTime (scheduled start)
+// to decide which policy bracket should be applied for that round.
+// Policy usage note:
+// This model is the main source of truth for applying interview reschedule / cancellation / no-show policies
+// during settlement. The WalletControllers.settleInterviewPayment function reads:
+// - status (Completed / Cancelled / NoShow / InCompleted / Incomplete)
+// - currentAction (e.g. Interviewer_NoShow)
+// - history[] (schedule / reschedule / cancel timestamps)
+// - dateTime (scheduled start)
+// to determine the correct payout bracket and refund behaviour.
 
 const mongoose = require("mongoose");
 
@@ -15,6 +31,12 @@ const participantSchema = new mongoose.Schema(
 );
 
 // Only schedule / reschedule / cancel info
+// Each history entry represents one policy-relevant event (Scheduled / Rescheduled / Cancelled)
+// and is used by settlement logic to calculate how many hours before the interview
+// the change happened, so the correct time bracket (>24h, 12–24h, 2–12h, <2h) can be applied.
+// Each entry here represents one policy-relevant event (Scheduled / Rescheduled / Cancelled)
+// and is used by settlement logic to calculate how many hours before the interview
+// a cancellation happened, so that the correct policy bracket can be applied.
 const roundHistorySchema = new mongoose.Schema(
     {
         scheduledAt: { type: Date, required: true },
@@ -100,6 +122,12 @@ const interviewRoundSchema = new mongoose.Schema({
     rejectionReason: String,
 
     // Settlement tracking
+    // These fields are updated by WalletControllers.settleInterviewPayment after
+    // interview policy has been applied. Super Admin UI (table + sidebar) reads
+    // settlementStatus/settlementDate to display whether payout was settled.
+    // These fields are set by WalletControllers.settleInterviewPayment to reflect
+    // the final outcome of policy-based settlement for this round. They are also
+    // surfaced in Super Admin UI (table + sidebar) to show per-round settlement status.
     settlementStatus: {
         type: String,
         enum: ['pending', 'completed', 'failed'],

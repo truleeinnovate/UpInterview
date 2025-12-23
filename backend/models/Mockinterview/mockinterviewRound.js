@@ -1,4 +1,9 @@
 // v1.0.0 - Venkatesh - Added hold transaction tracking and settlement status fields for mock interview payment management
+// Policy usage note:
+// MockInterviewRound is used by the same settlement pipeline as normal InterviewRounds.
+// WalletControllers.settleInterviewPayment loads this model when isMockInterview=true
+// and applies the mock-specific policy brackets (>12h: 0%, 2-12h: 25%, <2h/NoShow: 50%).
+// The settlementStatus/settlementDate fields track the final outcome for each mock round.
 
 const mongoose = require("mongoose");
 
