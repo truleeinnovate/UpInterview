@@ -499,14 +499,6 @@ const ContactUsViewPage = lazy(() =>
 // v1.0.8 ------------------------------------------------------------------------------->
 // v1.0.9 ------------------------------------------------------------------------------->
 
-const VideoSDKDashboard = lazy(() => import("../src/VideoSDK/Dashboard.jsx"));
-const VideoSDKJoinMeeting = lazy(() =>
-  import("../src/VideoSDK/JoinMeeting.jsx")
-);
-const VideoSDKMeetingRoom = lazy(() =>
-  import("../src/VideoSDK/MeetingRoom.jsx")
-);
-
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
   <Suspense fallback={<Loading />}>{children}</Suspense>
