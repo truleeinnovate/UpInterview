@@ -194,7 +194,7 @@ export default function CodeEditor() {
   const isExpanded = leftExpanded || rightExpanded;
 
   return (
-    <div className="h-full flex flex-col bg-[#0a0e27] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-[#0a0e27] relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-emerald-500/5 pointer-events-none"></div>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-500/10 via-transparent to-transparent pointer-events-none"></div>
 

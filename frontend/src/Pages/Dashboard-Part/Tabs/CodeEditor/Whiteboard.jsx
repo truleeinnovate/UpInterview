@@ -913,7 +913,7 @@ export default function Whiteboard() {
   ];
 
   return (
-    <div className="h-full flex flex-col bg-[#0a0e27] relative overflow-hidden select-none">
+    <div className="h-screen w-full flex flex-col bg-[#0a0e27] relative overflow-hidden select-none">
       <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-fuchsia-500/5 pointer-events-none"></div>
 
       {/* Header UI */}
