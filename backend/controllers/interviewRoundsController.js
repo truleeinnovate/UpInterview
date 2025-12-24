@@ -240,6 +240,8 @@ const updateInterviewRoundStatus = async (req, res) => {
     const { roundId } = req.params;
     const { actingAsUserId } = res.locals.auth;
 
+    console.log("req.body", req.body);
+
     if (!roundId) {
       return res
         .status(400)
@@ -253,10 +255,23 @@ const updateInterviewRoundStatus = async (req, res) => {
         .json({ success: false, message: "Round not found" });
     }
 
+    // Compute changes dynamically
+    const changes = {
+      statusChanged:
+        req.body.status !== undefined && req.body.status !== round.status,
+      dateTimeChanged:
+        req.body.dateTime !== undefined && req.body.dateTime !== round.dateTime,
+      // Add more as needed, e.g., interviewersChanged: !_.isEqual(req.body.interviewers, round.interviewers) // if using lodash for deep compare
+    };
+    changes.anyChange = Object.values(changes).some(
+      (changed) => changed === true
+    );
+
     const updatePayload = buildSmartRoundUpdate({
       existingRound: round,
       body: req.body,
       actingAsUserId,
+      changes,
     });
 
     if (!updatePayload) {
