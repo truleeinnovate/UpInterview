@@ -25,6 +25,7 @@ import {
   ExternalLink,
   Share2,
   BarChart3,
+  Activity,
 } from "lucide-react";
 
 // import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
@@ -50,6 +51,8 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { notify } from "../../../../../services/toastService";
 import ScheduledAssessmentResultView from "../../Assessment-Tab/AssessmentViewDetails/ScheduledAssessmentResultView";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
+import RoundStatusReasonModal from "../../CommonCode-AllTabs/RoundStatusReasonModal";
+import { NO_SHOW_OPTIONS, CANCEL_OPTIONS } from "../../../../../utils/roundHistoryOptions";
 
 const RoundCard = ({
   round,
@@ -79,23 +82,14 @@ const RoundCard = ({
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   const [confirmAction, setConfirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   // Add near other state declarations
-  const [cancelReason, setCancelReason] = useState("");
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReasons, setCancelReasons] = useState([
-    "Candidate unavailable",
-    "Interviewer unavailable",
-    "Technical issues",
-    "Position on hold",
-    "Candidate withdrew application",
-    "Other",
-  ]);
-  // Add this near other state declarations
-  const [otherReason, setOtherReason] = useState("");
+  const [cancelReasonModalOpen, setCancelReasonModalOpen] = useState(false);
+  const [noShowReasonModalOpen, setNoShowReasonModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
   // v1.0.1 <--------------------------------------------
@@ -218,7 +212,7 @@ const RoundCard = ({
 
   const handleStatusChange = async (
     newStatus,
-    cancellationReason = null,
+    reasonValue = null,
     comment = null
   ) => {
     // const roundData = {
@@ -234,14 +228,18 @@ const RoundCard = ({
     //   isEditing: true, // Always set isEditing to true
     // };
 
-    // For cancellation, we need to ensure we pass the cancellation reason
-    if (newStatus === "Cancelled" && !cancellationReason) {
-      // If cancellation is triggered without reason, open the cancel modal
-      setActionInProgress(true);
-      setShowCancelModal(true);
+    // For cancellation/no-show, we need to ensure we pass a reason
+    if ((newStatus === "Cancelled" || newStatus === "NoShow") && !reasonValue) {
+      if (newStatus === "Cancelled") {
+        setActionInProgress(true);
+        setCancelReasonModalOpen(true);
+      } else if (newStatus === "NoShow") {
+        setActionInProgress(true);
+        setNoShowReasonModalOpen(true);
+      }
       return;
     }
-    console.log("cancellationReason", cancellationReason);
+    console.log("status reason", newStatus, reasonValue);
 
     try {
       // const response = await axios.post(
@@ -257,9 +255,9 @@ const RoundCard = ({
         status: newStatus,
       };
 
-      // Add cancellation reason if provided
-      if (newStatus === "Cancelled" && cancellationReason) {
-        payload.cancellationReason = cancellationReason;
+      // Add cancellation / NoShow reason if provided
+      if ((newStatus === "Cancelled" || newStatus === "NoShow") && reasonValue) {
+        payload.cancellationReason = reasonValue;
         payload.comment = comment || null;
       }
 
@@ -280,27 +278,20 @@ const RoundCard = ({
     }
   };
 
-  const handleCancelWithReason = async () => {
-    // Determine the final reason to send
-    let finalReason = cancelReason;
-    let comment = otherReason;
-
-    // If user selected "Other" and typed something, use that
-    if (cancelReason === "Other" && otherReason.trim()) {
-      // finalReason = otherReason;
-      comment = otherReason;
-    }
-
-    if (!finalReason.trim()) {
-      notify.error("Please provide a cancellation reason");
-      return;
-    }
-
+  const handleCancelWithReason = async ({ reason, comment }) => {
     try {
-      await handleStatusChange("Cancelled", finalReason, comment);
-      setShowCancelModal(false);
-      setCancelReason("");
-      setOtherReason("");
+      await handleStatusChange("Cancelled", reason, comment || null);
+      setCancelReasonModalOpen(false);
+      setActionInProgress(false);
+    } catch (error) {
+      setActionInProgress(false);
+    }
+  };
+
+  const handleNoShowWithReason = async ({ reason, comment }) => {
+    try {
+      await handleStatusChange("NoShow", reason, comment || null);
+      setNoShowReasonModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
       setActionInProgress(false);
@@ -1017,74 +1008,99 @@ const RoundCard = ({
     // }
   };
 
-  // 5. Added renderCancelModal function
-  const renderCancelModal = () => {
+  // 5. Cancel/NoShow reasons handled via shared modal
+
+  const renderActivityModal = () => {
+    const historyEntries = Array.isArray(round?.history)
+      ? [...round.history].sort((a, b) => {
+          const aTime = new Date(a?.updatedAt || a?.scheduledAt || 0).getTime();
+          const bTime = new Date(b?.updatedAt || b?.scheduledAt || 0).getTime();
+          return bTime - aTime;
+        })
+      : [];
+
     return createPortal(
-      <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
-        <div className="bg-white p-5 rounded-lg shadow-md max-w-md w-full">
-          <h3 className="text-lg font-semibold mb-3">Cancel Round</h3>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Reason for Cancellation
-            </label>
-            <select
-              value={cancelReason}
-              onChange={(e) => {
-                setCancelReason(e.target.value);
-                // Clear other reason when switching away from "Other"
-                if (e.target.value !== "Other") {
-                  setOtherReason("");
-                }
-              }}
-              className="w-full p-2 border border-gray-300 rounded-md"
+      <div className="fixed inset-0 z-50 flex">
+        <div
+          className="flex-1 bg-black bg-opacity-40"
+          onClick={() => setShowActivityModal(false)}
+        />
+        <div className="w-full max-w-xl h-full bg-white shadow-xl flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Round Activity</h3>
+              <p className="text-xs text-gray-500">
+                {interviewData?.candidateId?.FirstName}{" "}
+                {interviewData?.candidateId?.LastName} - {round?.roundTitle}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowActivityModal(false)}
+              className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
             >
-              <option value="">Select a reason</option>
-              {cancelReasons.map((reason, index) => (
-                <option key={index} value={reason}>
-                  {reason}
-                </option>
-              ))}
-            </select>
+              <XCircle className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-5 py-4 bg-gray-50">
+            {historyEntries.length === 0 ? (
+              <div className="text-sm text-gray-500">
+                No activity recorded for this round yet.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {historyEntries.map((entry, index) => {
+                  const timestamp = entry?.updatedAt || entry?.scheduledAt;
+                  const reasonLabel = entry?.reasonCode || entry?.reason;
+                  const actor = entry?.updatedByName || "";
 
-            {cancelReason === "Other" && (
-              <div className="mt-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Specify other reason
-                </label>
-                <input
-                  type="text"
-                  value={otherReason}
-                  onChange={(e) => setOtherReason(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  placeholder="Enter reason..."
-                />
+                  return (
+                    <div
+                      key={`${timestamp || index}-${index}`}
+                      className="rounded-xl border border-blue-100 bg-blue-50"
+                    >
+                      <div className="flex items-start justify-between px-4 py-3 border-b border-blue-100">
+                        <div>
+                          <div className="flex items-center gap-2 text-sm font-semibold text-blue-900">
+                            <Activity className="h-4 w-4" />
+                            <span>{entry?.action || "Activity"}</span>
+                          </div>
+                          {timestamp && (
+                            <div className="mt-1 flex items-center gap-2 text-xs text-gray-600">
+                              <Clock className="h-3 w-3" />
+                              <span>{formatDate(timestamp)}</span>
+                            </div>
+                          )}
+                          {actor && (
+                            <div className="mt-1 text-xs text-gray-500">
+                              By {actor}
+                            </div>
+                          )}
+                        </div>
+                        {entry?.action && (
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                            {entry.action}
+                          </span>
+                        )}
+                      </div>
+                      <div className="px-4 py-3 bg-blue-50/60 text-xs text-gray-700">
+                        {reasonLabel && (
+                          <div className="mb-1">
+                            <span className="font-medium text-gray-500">Reason:</span>
+                            <span className="ml-1">{reasonLabel}</span>
+                          </div>
+                        )}
+                        {entry?.comment && (
+                          <div>
+                            <span className="font-medium text-gray-500">Comment:</span>
+                            <span className="ml-1">{entry.comment}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-          </div>
-
-          <div className="flex justify-end space-x-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowCancelModal(false);
-                setCancelReason("");
-                setOtherReason("");
-                setActionInProgress(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleCancelWithReason}
-              disabled={
-                !cancelReason.trim() ||
-                (cancelReason === "Other" && !otherReason.trim())
-              }
-            >
-              Confirm Cancel
-            </Button>
           </div>
         </div>
       </div>,
@@ -1740,6 +1756,15 @@ const RoundCard = ({
               {/* v1.0.5 <------------------------------------------------------------------ */}
               <div className="overflow-x-auto">
                 <div className="mt-6 w-full flex gap-2 whitespace-nowrap sm:justify-start md:justify-start justify-end">
+                  {/* Activity */}
+                  {round.roundTitle !== "Assessment" && (
+                    <button
+                      onClick={() => setShowActivityModal(true)}
+                      className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                    >
+                      <Activity className="h-4 w-4 mr-1" /> Activity
+                    </button>
+                  )}
                   {/* Reschedule */}
                   {permissions.canReschedule &&
                     round?.roundTitle !== "Assessment" && (
@@ -1752,6 +1777,20 @@ const RoundCard = ({
                         <Calendar className="h-4 w-4 mr-1" /> Reschedule
                       </button>
                     )}
+                  
+                  {/* No Show */}
+                  {permissions.canCancel && round.roundTitle !== "Assessment" &&  (
+                    <button
+                      onClick={() => {
+                        setActionInProgress(true);
+                        setNoShowReasonModalOpen(true);
+                      }}
+                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                    >
+                      <XCircle className="h-4 w-4 mr-1" /> No Show
+                    </button>
+                  )}
+
                   {/* Cancel */}
 
                   {permissions.canCancel &&
@@ -1759,7 +1798,7 @@ const RoundCard = ({
                       <button
                         onClick={() => {
                           setActionInProgress(true);
-                          setShowCancelModal(true);
+                          setCancelReasonModalOpen(true);
 
                           // setConfirmAction("Cancelled");
                           // setShowConfirmModal(true);
@@ -1894,7 +1933,35 @@ const RoundCard = ({
       </div>
 
       {/*  cancelllation modal */}
-      {showCancelModal && renderCancelModal()}
+      {showActivityModal && renderActivityModal()}
+
+      {/* Shared reason modal for Cancel */}
+      <RoundStatusReasonModal
+        isOpen={cancelReasonModalOpen}
+        title="Cancel Round"
+        label="Reason for Cancellation"
+        options={CANCEL_OPTIONS}
+        onClose={() => {
+          setCancelReasonModalOpen(false);
+          setActionInProgress(false);
+        }}
+        onConfirm={handleCancelWithReason}
+        confirmLabel="Confirm Cancel"
+      />
+
+      {/* Shared reason modal for No Show */}
+      <RoundStatusReasonModal
+        isOpen={noShowReasonModalOpen}
+        title="Mark as No Show"
+        label="Reason for No Show"
+        options={NO_SHOW_OPTIONS}
+        onClose={() => {
+          setNoShowReasonModalOpen(false);
+          setActionInProgress(false);
+        }}
+        onConfirm={handleNoShowWithReason}
+        confirmLabel="Confirm No Show"
+      />
 
       {showConfirmModal &&
         createPortal(
