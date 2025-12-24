@@ -208,7 +208,7 @@ const PositionRoundCard = ({
         `${config.REACT_APP_API_URL}/interview/save-round`,
         payload
       );
-      
+
       // Show success toast
       notify.success(`Round status updated to ${newStatus}`, {});
     } catch (error) {
@@ -440,60 +440,61 @@ const PositionRoundCard = ({
                 )}
               </div>
 
-
-              {round.roundTitle !== "Assessment" && round?.questions.length > 0 && (
-                <div className="mt-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-sm font-medium text-gray-700">
-                      Interview Questions
-                    </h4>
-                    <button
-                      onClick={() => setShowQuestions(!showQuestions)}
-                      className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
-                    >
-                      {showQuestions ? "Hide" : "Show"}
-                      {showQuestions ? (
-                        <ChevronUp className="h-4 w-4 ml-1" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 ml-1" />
-                      )}
-                    </button>
-                  </div>
-                  {/* v1.0.1 <--------------------------------------------------------- */}
-                  {showQuestions && round.questions && (
-                    <div className="space-y-2">
-                      {round?.questions.length > 0 && (
-                        <ul className="mt-2 space-y-1">
-                          {round?.questions?.map((question, qIndex) => {
-                            // const isMandatory = question?.mandatory === "true";
-                            const questionText =
-                              question?.snapshot?.questionText ||
-                              "No Question Text Available";
-                            return (
-                              <li
-                                key={qIndex}
-                                className="text-gray-600 font-sm"
-                              >
-                                <span>
-                                  {/* {qIndex + 1}. */}•{" "}
-                                  {questionText || "No question text available"}
-                                </span>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      ) 
-                      // : (
-                      //   <p className="mt-2 text-gray-500 flex justify-center">
-                      //     No Questions added yet.
-                      //   </p>
-                      // )
-                      }
+              {round.roundTitle !== "Assessment" &&
+                round?.questions.length > 0 && (
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-sm font-medium text-gray-700">
+                        Interview Questions
+                      </h4>
+                      <button
+                        onClick={() => setShowQuestions(!showQuestions)}
+                        className="text-sm text-custom-blue hover:text-custom-blue/80 flex items-center"
+                      >
+                        {showQuestions ? "Hide" : "Show"}
+                        {showQuestions ? (
+                          <ChevronUp className="h-4 w-4 ml-1" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 ml-1" />
+                        )}
+                      </button>
                     </div>
-                  )}
-                </div>
-              )
-            } 
+                    {/* v1.0.1 <--------------------------------------------------------- */}
+                    {showQuestions && round.questions && (
+                      <div className="space-y-2">
+                        {
+                          round?.questions.length > 0 && (
+                            <ul className="mt-2 space-y-1">
+                              {round?.questions?.map((question, qIndex) => {
+                                // const isMandatory = question?.mandatory === "true";
+                                const questionText =
+                                  question?.snapshot?.questionText ||
+                                  "No Question Text Available";
+                                return (
+                                  <li
+                                    key={qIndex}
+                                    className="text-gray-600 font-sm"
+                                  >
+                                    <span>
+                                      {/* {qIndex + 1}. */}•{" "}
+                                      {questionText ||
+                                        "No question text available"}
+                                    </span>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )
+                          // : (
+                          //   <p className="mt-2 text-gray-500 flex justify-center">
+                          //     No Questions added yet.
+                          //   </p>
+                          // )
+                        }
+                      </div>
+                    )}
+                  </div>
+                )}
 
               {round.roundTitle === "Assessment" && (
                 <div className="mt-4">
@@ -825,7 +826,7 @@ const PositionRoundCard = ({
       {/* BACKDROP WHEN ACTIVITY PANEL IS OPEN */}
       {/* v1.0.4 <------------------------------------------------------------------------------ */}
       {showActivityPanel && (
-        <SidebarPopup title="Activity" onClose={toggleActivityPanel}>
+        <SidebarPopup title="Feeds" onClose={toggleActivityPanel}>
           <div className="sm:p-0 p-4">
             <Activity
               parentId={round?._id}

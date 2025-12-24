@@ -308,7 +308,7 @@ const AssessmentActionPopup = ({
       case 'cancelled':
         return 'text-red-600 bg-red-50';
       case 'extended':
-        return 'text-blue-600 bg-blue-50';
+        return 'text-custom-blue bg-custom-blue/10';
       case 'pending':
         return 'text-yellow-600 bg-yellow-50';
       case 'in_progress':

@@ -684,7 +684,7 @@ const SubscriptionCardDetails = () => {
                       checked={cardDetails.membershipType === "monthly"}
                       // onChange={(e) => setCardDetails((prevData) => ({ ...prevData, membershipType: e.target.value }))}
                       readOnly
-                      className="mr-1 h-4 w-5"
+                      className="mr-1 h-4 w-5 accent-custom-blue"
                     />
                   </div>
                   <div className="flex flex-col">
@@ -723,7 +723,7 @@ const SubscriptionCardDetails = () => {
                       value="annual"
                       checked={cardDetails.membershipType === "annual"}
                       readOnly
-                      className="mr-1 h-4 w-5"
+                      className="mr-1 h-4 w-5 accent-custom-blue"
                     />
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold">
