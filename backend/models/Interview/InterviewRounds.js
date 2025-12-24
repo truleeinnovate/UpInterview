@@ -24,7 +24,7 @@ const participantSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ["Candidate", "Interviewer", "Scheduler"],
-      required: true,
+      // required: true,
     },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }, // optional for candidate
     joinedAt: { type: Date },
@@ -42,20 +42,23 @@ const participantSchema = new mongoose.Schema(
 // a cancellation happened, so that the correct policy bracket can be applied.
 const roundHistorySchema = new mongoose.Schema(
   {
-    scheduledAt: { type: Date, required: true },
+    // scheduledAt: { type: Date, required: true },
+    scheduledAt: { type: String },
     action: {
       type: String,
-      enum: ["Scheduled", "Rescheduled", "Cancelled"],
-      required: true,
+      //   enum: ["Scheduled", "Rescheduled", "Cancelled"],
+      //   required: true,
     },
     // reason: { type: String },
     reasonCode: { type: String }, // e.g. "candidate_requested"
     comment: { type: String }, // only when reasonCode === "other"
     participants: [participantSchema],
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    interviewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }],
+
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     updatedAt: { type: Date, default: Date.now },
-  },
-  { _id: false }
+  }
+  // { _id: false }
 );
 
 // Main Interview Round Schema
