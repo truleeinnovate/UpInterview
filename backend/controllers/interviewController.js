@@ -1014,7 +1014,7 @@ const saveInterviewRound = async (req, res) => {
           },
           {
             status: () => ({
-              json: () => {},
+              json: () => { },
             }),
             locals: {},
           }
@@ -1043,7 +1043,7 @@ const saveInterviewRound = async (req, res) => {
         },
         {
           status: () => ({
-            json: () => {},
+            json: () => { },
           }),
           locals: {},
         }
@@ -1378,7 +1378,7 @@ async function handleInterviewerChangeFlow({
           },
         },
         {
-          status: () => ({ json: () => {} }),
+          status: () => ({ json: () => { } }),
           locals: {},
         }
       );
@@ -1396,7 +1396,7 @@ async function handleInterviewerChangeFlow({
         },
         {
           status: () => ({
-            json: () => {},
+            json: () => { },
           }),
           locals: {},
         }
@@ -1438,7 +1438,7 @@ function detectRoundChanges({
   if (
     incomingRound.dateTime &&
     new Date(incomingRound.dateTime).getTime() !==
-      new Date(existingRound.dateTime).getTime()
+    new Date(existingRound.dateTime).getTime()
   ) {
     changes.dateTimeChanged = true;
     changes.anyChange = true;
@@ -2344,26 +2344,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-          from: "mockinterviews",
-          localField: "mockInterviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        }
+        from: "mockinterviews",
+        localField: "mockInterviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      }
       : {
-          from: "interviews",
-          localField: "interviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        };
+        from: "interviews",
+        localField: "interviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2385,23 +2385,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-            {
-              $addFields: {
-                mainTenantIdNormalized: {
-                  $cond: [
-                    {
-                      $and: [
-                        { $ne: ["$mainInterview.tenantId", null] },
-                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                      ],
-                    },
-                    { $toObjectId: "$mainInterview.tenantId" },
-                    null,
-                  ],
-                },
+          {
+            $addFields: {
+              mainTenantIdNormalized: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ["$mainInterview.tenantId", null] },
+                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                    ],
+                  },
+                  { $toObjectId: "$mainInterview.tenantId" },
+                  null,
+                ],
               },
             },
-          ]
+          },
+        ]
         : []),
       // Lookup tenant for organization info
       {
@@ -2777,12 +2777,22 @@ const getInterviewDataforOrg = async (req, res) => {
         select: "firstName lastName email",
       })
       .lean();
+    console.log("interviewRequests", interviewRequests);
 
     // Create lookup map → roundId => request
     const requestMap = {};
+
     interviewRequests.forEach((req) => {
-      requestMap[String(req.roundId)] = req;
+      const roundKey = String(req.roundId);
+
+      if (!requestMap[roundKey]) {
+        requestMap[roundKey] = [];
+      }
+
+      requestMap[roundKey].push(req);
     });
+
+    console.log("requestMap FINAL", requestMap);
 
     // 5️⃣ Build rounds response
     const fullRounds = rounds.map((round) => {
@@ -2794,11 +2804,19 @@ const getInterviewDataforOrg = async (req, res) => {
         round.status === "RequestSent" &&
         interview.status === "InProgress"
       ) {
-        const request = requestMap[String(round._id)];
-        if (request?.interviewerId) {
-          interviewers = [request.interviewerId];
+        const requests = requestMap[String(round._id)] || [];
+
+        console.log("requests count:", requests.length);
+
+        if (requests.length > 0) {
+          interviewers = requests
+            .map((r) => r.interviewerId)
+            .filter(Boolean);
         }
       }
+
+
+
 
       return {
         ...round,
