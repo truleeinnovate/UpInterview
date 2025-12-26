@@ -165,6 +165,31 @@ const getMasterDataKeys = (type) => {
   return typeMap[type] || type;
 };
 
+const getMasterTitles = (type) => {
+  switch (type) {
+    case "industries":
+      return "Industrie";
+    case "technology":
+      return "Technologie";
+    case "skills":
+      return "Skill";
+    case "locations":
+      return "Location";
+    case "roles":
+      return "Role";
+    case "qualification":
+      return "Qualification";
+    case "universitycollege":
+      return "University/College";
+    case "company":
+      return "Companie";
+    case "category":
+      return "Categorie";
+    default:
+      return type;
+  }
+};
+
 const MasterTable = ({ permissions = {} }) => {
   const queryClient = useQueryClient();
   const { type } = useParams();
@@ -849,7 +874,7 @@ const MasterTable = ({ permissions = {} }) => {
           <ArrowLeft size={20} />
         </button>
         <Header
-          title={capitalizeFirstLetter(type)}
+          title={`${getMasterTitles(type)}s`}
           onAddClick={() => {
             setPopupMode("create");
             setIsPopupOpen(true);
@@ -941,6 +966,8 @@ const MasterTable = ({ permissions = {} }) => {
               }}
               loading={isLoading}
               emptyState="No master data found."
+              kanbanTitle={getMasterTitles(type)}
+              customHeight = "calc(100vh - 282px)"
             />
           </div>
         )}

@@ -31,7 +31,7 @@ const KanbanView = ({
     >
       <div className="w-full">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-gray-800">All receipts</h3>
+          <h3 className="text-xl font-semibold text-gray-800">All Receipts</h3>
           <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-medium text-gray-600 shadow-sm border border-gray-200">
             {receipts?.length || 0} Receipts
           </span>

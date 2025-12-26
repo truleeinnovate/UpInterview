@@ -501,23 +501,23 @@ function IntegrationsPage() {
   ];
 
   // Render Actions for Kanban
-  const renderKanbanActions = (item) => (
-    <div className="flex items-center gap-1">
-      {kanbanActions.map((action) => (
-        <button
-          key={action.key}
-          onClick={(e) => {
-            e.stopPropagation();
-            action.onClick(item);
-          }}
-          className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
-          title={action.label}
-        >
-          {action.icon}
-        </button>
-      ))}
-    </div>
-  );
+  // const renderKanbanActions = (item) => (
+  //   <div className="flex items-center gap-1">
+  //     {kanbanActions.map((action) => (
+  //       <button
+  //         key={action.key}
+  //         onClick={(e) => {
+  //           e.stopPropagation();
+  //           action.onClick(item);
+  //         }}
+  //         className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
+  //         title={action.label}
+  //       >
+  //         {action.icon}
+  //       </button>
+  //     ))}
+  //   </div>
+  // );
   // Render Filter Content
   const renderFilterContent = () => {
     // filters options
