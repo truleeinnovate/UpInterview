@@ -621,7 +621,7 @@ export default function Plans() {
               <KanbanActionsMenu item={item} kanbanActions={actions} />
             )}
             emptyState="No Active Plans Found"
-            kanbanTitle="Candidate"
+            kanbanTitle="Subscription Plan"
           />
         )}
       </div>
