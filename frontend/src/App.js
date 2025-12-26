@@ -46,6 +46,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { queryClient } from "./utils/queryClient"; // Import shared query client
 import { usePersistenceConfig } from "./utils/persistenceConfig"; // Import persistence config
+import VideoSdkPanel from "./VideoSDK1/VideoSdkPanel.js";
 
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
 const SelectProfession = lazy(() => import("./Pages/Login-Part/Individual-3"));
@@ -526,6 +527,10 @@ const AuthRoutes = () => (
     <Route path="/forgot-password" element={<ForgetPassword />} />
 
     <Route path="/video-dashboard" element={<VideoSDKDashboard1 />} />
+
+    <Route path="/video-sdk-candidate-details" element={<VideoSdkPanel panelType="candidate-details" />} />
+    <Route path="/video-sdk-feedback" element={<VideoSdkPanel panelType="feedback" />} />
+    <Route path="/video-sdk-interview-actions" element={<VideoSdkPanel panelType="interview-actions" />} />
 
     <Route path="/assessmenttest" element={<AssessmentTest />} />
     <Route path="/pending-approval" element={<PendingApproval />} />
@@ -1493,6 +1498,9 @@ const App = () => {
       "/oauth2callback",
       "/join-meeting",
       '/video-dashboard',
+      '/video-sdk-candidate-details',
+      '/video-sdk-feedback',
+      '/video-sdk-interview-actions',
       "/code-editor",
       "/white-board",
     ].some(

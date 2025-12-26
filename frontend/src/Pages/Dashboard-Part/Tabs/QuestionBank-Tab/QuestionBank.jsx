@@ -23,6 +23,8 @@ const QuestionBank = ({
   handleToggleMandatory,
   interviewQuestionsLists,
   removedQuestionIds,
+  isEmbedded = false,
+  onSelectQuestion = () => {}
 }) => {
 
 
@@ -50,17 +52,40 @@ const QuestionBank = ({
   };
   //---v1.0.0----->
 
+ const containerStyle = isEmbedded ? { 
+    padding: '0.5rem', 
+    height: '100%', 
+    overflowY: 'auto',
+    backgroundColor: 'white'
+  } : {};
+   const handleQuestionClick = (question) => {
+    if (isEmbedded) {
+      onSelectQuestion(question);
+      // Optionally close the sidebar after selection
+      // You can remove this if you want to keep the sidebar open
+      // setSideBarMode(null);
+    } else {
+      // Existing click handler logic
+      // ...
+    }
+  };
+
   return (
     // v1.0.6 <--------------------------------------------------------------------------------------
-    <div
-      className={`h-full bg-white rounded-lg flex flex-col ${
-        type === "interviewerSection" ||
-        type === "feedback" ||
-        type === "assessment"
-          ? ""
-          : ""
-      }`}
-    >
+    // <div
+    //   className={`h-full bg-white rounded-lg flex flex-col ${
+    //     type === "interviewerSection" ||
+    //     type === "feedback" ||
+    //     type === "assessment"
+    //       ? ""
+    //       : ""
+    //   }`}
+    //   style={containerStyle}
+    // >
+    <div 
+    className={`${isEmbedded ? 'question-bank-embedded' : 'h-full bg-white rounded-lg'} flex flex-col`}
+    style={containerStyle}
+  >
       {/* Tab Navigation - Fixed at top for modal context */}
       <div className="flex sm:gap-6 justify-between bg-white sm:px-0 sm:pl-4 text-center px-4 py-3 flex-shrink-0">
         <div className="flex sm:gap-6">

@@ -833,10 +833,12 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
   const { meetingId } = useMeeting();
   const [isCopied, setIsCopied] = useState(false);
 
-  // Custom button component to ensure consistent styling
-  const ControlButton = ({ children }) => (
-    <div className="text-black hover:bg-gray-100 p-2 rounded-md transition-colors">
-      {children}
+  // Custom button component to ensure consistent styling and centering
+  const ControlButton = ({ children, className = '' }) => (
+    <div className={`flex items-center justify-center w-12 h-12 hover:bg-gray-700 rounded-lg transition-all duration-200 ${className}`}>
+      <div className="flex items-center justify-center w-7 h-7">
+        {children}
+      </div>
     </div>
   );
 
@@ -852,9 +854,9 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
     const { meetingId } = useMeeting();
     const [isCopied, setIsCopied] = useState(false);
     return (
-      <div className="flex items-center justify-center lg:ml-0 ml-4">
-        <div className="flex border-2 border-gray-850 p-2 rounded-md items-center justify-center">
-          <h1 className="text-white text-base ">{meetingId}</h1>
+      <div className="flex items-center justify-center lg:ml-0 ml-2">
+        <div className="flex border-2 border-gray-850 p-1.5 rounded-md items-center justify-center">
+          <span className="text-white text-sm">{meetingId}</span>
           <button
             className="ml-2"
             onClick={() => {
@@ -883,21 +885,34 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
   };
 
   return (
-    <div className="flex items-center justify-between p-2 bg-gray-800 border-t border-gray-600">
+    <div className="relative flex items-center justify-between px-4 py-2 bg-gray-800 border-gray-600 h-16">
       {/* Left side - Meeting ID */}
-      <div className="flex items-center px-4">
+      <div className="flex items-center">
         <MeetingIdCopyBTN />
       </div>
 
       {/* Middle - Controls */}
-      <div className="flex items-center space-x-1 -ml-48" ref={tollTipEl}>
-        <ControlButton><RecordingBTN {...buttonProps} /></ControlButton>
-        <ControlButton><RaiseHandBTN isMobile={false} isTab={false} {...buttonProps} /></ControlButton>
-        <ControlButton><MicBTN {...buttonProps} /></ControlButton>
-        <ControlButton><WebCamBTN {...buttonProps} /></ControlButton>
-        <ControlButton><ScreenShareBTN isMobile={false} isTab={false} {...buttonProps} /></ControlButton>
-        {/* <ControlButton><PipBTN isMobile={false} isTab={false} {...buttonProps} /></ControlButton> */}
-        <ControlButton><LeaveBTN {...buttonProps} /></ControlButton>
+      <div className="absolute left-1/2 transform -translate-x-1/2" ref={tollTipEl}>
+        <div className="flex items-center">
+          {/* First group */}
+          <div className="flex items-center space-x-4">
+            <ControlButton><RecordingBTN {...buttonProps} /></ControlButton>
+            <ControlButton><RaiseHandBTN isMobile={false} isTab={false} {...buttonProps} /></ControlButton>
+          </div>
+          
+          {/* Middle group with mic and webcam - centered */}
+          <div className="flex items-center mx-6">
+            <ControlButton className="mr-2"><MicBTN {...buttonProps} /></ControlButton>
+            <div className="h-8 bg-gray-600 mx-2"></div>
+            <ControlButton className="ml-2"><WebCamBTN {...buttonProps} /></ControlButton>
+          </div>
+          
+          {/* Last group */}
+          <div className="flex items-center space-x-4">
+            <ControlButton><ScreenShareBTN isMobile={false} isTab={false} {...buttonProps} /></ControlButton>
+            <ControlButton><LeaveBTN {...buttonProps} /></ControlButton>
+          </div>
+        </div>
       </div>
 
       {/* Right side - Chat and Participants */}
