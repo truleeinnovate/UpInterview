@@ -144,12 +144,12 @@ const interviewRoundSchema = new mongoose.Schema(
     // These fields are set by WalletControllers.settleInterviewPayment to reflect
     // the final outcome of policy-based settlement for this round. They are also
     // surfaced in Super Admin UI (table + sidebar) to show per-round settlement status.
-    settlementStatus: {
-      type: String,
-      enum: ["pending", "completed", "failed"],
-      default: "pending",
-    },
-    settlementDate: { type: Date },
+    // settlementStatus: {
+    //   type: String,
+    //   enum: ["pending", "completed", "failed"],
+    //   default: "pending",
+    // },
+    // settlementDate: { type: Date },
 
     // External system identifier
     externalId: { type: String, sparse: true, index: true }, // External system identifier
