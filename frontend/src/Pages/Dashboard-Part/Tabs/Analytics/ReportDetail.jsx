@@ -670,8 +670,6 @@ const ReportDetail = () => {
   const saveFilterPreset = useSaveFilterPreset();
   const saveColumnConfig = useSaveColumnConfig();
 
-  console.log("KPIs ===============================> ", kpis);
-  console.log("FILTERS ===============================> ", filters);
 
   // column manager scroll lock
   useScrollLock(isColumnManagerOpen);
@@ -679,7 +677,6 @@ const ReportDetail = () => {
   // const generatedReport = location.state;
   // const isGeneratedReport = !!generatedReport;
   const isGeneratedReport = data.length > 0;
-  console.log("isGeneratedReport", isGeneratedReport);
 
   // THIS IS THE KEY — track last fetched reportId
   const lastFetchedId = useRef(null);
@@ -832,8 +829,6 @@ const ReportDetail = () => {
         kpis: apiKpis = [],
         charts: apiCharts = [],
       } = response;
-
-      console.log("Full Report Response:", response);
 
       setColumns(
         apiColumns.map((col, i) => ({

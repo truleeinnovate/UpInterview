@@ -43,7 +43,7 @@ const FeedbackFormModal = () => {
 
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
-    console.log("Adding question to round:", question);
+    // console.log("Adding question to round:", question);
     if (question && question.questionId && question.snapshot) {
       setInterviewerSectionData((prevList) => {
         if (prevList.some((q) => q.questionId === question.questionId)) {

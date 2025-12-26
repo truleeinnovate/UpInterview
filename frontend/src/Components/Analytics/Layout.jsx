@@ -69,8 +69,7 @@ import { usePermissions } from "../../Context/PermissionsContext";
 
 const Layout = () => {
     const { effectivePermissions } = usePermissions();
-  console.log("effectivePermissions",effectivePermissions);
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
 const navigation = [

@@ -241,7 +241,7 @@ function SupportDetails() {
       setCurrentTicket(updatedTicket);
       setIsOwnerEditing(false);
 
-      console.log("Owner updated successfully:", response.data);
+      // console.log("Owner updated successfully:", response.data);
     } catch (error) {
       console.error("Error updating owner:", error);
     } finally {

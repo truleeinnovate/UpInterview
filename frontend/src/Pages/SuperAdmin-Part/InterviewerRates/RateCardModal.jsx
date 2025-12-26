@@ -701,7 +701,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Form data before submission:", formData);
+    // console.log("Form data before submission:", formData);
 
     const errors = validateRateCard(formData);
     if (Object.keys(errors).length > 0) {
@@ -737,7 +737,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
         );
       }
 
-      console.log("Form submitted successfully:", response.data);
+      // console.log("Form submitted successfully:", response.data);
 
       if (response.status === 200 || response.status === 201) {
         notify.success(response.data.message || "Rate Card saved successfully");

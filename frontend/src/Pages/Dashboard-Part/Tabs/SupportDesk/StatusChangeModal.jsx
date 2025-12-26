@@ -26,7 +26,7 @@ function StatusChangeModal({ isOpen, onClose, ticketId, onStatusUpdate }) {
     : null;
   //console.log('impersonationPayload:', impersonationPayload.impersonatedUserId);
   const { singleContact} = useSingleContact();
-  console.log("singleContact=====",singleContact.firstName)
+  // console.log("singleContact=====",singleContact.firstName)
 
   const [newStatus, setNewStatus] = useState("");
   const [comment, setComment] = useState("");

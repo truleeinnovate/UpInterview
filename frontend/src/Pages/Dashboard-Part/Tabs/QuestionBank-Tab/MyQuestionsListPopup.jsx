@@ -205,12 +205,12 @@ const MyQuestionsList1 = forwardRef(
         });
 
         if (isEditing && result?.updated) {
-          console.log("List updated successfully");
+          // console.log("List updated successfully");
           setSelectedLabelnew(newListName);
           Cookies.set("lastSelectedLabel", newListName);
           setShowNewListPopup(false);
         } else {
-          console.log("New list created:", result);
+          // console.log("New list created:", result);
           setNewListName("");
           setNewListNameForName("");
           setShowNewListPopup(false);
@@ -242,15 +242,15 @@ const MyQuestionsList1 = forwardRef(
         const currentListIds =
           existingQuestion?.data?.tenantListId?.map((id) => id.toString()) ||
           [];
-        console.log("currentListIds ------", currentListIds);
+        // console.log("currentListIds ------", currentListIds);
         const listsToAdd = selectedListIds.filter(
           (id) => !currentListIds.includes(id)
         );
-        console.log("listsToAdd ------", listsToAdd);
+        // console.log("listsToAdd ------", listsToAdd);
         const listsToRemove = currentListIds.filter(
           (id) => !selectedListIds.includes(id)
         );
-        console.log("listsToRemove ------", listsToRemove);
+        // console.log("listsToRemove ------", listsToRemove);
 
         if (listsToAdd.length > 0) {
           //<--------v1.0.3-----
@@ -298,7 +298,7 @@ const MyQuestionsList1 = forwardRef(
               : {}),
           });
 
-          console.log("addQuestionToList------------", addQuestion);
+          // console.log("addQuestionToList------------", addQuestion);
           //--------v1.0.3----->
         }
 
@@ -310,7 +310,7 @@ const MyQuestionsList1 = forwardRef(
           });
         }
 
-        console.log("Question lists updated successfully");
+        // console.log("Question lists updated successfully");
         setSelectedListIds([]);
         closeDropdown();
       } catch (error) {

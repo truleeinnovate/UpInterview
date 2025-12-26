@@ -11,7 +11,7 @@ const VerticalRoundsView = ({
   currentRoundId,
   onChangeRound,
 }) => {
-  console.log("template",template);
+  // console.log("template",template);
   
   
 

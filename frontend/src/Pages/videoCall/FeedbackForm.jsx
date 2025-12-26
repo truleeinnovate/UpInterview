@@ -124,7 +124,7 @@ const FeedbackForm = ({
       ? overallImpressionTabData?.communicationRating
       : 0
   );
-  console.log("skillsData", overallImpressionTabData);
+  // console.log("skillsData", overallImpressionTabData);
 
   // Fixed: Proper initialization for skill ratings with proper conditional checks
   const initialSkillRatings =
@@ -275,7 +275,7 @@ const FeedbackForm = ({
       ...(filteredInterviewerQuestions || []),
     ];
 
-    console.log("allQuestions", allQuestions);
+    // console.log("allQuestions", allQuestions);
 
     // Build a quick lookup of current UI state overlays
     const overlayMap = (interviewerSectionData || []).reduce((acc, q) => {
@@ -626,9 +626,9 @@ const FeedbackForm = ({
       // console.log("Previous state:", prev);
       const updated = prev.map((q) => {
         if ((q.questionId || q.id) === questionId) {
-          console.log("Found question to toggle:", q);
+          // console.log("Found question to toggle:", q);
           const newMandatory = q.mandatory === "true" ? "false" : "true";
-          console.log("New mandatory value:", newMandatory);
+          // console.log("New mandatory value:", newMandatory);
           return {
             ...q,
             mandatory: newMandatory,
@@ -642,7 +642,7 @@ const FeedbackForm = ({
         }
         return q;
       });
-      console.log("Updated state:", updated);
+      // console.log("Updated state:", updated);
       return updated;
     });
   };
@@ -726,7 +726,7 @@ const FeedbackForm = ({
 
   const onChangeDislikeRadioInput = (questionId, value) => {
     //<---v1.0.0-----
-    console.log("onChangeDislikeRadioInput", questionId, value);
+    // console.log("onChangeDislikeRadioInput", questionId, value);
     setInterviewerSectionData((prev) => {
       const exists = prev.some((q) => (q.questionId || q.id) === questionId);
       if (exists) {
@@ -1015,11 +1015,11 @@ const FeedbackForm = ({
 
   const submitFeedback = async () => {
     try {
-      console.log("🚀 Starting feedback submission...");
-      console.log(
-        "📋 Preselected questions responses:",
-        preselectedQuestionsResponses
-      );
+      // console.log("🚀 Starting feedback submission...");
+      // console.log(
+      //   "📋 Preselected questions responses:",
+      //   preselectedQuestionsResponses
+      // );
 
       // Validate form locally first
       if (!validateForm()) {

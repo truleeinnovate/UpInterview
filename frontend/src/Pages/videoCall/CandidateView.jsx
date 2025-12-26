@@ -103,10 +103,10 @@ const CandidateView = ({ onBack, feedbackData, decodedData }) => {
     return () => clearInterval(interval);
   }, [feedbackData?.round?.dateTime]);
 
-  console.log(
-    "  {feedbackData?.round?.duration}",
-    feedbackData?.round?.duration
-  );
+  // console.log(
+  //   "  {feedbackData?.round?.duration}",
+  //   feedbackData?.round?.duration
+  // );
 
   return (
     // v1.0.0 <-----------------------------------------------------------------------------

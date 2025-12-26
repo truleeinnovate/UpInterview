@@ -36,10 +36,10 @@ const AssessmentTest = () => {
 
   useEffect(() => {
     if (assessment?.assessmentId?._id) {
-      console.log(
-        "Fetching assessment questions for ID:",
-        assessment.assessmentId._id
-      );
+      // console.log(
+      //   "Fetching assessment questions for ID:",
+      //   assessment.assessmentId._id
+      // );
 
       const loadAssessmentQuestions = async () => {
         try {

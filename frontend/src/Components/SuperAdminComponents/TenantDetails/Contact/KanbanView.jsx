@@ -1,14 +1,6 @@
 import { motion } from "framer-motion";
-// import { format, isValid, parseISO } from "date-fns";
-
-// const formatDate = (dateString) => {
-//   if (!dateString) return "N/A";
-//   const date = parseISO(dateString);
-//   return isValid(date) ? format(date, "MMM dd, yyyy") : "N/A";
-// };
-
-const capitalizeFirstLetter = (str) =>
-  str?.charAt(0)?.toUpperCase() + str?.slice(1);
+import { useNavigate } from "react-router-dom";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const KanbanView = ({
   data = [],
@@ -18,7 +10,10 @@ const KanbanView = ({
   renderActions = () => null,
   emptyState = "No Data Found",
   viewMode = "",
+  onTitleClick,
 }) => {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -43,7 +38,7 @@ const KanbanView = ({
             className={`${
               viewMode === "collapsed"
                 ? "flex flex-col gap-5 w-full"
-                : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 w-full"
+                : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-5 w-full"
             }`}
           >
             {data.map((item, index) => (
@@ -73,14 +68,22 @@ const KanbanView = ({
                       </div>
                     )}
 
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-custom-blue truncate">
+                    <h4 className="text-base font-semibold text-custom-blue truncate">
+                      <span
+                        className={`${
+                          item?.navigateTo || onTitleClick
+                            ? "cursor-pointer"
+                            : ""
+                        }`}
+                        onClick={() => {
+                          if (onTitleClick) onTitleClick(item);
+                          else if (item?.navigateTo) navigate(item?.navigateTo);
+                        }}
+                        title={item?.title}
+                      >
                         {capitalizeFirstLetter(item?.title) || "N/A"}
-                      </h4>
-                      <p className="text-sm text-gray-600 truncate">
-                        {item?.subtitle || "N/A"}
-                      </p>
-                    </div>
+                      </span>
+                    </h4>
                   </div>
 
                   <div className="flex gap-1 flex-shrink-0">

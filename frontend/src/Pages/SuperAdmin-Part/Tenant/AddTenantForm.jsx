@@ -495,7 +495,7 @@ const AddTenantForm = ({ mode }) => {
 
   const handleAddCandidate = async (e) => {
     e.preventDefault();
-    console.log("Starting add tenant process...");
+    // console.log("Starting add tenant process...");
 
     // Get user token information
     const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -507,7 +507,7 @@ const AddTenantForm = ({ mode }) => {
     // const userName = Cookies.get('userName')
     // const orgId = Cookies.get('organizationId')
 
-    console.log("User info:", { userId, userName, orgId });
+    // console.log("User info:", { userId, userName, orgId });
 
     // Validate form data
     // const { formIsValid, newErrors } = validateTenantForm(
@@ -524,7 +524,7 @@ const AddTenantForm = ({ mode }) => {
 
     // Prepare candidate data
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-    console.log("Current date and time:", currentDateTime);
+    // console.log("Current date and time:", currentDateTime);
 
     const data = {
       FirstName: formData.FirstName,
@@ -556,7 +556,7 @@ const AddTenantForm = ({ mode }) => {
       JobTitle: formData.JobTitle,
     };
 
-    console.log("Submitting tenant data:", data);
+    // console.log("Submitting tenant data:", data);
 
     // try {
     //   // getting the API from the apihooks for add or update candidate (post or patch)
@@ -576,7 +576,7 @@ const AddTenantForm = ({ mode }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Starting tenant process...");
+    // console.log("Starting tenant process...");
 
     // Get user token information
     const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -599,7 +599,7 @@ const AddTenantForm = ({ mode }) => {
 
     // Prepare candidate data
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-    console.log("Current date and time:", currentDateTime);
+    // console.log("Current date and time:", currentDateTime);
 
     const data = {
       FirstName: formData.FirstName,
@@ -630,7 +630,7 @@ const AddTenantForm = ({ mode }) => {
       Status: formData.Status,
     };
 
-    console.log("Submitting tenant data:", data);
+    // console.log("Submitting tenant data:", data);
 
     // try {
     //   let candidateId;

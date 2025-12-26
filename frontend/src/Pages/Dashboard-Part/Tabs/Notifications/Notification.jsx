@@ -12,7 +12,7 @@ import axios from "axios";
 import { config } from '../../../../config';
 
 const Notification = ({ isassesmentProfileDetails, objectId, candidateId, category }) => {
-  console.log("ObjectId", objectId);
+  // console.log("ObjectId", objectId);
   const [notificationsData, setNotificationsData] = useState([]);
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");

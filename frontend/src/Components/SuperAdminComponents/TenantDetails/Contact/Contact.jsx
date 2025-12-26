@@ -12,6 +12,8 @@ import TableView from "../../../../Components/Shared/Table/TableView.jsx";
 import KanbanView from "./KanbanView.jsx";
 import { Eye, ChevronUp, ChevronDown } from "lucide-react";
 import { useContacts } from "../../../../apiHooks/superAdmin/useContacts.js";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import StatusBadge from "../../common/StatusBadge.jsx";
 
 const Contact = ({ organizationId, viewMode }) => {
   const { contacts, isLoading } = useContacts(organizationId);
@@ -195,9 +197,6 @@ const Contact = ({ organizationId, viewMode }) => {
     setCurrentPage(0); // Reset to first page on search
   };
 
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
   // Table Columns
   const tableColumns = [
     {
@@ -248,10 +247,10 @@ const Contact = ({ organizationId, viewMode }) => {
     },
     {
       key: "experienceYear",
-      header: "Years Of Experience",
+      header: "Experience",
       render: (value, row) => (
         <span>
-          {row?.yearsOfExperience ? row.yearsOfExperience + " years" : "N/A"}
+          {row?.yearsOfExperience ? row.yearsOfExperience + " Years" : "N/A"}
         </span>
       ),
     },
@@ -266,7 +265,13 @@ const Contact = ({ organizationId, viewMode }) => {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <span>{row?.status ? capitalizeFirstLetter(row.status) : "N/A"}</span>
+        <span>
+          {row?.status ? (
+            <StatusBadge status={capitalizeFirstLetter(row?.status)} />
+          ) : (
+            "N/A"
+          )}
+        </span>
       ),
     },
     // {
@@ -283,52 +288,22 @@ const Contact = ({ organizationId, viewMode }) => {
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         setSelectedContactId(row._id);
       },
     },
-    // {
-    //   key: "360-view",
-    //   label: "360° View",
-    //   icon: <UserCircle className="w-4 h-4 text-purple-600" />,
-    //   onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
-    // },
-    // {
-    //   key: "edit",
-    //   label: "Edit",
-    //   icon: <Pencil className="w-4 h-4 text-green-600" />,
-    //   onClick: (row) => navigate(`edit/${row._id}`),
-    // },
-    // {
-    //   key: "resend-link",
-    //   label: "Resend Link",
-    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
-    //   disabled: (row) => row.status === "completed",
-    // },
   ];
 
   const actions = [
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         setSelectedContactId(row._id);
       },
     },
-    // {
-    //   key: "edit",
-    //   label: "Edit",
-    //   icon: <Pencil className="w-4 h-4 text-green-600" />,
-    //   onClick: (row) => navigate(`edit/${row._id}`),
-    // },
-    // {
-    //   key: "login-as-user",
-    //   label: "Login as User",
-    //   icon: <AiOutlineUser className="w-4 h-4 text-blue-600" />,
-    //   // onClick: (row) => handleLoginAsUser(row._id),
-    // },
   ];
 
   // Kanban Columns Configuration
@@ -361,7 +336,7 @@ const Contact = ({ organizationId, viewMode }) => {
       header: "Years Of Experience",
       render: (value, row) => (
         <span>
-          {row?.yearsOfExperience ? row.yearsOfExperience + " years" : "N/A"}
+          {row?.yearsOfExperience ? row.yearsOfExperience + " Years" : "N/A"}
         </span>
       ),
     },
@@ -376,7 +351,13 @@ const Contact = ({ organizationId, viewMode }) => {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <span>{row?.status ? capitalizeFirstLetter(row.status) : "N/A"}</span>
+        <span>
+          {row?.status ? (
+            <StatusBadge status={capitalizeFirstLetter(row.status)} />
+          ) : (
+            "N/A"
+          )}
+        </span>
       ), // <span>{row?.status ? row.status : "N/A"}</span>,
     },
   ];
@@ -442,7 +423,7 @@ const Contact = ({ organizationId, viewMode }) => {
             e.stopPropagation();
             action.onClick(item);
           }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-1.5 text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
           title={action.label}
         >
           {action.icon}
@@ -569,6 +550,9 @@ const Contact = ({ organizationId, viewMode }) => {
                     }))}
                     contacts={contacts}
                     renderActions={renderKanbanActions}
+                    onTitleClick={(item) => {
+                      setSelectedContactId(item?._id);
+                    }}
                     columns={kanbanColumns}
                     emptyState="No Contacts found."
                     viewMode={viewMode}

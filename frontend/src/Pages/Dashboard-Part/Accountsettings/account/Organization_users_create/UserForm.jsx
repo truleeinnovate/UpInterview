@@ -280,7 +280,7 @@ const UserForm = ({ mode }) => {
       if (userType === "superAdmin" && "isProfileCompleted" in submitUserData) {
         delete submitUserData.isProfileCompleted;
       }
-      console.log("is loading before submit", isLoading);
+      // console.log("is loading before submit", isLoading);
       // ------------------------------v1.0.1 >
       await addOrUpdateUser.mutateAsync({
         userData: submitUserData,
@@ -288,7 +288,7 @@ const UserForm = ({ mode }) => {
         isFileRemoved,
         editMode,
       });
-      console.log("is loading after submit", isLoading);
+      // console.log("is loading after submit", isLoading);
 
       navigate("/account-settings/users");
     } catch (error) {

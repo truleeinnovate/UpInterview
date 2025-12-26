@@ -752,13 +752,13 @@ const SuggestedQuestionsComponent = ({
   // };
 
   const onClickRemoveQuestion = async (id) => {
-    console.log("item ID", id);
+    // console.log("item ID", id);
     if (type === "assessment") {
       // Remove question from assessment sections
       updateQuestionsInAddedSectionFromQuestionBank(sectionName, null, id);
       notify.success("Question removed successfully!");
 
-      console.log("addedSections", addedSections);
+      // console.log("addedSections", addedSections);
     } else if (
       type === "interviewerSection" ||
       (type === "feedback" && handleRemoveQuestion)

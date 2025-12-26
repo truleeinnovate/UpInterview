@@ -4,11 +4,8 @@
 
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
-const capitalizeFirstLetter = (str) => {
-  if (typeof str !== "string" || !str) return "";
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
 
 const KanbanCommon = ({
   data = [],
