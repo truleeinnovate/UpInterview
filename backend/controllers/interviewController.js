@@ -1185,55 +1185,35 @@ const saveInterviewRound = async (req, res) => {
 };
 
 // PATCH call for interview round update
+// PATCH call for interview round update - Fixed Crash Bug
 const updateInterviewRound = async (req, res) => {
   const { interviewId, round, questions } = req.body;
   const { actingAsUserId } = res.locals.auth;
 
   let roundIdParam = req.params.roundId;
 
-  // console.log("[DEBUG] Full request body:", JSON.stringify(req.body, null, 2));
-  // console.log("[DEBUG] roundId from params:", roundIdParam);
-  // console.log("[DEBUG] actingAsUserId:", actingAsUserId);
-
   console.log(" req.body", req.body);
 
   if (!mongoose.Types.ObjectId.isValid(roundIdParam)) {
-    console.log("[ERROR] Invalid roundId:", roundIdParam);
     return res.status(400).json({ message: "Invalid roundId" });
   }
 
   const roundId = new mongoose.Types.ObjectId(roundIdParam);
 
   if (!interviewId || !roundId || !round) {
-    console.log("[ERROR] Missing required fields:", {
-      interviewId,
-      roundId,
-      round,
-    });
     return res.status(400).json({
       message: "Interview ID, Round ID, and round data are required.",
     });
   }
 
-  // Process interviewers if provided
   if (round.interviewers) {
     round.interviewers = await processInterviewers(round.interviewers);
   }
 
   const existingRound = await InterviewRounds.findById(roundId).lean();
   if (!existingRound) {
-    console.log("[ERROR] Round not found for ID:", roundId);
     return res.status(404).json({ message: "Round not found." });
   }
-
-  // console.log(
-  //   "[DEBUG] Existing round data:",
-  //   JSON.stringify(existingRound, null, 2)
-  // );
-  // console.log(
-  //   "[DEBUG] Selected interviewers from frontend:",
-  //   JSON.stringify(req?.body?.round?.selectedInterviewers, null, 2)
-  // );
 
   const changes = detectRoundChanges({
     existingRound,
@@ -1241,22 +1221,88 @@ const updateInterviewRound = async (req, res) => {
     selectedInterviewers: req?.body?.round?.selectedInterviewers || [],
   });
 
-  // console.log("[DEBUG] Detected changes:", JSON.stringify(changes, null, 2));
-
   if (!changes.anyChange) {
-    // console.log("[INFO] No changes detected - returning noop");
     return res.status(200).json({
       message: "No changes detected. Round not updated.",
       status: "noop",
     });
   }
 
-  const updatePayload = buildSmartRoundUpdate({
+  let updatePayload = buildSmartRoundUpdate({
     existingRound,
     body: req.body.round,
     actingAsUserId,
     changes,
   });
+
+  // Safe initialization if buildSmartRoundUpdate returned null or no $push
+  if (!updatePayload) {
+    updatePayload = { $set: {} };
+  }
+  if (!updatePayload.$push) {
+    updatePayload.$push = { history: [] };
+  }
+  if (!Array.isArray(updatePayload.$push.history)) {
+    updatePayload.$push.history = [];
+  }
+
+  const isInternal = req.body.round?.interviewerType === "Internal";
+  const isOutsource = req.body.round?.interviewerType !== "Internal";
+
+  // === OUTSOURCE RESCHEDULING: Cancel old requests, keep RequestSent ===
+  if (
+    isOutsource &&
+    changes.dateTimeChanged &&
+    existingRound.status === "RequestSent"
+  ) {
+    await InterviewRequest.updateMany(
+      { roundId: existingRound._id, status: "inprogress" },
+      { status: "withdrawn", respondedAt: new Date() }
+    );
+
+    updatePayload.$set.status = "RequestSent";
+
+    // Safely check and add Rescheduled history
+    const hasRescheduled = updatePayload.$push.history.some(h => h.action === "Rescheduled");
+    if (!hasRescheduled) {
+      updatePayload.$push.history.push({
+        action: "Rescheduled",
+        scheduledAt: req.body.round.dateTime,
+        updatedAt: new Date(),
+        createdBy: actingAsUserId,
+        reasonCode: req.body.round.currentActionReason || "time_changed",
+        comment: req.body.round.comments || null,
+      });
+    }
+  }
+
+  // === INTERNAL RESCHEDULING: Correct Scheduled vs Rescheduled ===
+  if (
+    isInternal &&
+    (changes.dateTimeChanged || changes.interviewersChanged)
+  ) {
+    const hasScheduledOnce = existingRound.history?.some(h => h.action === "Scheduled");
+    const correctAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
+
+    const newEntry = {
+      action: correctAction,
+      scheduledAt: req.body.round.dateTime,
+      updatedAt: new Date(),
+      createdBy: actingAsUserId,
+      reasonCode: req.body.round.currentActionReason || null,
+      comment: req.body.round.comments || null,
+    };
+
+    const existingIndex = updatePayload.$push.history.findIndex(h =>
+      ["Scheduled", "Rescheduled"].includes(h.action)
+    );
+
+    if (existingIndex !== -1) {
+      updatePayload.$push.history[existingIndex] = newEntry;
+    } else {
+      updatePayload.$push.history.push(newEntry);
+    }
+  }
 
   const updatedRound = await InterviewRounds.findByIdAndUpdate(
     roundId,
@@ -1264,19 +1310,16 @@ const updateInterviewRound = async (req, res) => {
     { new: true, runValidators: true }
   );
 
-  console.log("changes.interviewersChanged", changes.interviewersChanged);
-  // && updatedRound?.status === "RequestSent" || updatedRound?.status === "RequestSent"
-  // Interviewer change flow
+  // === Only trigger interviewer change flow if interviewers actually changed ===
   if (changes.interviewersChanged) {
     if (
-      req.body.round?.interviewerType !== "Internal" &&
+      isOutsource &&
       req.body.round?.interviewMode !== "Face to Face" &&
-      req.body?.round?.selectedInterviewers &&
-      req.body.round?.selectedInterviewers.length > 0
+      req.body?.round?.selectedInterviewers?.length > 0
     ) {
       await handleInterviewerChangeFlow({
         existingRound,
-        newInterviewers: req.body.round.selectedInterviewers || [],
+        newInterviewers: req.body.round.selectedInterviewers,
         interviewId,
       });
 
@@ -1301,6 +1344,7 @@ const updateInterviewRound = async (req, res) => {
   });
 };
 
+//on patch cann when need to cancel already selcted interviwers and send new request process
 async function handleInterviewerChangeFlow({
   existingRound,
   newInterviewers,
@@ -1310,34 +1354,18 @@ async function handleInterviewerChangeFlow({
   console.log("[DEBUG] Old interviewers:", existingRound.interviewers);
   console.log("[DEBUG] New interviewers:", newInterviewers);
 
-  // 1. Cancel old interview requests
-  const cancelledCount = await InterviewRequest.updateMany(
-    { roundId: existingRound._id, status: "inprogress" },
-    { status: "cancelled", respondedAt: new Date() }
-  );
-  console.log(
-    "[DEBUG] Cancelled old requests count:",
-    cancelledCount.modifiedCount
-  );
+  // // 1. Cancel old interview requests
+  // const cancelledCount = await InterviewRequest.updateMany(
+  //   { roundId: existingRound._id, status: "inprogress" },
+  //   { status: "withdrawn", respondedAt: new Date() }
+  // );
+  // console.log(
+  //   "[DEBUG] Cancelled old requests count:",
+  //   cancelledCount.modifiedCount
+  // );
 
   // 2. Send cancellation emails
   console.log("[EMAIL] Sending cancellation emails...");
-  // existing  interviwers notification have to send to email cancelled
-  // try {
-
-  //   // await sendInterviewRoundCancellationEmails(
-  //   //   {
-  //   //     body: {
-  //   //       interviewId: interviewId,
-  //   //       roundId: existingRound?._id,
-  //   //     },
-  //   //   },
-  //   //   { status: () => ({ json: () => {} }), locals: {} }
-  //   // );
-  //   console.log("[EMAIL] Cancellation emails sent successfully");
-  // } catch (err) {
-  //   console.error("[EMAIL ERROR] Failed to send cancellation emails:", err);
-  // }
 
   // 3. Fetch interview details
   const interview = await Interview.findById(interviewId).lean();
@@ -1345,12 +1373,7 @@ async function handleInterviewerChangeFlow({
     console.error("[ERROR] Interview not found:", interviewId);
     return;
   }
-  // if (interview &&
-  //       savedRound.roundTitle !== "Assessment" &&
-  //       savedRound.interviewMode !== "Face to Face" &&
-  //       // Array.isArray(req.body?.round?.selectedInterviewers
 
-  //       )
   // 4. Create new requests
   for (const interviewer of newInterviewers) {
     console.log(
@@ -2609,6 +2632,120 @@ const getAllInterviewRounds = async (req, res) => {
 };
 
 // Get wallet transaction data for a specific interview round
+// const getInterviewRoundTransaction = async (req, res) => {
+//   try {
+//     const { id: roundId } = req.params;
+
+//     if (!roundId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Round ID is required",
+//       });
+//     }
+
+//     // Determine if this is a mock interview round
+//     let round = await InterviewRounds.findById(roundId);
+//     let isMock = false;
+
+//     if (!round) {
+//       // Try to find as mock interview round
+//       round = await MockInterviewRound.findById(roundId);
+//       isMock = true;
+//     }
+
+//     if (!round) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Interview round not found",
+//       });
+//     }
+
+//     // Fetch wallet transaction data based on roundId (preferred) or legacy holdTransactionId
+//     let holdTransactionData = null;
+//     let resolvedHoldTransactionId = null;
+//     let roundTransactions = [];
+
+//     try {
+//       const roundIdStr = round._id.toString();
+
+//       // Preferred: find wallet and all transactions using metadata.roundId
+//       const walletByMetadata = await Wallet.findOne({
+//         "transactions.metadata.roundId": roundIdStr,
+//       });
+
+//       if (walletByMetadata && Array.isArray(walletByMetadata.transactions)) {
+//         // All transactions for this round (hold + debit after settlement, etc.)
+//         roundTransactions = walletByMetadata.transactions.filter(
+//           (t) => t && t.metadata && String(t.metadata.roundId) === roundIdStr
+//         );
+
+//         if (roundTransactions.length > 0) {
+//           // Prefer the original hold transaction if it still exists
+//           const preferredHold = roundTransactions.find(
+//             (t) => String(t.type).toLowerCase() === "hold"
+//           );
+
+//           const primaryTx =
+//             preferredHold || roundTransactions[roundTransactions.length - 1];
+
+//           if (primaryTx) {
+//             holdTransactionData = primaryTx;
+//             resolvedHoldTransactionId = primaryTx._id
+//               ? primaryTx._id.toString()
+//               : null;
+//           }
+//         }
+//       }
+
+//       // Legacy fallback: use round.holdTransactionId if metadata lookup failed
+//       if (!holdTransactionData && round.holdTransactionId) {
+//         const walletById = await Wallet.findOne({
+//           "transactions._id": round.holdTransactionId,
+//         });
+
+//         if (walletById && Array.isArray(walletById.transactions)) {
+//           const legacyTx = walletById.transactions.find(
+//             (t) => t._id && t._id.toString() === round.holdTransactionId
+//           );
+
+//           if (legacyTx) {
+//             holdTransactionData = legacyTx;
+//             resolvedHoldTransactionId = legacyTx._id
+//               ? legacyTx._id.toString()
+//               : round.holdTransactionId;
+//             // For legacy data, expose this single transaction in the array as well
+//             roundTransactions = [legacyTx];
+//           }
+//         }
+//       }
+//     } catch (error) {
+//       console.error(
+//         `Error fetching transaction for round ${round._id}:`,
+//         error
+//       );
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       data: {
+//         roundId: round._id,
+//         holdTransactionId: resolvedHoldTransactionId,
+//         holdTransactionData: holdTransactionData,
+//         transactions: roundTransactions,
+//         settlementStatus: round.settlementStatus || "pending",
+//         settlementDate: round.settlementDate || null,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error fetching interview round transaction:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch transaction data",
+//       error: error.message,
+//     });
+//   }
+// };
+
 const getInterviewRoundTransaction = async (req, res) => {
   try {
     const { id: roundId } = req.params;
@@ -2620,12 +2757,11 @@ const getInterviewRoundTransaction = async (req, res) => {
       });
     }
 
-    // Determine if this is a mock interview round
+    // Determine if mock or normal
     let round = await InterviewRounds.findById(roundId);
     let isMock = false;
 
     if (!round) {
-      // Try to find as mock interview round
       round = await MockInterviewRound.findById(roundId);
       isMock = true;
     }
@@ -2637,80 +2773,57 @@ const getInterviewRoundTransaction = async (req, res) => {
       });
     }
 
-    // Fetch wallet transaction data based on roundId (preferred) or legacy holdTransactionId
-    let holdTransactionData = null;
-    let resolvedHoldTransactionId = null;
+    const roundIdStr = round._id.toString();
+
+    // Find wallet with transactions for this round
+    const wallet = await Wallet.findOne({
+      "transactions.metadata.roundId": roundIdStr,
+    });
+
     let roundTransactions = [];
+    let activeHoldTransactionId = null;
+    let activeHoldTransactionData = null;
+    let settlementStatus = "pending";
+    let settlementDate = null;
 
-    try {
-      const roundIdStr = round._id.toString();
+    if (wallet && Array.isArray(wallet.transactions)) {
+      roundTransactions = wallet.transactions
+        .filter(t => t.metadata && t.metadata.roundId === roundIdStr)
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); // Ascending chronological
 
-      // Preferred: find wallet and all transactions using metadata.roundId
-      const walletByMetadata = await Wallet.findOne({
-        "transactions.metadata.roundId": roundIdStr,
-      });
+      // Active hold: latest hold not completed
+      const activeHold = [...roundTransactions]
+        .reverse()
+        .find(t => t.type === "hold" && t.status !== "completed");
 
-      if (walletByMetadata && Array.isArray(walletByMetadata.transactions)) {
-        // All transactions for this round (hold + debit after settlement, etc.)
-        roundTransactions = walletByMetadata.transactions.filter(
-          (t) => t && t.metadata && String(t.metadata.roundId) === roundIdStr
-        );
-
-        if (roundTransactions.length > 0) {
-          // Prefer the original hold transaction if it still exists
-          const preferredHold = roundTransactions.find(
-            (t) => String(t.type).toLowerCase() === "hold"
-          );
-
-          const primaryTx =
-            preferredHold || roundTransactions[roundTransactions.length - 1];
-
-          if (primaryTx) {
-            holdTransactionData = primaryTx;
-            resolvedHoldTransactionId = primaryTx._id
-              ? primaryTx._id.toString()
-              : null;
-          }
-        }
+      if (activeHold) {
+        activeHoldTransactionId = activeHold._id.toString();
+        activeHoldTransactionData = activeHold;
       }
 
-      // Legacy fallback: use round.holdTransactionId if metadata lookup failed
-      if (!holdTransactionData && round.holdTransactionId) {
-        const walletById = await Wallet.findOne({
-          "transactions._id": round.holdTransactionId,
-        });
-
-        if (walletById && Array.isArray(walletById.transactions)) {
-          const legacyTx = walletById.transactions.find(
-            (t) => t._id && t._id.toString() === round.holdTransactionId
-          );
-
-          if (legacyTx) {
-            holdTransactionData = legacyTx;
-            resolvedHoldTransactionId = legacyTx._id
-              ? legacyTx._id.toString()
-              : round.holdTransactionId;
-            // For legacy data, expose this single transaction in the array as well
-            roundTransactions = [legacyTx];
-          }
-        }
-      }
-    } catch (error) {
-      console.error(
-        `Error fetching transaction for round ${round._id}:`,
-        error
+      // Check if settled: look for a debit with settlementStatus completed
+      const settlementTx = roundTransactions.find(
+        t => t.type === "debit" && t.metadata && t.metadata.settlementStatus === "completed"
       );
+
+      if (settlementTx) {
+        settlementStatus = "completed";
+        settlementDate = settlementTx.metadata.settledAt || settlementTx.createdAt;
+      }
     }
+
+    // Legacy fallback if needed (but prefer metadata)
+    // ... (add if you have legacy data)
 
     res.status(200).json({
       success: true,
       data: {
         roundId: round._id,
-        holdTransactionId: resolvedHoldTransactionId,
-        holdTransactionData: holdTransactionData,
-        transactions: roundTransactions,
-        settlementStatus: round.settlementStatus || "pending",
-        settlementDate: round.settlementDate || null,
+        holdTransactionId: activeHoldTransactionId, // For backward compat, active one
+        holdTransactionData: activeHoldTransactionData,
+        transactions: roundTransactions, // All history
+        settlementStatus,
+        settlementDate,
       },
     });
   } catch (error) {
@@ -2723,6 +2836,126 @@ const getInterviewRoundTransaction = async (req, res) => {
   }
 };
 
+// const getInterviewDataforOrg = async (req, res) => {
+//   try {
+//     const { interviewId } = req.params;
+
+//     // 1️⃣ Fetch interview
+//     const interview = await Interview.findById(interviewId)
+//       .populate({
+//         path: "candidateId",
+//         select:
+//           "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
+//       })
+//       .populate({
+//         path: "positionId",
+//         select: "title companyname Location skills minexperience maxexperience",
+//       })
+//       .populate("templateId")
+//       .lean();
+
+//     if (!interview) {
+//       return res.status(404).json({ message: "Interview not found" });
+//     }
+
+//     // 2️⃣ Fetch rounds
+//     const rounds = await InterviewRounds.find({ interviewId })
+//       .populate({
+//         path: "interviewers",
+//         select: "firstName lastName email",
+//       })
+//       .lean();
+
+//     const roundIds = rounds.map((r) => r._id);
+
+//     // 3️⃣ Fetch questions
+//     const questions = await interviewQuestions
+//       .find({ roundId: { $in: roundIds } })
+//       .select("roundId snapshot")
+//       .lean();
+
+//     const questionMap = {};
+//     questions.forEach((q) => {
+//       const key = String(q.roundId);
+//       if (!questionMap[key]) questionMap[key] = [];
+//       questionMap[key].push(q);
+//     });
+
+//     // 4️⃣ Fetch Interview Requests (only once)
+//     const interviewRequests = await InterviewRequest.find({
+//       roundId: { $in: roundIds },
+//       status: "inprogress",
+//     })
+//       .populate({
+//         path: "interviewerId",
+//         select: "firstName lastName email",
+//       })
+//       .lean();
+//     console.log("interviewRequests", interviewRequests);
+
+//     // Create lookup map → roundId => request
+//     const requestMap = {};
+
+//     interviewRequests.forEach((req) => {
+//       const roundKey = String(req.roundId);
+
+//       if (!requestMap[roundKey]) {
+//         requestMap[roundKey] = [];
+//       }
+
+//       requestMap[roundKey].push(req);
+//     });
+
+//     console.log("requestMap FINAL", requestMap);
+
+//     // 5️⃣ Build rounds response
+//     const fullRounds = rounds.map((round) => {
+//       let interviewers = round.interviewers || [];
+
+//       // 👉 Condition check
+//       if (
+//         interviewers.length === 0 &&
+//         round.status === "RequestSent" &&
+//         interview.status === "InProgress"
+//       ) {
+//         const requests = requestMap[String(round._id)] || [];
+
+//         console.log("requests count:", requests.length);
+
+//         if (requests.length > 0) {
+//           interviewers = requests
+//             .map((r) => r.interviewerId)
+//             .filter(Boolean);
+//         }
+//       }
+
+
+
+
+//       return {
+//         ...round,
+//         interviewers,
+//         questions: questionMap[String(round._id)] || [],
+//       };
+//     });
+
+//     interview.rounds = fullRounds;
+
+//     return res.json({
+//       success: true,
+//       data: interview,
+//     });
+//   } catch (err) {
+//     console.error("Interview Fetch Failed:", err);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//       error: err.message,
+//     });
+//   }
+// };
+
+
 const getInterviewDataforOrg = async (req, res) => {
   try {
     const { interviewId } = req.params;
@@ -2731,8 +2964,7 @@ const getInterviewDataforOrg = async (req, res) => {
     const interview = await Interview.findById(interviewId)
       .populate({
         path: "candidateId",
-        select:
-          "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
+        select: "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
       })
       .populate({
         path: "positionId",
@@ -2745,7 +2977,7 @@ const getInterviewDataforOrg = async (req, res) => {
       return res.status(404).json({ message: "Interview not found" });
     }
 
-    // 2️⃣ Fetch rounds
+    // 2️⃣ Fetch rounds with accepted interviewers populated
     const rounds = await InterviewRounds.find({ interviewId })
       .populate({
         path: "interviewers",
@@ -2768,8 +3000,8 @@ const getInterviewDataforOrg = async (req, res) => {
       questionMap[key].push(q);
     });
 
-    // 4️⃣ Fetch Interview Requests (only once)
-    const interviewRequests = await InterviewRequest.find({
+    // 4️⃣ Fetch ONLY pending (inprogress) outsource requests
+    const pendingRequests = await InterviewRequest.find({
       roundId: { $in: roundIds },
       status: "inprogress",
     })
@@ -2778,51 +3010,26 @@ const getInterviewDataforOrg = async (req, res) => {
         select: "firstName lastName email",
       })
       .lean();
-    console.log("interviewRequests", interviewRequests);
 
-    // Create lookup map → roundId => request
-    const requestMap = {};
-
-    interviewRequests.forEach((req) => {
+    // Map: roundId → array of pending requests
+    const pendingRequestMap = {};
+    pendingRequests.forEach((req) => {
       const roundKey = String(req.roundId);
-
-      if (!requestMap[roundKey]) {
-        requestMap[roundKey] = [];
+      if (!pendingRequestMap[roundKey]) {
+        pendingRequestMap[roundKey] = [];
       }
-
-      requestMap[roundKey].push(req);
+      pendingRequestMap[roundKey].push(req);
     });
-
-    console.log("requestMap FINAL", requestMap);
 
     // 5️⃣ Build rounds response
     const fullRounds = rounds.map((round) => {
-      let interviewers = round.interviewers || [];
-
-      // 👉 Condition check
-      if (
-        interviewers.length === 0 &&
-        round.status === "RequestSent" &&
-        interview.status === "InProgress"
-      ) {
-        const requests = requestMap[String(round._id)] || [];
-
-        console.log("requests count:", requests.length);
-
-        if (requests.length > 0) {
-          interviewers = requests
-            .map((r) => r.interviewerId)
-            .filter(Boolean);
-        }
-      }
-
-
-
-
       return {
         ...round,
-        interviewers,
+        // Keep interviewers = only accepted ones (from round.interviewers)
+        interviewers: round.interviewers || [],
         questions: questionMap[String(round._id)] || [],
+        // Expose pending requests separately — frontend will use this when RequestSent
+        pendingOutsourceRequests: pendingRequestMap[String(round._id)] || [],
       };
     });
 
@@ -2841,71 +3048,6 @@ const getInterviewDataforOrg = async (req, res) => {
     });
   }
 };
-
-// const getInterviewDataforOrg = async (req, res) => {
-//   try {
-//     const { interviewId } = req.params;
-
-//     // STEP 1: Fetch interview with population
-//     const interview = await Interview.findById(interviewId)
-//       .populate({
-//         path: "candidateId",
-//         select:
-//           "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
-//         model: "Candidate",
-//       })
-//       .populate({
-//         path: "positionId",
-//         select: "title companyname Location skills minexperience maxexperience",
-//         model: "Position",
-//       })
-//       .populate({ path: "templateId" })
-//       .lean();
-
-//     if (!interview) {
-//       return res.status(404).json({ message: "Interview not found" });
-//     }
-
-//     // STEP 2: Get all rounds for THIS interview
-//     const rounds = await InterviewRounds.find({ interviewId })
-//       .populate({
-//         path: "interviewers",
-//         select: "firstName lastName email",
-//       })
-//       .lean();
-
-//     // STEP 3: Fetch questions for rounds
-//     const roundIds = rounds.map((r) => r._id);
-//     const questions = await interviewQuestions
-//       .find({
-//         roundId: { $in: roundIds },
-//       })
-//       .select("roundId snapshot")
-//       .lean();
-
-//     // STEP 4: Map questions → rounds
-//     const questionMap = {};
-//     questions.forEach((q) => {
-//       const key = String(q.roundId);
-//       if (!questionMap[key]) questionMap[key] = [];
-//       questionMap[key].push(q);
-//     });
-
-//     const fullRounds = rounds.map((r) => ({
-//       ...r,
-//       questions: questionMap[String(r._id)] || [],
-//     }));
-
-//     // STEP 5: Attach rounds to interview
-//     interview.rounds = fullRounds;
-
-//     return res.json({ success: true, data: interview });
-//   } catch (err) {
-//     console.error("Interview Fetch Failed:", err);
-//     return res.status(500).json({ message: "Server error", error: err });
-//   }
-// };
-
 // Export all controller functions
 module.exports = {
   createInterview,

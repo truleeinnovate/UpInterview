@@ -25,6 +25,8 @@ const {
 const { InterviewRounds } = require("../models/Interview/InterviewRounds");
 const Invoicemodels = require("../models/Invoicemodels");
 
+const { getPayPercent, computeSettlementAmounts } = require('../utils/roundPolicyUtil');
+
 // Initialize Razorpay SDK
 // Note: This uses the same credentials for both Razorpay (payments) and RazorpayX (payouts)
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
@@ -1131,9 +1133,8 @@ const verifyBankAccount = async (req, res) => {
       !bankAccount.accountNumber
     ) {
       return res.status(400).json({
-        error: `${
-          bankAccount.routingNumber ? "Routing Number" : "IFSC code"
-        } and account number are required for verification`,
+        error: `${bankAccount.routingNumber ? "Routing Number" : "IFSC code"
+          } and account number are required for verification`,
       });
     }
 
@@ -1799,11 +1800,10 @@ const createWithdrawalRequest = async (req, res) => {
         ownerId,
         tenantId,
         title: "Withdrawal Request Created",
-        message: `Your withdrawal request ${
-          withdrawalRequest.withdrawalCode
-        } for ₹${withdrawalRequest.netAmount.toFixed(
-          2
-        )} has been submitted successfully. It will be processed within 24-48 hours.`,
+        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode
+          } for ₹${withdrawalRequest.netAmount.toFixed(
+            2
+          )} has been submitted successfully. It will be processed within 24-48 hours.`,
         type: "wallet",
         category: "withdrawal_status",
         unread: true,
@@ -2055,13 +2055,11 @@ const failManualWithdrawal = async (req, res) => {
         ownerId: withdrawalRequest.ownerId,
         tenantId: withdrawalRequest.tenantId,
         title: "Withdrawal Failed",
-        message: `Your withdrawal request ${
-          withdrawalRequest.withdrawalCode
-        } for ₹${withdrawalRequest.amount.toFixed(
-          2
-        )} could not be processed. The amount has been refunded to your wallet. Reason: ${
-          failureReason || "Processing error"
-        }`,
+        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode
+          } for ₹${withdrawalRequest.amount.toFixed(
+            2
+          )} could not be processed. The amount has been refunded to your wallet. Reason: ${failureReason || "Processing error"
+          }`,
         type: "wallet",
         category: "withdrawal_status",
         unread: true,
@@ -2216,14 +2214,12 @@ const processManualWithdrawal = async (req, res) => {
         ownerId: withdrawalRequest.ownerId,
         tenantId: withdrawalRequest.tenantId,
         title: "Withdrawal Completed",
-        message: `Your withdrawal request ${
-          withdrawalRequest.withdrawalCode
-        } for ₹${withdrawalRequest.netAmount.toFixed(
-          2
-        )} has been completed successfully. The amount has been transferred to your bank account ending with ${
-          withdrawalRequest.bankAccountId?.maskedAccountNumber ||
+        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode
+          } for ₹${withdrawalRequest.netAmount.toFixed(
+            2
+          )} has been completed successfully. The amount has been transferred to your bank account ending with ${withdrawalRequest.bankAccountId?.maskedAccountNumber ||
           "your registered account"
-        }.`,
+          }.`,
         type: "wallet",
         category: "withdrawal_status",
         unread: true,
@@ -2346,15 +2342,15 @@ const getAllWithdrawalRequests = async (req, res) => {
 
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
     const modeValues = modeParam
       ? modeParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     const pipeline = [];
@@ -2654,11 +2650,10 @@ const cancelWithdrawalRequest = async (req, res) => {
         ownerId: withdrawalRequest.ownerId,
         tenantId: withdrawalRequest.tenantId,
         title: "Withdrawal Canceled",
-        message: `Your withdrawal request ${
-          withdrawalRequest.withdrawalCode
-        } for ₹${withdrawalRequest.amount.toFixed(
-          2
-        )} has been canceled. The amount has been refunded to your wallet.`,
+        message: `Your withdrawal request ${withdrawalRequest.withdrawalCode
+          } for ₹${withdrawalRequest.amount.toFixed(
+            2
+          )} has been canceled. The amount has been refunded to your wallet.`,
         type: "wallet",
         category: "withdrawal_status",
         unread: true,
@@ -2942,8 +2937,557 @@ const fixVerifiedBankAccounts = async (req, res) => {
 };
 
 // Settlement function for interview rounds
+// const settleInterviewPayment = async (req, res) => {
+//   // Structured logging context
+//   res.locals.loggedByController = true;
+//   res.locals.processName = "Settle Interview Payment";
+
+//   const session = await mongoose.startSession();
+//   session.startTransaction();
+
+//   try {
+//     const {
+//       roundId,
+//       transactionId,
+//       interviewerContactId,
+//       companyName,
+//       roundTitle,
+//       positionTitle,
+//       interviewerTenantId,
+//       previewOnly,
+//     } = req.body;
+
+//     const isPreview = Boolean(previewOnly);
+
+//     // console.log("[settleInterviewPayment] Starting settlement:", { roundId, transactionId, interviewerContactId, companyName, roundTitle });
+
+//     // Validate required fields
+//     if (!roundId || !transactionId || !interviewerContactId) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           "roundId, transactionId, and interviewerContactId are required",
+//       });
+//     }
+
+//     // 1. Find the organization's wallet with the hold transaction
+//     const orgWallet = await WalletTopup.findOne({
+//       "transactions._id": transactionId,
+//     }).session(session);
+
+//     if (!orgWallet) {
+//       await session.abortTransaction();
+//       return res.status(404).json({
+//         success: false,
+//         message: "Organization wallet with hold transaction not found",
+//       });
+//     }
+
+//     // 2. Find the specific hold transaction
+//     const holdTransaction = orgWallet.transactions.find(
+//       (t) => t._id && t._id.toString() === transactionId
+//     );
+
+//     if (!holdTransaction) {
+//       await session.abortTransaction();
+//       return res.status(404).json({
+//         success: false,
+//         message: "Hold transaction not found",
+//       });
+//     }
+
+//     if (
+//       holdTransaction.type !== "hold" ||
+//       holdTransaction.status === "completed"
+//     ) {
+//       await session.abortTransaction();
+//       return res.status(400).json({
+//         success: false,
+//         message: "Transaction is not a hold or already settled",
+//       });
+//     }
+
+//     // ------------------------------------------------------------------
+//     // 2a. Determine settlement amount based on interview policy
+//     // ------------------------------------------------------------------
+//     const baseAmount = Number(holdTransaction.amount || 0);
+
+//     // Default: full payout (backwards compatible)
+//     let payPercent = 100;
+//     let settlementScenario = "completed";
+
+//     // Try to load the interview round (normal or mock) to inspect status/timing
+//     let roundDoc = await InterviewRounds.findById(roundId).lean();
+//     let isMockRound = false;
+
+//     if (!roundDoc) {
+//       roundDoc = await MockInterviewRound.findById(roundId).lean();
+//       isMockRound = !!roundDoc;
+//     }
+
+//     const isMockInterview = Boolean(
+//       (holdTransaction.metadata && holdTransaction.metadata.isMockInterview) ||
+//         isMockRound
+//     );
+
+//     if (roundDoc) {
+//       const roundStatus = roundDoc.status;
+//       const currentAction = roundDoc.currentAction;
+
+//       // Determine when the status effectively changed
+//       let actionTime = roundDoc.updatedAt
+//         ? new Date(roundDoc.updatedAt)
+//         : new Date();
+
+//       // For cancellations, prefer the explicit history entry (when the user actually cancelled)
+//       if (
+//         roundStatus === "Cancelled" &&
+//         Array.isArray(roundDoc.history) &&
+//         roundDoc.history.length > 0
+//       ) {
+//         const cancelEntry = roundDoc.history
+//           .slice()
+//           .reverse()
+//           .find((h) => h && h.action === "Cancelled");
+
+//         if (cancelEntry && cancelEntry.updatedAt) {
+//           const cancelTime = new Date(cancelEntry.updatedAt);
+//           if (!isNaN(cancelTime.getTime())) {
+//             actionTime = cancelTime;
+//           }
+//         }
+//       }
+
+//       // Scheduled interview start time (string in schema)
+//       const scheduledTime = roundDoc.dateTime
+//         ? new Date(roundDoc.dateTime)
+//         : null;
+
+//       // Helper: compute hours before interview at the moment of action
+//       let hoursBefore = null;
+//       if (
+//         scheduledTime &&
+//         !isNaN(scheduledTime.getTime()) &&
+//         !isNaN(actionTime.getTime())
+//       ) {
+//         hoursBefore =
+//           (scheduledTime.getTime() - actionTime.getTime()) /
+//           (1000 * 60 * 60);
+
+//         // For bracket purposes, treat any negative value as 0 (at/after start)
+//         if (!isNaN(hoursBefore) && hoursBefore < 0) {
+//           hoursBefore = 0;
+//         }
+//       }
+
+//       const isInterviewerNoShow = currentAction === "Interviewer_NoShow";
+
+//       if (isInterviewerNoShow) {
+//         // Interviewer no-show → full refund to organization, no payout
+//         payPercent = 0;
+//         settlementScenario = "interviewer_no_show";
+//       } else if (roundStatus === "Completed") {
+//         // Completed interviews always pay 100% to interviewer
+//         payPercent = 100;
+//         settlementScenario = "completed";
+//       } else if (
+//         roundStatus === "Cancelled" ||
+//         roundStatus === "NoShow" ||
+//         roundStatus === "InCompleted" ||
+//         roundStatus === "Incomplete"
+//       ) {
+//         // Apply time-based policy for cancellations / no-show
+//         settlementScenario = (roundStatus || "other").toLowerCase();
+
+//         if (hoursBefore == null || isNaN(hoursBefore)) {
+//           // If we cannot compute a valid bracket, be conservative (no payout)
+//           payPercent = 0;
+//         } else if (isMockInterview) {
+//           // -------------------------
+//           // Mock Interview Policy
+//           // > 12h    → 0%
+//           // 2–12h    → 25%
+//           // < 2h/NS  → 50%
+//           // -------------------------
+//           if (hoursBefore > 12) {
+//             payPercent = 0;
+//           } else if (hoursBefore > 2) {
+//             payPercent = 25;
+//           } else {
+//             payPercent = 50;
+//           }
+//         } else {
+//           // -------------------------
+//           // Normal Interview Policy
+//           // > 24h    → 0%
+//           // 12–24h  → 25%
+//           // 2–12h   → 50%
+//           // < 2h/NS → 100%
+//           // -------------------------
+//           if (hoursBefore > 24) {
+//             payPercent = 0;
+//           } else if (hoursBefore > 12) {
+//             payPercent = 25;
+//           } else if (hoursBefore > 2) {
+//             payPercent = 50;
+//           } else {
+//             payPercent = 100;
+//           }
+//         }
+//       }
+//     }
+
+//     // Final settlement amounts
+//     // 1) Compute gross payout as per policy (before platform charges & GST)
+//     const rawGrossSettlement = (baseAmount * payPercent) / 100;
+//     const grossSettlementAmount =
+//       Math.round(rawGrossSettlement * 100) / 100; // round to 2 decimals
+
+//     // 2) Any amount not paid out (gross) is refunded back to the organization
+//     const refundAmount = Math.max(0, baseAmount - grossSettlementAmount);
+
+//     // 3) Platform service charge (10% of gross payout)
+//     const serviceChargePercent = 10;
+//     const rawServiceCharge =
+//       (grossSettlementAmount * serviceChargePercent) / 100;
+//     const serviceCharge = Math.round(rawServiceCharge * 100) / 100;
+
+//     // 4) GST on the service charge (18% of service charge)
+//     const gstRate = 0.18;
+//     const rawServiceChargeGst = serviceCharge * gstRate;
+//     const serviceChargeGst =
+//       Math.round(rawServiceChargeGst * 100) / 100;
+
+//     // 5) Net amount actually credited to interviewer after charges + GST
+//     let settlementAmount =
+//       grossSettlementAmount - serviceCharge - serviceChargeGst;
+//     if (settlementAmount < 0) {
+//       settlementAmount = 0;
+//     }
+//     settlementAmount = Math.round(settlementAmount * 100) / 100;
+//     // console.log(`[settleInterviewPayment] Gross: ${grossSettlementAmount}, net: ${settlementAmount}, refund: ${refundAmount}, serviceCharge: ${serviceCharge}, gst: ${serviceChargeGst}, scenario: ${settlementScenario}`);
+
+//     // If this is only a preview call, return the computed values without mutating wallets
+//     if (isPreview) {
+//       const previewData = {
+//         settlementAmount,
+//         refundAmount,
+//         payPercent,
+//         serviceCharge,
+//         serviceChargeGst,
+//         grossSettlementAmount,
+//         settlementScenario,
+//         organizationWallet: {
+//           ownerId: orgWallet.ownerId,
+//           balance: orgWallet.balance,
+//           holdAmount: orgWallet.holdAmount,
+//         },
+//         interviewerWallet: null,
+//         roundId,
+//         originalTransactionId: transactionId,
+//         preview: true,
+//       };
+
+//       res.locals.logData = {
+//         tenantId: interviewerTenantId || req?.body?.tenantId || "",
+//         ownerId: interviewerContactId,
+//         processName: "Preview Interview Settlement",
+//         status: "success",
+//         message: "Interview settlement preview computed successfully",
+//         requestBody: req.body,
+//         responseBody: previewData,
+//       };
+
+//       await session.abortTransaction();
+//       return res.status(200).json({
+//         success: true,
+//         message: "Interview settlement preview",
+//         data: previewData,
+//       });
+//     }
+
+//     // 3. Update the hold transaction to debit/completed in organization wallet
+//     const orgWalletUpdate = {
+//       $set: {
+//         "transactions.$.type": "debit",
+//         "transactions.$.status": "completed",
+//         // Amount debited from organization wallet is the gross payout
+//         // determined by the policy (before platform charges & GST)
+//         "transactions.$.amount": grossSettlementAmount,
+//         "transactions.$.description": `Settled payment to interviewer for ${
+//           companyName || "Company"
+//         } - ${roundTitle || "Interview Round"}`,
+//         "transactions.$.metadata.settledAt": new Date(),
+//         "transactions.$.metadata.settlementStatus": "completed",
+//         "transactions.$.metadata.settlementBaseAmount": baseAmount,
+//         "transactions.$.metadata.settlementPayPercent": payPercent,
+//         "transactions.$.metadata.settlementAmountPaidToInterviewer":
+//           settlementAmount,
+//         "transactions.$.metadata.settlementRefundAmount": refundAmount,
+//         "transactions.$.metadata.settlementServiceCharge": serviceCharge,
+//         "transactions.$.metadata.settlementServiceChargeGst":
+//           serviceChargeGst,
+//         "transactions.$.metadata.settlementGrossAmount":
+//           grossSettlementAmount,
+//         "transactions.$.metadata.settlementScenario": settlementScenario,
+//       },
+//       $inc: {
+//         // Release full hold, and refund any unused portion back to balance
+//         holdAmount: -baseAmount,
+//         balance: refundAmount,
+//       },
+//     };
+
+//     const updatedOrgWallet = await WalletTopup.findOneAndUpdate(
+//       {
+//         _id: orgWallet._id,
+//         "transactions._id": transactionId,
+//       },
+//       orgWalletUpdate,
+//       { new: true, session }
+//     );
+
+//     if (!updatedOrgWallet) {
+//       await session.abortTransaction();
+//       return res.status(500).json({
+//         success: false,
+//         message: "Failed to update organization wallet",
+//       });
+//     }
+
+//     // If there is a refund portion, also log it as a separate credit transaction
+//     if (refundAmount > 0) {
+//       const refundTransaction = {
+//         type: "credit",
+//         amount: refundAmount,
+//         description: `Refund for ${companyName || "Company"} - ${
+//           roundTitle || "Interview Round"
+//         }`,
+//         relatedInvoiceId: holdTransaction.relatedInvoiceId,
+//         status: "completed",
+//         metadata: {
+//           ...holdTransaction.metadata,
+//           settlementDate: new Date(),
+//           originalTransactionId: transactionId,
+//           roundId: roundId,
+//           settlementType: "interview_refund",
+//           companyName: companyName || "Company",
+//           roundTitle: roundTitle || "Interview Round",
+//           positionTitle: positionTitle || "Position",
+//         },
+//         createdDate: new Date(),
+//         createdAt: new Date(),
+//       };
+
+//       await WalletTopup.findByIdAndUpdate(
+//         orgWallet._id,
+//         {
+//           $push: {
+//             transactions: refundTransaction,
+//           },
+//         },
+//         { session }
+//       );
+//     }
+
+//     // console.log(`[settleInterviewPayment] Updated org wallet - reduced hold by ${settlementAmount}`);
+
+//     // 4. Find or create interviewer's wallet
+//     let interviewerWallet = await WalletTopup.findOne({
+//       ownerId: interviewerContactId,
+//     }).session(session);
+
+//     if (!interviewerWallet) {
+//       // Create wallet for interviewer if doesn't exist
+//       // Get tenantId from the organization wallet or request
+//       const tenantId =
+//         orgWallet?.tenantId || req.body?.tenantId || req.query?.tenantId;
+
+//       if (!tenantId) {
+//         console.warn(
+//           `[settleInterviewPayment] Creating interviewer wallet without tenantId for ${interviewerContactId}`
+//         );
+//       }
+//     }
+
+//     // 5. Create credit transaction for interviewer (only if there is a payout)
+//     let creditTransaction = null;
+//     let updatedInterviewerWallet = null;
+
+//     if (settlementAmount > 0) {
+//       creditTransaction = {
+//         type: "credit",
+//         amount: settlementAmount,
+//         description: `Payment from ${companyName || "Company"} - ${
+//           roundTitle || "Interview Round"
+//         } for ${positionTitle || "Position"}`,
+//         relatedInvoiceId: holdTransaction.relatedInvoiceId,
+//         status: "completed",
+//         metadata: {
+//           ...holdTransaction.metadata,
+//           settlementDate: new Date(),
+//           originalTransactionId: transactionId,
+//           organizationWalletId: orgWallet._id.toString(),
+//           roundId: roundId,
+//           settlementType: "interview_payment",
+//           companyName: companyName || "Company",
+//           roundTitle: roundTitle || "Interview Round",
+//           positionTitle: positionTitle || "Position",
+//         },
+//         createdDate: new Date(),
+//         createdAt: new Date(),
+//       };
+
+//       // 6. Update interviewer's wallet - add balance and transaction
+//       updatedInterviewerWallet = await WalletTopup.findByIdAndUpdate(
+//         interviewerWallet._id,
+//         {
+//           $inc: {
+//             balance: settlementAmount, // Increase interviewer balance
+//           },
+//           $push: {
+//             transactions: creditTransaction,
+//           },
+//         },
+//         { new: true, session }
+//       );
+
+//       if (!updatedInterviewerWallet) {
+//         await session.abortTransaction();
+//         return res.status(500).json({
+//           success: false,
+//           message: "Failed to update interviewer wallet",
+//         });
+//       }
+//     }
+
+//     // console.log(`[settleInterviewPayment] Added ${settlementAmount} to interviewer wallet. New balance: ${updatedInterviewerWallet?.balance}`);
+
+//     // 7. Send push notification to interviewer
+//     try {
+//       if (settlementAmount > 0) {
+//         await createInterviewSettlementNotification(
+//           interviewerContactId,
+//           interviewerTenantId,
+//           {
+//             amount: settlementAmount,
+//             companyName: companyName || "Company",
+//             roundTitle: roundTitle || "Interview Round",
+//             positionTitle: positionTitle || "Position",
+//             settlementCode: transactionId,
+//           }
+//         );
+//       }
+//       // console.log("[settleInterviewPayment] Push notification sent to interviewer");
+//     } catch (notifErr) {
+//       console.error(
+//         "[settleInterviewPayment] Failed to send notification:",
+//         notifErr
+//       );
+//       // Don't fail the settlement if notification fails
+//     }
+
+//     // 8. Update the interview round to mark settlement
+
+//     // Try regular interview round first
+//     let roundUpdate = await InterviewRounds.findByIdAndUpdate(
+//       roundId,
+//       {
+//         $set: {
+//           settlementStatus: "completed",
+//           settlementDate: new Date(),
+//         },
+//       },
+//       { new: true, session }
+//     );
+
+//     // If not found, try mock interview round
+//     if (!roundUpdate) {
+//       roundUpdate = await MockInterviewRound.findByIdAndUpdate(
+//         roundId,
+//         {
+//           $set: {
+//             settlementStatus: "completed",
+//             settlementDate: new Date(),
+//           },
+//         },
+//         { new: true, session }
+//       );
+//     }
+
+//     // Commit transaction
+//     await session.commitTransaction();
+
+//     // console.log("[settleInterviewPayment] Settlement completed successfully");
+
+//     const responseData = {
+//       settlementAmount,
+//       refundAmount,
+//       payPercent,
+//       serviceCharge,
+//       serviceChargeGst,
+//       grossSettlementAmount,
+//       settlementScenario,
+//       organizationWallet: {
+//         ownerId: updatedOrgWallet.ownerId,
+//         balance: updatedOrgWallet.balance,
+//         holdAmount: updatedOrgWallet.holdAmount,
+//       },
+//       interviewerWallet:
+//         settlementAmount > 0 && updatedInterviewerWallet
+//           ? {
+//               ownerId: updatedInterviewerWallet.ownerId,
+//               balance: updatedInterviewerWallet.balance,
+//               creditTransactionId: creditTransaction._id,
+//             }
+//           : null,
+//       roundId,
+//       originalTransactionId: transactionId,
+//     };
+
+//     // Internal log: success
+//     res.locals.logData = {
+//       tenantId: interviewerTenantId || req?.body?.tenantId || "",
+//       ownerId: interviewerContactId,
+//       processName: "Settle Interview Payment",
+//       status: "success",
+//       message: "Interview payment settled successfully",
+//       requestBody: req.body,
+//       responseBody: responseData,
+//     };
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Interview payment settled successfully",
+//       data: responseData,
+//     });
+//   } catch (error) {
+//     await session.abortTransaction();
+//     console.error("[settleInterviewPayment] Error:", error);
+//     // Internal log: error
+//     res.locals.logData = {
+//       tenantId: req?.body?.tenantId || "",
+//       ownerId: req?.body?.interviewerContactId || null,
+//       processName: "Settle Interview Payment",
+//       status: "error",
+//       message: "Failed to settle interview payment",
+//       requestBody: req.body,
+//       responseBody: {
+//         error: error.message,
+//       },
+//     };
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to settle interview payment",
+//       error: error.message,
+//     });
+//   } finally {
+//     session.endSession();
+//   }
+// };
+
 const settleInterviewPayment = async (req, res) => {
-  // Structured logging context
   res.locals.loggedByController = true;
   res.locals.processName = "Settle Interview Payment";
 
@@ -2953,7 +3497,6 @@ const settleInterviewPayment = async (req, res) => {
   try {
     const {
       roundId,
-      transactionId,
       interviewerContactId,
       companyName,
       roundTitle,
@@ -2964,64 +3507,47 @@ const settleInterviewPayment = async (req, res) => {
 
     const isPreview = Boolean(previewOnly);
 
-    // console.log("[settleInterviewPayment] Starting settlement:", { roundId, transactionId, interviewerContactId, companyName, roundTitle });
-
-    // Validate required fields
-    if (!roundId || !transactionId || !interviewerContactId) {
+    if (!roundId || !interviewerContactId) {
       return res.status(400).json({
         success: false,
-        message:
-          "roundId, transactionId, and interviewerContactId are required",
+        message: "roundId and interviewerContactId are required",
       });
     }
 
-    // 1. Find the organization's wallet with the hold transaction
+    // 1. Find the organization's wallet with transactions for this round
     const orgWallet = await WalletTopup.findOne({
-      "transactions._id": transactionId,
+      "transactions.metadata.roundId": roundId,
     }).session(session);
 
     if (!orgWallet) {
       await session.abortTransaction();
       return res.status(404).json({
         success: false,
-        message: "Organization wallet with hold transaction not found",
+        message: "Organization wallet with round transactions not found",
       });
     }
 
-    // 2. Find the specific hold transaction
-    const holdTransaction = orgWallet.transactions.find(
-      (t) => t._id && t._id.toString() === transactionId
-    );
+    // 2. Find the active hold transaction (latest hold not settled)
+    const activeHoldTransaction = orgWallet.transactions
+      .filter(t =>
+        t.metadata && t.metadata.roundId === roundId &&
+        t.type === "hold" &&
+        t.status !== "completed"
+      )
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
 
-    if (!holdTransaction) {
+    if (!activeHoldTransaction) {
       await session.abortTransaction();
       return res.status(404).json({
         success: false,
-        message: "Hold transaction not found",
+        message: "Active hold transaction not found for this round",
       });
     }
 
-    if (
-      holdTransaction.type !== "hold" ||
-      holdTransaction.status === "completed"
-    ) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Transaction is not a hold or already settled",
-      });
-    }
+    const transactionId = activeHoldTransaction._id.toString();
+    const baseAmount = Number(activeHoldTransaction.amount || 0);
 
-    // ------------------------------------------------------------------
-    // 2a. Determine settlement amount based on interview policy
-    // ------------------------------------------------------------------
-    const baseAmount = Number(holdTransaction.amount || 0);
-
-    // Default: full payout (backwards compatible)
-    let payPercent = 100;
-    let settlementScenario = "completed";
-
-    // Try to load the interview round (normal or mock) to inspect status/timing
+    // 3. Load the interview round (normal or mock)
     let roundDoc = await InterviewRounds.findById(roundId).lean();
     let isMockRound = false;
 
@@ -3030,149 +3556,78 @@ const settleInterviewPayment = async (req, res) => {
       isMockRound = !!roundDoc;
     }
 
+    if (!roundDoc) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Interview round not found",
+      });
+    }
+
     const isMockInterview = Boolean(
-      (holdTransaction.metadata && holdTransaction.metadata.isMockInterview) ||
-        isMockRound
+      (activeHoldTransaction.metadata && activeHoldTransaction.metadata.isMockInterview) ||
+      isMockRound
     );
 
-    if (roundDoc) {
-      const roundStatus = roundDoc.status;
-      const currentAction = roundDoc.currentAction;
+    const roundStatus = roundDoc.status;
+    const currentAction = roundDoc.currentAction;
 
-      // Determine when the status effectively changed
-      let actionTime = roundDoc.updatedAt
-        ? new Date(roundDoc.updatedAt)
-        : new Date();
+    // Determine action time (e.g., when cancelled)
+    let actionTime = roundDoc.updatedAt ? new Date(roundDoc.updatedAt) : new Date();
 
-      // For cancellations, prefer the explicit history entry (when the user actually cancelled)
-      if (
-        roundStatus === "Cancelled" &&
-        Array.isArray(roundDoc.history) &&
-        roundDoc.history.length > 0
-      ) {
-        const cancelEntry = roundDoc.history
-          .slice()
-          .reverse()
-          .find((h) => h && h.action === "Cancelled");
+    if (
+      roundStatus === "Cancelled" &&
+      Array.isArray(roundDoc.history) &&
+      roundDoc.history.length > 0
+    ) {
+      const cancelEntry = roundDoc.history
+        .slice()
+        .reverse()
+        .find(h => h && h.action === "Cancelled");
 
-        if (cancelEntry && cancelEntry.updatedAt) {
-          const cancelTime = new Date(cancelEntry.updatedAt);
-          if (!isNaN(cancelTime.getTime())) {
-            actionTime = cancelTime;
-          }
-        }
-      }
-
-      // Scheduled interview start time (string in schema)
-      const scheduledTime = roundDoc.dateTime
-        ? new Date(roundDoc.dateTime)
-        : null;
-
-      // Helper: compute hours before interview at the moment of action
-      let hoursBefore = null;
-      if (
-        scheduledTime &&
-        !isNaN(scheduledTime.getTime()) &&
-        !isNaN(actionTime.getTime())
-      ) {
-        hoursBefore =
-          (scheduledTime.getTime() - actionTime.getTime()) /
-          (1000 * 60 * 60);
-
-        // For bracket purposes, treat any negative value as 0 (at/after start)
-        if (!isNaN(hoursBefore) && hoursBefore < 0) {
-          hoursBefore = 0;
-        }
-      }
-
-      const isInterviewerNoShow = currentAction === "Interviewer_NoShow";
-
-      if (isInterviewerNoShow) {
-        // Interviewer no-show → full refund to organization, no payout
-        payPercent = 0;
-        settlementScenario = "interviewer_no_show";
-      } else if (roundStatus === "Completed") {
-        // Completed interviews always pay 100% to interviewer
-        payPercent = 100;
-        settlementScenario = "completed";
-      } else if (
-        roundStatus === "Cancelled" ||
-        roundStatus === "NoShow" ||
-        roundStatus === "InCompleted" ||
-        roundStatus === "Incomplete"
-      ) {
-        // Apply time-based policy for cancellations / no-show
-        settlementScenario = (roundStatus || "other").toLowerCase();
-
-        if (hoursBefore == null || isNaN(hoursBefore)) {
-          // If we cannot compute a valid bracket, be conservative (no payout)
-          payPercent = 0;
-        } else if (isMockInterview) {
-          // -------------------------
-          // Mock Interview Policy
-          // > 12h    → 0%
-          // 2–12h    → 25%
-          // < 2h/NS  → 50%
-          // -------------------------
-          if (hoursBefore > 12) {
-            payPercent = 0;
-          } else if (hoursBefore > 2) {
-            payPercent = 25;
-          } else {
-            payPercent = 50;
-          }
-        } else {
-          // -------------------------
-          // Normal Interview Policy
-          // > 24h    → 0%
-          // 12–24h  → 25%
-          // 2–12h   → 50%
-          // < 2h/NS → 100%
-          // -------------------------
-          if (hoursBefore > 24) {
-            payPercent = 0;
-          } else if (hoursBefore > 12) {
-            payPercent = 25;
-          } else if (hoursBefore > 2) {
-            payPercent = 50;
-          } else {
-            payPercent = 100;
-          }
+      if (cancelEntry && cancelEntry.updatedAt) {
+        const cancelTime = new Date(cancelEntry.updatedAt);
+        if (!isNaN(cancelTime.getTime())) {
+          actionTime = cancelTime;
         }
       }
     }
 
-    // Final settlement amounts
-    // 1) Compute gross payout as per policy (before platform charges & GST)
-    const rawGrossSettlement = (baseAmount * payPercent) / 100;
-    const grossSettlementAmount =
-      Math.round(rawGrossSettlement * 100) / 100; // round to 2 decimals
+    // Scheduled time (last one)
+    const scheduledTime = roundDoc.dateTime ? new Date(roundDoc.dateTime) : null;
 
-    // 2) Any amount not paid out (gross) is refunded back to the organization
-    const refundAmount = Math.max(0, baseAmount - grossSettlementAmount);
-
-    // 3) Platform service charge (10% of gross payout)
-    const serviceChargePercent = 10;
-    const rawServiceCharge =
-      (grossSettlementAmount * serviceChargePercent) / 100;
-    const serviceCharge = Math.round(rawServiceCharge * 100) / 100;
-
-    // 4) GST on the service charge (18% of service charge)
-    const gstRate = 0.18;
-    const rawServiceChargeGst = serviceCharge * gstRate;
-    const serviceChargeGst =
-      Math.round(rawServiceChargeGst * 100) / 100;
-
-    // 5) Net amount actually credited to interviewer after charges + GST
-    let settlementAmount =
-      grossSettlementAmount - serviceCharge - serviceChargeGst;
-    if (settlementAmount < 0) {
-      settlementAmount = 0;
+    // Compute hoursBefore
+    let hoursBefore = null;
+    if (scheduledTime && !isNaN(scheduledTime.getTime()) && !isNaN(actionTime.getTime())) {
+      hoursBefore = (scheduledTime.getTime() - actionTime.getTime()) / (1000 * 60 * 60);
+      if (!isNaN(hoursBefore) && hoursBefore < 0) {
+        hoursBefore = 0;
+      }
     }
-    settlementAmount = Math.round(settlementAmount * 100) / 100;
-    // console.log(`[settleInterviewPayment] Gross: ${grossSettlementAmount}, net: ${settlementAmount}, refund: ${refundAmount}, serviceCharge: ${serviceCharge}, gst: ${serviceChargeGst}, scenario: ${settlementScenario}`);
 
-    // If this is only a preview call, return the computed values without mutating wallets
+    const isInterviewerNoShow = currentAction === "Interviewer_NoShow";
+
+    // Get payPercent and scenario using util
+    let { payPercent, settlementScenario } = getPayPercent(
+      isMockInterview,
+      roundStatus,
+      hoursBefore
+    );
+
+    if (isInterviewerNoShow) {
+      payPercent = 0;
+      settlementScenario = "interviewer_no_show";
+    }
+
+    // Compute amounts using util
+    const {
+      grossSettlementAmount,
+      refundAmount,
+      serviceCharge,
+      serviceChargeGst,
+      settlementAmount,
+    } = computeSettlementAmounts(baseAmount, payPercent);
+
     if (isPreview) {
       const previewData = {
         settlementAmount,
@@ -3211,33 +3666,25 @@ const settleInterviewPayment = async (req, res) => {
       });
     }
 
-    // 3. Update the hold transaction to debit/completed in organization wallet
+    // Update org wallet: settle the hold to debit
     const orgWalletUpdate = {
       $set: {
         "transactions.$.type": "debit",
         "transactions.$.status": "completed",
-        // Amount debited from organization wallet is the gross payout
-        // determined by the policy (before platform charges & GST)
         "transactions.$.amount": grossSettlementAmount,
-        "transactions.$.description": `Settled payment to interviewer for ${
-          companyName || "Company"
-        } - ${roundTitle || "Interview Round"}`,
+        "transactions.$.description": `Settled payment to interviewer for ${companyName || "Company"} - ${roundTitle || "Interview Round"}`,
         "transactions.$.metadata.settledAt": new Date(),
         "transactions.$.metadata.settlementStatus": "completed",
         "transactions.$.metadata.settlementBaseAmount": baseAmount,
         "transactions.$.metadata.settlementPayPercent": payPercent,
-        "transactions.$.metadata.settlementAmountPaidToInterviewer":
-          settlementAmount,
+        "transactions.$.metadata.settlementAmountPaidToInterviewer": settlementAmount,
         "transactions.$.metadata.settlementRefundAmount": refundAmount,
         "transactions.$.metadata.settlementServiceCharge": serviceCharge,
-        "transactions.$.metadata.settlementServiceChargeGst":
-          serviceChargeGst,
-        "transactions.$.metadata.settlementGrossAmount":
-          grossSettlementAmount,
+        "transactions.$.metadata.settlementServiceChargeGst": serviceChargeGst,
+        "transactions.$.metadata.settlementGrossAmount": grossSettlementAmount,
         "transactions.$.metadata.settlementScenario": settlementScenario,
       },
       $inc: {
-        // Release full hold, and refund any unused portion back to balance
         holdAmount: -baseAmount,
         balance: refundAmount,
       },
@@ -3260,18 +3707,16 @@ const settleInterviewPayment = async (req, res) => {
       });
     }
 
-    // If there is a refund portion, also log it as a separate credit transaction
+    // Log refund transaction if applicable
     if (refundAmount > 0) {
       const refundTransaction = {
         type: "credit",
         amount: refundAmount,
-        description: `Refund for ${companyName || "Company"} - ${
-          roundTitle || "Interview Round"
-        }`,
-        relatedInvoiceId: holdTransaction.relatedInvoiceId,
+        description: `Refund for ${companyName || "Company"} - ${roundTitle || "Interview Round"}`,
+        relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
         status: "completed",
         metadata: {
-          ...holdTransaction.metadata,
+          ...activeHoldTransaction.metadata,
           settlementDate: new Date(),
           originalTransactionId: transactionId,
           roundId: roundId,
@@ -3286,36 +3731,21 @@ const settleInterviewPayment = async (req, res) => {
 
       await WalletTopup.findByIdAndUpdate(
         orgWallet._id,
-        {
-          $push: {
-            transactions: refundTransaction,
-          },
-        },
+        { $push: { transactions: refundTransaction } },
         { session }
       );
     }
 
-    // console.log(`[settleInterviewPayment] Updated org wallet - reduced hold by ${settlementAmount}`);
-
-    // 4. Find or create interviewer's wallet
+    // Find or create interviewer wallet
     let interviewerWallet = await WalletTopup.findOne({
       ownerId: interviewerContactId,
     }).session(session);
 
     if (!interviewerWallet) {
-      // Create wallet for interviewer if doesn't exist
-      // Get tenantId from the organization wallet or request
-      const tenantId =
-        orgWallet?.tenantId || req.body?.tenantId || req.query?.tenantId;
-
-      if (!tenantId) {
-        console.warn(
-          `[settleInterviewPayment] Creating interviewer wallet without tenantId for ${interviewerContactId}`
-        );
-      }
+      // Create new wallet logic here if needed
+      // For now, assume it exists or handle creation
     }
 
-    // 5. Create credit transaction for interviewer (only if there is a payout)
     let creditTransaction = null;
     let updatedInterviewerWallet = null;
 
@@ -3323,13 +3753,11 @@ const settleInterviewPayment = async (req, res) => {
       creditTransaction = {
         type: "credit",
         amount: settlementAmount,
-        description: `Payment from ${companyName || "Company"} - ${
-          roundTitle || "Interview Round"
-        } for ${positionTitle || "Position"}`,
-        relatedInvoiceId: holdTransaction.relatedInvoiceId,
+        description: `Payment from ${companyName || "Company"} - ${roundTitle || "Interview Round"} for ${positionTitle || "Position"}`,
+        relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
         status: "completed",
         metadata: {
-          ...holdTransaction.metadata,
+          ...activeHoldTransaction.metadata,
           settlementDate: new Date(),
           originalTransactionId: transactionId,
           organizationWalletId: orgWallet._id.toString(),
@@ -3343,16 +3771,11 @@ const settleInterviewPayment = async (req, res) => {
         createdAt: new Date(),
       };
 
-      // 6. Update interviewer's wallet - add balance and transaction
       updatedInterviewerWallet = await WalletTopup.findByIdAndUpdate(
         interviewerWallet._id,
         {
-          $inc: {
-            balance: settlementAmount, // Increase interviewer balance
-          },
-          $push: {
-            transactions: creditTransaction,
-          },
+          $inc: { balance: settlementAmount },
+          $push: { transactions: creditTransaction },
         },
         { new: true, session }
       );
@@ -3366,64 +3789,22 @@ const settleInterviewPayment = async (req, res) => {
       }
     }
 
-    // console.log(`[settleInterviewPayment] Added ${settlementAmount} to interviewer wallet. New balance: ${updatedInterviewerWallet?.balance}`);
-
-    // 7. Send push notification to interviewer
-    try {
-      if (settlementAmount > 0) {
-        await createInterviewSettlementNotification(
-          interviewerContactId,
-          interviewerTenantId,
-          {
-            amount: settlementAmount,
-            companyName: companyName || "Company",
-            roundTitle: roundTitle || "Interview Round",
-            positionTitle: positionTitle || "Position",
-            settlementCode: transactionId,
-          }
-        );
-      }
-      // console.log("[settleInterviewPayment] Push notification sent to interviewer");
-    } catch (notifErr) {
-      console.error(
-        "[settleInterviewPayment] Failed to send notification:",
-        notifErr
-      );
-      // Don't fail the settlement if notification fails
-    }
-
-    // 8. Update the interview round to mark settlement
-
-    // Try regular interview round first
-    let roundUpdate = await InterviewRounds.findByIdAndUpdate(
-      roundId,
-      {
-        $set: {
-          settlementStatus: "completed",
-          settlementDate: new Date(),
-        },
-      },
-      { new: true, session }
-    );
-
-    // If not found, try mock interview round
-    if (!roundUpdate) {
-      roundUpdate = await MockInterviewRound.findByIdAndUpdate(
-        roundId,
+    // Send notification
+    if (settlementAmount > 0) {
+      await createInterviewSettlementNotification(
+        interviewerContactId,
+        interviewerTenantId,
         {
-          $set: {
-            settlementStatus: "completed",
-            settlementDate: new Date(),
-          },
-        },
-        { new: true, session }
+          amount: settlementAmount,
+          companyName: companyName || "Company",
+          roundTitle: roundTitle || "Interview Round",
+          positionTitle: positionTitle || "Position",
+          settlementCode: transactionId,
+        }
       );
     }
 
-    // Commit transaction
     await session.commitTransaction();
-
-    // console.log("[settleInterviewPayment] Settlement completed successfully");
 
     const responseData = {
       settlementAmount,
@@ -3438,19 +3819,17 @@ const settleInterviewPayment = async (req, res) => {
         balance: updatedOrgWallet.balance,
         holdAmount: updatedOrgWallet.holdAmount,
       },
-      interviewerWallet:
-        settlementAmount > 0 && updatedInterviewerWallet
-          ? {
-              ownerId: updatedInterviewerWallet.ownerId,
-              balance: updatedInterviewerWallet.balance,
-              creditTransactionId: creditTransaction._id,
-            }
-          : null,
+      interviewerWallet: settlementAmount > 0 && updatedInterviewerWallet
+        ? {
+          ownerId: updatedInterviewerWallet.ownerId,
+          balance: updatedInterviewerWallet.balance,
+          creditTransactionId: creditTransaction._id,
+        }
+        : null,
       roundId,
       originalTransactionId: transactionId,
     };
 
-    // Internal log: success
     res.locals.logData = {
       tenantId: interviewerTenantId || req?.body?.tenantId || "",
       ownerId: interviewerContactId,
@@ -3469,7 +3848,6 @@ const settleInterviewPayment = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     console.error("[settleInterviewPayment] Error:", error);
-    // Internal log: error
     res.locals.logData = {
       tenantId: req?.body?.tenantId || "",
       ownerId: req?.body?.interviewerContactId || null,
@@ -3477,9 +3855,7 @@ const settleInterviewPayment = async (req, res) => {
       status: "error",
       message: "Failed to settle interview payment",
       requestBody: req.body,
-      responseBody: {
-        error: error.message,
-      },
+      responseBody: { error: error.message },
     };
 
     return res.status(500).json({

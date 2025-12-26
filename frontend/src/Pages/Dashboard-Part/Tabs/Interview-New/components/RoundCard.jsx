@@ -864,7 +864,7 @@ const RoundCard = ({
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: false,
+      canReschedule: true,
       canCancel: false,
       canComplete: false,
       canReject: false,

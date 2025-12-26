@@ -13,5 +13,10 @@ module.exports = {
   JWT_SECRET: process.env.JWT_SECRET,
 
   // API URLs
-  REACT_APP_API_URL_FRONTEND: process.env.REACT_APP_API_URL_FRONTEND
+  REACT_APP_API_URL_FRONTEND: process.env.REACT_APP_API_URL_FRONTEND,
+  
+  // 
+
+  SERVICE_CHARGE_PERCENT: parseFloat(process.env.PLATFORM_SERVICE_CHARGE_PERCENT) || 10,
+  GST_RATE: parseFloat(process.env.GST_RATE) || 0.18,
 };
