@@ -250,7 +250,7 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
         const response = await axios.get(
           `${config.REACT_APP_API_URL}/rate-cards`
         );
-        console.log("Fetched rate cards at Kanban:", response.data);
+        // console.log("Fetched rate cards at Kanban:", response.data);
         setRateCards(response.data);
       } catch (error) {
         console.error("Error fetching rate cards:", error);

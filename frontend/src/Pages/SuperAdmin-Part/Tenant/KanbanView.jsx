@@ -11,7 +11,7 @@ const KanbanView = ({
   renderActions = () => null,
   emptyState = "No Data Found",
 }) => {
-  console.log("KanbanView - data:", data);
+  // console.log("KanbanView - data:", data);
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

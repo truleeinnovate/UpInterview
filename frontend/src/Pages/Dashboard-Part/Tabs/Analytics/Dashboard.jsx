@@ -40,14 +40,13 @@ const Dashboard = () => {
     undefined,
     type
   );
-  console.log("responseDashBoard ===============================> ", responseDashBoard);
+
 
   // Assessments
   const { responseAssessmentDashBoard } = useScheduleAssessments({
     type,
   });
 
-  console.log("responseAssessmentDashBoard", responseAssessmentDashBoard);
 
   // ----------------------------------------------------------------------------------------------
   const [filters, setFilters] = useState({

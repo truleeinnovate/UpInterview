@@ -35,11 +35,11 @@ import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capital
 function TenantDetailsPage() {
   const { id } = useParams();
   // v1.0.0 <---------------------------------------------------------------------
-  console.log("1. CURRENT TENANT ID: ", id);
+  // console.log("1. CURRENT TENANT ID: ", id);
   // v1.0.0 --------------------------------------------------------------------->
   const { tenant, isLoading, isError, error, refetch } = useTenantById(id);
   // v1.0.0 <---------------------------------------------------------------------
-  console.log("4. CURRENT TENANT VIEW: ", tenant);
+  // console.log("4. CURRENT TENANT VIEW: ", tenant);
   // v1.0.0 --------------------------------------------------------------------->
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");

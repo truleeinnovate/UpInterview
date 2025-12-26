@@ -233,7 +233,7 @@ const MockSchedulelater = () => {
       if (MockEditData) {
         setMockEdit(true);
 
-        console.log("MockEditData", MockEditData);
+        // console.log("MockEditData", MockEditData);
 
         // Map interviewers to externalInterviewers format
         const formattedInterviewers =

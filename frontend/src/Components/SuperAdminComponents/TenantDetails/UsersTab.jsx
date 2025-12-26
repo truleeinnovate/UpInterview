@@ -40,6 +40,8 @@ import { toast } from "react-toastify";
 import { usePermissions } from "../../../Context/PermissionsContext";
 import KanbanView from "./Users/Kanban.jsx";
 import { notify } from "../../../services/toastService.js";
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { formatDateTime } from "../../../utils/dateFormatter.js";
 
 function UsersTab({ users, viewMode }) {
   const { refreshPermissions } = usePermissions();
@@ -255,15 +257,12 @@ function UsersTab({ users, viewMode }) {
     setSelectedUser(null);
   };
 
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
   // Shared Actions Configuration for Table and Kanban
   const actions = [
     {
       key: "view",
       label: "View Details",
-      icon: <Eye className="w-4 h-4 text-blue-600" />,
+      icon: <Eye className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         setSelectedUserId(row._id);
         setIsPopupOpen(true);
@@ -278,7 +277,7 @@ function UsersTab({ users, viewMode }) {
     {
       key: "login-as-user",
       label: "Login as User",
-      icon: <User className="w-4 h-4 text-blue-600" />,
+      icon: <User className="w-4 h-4 text-custom-blue" />,
       onClick: (row) => {
         handleLoginAsUser(row._id);
       },
@@ -342,20 +341,22 @@ function UsersTab({ users, viewMode }) {
       header: "Role",
       render: (_, row) => (
         <div className="flex items-center gap-2">
-          <span>{row?.roleName ? row.roleName : "N/A"}</span>
+          <span>
+            {row?.roleName ? capitalizeFirstLetter(row.roleName) : "N/A"}
+          </span>
         </div>
       ),
     },
     {
       key: "lastLogin",
       header: "Last Login",
-      render: (value, row) =>
-        new Date(row.updatedAt).toLocaleDateString() || "N/A",
+      render: (value, row) => formatDateTime(row?.updatedAt) || "N/A",
     },
     {
       key: "status",
       header: "Status",
-      render: (value, row) => <StatusBadge status={row.status} /> || "N/A",
+      render: (value, row) =>
+        <StatusBadge status={capitalizeFirstLetter(row.status)} /> || "N/A",
     },
   ];
 
@@ -369,6 +370,11 @@ function UsersTab({ users, viewMode }) {
     {
       key: "email",
       header: "Email",
+      render: (value) => (
+        <span title={value} className="cursor-default">
+          {value}
+        </span>
+      ),
     },
     {
       key: "status",
@@ -387,7 +393,7 @@ function UsersTab({ users, viewMode }) {
             e.stopPropagation();
             action.onClick(item);
           }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-1.5 text-custom-blue hover:bg-custom-blue/10 rounded-lg transition-colors"
           title={action.label}
         >
           {action.icon}
@@ -780,6 +786,10 @@ function UsersTab({ users, viewMode }) {
                       columns={kanbanColumns}
                       loading={isLoading}
                       renderActions={renderKanbanActions}
+                      onTitleClick={(item) => {
+                        setSelectedUserId(item._id);
+                        setIsPopupOpen(true);
+                      }}
                       emptyState="No Users found."
                       viewMode={viewMode}
                     />

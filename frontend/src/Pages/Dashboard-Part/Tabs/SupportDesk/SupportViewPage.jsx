@@ -40,12 +40,12 @@ const SupportViewPage = () => {
   const [activeTab, setActiveTab] = useState("details");
   const { id } = useParams();
 
-  console.log("SupportViewPage Ticket ID:", id);
+  // console.log("SupportViewPage Ticket ID:", id);
 
   const { data: ticket, isLoading, isError } = useTicketById(id);
 
   const ticketData = ticket?.ticket || {};
-  console.log("ticketData", ticketData);
+  // console.log("ticketData", ticketData);
   // console.log("lastModifiedBy:", ticketData.updatedByUserId);
 
   useEffect(() => {

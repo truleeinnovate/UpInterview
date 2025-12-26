@@ -277,7 +277,7 @@ const InvoiceTab = () => {
 
         const { invoices: invoiceData, pagination } = Invoice_res?.data || {};
 
-        console.log("Invoice Data:", invoiceData, pagination);
+        // console.log("Invoice Data:", invoiceData, pagination);
 
         // Transform the data into a more usable structure
         const formattedData = invoiceData.map((invoice) => {

@@ -75,7 +75,7 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
   const { isMutationLoading, submitTicket } = useSupportTickets();
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const ownerId = tokenPayload?.userId;
-  console.log(`ownerId ------- ${ownerId}`);
+  // console.log(`ownerId ------- ${ownerId}`);
   const tenantId = tokenPayload?.tenantId;
   const navigate = useNavigate();
   const location = useLocation();
@@ -168,13 +168,13 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
         const response = await axios.get(
           `${process.env.REACT_APP_API_URL}/users/owner/${ownerId}`
         );
-        console.log("response", response);
+        // console.log("response", response);
         setContact(response.data);
 
         const response2 = await axios.get(
           `${process.env.REACT_APP_API_URL}/Organization/organization-details/${tenantId}`
         );
-        console.log("response2", response2);
+        // console.log("response2", response2);
         setOrganization(response2.data.company);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -350,9 +350,9 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
     ]
   );
 
-  console.log("FeedbackIssueType---", FeedbackIssueType);
+  // console.log("FeedbackIssueType---", FeedbackIssueType);
 
-  console.log("types of ", typeof initialTicketData?._id);
+  // console.log("types of ", typeof initialTicketData?._id);
 
   const handleSubmit = useCallback(
     async (e) => {
@@ -362,21 +362,21 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
       if (!validateForm()) return;
 
       const formData = createFormData();
-      console.log("formData--- formData", formData);
+      // console.log("formData--- formData", formData);
 
       try {
-        console.log(
-          "data: formDa editMode ticketId attachmentFile isAttachmentFileRemoved,",
-          {
-            data: formData,
-            editMode,
-            ticketId: initialTicketData?._id,
-            attachmentFile,
-            isAttachmentFileRemoved,
-            tenantId,
-            ownerId,
-          }
-        );
+        // console.log(
+        //   "data: formDa editMode ticketId attachmentFile isAttachmentFileRemoved,",
+        //   {
+        //     data: formData,
+        //     editMode,
+        //     ticketId: initialTicketData?._id,
+        //     attachmentFile,
+        //     isAttachmentFileRemoved,
+        //     tenantId,
+        //     ownerId,
+        //   }
+        // );
 
         const response = await submitTicket({
           data: formData,

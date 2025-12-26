@@ -35,7 +35,7 @@ const OrganizationRequest = () => {
   const filterIconRef = useRef(null);
   const [selectedOrganizationId, setSelectedOrganizationId] = useState(null);
   const [selectedOrganization, setSelectedOrganization] = useState(null);
-  console.log("selectedOrganization", selectedOrganization);
+  // console.log("selectedOrganization", selectedOrganization);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const ITEMS_PER_PAGE = 10;
 
@@ -74,10 +74,10 @@ const OrganizationRequest = () => {
         throw error;
       }
 
-      console.log("Initiating status update for organization:", {
-        orgId,
-        updateData,
-      });
+      // console.log("Initiating status update for organization:", {
+      //   orgId,
+      //   updateData,
+      // });
 
       // Call the update function from the hook
       const response = await updateOrganizationStatus(orgId, {
@@ -85,7 +85,7 @@ const OrganizationRequest = () => {
         updatedAt: new Date().toISOString(),
       });
 
-      console.log("Status update successful:", response);
+      // console.log("Status update successful:", response);
 
       // Refresh the data
       await refetch();
@@ -177,7 +177,7 @@ const OrganizationRequest = () => {
   // Handle view details
   const handleViewDetails = (organization) => {
     if (organization?._id) {
-      console.log("Setting selected organization ID:", organization._id);
+      // console.log("Setting selected organization ID:", organization._id);
       setSelectedOrganizationId(organization._id);
       setSelectedOrganization(organization);
       setIsPopupOpen(true);
@@ -203,7 +203,7 @@ const OrganizationRequest = () => {
   // Handle edit
   const handleEdit = (organization) => {
     // Navigate to edit page or open edit modal
-    console.log("Edit organization:", organization);
+    // console.log("Edit organization:", organization);
   };
 
   // // Handle status filter change

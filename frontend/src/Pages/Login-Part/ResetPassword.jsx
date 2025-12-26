@@ -31,8 +31,8 @@ const ResetPassword = () => {
     setIsSubmitting(true);
     setMessage({ text: "", type: "" });
 
-    console.log("Token being sent:", userId); // Log the token
-    console.log("Request payload:", { token: userId, newPassword: password, type }); // Log the full payload
+    // console.log("Token being sent:", userId); // Log the token
+    // console.log("Request payload:", { token: userId, newPassword: password, type }); // Log the full payload
 
     // Validation checks
     if (password !== confirmPassword) {

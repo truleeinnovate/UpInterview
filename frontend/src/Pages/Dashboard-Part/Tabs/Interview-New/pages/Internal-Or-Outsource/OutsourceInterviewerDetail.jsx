@@ -5,7 +5,7 @@ import { Button } from '../../../CommonCode-AllTabs/ui/button';
 import InterviewerAvatar from '../../../CommonCode-AllTabs/InterviewerAvatar';
 
 function AvailabilityCalendar({ availabilities }) {
-    console.log("availabilities", availabilities);
+    // console.log("availabilities", availabilities);
 
     const [currentWeek, setCurrentWeek] = useState(new Date());
 
@@ -165,7 +165,7 @@ function TabButton({ isActive, onClick, children }) {
 }
 
 function InterviewerDetailsModal({ interviewer, onClose }) {
-    console.log("interviewer details modal", interviewer);
+    // console.log("interviewer details modal", interviewer);
     const [activeTab, setActiveTab] = useState('about');
 
     if (!interviewer) return null;
@@ -231,7 +231,7 @@ function InterviewerDetailsModal({ interviewer, onClose }) {
             });
         });
 
-        console.log("Final availabilityMap:", availabilityMap);
+        // console.log("Final availabilityMap:", availabilityMap);
         return availabilityMap;
     };
 

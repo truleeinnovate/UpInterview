@@ -120,10 +120,10 @@ const QuestionBankForm = ({
 
 
   const [selectedListId, setSelectedListId] = useState([]);
-  console.log("selectedLabelId =================+", [
-    ...selectedListId,
-    selectedLabelId,
-  ]);
+  // console.log("selectedLabelId =================+", [
+  //   ...selectedListId,
+  //   selectedLabelId,
+  // ]);
 
   const [dropdownValue, setDropdownValue] = useState(
     isInterviewType ? "Interview Questions" : "Assessment Questions"
@@ -143,7 +143,7 @@ const QuestionBankForm = ({
       const matchedLabel = createdLists.find(
         (list) => list._id === selectedLabelId
       );
-      console.log("matchedLabel", matchedLabel);
+      // console.log("matchedLabel", matchedLabel);
       // Only auto-apply the selection if it matches the current Ass/Int type
       if (matchedLabel) {
         const typeVal = matchedLabel.type;
@@ -351,7 +351,7 @@ const QuestionBankForm = ({
       setAnswerMatching(question.autoAssessment?.criteria || "");
       setCharLimits(question.charLimits || { min: 1, max: 100 });
       const labelNames = question.tenantListId.map((tenant) => tenant);
-      console.log("labelNames ----------------", question.tenantListId);
+      // console.log("labelNames ----------------", question.tenantListId);
       setSelectedLabels(labelNames);
       // setSelectedMinExperience(
       //   question.minexperience === 0 || question.minexperience
@@ -525,7 +525,7 @@ const extractValidationErrors = (axiosError) => {
           isInterviewType && dropdownValue !== "Assessment Questions",
       } //<----v1.0.7------
     );
-    console.log("newErrors", newErrors);
+    // console.log("newErrors", newErrors);
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setIsSubmitting(false);
