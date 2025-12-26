@@ -17,7 +17,9 @@ import CandidateDetails from "../../Pages/videoCall/CandidateDetails"
 import FeedbackForm from "../../Pages/videoCall/FeedbackForm";
 import InterviewActions from "../../Pages/videoCall/InterviewActions";
 import { useMeetingAppContext } from "../MeetingAppContextDef";
-import { MessageSquare, Users, User, ClipboardList, ClipboardCheck } from "lucide-react";
+import { MessageSquare, Users, User, ClipboardList, ClipboardCheck, BookOpen } from "lucide-react";
+import { openPanelInNewTab } from '../utils/openInNewTab';
+import QuestionBank from "../../Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank";
 
 
 export function MeetingContainer({
@@ -63,8 +65,18 @@ export function MeetingContainer({
 
   // Function to get sidebar width based on mode
   const getSidebarWidth = (mode) => {
-    const wideModes = ['CANDIDATE', 'FEEDBACK', 'INTERVIEWACTIONS'];
-    return wideModes.includes(mode) ? '600px' : '20rem';
+    switch (mode) {
+      case 'CANDIDATE':
+      case 'FEEDBACK':
+      case 'INTERVIEWACTIONS':
+      case 'QUESTIONBANK':
+        return '50%';
+      case 'CHAT':
+      case 'PARTICIPANTS':
+        return '25%';
+      default:
+        return '25%';
+    }
   };
 
   // Get the current sidebar width
@@ -73,11 +85,8 @@ export function MeetingContainer({
 
   // Handle sidebar item click
   const handleSidebarItemClick = (id) => {
-    if (sideBarMode === id.toUpperCase()) {
-      setSideBarMode(null);
-    } else {
-      setSideBarMode(id.toUpperCase());
-    }
+    const upperId = id.toUpperCase();
+    setSideBarMode(prevMode => prevMode === upperId ? null : upperId);
   };
 
   const [containerHeight, setContainerHeight] = useState(0);
@@ -260,7 +269,7 @@ export function MeetingContainer({
       {/* Top Navigation */}
       <nav className="bg-white shadow-sm">
         <div className="px-6">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-14">
             <div className="flex items-center space-x-2">
               <a
                 href="/code-editor"
@@ -268,7 +277,7 @@ export function MeetingContainer({
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 bg-custom-blue text-white rounded-md text-sm font-medium hover:bg-custom-blue/80 transition-colors flex items-center"
               >
-                <span>Editor</span>
+                <span>Code Editor</span>
                 <ExternalLink className="w-3 h-3 ml-1" />
               </a>
               <a
@@ -288,31 +297,37 @@ export function MeetingContainer({
                 {
                   id: "chat",
                   label: "Chat",
-                  icon: <MessageSquare className="w-5 h-5" />,
+                  icon: <MessageSquare className="w-4 h-4" />,
                   tooltip: "Chat"
                 },
                 {
                   id: "participants",
                   label: "Participants",
-                  icon: <Users className="w-5 h-5" />,
+                  icon: <Users className="w-4 h-4" />,
                   tooltip: "Participants"
                 },
                 {
                   id: "candidate",
                   label: "Candidate Details",
-                  icon: <User className="w-5 h-5" />,
+                  icon: <User className="w-4 h-4" />,
                   tooltip: "Candidate Details"
+                },
+                {
+                  id: "questionbank",  // New Question Bank item
+                  label: "Question Bank",
+                  icon: <BookOpen className="w-4 h-4" />,
+                  tooltip: "Question Bank"
                 },
                 {
                   id: "feedback",
                   label: "Feedback Form",
-                  icon: <ClipboardList className="w-5 h-5" />,
+                  icon: <ClipboardList className="w-4 h-4" />,
                   tooltip: "Feedback Form"
                 },
                 {
                   id: "interviewactions",
                   label: "Interview Actions",
-                  icon: <ClipboardCheck className="w-5 h-5" />,
+                  icon: <ClipboardCheck className="w-4 h-4" />,
                   tooltip: "Interview"
                 },
               ].map((item) => (
@@ -334,133 +349,230 @@ export function MeetingContainer({
                 </div>
               ))}
             </div>
+
           </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Main Video Area - Takes full width when sidebar is closed, leaves space when open */}
-        <div className={`flex-1 ${mainContentPadding} transition-all duration-300`} style={{
-          width: sideBarMode ? `calc(100% - ${sidebarWidth})` : '100%'
-        }}>
-          {typeof localParticipantAllowedJoin === "boolean" ? (
-            localParticipantAllowedJoin ? (
-              <div className="flex flex-1 flex-col h-full">
-                <div className="flex-1 overflow-hidden">
-                  {isPresenting ? (
-                    <div className="h-full">
-                      <PresenterView height={containerHeight - bottomBarHeight} />
-                    </div>
-                  ) : (
-                    <div
-                      className="grid h-full"
-                      style={{
-                        gridTemplateColumns:
-                          uniqueParticipants.size === 1
-                            ? '1fr'
-                            : uniqueParticipants.size === 2
-                              ? '1fr 1fr'
-                              : '1fr 1fr 1fr',
-                        gridTemplateRows:
-                          uniqueParticipants.size <= 3
-                            ? '1fr'
-                            : uniqueParticipants.size <= 6
-                              ? '1fr 1fr'
-                              : '1fr 1fr 1fr',
-                      }}
-                    >
-                      {Array.from(uniqueParticipants).map((participantId) => (
-                        <div
-                          key={`participant-${participantId}`}
-                          className="relative"
-                          style={{
-                            height: containerHeight - bottomBarHeight - 10,
-                          }}
-                        >
-                          <ParticipantView participantId={participantId} />
-                          <ParticipantMicStream participantId={participantId} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <BottomBar
-                  bottomBarHeight={bottomBarHeight}
-                  setIsMeetingLeft={setIsMeetingLeft}
-                />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-red-500 text-lg">
-                  You have not been allowed to join yet.
-                </p>
-              </div>
-            )
-          ) : (
-            !mMeeting.isMeetingJoined && <WaitingToJoinScreen />
-          )}
-        </div>
-
-        {/* Right Sidebar */}
-        {sideBarMode && (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Video Area - Will be resized when sidebar is open */}
+        <div className="flex-1 flex overflow-hidden">
           <div
-            className="bg-white border-l border-gray-200 flex flex-col transition-all duration-300 fixed right-0 top-0 bottom-0 overflow-y-auto"
+            className="flex-1 transition-all duration-300"
             style={{
-              width: sidebarWidth,
-              height: 'calc(100% - 4rem)', // Adjust based on your header height
-              marginTop: '4rem' // Match your header height
+              width: sideBarMode ? `calc(100% - ${getSidebarWidth(sideBarMode)})` : '100%'
             }}
           >
-            {sideBarMode === 'CANDIDATE' ? (
-              <CandidateDetails
-                candidate={{
-                  id: "candidate-1",
-                  name: "John Doe",
-                  email: "john@example.com",
-                  position: "Software Engineer"
-                }}
-                onClose={() => setSideBarMode(null)}
-              />
-            ) : sideBarMode === 'FEEDBACK' ? (
-              <FeedbackForm
-                onClose={() => setSideBarMode(null)}
-              />
-            ) : sideBarMode === 'INTERVIEWACTIONS' ? (
-              <div className="p-4">
-                <InterviewActions
-                  onClose={() => setSideBarMode(null)}
-                  interviewData={{
-                    interviewRound: {
-                      dateTime: new Date().toLocaleString(),
-                      status: 'Scheduled',
-                      _id: 'mock-id'
-                    }
-                  }}
-                  isAddMode={false}
-                  decodedData={{}}
-                  onActionComplete={() => { }}
-                />
-              </div>
+            {typeof localParticipantAllowedJoin === "boolean" ? (
+              localParticipantAllowedJoin ? (
+                <div className="flex flex-col h-full w-full">
+                  <div className="flex-1 overflow-hidden">
+                    {isPresenting ? (
+                      <div className="h-full">
+                        <PresenterView height={containerHeight - bottomBarHeight} />
+                      </div>
+                    ) : (
+                      <div
+                        className="grid h-full w-full"
+                        style={{
+                          gridTemplateColumns:
+                            uniqueParticipants.size === 1
+                              ? '1fr'
+                              : uniqueParticipants.size === 2
+                                ? '1fr 1fr'
+                                : '1fr 1fr 1fr',
+                          gridTemplateRows:
+                            uniqueParticipants.size <= 3
+                              ? '1fr'
+                              : uniqueParticipants.size <= 6
+                                ? '1fr 1fr'
+                                : '1fr 1fr 1fr',
+                        }}
+                      >
+                        {Array.from(uniqueParticipants).map((participantId) => (
+                          <div
+                            key={`participant-${participantId}`}
+                            className="relative"
+                            style={{
+                              height: containerHeight - bottomBarHeight - 10,
+                            }}
+                          >
+                            <ParticipantView participantId={participantId} />
+                            <ParticipantMicStream participantId={participantId} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-red-500 text-lg">
+                    You have not been allowed to join yet.
+                  </p>
+                </div>
+              )
             ) : (
-              <SidebarConatiner
-                height={containerHeight}
-                sideBarContainerWidth={sideBarContainerWidth}
-              />
+              !mMeeting.isMeetingJoined && <WaitingToJoinScreen />
             )}
           </div>
-        )}
+          {/* Sidebar - Rendered conditionally */}
+          {sideBarMode && (
+            <div
+              className="bg-white border-l border-gray-200 flex flex-col transition-all duration-300 overflow-y-auto"
+              style={{
+                width: getSidebarWidth(sideBarMode),
+                height: '100%',
+              }}
+            >
+              {['CANDIDATE', 'FEEDBACK', 'INTERVIEWACTIONS'].includes(sideBarMode) ? (
+                <div className="flex flex-col h-full">
+                  {/* Sidebar Header for Candidate, Feedback, and Interview Actions */}
+                  <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                    <div className="flex items-center">
+                      {sideBarMode === 'CANDIDATE' && <User className="h-5 w-5 mr-2" />}
+                      {sideBarMode === 'FEEDBACK' && <ClipboardCheck className="h-5 w-5 mr-2" />}
+                      {sideBarMode === 'INTERVIEWACTIONS' && <ClipboardList className="h-5 w-5 mr-2" />}
+                      <h3 className="text-lg font-medium">
+                        {sideBarMode === 'CANDIDATE' && 'Candidate Details'}
+                        {sideBarMode === 'FEEDBACK' && 'Interview Feedback'}
+                        {sideBarMode === 'INTERVIEWACTIONS' && 'Interview Actions'}
+                      </h3>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        className="p-1 rounded-full hover:bg-gray-100"
+                        onClick={() => {
+                          // Prepare data based on the panel type
+                          let panelData = {};
+                          if (sideBarMode === 'CANDIDATE') {
+                            panelData = {
+                              id: "candidate-1",
+                              name: "John Doe",
+                              email: "john@example.com",
+                              position: "Software Engineer"
+                            };
+                          } else if (sideBarMode === 'FEEDBACK') {
+                            // Add feedback form data if needed
+                            panelData = {};
+                          } else if (sideBarMode === 'INTERVIEWACTIONS') {
+                            // Add interview actions data if needed
+                            panelData = {
+                              interviewRound: {
+                                dateTime: new Date().toLocaleString(),
+                                status: 'Scheduled',
+                                _id: 'mock-id'
+                              }
+                            };
+                          } else if (sideBarMode === 'QUESTIONBANK') {
+                            window.open('/question-bank', '_blank');
+                            return;
+                          }
+                          openPanelInNewTab(sideBarMode, panelData);
+                        }}
+                      >
+                        <ExternalLink className="h-4 w-4 text-gray-500" />
+                      </button>
+                      <button
+                        className="p-1 rounded-full hover:bg-gray-100"
+                        onClick={() => setSideBarMode(null)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sidebar Content */}
+                  <div className="flex-1 overflow-y-auto">
+                    {sideBarMode === 'CANDIDATE' ? (
+                      <CandidateDetails
+                        candidate={{
+                          id: "candidate-1",
+                          name: "John Doe",
+                          email: "john@example.com",
+                          position: "Software Engineer"
+                        }}
+                        onClose={() => setSideBarMode(null)}
+                      />
+                    ) : sideBarMode === 'FEEDBACK' ? (
+                      <FeedbackForm
+                        onClose={() => setSideBarMode(null)}
+                      />
+                    ) : sideBarMode === 'INTERVIEWACTIONS' ? (
+                      <div className="p-4">
+                        <InterviewActions
+                          onClose={() => setSideBarMode(null)}
+                          interviewData={{
+                            interviewRound: {
+                              dateTime: new Date().toLocaleString(),
+                              status: 'Scheduled',
+                              _id: 'mock-id'
+                            }
+                          }}
+                          isAddMode={false}
+                          decodedData={{}}
+                          onActionComplete={() => { }}
+                        />
+                      </div>
+                    ) : sideBarMode === 'QUESTIONBANK' ? (
+                      <div className="h-full flex flex-col bg-white">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                          <h3 className="text-lg font-medium flex items-center">
+                            <BookOpen className="w-5 h-5 mr-2" />
+                            Question Bank
+                          </h3>
+                          <button
+                            onClick={() => setSideBarMode(null)}
+                            className="text-gray-500 hover:text-gray-700"
+                            aria-label="Close panel"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                          <QuestionBank
+                            isEmbedded={true}
+                            onSelectQuestion={(question) => {
+                              // Handle the selected question
+                              console.log('Question selected:', question);
+                              // You can add the question to chat or show it in the main area
+                              // For example, you might want to send it to the chat:
+                              // sendQuestionToChat(question);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <SidebarConatiner
+                        height={containerHeight}
+                        sideBarContainerWidth={sideBarContainerWidth}
+                      />
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // Original SidebarConatiner for CHAT and PARTICIPANTS
+                <SidebarConatiner
+                  height={containerHeight}
+                  sideBarContainerWidth={getSidebarWidth(sideBarMode)}
+                />
+              )}
+            </div>
+          )}
+        </div>
+        {/* Bottom Bar - Always full width */}
+        <div className="w-full">
+          <BottomBar
+            bottomBarHeight={bottomBarHeight}
+            setIsMeetingLeft={setIsMeetingLeft}
+          />
+        </div>
       </div>
-      {/* Confirmation Dialog */}
-      <ConfirmBox
-        open={meetingErrorVisible}
-        successText="OKAY"
-        onSuccess={() => {
-          setMeetingErrorVisible(false);
-        }}
-        title={`Error Code: ${meetingError?.code || 'Unknown Error'}`}
-        subTitle={meetingError?.message || 'An unknown error occurred'}
-      />
     </div>
   );
 }
