@@ -2558,6 +2558,7 @@ const getAllInterviewRounds = async (req, res) => {
         updatedAt: "$updatedAt",
         interviewStatus: "$mainInterview.status",
         dataType: 1,
+        history: 1,
       },
     };
 

@@ -19,9 +19,9 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
   const [showCandidateSidebar, setShowCandidateSidebar] = useState(false);
   const [showPositionSidebar, setShowPositionSidebar] = useState(false);
   const [candidateData, setCandidateData] = useState(null);
-  //console.log("candidateData----",candidateData);
+  console.log("intData----",interviewData);
   const [positionData, setPositionData] = useState(null);
-  console.log("positionDat--",positionData);
+  //console.log("positionDat--",positionData);
   const [loading, setLoading] = useState(false);
   const [transactionData, setTransactionData] = useState(null);
   const [transactionLoading, setTransactionLoading] = useState(false);
@@ -38,7 +38,6 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
       if (!isOpen || !interviewData?._id) {
         return;
       }
-      
       // Only fetch if transaction tab is active or will be shown
       if (activeTab === 'transactions' && !transactionData && !transactionLoading) {
         setTransactionLoading(true);
@@ -54,6 +53,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
           );
           
           if (response.data.success && response.data.data) {
+            console.log("response.data.data--",response.data.data);
             setTransactionData(response.data.data);
           }
         } catch (error) {
@@ -258,7 +258,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/wallet/settle-interview`,
+        `${process.env.REACT_APP_API_URL}/wallet/settle-interview`,
         {
           method: 'POST',
           headers: {
@@ -929,68 +929,91 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
             </div>
           </DetailSection>
 
-          {/* Scheduling History */}
+          {/* Round History (matches InterviewRounds.history schema) */}
           {interviewData.history && interviewData.history.length > 0 && (
-            <DetailSection title="Scheduling History">
+            <DetailSection title="Round History">
               <div className="space-y-3">
-                {interviewData.history.map((historyItem, index) => (
-                  <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <History className="w-4 h-4 text-custom-blue" />
-                        <span className="text-sm font-medium text-gray-900">
-                          {historyItem.action || 'Action'}
-                        </span>
-                      </div>
-                      <span className="text-xs text-gray-500">
-                        {historyItem.scheduledAt 
-                          ? new Date(historyItem.scheduledAt).toLocaleString('en-US', {
-                              dateStyle: 'medium',
-                              timeStyle: 'short'
-                            })
-                          : 'N/A'}
-                      </span>
-                    </div>
-                    
-                    {historyItem.reason && (
-                      <div className="mb-2">
-                        <p className="text-xs text-gray-600">
-                          <span className="font-semibold">Reason:</span> {historyItem.reason}
-                        </p>
-                      </div>
-                    )}
-                    
-                    {historyItem.participants && historyItem.participants.length > 0 && (
-                      <div className="mb-2">
-                        <p className="text-xs font-semibold text-gray-600 mb-1">Participants:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {historyItem.participants.map((participant, pIndex) => (
-                            <span key={pIndex} className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded text-xs">
-                              <Circle className={`w-2 h-2 ${participant.status === 'Joined' ? 'text-green-500' : 'text-gray-400'}`} />
-                              <span className="text-gray-700">{participant.role}</span>
-                              {participant.status && (
-                                <span className="text-gray-500">({participant.status})</span>
-                              )}
+                {interviewData.history
+                  .filter((h) => h && typeof h === 'object')
+                  .map((historyItem, index) => {
+                    const reasonLabel = historyItem.reasonCode;
+                    return (
+                      <div
+                        key={index}
+                        className="bg-gray-50 rounded-lg p-4 border border-gray-100"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <History className="w-4 h-4 text-custom-blue" />
+                            <span className="text-sm font-medium text-gray-900">
+                              {historyItem.action || 'Action'}
                             </span>
-                          ))}
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {historyItem.scheduledAt
+                              ? historyItem.scheduledAt
+                              : 'N/A'}
+                          </span>
+                        </div>
+
+                        {(reasonLabel || historyItem.comment) && (
+                          <div className="mb-2">
+                            {reasonLabel && (
+                              <p className="text-xs text-gray-600">
+                                <span className="font-semibold">Reason:</span>{' '}
+                                {reasonLabel}
+                              </p>
+                            )}
+                            {historyItem.comment && (
+                              <p className="text-xs text-gray-600 mt-1">
+                                <span className="font-semibold">Comment:</span>{' '}
+                                {historyItem.comment}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {Array.isArray(historyItem.participants) &&
+                          historyItem.participants.length > 0 && (
+                            <div className="mb-2">
+                              <p className="text-xs font-semibold text-gray-600 mb-1">
+                                Participants:
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {historyItem.participants.map((participant, pIndex) => (
+                                  <span
+                                    key={pIndex}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded text-xs"
+                                  >
+                                    <Circle
+                                      className={`w-2 h-2 ${
+                                        participant?.status === 'Joined'
+                                          ? 'text-green-500'
+                                          : 'text-gray-400'
+                                      }`}
+                                    />
+                                    <span className="text-gray-700">{participant?.role}</span>
+                                    {participant?.status && (
+                                      <span className="text-gray-500">({participant.status})</span>
+                                    )}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                        <div className="flex items-center gap-4 mt-2 pt-2 border-t border-gray-100">
+          
+                          {(historyItem.createdBy) && (
+                            <p className="text-xs text-gray-500">
+                              By:{' '}
+                              {historyItem.createdBy}
+                            </p>
+                          )}
                         </div>
                       </div>
-                    )}
-                    
-                    <div className="flex items-center gap-4 mt-2 pt-2 border-t border-gray-100">
-                      <p className="text-xs text-gray-500">
-                        Updated: {historyItem.updatedAt 
-                          ? new Date(historyItem.updatedAt).toLocaleDateString()
-                          : 'N/A'}
-                      </p>
-                      {historyItem.updatedBy && (
-                        <p className="text-xs text-gray-500">
-                          By: {historyItem.updatedBy}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
               </div>
             </DetailSection>
           )}
