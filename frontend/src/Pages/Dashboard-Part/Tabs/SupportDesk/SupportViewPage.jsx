@@ -93,7 +93,7 @@ const SupportViewPage = () => {
             onClick={() => setActiveTab("activity")}
           >
             <History className="w-4 h-4" />
-            Activity
+            Feeds
           </button>
         </div>
       </div>

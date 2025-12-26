@@ -60,14 +60,44 @@ const {
 const moment = require("moment-timezone");
 
 // Function to update start and end time
+// const formatDateTime = (date, showDate = true) => {
+//   if (!date) return "";
+
+//   // Convert UTC date to local timezone for display
+//   const d = new Date(date);
+//   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+//   // const d = new Date(date);
+
+//   // Format date if required
+//   const day = String(d.getDate()).padStart(2, "0");
+//   const month = String(d.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+//   const year = d.getFullYear();
+//   const formattedDate = `${day}-${month}-${year}`;
+
+//   // Format time
+//   const formattedTime = d.toLocaleTimeString("en-US", {
+//     timeZone: timeZone,
+//     hour: "2-digit",
+//     minute: "2-digit",
+//     hour12: true,
+//   });
+
+//   return showDate ? `${formattedDate} ${formattedTime}` : formattedTime;
+// };
+
 const formatDateTime = (date, showDate = true) => {
   if (!date) return "";
 
-  // Convert UTC date to local timezone for display
+  // Validate date
   const d = new Date(date);
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (isNaN(d.getTime())) {
+    console.warn("Invalid date passed to formatDateTime:", date);
+    return "";
+  }
 
-  // const d = new Date(date);
+  // Convert UTC date to local timezone for display
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   // Format date if required
   const day = String(d.getDate()).padStart(2, "0");
@@ -235,6 +265,10 @@ const RoundFormInterviews = () => {
 
   const [externalInterviewers, setExternalInterviewers] = useState([]);
 
+  // while editing
+  const isEditing = !!roundId && roundId !== "new";
+  const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
+
   useEffect(() => {
     if (
       selectedInterviewType === "External" &&
@@ -280,6 +314,72 @@ const RoundFormInterviews = () => {
   };
   // v1.0.1 ------------------------------------------------------------------------->
 
+  // const updateTimes = useCallback(
+  //   (newDuration) => {
+  //     let start = null;
+  //     let end = null;
+
+  //     if (interviewType === "instant") {
+  //       const now = new Date();
+  //       now.setMinutes(now.getMinutes() + 15); // Start after 15 min
+  //       // start = now;
+
+  //       // Convert to UTC
+  //       const localTimeStr = moment(now)?.format("YYYY-MM-DD HH:mm");
+  //       start = moment
+  //         ?.tz(
+  //           localTimeStr,
+  //           "YYYY-MM-DD HH:mm",
+  //           Intl.DateTimeFormat().resolvedOptions().timeZone
+  //         )
+  //         .utc()
+  //         .toDate();
+
+  //       const endTime = new Date(start);
+  //       // const endTime = new Date(now);
+  //       endTime.setMinutes(endTime.getMinutes() + newDuration);
+  //       end = endTime;
+  //     } else if (interviewType === "scheduled" && scheduledDate) {
+  //       // start = new Date(scheduledDate);
+  //       // Convert scheduled date from local timezone to UTC
+  //       const localTimeStr = moment(scheduledDate).format("YYYY-MM-DD HH:mm");
+  //       start = moment
+  //         ?.tz(
+  //           localTimeStr,
+  //           "YYYY-MM-DD HH:mm",
+  //           Intl.DateTimeFormat().resolvedOptions().timeZone
+  //         )
+  //         .utc()
+  //         .toDate();
+
+  //       const endTime = new Date(start);
+  //       endTime.setMinutes(endTime.getMinutes() + newDuration);
+  //       end = endTime;
+  //     }
+
+  //     if (start && end) {
+  //       setStartTime(start.toISOString()); // Store in ISO for backend
+  //       setEndTime(end.toISOString()); // Store in ISO for backend
+
+  //       // ✅ Ensure start shows date & time, but end shows only time
+  //       const formattedStart = formatDateTime(start, true);
+  //       const formattedEnd = formatDateTime(end, false);
+  //       let combinedDateTime = `${formattedStart} - ${formattedEnd}`;
+
+  //       setCombinedDateTime(combinedDateTime);
+  //     }
+  //   },
+  //   [
+  //     interviewType,
+  //     scheduledDate,
+  //     duration,
+  //     isEditing,
+  //     roundEditData,
+  //     combinedDateTime,
+  //   ]
+  //   // [interviewType, scheduledDate, duration]
+  // );
+
   const updateTimes = useCallback(
     (newDuration) => {
       let start = null;
@@ -288,7 +388,6 @@ const RoundFormInterviews = () => {
       if (interviewType === "instant") {
         const now = new Date();
         now.setMinutes(now.getMinutes() + 15); // Start after 15 min
-        // start = now;
 
         // Convert to UTC
         const localTimeStr = moment(now)?.format("YYYY-MM-DD HH:mm");
@@ -302,40 +401,66 @@ const RoundFormInterviews = () => {
           .toDate();
 
         const endTime = new Date(start);
-        // const endTime = new Date(now);
         endTime.setMinutes(endTime.getMinutes() + newDuration);
         end = endTime;
       } else if (interviewType === "scheduled" && scheduledDate) {
-        // start = new Date(scheduledDate);
-        // Convert scheduled date from local timezone to UTC
-        const localTimeStr = moment(scheduledDate).format("YYYY-MM-DD HH:mm");
-        start = moment
-          ?.tz(
-            localTimeStr,
-            "YYYY-MM-DD HH:mm",
-            Intl.DateTimeFormat().resolvedOptions().timeZone
-          )
-          .utc()
-          .toDate();
+        try {
+          // Validate scheduledDate before using it
+          const date = new Date(scheduledDate);
+          if (isNaN(date.getTime())) {
+            console.warn("Invalid scheduledDate:", scheduledDate);
+            return; // Exit if date is invalid
+          }
 
-        const endTime = new Date(start);
-        endTime.setMinutes(endTime.getMinutes() + newDuration);
-        end = endTime;
+          // Convert scheduled date from local timezone to UTC
+          const localTimeStr = moment(date).format("YYYY-MM-DD HH:mm");
+          start = moment
+            ?.tz(
+              localTimeStr,
+              "YYYY-MM-DD HH:mm",
+              Intl.DateTimeFormat().resolvedOptions().timeZone
+            )
+            .utc()
+            .toDate();
+
+          const endTime = new Date(start);
+          endTime.setMinutes(endTime.getMinutes() + newDuration);
+          end = endTime;
+        } catch (error) {
+          console.error("Error processing scheduled date:", error);
+          return; // Exit on error
+        }
       }
 
       if (start && end) {
+        // Additional validation before setting state
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+          console.warn("Invalid start or end time calculated");
+          return;
+        }
+
         setStartTime(start.toISOString()); // Store in ISO for backend
         setEndTime(end.toISOString()); // Store in ISO for backend
 
         // ✅ Ensure start shows date & time, but end shows only time
         const formattedStart = formatDateTime(start, true);
         const formattedEnd = formatDateTime(end, false);
-        let combinedDateTime = `${formattedStart} - ${formattedEnd}`;
 
-        setCombinedDateTime(combinedDateTime);
+        // Additional validation for formatted dates
+        if (formattedStart && formattedEnd) {
+          let combinedDateTime = `${formattedStart} - ${formattedEnd}`;
+          setCombinedDateTime(combinedDateTime);
+        }
       }
     },
-    [interviewType, scheduledDate]
+    [
+      interviewType,
+      scheduledDate,
+      duration,
+      isEditing,
+      roundEditData,
+      combinedDateTime,
+    ]
   );
 
   // Replace this useEffect
@@ -413,17 +538,44 @@ const RoundFormInterviews = () => {
   // // [duration, interviewType, scheduledDate, startTime, endTime, combinedDateTime]
   // );
 
+  // useEffect(() => {
+  //   updateTimes(duration);
+  // }, [duration, updateTimes]);
+  // Trigger time update when editing data is fully loaded OR when duration changes for new form
   useEffect(() => {
-    updateTimes(duration);
-  }, [duration, updateTimes]);
+    if (
+      (isEditing && roundEditData && duration && interviewType) ||
+      (!isEditing && duration && interviewType)
+    ) {
+      updateTimes(duration);
+    }
+  }, [isEditing, roundEditData, duration, interviewType, updateTimes]);
+
+  // Also update when duration changes
+  useEffect(() => {
+    if (startTime) {
+      updateTimes();
+    }
+  }, [duration]);
 
   //<-----v1.0.4----
   // Default and enforce scheduledDate when switching to "scheduled"
+  // useEffect(() => {
+  //   if (interviewType === "scheduled") {
+  //     const minVal = twoHoursFromNowLocal();
+  //     if (!scheduledDate || scheduledDate < minVal) {
+  //       setScheduledDate(minVal);
+  //     }
+  //   }
+  // }, [interviewType]);
+
   useEffect(() => {
     if (interviewType === "scheduled") {
       const minVal = twoHoursFromNowLocal();
       if (!scheduledDate || scheduledDate < minVal) {
         setScheduledDate(minVal);
+        // Trigger time calculation after setting scheduled date
+        setTimeout(() => updateTimes(duration), 100);
       }
     }
   }, [interviewType]);
@@ -586,76 +738,76 @@ const RoundFormInterviews = () => {
     }));
   };
 
-  const handleRoundTitleChange = (e) => {
-    const selectedTitle = e.target.value;
+  // const handleRoundTitleChange = (e) => {
+  //   const selectedTitle = e.target.value;
 
-    if (selectedTitle === "Other") {
-      setCustomRoundTitle("");
-      setInterviewerViewType("");
-      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null);
-      setCombinedDateTime("");
-    } else {
-      setRoundTitle(selectedTitle);
-      setCustomRoundTitle("");
-      setInstructions("");
-      setInterviewMode("");
-      // setStatus("Pending");
-      setInterviewType("instant");
-      setScheduledDate("");
-      setDuration(60);
-      setStartTime("");
-      setEndTime("");
+  //   if (selectedTitle === "Other") {
+  //     setCustomRoundTitle("");
+  //     setInterviewerViewType("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //     setCombinedDateTime("");
+  //   } else {
+  //     setRoundTitle(selectedTitle);
+  //     setCustomRoundTitle("");
+  //     setInstructions("");
+  //     setInterviewMode("");
+  //     // setStatus("Pending");
+  //     setInterviewType("instant");
+  //     setScheduledDate("");
+  //     setDuration(60);
+  //     setStartTime("");
+  //     setEndTime("");
 
-      setInterviewerGroupName("");
+  //     setInterviewerGroupName("");
 
-      setInterviewerGroupId("");
-      setInterviewerViewType("");
-      setCombinedDateTime("");
-      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null);
-    }
+  //     setInterviewerGroupId("");
+  //     setInterviewerViewType("");
+  //     setCombinedDateTime("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //   }
 
-    if (selectedTitle === "Other") {
-      setCustomRoundTitle("");
-      setInstructions("");
-    } else if (selectedTitle === "Assessment") {
-      setInterviewMode("Virtual");
-      setInterviewQuestionsList([]);
-      setInstructions("");
+  //   if (selectedTitle === "Other") {
+  //     setCustomRoundTitle("");
+  //     setInstructions("");
+  //   } else if (selectedTitle === "Assessment") {
+  //     setInterviewMode("Virtual");
+  //     setInterviewQuestionsList([]);
+  //     setInstructions("");
 
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
-      setInterviewerViewType("");
-      // setStatus("Pending");
-      setInterviewType("instant");
-      setScheduledDate("");
-      setDuration(60);
-      setStartTime("");
-      setEndTime("");
-      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null);
-      setCombinedDateTime("");
-    } else {
-      setInterviewMode("");
-      setInstructions("");
-      setInstructions("");
-      setInterviewMode("");
-      // setStatus("Pending");
-      setInterviewType("instant");
-      setScheduledDate("");
-      setDuration(60);
-      setStartTime("");
-      setEndTime("");
-      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null);
-      setCombinedDateTime("");
+  //     setInterviewerGroupName("");
+  //     setInterviewerGroupId("");
+  //     setInterviewerViewType("");
+  //     // setStatus("Pending");
+  //     setInterviewType("instant");
+  //     setScheduledDate("");
+  //     setDuration(60);
+  //     setStartTime("");
+  //     setEndTime("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //     setCombinedDateTime("");
+  //   } else {
+  //     setInterviewMode("");
+  //     setInstructions("");
+  //     setInstructions("");
+  //     setInterviewMode("");
+  //     // setStatus("Pending");
+  //     setInterviewType("instant");
+  //     setScheduledDate("");
+  //     setDuration(60);
+  //     setStartTime("");
+  //     setEndTime("");
+  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+  //     setSelectedAssessmentData(null);
+  //     setCombinedDateTime("");
 
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
-      setInterviewerViewType("");
-    }
-  };
+  //     setInterviewerGroupName("");
+  //     setInterviewerGroupId("");
+  //     setInterviewerViewType("");
+  //   }
+  // };
 
   // const handleSuggestedTabClick = (questionType) => {
   //   setActiveTab("SuggesstedQuestions");
@@ -691,9 +843,15 @@ const RoundFormInterviews = () => {
     }
   }, [selectedInterviewType]);
 
-  // while editing
-  const isEditing = !!roundId && roundId !== "new";
-  const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
+  // Add this cleanup effect
+  useEffect(() => {
+    return () => {
+      // Clean up all modal states when component unmounts
+      setShowOutsourcePopup(false);
+      setInternalInterviews(false);
+    };
+  }, [roundId]);
+
   console.log("roundEditData roundEditData", roundEditData);
 
   const editingAssessmentId =
@@ -800,160 +958,382 @@ const RoundFormInterviews = () => {
     assessmentTemplate?.assessmentName,
   ]);
 
+  // Add this state near your other state declarations
+  const [hasManuallyClearedInterviewers, setHasManuallyClearedInterviewers] =
+    useState(false);
+
   useEffect(() => {
-    if (isEditing && roundEditData) {
-      // Update assessmentTemplate only if different
-
-      const foundGroup = groups?.find(
-        (g) => g?._id === roundEditData?.interviewerGroupId
-      );
-
-      // Find full assessment object by id instead of relying on paginated list
-      const fullAssessment =
-        roundEditData?.roundTitle === "Assessment" &&
-          roundEditData?.assessmentId
-          ? editingAssessment || null
-          : null;
-
-      const newAssessmentTemplate =
-        roundEditData?.roundTitle === "Assessment" &&
-          roundEditData?.assessmentId
-          ? {
-            assessmentId: roundEditData?.assessmentId,
-            assessmentName:
-              editingAssessment?.AssessmentTitle ||
-              assessmentTemplate?.assessmentName ||
-              "",
-          }
-          : { assessmentId: "", assessmentName: "" };
-      if (
-        JSON.stringify(assessmentTemplate) !==
-        JSON.stringify(newAssessmentTemplate)
-      ) {
-        setAssessmentTemplate(newAssessmentTemplate);
-        setSelectedAssessmentData(fullAssessment);
-      }
-
-      // Update other states only if different
-      if (roundTitle !== roundEditData.roundTitle)
-        setRoundTitle(roundEditData.roundTitle);
-      if (interviewType !== roundEditData.interviewType)
-        setInterviewType(roundEditData.interviewType);
-      if (interviewMode !== roundEditData.interviewMode)
-        setInterviewMode(roundEditData.interviewMode);
-      if (selectedInterviewType !== roundEditData.interviewerType)
-        setSelectedInterviewType(
-          roundEditData.interviewerType || roundEditData?.interviewerType
-        );
-      if (
-        JSON.stringify(interviewQuestionsList) !==
-        JSON.stringify(roundEditData.questions)
-      ) {
-        setInterviewQuestionsList(roundEditData.questions);
-      }
-      if (status !== roundEditData.status) setStatus(roundEditData.status);
-      if (instructions !== (roundEditData.instructions || ""))
-        setInstructions(roundEditData.instructions || "");
-      if (sequence !== roundEditData.sequence)
-        setSequence(roundEditData.sequence);
-      if (duration !== (roundEditData.duration || 60))
-        setDuration(Number(roundEditData.duration) || 60);
-      if (interviewerGroupName !== (foundGroup?.name || "")) {
-        setInterviewerGroupName(foundGroup?.name || "");
-        // setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
-      }
-      if (interviewerGroupId !== (roundEditData?.interviewerGroupId || "")) {
-        setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
-      }
-      if (interviewerViewType !== (roundEditData?.interviewerViewType || "")) {
-        setInterviewerViewType(roundEditData?.interviewerViewType || "");
-      }
-
-      // Update interviewers only if different
-      if (roundEditData.interviewers && roundEditData.interviewers.length > 0) {
-        const normalizedInterviewers = roundEditData.interviewers.map(
-          (interviewer) => ({
-            _id: interviewer._id,
-            firstName: interviewer?.firstName,
-            lastName: interviewer?.lastName,
-            email: interviewer?.email,
-          })
-        );
-        // =======
-        //   const [showDropdown, setShowDropdown] = useState(false);
-        //   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
-        //   const [internalInterviewers, setInternalInterviewers] = useState([]);
-
-        //   const [externalInterviewers, setExternalInterviewers] = useState([]);
-        // >>>>>>> main
-
-        if (roundEditData.interviewerType === "Internal") {
-          if (
-            JSON.stringify(internalInterviewers) !==
-            JSON.stringify(normalizedInterviewers)
-          ) {
-            setInternalInterviewers(normalizedInterviewers);
-            setExternalInterviewers([]);
-          }
-        } else if (roundEditData.interviewerType === "External") {
-          if (
-            JSON.stringify(externalInterviewers) !==
-            JSON.stringify(normalizedInterviewers)
-          ) {
-            setExternalInterviewers(normalizedInterviewers);
-            setInternalInterviewers([]);
-          }
-        }
-      }
-
-      // Fetch assessment questions if needed
-      if (
-        roundEditData.roundTitle === "Assessment" &&
-        roundEditData.assessmentId
-      ) {
-        if (assessmentTemplate.assessmentId !== roundEditData.assessmentId) {
-          setQuestionsLoading(true);
-          fetchAssessmentQuestions(roundEditData.assessmentId).then(
-            ({ data, error }) => {
-              setQuestionsLoading(false);
-              if (data) {
-                setSectionQuestions(data?.sections || {});
-              } else {
-                console.error("Error fetching assessment questions:", error);
-              }
-            }
-          );
-        }
-      }
-    } else {
+    if (!isEditing || !roundEditData) {
+      // For new rounds: set default sequence
       const maxSequence =
         rounds?.length > 0 ? Math.max(...rounds.map((r) => r.sequence)) : 0;
       if (sequence !== maxSequence + 1) {
         setSequence(maxSequence + 1);
       }
+      return;
     }
-  }, [
-    rounds,
-    roundId,
-    assessmentTemplate,
-    isEditing,
-    duration,
-    editingAssessment,
-    groups,
-    externalInterviewers,
-    instructions,
-    internalInterviewers,
-    interviewMode,
-    interviewQuestionsList,
-    interviewType,
-    interviewerGroupId,
-    interviewerGroupName,
-    interviewerViewType,
-    roundTitle,
-    selectedInterviewType,
-    sequence,
-    status,
-  ]);
+
+    // === EDIT MODE: Load data from roundEditData ===
+    const foundGroup = groups?.find(
+      (g) => g?._id === roundEditData?.interviewerGroupId
+    );
+
+    // Assessment
+    if (
+      roundEditData.roundTitle === "Assessment" &&
+      roundEditData.assessmentId
+    ) {
+      const newAssessmentTemplate = {
+        assessmentId: roundEditData.assessmentId,
+        assessmentName: editingAssessment?.AssessmentTitle || "",
+      };
+      setAssessmentTemplate(newAssessmentTemplate);
+      setSelectedAssessmentData(editingAssessment || null);
+    } else {
+      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+      setSelectedAssessmentData(null);
+    }
+
+    // Basic fields
+    setRoundTitle(roundEditData.roundTitle || "");
+    setInterviewType(roundEditData.interviewType || "instant");
+    setInterviewMode(roundEditData.interviewMode || "");
+    setSelectedInterviewType(roundEditData.interviewerType || null);
+    setInterviewQuestionsList(roundEditData.questions || []);
+    setStatus(roundEditData.status || "Draft");
+    setInstructions(roundEditData.instructions || "");
+    setSequence(roundEditData.sequence || 1);
+    setDuration(Number(roundEditData.duration) || 60);
+    setInterviewerGroupName(foundGroup?.name || "");
+    setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
+    setInterviewerViewType(roundEditData?.interviewerViewType || "individuals");
+
+    // === Load Interviewers Safely ===
+    if (roundEditData.interviewers && roundEditData.interviewers.length > 0) {
+      if (roundEditData.interviewerType === "Internal") {
+        const normalized = roundEditData.interviewers.map((i) => ({
+          _id: i._id,
+          firstName: i.firstName || "",
+          lastName: i.lastName || "",
+          email: i.email || "",
+        }));
+        setInternalInterviewers(normalized);
+        setExternalInterviewers([]);
+      } else if (roundEditData.interviewerType === "External") {
+        const normalized = roundEditData.interviewers.map((i) => ({
+          id: i._id,
+          _id: i._id,
+          firstName: i.contact?.firstName || i.firstName || "",
+          lastName: i.contact?.lastName || i.lastName || "",
+          email: i.email || "",
+          contact: i.contact,
+        }));
+        console.log("normalized", normalized);
+        setExternalInterviewers(normalized);
+        setInternalInterviewers([]);
+      }
+    } else {
+      // No interviewers in DB → clear both
+      setInternalInterviewers([]);
+      setExternalInterviewers([]);
+      // Only reset type if none exist
+      if (!roundEditData.interviewerType) {
+        setSelectedInterviewType(null);
+      }
+    }
+
+    // === Handle scheduled date/time parsing ===
+    if (roundEditData.dateTime && roundEditData.interviewType === "scheduled") {
+      const match = roundEditData.dateTime.match(
+        /^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)/
+      );
+      if (match) {
+        let [, day, month, year, hour, minute, ampm] = match;
+        let hours = parseInt(hour, 10);
+        if (ampm === "PM" && hours !== 12) hours += 12;
+        if (ampm === "AM" && hours === 12) hours = 0;
+        const parsedDate = new Date(
+          year,
+          month - 1,
+          day,
+          hours,
+          parseInt(minute, 10)
+        );
+
+        if (!isNaN(parsedDate.getTime())) {
+          setScheduledDate(formatForDatetimeLocal(parsedDate));
+
+          const localTimeStr = moment(parsedDate).format("YYYY-MM-DD HH:mm");
+          const utcStart = moment
+            .tz(
+              localTimeStr,
+              "YYYY-MM-DD HH:mm",
+              Intl.DateTimeFormat().resolvedOptions().timeZone
+            )
+            .utc()
+            .toDate();
+          const utcEnd = new Date(utcStart);
+          utcEnd.setMinutes(
+            utcEnd.getMinutes() + (Number(roundEditData.duration) || 60)
+          );
+
+          setStartTime(utcStart.toISOString());
+          setEndTime(utcEnd.toISOString());
+
+          const formattedStart = formatDateTime(utcStart, true);
+          const formattedEnd = formatDateTime(utcEnd, false);
+          setCombinedDateTime(`${formattedStart} - ${formattedEnd}`);
+        }
+      }
+    }
+
+    // Fetch questions for assessment round
+    if (
+      roundEditData.roundTitle === "Assessment" &&
+      roundEditData.assessmentId
+    ) {
+      setQuestionsLoading(true);
+      fetchAssessmentQuestions(roundEditData.assessmentId).then(({ data }) => {
+        setQuestionsLoading(false);
+        if (data?.sections) {
+          setSectionQuestions(data.sections);
+        }
+      });
+    }
+  }, [isEditing, roundEditData, rounds, groups, editingAssessment]);
+
+  console.log("ExternalInterviewers", externalInterviewers);
+
+  // useEffect(() => {
+  //   if (isEditing && roundEditData && !hasManuallyClearedInterviewers) {
+  //     // Update assessmentTemplate only if different
+
+  //     const foundGroup = groups?.find(
+  //       (g) => g?._id === roundEditData?.interviewerGroupId
+  //     );
+
+  //     // Find full assessment object by id instead of relying on paginated list
+  //     const fullAssessment =
+  //       roundEditData?.roundTitle === "Assessment" &&
+  //       roundEditData?.assessmentId
+  //         ? editingAssessment || null
+  //         : null;
+
+  //     const newAssessmentTemplate =
+  //       roundEditData?.roundTitle === "Assessment" &&
+  //       roundEditData?.assessmentId
+  //         ? {
+  //             assessmentId: roundEditData?.assessmentId,
+  //             assessmentName:
+  //               editingAssessment?.AssessmentTitle ||
+  //               assessmentTemplate?.assessmentName ||
+  //               "",
+  //           }
+  //         : { assessmentId: "", assessmentName: "" };
+  //     if (
+  //       JSON.stringify(assessmentTemplate) !==
+  //       JSON.stringify(newAssessmentTemplate)
+  //     ) {
+  //       setAssessmentTemplate(newAssessmentTemplate);
+  //       setSelectedAssessmentData(fullAssessment);
+  //     }
+
+  //     // Update other states only if different
+  //     if (roundTitle !== roundEditData.roundTitle)
+  //       setRoundTitle(roundEditData.roundTitle);
+  //     if (interviewType !== roundEditData.interviewType)
+  //       setInterviewType(roundEditData.interviewType);
+  //     if (interviewMode !== roundEditData.interviewMode)
+  //       setInterviewMode(roundEditData.interviewMode);
+  //     if (selectedInterviewType !== roundEditData.interviewerType)
+  //       setSelectedInterviewType(
+  //         roundEditData.interviewerType || roundEditData?.interviewerType
+  //       );
+  //     if (
+  //       JSON.stringify(interviewQuestionsList) !==
+  //       JSON.stringify(roundEditData.questions)
+  //     ) {
+  //       setInterviewQuestionsList(roundEditData.questions);
+  //     }
+  //     if (status !== roundEditData.status) setStatus(roundEditData.status);
+  //     if (instructions !== (roundEditData.instructions || ""))
+  //       setInstructions(roundEditData.instructions || "");
+  //     if (sequence !== roundEditData.sequence)
+  //       setSequence(roundEditData.sequence);
+  //     if (duration !== (roundEditData.duration || 60))
+  //       setDuration(Number(roundEditData.duration) || 60);
+  //     if (interviewerGroupName !== (foundGroup?.name || "")) {
+  //       setInterviewerGroupName(foundGroup?.name || "");
+  //       // setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
+  //     }
+  //     if (interviewerGroupId !== (roundEditData?.interviewerGroupId || "")) {
+  //       setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
+  //     }
+  //     if (interviewerViewType !== (roundEditData?.interviewerViewType || "")) {
+  //       setInterviewerViewType(roundEditData?.interviewerViewType || "");
+  //     }
+
+  //     // Update interviewers only if different
+  //     if (
+  //       roundEditData.interviewers &&
+  //       roundEditData.interviewers.length > 0 &&
+  //       selectedInterviewType === null
+  //     ) {
+  //       if (roundEditData.interviewerType === "Internal") {
+  //         const normalizedInterviewers = roundEditData.interviewers.map(
+  //           (interviewer) => ({
+  //             _id: interviewer._id,
+  //             firstName: interviewer?.firstName,
+  //             lastName: interviewer?.lastName,
+  //             email: interviewer?.email,
+  //           })
+  //         );
+  //         if (
+  //           JSON.stringify(internalInterviewers) !==
+  //           JSON.stringify(normalizedInterviewers)
+  //         ) {
+  //           setInternalInterviewers(normalizedInterviewers);
+  //           setExternalInterviewers([]);
+  //         }
+  //       } else if (roundEditData.interviewerType === "External") {
+  //         // FIX: Properly normalize External interviewers
+  //         const normalizedExternal = roundEditData.interviewers.map(
+  //           (interviewer) => ({
+  //             id: interviewer._id, // backend uses _id as id for external
+  //             _id: interviewer._id, // keep both for consistency
+  //             firstName:
+  //               interviewer.contact?.firstName || interviewer.firstName || "",
+  //             lastName:
+  //               interviewer.contact?.lastName || interviewer.lastName || "",
+  //             email: interviewer.email,
+  //             contact: interviewer.contact, // preserve full contact if needed
+  //           })
+  //         );
+  //         if (
+  //           JSON.stringify(externalInterviewers) !==
+  //           JSON.stringify(normalizedExternal)
+  //         ) {
+  //           setExternalInterviewers(normalizedExternal);
+  //           setInternalInterviewers([]);
+  //         }
+  //       }
+  //     }
+  //     // ADD THIS SECTION inside the useEffect that handles isEditing && roundEditData
+  //     if (roundEditData?.dateTime && interviewType === "scheduled") {
+  //       // Parse the string like "27-12-2025 04:47 AM - 05:47 AM"
+  //       const match = roundEditData.dateTime.match(
+  //         /^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)/
+  //       );
+  //       if (match) {
+  //         let [, day, month, year, hour, minute, ampm] = match;
+  //         let hours = parseInt(hour, 10);
+  //         if (ampm === "PM" && hours !== 12) hours += 12;
+  //         if (ampm === "AM" && hours === 12) hours = 0;
+
+  //         const parsedDate = new Date(
+  //           year,
+  //           month - 1,
+  //           day,
+  //           hours,
+  //           parseInt(minute, 10)
+  //         );
+
+  //         if (!isNaN(parsedDate.getTime())) {
+  //           // 1. Set the datetime-local input value (local time)
+  //           setScheduledDate(formatForDatetimeLocal(parsedDate));
+
+  //           // 2. Calculate UTC ISO strings for backend
+  //           const localTimeStr = moment(parsedDate).format("YYYY-MM-DD HH:mm");
+  //           const utcStart = moment
+  //             .tz(
+  //               localTimeStr,
+  //               "YYYY-MM-DD HH:mm",
+  //               Intl.DateTimeFormat().resolvedOptions().timeZone
+  //             )
+  //             .utc()
+  //             .toDate();
+
+  //           const utcEnd = new Date(utcStart);
+  //           utcEnd.setMinutes(utcEnd.getMinutes() + duration);
+
+  //           setStartTime(utcStart.toISOString());
+  //           setEndTime(utcEnd.toISOString());
+
+  //           // 3. Update displayed combinedDateTime
+  //           const formattedStart = formatDateTime(utcStart, true);
+  //           const formattedEnd = formatDateTime(utcEnd, false);
+  //           setCombinedDateTime(`${formattedStart} - ${formattedEnd}`);
+  //         }
+  //       }
+  //     }
+
+  //     // Fetch assessment questions if needed
+  //     if (
+  //       roundEditData.roundTitle === "Assessment" &&
+  //       roundEditData.assessmentId
+  //     ) {
+  //       if (assessmentTemplate.assessmentId !== roundEditData.assessmentId) {
+  //         setQuestionsLoading(true);
+  //         fetchAssessmentQuestions(roundEditData.assessmentId).then(
+  //           ({ data, error }) => {
+  //             setQuestionsLoading(false);
+  //             if (data) {
+  //               setSectionQuestions(data?.sections || {});
+  //             } else {
+  //               console.error("Error fetching assessment questions:", error);
+  //             }
+  //           }
+  //         );
+  //       }
+  //     }
+  //   } else {
+  //     const maxSequence =
+  //       rounds?.length > 0 ? Math.max(...rounds.map((r) => r.sequence)) : 0;
+  //     if (sequence !== maxSequence + 1) {
+  //       setSequence(maxSequence + 1);
+  //     }
+  //   }
+  // }, [
+  //   rounds,
+  //   roundId,
+  //   // internalInterviewers, // Add this
+  //   // externalInterviewers, // Add this
+
+  //   // assessmentTemplate,
+  //   // isEditing,
+  //   // duration,
+  //   // editingAssessment,
+  //   // groups,
+  //   // // externalInterviewers,
+  //   // instructions,
+  //   // internalInterviewers,
+  //   hasManuallyClearedInterviewers,
+  //   roundEditData,
+  //   // interviewMode,
+  //   // interviewQuestionsList,
+  //   // interviewType,
+  //   // interviewerGroupId,
+  //   // interviewerGroupName,
+  //   // interviewerViewType,
+  //   // roundTitle,
+  //   // selectedInterviewType,
+  //   // sequence,
+  //   // status,
+  // ]);
+
+  // Add this cleanup effect
+  useEffect(() => {
+    return () => {
+      // Clean up all modal states when component unmounts
+      setShowOutsourcePopup(false);
+      setInternalInterviews(false);
+    };
+  }, [roundId]);
+
+  // Add this useEffect to reset the flag when roundId changes
+  // useEffect(() => {
+  //   setHasManuallyClearedInterviewers(false);
+  // }, [roundId]);
 
   // Add this useEffect hook after your existing useEffect hooks
   useEffect(() => {
@@ -1029,6 +1409,45 @@ const RoundFormInterviews = () => {
       // toast.warn("Interview type changed - external interviewers have been cleared. Please reselect them.");
     }
     setInterviewType(type);
+    // Reset scheduled date when switching to instant
+    // Reset times based on new type
+    if (type === "instant") {
+      // Clear scheduled date
+      setScheduledDate("");
+
+      // Calculate instant time: now + 15 minutes
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 15);
+      now.setSeconds(0, 0);
+
+      const localTimeStr = moment(now).format("YYYY-MM-DD HH:mm");
+      const utcStart = moment
+        .tz(
+          localTimeStr,
+          "YYYY-MM-DD HH:mm",
+          Intl.DateTimeFormat().resolvedOptions().timeZone
+        )
+        .utc()
+        .toDate();
+
+      const end = new Date(utcStart);
+      end.setMinutes(end.getMinutes() + duration);
+
+      // Manually update times immediately
+      setStartTime(utcStart.toISOString());
+      setEndTime(end.toISOString());
+
+      const formattedStart = formatDateTime(utcStart, true);
+      const formattedEnd = formatDateTime(end, false);
+      setCombinedDateTime(`${formattedStart} - ${formattedEnd}`);
+    } else if (type === "scheduled") {
+      // Only set minimum if no date exists
+      if (!scheduledDate) {
+        const minVal = twoHoursFromNowLocal();
+        setScheduledDate(minVal);
+      }
+      // updateTimes will handle the rest via useEffect
+    }
   };
 
   const handleInternalInterviewerSelect = (
@@ -1050,6 +1469,7 @@ const RoundFormInterviews = () => {
       setInternalInterviewers([]);
       setInterviewerGroupName("");
       setInterviewerGroupId("");
+      setHasManuallyClearedInterviewers(true);
     }
 
     setInterviewerViewType(viewType);
@@ -1077,6 +1497,27 @@ const RoundFormInterviews = () => {
     // setInternalInterviewers([...internalInterviewers, ...interviewers]); // Append new interviewers
   };
 
+  const openInternalModal = () => {
+    if (externalInterviewers.length > 0) {
+      setExternalInterviewers([]);
+      setSelectedInterviewType(null);
+      setHasManuallyClearedInterviewers(true); // Important: prevent edit data from reloading old external
+    }
+    setInternalInterviews(true);
+  };
+
+  const openExternalModal = () => {
+    if (internalInterviewers.length > 0) {
+      setInternalInterviewers([]);
+      setInterviewerGroupName("");
+      setInterviewerGroupId("");
+      setInterviewerViewType("individuals");
+      setSelectedInterviewType(null);
+      setHasManuallyClearedInterviewers(true); // Important: prevent edit data from reloading old internal
+    }
+    setShowOutsourcePopup(true);
+  };
+
   const handleExternalInterviewerSelect = (interviewers) => {
     if (selectedInterviewType === "Internal") {
       alert(
@@ -1093,15 +1534,15 @@ const RoundFormInterviews = () => {
 
     setSelectedInterviewType("External");
     setExternalInterviewers([...externalInterviewers, ...uniqueInterviewers]); // Append new interviewers
+    setHasManuallyClearedInterviewers(false); // Reset flag when adding new interviewers
   };
-
   const handleRemoveInternalInterviewer = (interviewerId) => {
     setInternalInterviewers((prev) => {
       const updatedInterviewers = prev.filter((i) => i._id !== interviewerId);
 
       // Reset selectedInterviewType if no interviewers are left
       if (updatedInterviewers.length === 0) {
-        //  && externalInterviewers.length === 0
+        setHasManuallyClearedInterviewers(true);
         setSelectedInterviewType(null);
         // setInternalInterviewers("")
         setInterviewerGroupName("");
@@ -1127,6 +1568,8 @@ const RoundFormInterviews = () => {
         updatedInterviewers.length === 0 &&
         internalInterviewers.length === 0
       ) {
+        // Set flag when manually removing all external interviewers
+        setHasManuallyClearedInterviewers(true);
         setSelectedInterviewType(null);
       }
 
@@ -1134,13 +1577,52 @@ const RoundFormInterviews = () => {
     });
   };
 
+  // const handleClearAllInterviewers = () => {
+  //   setInternalInterviewers([]);
+  //   setExternalInterviewers([]);
+  //   setSelectedInterviewType(null);
+  //   setInterviewerGroupName("");
+  //   setInterviewerGroupId("");
+  //   setInterviewerViewType("individuals");
+
+  //   if (isInternalInterviews) {
+  //     setInternalInterviews(false); // Close and reopen modal to reset its state
+  //   }
+  // };
+
   const handleClearAllInterviewers = () => {
+    console.log("Clearing all interviewers...");
+    console.log(
+      "Before clear - internal:",
+      internalInterviewers.length,
+      "external:",
+      externalInterviewers.length
+    );
+
     setInternalInterviewers([]);
     setExternalInterviewers([]);
     setSelectedInterviewType(null);
     setInterviewerGroupName("");
     setInterviewerGroupId("");
     setInterviewerViewType("individuals");
+
+    // Set the flag to prevent re-initialization
+    setHasManuallyClearedInterviewers(true);
+
+    // Also clear any related modal states
+    if (isInternalInterviews) {
+      setInternalInterviews(false); // Close the internal interviewers modal
+    }
+
+    // Force a complete reset by closing any open modals
+    setShowOutsourcePopup(false);
+
+    console.log(
+      "After clear - internal:",
+      internalInterviewers.length,
+      "external:",
+      externalInterviewers.length
+    );
   };
 
   const selectedInterviewers =
@@ -1315,9 +1797,17 @@ const RoundFormInterviews = () => {
           dateTime: combinedDateTime,
           interviewType,
         }),
-        ...(selectedInterviewType !== "external" && {
+        // ...(selectedInterviewType !== "external" && {
+        //   interviewers: formattedInterviewers || [],
+        // }),
+        // Internal interviewers: send their user IDs
+        ...(selectedInterviewType === "Internal" && {
           interviewers: formattedInterviewers || [],
         }),
+        // External interviewers: send their _id
+        // ...(selectedInterviewType === "External" && {
+        //   interviewers: externalInterviewers.map((i) => i._id || i.id),
+        // }),
         // ✅ ADD THESE TWO LINES (VERY IMPORTANT) - KEPT EXACTLY AS REQUESTED
         selectedInterviewers, // ← backend uses this to create requests
         expiryDateTime, // ← backend uses frontend expiry
@@ -1331,6 +1821,8 @@ const RoundFormInterviews = () => {
         scrollToFirstError(validationErrors, fieldRefs);
         return;
       }
+
+      console.log("roundData", roundData);
 
       // v1.0.1 --------------------------------------------------------------------------------->
 
@@ -1354,6 +1846,180 @@ const RoundFormInterviews = () => {
             })) || [],
         };
 
+      console.log("payload", payload);
+
+      const shouldGenerateMeeting =
+        !isEditing && // 🧩 Skip in edit mode
+        payload?.round?.interviewMode !== "Face to Face" &&
+        Array.isArray(selectedInterviewers) &&
+        selectedInterviewers.length > 0;
+
+      // meeting gerating google or zoom etc......
+      let meetingLink = null;
+      if (payload.round.roundTitle !== "Assessment") {
+        try {
+          // v1.0.3 <-----------------------------------------------------------
+          setMeetingCreationProgress("Creating links...");
+          // v1.0.3 ----------------------------------------------------------->
+          // Import the meeting platform utility
+          const { createMeeting } = await import(
+            "../../../../../utils/meetingPlatforms.js"
+          );
+
+          if (shouldGenerateMeeting) {
+            setIsMeetingCreationLoading(true);
+            // ========================================
+            // Google Meet creation
+            // ========================================
+            if (selectedMeetingPlatform === "google-meet") {
+              meetingLink = await createMeeting(
+                "googlemeet",
+                {
+                  roundTitle,
+                  instructions,
+                  combinedDateTime,
+                  duration,
+                  selectedInterviewers,
+                },
+                (progress) => {
+                  setMeetingCreationProgress(progress);
+                }
+              );
+
+              // ========================================
+              // Zoom meeting creation
+              // ========================================
+            } else if (selectedMeetingPlatform === "zoom") {
+              // Format helper
+              function formatStartTimeForZoom(input) {
+                if (!input || typeof input !== "string") return undefined;
+
+                // Expected: "20-12-2025 07:36 PM - 08:36 PM"
+                const match = input.match(
+                  /^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})\s+(AM|PM)/
+                );
+
+                if (!match) return undefined;
+
+                let [, day, month, year, hh, mm, meridiem] = match;
+
+                day = Number(day);
+                month = Number(month);
+                year = Number(year);
+
+                let hours = Number(hh);
+                const minutes = Number(mm);
+
+                if (meridiem === "PM" && hours !== 12) hours += 12;
+                if (meridiem === "AM" && hours === 12) hours = 0;
+
+                const localDate = new Date(
+                  year,
+                  month - 1,
+                  day,
+                  hours,
+                  minutes,
+                  0
+                );
+
+                if (isNaN(localDate.getTime())) return undefined;
+
+                // Zoom expects LOCAL time when timezone is provided
+                return (
+                  `${localDate.getFullYear()}-` +
+                  `${String(localDate.getMonth() + 1).padStart(2, "0")}-` +
+                  `${String(localDate.getDate()).padStart(2, "0")}T` +
+                  `${String(localDate.getHours()).padStart(2, "0")}:` +
+                  `${String(localDate.getMinutes()).padStart(2, "0")}:00`
+                );
+              }
+
+              const formattedStartTime =
+                formatStartTimeForZoom(combinedDateTime);
+              if (!formattedStartTime)
+                throw new Error("Invalid start time format");
+
+              const payloads = {
+                topic: roundTitle,
+                duration: Number(duration),
+                userId: undefined,
+                ...(interviewType === "scheduled" &&
+                  formattedStartTime && {
+                    start_time: formattedStartTime,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  }),
+                settings: {
+                  join_before_host: true,
+                  host_video: false,
+                  participant_video: false,
+                },
+              };
+
+              meetingLink = await createMeeting(
+                "zoommeet",
+                { payload: payloads },
+                (progress) => {
+                  setMeetingCreationProgress(progress);
+                }
+              );
+            } else if (selectedMeetingPlatform === "videosdk") {
+                try {
+                  setMeetingCreationProgress("Creating VideoSDK meeting...");
+
+                  // Import the createMeeting function from VideoSDK api
+                  const { createMeeting } = await import('../../../../../VideoSDK1/api.js');
+
+                  // Get the token - make sure you have this in your environment or state
+                  const token = process.env.REACT_APP_VIDEOSDK_TOKEN;
+
+                  if (!token) {
+                    throw new Error("VideoSDK token is not configured");
+                  }
+
+                  // Create the meeting
+                  const { meetingId, err } = await createMeeting({ token });
+
+                  if (err) {
+                    throw new Error(err);
+                  }
+
+                  // Construct the meeting URL - adjust the path as needed
+                  meetingLink = `${window.location.origin}/videosdk-meeting?meetingId=${meetingId}`;
+
+                  setMeetingCreationProgress("Meeting created successfully");
+                } catch (error) {
+                  console.error("Error creating VideoSDK meeting:", error);
+                  setMeetingCreationProgress(`Error: ${error.message}`);
+                  setIsMeetingCreationLoading(false);
+                  return;
+                }
+              }
+
+            // Fixed: was using undefined 'data'
+            if (meetingLink) {
+              // Correct way to add meetingId and meetPlatform to payload.round
+              if (payload.round) {
+                payload.round.meetingId = meetingLink?.start_url
+                  ? meetingLink?.start_url
+                  : meetingLink;
+                payload.round.meetPlatform = selectedMeetingPlatform;
+              }
+              // payload?.round?.meetingId = meetingLink?.start_url
+              //   ? meetingLink?.start_url
+              //   : meetingLink
+              // payload?.round?.meetPlatform = selectedMeetingPlatform
+            }
+          }
+        } catch (err) {
+          console.error("Error in meeting creation:", err);
+          setErrors({
+            meetingCreation: err.message || "Failed to create meeting",
+          });
+        } finally {
+          setIsMeetingCreationLoading(false);
+          setMeetingCreationProgress("");
+        }
+      }
       // Check internal interview usage before scheduling
       if (selectedInterviewType === "Internal" && status === "Scheduled") {
         // Check if this is a new scheduling (not already scheduled)
@@ -1389,6 +2055,8 @@ const RoundFormInterviews = () => {
         response = await saveInterviewRound(payload);
       }
 
+      console.log("response response", response);
+
       // ✅ Collect success messages instead of showing immediately
       successMessages.push("Interview round created successfully!");
 
@@ -1401,145 +2069,8 @@ const RoundFormInterviews = () => {
           navigate(`/interviews/${interviewId}`);
         }
       }
-      //   // Calculate link expiry days
-      //   let linkExpiryDays = null;
-      //   if (selectedAssessmentData?.ExpiryDate) {
-      //     const expiryDate = new Date(selectedAssessmentData.ExpiryDate);
-      //     const today = new Date();
-      //     const diffTime = expiryDate.getTime() - today.getTime();
-      //     linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
-      //   }
-
-      //   // setIsLoading(true);
-      //   const result = await shareAssessmentAPI({
-      //     assessmentId: assessmentTemplate?.assessmentId,
-      //     selectedCandidates: [interview?.candidateId],
-      //     linkExpiryDays,
-      //     userId: userId,
-      //     organizationId: orgId,
-      //     setErrors,
-      //     queryClient,
-
-      //     // onClose: onCloseshare,
-      //     // setErrors,
-      //     // setIsLoading,
-      //     // organizationId,
-      //     // userId,
-      //   });
-      //   if (result.success) {
-      //     const updatedRoundData = {
-      //       ...roundData,
-      //       scheduleAssessmentId: result.data?.scheduledAssessmentId,
-      //       // meetingId: data?.start_url || meetingLink,
-      //     };
-      //     const updatePayload = {
-      //       interviewId,
-      //       roundId: targetRoundId,
-      //       round: updatedRoundData,
-      //       ...(isEditing ? { questions: interviewQuestionsList } : {}),
-      //     };
-
-      //     response = await updateInterviewRound(updatePayload);
-
-      //     if (response.status === "ok") {
-      //       navigate(`/interviews/${interviewId}`);
-      //     }
-      //     // response = await updateInterviewRound(updatePayload);
-      //     // navigate(`/interviews/${interviewId}`);
-      //     // toast.success('Assessment shared successfully!');
-      //   }
-      // }
 
       if (payload.round.roundTitle !== "Assessment") {
-        //  out sourced email sent
-        // if (payload?.round?.interviewMode !== "Face to Face") {
-        //   //   // Handle outsource request if interviewers are selected
-        //   //   if (selectedInterviewers && selectedInterviewers.length > 0) {
-        //   //     const isInternal = selectedInterviewType === "Internal";
-        //   //     for (const interviewer of selectedInterviewers) {
-        //   //       const interviewDateTime = new Date(combinedDateTime);
-        //   //       const expiryDateTime = calculateExpiryDate(interviewDateTime);
-        //   //       const outsourceRequestData = {
-        //   //         tenantId: orgId,
-        //   //         ownerId: userId,
-        //   //         scheduledInterviewId: interviewId,
-        //   //         interviewerType: selectedInterviewType,
-        //   //         interviewerId: interviewer.contact?._id || interviewer._id,
-        //   //         // status: isInternal ? "accepted" : "inprogress",
-        //   //         dateTime: combinedDateTime,
-        //   //         duration,
-        //   //         candidateId: candidate?._id,
-        //   //         positionId: position?._id,
-        //   //         roundId: response.savedRound._id,
-        //   //         isMockInterview: false,
-        //   //         requestMessage: isInternal
-        //   //           ? "Internal interview request"
-        //   //           : "Outsource interview request",
-        //   //         expiryDateTime
-        //   //       };
-        //   //       await axios.post(
-        //   //         `${config.REACT_APP_API_URL}/interviewrequest`,
-        //   //         outsourceRequestData,
-        //   //         {
-        //   //           headers: {
-        //   //             "Content-Type": "application/json",
-        //   //             Authorization: `Bearer ${Cookies.get("authToken")}`,
-        //   //           },
-        //   //         }
-        //   //       );
-        //   //     }
-        //   //     // Send outsource interview request emails if this is an outsource round
-        //   // if (
-        //   //   selectedInterviewType !== "Internal" &&
-        //   //   selectedInterviewers &&
-        //   //   selectedInterviewers.length > 0
-        //   // ) {
-        //   //   try {
-        //   //     const interviewerIds = selectedInterviewers.map(
-        //   //       (interviewer) => interviewer.contact?._id || interviewer._id
-        //   //     );
-        //   //     const emailResponse = await axios.post(
-        //   //       `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
-        //   //       {
-        //   //         interviewId: interviewId,
-        //   //         roundId: response.savedRound._id || targetRoundId,
-        //   //         interviewerIds: interviewerIds,
-        //   //         candidateId: candidate?._id,
-        //   //         positionId: position?._id,
-        //   //         dateTime: combinedDateTime,
-        //   //         type: "interview",
-        //   //         // duration: duration,
-        //   //         // roundTitle: roundTitle,
-        //   //       },
-        //   //       {
-        //   //         headers: {
-        //   //           "Content-Type": "application/json",
-        //   //           Authorization: `Bearer ${Cookies.get("authToken")}`,
-        //   //         },
-        //   //       }
-        //   //     );
-        //   //     if (emailResponse.data.success) {
-        //   //       // toast.success(`Outsource interview request emails sent to ${emailResponse.data.data.successfulEmails} interviewers`);
-        //   //       if (emailResponse.data.data.failedEmails > 0) {
-        //   //         notify.warning(
-        //   //           `${emailResponse.data.data.failedEmails} emails failed to send`
-        //   //         );
-        //   //       }
-        //   //     } else {
-        //   //       notify.error(
-        //   //         "Failed to send outsource interview request emails"
-        //   //       );
-        //   //     }
-        //   //   } catch (emailError) {
-        //   //     console.error(
-        //   //       "Error sending outsource interview request emails:",
-        //   //       emailError
-        //   //     );
-        //   //     notify.error("Failed to send outsource interview request emails");
-        //   //   }
-        //   // }
-        // }
-
         // don't remove this code related to agora video room
         // if (response.status === 'ok'){
         //   const video_call_res = await axios.post(`${config.REACT_APP_API_URL}/api/agora/create-video-room`,
@@ -1554,252 +2085,77 @@ const RoundFormInterviews = () => {
         // internal  interview  email sent
         // Meeting platform link creation
         if (response.status === "ok") {
-          const shouldGenerateMeeting =
-            !isEditing && // 🧩 Skip in edit mode
-            payload?.round?.interviewMode !== "Face to Face" &&
-            Array.isArray(selectedInterviewers) &&
-            selectedInterviewers.length > 0;
+          // Handle Face to Face (no meeting link)
+          if (!shouldGenerateMeeting && selectedInterviewers?.length > 0) {
+            const faceToFaceRoundData = {
+              ...roundData,
+              status: isReschedule ? "Rescheduled" : "Scheduled",
+            };
 
-          let meetingLink = null;
-          try {
-            // v1.0.3 <-----------------------------------------------------------
-            setMeetingCreationProgress("Creating links...");
-            // v1.0.3 ----------------------------------------------------------->
-            // Import the meeting platform utility
-            const { createMeeting } = await import(
-              "../../../../../utils/meetingPlatforms.js"
-            );
+            const updatePayload = {
+              interviewId,
+              roundId: targetRoundId,
+              round: faceToFaceRoundData,
+              ...(isEditing ? { questions: interviewQuestionsList } : {}),
+            };
 
-            if (shouldGenerateMeeting) {
-              setIsMeetingCreationLoading(true);
-              // ========================================
-              // Google Meet creation
-              // ========================================
-              if (selectedMeetingPlatform === "google-meet") {
-                meetingLink = await createMeeting(
-                  "googlemeet",
-                  {
-                    roundTitle,
-                    instructions,
-                    combinedDateTime,
-                    duration,
-                    selectedInterviewers,
-                  },
-                  (progress) => {
-                    setMeetingCreationProgress(progress);
-                  }
-                );
-
-                // ========================================
-                // Zoom meeting creation
-                // ========================================
-              } else if (selectedMeetingPlatform === "zoom") {
-                // Format helper
-                function formatStartTimeForZoom(input) {
-                  if (!input || typeof input !== "string") return undefined;
-
-                  // Expected: "20-12-2025 07:36 PM - 08:36 PM"
-                  const match = input.match(
-                    /^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})\s+(AM|PM)/
-                  );
-
-                  if (!match) return undefined;
-
-                  let [, day, month, year, hh, mm, meridiem] = match;
-
-                  day = Number(day);
-                  month = Number(month);
-                  year = Number(year);
-
-                  let hours = Number(hh);
-                  const minutes = Number(mm);
-
-                  if (meridiem === "PM" && hours !== 12) hours += 12;
-                  if (meridiem === "AM" && hours === 12) hours = 0;
-
-                  const localDate = new Date(
-                    year,
-                    month - 1,
-                    day,
-                    hours,
-                    minutes,
-                    0
-                  );
-
-                  if (isNaN(localDate.getTime())) return undefined;
-
-                  // Zoom expects LOCAL time when timezone is provided
-                  return (
-                    `${localDate.getFullYear()}-` +
-                    `${String(localDate.getMonth() + 1).padStart(2, "0")}-` +
-                    `${String(localDate.getDate()).padStart(2, "0")}T` +
-                    `${String(localDate.getHours()).padStart(2, "0")}:` +
-                    `${String(localDate.getMinutes()).padStart(2, "0")}:00`
-                  );
-                }
-
-                const formattedStartTime =
-                  formatStartTimeForZoom(combinedDateTime);
-                if (!formattedStartTime)
-                  throw new Error("Invalid start time format");
-
-                const payloads = {
-                  topic: roundTitle,
-                  duration: Number(duration),
-                  userId: undefined,
-                  ...(interviewType === "scheduled" &&
-                    formattedStartTime && {
-                    start_time: formattedStartTime,
-                    timezone:
-                      Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  }),
-                  settings: {
-                    join_before_host: true,
-                    host_video: false,
-                    participant_video: false,
-                  },
-                };
-
-                meetingLink = await createMeeting(
-                  "zoommeet",
-                  { payload: payloads },
-                  (progress) => {
-                    setMeetingCreationProgress(progress);
-                  }
-                );
-              } else if (selectedMeetingPlatform === "videosdk") {
-                try {
-                  setMeetingCreationProgress("Creating VideoSDK meeting...");
-
-                  // Import the createMeeting function from VideoSDK api
-                  const { createMeeting } = await import('../../../../../VideoSDK1/api.js');
-
-                  // Get the token - make sure you have this in your environment or state
-                  const token = process.env.REACT_APP_VIDEOSDK_TOKEN;
-
-                  if (!token) {
-                    throw new Error("VideoSDK token is not configured");
-                  }
-
-                  // Create the meeting
-                  const { meetingId, err } = await createMeeting({ token });
-
-                  if (err) {
-                    throw new Error(err);
-                  }
-
-                  // Construct the meeting URL - adjust the path as needed
-                  meetingLink = `${window.location.origin}/videosdk-meeting?meetingId=${meetingId}`;
-
-                  setMeetingCreationProgress("Meeting created successfully");
-                } catch (error) {
-                  console.error("Error creating VideoSDK meeting:", error);
-                  setMeetingCreationProgress(`Error: ${error.message}`);
-                  setIsMeetingCreationLoading(false);
-                  return;
-                }
-              }
-
-              // Fixed: was using undefined 'data'
-              if (meetingLink) {
-                const updatedRoundData = {
-                  ...roundData,
-                  meetingId: meetingLink?.start_url
-                    ? meetingLink?.start_url
-                    : meetingLink,
-                  meetPlatform: selectedMeetingPlatform,
-                };
-                const updatePayload = {
-                  interviewId,
-                  roundId: targetRoundId,
-                  round: updatedRoundData,
-                  ...(isEditing ? { questions: interviewQuestionsList } : {}),
-                };
-
-                // 🔹 Call PATCH mutation instead of POST
-                await updateInterviewRound(updatePayload);
-              }
-            }
-            // Handle Face to Face (no meeting link)
-            if (!shouldGenerateMeeting && selectedInterviewers?.length > 0) {
-              const faceToFaceRoundData = {
-                ...roundData,
-                status: isReschedule ? "Rescheduled" : "Scheduled",
-              };
-
-              const updatePayload = {
-                interviewId,
-                roundId: targetRoundId,
-                round: faceToFaceRoundData,
-                ...(isEditing ? { questions: interviewQuestionsList } : {}),
-              };
-
-              await updateInterviewRound(updatePayload);
-            }
-
-            // ✅ Email sending logic (internal interviewers)
-            try {
-              const isInternal = selectedInterviewType === "Internal";
-
-              const shouldSendEmails =
-                payload?.round?.interviewMode !== "Face to Face" &&
-                Array.isArray(selectedInterviewers) &&
-                selectedInterviewers.length > 0;
-
-              if (shouldSendEmails && isInternal) {
-                const emailResponse = await axios.post(
-                  `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
-                  {
-                    interviewId: interviewId,
-                    roundId: targetRoundId,
-                    sendEmails: true,
-                  },
-                  {
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${Cookies.get("authToken")}`,
-                    },
-                  }
-                );
-
-                if (emailResponse.data.success) {
-                  successMessages.push(
-                    "Interview round created and emails sent successfully!"
-                  );
-                  if (emailResponse.data.data.emailsSent > 0) {
-                    successMessages.push(
-                      `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
-                    );
-                  }
-                } else {
-                  notify.error("Round created but email sending failed");
-                }
-              }
-            } catch (emailError) {
-              console.error("Error sending emails:", emailError);
-              notify.error("Round created but email sending failed");
-            }
-
-            // ✅ Show all collected success messages sequentially
-            for (const [i, msg] of successMessages.entries()) {
-              setTimeout(() => {
-                notify.success(msg);
-              }, i * 1000);
-            }
-
-            // ✅ Navigate only once, after toasts
-            setTimeout(() => {
-              navigate(`/interviews/${interviewId}`);
-            }, successMessages.length * 1000 + 500);
-          } catch (err) {
-            console.error("Error in meeting creation:", err);
-            setErrors({
-              meetingCreation: err.message || "Failed to create meeting",
-            });
-          } finally {
-            setIsMeetingCreationLoading(false);
-            setMeetingCreationProgress("");
+            await updateInterviewRound(updatePayload);
           }
+
+          // ✅ Email sending logic (internal interviewers)
+          try {
+            const isInternal = selectedInterviewType === "Internal";
+
+            const shouldSendEmails =
+              payload?.round?.interviewMode !== "Face to Face" &&
+              Array.isArray(selectedInterviewers) &&
+              selectedInterviewers.length > 0;
+
+            if (shouldSendEmails && isInternal) {
+              const emailResponse = await axios.post(
+                `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
+                {
+                  interviewId: interviewId,
+                  roundId: targetRoundId,
+                  sendEmails: true,
+                },
+                {
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${Cookies.get("authToken")}`,
+                  },
+                }
+              );
+
+              if (emailResponse.data.success) {
+                successMessages.push(
+                  "Interview round created and emails sent successfully!"
+                );
+                if (emailResponse.data.data.emailsSent > 0) {
+                  successMessages.push(
+                    `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
+                  );
+                }
+              } else {
+                notify.error("Round created but email sending failed");
+              }
+            }
+          } catch (emailError) {
+            console.error("Error sending emails:", emailError);
+            notify.error("Round created but email sending failed");
+          }
+
+          // ✅ Show all collected success messages sequentially
+          for (const [i, msg] of successMessages.entries()) {
+            setTimeout(() => {
+              notify.success(msg);
+            }, i * 1000);
+          }
+
+          // ✅ Navigate only once, after toasts
+          setTimeout(() => {
+            navigate(`/interviews/${interviewId}`);
+          }, successMessages.length * 1000 + 500);
 
           // Removed duplicate navigate here to prevent double navigation
           // navigate(`/interviews/${interviewId}`);
@@ -2053,6 +2409,7 @@ const RoundFormInterviews = () => {
                         value={
                           isCustomRoundTitle ? customRoundTitle : roundTitle
                         }
+                        disabled={isEditing || isReschedule}
                         options={ROUND_TITLES}
                         // options={[
                         //   { value: "Assessment", label: "Assessment" },
@@ -2081,7 +2438,11 @@ const RoundFormInterviews = () => {
                           containerRef={fieldRefs.interviewMode}
                           label="Interview Mode"
                           required
-                          disabled={roundTitle === "Assessment"}
+                          disabled={
+                            roundTitle === "Assessment" ||
+                            isEditing ||
+                            isReschedule
+                          }
                           name="interviewMode"
                           value={interviewMode}
                           options={[
@@ -2150,22 +2511,6 @@ const RoundFormInterviews = () => {
                       {/* v1.0.1 ---------------------------------------------------------------------------------------> */}
                     </div>
 
-                    {/* Status */}
-
-                    {/* <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Status
-                      </label>
-                      <div className="mt-1 flex items-center">
-                        <span
-                          className="text-gray-700 block w-full pl-3 pr-10 py-2 text-base border sm:text-sm rounded-md"
-                          disabled
-                        >
-                          {status}
-                        </span>{" "}
-                      </div>
-                    </div> */}
-
                     <div>
                       <DropdownWithSearchField
                         label="Duration (Minutes)"
@@ -2178,7 +2523,11 @@ const RoundFormInterviews = () => {
                           { value: 90, label: "90 min" },
                           { value: 120, label: "120 min" },
                         ]}
-                        disabled={roundTitle === "Assessment"}
+                        disabled={
+                          roundTitle === "Assessment" ||
+                          isEditing ||
+                          isReschedule
+                        }
                         onChange={(e) => {
                           setDuration(parseInt(e.target.value));
                           //clearError("duration")
@@ -2528,7 +2877,8 @@ const RoundFormInterviews = () => {
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
                                 ? "border-custom-blue bg-blue-50"
                                 : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            }`}
+                            key="instant-btn"
                           >
                             <Clock
                               className={`h-6 w-6 ${interviewType === "instant"
@@ -2558,7 +2908,8 @@ const RoundFormInterviews = () => {
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
                                 ? "border-custom-blue bg-blue-50"
                                 : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            }`}
+                            key="scheduled-btn"
                           >
                             <Calendar
                               className={`h-6 w-6 ${interviewType === "scheduled"
@@ -2594,7 +2945,12 @@ const RoundFormInterviews = () => {
                                 id="scheduledDate"
                                 name="scheduledDate"
                                 //lang="en-US"
-                                value={scheduledDate}
+                                // value={scheduledDate}
+                                value={
+                                  interviewType === "scheduled"
+                                    ? scheduledDate
+                                    : ""
+                                }
                                 onChange={handleScheduledDateChange} // Use the new handler
                                 //<-----v1.0.4----
                                 // onChange={(e) => {
@@ -2611,30 +2967,6 @@ const RoundFormInterviews = () => {
                               />
                             </div>
                           )}
-
-                          {/* <div className="mt-4">
-                            <label
-                              htmlFor="duration"
-                              className="block text-sm font-medium text-gray-700"
-                            >
-                              Duration (Minutes)
-                            </label>
-                            <select
-                              id="duration"
-                              name="duration"
-                              value={duration}
-                              onChange={(e) =>
-                                setDuration(parseInt(e.target.value))
-                              }
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-custom-blue focus:border-custom-blue sm:text-sm"
-                            >
-                              <option value="30">30 min</option>
-                              <option value="45">45 min</option>
-                              <option value="60">60 min</option>
-                              <option value="90">90 min</option>
-                              <option value="120">120 min</option>
-                            </select>
-                          </div> */}
                         </div>
 
                         {interviewType === "instant" && (
@@ -2730,23 +3062,38 @@ const RoundFormInterviews = () => {
                           Interviewers
                         </label>
                         <div className="flex space-x-2">
+                          {/* Select Internal Button */}
                           {organization === false ? (
                             <Button
                               type="button"
                               onClick={() => {
                                 handleInternalInterviewerSelect([ownerData]);
-                                // clearError('interviewerType');
                               }}
                               variant="outline"
                               size="sm"
-                              className={`${isExternalSelected
+                              className={
+                                // Disable if:
+                                // - Editing/rescheduling and original type was External
+                                // - Or currently External is selected (in create mode)
+                                (isEditing || isReschedule) &&
+                                roundEditData?.interviewerType === "External"
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : isExternalSelected
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
-                                }`}
-                              disabled={isExternalSelected}
-                              title={
+                              }
+                              disabled={
+                                ((isEditing || isReschedule) &&
+                                  roundEditData?.interviewerType ===
+                                    "External") ||
                                 isExternalSelected
-                                  ? "Clear external interviewers first"
+                              }
+                              title={
+                                (isEditing || isReschedule) &&
+                                roundEditData?.interviewerType === "External"
+                                  ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
+                                  : isExternalSelected
+                                  ? "Clear outsourced interviewers first"
                                   : ""
                               }
                             >
@@ -2758,17 +3105,30 @@ const RoundFormInterviews = () => {
                           ) : (
                             <Button
                               type="button"
-                              onClick={() => setInternalInterviews(true)}
+                              onClick={openInternalModal}
+                              // onClick={() => setInternalInterviews(true)}
                               variant="outline"
                               size="sm"
-                              className={`${isExternalSelected
+                              className={
+                                (isEditing || isReschedule) &&
+                                roundEditData?.interviewerType === "External"
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : isExternalSelected
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
-                                }`}
-                              disabled={isExternalSelected}
-                              title={
+                              }
+                              disabled={
+                                ((isEditing || isReschedule) &&
+                                  roundEditData?.interviewerType ===
+                                    "External") ||
                                 isExternalSelected
-                                  ? "Clear external interviewers first"
+                              }
+                              title={
+                                (isEditing || isReschedule) &&
+                                roundEditData?.interviewerType === "External"
+                                  ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
+                                  : isExternalSelected
+                                  ? "Clear outsourced interviewers first"
                                   : ""
                               }
                             >
@@ -2779,26 +3139,41 @@ const RoundFormInterviews = () => {
                             </Button>
                           )}
 
+                          {/* Select Outsourced Button */}
                           <Button
                             type="button"
-                            onClick={() => setShowOutsourcePopup(true)}
+                            onClick={openExternalModal}
+                            // onClick={() => setShowOutsourcePopup(true)}
                             variant="outline"
                             size="sm"
-                            className={`${isInternalSelected
+                            className={
+                              (isEditing || isReschedule) &&
+                              roundEditData?.interviewerType === "Internal"
+                                ? "opacity-50 cursor-not-allowed"
+                                : isInternalSelected ||
+                                  interviewMode === "Face to Face"
                                 ? "opacity-50 cursor-not-allowed"
                                 : ""
-                              }`}
+                            }
                             disabled={
+                              ((isEditing || isReschedule) &&
+                                roundEditData?.interviewerType ===
+                                  "Internal") ||
                               isInternalSelected ||
                               interviewMode === "Face to Face"
                             }
                             title={
-                              isInternalSelected
+                              (isEditing || isReschedule) &&
+                              roundEditData?.interviewerType === "Internal"
+                                ? "Cannot change from Internal to Outsourced interviewers in edit/reschedule"
+                                : isInternalSelected
                                 ? "Clear internal interviewers first"
+                                : interviewMode === "Face to Face"
+                                ? "Outsourced interviewers not allowed for Face-to-Face"
                                 : ""
                             }
                           >
-                            <User className="h-4 w-4 sm:mr-0 mr-1 text-orange-600" />
+                            <Users className="h-4 w-4 sm:mr-0 mr-1 text-orange-600" />
                             <span className="sm:hidden inline">
                               Select Outsourced
                             </span>
@@ -3022,10 +3397,13 @@ const RoundFormInterviews = () => {
                                     >
                                       <div className="flex items-center min-w-0 flex-1">
                                         <span className="ml-2 text-sm text-orange-800 truncate">
+                                          {/* FIX: Safely access nested contact fields */}
                                           {interviewer?.contact?.firstName ||
-                                            interviewer?.firstName}{" "}
+                                            interviewer?.firstName ||
+                                            "Unknown"}{" "}
                                           {interviewer?.contact?.lastName ||
-                                            interviewer?.lastName}{" "}
+                                            interviewer?.lastName ||
+                                            ""}{" "}
                                           (Outsourced)
                                         </span>
                                       </div>
@@ -3033,7 +3411,7 @@ const RoundFormInterviews = () => {
                                         type="button"
                                         onClick={() =>
                                           handleRemoveExternalInterviewer(
-                                            interviewer.id
+                                            interviewer.id || interviewer._id
                                           )
                                         }
                                         className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
@@ -3223,6 +3601,7 @@ const RoundFormInterviews = () => {
       {/* External Interviews Modal */}
       {showOutsourcePopup && (
         <OutsourcedInterviewerModal
+          key={`outsource-modal-${externalInterviewers.length}`}
           onClose={() => setShowOutsourcePopup(false)}
           dateTime={combinedDateTime}
           skills={position?.skills}
@@ -3236,6 +3615,7 @@ const RoundFormInterviews = () => {
 
       {isInternalInterviews && (
         <InternalInterviews
+          key={`internal-modal-${internalInterviewers.length}-${interviewerGroupId}`}
           isOpen={isInternalInterviews}
           // onClose={() => setInternalInterviews(false)}
           onClose={() => {
@@ -3251,7 +3631,8 @@ const RoundFormInterviews = () => {
           // defaultViewType={interviewerViewType}
           selectedGroupName={interviewerGroupName}
           selectedGroupId={interviewerGroupId}
-        //  clearOnViewTypeChange={true}
+          // key={`${internalInterviewers.length}-${interviewerGroupId}`}
+          //  clearOnViewTypeChange={true}
         />
       )}
     </div>

@@ -722,7 +722,7 @@ const ShareAssessment = ({
                           setSelectedCandidates([]);
                         }
                       }}
-                      className="h-4 w-4 text-custom-blue focus:ring-custom-blue/80 border-gray-300 rounded"
+                      className="h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue/80 border-gray-300 rounded"
                       disabled={
                         !candidateData ||
                         candidateData.length === 0 ||

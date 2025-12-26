@@ -1,9 +1,7 @@
 // v1.0.0 - Ashok - Fixed alignment issues
 
 import { motion } from "framer-motion";
-
-const capitalizeFirstLetter = (str) =>
-  str?.charAt(0)?.toUpperCase() + str?.slice(1);
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const KanbanView = ({
   data = [],

@@ -1,4 +1,3 @@
-
 // v1.0.0 - Venkatesh - Added hold transaction tracking and settlement status fields for interview payment management
 // Policy usage:
 // This schema is the main source of truth for applying interview reschedule / cancellation / no-show policies
@@ -21,13 +20,17 @@ const mongoose = require("mongoose");
 
 // Participants (Candidate + Interviewer + Scheduler)
 const participantSchema = new mongoose.Schema(
-    {
-        role: { type: String, enum: ["Candidate", "Interviewer", "Scheduler"], required: true },
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }, // optional for candidate
-        joinedAt: { type: Date },
-        status: { type: String, enum: ["Joined", "Not Joined"] },
+  {
+    role: {
+      type: String,
+      enum: ["Candidate", "Interviewer", "Scheduler"],
+      // required: true,
     },
-    { _id: false }
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }, // optional for candidate
+    joinedAt: { type: Date },
+    status: { type: String, enum: ["Joined", "Not Joined"] },
+  },
+  { _id: false }
 );
 
 // Only schedule / reschedule / cancel info
@@ -38,21 +41,29 @@ const participantSchema = new mongoose.Schema(
 // and is used by settlement logic to calculate how many hours before the interview
 // a cancellation happened, so that the correct policy bracket can be applied.
 const roundHistorySchema = new mongoose.Schema(
-    {
-        scheduledAt: { type: Date, required: true },
-        action: { type: String, enum: ["Scheduled", "Rescheduled", "Cancelled"], required: true },
-        // reason: { type: String },
-        reasonCode: { type: String },      // e.g. "candidate_requested"
-        comment: { type: String },         // only when reasonCode === "other"
-        participants: [participantSchema],
-        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        updatedAt: { type: Date, default: Date.now },
+  {
+    // scheduledAt: { type: Date, required: true },
+    scheduledAt: { type: String },
+    action: {
+      type: String,
+      //   enum: ["Scheduled", "Rescheduled", "Cancelled"],
+      //   required: true,
     },
-    { _id: false }
+    // reason: { type: String },
+    reasonCode: { type: String }, // e.g. "candidate_requested"
+    comment: { type: String }, // only when reasonCode === "other"
+    participants: [participantSchema],
+    interviewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }],
+
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    updatedAt: { type: Date, default: Date.now },
+  }
+  // { _id: false }
 );
 
 // Main Interview Round Schema
-const interviewRoundSchema = new mongoose.Schema({
+const interviewRoundSchema = new mongoose.Schema(
+  {
     interviewId: { type: mongoose.Schema.Types.ObjectId, ref: "Interview" },
     sequence: Number,
     roundTitle: String,
@@ -64,7 +75,6 @@ const interviewRoundSchema = new mongoose.Schema({
 
     // Current scheduled date/time
     // dateTime: { type: Date },
-
 
     // Current scheduled date/time
 
@@ -80,31 +90,34 @@ const interviewRoundSchema = new mongoose.Schema({
 
     // Current lifecycle status
     status: {
-        type: String,
-        enum: [
-            "Draft",
-            "RequestSent",
-            "Scheduled",
-            "InProgress",
-            "Completed",
-            "InCompleted",
-            "Rescheduled",
-            "Rejected",
-            "Selected",
-            "Cancelled",
-            "Incomplete",
-            "NoShow"
-        ],
-        default: "Draft",
+      type: String,
+      enum: [
+        "Draft",
+        "RequestSent",
+        "Scheduled",
+        "InProgress",
+        "Completed",
+        "InCompleted",
+        "Rescheduled",
+        "Rejected",
+        "Selected",
+        "Cancelled",
+        "Incomplete",
+        "NoShow",
+      ],
+      default: "Draft",
     },
 
     // Track last and current actions + reasons
- /* ------------------------------------
+    /* ------------------------------------
      * Current Action Tracking
      * ---------------------------------- */
-    currentAction: { type: String },          // e.g. Rescheduled
-    currentActionReason: { type: String },    // reasonCode
-    comments: { type: String },               // only for "other"
+    currentAction: { type: String }, // e.g. Rescheduled
+    previousAction: {
+      type: String,
+    },
+    currentActionReason: { type: String }, // reasonCode
+    comments: { type: String }, // only for "other"
 
     /* ------------------------------------
      * History (append-only)
@@ -118,7 +131,10 @@ const interviewRoundSchema = new mongoose.Schema({
     meetPlatform: String,
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
 
-    scheduleAssessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "ScheduledAssessment" },
+    scheduleAssessmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ScheduledAssessment",
+    },
     rejectionReason: String,
 
     // Settlement tracking
@@ -129,94 +145,96 @@ const interviewRoundSchema = new mongoose.Schema({
     // the final outcome of policy-based settlement for this round. They are also
     // surfaced in Super Admin UI (table + sidebar) to show per-round settlement status.
     settlementStatus: {
-        type: String,
-        enum: ['pending', 'completed', 'failed'],
-        default: 'pending'
+      type: String,
+      enum: ["pending", "completed", "failed"],
+      default: "pending",
     },
     settlementDate: { type: Date },
 
     // External system identifier
     externalId: { type: String, sparse: true, index: true }, // External system identifier
-}, { timestamps: true });
+  },
+  { timestamps: true }
+);
 
 // Add middleware to track status changes for internal interview usage
-const { handleInterviewStatusChange } = require('../../services/interviewUsageService');
+const {
+  handleInterviewStatusChange,
+} = require("../../services/interviewUsageService");
 
 // Pre-save hook to track status changes
-interviewRoundSchema.pre('save', async function (next) {
-    try {
-        // Check if status has changed
-        if (this.isModified('status') && !this.isNew) {
-            const oldStatus = this._original_status || 'Draft';
-            const newStatus = this.status;
+interviewRoundSchema.pre("save", async function (next) {
+  try {
+    // Check if status has changed
+    if (this.isModified("status") && !this.isNew) {
+      const oldStatus = this._original_status || "Draft";
+      const newStatus = this.status;
 
-            // Only track for Internal interviews
-            if (this.interviewerType === 'Internal') {
-                const Interview = require('../Interview/Interview').Interview;
-                const interview = await Interview.findById(this.interviewId);
+      // Only track for Internal interviews
+      if (this.interviewerType === "Internal") {
+        const Interview = require("../Interview/Interview").Interview;
+        const interview = await Interview.findById(this.interviewId);
 
-                if (interview) {
-                    const result = await handleInterviewStatusChange(
-                        this._id,
-                        oldStatus,
-                        newStatus,
-                        {
-                            tenantId: interview.tenantId,
-                            ownerId: interview.ownerId
-                        }
-                    );
-
-                    if (!result.success && newStatus === 'Scheduled') {
-                        // If scheduling fails due to usage limit, prevent the save
-                        return next(new Error(result.message || 'Usage limit exceeded'));
-                    }
-                }
+        if (interview) {
+          const result = await handleInterviewStatusChange(
+            this._id,
+            oldStatus,
+            newStatus,
+            {
+              tenantId: interview.tenantId,
+              ownerId: interview.ownerId,
             }
-        }
+          );
 
-        next();
-    } catch (error) {
-        console.error('[InterviewRounds] Error in pre-save hook:', error);
-        next(error);
+          if (!result.success && newStatus === "Scheduled") {
+            // If scheduling fails due to usage limit, prevent the save
+            return next(new Error(result.message || "Usage limit exceeded"));
+          }
+        }
+      }
     }
+
+    next();
+  } catch (error) {
+    console.error("[InterviewRounds] Error in pre-save hook:", error);
+    next(error);
+  }
 });
 
 // Pre-findOneAndUpdate hook to track the original status
-interviewRoundSchema.pre('findOneAndUpdate', async function () {
-    const docToUpdate = await this.model.findOne(this.getQuery());
-    if (docToUpdate) {
-        this._originalDoc = docToUpdate;
-    }
+interviewRoundSchema.pre("findOneAndUpdate", async function () {
+  const docToUpdate = await this.model.findOne(this.getQuery());
+  if (docToUpdate) {
+    this._originalDoc = docToUpdate;
+  }
 });
 
 // Post-findOneAndUpdate hook to handle status change
-interviewRoundSchema.post('findOneAndUpdate', async function (doc) {
-    try {
-        if (!doc || !this._originalDoc) return;
+interviewRoundSchema.post("findOneAndUpdate", async function (doc) {
+  try {
+    if (!doc || !this._originalDoc) return;
 
-        const oldStatus = this._originalDoc.status;
-        const newStatus = doc.status;
+    const oldStatus = this._originalDoc.status;
+    const newStatus = doc.status;
 
-        // Check if status changed and it's an Internal interview
-        if (oldStatus !== newStatus && doc.interviewerType === 'Internal') {
-            const Interview = require('../Interview/Interview').Interview;
-            const interview = await Interview.findById(doc.interviewId);
+    // Check if status changed and it's an Internal interview
+    if (oldStatus !== newStatus && doc.interviewerType === "Internal") {
+      const Interview = require("../Interview/Interview").Interview;
+      const interview = await Interview.findById(doc.interviewId);
 
-            if (interview) {
-                await handleInterviewStatusChange(
-                    doc._id,
-                    oldStatus,
-                    newStatus,
-                    {
-                        tenantId: interview.tenantId,
-                        ownerId: interview.ownerId
-                    }
-                );
-            }
-        }
-    } catch (error) {
-        console.error('[InterviewRounds] Error in post-findOneAndUpdate hook:', error);
+      if (interview) {
+        await handleInterviewStatusChange(doc._id, oldStatus, newStatus, {
+          tenantId: interview.tenantId,
+          ownerId: interview.ownerId,
+        });
+      }
     }
+  } catch (error) {
+    console.error(
+      "[InterviewRounds] Error in post-findOneAndUpdate hook:",
+      error
+    );
+  }
 });
 
 const InterviewRounds = mongoose.model("InterviewRounds", interviewRoundSchema);

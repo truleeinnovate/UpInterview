@@ -10,10 +10,12 @@ const { Contacts } = require("../models/Contacts");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
 const Wallet = require("../models/WalletTopup");
 const { Candidate } = require("../models/Candidate");
-const { MockInterviewRound } = require('../models/Mockinterview/mockinterviewRound');
-const { MockInterview } = require('../models/Mockinterview/mockinterview');
-const { generateUniqueId } = require('../services/uniqueIdGeneratorService');
-
+const {
+  MockInterviewRound,
+} = require("../models/Mockinterview/mockinterviewRound");
+const { MockInterview } = require("../models/Mockinterview/mockinterview");
+const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+const { buildSmartRoundUpdate } = require("./interviewRoundsController.js");
 
 //old mansoor code i have changed this code because each interviwer send one request
 
@@ -78,32 +80,43 @@ exports.createRequest = async (req, res) => {
       requestMessage,
       expiryDateTime,
       isMockInterview,
-      contactId
+      contactId,
     } = req.body;
     const isInternal = interviewerType === "internal";
 
     // Generate custom request ID using centralized service with tenant ID
-    const customRequestId = await generateUniqueId('INT-RQST', InterviewRequest, 'customRequestId', tenantId);
+    const customRequestId = await generateUniqueId(
+      "INT-RQST",
+      InterviewRequest,
+      "customRequestId",
+      tenantId
+    );
 
     const newRequest = new InterviewRequest({
       interviewRequestCode: customRequestId,
       tenantId: new mongoose.Types.ObjectId(tenantId),
       ownerId,
-      scheduledInterviewId: isMockInterview ? undefined : new mongoose.Types.ObjectId(scheduledInterviewId),
+      scheduledInterviewId: isMockInterview
+        ? undefined
+        : new mongoose.Types.ObjectId(scheduledInterviewId),
       interviewerType,
       contactId: new mongoose.Types.ObjectId(contactId),
       interviewerId: new mongoose.Types.ObjectId(interviewerId), // Save interviewerId instead of an array
       dateTime,
       duration,
-      candidateId: isMockInterview ? undefined : new mongoose.Types.ObjectId(candidateId),
-      positionId: isMockInterview ? undefined : new mongoose.Types.ObjectId(positionId),
+      candidateId: isMockInterview
+        ? undefined
+        : new mongoose.Types.ObjectId(candidateId),
+      positionId: isMockInterview
+        ? undefined
+        : new mongoose.Types.ObjectId(positionId),
       status: isInternal ? "accepted" : "inprogress",
       roundId: new mongoose.Types.ObjectId(roundId),
       requestMessage: isInternal
         ? "Internal interview request"
         : "Outsource interview request",
       expiryDateTime,
-      isMockInterview
+      isMockInterview,
     });
 
     await newRequest.save();
@@ -143,13 +156,12 @@ exports.createRequest = async (req, res) => {
 
 exports.getAllRequests = async (req, res) => {
   try {
-    const hasPaginationParams = (
-      'page' in req.query ||
-      'limit' in req.query ||
-      'search' in req.query ||
-      'status' in req.query ||
-      'type' in req.query
-    );
+    const hasPaginationParams =
+      "page" in req.query ||
+      "limit" in req.query ||
+      "search" in req.query ||
+      "status" in req.query ||
+      "type" in req.query;
 
     if (!hasPaginationParams) {
       // Legacy behavior: return full list (used by some existing UIs)
@@ -178,32 +190,38 @@ exports.getAllRequests = async (req, res) => {
     // Paginated mode
     const page = Math.max(parseInt(req.query.page, 10) || 0, 0);
     const limitRaw = parseInt(req.query.limit, 10);
-    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
-    const search = (req.query.search || '').trim();
-    const statusParam = (req.query.status || '').trim();
-    const typeParam = (req.query.type || '').trim();
+    const limit =
+      Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
+    const search = (req.query.search || "").trim();
+    const statusParam = (req.query.status || "").trim();
+    const typeParam = (req.query.type || "").trim();
 
-    const statusValues = statusParam ? statusParam.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const statusValues = statusParam
+      ? statusParam
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
 
     const pipeline = [
       {
         $lookup: {
-          from: 'contacts',
-          localField: 'interviewerId',
-          foreignField: '_id',
-          as: 'interviewer',
+          from: "contacts",
+          localField: "interviewerId",
+          foreignField: "_id",
+          as: "interviewer",
         },
       },
-      { $unwind: { path: '$interviewer', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: "$interviewer", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
-          from: 'positions',
-          localField: 'positionId',
-          foreignField: '_id',
-          as: 'position',
+          from: "positions",
+          localField: "positionId",
+          foreignField: "_id",
+          as: "position",
         },
       },
-      { $unwind: { path: '$position', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: "$position", preserveNullAndEmptyArrays: true } },
     ];
 
     const match = {};
@@ -211,18 +229,18 @@ exports.getAllRequests = async (req, res) => {
       match.status = { $in: statusValues };
     }
     if (typeParam) {
-      match.interviewerType = { $regex: new RegExp(`^${typeParam}$`, 'i') };
+      match.interviewerType = { $regex: new RegExp(`^${typeParam}$`, "i") };
     }
     if (search) {
-      const regex = new RegExp(search, 'i');
+      const regex = new RegExp(search, "i");
       match.$or = [
         { interviewRequestCode: { $regex: regex } },
         { interviewerType: { $regex: regex } },
         { status: { $regex: regex } },
-        { 'interviewer.firstName': { $regex: regex } },
-        { 'interviewer.lastName': { $regex: regex } },
-        { 'interviewer.email': { $regex: regex } },
-        { 'position.title': { $regex: regex } },
+        { "interviewer.firstName": { $regex: regex } },
+        { "interviewer.lastName": { $regex: regex } },
+        { "interviewer.email": { $regex: regex } },
+        { "position.title": { $regex: regex } },
       ];
     }
     if (Object.keys(match).length > 0) {
@@ -236,11 +254,16 @@ exports.getAllRequests = async (req, res) => {
         data: [
           { $skip: page * limit },
           { $limit: limit },
-          { $addFields: { interviewerId: '$interviewer', positionId: '$position' } },
+          {
+            $addFields: {
+              interviewerId: "$interviewer",
+              positionId: "$position",
+            },
+          },
           { $project: { interviewer: 0, position: 0 } },
         ],
-        totalCount: [{ $count: 'count' }],
-        statusCounts: [{ $group: { _id: '$status', count: { $sum: 1 } } }],
+        totalCount: [{ $count: "count" }],
+        statusCounts: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
       },
     });
 
@@ -275,7 +298,9 @@ exports.getAllRequests = async (req, res) => {
       status: true,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Server Error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server Error", error: error.message });
   }
 };
 
@@ -341,8 +366,6 @@ exports.updateRequestStatus = async (req, res) => {
           Status: "Scheduled",
         }));
         await interview.save();
-
-
       } else {
         return res.status(404).json({
           message: "Interview not found for the scheduledInterviewId",
@@ -393,29 +416,33 @@ const formatInterviewRequest = async (request) => {
   if (request.roundId) {
     if (request.isMockInterview) {
       // Fetch from MockInterviewRounds collection
-      const mockRound = await mongoose.model("MockInterviewRound").findById(request.roundId)
+      const mockRound = await mongoose
+        .model("MockInterviewRound")
+        .findById(request.roundId)
         .select("roundTitle interviewType duration dateTime")
         .lean();
       roundDetails = mockRound
         ? {
-          roundTitle: mockRound.roundTitle,
-          interviewType: mockRound.interviewType,
-          duration: mockRound.duration,
-          dateTime: mockRound.dateTime,
-        }
+            roundTitle: mockRound.roundTitle,
+            interviewType: mockRound.interviewType,
+            duration: mockRound.duration,
+            dateTime: mockRound.dateTime,
+          }
         : null;
     } else {
       // Fetch from InterviewRounds collection
-      const interviewRound = await mongoose.model("InterviewRounds").findById(request.roundId)
+      const interviewRound = await mongoose
+        .model("InterviewRounds")
+        .findById(request.roundId)
         .select("roundTitle interviewType duration dateTime")
         .lean();
       roundDetails = interviewRound
         ? {
-          roundTitle: interviewRound.roundTitle,
-          interviewType: interviewRound.interviewType,
-          duration: interviewRound.duration,
-          dateTime: interviewRound.dateTime,
-        }
+            roundTitle: interviewRound.roundTitle,
+            interviewType: interviewRound.interviewType,
+            duration: interviewRound.duration,
+            dateTime: interviewRound.dateTime,
+          }
         : null;
     }
   }
@@ -423,47 +450,53 @@ const formatInterviewRequest = async (request) => {
   // Handle candidate/contact data based on isMockInterview
   if (request.isMockInterview) {
     if (request.contactId) {
-      const contact = await mongoose.model("Contacts").findById(request.contactId)
+      const contact = await mongoose
+        .model("Contacts")
+        .findById(request.contactId)
         .select("firstName lastName email phone")
         .lean();
       candidateDetails = contact
         ? {
-          id: contact._id,
-          name: `${contact.firstName} ${contact.lastName}`,
-          email: contact.email,
-          phone: contact.phone,
-        }
+            id: contact._id,
+            name: `${contact.firstName} ${contact.lastName}`,
+            email: contact.email,
+            phone: contact.phone,
+          }
         : null;
     }
   } else {
     if (request.candidateId) {
-      const candidate = await mongoose.model("Candidate").findById(request.candidateId)
+      const candidate = await mongoose
+        .model("Candidate")
+        .findById(request.candidateId)
         .select("FirstName LastName Email Phone")
         .lean();
       candidateDetails = candidate
         ? {
-          id: candidate._id,
-          name: `${candidate.FirstName} ${candidate.LastName}`,
-          email: candidate.Email,
-          phone: candidate.Phone,
-        }
+            id: candidate._id,
+            name: `${candidate.FirstName} ${candidate.LastName}`,
+            email: candidate.Email,
+            phone: candidate.Phone,
+          }
         : null;
     }
   }
 
   // Handle position data only for non-mock interviews
   if (!request.isMockInterview && request.positionId) {
-    const position = await mongoose.model("Position").findById(request.positionId)
+    const position = await mongoose
+      .model("Position")
+      .findById(request.positionId)
       .select("title description location companyname")
       .lean();
     positionDetails = position
       ? {
-        id: position._id,
-        title: position.title,
-        description: position.description,
-        location: position.location,
-        companyname: position.companyname, // Added to match frontend
-      }
+          id: position._id,
+          title: position.title,
+          description: position.description,
+          location: position.location,
+          companyname: position.companyname, // Added to match frontend
+        }
       : null;
   }
 
@@ -511,19 +544,25 @@ exports.getInterviewRequests = async (req, res) => {
         return res.status(400).json({ message: "Invalid interviewerId" });
       }
       const interviewerObjectId = new mongoose.Types.ObjectId(interviewerId);
-      requests = await InterviewRequest.find({ interviewerId: interviewerObjectId }).lean();
+      requests = await InterviewRequest.find({
+        interviewerId: interviewerObjectId,
+      }).lean();
     } else {
       // Default: use ownerId logic
       if (!ownerId) {
         return res.status(400).json({ message: "ownerId is required" });
       }
 
-
       // Find all contacts where ownerId matches
-      const contacts = await mongoose.model("Contacts").find({ ownerId }).lean();
+      const contacts = await mongoose
+        .model("Contacts")
+        .find({ ownerId })
+        .lean();
 
       if (!contacts || contacts.length === 0) {
-        return res.status(404).json({ message: "No contacts found for this ownerId" });
+        return res
+          .status(404)
+          .json({ message: "No contacts found for this ownerId" });
       }
 
       // Get all contact IDs for the query
@@ -533,11 +572,12 @@ exports.getInterviewRequests = async (req, res) => {
       const query = { interviewerId: { $in: contactIds } };
 
       requests = await InterviewRequest.find(query).lean();
-
     }
 
     // Format all requests using the shared function
-    const formattedRequests = await Promise.all(requests.map(formatInterviewRequest));
+    const formattedRequests = await Promise.all(
+      requests.map(formatInterviewRequest)
+    );
 
     res.status(200).json(formattedRequests);
   } catch (error) {
@@ -570,7 +610,9 @@ exports.acceptInterviewRequest = async (req, res) => {
     if (request.isMockInterview) {
       round = await MockInterviewRound.findById(roundId);
       if (!round) {
-        return res.status(404).json({ message: "Mock interview round not found" });
+        return res
+          .status(404)
+          .json({ message: "Mock interview round not found" });
       }
     } else {
       round = await InterviewRounds.findById(roundId);
@@ -578,10 +620,37 @@ exports.acceptInterviewRequest = async (req, res) => {
         return res.status(404).json({ message: "Interview round not found" });
       }
     }
+    //schedule only update for 1 st time from second time rescheduled will update
+    // Decide schedule action based on history
+    const hasScheduledOnce = round.history?.some(
+      (h) => h.action === "Scheduled"
+    );
+
+    const scheduleAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
 
     if (!round.interviewers.includes(contactId)) {
       round.interviewers.push(contactId);
-      round.status = "Scheduled";
+      round.status = scheduleAction;
+
+      // Build the update payload using your helper
+      const updatePayload = buildSmartRoundUpdate({
+        existingRound: round,
+        body: round, // new array with added interviewer
+        // You can pass optional reason if frontend provides it
+        // rescheduleReason: "added_new_interviewer",
+
+        actingAsUserId: req.user?._id || null, // or whoever is accepting the request
+        // changes,
+      });
+
+      // Apply atomic update with history tracking
+      // const updatedRound = await RoundModel.findByIdAndUpdate(
+      //   roundId,
+      //   updatePayload,
+      //   { new: true, runValidators: true }
+      // );
+      round.history.push(updatePayload);
+
       await round.save();
     } else {
     }
@@ -591,9 +660,9 @@ exports.acceptInterviewRequest = async (req, res) => {
       {
         roundId: roundId,
         _id: { $ne: requestId }, // Don't update the accepted request
-        status: { $ne: 'withdrawn' } // Only update if not already withdrawn
+        status: { $ne: "withdrawn" }, // Only update if not already withdrawn
       },
-      { status: 'withdrawn', updatedAt: new Date() }
+      { status: "withdrawn", updatedAt: new Date() }
     );
 
     // Update the status of the accepted request
@@ -615,7 +684,7 @@ exports.acceptInterviewRequest = async (req, res) => {
     if (isNaN(durationInMinutes) || durationInMinutes <= 0) {
       return res.status(400).json({
         success: false,
-        message: `Invalid duration in interview request. Expected format like "30 minutes".`
+        message: `Invalid duration in interview request. Expected format like "30 minutes".`,
       });
     }
 
@@ -637,21 +706,21 @@ exports.acceptInterviewRequest = async (req, res) => {
       if (isNaN(expertiseYears) || expertiseYears < 0) {
         return res.status(400).json({
           success: false,
-          message: `Invalid or missing expertiseLevel for interviewer (${mockInterview}). Must be a non-negative number.`
+          message: `Invalid or missing expertiseLevel for interviewer (${mockInterview}). Must be a non-negative number.`,
         });
       }
       if (expertiseYears <= 3) {
-        experienceLevel = 'junior';
+        experienceLevel = "junior";
       } else if (expertiseYears <= 6) {
-        experienceLevel = 'mid';
+        experienceLevel = "mid";
       } else {
-        experienceLevel = 'senior';
+        experienceLevel = "senior";
       }
       rate = contact.rates?.[experienceLevel]?.inr;
-      if (typeof rate !== 'number' || rate <= 0) {
+      if (typeof rate !== "number" || rate <= 0) {
         return res.status(400).json({
           success: false,
-          message: `Invalid or missing INR rate for ${experienceLevel} level in contact (${contactId}).`
+          message: `Invalid or missing INR rate for ${experienceLevel} level in contact (${contactId}).`,
         });
       }
     } else {
@@ -664,72 +733,71 @@ exports.acceptInterviewRequest = async (req, res) => {
       if (isNaN(experienceYears) || experienceYears < 0) {
         return res.status(400).json({
           success: false,
-          message: `Invalid or missing CurrentExperience for candidate (${request.candidateId}).`
+          message: `Invalid or missing CurrentExperience for candidate (${request.candidateId}).`,
         });
       }
       if (experienceYears <= 3) {
-        experienceLevel = 'junior';
+        experienceLevel = "junior";
       } else if (experienceYears <= 6) {
-        experienceLevel = 'mid';
+        experienceLevel = "mid";
       } else {
-        experienceLevel = 'senior';
+        experienceLevel = "senior";
       }
       rate = contact.rates?.[experienceLevel]?.inr;
-      if (typeof rate !== 'number' || rate <= 0) {
+      if (typeof rate !== "number" || rate <= 0) {
         return res.status(400).json({
           success: false,
-          message: `Invalid or missing INR rate for ${experienceLevel} level in contact (${contactId}).`
+          message: `Invalid or missing INR rate for ${experienceLevel} level in contact (${contactId}).`,
         });
       }
     }
-
 
     // Calculate base amount
     let totalAmount = (rate * durationInMinutes) / 60;
     if (isNaN(totalAmount) || totalAmount <= 0) {
       return res.status(400).json({
         success: false,
-        message: "Failed to calculate interview fee. Please check rate and duration."
+        message:
+          "Failed to calculate interview fee. Please check rate and duration.",
       });
     }
-
 
     // Apply discount if it's a mock interview
     let appliedDiscountPercentage = 0;
     let discountAmount = 0;
     if (request.isMockInterview && contact.mock_interview_discount) {
-      appliedDiscountPercentage = parseFloat(contact.mock_interview_discount) || 0;
+      appliedDiscountPercentage =
+        parseFloat(contact.mock_interview_discount) || 0;
       if (appliedDiscountPercentage > 0 && appliedDiscountPercentage <= 100) {
         discountAmount = (totalAmount * appliedDiscountPercentage) / 100;
         totalAmount -= discountAmount;
       }
     }
 
-
     // Fetch wallet
     const wallet = await Wallet.findOne({ ownerId: request.ownerId });
     if (!wallet) {
       return res.status(400).json({
         success: false,
-        message: "No wallet found for this organization."
+        message: "No wallet found for this organization.",
       });
     }
     const walletBalance = Number(wallet.balance || 0);
-
 
     // Check if there is enough balance
     if (walletBalance < totalAmount) {
       return res.status(400).json({
         success: false,
-        message: "Insufficient balance in wallet to accept this interview request."
+        message:
+          "Insufficient balance in wallet to accept this interview request.",
       });
     }
-
 
     // Prepare transaction record
     const prevBalance = Number(wallet.balance || 0);
     const prevHoldAmount = Number(wallet.holdAmount || 0);
-    const holdID = request?.interviewRequestCode || String(requestId).slice(-10);
+    const holdID =
+      request?.interviewRequestCode || String(requestId).slice(-10);
 
     // Create a wallet "hold" transaction for the full amount that will later
     // be settled according to the interview policy (normal vs mock, time brackets,
@@ -738,30 +806,39 @@ exports.acceptInterviewRequest = async (req, res) => {
     const holdTransaction = {
       type: "hold",
       amount: totalAmount,
-      description: `Hold for ${request.isMockInterview ? 'mock ' : ''}interview round ${round?.roundTitle}`,
+      description: `Hold for ${
+        request.isMockInterview ? "mock " : ""
+      }interview round ${round?.roundTitle}`,
       relatedInvoiceId: holdID,
       status: "pending",
       metadata: {
         // Policy inputs: these fields are used downstream by settlement logic
         // and reporting to understand how the original hold amount was computed
         // and to link all transactions back to the specific interview round.
-        interviewId: String(request.isMockInterview ? round?.mockInterviewId : round?.interviewId || ""),
+        interviewId: String(
+          request.isMockInterview
+            ? round?.mockInterviewId
+            : round?.interviewId || ""
+        ),
         roundId: String(roundId),
         requestId: String(requestId),
         interviewerContactId: String(contact._id),
-        rate: rate,  // Store selected rate
+        rate: rate, // Store selected rate
         experienceLevel: experienceLevel,
         duration: String(duration),
         durationInMinutes: durationInMinutes,
         isMockInterview: Boolean(request.isMockInterview),
-        mockInterviewDiscount: request.isMockInterview ? appliedDiscountPercentage : null,
+        mockInterviewDiscount: request.isMockInterview
+          ? appliedDiscountPercentage
+          : null,
         calculation: {
-          formula: request.isMockInterview && appliedDiscountPercentage > 0
-            ? "(rate * minutes / 60) - discount"
-            : "rate * minutes / 60",
+          formula:
+            request.isMockInterview && appliedDiscountPercentage > 0
+              ? "(rate * minutes / 60) - discount"
+              : "rate * minutes / 60",
           rate: rate,
           minutes: durationInMinutes,
-          discountPercentage: appliedDiscountPercentage
+          discountPercentage: appliedDiscountPercentage,
         },
         prevBalance,
         prevHoldAmount,
@@ -786,37 +863,46 @@ exports.acceptInterviewRequest = async (req, res) => {
     );
 
     // Get the transaction ID from the updated wallet (last transaction)
-    const savedTransaction = updatedWallet.transactions[updatedWallet.transactions.length - 1];
-    const transactionId = savedTransaction._id ? savedTransaction._id.toString() : null;
+    const savedTransaction =
+      updatedWallet.transactions[updatedWallet.transactions.length - 1];
+    const transactionId = savedTransaction._id
+      ? savedTransaction._id.toString()
+      : null;
 
     // Send emails
     try {
-      const emailController = require('./EmailsController/interviewEmailController');
+      const emailController = require("./EmailsController/interviewEmailController");
       await emailController.sendInterviewRoundEmails({
         body: {
-          interviewId: request.isMockInterview ? round?.mockInterviewId : round?.interviewId,
+          interviewId: request.isMockInterview
+            ? round?.mockInterviewId
+            : round?.interviewId,
           roundId: roundId,
-          sendEmails: true
-        }
+          sendEmails: true,
+        },
       });
     } catch (emailError) {
-      console.error('Failed to send interview round emails:', emailError);
+      console.error("Failed to send interview round emails:", emailError);
     }
 
     const successResponse = {
       success: true,
-      message: `${request.isMockInterview ? 'Mock i' : 'I'}nterview request accepted; funds held and emails processed`,
+      message: `${
+        request.isMockInterview ? "Mock i" : "I"
+      }nterview request accepted; funds held and emails processed`,
       wallet: {
         balance: updatedWallet?.balance,
         holdAmount: updatedWallet?.holdAmount,
       },
       transaction: {
         ...holdTransaction,
-        _id: transactionId  // Include the actual transaction ID
+        _id: transactionId, // Include the actual transaction ID
       },
-      appliedDiscount: request.isMockInterview ? appliedDiscountPercentage : null,
+      appliedDiscount: request.isMockInterview
+        ? appliedDiscountPercentage
+        : null,
       roundUpdated: true,
-      holdTransactionId: transactionId
+      holdTransactionId: transactionId,
     };
 
     // Structured internal log for successful accept

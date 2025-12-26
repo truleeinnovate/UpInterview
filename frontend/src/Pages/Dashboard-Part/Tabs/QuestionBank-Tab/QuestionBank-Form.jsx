@@ -1914,7 +1914,7 @@ const extractValidationErrors = (axiosError) => {
                       id="autoAssessment"
                       checked={autoAssessment}
                       onChange={() => setAutoAssessment(!autoAssessment)}
-                      className="ml-14 w-4 h-4"
+                      className="ml-14 w-4 h-4 accent-custom-blue"
                     />
                   </div>
                   {autoAssessment && (
@@ -1931,7 +1931,7 @@ const extractValidationErrors = (axiosError) => {
                           value="Exact"
                           checked={answerMatching === "Exact"}
                           onChange={() => setAnswerMatching("Exact")}
-                          className="mr-1"
+                          className="mr-1 accent-custom-blue"
                         />
                         <label htmlFor="exact" className="text-sm">
                           Exact

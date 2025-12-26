@@ -17,11 +17,10 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 import { useTaskById } from "../../../../apiHooks/useTasks";
 
 const TaskProfileDetails = ({ task, taskId, onClosetask }) => {
-  
   const [isFullScreen, setIsFullScreen] = useState(false);
   const navigate = useNavigate();
   const [showMainContent] = useState(true);
-  
+
   const [activeTab, setActiveTab] = useState("details"); // State for active tab
 
   const { data: fetchedTask, isLoading: isLoadingTask } = useTaskById(taskId);
@@ -83,7 +82,7 @@ const TaskProfileDetails = ({ task, taskId, onClosetask }) => {
               onClick={() => setActiveTab("activity")}
             >
               <Clock className="w-4 h-4" />
-              Activity
+              Feeds
             </button>
           </div>
 
@@ -97,7 +96,9 @@ const TaskProfileDetails = ({ task, taskId, onClosetask }) => {
                   <div className="flex items-center justify-center mb-4">
                     <div className="relative">
                       <div className="sm:w-20 sm:h-20 w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-3xl font-semibold shadow-lg">
-                        {taskData.title ? taskData.title.charAt(0).toUpperCase() : ""}
+                        {taskData.title
+                          ? taskData.title.charAt(0).toUpperCase()
+                          : ""}
                       </div>
                     </div>
                   </div>
@@ -166,7 +167,9 @@ const TaskProfileDetails = ({ task, taskId, onClosetask }) => {
                             <p className="sm:text-sm text-gray-700">
                               {
                                 <StatusBadge
-                                  status={capitalizeFirstLetter(taskData?.status)}
+                                  status={capitalizeFirstLetter(
+                                    taskData?.status
+                                  )}
                                 />
                               }
                             </p>
@@ -195,7 +198,9 @@ const TaskProfileDetails = ({ task, taskId, onClosetask }) => {
                             <p className="sm:text-sm text-gray-700">
                               {
                                 <StatusBadge
-                                  status={capitalizeFirstLetter(taskData?.priority)}
+                                  status={capitalizeFirstLetter(
+                                    taskData?.priority
+                                  )}
                                 />
                               }
                             </p>
@@ -285,7 +290,9 @@ const TaskProfileDetails = ({ task, taskId, onClosetask }) => {
                     <h4 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
                       Task Comments
                     </h4>
-                    <p className="sm:text-sm text-gray-700">{taskData.comments}</p>
+                    <p className="sm:text-sm text-gray-700">
+                      {taskData.comments}
+                    </p>
                   </div>
 
                   {/* Task History - if available */}

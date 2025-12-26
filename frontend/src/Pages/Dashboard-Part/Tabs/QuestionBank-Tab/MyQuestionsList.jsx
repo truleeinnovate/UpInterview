@@ -1713,7 +1713,7 @@ const MyQuestionsList = ({
                                               question._id
                                             )
                                           }
-                                          className="sr-only" // Hide the default checkbox
+                                          className="sr-only accent-custom-blue" // Hide the default checkbox
                                         />
                                         <div
                                           className={`w-4 h-4 rounded border-2 flex items-center justify-center ${

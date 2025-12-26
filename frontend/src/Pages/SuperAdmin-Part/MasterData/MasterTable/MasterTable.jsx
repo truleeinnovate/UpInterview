@@ -699,7 +699,7 @@ const MasterTable = ({ permissions = {} }) => {
       header: "Updated Date",
       render: (value, row) => {
         return row.updatedAt ? (
-          <span>{capitalizeFirstLetter(row.updatedAt)}</span>
+          <span>{formatDateTime(row.updatedAt)}</span>
         ) : (
           "N/A"
         );
