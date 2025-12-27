@@ -1925,19 +1925,70 @@ app.get("/get-token", (req, res) => {
 });
 
 //post
-app.post("/create-meeting/", (req, res) => {
-  const { token, region } = req.body;
-  const url = `${process.env.VIDEOSDK_API_ENDPOINT}/rooms`;
-  const options = {
-    method: "POST",
-    headers: { Authorization: token, "Content-Type": "application/json" },
-    body: JSON.stringify({ region }),
-  };
+// app.post("/create-meeting/", (req, res) => {
+//   const { token, region } = req.body;
+//   const url = `${process.env.VIDEOSDK_API_ENDPOINT}/rooms`;
+//   const options = {
+//     method: "POST",
+//     headers: { Authorization: token, "Content-Type": "application/json" },
+//     body: JSON.stringify({ region }),
+//   };
 
-  fetch(url, options)
-    .then((response) => response.json())
-    .then((result) => res.json(result))
-    .catch((error) => console.error("error", error));
+//   fetch(url, options)
+//     .then((response) => response.json())
+//     .then((result) => res.json(result))
+//     .catch((error) => console.error("error", error));
+// });
+
+// create debug code
+app.post("/create-meeting/", async (req, res) => {
+  try {
+    console.log("🟡 /create-meeting API HIT");
+
+    const { token, region } = req.body;
+
+    console.log("📥 Request body:", req.body);
+    console.log("🔐 Token received:", token);
+    console.log("🌍 Region received:", region);
+
+    if (!token) {
+      console.error("❌ Token missing in request body");
+      return res.status(400).json({ error: "Token is required" });
+    }
+
+    const url = `${process.env.VIDEOSDK_API_ENDPOINT}/rooms`;
+    console.log("🌐 VideoSDK URL:", url);
+
+    const options = {
+      method: "POST",
+      headers: {
+        Authorization: token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ region }),
+    };
+
+    console.log("📤 Outgoing request options:", options);
+
+    const response = await fetch(url, options);
+
+    console.log("📥 VideoSDK response status:", response.status);
+    console.log("📥 VideoSDK response ok?:", response.ok);
+
+    const result = await response.json();
+    console.log("📦 VideoSDK response data:", result);
+
+    if (!response.ok) {
+      console.error("❌ VideoSDK API error:", result);
+      return res.status(response.status).json(result);
+    }
+
+    console.log("✅ Meeting created successfully");
+    res.json(result);
+  } catch (error) {
+    console.error("🔥 /create-meeting server error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 //validate
