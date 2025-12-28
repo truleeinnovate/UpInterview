@@ -52,13 +52,15 @@ const roundHistorySchema = new mongoose.Schema(
     // reason: { type: String },
     reasonCode: { type: String }, // e.g. "candidate_requested"
     comment: { type: String }, // only when reasonCode === "other"
-    participants: [participantSchema],
-    interviewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }],
+    participants: [participantSchema],//this will track participants joined or not in video call or interview
+    interviewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }],//when user select outsource or internal this will track
 
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    updatedAt: { type: Date, default: Date.now },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    // updatedAt: { type: Date, default: Date.now },
+  },
+   {
+    timestamps: { createdAt: true, updatedAt: false },
   }
-  // { _id: false }
 );
 
 // Main Interview Round Schema
