@@ -118,9 +118,11 @@ jobs:
           REACT_APP_API_URL_FRONTEND: ${{ secrets.REACT_APP_API_URL_FRONTEND }}
 
           # video sdk token
-          REACT_APP_VIDEOSDK_TOKEN: ${{ secrets.REACT_APP_VIDEOSDK_TOKEN }}
+          REACT_APP_VIDEOSDK_TOKEN: ${{ secrets.REACT_APP_VIDEOSDK_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJjYTUyZjUzZi0yZjZkLTQ2NWEtYmViMS0wYTIyMzMzYmJiZDYiLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sInJvbGVzIjpbInJ0YyJdLCJpYXQiOjE3NjYzNzkzMTIsImV4cCI6MTc3NDE1NTMxMn0.PdOC43E72xlz7pHXQn7g5dlM66prKjRlgqk6st5lydI' }}
 
-          REACT_APP_VIDEOSDK_TOKEN1: ${{ secrets.REACT_APP_VIDEOSDK_TOKEN1 }}
+          REACT_APP_VIDEOSDK_TOKEN1: ${{ secrets.REACT_APP_VIDEOSDK_TOKEN1 || 'random-value-duplicated-for-video-sdk-token' }}
+
+          REACT_APP_TEST: ${{ secrets.REACT_APP_TEST }}
 
           # Google OAuth configuration
           REACT_APP_GOOGLE_AUTH_URL: ${{ secrets.REACT_APP_GOOGLE_AUTH_URL }}

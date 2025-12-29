@@ -502,6 +502,7 @@ const ContactUsViewPage = lazy(() =>
 
 // Testing Video SDK
 const Testingvideosdkforenv = lazy(() => import('./Testingvideosdkforenv'));
+const Customenvtesting = lazy(() => import('./newcustomenv'));
 
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
@@ -561,6 +562,7 @@ const AuthRoutes = () => (
     <Route path="/code-editor" element={<CodeEditor />} />
     <Route path="/white-board" element={<WhiteBoard />} />
     <Route path="/testing-videosdk" element={<Testingvideosdkforenv />} />
+    <Route path="/customenvtesting" element={<Customenvtesting />} />
   </Routes>
 );
 
@@ -1507,7 +1509,8 @@ const App = () => {
       '/video-sdk-interview-actions',
       "/code-editor",
       "/white-board",
-      "/testing-videosdk"
+      "/testing-videosdk",
+      "/customenvtesting"
     ].some(
       (path) =>
         location.pathname === path ||
