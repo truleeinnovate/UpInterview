@@ -120,6 +120,8 @@ jobs:
           # video sdk token
           REACT_APP_VIDEOSDK_TOKEN: ${{ secrets.REACT_APP_VIDEOSDK_TOKEN }}
 
+          REACT_APP_VIDEOSDK_TOKEN1: ${{ secrets.REACT_APP_VIDEOSDK_TOKEN1 }}
+
           # Google OAuth configuration
           REACT_APP_GOOGLE_AUTH_URL: ${{ secrets.REACT_APP_GOOGLE_AUTH_URL }}
           REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
