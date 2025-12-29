@@ -1896,6 +1896,11 @@ app.use("/analytics", analyticsRoutes);
 
 // v1
 // get
+
+console.log('VIDEOSDK_API_KEY:', process.env.VIDEOSDK_API_KEY);
+console.log('VIDEOSDK_SECRET_KEY:', process.env.VIDEOSDK_SECRET_KEY);
+console.log('VIDEOSDK_API_ENDPOINT:', process.env.VIDEOSDK_API_ENDPOINT);
+
 app.get("/get-token", (req, res) => {
   const API_KEY = process.env.VIDEOSDK_API_KEY;
   const SECRET_KEY = process.env.VIDEOSDK_SECRET_KEY;
@@ -2007,6 +2012,44 @@ app.post("/validate-meeting/:meetingId", (req, res) => {
     .then((response) => response.json())
     .then((result) => res.json(result))
     .catch((error) => console.error("error", error));
+});
+
+// Add this right after other middleware but before other route handlers
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+// Add the log-env route
+app.get('/api/log-env', (req, res) => {
+  const envVars = {
+    VIDEOSDK_API_KEY: process.env.VIDEOSDK_API_KEY || 'Not set',
+    VIDEOSDK_SECRET_KEY: process.env.VIDEOSDK_SECRET_KEY ? '*** (masked)' : 'Not set',
+    VIDEOSDK_API_ENDPOINT: process.env.VIDEOSDK_API_ENDPOINT || 'Not set',
+    NODE_ENV: process.env.NODE_ENV || 'Not set',
+    PORT: process.env.PORT || 'Not set'
+  };
+  console.log('\n===== Backend Environment Variables =====');
+  console.log('Current Time:', new Date().toISOString());
+  console.log('Request Headers:', req.headers);
+  console.log('----------------------------------------');
+  Object.entries(envVars).forEach(([key, value]) => {
+    console.log(`${key}: ${value}`);
+  });
+  console.log('======================================\n');
+  res.json({
+    status: 'success',
+    message: 'Environment variables logged to console',
+    timestamp: new Date().toISOString(),
+    env: envVars
+  });
+});
+// Add CORS preflight for OPTIONS
+app.options('/api/log-env', (req, res) => {
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.status(200).end();
 });
 
 // Catch-all for undefined routes
