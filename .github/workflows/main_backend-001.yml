@@ -170,6 +170,12 @@ jobs:
 
           # API URLs
           REACT_APP_API_URL_FRONTEND: ${{ secrets.REACT_APP_API_URL_FRONTEND }}
+
+          # video sdk
+          VIDEOSDK_API_KEY: ${{ secrets.VIDEOSDK_API_KEY }}
+          VIDEOSDK_SECRET_KEY: ${{ secrets.VIDEOSDK_SECRET_KEY }}
+          VIDEOSDK_API_ENDPOINT: ${{ secrets.VIDEOSDK_API_ENDPOINT }}
+
         run: npm ci --only=production
 
       # 👇 NEW STEP — Install PM2 globally
