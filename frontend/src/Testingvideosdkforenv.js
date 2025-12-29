@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+// import axios from 'axios';
 
 const Testingvideosdkforenv = () => {
-    const [backendStatus, setBackendStatus] = useState('Loading...');
-    const [error, setError] = useState(null);
+    // const [backendStatus, setBackendStatus] = useState('Loading...');
+    // const [error, setError] = useState(null);
 
     const frontendVars = {
         'REACT_APP_REDIRECT_URI': process.env.REACT_APP_REDIRECT_URI || 'Not set',
@@ -13,46 +13,46 @@ const Testingvideosdkforenv = () => {
         'NODE_ENV': process.env.NODE_ENV || 'Not set'
     };
 
-    useEffect(() => {
-        // Log frontend environment variables to browser console
-        console.log('\n===== Frontend Environment Variables =====');
-        console.log('Current Time:', new Date().toISOString());
-        console.log('----------------------------------------');
-        Object.entries(frontendVars).forEach(([key, value]) => {
-            console.log(`${key}: ${value}`);
-        });
-        console.log('======================================\n');
+    // useEffect(() => {
+    //     // Log frontend environment variables to browser console
+    //     console.log('\n===== Frontend Environment Variables =====');
+    //     console.log('Current Time:', new Date().toISOString());
+    //     console.log('----------------------------------------');
+    //     Object.entries(frontendVars).forEach(([key, value]) => {
+    //         console.log(`${key}: ${value}`);
+    //     });
+    //     console.log('======================================\n');
 
-        // Call backend to log its environment variables
-        // Update the axios call in your useEffect
-        // In Testingvideosdkforenv.js, update the axios call to:
-        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-        axios.get(`${apiUrl}/api/log-env`)
-            .then(response => {
-                console.log('Backend response:', response.data);
-                setBackendStatus(`Backend variables logged at ${new Date().toLocaleTimeString()}`);
-            })
-            .catch(err => {
-                console.error('Error calling backend:', {
-                    message: err.message,
-                    response: err.response?.data,
-                    status: err.response?.status
-                });
-                setError(`Failed to connect to backend: ${err.response?.data?.message || err.message}`);
-                setBackendStatus('Error connecting to backend');
-            });
-    }, []);
+    //     // Call backend to log its environment variables
+    //     // Update the axios call in your useEffect
+    //     // In Testingvideosdkforenv.js, update the axios call to:
+    //     const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    //     axios.get(`${apiUrl}/api/log-env`)
+    //         .then(response => {
+    //             console.log('Backend response:', response.data);
+    //             setBackendStatus(`Backend variables logged at ${new Date().toLocaleTimeString()}`);
+    //         })
+    //         .catch(err => {
+    //             console.error('Error calling backend:', {
+    //                 message: err.message,
+    //                 response: err.response?.data,
+    //                 status: err.response?.status
+    //             });
+    //             setError(`Failed to connect to backend: ${err.response?.data?.message || err.message}`);
+    //             setBackendStatus('Error connecting to backend');
+    //         });
+    // }, []);
 
     return (
         <div className="p-6 max-w-4xl mx-auto">
             <h1 className="text-2xl font-bold mb-6">Environment Variables Test</h1>
 
-            <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400">
+            {/* <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400">
                 <h2 className="font-semibold mb-2">Backend Status:</h2>
                 <p className={error ? 'text-red-600' : 'text-green-600'}>
                     {error || backendStatus}
                 </p>
-            </div>
+            </div> */}
 
             <div className="bg-white shadow-md rounded-lg overflow-hidden mb-6">
                 <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
