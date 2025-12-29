@@ -1,11 +1,26 @@
 const express = require("express");
 const {
+  saveInterviewRound,
+  updateInterviewRound,
   updateInterviewRoundStatus,
 } = require("../controllers/interviewRoundsController");
 const router = express.Router();
-// const { getAllInterviewRounds } = require('../controllers/interviewRoundsController.js');
+const loggingService = require("../middleware/loggingService");
 
-// router.get('/', getAllInterviewRounds);
+
+
+router.post(
+  "/save-round",
+  loggingService.internalLoggingMiddleware,
+  saveInterviewRound
+);
+
+//  interview round update routes
+router.patch(
+  "/update-round/:roundId",
+  loggingService.internalLoggingMiddleware,
+  updateInterviewRound
+);
 
 // Update interview round status
 router.patch("/:roundId/status", updateInterviewRoundStatus);

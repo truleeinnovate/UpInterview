@@ -82,7 +82,7 @@ exports.createRequest = async (req, res) => {
       isMockInterview,
       contactId,
     } = req.body;
-    const isInternal = interviewerType === "internal";
+    const isInternal = interviewerType === "Internal";
 
     // Generate custom request ID using centralized service with tenant ID
     const customRequestId = await generateUniqueId(

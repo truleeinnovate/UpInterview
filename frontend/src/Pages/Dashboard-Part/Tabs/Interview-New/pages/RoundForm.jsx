@@ -41,8 +41,8 @@ import LoadingButton from "../../../../../Components/LoadingButton";
 // v1.0.1 <----------------------------------------------------------------------------
 
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
-import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI.jsx";
-import { useQueryClient } from "@tanstack/react-query";
+// import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI.jsx";
+// import { useQueryClient } from "@tanstack/react-query";
 import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
 import InputField from "../../../../../Components/FormFields/InputField.jsx";
 import DescriptionField from "../../../../../Components/FormFields/DescriptionField.jsx";
@@ -1945,9 +1945,9 @@ const RoundFormInterviews = () => {
                 userId: undefined,
                 ...(interviewType === "scheduled" &&
                   formattedStartTime && {
-                    start_time: formattedStartTime,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  }),
+                  start_time: formattedStartTime,
+                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                }),
                 settings: {
                   join_before_host: true,
                   host_video: false,
@@ -1963,37 +1963,37 @@ const RoundFormInterviews = () => {
                 }
               );
             } else if (selectedMeetingPlatform === "videosdk") {
-                try {
-                  setMeetingCreationProgress("Creating VideoSDK meeting...");
+              try {
+                setMeetingCreationProgress("Creating VideoSDK meeting...");
 
-                  // Import the createMeeting function from VideoSDK api
-                  const { createMeeting } = await import('../../../../../VideoSDK1/api.js');
+                // Import the createMeeting function from VideoSDK api
+                const { createMeeting } = await import('../../../../../VideoSDK1/api.js');
 
-                  // Get the token - make sure you have this in your environment or state
-                  const token = process.env.REACT_APP_VIDEOSDK_TOKEN;
+                // Get the token - make sure you have this in your environment or state
+                const token = process.env.REACT_APP_VIDEOSDK_TOKEN;
 
-                  if (!token) {
-                    throw new Error("VideoSDK token is not configured");
-                  }
-
-                  // Create the meeting
-                  const { meetingId, err } = await createMeeting({ token });
-
-                  if (err) {
-                    throw new Error(err);
-                  }
-
-                  // Construct the meeting URL - adjust the path as needed
-                  meetingLink = `${window.location.origin}/videosdk-meeting?meetingId=${meetingId}`;
-
-                  setMeetingCreationProgress("Meeting created successfully");
-                } catch (error) {
-                  console.error("Error creating VideoSDK meeting:", error);
-                  setMeetingCreationProgress(`Error: ${error.message}`);
-                  setIsMeetingCreationLoading(false);
-                  return;
+                if (!token) {
+                  throw new Error("VideoSDK token is not configured");
                 }
+
+                // Create the meeting
+                const { meetingId, err } = await createMeeting({ token });
+
+                if (err) {
+                  throw new Error(err);
+                }
+
+                // Construct the meeting URL - adjust the path as needed
+                meetingLink = `${window.location.origin}/videosdk-meeting?meetingId=${meetingId}`;
+
+                setMeetingCreationProgress("Meeting created successfully");
+              } catch (error) {
+                console.error("Error creating VideoSDK meeting:", error);
+                setMeetingCreationProgress(`Error: ${error.message}`);
+                setIsMeetingCreationLoading(false);
+                return;
               }
+            }
 
             // Fixed: was using undefined 'data'
             if (meetingLink) {
@@ -2086,64 +2086,65 @@ const RoundFormInterviews = () => {
         // Meeting platform link creation
         if (response.status === "ok") {
           // Handle Face to Face (no meeting link)
-          if (!shouldGenerateMeeting && selectedInterviewers?.length > 0) {
-            const faceToFaceRoundData = {
-              ...roundData,
-              status: isReschedule ? "Rescheduled" : "Scheduled",
-            };
+          // need to ask with ranjith why we use this code -ashraf
+          // if (!shouldGenerateMeeting && selectedInterviewers?.length > 0) {
+          //   const faceToFaceRoundData = {
+          //     ...roundData,
+          //     status: isReschedule ? "Rescheduled" : "Scheduled",
+          //   };
 
-            const updatePayload = {
-              interviewId,
-              roundId: targetRoundId,
-              round: faceToFaceRoundData,
-              ...(isEditing ? { questions: interviewQuestionsList } : {}),
-            };
+          //   const updatePayload = {
+          //     interviewId,
+          //     roundId: targetRoundId,
+          //     round: faceToFaceRoundData,
+          //     ...(isEditing ? { questions: interviewQuestionsList } : {}),
+          //   };
 
-            await updateInterviewRound(updatePayload);
-          }
+          //   await updateInterviewRound(updatePayload);
+          // }
 
           // ✅ Email sending logic (internal interviewers)
-          try {
-            const isInternal = selectedInterviewType === "Internal";
+          // try {
+          //   // const isInternal = selectedInterviewType === "Internal";
 
-            const shouldSendEmails =
-              payload?.round?.interviewMode !== "Face to Face" &&
-              Array.isArray(selectedInterviewers) &&
-              selectedInterviewers.length > 0;
+          //   // const shouldSendEmails =
+          //   //   selectedInterviewType === "Internal" &&
+          //   //   Array.isArray(selectedInterviewers) &&
+          //   //   selectedInterviewers.length > 0;
 
-            if (shouldSendEmails && isInternal) {
-              const emailResponse = await axios.post(
-                `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
-                {
-                  interviewId: interviewId,
-                  roundId: targetRoundId,
-                  sendEmails: true,
-                },
-                {
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${Cookies.get("authToken")}`,
-                  },
-                }
-              );
+          //   // if (shouldSendEmails && isInternal) {
+          //   //   const emailResponse = await axios.post(
+          //   //     `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
+          //   //     {
+          //   //       interviewId: interviewId,
+          //   //       roundId: targetRoundId,
+          //   //       sendEmails: true,
+          //   //     },
+          //   //     {
+          //   //       headers: {
+          //   //         "Content-Type": "application/json",
+          //   //         Authorization: `Bearer ${Cookies.get("authToken")}`,
+          //   //       },
+          //   //     }
+          //   //   );
 
-              if (emailResponse.data.success) {
-                successMessages.push(
-                  "Interview round created and emails sent successfully!"
-                );
-                if (emailResponse.data.data.emailsSent > 0) {
-                  successMessages.push(
-                    `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
-                  );
-                }
-              } else {
-                notify.error("Round created but email sending failed");
-              }
-            }
-          } catch (emailError) {
-            console.error("Error sending emails:", emailError);
-            notify.error("Round created but email sending failed");
-          }
+          //   //   if (emailResponse.data.success) {
+          //   //     successMessages.push(
+          //   //       "Interview round created and emails sent successfully!"
+          //   //     );
+          //   //     if (emailResponse.data.data.emailsSent > 0) {
+          //   //       successMessages.push(
+          //   //         `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
+          //   //       );
+          //   //     }
+          //   //   } else {
+          //   //     notify.error("Round created but email sending failed");
+          //   //   }
+          //   // }
+          // } catch (emailError) {
+          //   console.error("Error sending emails:", emailError);
+          //   notify.error("Round created but email sending failed");
+          // }
 
           // ✅ Show all collected success messages sequentially
           for (const [i, msg] of successMessages.entries()) {
@@ -2669,8 +2670,8 @@ const RoundFormInterviews = () => {
                                                   </span>
                                                   <ChevronUp
                                                     className={`transform transition-transform ${expandedSections[sectionId]
-                                                        ? ""
-                                                        : "rotate-180"
+                                                      ? ""
+                                                      : "rotate-180"
                                                       }`}
                                                   />
                                                 </button>
@@ -2715,10 +2716,10 @@ const RoundFormInterviews = () => {
                                                               </div>
                                                               <ChevronDown
                                                                 className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
-                                                                    question._id
-                                                                  ]
-                                                                    ? "transform rotate-180"
-                                                                    : ""
+                                                                  question._id
+                                                                ]
+                                                                  ? "transform rotate-180"
+                                                                  : ""
                                                                   }`}
                                                               />
                                                             </div>
@@ -2772,11 +2773,11 @@ const RoundFormInterviews = () => {
                                                                                 }
                                                                                 //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
                                                                                 className={`text-sm p-2 rounded border ${option ===
-                                                                                    question
-                                                                                      .snapshot
-                                                                                      .correctAnswer
-                                                                                    ? "bg-green-50 border-green-200 text-green-800"
-                                                                                    : "bg-gray-50 border-gray-200"
+                                                                                  question
+                                                                                    .snapshot
+                                                                                    .correctAnswer
+                                                                                  ? "bg-green-50 border-green-200 text-green-800"
+                                                                                  : "bg-gray-50 border-gray-200"
                                                                                   }`}
                                                                               >
                                                                                 {
@@ -2875,21 +2876,21 @@ const RoundFormInterviews = () => {
                             // onClick={() => setInterviewType("instant")}
                             onClick={() => handleInterviewTypeChange("instant")}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                             key="instant-btn"
                           >
                             <Clock
                               className={`h-6 w-6 ${interviewType === "instant"
-                                  ? "text-custom-blue/70"
-                                  : "text-gray-400"
+                                ? "text-custom-blue/70"
+                                : "text-gray-400"
                                 }`}
                             />
                             <span
                               className={`mt-2 font-medium ${interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
                                 }`}
                             >
                               Instant Interview
@@ -2906,21 +2907,21 @@ const RoundFormInterviews = () => {
                             } // Use new handler
                             // onClick={() => setInterviewType("scheduled")}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                             key="scheduled-btn"
                           >
                             <Calendar
                               className={`h-6 w-6 ${interviewType === "scheduled"
-                                  ? "text-custom-blue/70"
-                                  : "text-gray-400"
+                                ? "text-custom-blue/70"
+                                : "text-gray-400"
                                 }`}
                             />
                             <span
                               className={`mt-2 font-medium ${interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
                                 }`}
                             >
                               Schedule for Later
@@ -3076,25 +3077,25 @@ const RoundFormInterviews = () => {
                                 // - Editing/rescheduling and original type was External
                                 // - Or currently External is selected (in create mode)
                                 (isEditing || isReschedule) &&
-                                roundEditData?.interviewerType === "External"
+                                  roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
                               }
                               disabled={
                                 ((isEditing || isReschedule) &&
                                   roundEditData?.interviewerType ===
-                                    "External") ||
+                                  "External") ||
                                 isExternalSelected
                               }
                               title={
                                 (isEditing || isReschedule) &&
-                                roundEditData?.interviewerType === "External"
+                                  roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
                                   : isExternalSelected
-                                  ? "Clear outsourced interviewers first"
-                                  : ""
+                                    ? "Clear outsourced interviewers first"
+                                    : ""
                               }
                             >
                               <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
@@ -3111,25 +3112,25 @@ const RoundFormInterviews = () => {
                               size="sm"
                               className={
                                 (isEditing || isReschedule) &&
-                                roundEditData?.interviewerType === "External"
+                                  roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
                               }
                               disabled={
                                 ((isEditing || isReschedule) &&
                                   roundEditData?.interviewerType ===
-                                    "External") ||
+                                  "External") ||
                                 isExternalSelected
                               }
                               title={
                                 (isEditing || isReschedule) &&
-                                roundEditData?.interviewerType === "External"
+                                  roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
                                   : isExternalSelected
-                                  ? "Clear outsourced interviewers first"
-                                  : ""
+                                    ? "Clear outsourced interviewers first"
+                                    : ""
                               }
                             >
                               <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
@@ -3148,29 +3149,29 @@ const RoundFormInterviews = () => {
                             size="sm"
                             className={
                               (isEditing || isReschedule) &&
-                              roundEditData?.interviewerType === "Internal"
+                                roundEditData?.interviewerType === "Internal"
                                 ? "opacity-50 cursor-not-allowed"
                                 : isInternalSelected ||
                                   interviewMode === "Face to Face"
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
                             }
                             disabled={
                               ((isEditing || isReschedule) &&
                                 roundEditData?.interviewerType ===
-                                  "Internal") ||
+                                "Internal") ||
                               isInternalSelected ||
                               interviewMode === "Face to Face"
                             }
                             title={
                               (isEditing || isReschedule) &&
-                              roundEditData?.interviewerType === "Internal"
+                                roundEditData?.interviewerType === "Internal"
                                 ? "Cannot change from Internal to Outsourced interviewers in edit/reschedule"
                                 : isInternalSelected
-                                ? "Clear internal interviewers first"
-                                : interviewMode === "Face to Face"
-                                ? "Outsourced interviewers not allowed for Face-to-Face"
-                                : ""
+                                  ? "Clear internal interviewers first"
+                                  : interviewMode === "Face to Face"
+                                    ? "Outsourced interviewers not allowed for Face-to-Face"
+                                    : ""
                             }
                           >
                             <Users className="h-4 w-4 sm:mr-0 mr-1 text-orange-600" />
@@ -3459,8 +3460,8 @@ const RoundFormInterviews = () => {
                                       <li
                                         key={qIndex}
                                         className={`flex justify-between items-center p-3 border rounded-md ${isMandatory
-                                            ? "border-red-500"
-                                            : "border-gray-300"
+                                          ? "border-red-500"
+                                          : "border-gray-300"
                                           }`}
                                       >
                                         <span className="text-gray-900 font-medium">
@@ -3631,8 +3632,8 @@ const RoundFormInterviews = () => {
           // defaultViewType={interviewerViewType}
           selectedGroupName={interviewerGroupName}
           selectedGroupId={interviewerGroupId}
-          // key={`${internalInterviewers.length}-${interviewerGroupId}`}
-          //  clearOnViewTypeChange={true}
+        // key={`${internalInterviewers.length}-${interviewerGroupId}`}
+        //  clearOnViewTypeChange={true}
         />
       )}
     </div>
