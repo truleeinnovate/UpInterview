@@ -687,7 +687,7 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       type,
     } = req.body;
 
-    console.log("req.body", req.body);
+    console.log("req.body sendOutsourceInterviewRequestEmails", req.body);
 
     // Set company name and support email from environment variables or defaults
     const companyName = process.env.COMPANY_NAME || "UpInterview";
