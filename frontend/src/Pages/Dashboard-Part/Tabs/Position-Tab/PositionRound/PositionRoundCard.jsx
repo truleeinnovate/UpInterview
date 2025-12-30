@@ -24,6 +24,7 @@ import {
   // Users,
   User,
   ExternalLink,
+  BarChart3,
   // X,
   // Expand,
   // Minimize,
@@ -744,7 +745,8 @@ const PositionRoundCard = ({
             size="sm"
             className="flex items-center"
           >
-            <Clock className="h-4 w-4 mr-1" />
+            {/* <Clock className="h-4 w-4 mr-1" /> */}
+            <BarChart3 className="h-4 w-4 mr-1" />
             <span>Feeds</span>
           </Button>
 
@@ -826,7 +828,11 @@ const PositionRoundCard = ({
       {/* BACKDROP WHEN ACTIVITY PANEL IS OPEN */}
       {/* v1.0.4 <------------------------------------------------------------------------------ */}
       {showActivityPanel && (
-        <SidebarPopup title="Feeds" onClose={toggleActivityPanel}>
+        <SidebarPopup
+          title="Feeds"
+          onClose={toggleActivityPanel}
+          icon={<BarChart3 />}
+        >
           <div className="sm:p-0 p-4">
             <Activity
               parentId={round?._id}
