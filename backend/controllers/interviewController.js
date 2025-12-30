@@ -38,7 +38,7 @@ const {
 } = require("./candidatePositionController.js");
 // const { createInterviewRequest } = require("../utils/interviewRequest.js");
 const InterviewRequest = require("../models/InterviewRequest.js");
-const { createRequest } = require("./InterviewRequestController.js");
+// const { createRequest } = require("./InterviewRequestController.js");
 // const {
 //   shareAssessment,
 // } = require("./EmailsController/assessmentEmailController.js");
@@ -845,8 +845,6 @@ const updateInterview = async (req, res) => {
 //     const oldStatusForWebhook = undefined;
 //     savedRound = await newInterviewRound.save();
 
-
-
 //     const interview = await Interview.findById(interviewId).lean();
 //     console.log("interview", interview);
 
@@ -873,7 +871,6 @@ const updateInterview = async (req, res) => {
 //         { new: true }
 //       );
 //     }
-
 
 //     // =================== start == assessment mails sending functionality == start ========================
 
@@ -1230,14 +1227,12 @@ const updateInterview = async (req, res) => {
 //       isEdit: true, // 🔥 dummy for now
 //     });
 
-
 //     await InterviewRounds.findByIdAndUpdate(
 //       roundId,
 //       { status: "RequestSent" },
 //       { new: true }
 //     );
 //   }
-
 
 //   return res.status(200).json({
 //     message: "Round updated successfully",
@@ -1349,8 +1344,6 @@ const updateInterview = async (req, res) => {
 //     }
 //   );
 // }
-
-
 
 // function detectRoundChanges({
 //   existingRound,
@@ -1748,59 +1741,6 @@ const updateInterview = async (req, res) => {
 // };
 
 // Helper function to trigger webhook for interview round status updates
-const triggerInterviewRoundStatusUpdated = async (
-  round,
-  oldStatus,
-  interview = null
-) => {
-  try {
-    // Skip if no status change or if status is not set
-    if (!round.status || round.status === oldStatus) {
-      return;
-    }
-
-    // Skip draft status as per requirements
-    if (round.status === "Draft") {
-      return;
-    }
-
-    // If interview is not provided, fetch it
-    if (!interview) {
-      interview = await Interview.findById(round.interviewId).lean();
-      if (!interview) {
-        console.error("Interview not found for round:", round._id);
-        return;
-      }
-    }
-
-    // Prepare the webhook data
-    const webhookData = {
-      interviewId: interview._id,
-      interviewCode: interview.interviewCode,
-      roundId: round._id,
-      roundTitle: round.roundTitle,
-      previousStatus: oldStatus,
-      newStatus: round.status,
-      updatedAt: new Date().toISOString(),
-      candidateId: interview.candidateId,
-      positionId: interview.positionId,
-      tenantId: interview.tenantId,
-    };
-
-    // Trigger the webhook
-    await triggerWebhook(
-      EVENT_TYPES.INTERVIEW_ROUND_STATUS_UPDATED,
-      webhookData,
-      interview.tenantId
-    );
-
-    console.log(
-      `Webhook triggered for interview round ${round._id} status change: ${oldStatus} -> ${round.status}`
-    );
-  } catch (error) {
-    console.error("Error in triggerInterviewRoundStatusUpdated:", error);
-  }
-};
 
 // v1.0.2 <-----------------------------------------
 
@@ -2280,26 +2220,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-        from: "mockinterviews",
-        localField: "mockInterviewId",
-        foreignField: "_id",
-        as: "mainInterview",
-      }
+          from: "mockinterviews",
+          localField: "mockInterviewId",
+          foreignField: "_id",
+          as: "mainInterview",
+        }
       : {
-        from: "interviews",
-        localField: "interviewId",
-        foreignField: "_id",
-        as: "mainInterview",
-      };
+          from: "interviews",
+          localField: "interviewId",
+          foreignField: "_id",
+          as: "mainInterview",
+        };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2321,23 +2261,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-          {
-            $addFields: {
-              mainTenantIdNormalized: {
-                $cond: [
-                  {
-                    $and: [
-                      { $ne: ["$mainInterview.tenantId", null] },
-                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                    ],
-                  },
-                  { $toObjectId: "$mainInterview.tenantId" },
-                  null,
-                ],
+            {
+              $addFields: {
+                mainTenantIdNormalized: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $ne: ["$mainInterview.tenantId", null] },
+                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                      ],
+                    },
+                    { $toObjectId: "$mainInterview.tenantId" },
+                    null,
+                  ],
+                },
               },
             },
-          },
-        ]
+          ]
         : []),
       // Lookup tenant for organization info
       {
@@ -2701,13 +2641,13 @@ const getInterviewRoundTransaction = async (req, res) => {
 
     if (wallet && Array.isArray(wallet.transactions)) {
       roundTransactions = wallet.transactions
-        .filter(t => t.metadata && t.metadata.roundId === roundIdStr)
+        .filter((t) => t.metadata && t.metadata.roundId === roundIdStr)
         .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); // Ascending chronological
 
       // Active hold: latest hold not completed
       const activeHold = [...roundTransactions]
         .reverse()
-        .find(t => t.type === "hold" && t.status !== "completed");
+        .find((t) => t.type === "hold" && t.status !== "completed");
 
       if (activeHold) {
         activeHoldTransactionId = activeHold._id.toString();
@@ -2716,12 +2656,16 @@ const getInterviewRoundTransaction = async (req, res) => {
 
       // Check if settled: look for a debit with settlementStatus completed
       const settlementTx = roundTransactions.find(
-        t => t.type === "debit" && t.metadata && t.metadata.settlementStatus === "completed"
+        (t) =>
+          t.type === "debit" &&
+          t.metadata &&
+          t.metadata.settlementStatus === "completed"
       );
 
       if (settlementTx) {
         settlementStatus = "completed";
-        settlementDate = settlementTx.metadata.settledAt || settlementTx.createdAt;
+        settlementDate =
+          settlementTx.metadata.settledAt || settlementTx.createdAt;
       }
     }
 
@@ -2842,9 +2786,6 @@ const getInterviewRoundTransaction = async (req, res) => {
 //         }
 //       }
 
-
-
-
 //       return {
 //         ...round,
 //         interviewers,
@@ -2868,7 +2809,6 @@ const getInterviewRoundTransaction = async (req, res) => {
 //   }
 // };
 
-
 const getInterviewDataforOrg = async (req, res) => {
   try {
     const { interviewId } = req.params;
@@ -2877,7 +2817,8 @@ const getInterviewDataforOrg = async (req, res) => {
     const interview = await Interview.findById(interviewId)
       .populate({
         path: "candidateId",
-        select: "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
+        select:
+          "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
       })
       .populate({
         path: "positionId",
