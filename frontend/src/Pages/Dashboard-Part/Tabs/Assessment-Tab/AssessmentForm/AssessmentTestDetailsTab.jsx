@@ -39,23 +39,23 @@ const AssessmentTestDetailsTab = ({
             </label>
             <div className="flex flex-wrap gap-4 mt-1 sm:ml-0 md:ml-0 ml-8">
               <p className="flex items-center">
-                <input type="checkbox" className="mr-2" checked disabled />
+                <input type="checkbox" className="mr-2 accent-custom-blue" checked disabled />
                 First Name
               </p>
               <p className="flex items-center">
-                <input type="checkbox" className="mr-2" checked disabled />
+                <input type="checkbox" className="mr-2 accent-custom-blue" checked disabled />
                 Last Name
               </p>
               <p className="flex items-center">
-                <input type="checkbox" className="mr-2" checked disabled />
+                <input type="checkbox" className="mr-2 accent-custom-blue" checked disabled />
                 Email
               </p>
               <p className="flex items-center">
-                <input type="checkbox" className="mr-2" checked disabled />
+                <input type="checkbox" className="mr-2 accent-custom-blue" checked disabled />
                 Skills
               </p>
               <p className="flex items-center">
-                <input type="checkbox" className="mr-2" checked disabled />
+                <input type="checkbox" className="mr-2 accent-custom-blue" checked disabled />
                 Current Experience
               </p>
             </div>
@@ -68,7 +68,7 @@ const AssessmentTestDetailsTab = ({
             <p className="flex items-center">
               <input
                 type="checkbox"
-                className="mr-2"
+                className="mr-2 accent-custom-blue"
                 name="includePhone"
                 checked={includePhone}
                 onChange={handleCheckboxChange}
@@ -78,7 +78,7 @@ const AssessmentTestDetailsTab = ({
             <p className="flex items-center">
               <input
                 type="checkbox"
-                className="mr-2"
+                className="mr-2 accent-custom-blue"
                 name="includePosition"
                 checked={includePosition}
                 onChange={handleCheckboxChange}

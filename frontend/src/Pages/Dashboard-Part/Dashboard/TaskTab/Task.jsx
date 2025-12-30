@@ -57,6 +57,7 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
 // v1.0.8 <-----------------------------------------------------------------------
+import { formatDateTime } from "../../../../utils/dateFormatter.js";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -669,7 +670,7 @@ const Task = () => {
     {
       key: "dueDate",
       header: "Due Date",
-      render: (value) => new Date(value).toLocaleDateString() || "N/A",
+      render: (value) => formatDateTime(value) || "N/A",
     },
   ];
 
@@ -826,7 +827,7 @@ const Task = () => {
                     ...task,
                     id: task._id || task.id,
                     title: task?.taskCode,
-                    subTitle: formatDate(task?.dueDate),
+                    subTitle: formatDateTime(task?.dueDate),
                   }))}
                   columns={kanbanColumns}
                   renderActions={(item) => (

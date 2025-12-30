@@ -345,6 +345,28 @@ const updatePosition = async (req, res) => {
 
     await updatedPosition.save();
 
+    const formatValue = (val) => {
+      if (val === null || val === undefined) return "None";
+
+      // If it's an array of skills, map the skill names
+      if (Array.isArray(val)) {
+        if (val.length === 0) return "Empty List";
+        // Check if it's the skills array (objects with a 'skill' property)
+        if (val[0] && typeof val[0] === "object" && val[0].skill) {
+          return val.map((s) => s.skill).join(", ");
+        }
+        // Fallback for other arrays
+        return JSON.stringify(val);
+      }
+
+      // If it's a single object (that isn't an array)
+      if (typeof val === "object") {
+        return JSON.stringify(val);
+      }
+
+      return val.toString();
+    };
+
     // NEW: Generate proper field messages with formatted values
     const fieldMessages = changes.map(
       ({ fieldName, formattedOldValue, formattedNewValue }) => ({
@@ -369,7 +391,8 @@ const updatePosition = async (req, res) => {
       // fieldMessage: fieldMessages,
       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
         fieldName,
-        message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
+        // message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
+        message: `${fieldName} updated from '${formatValue(oldValue)}' to '${formatValue(newValue)}'`,
       })),
       history: changes,
     };

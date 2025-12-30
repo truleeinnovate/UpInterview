@@ -396,6 +396,22 @@ exports.newAssessment = async (req, res) => {
       // Continue execution even if notification fails
     }
 
+    // Generate feed for assessment creation
+    res.locals.feedData = {
+      tenantId: tenantId || "",
+      feedType: "info",
+      action: {
+        name: "assessment_created",
+        description: `Assessment was created successfully`,
+      },
+      ownerId: ownerId || "",
+      parentId: assessment._id,
+      parentObject: "Assessment",
+      metadata: req.body,
+      severity: res.statusCode >= 500 ? "high" : "low",
+      message: `Assessment was created successfully`,
+    };
+
     // Generate logs for successful assessment creation
     res.locals.logData = {
       tenantId: tenantId || "",
@@ -490,6 +506,92 @@ exports.updateAssessment = async (req, res) => {
         message: "Assessment not found",
       });
     }
+
+    // Detect changes between current assessment and incoming updateData
+    const changes = [];
+    const excludedFields = [
+      "_id",
+      "__v",
+      "createdAt",
+      "updatedAt",
+      "tenantId",
+      "ownerId",
+    ];
+
+    Object.keys(updateData).forEach((key) => {
+      if (excludedFields.includes(key)) return;
+
+      const oldValue = currentAssessment[key];
+      const newValue = updateData[key];
+
+      // Comparison for objects/arrays vs primitives
+      const isDifferent =
+        typeof oldValue === "object" && oldValue !== null
+          ? JSON.stringify(oldValue) !== JSON.stringify(newValue)
+          : oldValue !== newValue;
+
+      if (isDifferent) {
+        changes.push({
+          fieldName: key,
+          oldValue,
+          newValue,
+        });
+      }
+    });
+
+    const isEmptyValue = (val) => {
+      return (
+        val === null ||
+        val === undefined ||
+        (typeof val === "string" && val.trim() === "")
+      );
+    };
+
+    // Helper to format values for the message string
+    const formatValue = (val) => {
+      if (val === null || val === undefined) return "None";
+
+      // If it's an array of skills, map the skill names
+      if (Array.isArray(val)) {
+        if (val.length === 0) return "Empty List";
+        // Check if it's the skills array (objects with a 'skill' property)
+        if (val[0] && typeof val[0] === "object" && val[0].skill) {
+          return val.map((s) => s.skill).join(", ");
+        }
+        // Fallback for other arrays
+        return JSON.stringify(val);
+      }
+
+      // If it's a single object (that isn't an array)
+      if (typeof val === "object") {
+        return JSON.stringify(val);
+      }
+
+      return val.toString();
+    };
+
+    // Only set feedData and logData when there are actual changes
+    res.locals.feedData = {
+      tenantId: updatedAssessment?.tenantId || req.body?.tenantId || "",
+      feedType: "update",
+      action: {
+        name: "assessment_updated",
+        description: `Assessment was updated`,
+      },
+      ownerId: updatedAssessment?.ownerId || req.body?.ownerId || "",
+      parentId: updatedAssessment?._id,
+      parentObject: "Assessment",
+      metadata: req.body,
+      severity: res.statusCode >= 500 ? "high" : "low",
+      fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
+        fieldName,
+        message: `${fieldName} updated from '${formatValue(
+          oldValue
+        )}' to '${formatValue(newValue)}'`,
+      })),
+      history: changes,
+    };
+
     // Generate logs for successful update
     res.locals.logData = {
       tenantId: updatedAssessment?.tenantId || req.body?.tenantId || "",
@@ -804,7 +906,23 @@ exports.createList = async (req, res) => {
       ownerId,
       tenantId,
     });
-    
+
+    // Generate feed for assessment creation
+    res.locals.feedData = {
+      tenantId: tenantId || "",
+      feedType: "info",
+      action: {
+        name: "assessment_list_created",
+        description: `Assessment list was created successfully`,
+      },
+      ownerId: ownerId || "",
+      parentId: req.body._id,
+      parentObject: "AssessmentList",
+      metadata: req.body,
+      severity: res.statusCode >= 500 ? "high" : "low",
+      message: `Assessment list was created successfully`,
+    };
+
     // Generate logs for successful list creation
     res.locals.logData = {
       tenantId: tenantId || "",

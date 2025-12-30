@@ -19,6 +19,7 @@ import {
   Activity,
   ArrowLeft,
   Pencil,
+  BarChart3,
 } from "lucide-react";
 // v1.0.0 -------------------------------------------------------->
 import { useInterviews } from "../../../../../apiHooks/useInterviews";
@@ -45,7 +46,8 @@ const tabs = [
   { id: "positions", name: "Positions", icon: Briefcase },
   { id: "timeline", name: "Timeline", icon: Calendar },
   { id: "documents", name: "Documents", icon: FileText },
-  { id: "activity", name: "Feeds", icon: Activity },
+  // { id: "activity", name: "Feeds", icon: Activity },
+  { id: "activity", name: "Feeds", icon: BarChart3 },
 ];
 // v1.0.0 -------------------------------------------------------->
 
