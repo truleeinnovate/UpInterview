@@ -104,10 +104,19 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      # ✅ DEBUG STEP — CHECK ENV IS AVAILABLE
+      - name: Debug envs
+        working-directory: ./frontend
+        env:
+          REACT_APP_TEST: ${{ secrets.REACT_APP_TEST }}
+        run: |
+          echo "REACT_APP_TEST=$REACT_APP_TEST"
+
       - name: Build application
         working-directory: ./frontend
         env:
           CI: false
+
           # LinkedIn OAuth configuration
           REACT_APP_CLIENT_ID: ${{ secrets.REACT_APP_CLIENT_ID }}
           REACT_APP_CLIENT_SECRET: ${{ secrets.REACT_APP_CLIENT_SECRET }}
@@ -117,11 +126,11 @@ jobs:
           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
           REACT_APP_API_URL_FRONTEND: ${{ secrets.REACT_APP_API_URL_FRONTEND }}
 
-          # video sdk token
-          REACT_APP_VIDEOSDK_TOKEN: ${{ secrets.REACT_APP_VIDEOSDK_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJjYTUyZjUzZi0yZjZkLTQ2NWEtYmViMS0wYTIyMzMzYmJiZDYiLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sInJvbGVzIjpbInJ0YyJdLCJpYXQiOjE3NjYzNzkzMTIsImV4cCI6MTc3NDE1NTMxMn0.PdOC43E72xlz7pHXQn7g5dlM66prKjRlgqk6st5lydI' }}
+          # Video SDK
+          REACT_APP_VIDEOSDK_TOKEN: ${{ secrets.REACT_APP_VIDEOSDK_TOKEN }}
+          REACT_APP_VIDEOSDK_TOKEN1: ${{ secrets.REACT_APP_VIDEOSDK_TOKEN1 }}
 
-          REACT_APP_VIDEOSDK_TOKEN1: ${{ secrets.REACT_APP_VIDEOSDK_TOKEN1 || 'random-value-duplicated-for-video-sdk-token' }}
-
+          # ✅ TEST ENV
           REACT_APP_TEST: ${{ secrets.REACT_APP_TEST }}
 
           # Google OAuth configuration
@@ -129,7 +138,24 @@ jobs:
           REACT_APP_GOOGLE_CLIENT_ID: ${{ secrets.REACT_APP_GOOGLE_CLIENT_ID }}
           REACT_APP_GOOGLE_REDIRECT_URI: ${{ secrets.REACT_APP_GOOGLE_REDIRECT_URI }}
           REACT_APP_GOOGLE_SCOPES: ${{ secrets.REACT_APP_GOOGLE_SCOPES }}
+
         run: npm run build
+
+      - name: Create optimized deployment package
+        working-directory: ./frontend
+        run: |
+          mkdir -p release
+          cp -r build release/
+          cd release && zip -r ../release.zip .
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'dev-frontend-upinterview'
+          slot-name: 'production'
+          package: ./frontend/release.zip
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DEV_FRONTEND }}
+          clean: true
 
       - name: Create optimized deployment package
         working-directory: ./frontend

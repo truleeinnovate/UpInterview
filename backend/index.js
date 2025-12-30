@@ -1897,44 +1897,6 @@ app.use("/analytics", analyticsRoutes);
 // v1
 // get
 
-// Add this at the very top of your index.js
-console.log('\n===== Backend Starting =====');
-console.log('Current Time:', new Date().toISOString());
-console.log('Node.js Version:', process.version);
-console.log('NODE_ENV:', process.env.NODE_ENV);
-
-// Your existing code...
-
-// Add this where you want to log the VIDEOSDK variables
-console.log('\n===== VideoSDK Configuration =====');
-console.log('VIDEOSDK_API_KEY:', process.env.VIDEOSDK_API_KEY || 'Not set');
-console.log('VIDEOSDK_SECRET_KEY:', process.env.VIDEOSDK_SECRET_KEY || 'Not set');
-console.log('VIDEOSDK_API_ENDPOINT:', process.env.VIDEOSDK_API_ENDPOINT || 'Not set');
-console.log('=================================\n');
-
-// After MongoDB connection
-mongoose.connection.on('connected', () => {
-  console.log('\n===== MongoDB Connection =====');
-  console.log('MongoDB connected successfully');
-  console.log('Host:', mongoose.connection.host);
-  console.log('Database:', mongoose.connection.name);
-  console.log('=================================\n');
-});
-
-// Add error handling
-mongoose.connection.on('error', (err) => {
-  console.error('\n===== MongoDB Connection Error =====');
-  console.error('MongoDB connection error:', err);
-  console.error('===================================\n');
-});
-
-// When the connection is disconnected
-mongoose.connection.on('disconnected', () => {
-  console.log('\n===== MongoDB Disconnected =====');
-  console.log('MongoDB connection disconnected');
-  console.log('================================\n');
-});
-
 app.get("/get-token", (req, res) => {
   const API_KEY = process.env.VIDEOSDK_API_KEY;
   const SECRET_KEY = process.env.VIDEOSDK_SECRET_KEY;
