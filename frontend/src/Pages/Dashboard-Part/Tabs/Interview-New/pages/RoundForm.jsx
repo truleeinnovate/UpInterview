@@ -3340,25 +3340,46 @@ const RoundFormInterviews = () => {
                         ) : (
                           <div>
                             <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center">
-                                <Users className="h-4 w-4 text-gray-500 mr-2" />
-                                <span className="text-sm text-gray-700">
-                                  {selectedInterviewers.length} Interviewer
-                                  {selectedInterviewers.length > 1 ? "s " : " "}
-                                  <span className="sm:hidden inline ml-1">
-                                    Selected
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center">
+                                  <Users className="h-4 w-4 text-gray-500 mr-2" />
+                                  <span className="text-sm text-gray-700">
+                                    {selectedInterviewers.length} Interviewer
+                                    {selectedInterviewers.length > 1
+                                      ? "s "
+                                      : " "}
+                                    <span className="sm:hidden inline ml-1">
+                                      Selected
+                                    </span>
+                                    {isInternalSelected && (
+                                      <span className="ml-1 px-2 py-0.5 bg-blue-100 text-custom-blue rounded-full text-xs">
+                                        Internal
+                                      </span>
+                                    )}
+                                    {isExternalSelected && (
+                                      <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
+                                        Outsourced
+                                      </span>
+                                    )}
                                   </span>
-                                  {isInternalSelected && (
-                                    <span className="ml-1 px-2 py-0.5 bg-blue-100 text-custom-blue rounded-full text-xs">
-                                      Internal
-                                    </span>
+                                </div>
+
+                                {/* === ADD THIS NEW SECTION HERE === */}
+                                {/* Pending Request Status Badge */}
+                                {isExternalSelected &&
+                                  status === "RequestSent" &&
+                                  externalInterviewers.length > 0 && (
+                                    <div className="ml-3 inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-1.5 rounded-full">
+                                      <Clock className="h-3 w-3 mr-1.5" />
+                                      <span>
+                                        {externalInterviewers.length} Pending
+                                      </span>
+                                      <span className="ml-1.5 text-yellow-600 text-xs">
+                                        (not accepted)
+                                      </span>
+                                    </div>
                                   )}
-                                  {isExternalSelected && (
-                                    <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
-                                      Outsourced
-                                    </span>
-                                  )}
-                                </span>
+                                {/* === END OF NEW SECTION === */}
                               </div>
                               {selectedInterviewers.length > 0 && (
                                 <button
@@ -3614,6 +3635,7 @@ const RoundFormInterviews = () => {
                           {errors.interviewers}
                         </p>
                       )}
+
                       {/* questions */}
                       <div className="mt-4">
                         <div className="py-3 mx-auto rounded-md">

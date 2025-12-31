@@ -905,15 +905,65 @@ async function handleInternalRoundEmails({
   );
 }
 
+// function detectRoundChanges({
+//   existingRound,
+//   incomingRound,
+//   selectedInterviewers,
+// }) {
+//   const changes = {
+//     statusChanged: false,
+//     dateTimeChanged: false,
+//     interviewersChanged: false,
+//     anyChange: false,
+//   };
+
+//   // Status change
+//   if (incomingRound.status && incomingRound.status !== existingRound.status) {
+//     changes.statusChanged = true;
+//     changes.anyChange = true;
+//   }
+
+//   // DateTime change
+//   if (
+//     incomingRound.dateTime &&
+//     new Date(incomingRound.dateTime).getTime() !==
+//       new Date(existingRound.dateTime).getTime()
+//   ) {
+//     changes.dateTimeChanged = true;
+//     changes.anyChange = true;
+//   }
+
+//   // Interviewers change
+//   const oldIds = (existingRound.interviewers || [])
+//     .map((i) => String(i.contact?._id || i._id))
+//     .sort();
+
+//   const newIds = (selectedInterviewers || [])
+//     .map((i) => String(i.contact?._id || i._id))
+//     .sort();
+
+//   if (JSON.stringify(oldIds) !== JSON.stringify(newIds)) {
+//     changes.interviewersChanged = true;
+//     changes.anyChange = true;
+//   }
+
+//   return changes;
+// }
+
 function detectRoundChanges({
   existingRound,
   incomingRound,
-  selectedInterviewers,
+  selectedInterviewers = [],
+  compareInterviewers = true,
+  compareQuestions = true,
+  compareInstructions = true,
 }) {
   const changes = {
     statusChanged: false,
     dateTimeChanged: false,
-    interviewersChanged: false,
+    // interviewersChanged: false,
+    instructionsChanged: false, // ✅ NEW
+    questionsChanged: false, // ✅ NEW
     anyChange: false,
   };
 
@@ -933,18 +983,41 @@ function detectRoundChanges({
     changes.anyChange = true;
   }
 
-  // Interviewers change
-  const oldIds = (existingRound.interviewers || [])
-    .map((i) => String(i.contact?._id || i._id))
-    .sort();
+  // Interviewers change (optional)
+  // if (compareInterviewers) {
+  //   const oldIds = (existingRound.interviewers || [])
+  //     .map((i) => String(i.contact?._id || i._id))
+  //     .sort();
 
-  const newIds = (selectedInterviewers || [])
-    .map((i) => String(i.contact?._id || i._id))
-    .sort();
+  //   const newIds = (selectedInterviewers || [])
+  //     .map((i) => String(i.contact?._id || i._id))
+  //     .sort();
 
-  if (JSON.stringify(oldIds) !== JSON.stringify(newIds)) {
-    changes.interviewersChanged = true;
+  //   if (JSON.stringify(oldIds) !== JSON.stringify(newIds)) {
+  //     changes.interviewersChanged = true;
+  //     changes.anyChange = true;
+  //   }
+  // }
+
+  // Instructions change (optional)
+  if (
+    compareInstructions &&
+    incomingRound.instructions !== undefined &&
+    incomingRound.instructions !== existingRound.instructions
+  ) {
+    changes.instructionsChanged = true;
     changes.anyChange = true;
+  }
+
+  // Questions change (optional – deep compare)
+  if (compareQuestions) {
+    const oldQuestions = JSON.stringify(existingRound.questions || []);
+    const newQuestions = JSON.stringify(incomingRound.questions || []);
+
+    if (oldQuestions !== newQuestions) {
+      changes.questionsChanged = true;
+      changes.anyChange = true;
+    }
   }
 
   return changes;
