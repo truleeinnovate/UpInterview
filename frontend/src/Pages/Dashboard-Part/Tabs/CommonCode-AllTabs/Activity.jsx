@@ -482,7 +482,6 @@ function Activity({ parentId, parentId2, mode }) {
       case "position_updated":
       case "ticket_updated":
       case "task_updated":
-      case "assessment_updated":
         // Don't show update cases for Position Round parentObject
 
         return (
@@ -564,6 +563,84 @@ function Activity({ parentId, parentId2, mode }) {
                 )
             ) : (
               <div>No changes recorded</div>
+            )}
+          </div>
+        );
+
+      // Case for Multi-step forms
+      case "assessment_updated":
+        // Define a comprehensive list of system fields to ignore
+        const EXCLUDED_FIELDS = [
+          "id",
+          "_id",
+          "tenantId",
+          "__v",
+          "ownerId",
+          "createdBy",
+          "updatedBy",
+          "createdAt",
+          "updatedAt",
+          "LastModifiedById",
+          "CreatedBy",
+          "CreatedDate",
+          "ModifiedDate",
+          "ModifiedBy",
+          "updated_by",
+          "created_by",
+        ];
+
+        return (
+          <div className="space-y-4">
+            {metadata?.steps ? (
+              metadata.steps.map((step, idx) => (
+                <div
+                  key={idx}
+                  className="border-l-2 border-custom-blue/30 pl-4 py-1"
+                >
+                  <h5 className="text-sm font-semibold text-gray-700 mb-2">
+                    {step.stepName || `Step ${idx + 1}`}
+                  </h5>
+                  <div className="grid grid-cols-1 gap-2">
+                    {Object.entries(step.data || {})
+                      .filter(([key]) => !EXCLUDED_FIELDS.includes(key))
+                      .map(([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex items-center space-x-2 text-sm"
+                        >
+                          <span className="text-gray-500 capitalize">
+                            {key.replace(/([A-Z])/g, " $1").trim()}:
+                          </span>
+                          <span className="font-medium text-gray-800">
+                            {formatValue(key, value)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              // Fallback for flat multi-feed summaries
+              <div className="bg-white/60 p-3 rounded-md border border-gray-100">
+                <p className="text-sm font-medium mb-2">Updates performed:</p>
+                <ul className="list-decimal list-inside text-sm space-y-1 text-gray-600">
+                  {fieldMessage
+                    ?.filter(
+                      (msg) =>
+                        !EXCLUDED_FIELDS.some(
+                          (field) =>
+                            msg.fieldName?.toLowerCase() ===
+                              field.toLowerCase() ||
+                            msg.message
+                              ?.toLowerCase()
+                              .includes(field.toLowerCase())
+                        )
+                    )
+                    .map((msg, i) => (
+                      <li key={i}>{msg.message}</li>
+                    ))}
+                </ul>
+              </div>
             )}
           </div>
         );

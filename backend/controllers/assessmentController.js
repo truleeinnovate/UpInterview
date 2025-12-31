@@ -396,6 +396,20 @@ exports.newAssessment = async (req, res) => {
       // Continue execution even if notification fails
     }
 
+    const populatedAssessment = await Assessment.findById(assessment._id)
+      .populate("Position", "title")
+      .populate("assessmentTemplateList", "categoryOrTechnology")
+      .lean();
+
+    const feedMetadata = {
+      AssessmentTitle: populatedAssessment.AssessmentTitle,
+      Position: populatedAssessment.Position?.title || "",
+      categoryOrTechnology:
+        populatedAssessment.assessmentTemplateList?.categoryOrTechnology || "",
+      DifficultyLevel: populatedAssessment.DifficultyLevel,
+      Duration: populatedAssessment.Duration,
+    };
+
     // Generate feed for assessment creation
     res.locals.feedData = {
       tenantId: tenantId || "",
@@ -407,7 +421,8 @@ exports.newAssessment = async (req, res) => {
       ownerId: ownerId || "",
       parentId: assessment._id,
       parentObject: "Assessment",
-      metadata: req.body,
+      // metadata: req.body,
+      metadata: feedMetadata,
       severity: res.statusCode >= 500 ? "high" : "low",
       message: `Assessment was created successfully`,
     };
@@ -570,6 +585,22 @@ exports.updateAssessment = async (req, res) => {
       return val.toString();
     };
 
+    const populatedAssessment = await Assessment.findById(updatedAssessment._id)
+      .populate("Position", "title")
+      .populate("assessmentTemplateList", "categoryOrTechnology")
+      .lean();
+
+    const mergedMetadata = {
+      ...req.body,
+
+      // Replace IDs with readable values
+      Position: populatedAssessment.Position?.title || req.body.Position,
+
+      categoryOrTechnology:
+        populatedAssessment.assessmentTemplateList?.categoryOrTechnology ||
+        req.body.categoryOrTechnology,
+    };
+
     // Only set feedData and logData when there are actual changes
     res.locals.feedData = {
       tenantId: updatedAssessment?.tenantId || req.body?.tenantId || "",
@@ -581,7 +612,8 @@ exports.updateAssessment = async (req, res) => {
       ownerId: updatedAssessment?.ownerId || req.body?.ownerId || "",
       parentId: updatedAssessment?._id,
       parentObject: "Assessment",
-      metadata: req.body,
+      // metadata: req.body,
+      metadata: mergedMetadata,
       severity: res.statusCode >= 500 ? "high" : "low",
       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
         fieldName,

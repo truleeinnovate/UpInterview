@@ -412,6 +412,16 @@ const CombinedNavbar = React.memo(() => {
           label: "Subscription Plans",
           permissionKey: "SubscriptionPlans.ViewTab",
         },
+        {
+          path: "/interview-policy",
+          label: "Interview Policy",
+          permissionKey: "InterviewPolicy.ViewTab",
+        },
+        {
+          path: "/regional-tax",
+          label: "Regional Tax",
+          permissionKey: "RegionalTax.ViewTab",
+        },
       ];
     } else {
       return [
@@ -1465,10 +1475,9 @@ const CombinedNavbar = React.memo(() => {
         </div>
 
         {/* Mobile sidebar */}
-        {/* Mobile sidebar */}
         {dropdownState.isSidebarOpen && (
-          <div className="fixed inset-0 top-16 bg-gray-800 bg-opacity-75 z-40 lg:hidden">
-            <div className="fixed left-0 w-64 bg-white h-full z-50 overflow-y-auto">
+          <div className="fixed inset-0 top-12 bg-gray-800 bg-opacity-75 z-40 lg:hidden">
+            <div className="fixed left-0 top-12 w-64 h-[calc(100vh-3rem)] bg-white z-50 overflow-y-auto pb-20">
               <div className="p-4 space-y-1">
                 {/* Super Admin Mobile Navigation */}
                 {userType === "superAdmin" && (
