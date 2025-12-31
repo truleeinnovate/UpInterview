@@ -64,15 +64,15 @@ async function getOrCreatePlatformWallet(session = null) {
 
   if (!wallet) {
     // Create a new platform wallet with isCompany marked as true
-    wallet = new WalletTopup({
-      ownerId,
-      isCompany: true,
-      currency: "INR",
-      tenantId: "",
-      balance: 0,
-      holdAmount: 0,
-      transactions: [],
-    });
+    // wallet = new WalletTopup({
+    //   ownerId,
+    //   isCompany: true,
+    //   currency: "INR",
+    //   tenantId: "",
+    //   balance: 0,
+    //   holdAmount: 0,
+    //   transactions: [],
+    // });
 
     if (session) {
       await wallet.save({ session });
@@ -102,9 +102,9 @@ const getPlatformWallet = async (req, res) => {
     });
 
     // Fallback: create or normalize the platform wallet if not found
-    if (!wallet) {
-      wallet = await getOrCreatePlatformWallet();
-    }
+    // if (!wallet) {
+    //   wallet = await getOrCreatePlatformWallet();
+    // }
 
     return res.status(200).json({
       success: true,
