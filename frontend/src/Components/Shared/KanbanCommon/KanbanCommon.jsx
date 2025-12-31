@@ -1,11 +1,11 @@
 // // Created by Ashok
 // v1.0.0 - Ashok - Added ability to click on title to navigate
 // v1.0.1 - Ashok - Improved subtile handling
+// v1.0.2 - Ashok - Updated plurals
 
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
-
 
 const KanbanCommon = ({
   data = [],
@@ -19,6 +19,30 @@ const KanbanCommon = ({
 }) => {
   const navigate = useNavigate();
 
+  const getPluralTitle = (title, count) => {
+    // New format (object)
+    if (typeof title === "object" && title !== null) {
+      return count === 1 ? title.singular : title.plural;
+    }
+
+    // Old format (string) – fallback logic
+    if (count === 1) return title;
+
+    // smart-enough plural rules
+    if (title.endsWith("y") && !/[aeiou]y$/i.test(title)) {
+      return title.slice(0, -1) + "ies";
+    }
+
+    if (/(s|x|z|ch|sh)$/i.test(title)) {
+      return title + "es";
+    }
+
+    return title + "s";
+  };
+
+  const count = data?.length || 0;
+  const pluralTitle = getPluralTitle(kanbanTitle);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -30,15 +54,19 @@ const KanbanCommon = ({
         {/* Header */}
         <div className="flex items-center justify-between mb-3 mx-6">
           <h3 className="sm:tex-md md:text-md lg:text-md xl:text-xl 2xl:text-xl font-semibold text-gray-800 tracking-tight">
-            All {capitalizeFirstLetter(kanbanTitle)}s
+            {/* All {capitalizeFirstLetter(kanbanTitle)}s */}
+            All {pluralTitle}
           </h3>
-          <span className="px-3 py-1.5 bg-white text-gray-500 rounded-lg text-sm font-medium border border-custom-blue/20">
+          {/* <span className="px-3 py-1.5 bg-white text-gray-500 rounded-lg text-sm font-medium border border-custom-blue/20">
             {data?.length || 0}
             <span className="ml-1">
               {data?.length > 1
                 ? `${capitalizeFirstLetter(kanbanTitle)}s`
                 : `${capitalizeFirstLetter(kanbanTitle)}`}
             </span>
+          </span> */}
+          <span className="px-3 py-1.5 bg-white text-gray-500 rounded-lg text-sm font-medium border border-custom-blue/20">
+            {count} {count === 1 ? kanbanTitle : pluralTitle}
           </span>
         </div>
 
@@ -80,8 +108,9 @@ const KanbanCommon = ({
             <p className="text-sm font-medium">{emptyState}</p>
           </div>
         ) : (
-          <div className="overflow-y-auto sm:pb-28 md:pb-28 lg:pb-28 xl:pb-16 2xl:pb-16"
-          style={{ maxHeight: customHeight }}
+          <div
+            className="overflow-y-auto sm:pb-28 md:pb-28 lg:pb-28 xl:pb-16 2xl:pb-16"
+            style={{ maxHeight: customHeight }}
           >
             <div className="px-4 grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
               {data.map((item, index) => (

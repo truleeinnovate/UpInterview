@@ -12,7 +12,11 @@ const assessmentSchema = new mongoose.Schema(
     // <------------------------------- v1.0.0
     AssessmentCode: { type: String },
     // ------------------------------ v1.0.0 >
-    Position: String,
+    // Position: String,
+    Position: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Position",
+    },
     Duration: String,
     DifficultyLevel: String,
     NumberOfQuestions: Number,

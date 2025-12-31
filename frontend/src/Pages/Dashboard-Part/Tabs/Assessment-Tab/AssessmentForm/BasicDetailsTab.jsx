@@ -104,13 +104,13 @@ const BasicDetailsTab = ({
   // Close tooltip when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showTooltip && !event.target.closest('.tooltip-container')) {
+      if (showTooltip && !event.target.closest(".tooltip-container")) {
         setShowTooltip(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showTooltip]);
 
   const [isPositionModalOpen, setIsPositionModalOpen] = useState(false);
@@ -527,11 +527,11 @@ const BasicDetailsTab = ({
                 value={
                   selected
                     ? {
-                      value: selected,
-                      label:
-                        categories?.find((c) => c._id === selected)
-                          ?.categoryOrTechnology || "Select List",
-                    }
+                        value: selected,
+                        label:
+                          categories?.find((c) => c._id === selected)
+                            ?.categoryOrTechnology || "Select List",
+                      }
                     : null
                 }
                 options={[
@@ -609,8 +609,8 @@ const BasicDetailsTab = ({
                     External ID
                   </label>
                   <div className="relative tooltip-container">
-                    <Info 
-                      className="w-4 h-4 text-gray-400 cursor-pointer" 
+                    <Info
+                      className="w-4 h-4 text-gray-400 cursor-pointer"
                       onClick={() => setShowTooltip(!showTooltip)}
                     />
                     {showTooltip && (

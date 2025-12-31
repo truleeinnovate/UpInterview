@@ -22,6 +22,8 @@ import {
   Users,
   ArrowLeft,
   IdCard,
+  BarChart3,
+  FileText,
 } from "lucide-react";
 import Modal from "react-modal";
 import InterviewProgress from "../Interview-New/components/InterviewProgress";
@@ -182,8 +184,8 @@ const PositionSlideDetails = () => {
   // const progressPercentage = totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0;
 
   const tabs = [
-    { id: "Details", name: "Details", icon: "📋" },
-    { id: "Activity", name: "Feeds", icon: "📊" },
+    { id: "Details", name: "Details", icon: FileText },
+    { id: "Activity", name: "Feeds", icon: BarChart3 },
   ];
 
   if (isLoading || !position) {
@@ -226,20 +228,24 @@ const PositionSlideDetails = () => {
         {/* Tabs Navigation */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`${
-                  activeTab === tab.id
-                    ? "border-custom-blue text-custom-blue"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
-              >
-                <span className="mr-2">{tab.icon}</span>
-                {tab.name}
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`${
+                    activeTab === tab.id
+                      ? "border-custom-blue text-custom-blue"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1`}
+                >
+                  {/* <span className="mr-2">{tab.icon}</span> */}
+                  <Icon className="w-4 h-4" />
+                  {tab.name}
+                </button>
+              );
+            })}
           </nav>
         </div>
         {/* v1.0.4 ------------------------------------------------------------------------------------------> */}

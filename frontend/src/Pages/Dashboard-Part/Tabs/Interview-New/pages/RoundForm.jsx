@@ -41,8 +41,8 @@ import LoadingButton from "../../../../../Components/LoadingButton";
 // v1.0.1 <----------------------------------------------------------------------------
 
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
-import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI.jsx";
-import { useQueryClient } from "@tanstack/react-query";
+// import { shareAssessmentAPI } from "../../Assessment-Tab/AssessmentShareAPI.jsx";
+// import { useQueryClient } from "@tanstack/react-query";
 import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField.jsx";
 import InputField from "../../../../../Components/FormFields/InputField.jsx";
 import DescriptionField from "../../../../../Components/FormFields/DescriptionField.jsx";
@@ -58,33 +58,6 @@ const {
 
 // v1.0.1 ---------------------------------------------------------------------------->
 const moment = require("moment-timezone");
-
-// Function to update start and end time
-// const formatDateTime = (date, showDate = true) => {
-//   if (!date) return "";
-
-//   // Convert UTC date to local timezone for display
-//   const d = new Date(date);
-//   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-//   // const d = new Date(date);
-
-//   // Format date if required
-//   const day = String(d.getDate()).padStart(2, "0");
-//   const month = String(d.getMonth() + 1).padStart(2, "0"); // Months are 0-based
-//   const year = d.getFullYear();
-//   const formattedDate = `${day}-${month}-${year}`;
-
-//   // Format time
-//   const formattedTime = d.toLocaleTimeString("en-US", {
-//     timeZone: timeZone,
-//     hour: "2-digit",
-//     minute: "2-digit",
-//     hour12: true,
-//   });
-
-//   return showDate ? `${formattedDate} ${formattedTime}` : formattedTime;
-// };
 
 const formatDateTime = (date, showDate = true) => {
   if (!date) return "";
@@ -266,23 +239,35 @@ const RoundFormInterviews = () => {
   const [externalInterviewers, setExternalInterviewers] = useState([]);
   // Max hourly rate across all outsourced interviewers (used only for external rounds)
   const [externalMaxHourlyRate, setExternalMaxHourlyRate] = useState(0);
+  const [showDateChangeConfirmation, setShowDateChangeConfirmation] =
+    useState(false);
+  const [pendingDateChange, setPendingDateChange] = useState(null); // { type: 'interviewType' | 'scheduledDate' | 'duration', value: any }
+  const [originalScheduledDate, setOriginalScheduledDate] =
+    useState(scheduledDate);
+  const [originalInterviewType, setOriginalInterviewType] =
+    useState(interviewType);
+
+  // Add this state near your other state declarations
+  const [hasManuallyClearedInterviewers, setHasManuallyClearedInterviewers] =
+    useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // while editing
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
 
-  useEffect(() => {
-    if (
-      selectedInterviewType === "External" &&
-      externalInterviewers.length > 0
-    ) {
-      setStatus("RequestSent");
-    } else if (selectedInterviewType !== "External") {
-      internalInterviewers.length > 0
-        ? setStatus("Scheduled")
-        : setStatus("Draft");
-    }
-  }, [selectedInterviewType, externalInterviewers, internalInterviewers]);
+  // useEffect(() => {
+  //   if (
+  //     selectedInterviewType === "External" &&
+  //     externalInterviewers.length > 0
+  //   ) {
+  //     setStatus("RequestSent");
+  //   } else if (selectedInterviewType !== "External") {
+  //     internalInterviewers.length > 0
+  //       ? setStatus("Scheduled")
+  //       : setStatus("Draft");
+  //   }
+  // }, [selectedInterviewType, externalInterviewers, internalInterviewers]);
 
   //<-----v1.0.4----
   // Helper: format a Date to 'YYYY-MM-DDTHH:mm' for <input type="datetime-local"/>
@@ -314,73 +299,6 @@ const RoundFormInterviews = () => {
     assessmentTemplate: useRef(null),
     instructions: useRef(null),
   };
-  // v1.0.1 ------------------------------------------------------------------------->
-
-  // const updateTimes = useCallback(
-  //   (newDuration) => {
-  //     let start = null;
-  //     let end = null;
-
-  //     if (interviewType === "instant") {
-  //       const now = new Date();
-  //       now.setMinutes(now.getMinutes() + 15); // Start after 15 min
-  //       // start = now;
-
-  //       // Convert to UTC
-  //       const localTimeStr = moment(now)?.format("YYYY-MM-DD HH:mm");
-  //       start = moment
-  //         ?.tz(
-  //           localTimeStr,
-  //           "YYYY-MM-DD HH:mm",
-  //           Intl.DateTimeFormat().resolvedOptions().timeZone
-  //         )
-  //         .utc()
-  //         .toDate();
-
-  //       const endTime = new Date(start);
-  //       // const endTime = new Date(now);
-  //       endTime.setMinutes(endTime.getMinutes() + newDuration);
-  //       end = endTime;
-  //     } else if (interviewType === "scheduled" && scheduledDate) {
-  //       // start = new Date(scheduledDate);
-  //       // Convert scheduled date from local timezone to UTC
-  //       const localTimeStr = moment(scheduledDate).format("YYYY-MM-DD HH:mm");
-  //       start = moment
-  //         ?.tz(
-  //           localTimeStr,
-  //           "YYYY-MM-DD HH:mm",
-  //           Intl.DateTimeFormat().resolvedOptions().timeZone
-  //         )
-  //         .utc()
-  //         .toDate();
-
-  //       const endTime = new Date(start);
-  //       endTime.setMinutes(endTime.getMinutes() + newDuration);
-  //       end = endTime;
-  //     }
-
-  //     if (start && end) {
-  //       setStartTime(start.toISOString()); // Store in ISO for backend
-  //       setEndTime(end.toISOString()); // Store in ISO for backend
-
-  //       // ✅ Ensure start shows date & time, but end shows only time
-  //       const formattedStart = formatDateTime(start, true);
-  //       const formattedEnd = formatDateTime(end, false);
-  //       let combinedDateTime = `${formattedStart} - ${formattedEnd}`;
-
-  //       setCombinedDateTime(combinedDateTime);
-  //     }
-  //   },
-  //   [
-  //     interviewType,
-  //     scheduledDate,
-  //     duration,
-  //     isEditing,
-  //     roundEditData,
-  //     combinedDateTime,
-  //   ]
-  //   // [interviewType, scheduledDate, duration]
-  // );
 
   const updateTimes = useCallback(
     (newDuration) => {
@@ -465,84 +383,13 @@ const RoundFormInterviews = () => {
     ]
   );
 
-  // Replace this useEffect
+  // UPDATED: Set initial load complete after first render
+  useEffect(() => {
+    if (isEditing && roundEditData) {
+      setIsInitialLoad(false);
+    }
+  }, [isEditing, roundEditData]);
 
-  // useEffect(() => {
-  //   let start = null;
-  //   let end = null;
-
-  //   if (interviewType === "instant") {
-  //     const now = new Date();
-  //     now.setMinutes(now.getMinutes() + 15);
-  //     start = now;
-  //     end = new Date(now);
-  //     end.setMinutes(end.getMinutes() + duration);
-  //   } else if (interviewType === "scheduled" && scheduledDate) {
-  //     start = new Date(scheduledDate);
-  //     end = new Date(start);
-  //     end.setMinutes(end.getMinutes() + duration);
-  //   }
-
-  //   if (start && end) {
-  //     // Only update state if the values have actually changed
-  //     if (startTime !== start.toISOString()) {
-  //       setStartTime(start.toISOString());
-  //     }
-  //     if (endTime !== end.toISOString()) {
-  //       setEndTime(end.toISOString());
-  //     }
-
-  //     const formattedStart = formatDateTime(start, true);
-  //     const formattedEnd = formatDateTime(end, false);
-  //     const newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
-
-  //     if (combinedDateTime !== newCombinedDateTime) {
-  //       setCombinedDateTime(newCombinedDateTime);
-  //     }
-  //   }
-  // }, [duration, interviewType, scheduledDate]);
-
-  // useEffect(() => {
-  //   let start = null;
-  //   let end = null;
-
-  //   if (interviewType === "instant") {
-  //     const now = new Date();
-  //     now.setMinutes(now.getMinutes() + 15);
-  //     start = now;
-  //     end = new Date(now);
-  //     end.setMinutes(end.getMinutes() + duration);
-  //   } else if (interviewType === "scheduled" && scheduledDate) {
-  //     start = new Date(scheduledDate);
-  //     end = new Date(start);
-  //     end.setMinutes(end.getMinutes() + duration);
-  //   }
-
-  //   if (start && end) {
-  //     // Only update state if the values have actually changed
-  //     if (startTime !== start.toISOString()) {
-  //       setStartTime(start.toISOString());
-  //     }
-  //     if (endTime !== end.toISOString()) {
-  //       setEndTime(end.toISOString());
-  //     }
-
-  //     const formattedStart = formatDateTime(start, true);
-  //     const formattedEnd = formatDateTime(end, false);
-  //     const newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
-
-  //     if (combinedDateTime !== newCombinedDateTime) {
-  //       setCombinedDateTime(newCombinedDateTime);
-  //     }
-  //   }
-  // },
-  // [duration, interviewType, scheduledDate]
-  // // [duration, interviewType, scheduledDate, startTime, endTime, combinedDateTime]
-  // );
-
-  // useEffect(() => {
-  //   updateTimes(duration);
-  // }, [duration, updateTimes]);
   // Trigger time update when editing data is fully loaded OR when duration changes for new form
   useEffect(() => {
     if (
@@ -634,182 +481,6 @@ const RoundFormInterviews = () => {
   };
 
   const [isCustomRoundTitle, setIsCustomRoundTitle] = useState(false);
-
-  // const handleRoundTitleUnifiedChange = (e) => {
-  //   const value = e.target.value;
-
-  //   // If already in custom mode, treat changes as typing the custom title
-  //   if (isCustomRoundTitle) {
-  //     setCustomRoundTitle(value);
-  //     setErrors((prev) => ({ ...prev, roundTitle: "" }));
-  //     return;
-  //   }
-
-  //   // DropdownWithSearchField sends an empty string when "Other" is chosen.
-  //   // Enter custom mode and keep roundTitle as "Other" for submission mapping.
-  //   if (value === "") {
-  //     setIsCustomRoundTitle(true);
-  //     setRoundTitle("Other");
-  //     setCustomRoundTitle("");
-  //      setInterviewQuestionsList([]);
-  //     setErrors((prev) => ({ ...prev, roundTitle: "" }));
-  //     return;
-  //   }
-
-  //   // Normal predefined selection
-  //   setRoundTitle(value);
-  //   setCustomRoundTitle("");
-  //   if (value === "Assessment") {
-  //     setInterviewMode("Virtual");
-  //   }
-  //   setErrors((prev) => ({ ...prev, roundTitle: "", interviewMode: "" }));
-  // };
-
-  const handleRoundTitleUnifiedChange = (e) => {
-    const value = e.target.value;
-
-    // If already in custom mode, treat changes as typing the custom title
-    if (isCustomRoundTitle) {
-      setCustomRoundTitle(value);
-      setErrors((prev) => ({ ...prev, roundTitle: "" }));
-      return;
-    }
-
-    // DropdownWithSearchField sends an empty string when "Other" is chosen.
-    // Enter custom mode and keep roundTitle as "Other" for submission mapping.
-    if (value === "") {
-      setIsCustomRoundTitle(true);
-      setRoundTitle("Other");
-      setCustomRoundTitle("");
-      setInstructions(""); // Clear instructions when selecting "Other"
-      setErrors((prev) => ({ ...prev, roundTitle: "" }));
-      return;
-    }
-    // Store previous round title to detect changes from "Assessment"
-    const previousRoundTitle = roundTitle;
-    // Normal predefined selection
-    setRoundTitle(value);
-    setCustomRoundTitle("");
-
-    // Clear instructions whenever round title changes
-    // setInstructions("");
-
-    if (value === "Assessment") {
-      setInterviewMode("Virtual");
-      setInterviewQuestionsList([]);
-      setInstructions(""); // Ensure instructions are cleared for Assessment
-
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
-      setInterviewerViewType("");
-      setInterviewType("instant");
-      setScheduledDate("");
-      setDuration(60);
-      setStartTime("");
-      setEndTime("");
-      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null);
-      setCombinedDateTime("");
-
-      setSectionQuestions({});
-      setInternalInterviewers([]);
-      setExternalInterviewers([]);
-      setSelectedInterviewType(null);
-    } else {
-      // setInterviewMode("");
-      setInstructions(previousRoundTitle === "Assessment" ? "" : instructions); // Clear instructions for non-Assessment rounds
-      // setInterviewType("instant");
-      // setScheduledDate("");
-      // setDuration(60);
-      // setStartTime("");
-      // setEndTime("");
-      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-      setSelectedAssessmentData(null);
-      // setCombinedDateTime("");
-
-      // setInterviewerGroupName("");
-      // setInterviewerGroupId("");
-      // setInterviewerViewType("");
-    }
-
-    setErrors((prev) => ({
-      ...prev,
-      roundTitle: "",
-      interviewMode: "",
-      instructions: "", // Clear instructions validation error
-    }));
-  };
-
-  // const handleRoundTitleChange = (e) => {
-  //   const selectedTitle = e.target.value;
-
-  //   if (selectedTitle === "Other") {
-  //     setCustomRoundTitle("");
-  //     setInterviewerViewType("");
-  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-  //     setSelectedAssessmentData(null);
-  //     setCombinedDateTime("");
-  //   } else {
-  //     setRoundTitle(selectedTitle);
-  //     setCustomRoundTitle("");
-  //     setInstructions("");
-  //     setInterviewMode("");
-  //     // setStatus("Pending");
-  //     setInterviewType("instant");
-  //     setScheduledDate("");
-  //     setDuration(60);
-  //     setStartTime("");
-  //     setEndTime("");
-
-  //     setInterviewerGroupName("");
-
-  //     setInterviewerGroupId("");
-  //     setInterviewerViewType("");
-  //     setCombinedDateTime("");
-  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-  //     setSelectedAssessmentData(null);
-  //   }
-
-  //   if (selectedTitle === "Other") {
-  //     setCustomRoundTitle("");
-  //     setInstructions("");
-  //   } else if (selectedTitle === "Assessment") {
-  //     setInterviewMode("Virtual");
-  //     setInterviewQuestionsList([]);
-  //     setInstructions("");
-
-  //     setInterviewerGroupName("");
-  //     setInterviewerGroupId("");
-  //     setInterviewerViewType("");
-  //     // setStatus("Pending");
-  //     setInterviewType("instant");
-  //     setScheduledDate("");
-  //     setDuration(60);
-  //     setStartTime("");
-  //     setEndTime("");
-  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-  //     setSelectedAssessmentData(null);
-  //     setCombinedDateTime("");
-  //   } else {
-  //     setInterviewMode("");
-  //     setInstructions("");
-  //     setInstructions("");
-  //     setInterviewMode("");
-  //     // setStatus("Pending");
-  //     setInterviewType("instant");
-  //     setScheduledDate("");
-  //     setDuration(60);
-  //     setStartTime("");
-  //     setEndTime("");
-  //     setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
-  //     setSelectedAssessmentData(null);
-  //     setCombinedDateTime("");
-
-  //     setInterviewerGroupName("");
-  //     setInterviewerGroupId("");
-  //     setInterviewerViewType("");
-  //   }
-  // };
 
   // const handleSuggestedTabClick = (questionType) => {
   //   setActiveTab("SuggesstedQuestions");
@@ -960,19 +631,149 @@ const RoundFormInterviews = () => {
     assessmentTemplate?.assessmentName,
   ]);
 
-  // Add this state near your other state declarations
-  const [hasManuallyClearedInterviewers, setHasManuallyClearedInterviewers] =
-    useState(false);
+  // Add this reset effect near other useEffects
+  useEffect(() => {
+    setHasManuallyClearedInterviewers(false);
+  }, [roundId]);
+
+  // Add this cleanup effect
+  useEffect(() => {
+    return () => {
+      // Clean up all modal states when component unmounts
+      setShowOutsourcePopup(false);
+      setInternalInterviews(false);
+    };
+  }, [roundId]);
+
+  // Add this useEffect to reset the flag when roundId changes
+  // useEffect(() => {
+  //   setHasManuallyClearedInterviewers(false);
+  // }, [roundId]);
+
+  // UPDATED: Modified - Only clear external interviewers on date/time changes AFTER initial load
+  // useEffect(() => {
+  //   // NEW: Skip clearing during initial load
+  //   if (isInitialLoad) {
+  //     return;
+  //   }
+
+  //   // NEW: Skip if we're in edit mode and haven't manually changed anything yet
+  //   if (isEditing && !hasManuallyClearedInterviewers && roundEditData) {
+  //     return;
+  //   }
+
+  //   // Clear external interviewers when date/time changes (but not on initial load)
+  //   if (
+  //     externalInterviewers.length > 0 &&
+  //     (scheduledDate || interviewType === "instant")
+  //   ) {
+  //     console.log("🔄 Clearing external interviewers due to date/time change");
+  //     setExternalInterviewers([]);
+  //     setHasManuallyClearedInterviewers(true);
+
+  //     // If only external interviewers were selected, reset the interview type
+  //     if (
+  //       selectedInterviewType === "External" &&
+  //       internalInterviewers.length === 0
+  //     ) {
+  //       setSelectedInterviewType(null);
+  //     }
+
+  //     // Reset status if it was RequestSent
+  //     if (status === "RequestSent") {
+  //       setStatus("Draft");
+  //     }
+  //   }
+  // }, [scheduledDate, interviewType]); // Keep dependencies but use guards above
+
+  // UPDATED: Modified - Handle combinedDateTime changes
+  // useEffect(() => {
+  //   // NEW: Skip during initial load
+  //   if (isInitialLoad) {
+  //     return;
+  //   }
+
+  //   // NEW: Skip if we're in edit mode and haven't manually changed anything yet
+  //   if (isEditing && !hasManuallyClearedInterviewers && roundEditData) {
+  //     return;
+  //   }
+
+  //   if (
+  //     interviewType === "scheduled" &&
+  //     combinedDateTime &&
+  //     externalInterviewers.length > 0
+  //   ) {
+  //     console.log(
+  //       "🔄 Clearing external interviewers due to combinedDateTime change"
+  //     );
+  //     setExternalInterviewers([]);
+  //     setHasManuallyClearedInterviewers(true);
+
+  //     if (
+  //       selectedInterviewType === "External" &&
+  //       internalInterviewers.length === 0
+  //     ) {
+  //       setSelectedInterviewType(null);
+  //     }
+
+  //     // Reset status if it was RequestSent
+  //     if (status === "RequestSent") {
+  //       setStatus("Draft");
+  //     }
+  //   }
+  // }, [combinedDateTime]);
+
+  // UPDATED: Fix the status setting logic
+  // useEffect(() => {
+  //   // NEW: Skip status updates during initial load in edit mode
+  //   if (isEditing && isInitialLoad) {
+  //     return;
+  //   }
+
+  //   if (
+  //     selectedInterviewType === "External" &&
+  //     externalInterviewers.length > 0
+  //   ) {
+  //     setStatus("RequestSent");
+  //   } else if (selectedInterviewType === "Internal") {
+  //     // NEW: Better logic for internal interviewers
+  //     if (internalInterviewers.length > 0) {
+  //       // Only set to Scheduled if we have date/time configured
+  //       const hasDateTimeConfigured =
+  //         interviewType === "instant" ||
+  //         (interviewType === "scheduled" && scheduledDate);
+
+  //       setStatus(hasDateTimeConfigured ? "Scheduled" : "Draft");
+  //     } else {
+  //       setStatus("Draft");
+  //     }
+  //   } else {
+  //     setStatus("Draft");
+  //   }
+  // }, [
+  //   selectedInterviewType,
+  //   externalInterviewers,
+  //   internalInterviewers,
+  //   interviewType,
+  //   scheduledDate,
+  //   isEditing,
+  //   isInitialLoad,
+  // ]);
 
   useEffect(() => {
-    if (!isEditing || !roundEditData) {
+    if (!isEditing) {
       // For new rounds: set default sequence
       const maxSequence =
         rounds?.length > 0 ? Math.max(...rounds.map((r) => r.sequence)) : 0;
       if (sequence !== maxSequence + 1) {
         setSequence(maxSequence + 1);
       }
+      setIsInitialLoad(false);
       return;
+    }
+
+    if (!roundEditData || hasManuallyClearedInterviewers) {
+      return; // Skip loading if data cleared manually
     }
 
     // === EDIT MODE: Load data from roundEditData ===
@@ -1002,7 +803,7 @@ const RoundFormInterviews = () => {
     setInterviewMode(roundEditData.interviewMode || "");
     setSelectedInterviewType(roundEditData.interviewerType || null);
     setInterviewQuestionsList(roundEditData.questions || []);
-    setStatus(roundEditData.status || "Draft");
+    if (status !== roundEditData.status) setStatus(roundEditData.status);
     setInstructions(roundEditData.instructions || "");
     setSequence(roundEditData.sequence || 1);
     setDuration(Number(roundEditData.duration) || 60);
@@ -1010,31 +811,58 @@ const RoundFormInterviews = () => {
     setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
     setInterviewerViewType(roundEditData?.interviewerViewType || "individuals");
 
+    // Store original scheduling values
+    setOriginalScheduledDate(scheduledDate);
+    setOriginalInterviewType(interviewType);
+
     // === Load Interviewers Safely ===
-    if (roundEditData.interviewers && roundEditData.interviewers.length > 0) {
-      if (roundEditData.interviewerType === "Internal") {
-        const normalized = roundEditData.interviewers.map((i) => ({
-          _id: i._id,
-          firstName: i.firstName || "",
-          lastName: i.lastName || "",
-          email: i.email || "",
-        }));
-        setInternalInterviewers(normalized);
-        setExternalInterviewers([]);
-      } else if (roundEditData.interviewerType === "External") {
-        const normalized = roundEditData.interviewers.map((i) => ({
-          id: i._id,
-          _id: i._id,
-          firstName: i.contact?.firstName || i.firstName || "",
-          lastName: i.contact?.lastName || i.lastName || "",
-          email: i.email || "",
-          contact: i.contact,
-        }));
-        console.log("normalized", normalized);
-        setExternalInterviewers(normalized);
-        setInternalInterviewers([]);
+    // if (roundEditData.interviewers && roundEditData.interviewers.length > 0) {
+    if (roundEditData.interviewerType === "Internal") {
+      const normalized = roundEditData.interviewers.map((i) => ({
+        _id: i._id,
+        firstName: i.firstName || "",
+        lastName: i.lastName || "",
+        email: i.email || "",
+      }));
+      setInternalInterviewers(normalized);
+      setExternalInterviewers([]);
+    } else if (roundEditData.interviewerType === "External") {
+      let source = [];
+
+      // Priority 1: Use accepted interviewers if they exist
+      if (
+        Array.isArray(roundEditData.interviewers) &&
+        roundEditData.interviewers.length > 0
+      ) {
+        source = roundEditData.interviewers;
       }
-    } else {
+      // Priority 2: Fall back to pending outsource requests
+      else if (
+        Array.isArray(roundEditData.pendingOutsourceRequests) &&
+        roundEditData.pendingOutsourceRequests.length > 0
+      ) {
+        source = roundEditData.pendingOutsourceRequests
+          .map((req) => req.interviewerId)
+          .filter(Boolean); // remove null/undefined
+      }
+
+      // Normalize to consistent shape for UI
+      const normalized = source.map((i) => ({
+        _id: i._id || i.id,
+        id: i._id || i.id, // both id and _id for compatibility
+        firstName: i.contact?.firstName || i.firstName || "Unknown",
+        lastName: i.contact?.lastName || i.lastName || "",
+        email: i.contact?.email || i.email || "",
+        contact: i.contact || i, // preserve full object if needed
+      }));
+
+      console.log("normalized", normalized);
+
+      setExternalInterviewers(normalized);
+      setInternalInterviewers([]); // clear internal
+    }
+    // }
+    else {
       // No interviewers in DB → clear both
       setInternalInterviewers([]);
       setExternalInterviewers([]);
@@ -1102,9 +930,41 @@ const RoundFormInterviews = () => {
         }
       });
     }
-  }, [isEditing, roundEditData, rounds, groups, editingAssessment]);
 
-  console.log("ExternalInterviewers", externalInterviewers);
+    // NEW: Mark initial load as complete at the end
+    setIsInitialLoad(false);
+    // For new entries or when manually cleared
+    // if (
+    //   selectedInterviewType === "External" &&
+    //   externalInterviewers.length > 0
+    // ) {
+    //   setStatus("RequestSent");
+    // } else if (
+    //   selectedInterviewType === "Internal" &&
+    //   internalInterviewers.length > 0
+    // ) {
+    //   // Only set to Scheduled if we have internal interviewers AND date/time is set
+    //   if (
+    //     (interviewType === "scheduled" && scheduledDate) ||
+    //     interviewType === "instant"
+    //   ) {
+    //     setStatus("Scheduled");
+    //   } else {
+    //     setStatus("Draft");
+    //   }
+    // } else {
+    //   setStatus("Draft");
+    // }
+  }, [
+    isEditing,
+    roundEditData,
+    rounds,
+    groups,
+    hasManuallyClearedInterviewers,
+    editingAssessment,
+  ]);
+
+  console.log("ExternalInterviewers", externalInterviewers, status);
 
   // useEffect(() => {
   //   if (isEditing && roundEditData && !hasManuallyClearedInterviewers) {
@@ -1323,60 +1183,36 @@ const RoundFormInterviews = () => {
   //   // status,
   // ]);
 
-  // Add this cleanup effect
-  useEffect(() => {
-    return () => {
-      // Clean up all modal states when component unmounts
-      setShowOutsourcePopup(false);
-      setInternalInterviews(false);
-    };
-  }, [roundId]);
-
-  // Add this useEffect to reset the flag when roundId changes
-  // useEffect(() => {
-  //   setHasManuallyClearedInterviewers(false);
-  // }, [roundId]);
-
-  // Add this useEffect hook after your existing useEffect hooks
-  useEffect(() => {
-    // Clear external interviewers when date/time changes
-    if (
-      externalInterviewers.length > 0 &&
-      (scheduledDate || interviewType === "instant")
-    ) {
-      setExternalInterviewers([]);
-
-      // If only external interviewers were selected, reset the interview type
-      if (
-        selectedInterviewType === "External" &&
-        internalInterviewers.length === 0
-      ) {
-        setSelectedInterviewType(null);
-      }
-    }
-  }, [scheduledDate, interviewType]); // Add this dependency array
-
-  // Also add this useEffect to handle combinedDateTime changes for scheduled interviews
-  useEffect(() => {
-    if (
-      interviewType === "scheduled" &&
-      combinedDateTime &&
-      externalInterviewers.length > 0
-    ) {
-      setExternalInterviewers([]);
-
-      if (
-        selectedInterviewType === "External" &&
-        internalInterviewers.length === 0
-      ) {
-        setSelectedInterviewType(null);
-      }
-    }
-  }, [combinedDateTime]);
-
   // Replace the existing scheduledDate change handler with this enhanced version
   const handleScheduledDateChange = (e) => {
     const val = e.target.value;
+
+    // If external interviewers exist and date is actually changing → clear them
+    // if (externalInterviewers.length > 0 && val !== scheduledDate) {
+    //   setExternalInterviewers([]);
+    //   setHasManuallyClearedInterviewers(true);
+
+    //   // Reset status if it was RequestSent
+    //   if (status === "RequestSent") {
+    //     setStatus("Draft");
+    //   }
+
+    //   if (selectedInterviewType === "External") {
+    //     setSelectedInterviewType(null);
+    //   }
+    // }
+
+    // Check if external interviewers exist and date is actually changing
+    if (externalInterviewers.length > 0 && val !== scheduledDate) {
+      // Set pending change and show confirmation popup
+      setPendingDateChange({
+        type: "scheduledDate",
+        value: val,
+      });
+      setShowDateChangeConfirmation(true);
+      return; // Don't proceed until user confirms
+    }
+
     const minVal = twoHoursFromNowLocal();
     // Prevent selecting past/less than 2 hours from now
     const newScheduledDate = val && val < minVal ? minVal : val;
@@ -1384,6 +1220,7 @@ const RoundFormInterviews = () => {
     // Clear external interviewers when date changes
     if (newScheduledDate !== scheduledDate && externalInterviewers.length > 0) {
       setExternalInterviewers([]);
+      setHasManuallyClearedInterviewers(true); // Add this
       if (
         selectedInterviewType === "External" &&
         internalInterviewers.length === 0
@@ -1397,19 +1234,170 @@ const RoundFormInterviews = () => {
     setScheduledDate(newScheduledDate);
   };
 
+  // const handleRoundTitleUnifiedChange = (e) => {
+  //   const value = e.target.value;
+
+  //   // If already in custom mode, treat changes as typing the custom title
+  //   if (isCustomRoundTitle) {
+  //     setCustomRoundTitle(value);
+  //     setErrors((prev) => ({ ...prev, roundTitle: "" }));
+  //     return;
+  //   }
+
+  //   // DropdownWithSearchField sends an empty string when "Other" is chosen.
+  //   // Enter custom mode and keep roundTitle as "Other" for submission mapping.
+  //   if (value === "") {
+  //     setIsCustomRoundTitle(true);
+  //     setRoundTitle("Other");
+  //     setCustomRoundTitle("");
+  //      setInterviewQuestionsList([]);
+  //     setErrors((prev) => ({ ...prev, roundTitle: "" }));
+  //     return;
+  //   }
+
+  //   // Normal predefined selection
+  //   setRoundTitle(value);
+  //   setCustomRoundTitle("");
+  //   if (value === "Assessment") {
+  //     setInterviewMode("Virtual");
+  //   }
+  //   setErrors((prev) => ({ ...prev, roundTitle: "", interviewMode: "" }));
+  // };
+
+  const handleRoundTitleUnifiedChange = (e) => {
+    const value = e.target.value;
+
+    // If already in custom mode, treat changes as typing the custom title
+    if (isCustomRoundTitle) {
+      setCustomRoundTitle(value);
+      setErrors((prev) => ({ ...prev, roundTitle: "" }));
+      return;
+    }
+
+    // DropdownWithSearchField sends an empty string when "Other" is chosen.
+    // Enter custom mode and keep roundTitle as "Other" for submission mapping.
+    if (value === "") {
+      setIsCustomRoundTitle(true);
+      setRoundTitle("Other");
+      setCustomRoundTitle("");
+      setInstructions(""); // Clear instructions when selecting "Other"
+      setErrors((prev) => ({ ...prev, roundTitle: "" }));
+      return;
+    }
+    // Store previous round title to detect changes from "Assessment"
+    const previousRoundTitle = roundTitle;
+    // Normal predefined selection
+    setRoundTitle(value);
+    setCustomRoundTitle("");
+
+    // Clear instructions whenever round title changes
+    // setInstructions("");
+
+    if (value === "Assessment") {
+      setInterviewMode("Virtual");
+      setInterviewQuestionsList([]);
+      setInstructions(""); // Ensure instructions are cleared for Assessment
+
+      setInterviewerGroupName("");
+      setInterviewerGroupId("");
+      setInterviewerViewType("");
+      setInterviewType("instant");
+      setScheduledDate("");
+      setDuration(60);
+      setStartTime("");
+      setEndTime("");
+      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+      setSelectedAssessmentData(null);
+      setCombinedDateTime("");
+
+      setSectionQuestions({});
+      setInternalInterviewers([]);
+      setExternalInterviewers([]);
+      setSelectedInterviewType(null);
+      setHasManuallyClearedInterviewers(true);
+    } else {
+      // setInterviewMode("");
+      setInstructions(previousRoundTitle === "Assessment" ? "" : instructions); // Clear instructions for non-Assessment rounds
+      // setInterviewType("instant");
+      // setScheduledDate("");
+      // setDuration(60);
+      // setStartTime("");
+      // setEndTime("");
+      setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
+      setSelectedAssessmentData(null);
+      // setCombinedDateTime("");
+
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
+      // setInterviewerViewType("");
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      roundTitle: "",
+      interviewMode: "",
+      instructions: "", // Clear instructions validation error
+    }));
+  };
+
+  console.log("internalInterviewers:", internalInterviewers);
+
   // Replace the existing interviewType change handler
   const handleInterviewTypeChange = (type) => {
     // Clear external interviewers when switching between instant and scheduled
-    if (interviewType !== type && externalInterviewers.length > 0) {
-      setExternalInterviewers([]);
-      if (
-        selectedInterviewType === "External" &&
-        internalInterviewers.length === 0
-      ) {
-        setSelectedInterviewType(null);
-      }
-      // toast.warn("Interview type changed - external interviewers have been cleared. Please reselect them.");
+    if (type === interviewType) return;
+
+    // If external interviewers exist and we're changing type, clear them
+    // if (externalInterviewers.length > 0) {
+    //   setExternalInterviewers([]);
+    //   setHasManuallyClearedInterviewers(true);
+
+    //   // Reset status if it was RequestSent
+    //   if (status === "RequestSent") {
+    //     setStatus("Draft");
+    //   }
+
+    //   if (selectedInterviewType === "External") {
+    //     setSelectedInterviewType(null);
+    //   }
+    // }
+
+    // Check if external interviewers exist and date/time is changing
+    if (externalInterviewers.length > 0) {
+      // Set pending change and show confirmation popup
+      setPendingDateChange({
+        type: "interviewType",
+        value: type,
+      });
+      setShowDateChangeConfirmation(true);
+      return; // Don't proceed until user confirms
     }
+
+    // Check if internal interviewers exist and date/time is changing
+    if (internalInterviewers.length > 0) {
+      // Set pending change and show confirmation popup
+      setPendingDateChange({
+        type: "interviewType",
+        value: type,
+      });
+      setShowDateChangeConfirmation(true);
+      return; // Don't proceed until user confirms
+    }
+
+    // Also clear internal interviewers if no date/time for scheduled
+    if (
+      type === "scheduled" &&
+      internalInterviewers.length > 0 &&
+      !scheduledDate
+    ) {
+      setInternalInterviewers([]);
+      setInterviewerGroupName("");
+      setInterviewerGroupId("");
+      setInterviewerViewType("individuals");
+      setSelectedInterviewType(null);
+      setHasManuallyClearedInterviewers(true);
+    }
+
     setInterviewType(type);
     // Reset scheduled date when switching to instant
     // Reset times based on new type
@@ -1452,17 +1440,95 @@ const RoundFormInterviews = () => {
     }
   };
 
+  // Also need to handle the confirmation popup actions for edit and rescheduled:
+  const handleConfirmDateChange = () => {
+    if (!pendingDateChange) return;
+
+    // Always clear external interviewers on confirmed change
+    if (externalInterviewers.length > 0) {
+      setExternalInterviewers([]);
+      setHasManuallyClearedInterviewers(true);
+      if (selectedInterviewType === "External") {
+        setSelectedInterviewType(null);
+      }
+      // if (status === "RequestSent") {
+      //   setStatus("Draft");
+      // }
+    }
+
+    // ADD THIS: Clear internal interviewers as well
+    if (internalInterviewers.length > 0) {
+      setInternalInterviewers([]);
+      setInterviewerGroupName("");
+      setInterviewerGroupId("");
+      setInterviewerViewType("individuals");
+      setHasManuallyClearedInterviewers(true);
+      if (selectedInterviewType === "Internal") {
+        setSelectedInterviewType(null);
+      }
+      // if (status === "Scheduled" || status === "Rescheduled") {
+      //   setStatus("Draft");
+      // }
+    }
+
+    // Apply the actual change
+    if (pendingDateChange.type === "interviewType") {
+      const newType = pendingDateChange.value;
+      setInterviewType(newType);
+
+      // Handle instant timing if switching to instant
+      if (newType === "instant") {
+        setScheduledDate("");
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 15);
+        now.setSeconds(0, 0);
+        const localTimeStr = moment(now).format("YYYY-MM-DD HH:mm");
+        const utcStart = moment
+          .tz(
+            localTimeStr,
+            "YYYY-MM-DD HH:mm",
+            Intl.DateTimeFormat().resolvedOptions().timeZone
+          )
+          .utc()
+          .toDate();
+        const end = new Date(utcStart);
+        end.setMinutes(end.getMinutes() + duration);
+        setStartTime(utcStart.toISOString());
+        setEndTime(end.toISOString());
+        const formattedStart = formatDateTime(utcStart, true);
+        const formattedEnd = formatDateTime(end, false);
+        setCombinedDateTime(`${formattedStart} - ${formattedEnd}`);
+      }
+    } else if (pendingDateChange.type === "scheduledDate") {
+      const minVal = twoHoursFromNowLocal();
+      const newScheduledDate =
+        pendingDateChange.value && pendingDateChange.value < minVal
+          ? minVal
+          : pendingDateChange.value;
+      setScheduledDate(newScheduledDate);
+    }
+
+    // Clear pending state
+    setShowDateChangeConfirmation(false);
+    setPendingDateChange(null);
+  };
+
   const handleInternalInterviewerSelect = (
     interviewers,
     viewType,
     groupName,
     groupId
   ) => {
-    if (selectedInterviewType === "External") {
-      alert(
-        "You need to clear external interviewers before selecting Internal interviewers."
-      );
-      return;
+    // if (selectedInterviewType === "External") {
+    //   alert(
+    //     "You need to clear external interviewers before selecting Internal interviewers."
+    //   );
+    //   return;
+    // }
+
+    // Clear external interviewers when selecting internal
+    if (externalInterviewers.length > 0) {
+      setExternalInterviewers([]);
     }
 
     // Clear existing interviewers when view type changes
@@ -1522,12 +1588,22 @@ const RoundFormInterviews = () => {
   };
 
   const handleExternalInterviewerSelect = (interviewers, maxHourlyRate) => {
-    if (selectedInterviewType === "Internal") {
-      alert(
-        "You need to clear Internal interviewers before selecting outsourced interviewers."
-      );
-      return;
+    // if (selectedInterviewType === "Internal") {
+    //   alert(
+    //     "You need to clear Internal interviewers before selecting outsourced interviewers."
+    //   );
+    //   return;
+    // }
+
+    // Clear internal interviewers when selecting external
+    if (internalInterviewers.length > 0) {
+      setInternalInterviewers([]);
+      setInterviewerGroupName("");
+      setInterviewerGroupId("");
+      setInterviewerViewType("individuals");
     }
+
+    setSelectedInterviewType("External");
 
     // Ensure no duplicates and append new interviewers
     const uniqueInterviewers = interviewers.filter(
@@ -1540,6 +1616,7 @@ const RoundFormInterviews = () => {
     setExternalMaxHourlyRate(Number(maxHourlyRate) || 0);
     setHasManuallyClearedInterviewers(false); // Reset flag when adding new interviewers
   };
+
   const handleRemoveInternalInterviewer = (interviewerId) => {
     setInternalInterviewers((prev) => {
       const updatedInterviewers = prev.filter((i) => i._id !== interviewerId);
@@ -1563,9 +1640,31 @@ const RoundFormInterviews = () => {
     });
   };
 
+  // const handleRemoveExternalInterviewer = (interviewerId) => {
+  //   setExternalInterviewers((prev) => {
+  //     const updatedInterviewers = prev.filter((i) => i.id !== interviewerId);
+
+  //     console.log("Updated external interviewers:", updatedInterviewers);
+
+  //     // Reset selectedInterviewType if no interviewers are left
+  //     if (
+  //       updatedInterviewers.length === 0 &&
+  //       internalInterviewers.length === 0
+  //     ) {
+  //       // Set flag when manually removing all external interviewers
+  //       setHasManuallyClearedInterviewers(true);
+  //       setSelectedInterviewType(null);
+  //     }
+
+  //     return updatedInterviewers;
+  //   });
+  // };
+
   const handleRemoveExternalInterviewer = (interviewerId) => {
     setExternalInterviewers((prev) => {
-      const updatedInterviewers = prev.filter((i) => i.id !== interviewerId);
+      const updatedInterviewers = prev.filter(
+        (i) => i.id !== interviewerId && i._id !== interviewerId
+      );
 
       // Reset selectedInterviewType if no interviewers are left
       if (
@@ -1635,6 +1734,8 @@ const RoundFormInterviews = () => {
     selectedInterviewType === "Internal"
       ? internalInterviewers
       : externalInterviewers;
+
+  console.log("selectedInterviewers", selectedInterviewers);
 
   const isInternalSelected = selectedInterviewType === "Internal";
   const isExternalSelected = selectedInterviewType === "External";
@@ -1955,9 +2056,9 @@ const RoundFormInterviews = () => {
                 userId: undefined,
                 ...(interviewType === "scheduled" &&
                   formattedStartTime && {
-                    start_time: formattedStartTime,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  }),
+                  start_time: formattedStartTime,
+                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                }),
                 settings: {
                   join_before_host: true,
                   host_video: false,
@@ -1973,37 +2074,39 @@ const RoundFormInterviews = () => {
                 }
               );
             } else if (selectedMeetingPlatform === "videosdk") {
-                try {
-                  setMeetingCreationProgress("Creating VideoSDK meeting...");
+              try {
+                setMeetingCreationProgress("Creating VideoSDK meeting...");
 
-                  // Import the createMeeting function from VideoSDK api
-                  const { createMeeting } = await import('../../../../../VideoSDK1/api.js');
+                // Import the createMeeting function from VideoSDK api
+                const { createMeeting } = await import(
+                  "../../../../../VideoSDK1/api.js"
+                );
 
-                  // Get the token - make sure you have this in your environment or state
-                  const token = process.env.REACT_APP_VIDEOSDK_TOKEN;
+                // Get the token - make sure you have this in your environment or state
+                const token = process.env.REACT_APP_VIDEOSDK_TOKEN;
 
-                  if (!token) {
-                    throw new Error("VideoSDK token is not configured");
-                  }
-
-                  // Create the meeting
-                  const { meetingId, err } = await createMeeting({ token });
-
-                  if (err) {
-                    throw new Error(err);
-                  }
-
-                  // Construct the meeting URL - adjust the path as needed
-                  meetingLink = `${window.location.origin}/videosdk-meeting?meetingId=${meetingId}`;
-
-                  setMeetingCreationProgress("Meeting created successfully");
-                } catch (error) {
-                  console.error("Error creating VideoSDK meeting:", error);
-                  setMeetingCreationProgress(`Error: ${error.message}`);
-                  setIsMeetingCreationLoading(false);
-                  return;
+                if (!token) {
+                  throw new Error("VideoSDK token is not configured");
                 }
+
+                // Create the meeting
+                const { meetingId, err } = await createMeeting({ token });
+
+                if (err) {
+                  throw new Error(err);
+                }
+
+                // Construct the meeting URL - adjust the path as needed
+                meetingLink = `${window.location.origin}/videosdk-meeting?meetingId=${meetingId}`;
+
+                setMeetingCreationProgress("Meeting created successfully");
+              } catch (error) {
+                console.error("Error creating VideoSDK meeting:", error);
+                setMeetingCreationProgress(`Error: ${error.message}`);
+                setIsMeetingCreationLoading(false);
+                return;
               }
+            }
 
             // Fixed: was using undefined 'data'
             if (meetingLink) {
@@ -2065,6 +2168,12 @@ const RoundFormInterviews = () => {
         response = await saveInterviewRound(payload);
       }
 
+      // Trust backend's returned status
+      const newStatus = response?.savedRound?.status || response?.updatedRound?.status;
+      if (newStatus) {
+        setStatus(newStatus);
+      }
+
       console.log("response response", response);
 
       // ✅ Collect success messages instead of showing immediately
@@ -2096,64 +2205,65 @@ const RoundFormInterviews = () => {
         // Meeting platform link creation
         if (response.status === "ok") {
           // Handle Face to Face (no meeting link)
-          if (!shouldGenerateMeeting && selectedInterviewers?.length > 0) {
-            const faceToFaceRoundData = {
-              ...roundData,
-              status: isReschedule ? "Rescheduled" : "Scheduled",
-            };
+          // need to ask with ranjith why we use this code -ashraf
+          // if (!shouldGenerateMeeting && selectedInterviewers?.length > 0) {
+          //   const faceToFaceRoundData = {
+          //     ...roundData,
+          //     status: isReschedule ? "Rescheduled" : "Scheduled",
+          //   };
 
-            const updatePayload = {
-              interviewId,
-              roundId: targetRoundId,
-              round: faceToFaceRoundData,
-              ...(isEditing ? { questions: interviewQuestionsList } : {}),
-            };
+          //   const updatePayload = {
+          //     interviewId,
+          //     roundId: targetRoundId,
+          //     round: faceToFaceRoundData,
+          //     ...(isEditing ? { questions: interviewQuestionsList } : {}),
+          //   };
 
-            await updateInterviewRound(updatePayload);
-          }
+          //   await updateInterviewRound(updatePayload);
+          // }
 
           // ✅ Email sending logic (internal interviewers)
-          try {
-            const isInternal = selectedInterviewType === "Internal";
+          // try {
+          //   // const isInternal = selectedInterviewType === "Internal";
 
-            const shouldSendEmails =
-              payload?.round?.interviewMode !== "Face to Face" &&
-              Array.isArray(selectedInterviewers) &&
-              selectedInterviewers.length > 0;
+          //   // const shouldSendEmails =
+          //   //   selectedInterviewType === "Internal" &&
+          //   //   Array.isArray(selectedInterviewers) &&
+          //   //   selectedInterviewers.length > 0;
 
-            if (shouldSendEmails && isInternal) {
-              const emailResponse = await axios.post(
-                `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
-                {
-                  interviewId: interviewId,
-                  roundId: targetRoundId,
-                  sendEmails: true,
-                },
-                {
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${Cookies.get("authToken")}`,
-                  },
-                }
-              );
+          //   // if (shouldSendEmails && isInternal) {
+          //   //   const emailResponse = await axios.post(
+          //   //     `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
+          //   //     {
+          //   //       interviewId: interviewId,
+          //   //       roundId: targetRoundId,
+          //   //       sendEmails: true,
+          //   //     },
+          //   //     {
+          //   //       headers: {
+          //   //         "Content-Type": "application/json",
+          //   //         Authorization: `Bearer ${Cookies.get("authToken")}`,
+          //   //       },
+          //   //     }
+          //   //   );
 
-              if (emailResponse.data.success) {
-                successMessages.push(
-                  "Interview round created and emails sent successfully!"
-                );
-                if (emailResponse.data.data.emailsSent > 0) {
-                  successMessages.push(
-                    `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
-                  );
-                }
-              } else {
-                notify.error("Round created but email sending failed");
-              }
-            }
-          } catch (emailError) {
-            console.error("Error sending emails:", emailError);
-            notify.error("Round created but email sending failed");
-          }
+          //   //   if (emailResponse.data.success) {
+          //   //     successMessages.push(
+          //   //       "Interview round created and emails sent successfully!"
+          //   //     );
+          //   //     if (emailResponse.data.data.emailsSent > 0) {
+          //   //       successMessages.push(
+          //   //         `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
+          //   //       );
+          //   //     }
+          //   //   } else {
+          //   //     notify.error("Round created but email sending failed");
+          //   //   }
+          //   // }
+          // } catch (emailError) {
+          //   console.error("Error sending emails:", emailError);
+          //   notify.error("Round created but email sending failed");
+          // }
 
           // ✅ Show all collected success messages sequentially
           for (const [i, msg] of successMessages.entries()) {
@@ -2887,8 +2997,9 @@ const RoundFormInterviews = () => {
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
                                 ? "border-custom-blue bg-blue-50"
                                 : "border-gray-300 hover:border-gray-400"
-                            }`}
+                              }`}
                             key="instant-btn"
+                          // disabled={status === "RequestSent"}
                           >
                             <Clock
                               className={`h-6 w-6 ${interviewType === "instant"
@@ -2918,7 +3029,8 @@ const RoundFormInterviews = () => {
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
                                 ? "border-custom-blue bg-blue-50"
                                 : "border-gray-300 hover:border-gray-400"
-                            }`}
+                              }`}
+                            // disabled={status === "RequestSent"}
                             key="scheduled-btn"
                           >
                             <Calendar
@@ -2961,6 +3073,7 @@ const RoundFormInterviews = () => {
                                     ? scheduledDate
                                     : ""
                                 }
+                                // disabled={status === "RequestSent"}
                                 onChange={handleScheduledDateChange} // Use the new handler
                                 //<-----v1.0.4----
                                 // onChange={(e) => {
@@ -2972,7 +3085,6 @@ const RoundFormInterviews = () => {
                                 //   );
                                 // }}
                                 min={twoHoursFromNowLocal()}
-                                //-----v1.0.4---->
                                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-custom-blue focus:border-custom-blue sm:text-sm"
                               />
                             </div>
@@ -3086,25 +3198,32 @@ const RoundFormInterviews = () => {
                                 // - Editing/rescheduling and original type was External
                                 // - Or currently External is selected (in create mode)
                                 (isEditing || isReschedule) &&
-                                roundEditData?.interviewerType === "External"
+                                  roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
                               }
                               disabled={
                                 ((isEditing || isReschedule) &&
                                   roundEditData?.interviewerType ===
-                                    "External") ||
-                                isExternalSelected
+                                  "External") ||
+                                isExternalSelected ||
+                                status === "RequestSent"
                               }
+                              // disabled={
+                              //   ((isEditing || isReschedule) &&
+                              //     roundEditData?.interviewerType ===
+                              //       "External") ||
+                              //   isExternalSelected
+                              // }
                               title={
                                 (isEditing || isReschedule) &&
-                                roundEditData?.interviewerType === "External"
+                                  roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
                                   : isExternalSelected
-                                  ? "Clear outsourced interviewers first"
-                                  : ""
+                                    ? "Clear outsourced interviewers first"
+                                    : ""
                               }
                             >
                               <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
@@ -3121,25 +3240,35 @@ const RoundFormInterviews = () => {
                               size="sm"
                               className={
                                 (isEditing || isReschedule) &&
-                                roundEditData?.interviewerType === "External"
+                                  roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
                               }
                               disabled={
                                 ((isEditing || isReschedule) &&
                                   roundEditData?.interviewerType ===
-                                    "External") ||
-                                isExternalSelected
+                                  "External") ||
+                                isInternalSelected ||
+                                interviewMode === "Face to Face" ||
+                                status === "RequestSent" ||
+                                status === "Scheduled" ||
+                                status === "Rescheduled"
                               }
+                              // disabled={
+                              //   ((isEditing || isReschedule) &&
+                              //     roundEditData?.interviewerType ===
+                              //       "External") ||
+                              //   isExternalSelected
+                              // }
                               title={
                                 (isEditing || isReschedule) &&
-                                roundEditData?.interviewerType === "External"
+                                  roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
                                   : isExternalSelected
-                                  ? "Clear outsourced interviewers first"
-                                  : ""
+                                    ? "Clear outsourced interviewers first"
+                                    : ""
                               }
                             >
                               <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
@@ -3158,29 +3287,33 @@ const RoundFormInterviews = () => {
                             size="sm"
                             className={
                               (isEditing || isReschedule) &&
-                              roundEditData?.interviewerType === "Internal"
+                                roundEditData?.interviewerType === "Internal"
                                 ? "opacity-50 cursor-not-allowed"
                                 : isInternalSelected ||
                                   interviewMode === "Face to Face"
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
                             }
                             disabled={
                               ((isEditing || isReschedule) &&
                                 roundEditData?.interviewerType ===
-                                  "Internal") ||
+                                "Internal") ||
                               isInternalSelected ||
-                              interviewMode === "Face to Face"
+                              interviewMode === "Face to Face" ||
+                              status === "RequestSent" ||
+                              status === "Rescheduled" ||
+                              (status === "Scheduled" &&
+                                internalInterviewers.length > 0)
                             }
                             title={
                               (isEditing || isReschedule) &&
-                              roundEditData?.interviewerType === "Internal"
+                                roundEditData?.interviewerType === "Internal"
                                 ? "Cannot change from Internal to Outsourced interviewers in edit/reschedule"
                                 : isInternalSelected
-                                ? "Clear internal interviewers first"
-                                : interviewMode === "Face to Face"
-                                ? "Outsourced interviewers not allowed for Face-to-Face"
-                                : ""
+                                  ? "Clear internal interviewers first"
+                                  : interviewMode === "Face to Face"
+                                    ? "Outsourced interviewers not allowed for Face-to-Face"
+                                    : ""
                             }
                           >
                             <Users className="h-4 w-4 sm:mr-0 mr-1 text-orange-600" />
@@ -3213,30 +3346,61 @@ const RoundFormInterviews = () => {
                         ) : (
                           <div>
                             <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center">
-                                <Users className="h-4 w-4 text-gray-500 mr-2" />
-                                <span className="text-sm text-gray-700">
-                                  {selectedInterviewers.length} Interviewer
-                                  {selectedInterviewers.length > 1 ? "s " : " "}
-                                  <span className="sm:hidden inline ml-1">
-                                    Selected
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center">
+                                  <Users className="h-4 w-4 text-gray-500 mr-2" />
+                                  <span className="text-sm text-gray-700">
+                                    {selectedInterviewers.length} Interviewer
+                                    {selectedInterviewers.length > 1
+                                      ? "s "
+                                      : " "}
+                                    <span className="sm:hidden inline ml-1">
+                                      Selected
+                                    </span>
+                                    {isInternalSelected && (
+                                      <span className="ml-1 px-2 py-0.5 bg-blue-100 text-custom-blue rounded-full text-xs">
+                                        Internal
+                                      </span>
+                                    )}
+                                    {isExternalSelected && (
+                                      <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
+                                        Outsourced
+                                      </span>
+                                    )}
                                   </span>
-                                  {isInternalSelected && (
-                                    <span className="ml-1 px-2 py-0.5 bg-blue-100 text-custom-blue rounded-full text-xs">
-                                      Internal
-                                    </span>
+                                </div>
+
+                                {/* === ADD THIS NEW SECTION HERE === */}
+                                {/* Pending Request Status Badge */}
+                                {isExternalSelected &&
+                                  status === "RequestSent" &&
+                                  externalInterviewers.length > 0 && (
+                                    <div className="ml-3 inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-1.5 rounded-full">
+                                      <Clock className="h-3 w-3 mr-1.5" />
+                                      <span>
+                                        {externalInterviewers.length} Pending
+                                      </span>
+                                      <span className="ml-1.5 text-yellow-600 text-xs">
+                                        (not accepted)
+                                      </span>
+                                    </div>
                                   )}
-                                  {isExternalSelected && (
-                                    <span className="ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
-                                      Outsourced
-                                    </span>
-                                  )}
-                                </span>
+                                {/* === END OF NEW SECTION === */}
                               </div>
                               {selectedInterviewers.length > 0 && (
                                 <button
                                   type="button"
                                   onClick={handleClearAllInterviewers}
+                                  disabled={
+                                    status === "RequestSent" ||
+                                    status === "Scheduled" ||
+                                    status === "ReScheduled"
+                                  }
+                                  title={
+                                    status === "RequestSent"
+                                      ? "Cannot clear interviewers after request is sent"
+                                      : "Clear All"
+                                  }
                                   className="text-sm text-red-600 hover:text-red-800 flex items-center"
                                 >
                                   <Trash2 className="h-3 w-3 mr-1" />
@@ -3358,7 +3522,19 @@ const RoundFormInterviews = () => {
                                                 interviewer._id
                                               )
                                             }
-                                            className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
+                                            // disabled={status === "RequestSent"}
+                                            disabled={
+                                              // status === "RequestSent" ||
+                                              status === "Scheduled" ||
+                                              status === "ReScheduled"
+                                            }
+                                            className={`text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100 ${status === "RequestSent" ||
+                                                status === "Scheduled" ||
+                                                status === "ReScheduled"
+                                                ? "opacity-50 cursor-not-allowed"
+                                                : ""
+                                              }`}
+                                            // className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
                                             title="Remove interviewer"
                                           >
                                             <X className="h-4 w-4" />
@@ -3424,8 +3600,24 @@ const RoundFormInterviews = () => {
                                             interviewer.id || interviewer._id
                                           )
                                         }
-                                        className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
-                                        title="Remove interviewer"
+                                        className={`text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100 ${status === "RequestSent" ||
+                                            status === "Scheduled" ||
+                                            status === "ReScheduled"
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : ""
+                                          }`}
+                                        title={
+                                          status === "RequestSent"
+                                            ? "Cannot remove interviewers after request is sent"
+                                            : "Remove interviewer"
+                                        }
+                                        disabled={
+                                          status === "RequestSent" ||
+                                          status === "Scheduled" ||
+                                          status === "ReScheduled"
+                                        }
+                                      // className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
+                                      // title="Remove interviewer"
                                       >
                                         <X className="h-4 w-4" />
                                       </button>
@@ -3443,6 +3635,7 @@ const RoundFormInterviews = () => {
                           {errors.interviewers}
                         </p>
                       )}
+
                       {/* questions */}
                       <div className="mt-4">
                         <div className="py-3 mx-auto rounded-md">
@@ -3641,9 +3834,69 @@ const RoundFormInterviews = () => {
           // defaultViewType={interviewerViewType}
           selectedGroupName={interviewerGroupName}
           selectedGroupId={interviewerGroupId}
-          // key={`${internalInterviewers.length}-${interviewerGroupId}`}
-          //  clearOnViewTypeChange={true}
+        // key={`${internalInterviewers.length}-${interviewerGroupId}`}
+        //  clearOnViewTypeChange={true}
         />
+      )}
+
+      {showDateChangeConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Confirm Change
+            </h3>
+            <p className="text-gray-700 mb-6">
+              Interview requests have already been sent. Changing the date,
+              time, or type will cancel those requests and you’ll need to select
+              interviewers again. Continue?
+            </p>
+
+            <div className="flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDateChangeConfirmation(false);
+                  setPendingDateChange(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDateChange}
+                // onClick={() => {
+                //   if (pendingDateChange) {
+                //     if (pendingDateChange.type === "interviewType") {
+                //       setInterviewType(pendingDateChange.value);
+                //     } else if (pendingDateChange.type === "scheduledDate") {
+                //       setScheduledDate(pendingDateChange.value);
+                //     }
+                //   }
+
+                //   // Clear external interviewers
+                //   setExternalInterviewers([]);
+                //   if (selectedInterviewType === "External") {
+                //     setSelectedInterviewType(null);
+                //   }
+
+                //   // If status was RequestSent, change it back to Draft
+                //   if (status === "RequestSent") {
+                //     setStatus("Draft");
+                //   }
+
+                //   setShowDateChangeConfirmation(false);
+                //   setPendingDateChange(null);
+                // }}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                {status === "RequestSent"
+                  ? "Proceed & Clear Invitations"
+                  : "Proceed & Clear Interviewers"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

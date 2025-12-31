@@ -257,7 +257,10 @@ const RoundCard = ({
       };
 
       // Add cancellation / NoShow reason if provided
-      if ((newStatus === "Cancelled" || newStatus === "NoShow") && reasonValue) {
+      if (
+        (newStatus === "Cancelled" || newStatus === "NoShow") &&
+        reasonValue
+      ) {
         payload.cancellationReason = reasonValue;
         payload.comment = comment || null;
       }
@@ -1690,19 +1693,20 @@ const RoundCard = ({
                         <Calendar className="h-4 w-4 mr-1" /> Reschedule
                       </button>
                     )}
-                  
+
                   {/* No Show */}
-                  {permissions.canCancel && round.roundTitle !== "Assessment" &&  (
-                    <button
-                      onClick={() => {
-                        setActionInProgress(true);
-                        setNoShowReasonModalOpen(true);
-                      }}
-                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                    >
-                      <XCircle className="h-4 w-4 mr-1" /> No Show
-                    </button>
-                  )}
+                  {permissions.canCancel &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => {
+                          setActionInProgress(true);
+                          setNoShowReasonModalOpen(true);
+                        }}
+                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                      >
+                        <XCircle className="h-4 w-4 mr-1" /> No Show
+                      </button>
+                    )}
 
                   {/* Cancel */}
 
@@ -1723,7 +1727,9 @@ const RoundCard = ({
                     )}
                   {/* Edit */}
                   {permissions.canEdit &&
-                    round?.interviewType.toLowerCase() !== "instant" && (
+                    ((round?.status === "Draft" &&
+                      round?.interviewType.toLowerCase() === "instant") ||
+                      round?.interviewType.toLowerCase() !== "instant") && (
                       <button
                         onClick={() => onEdit(round)}
                         className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
