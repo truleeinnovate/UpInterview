@@ -1520,11 +1520,9 @@ const RoundFormInterviews = () => {
 
     // Step 6: Trigger the full submit (which calls PATCH API) after state updates
     // We use setTimeout to ensure all state changes above are applied first
-    let c = 1;
+    // let c = 1;
     setTimeout(() => {
       handleSubmit(new Event("submit"), "changes-confirmed"); // Fake event to match handleSubmit signature
-      c += 1;
-      console.log("c  ", c);
     }, 100);
 
     // // Clear pending state
