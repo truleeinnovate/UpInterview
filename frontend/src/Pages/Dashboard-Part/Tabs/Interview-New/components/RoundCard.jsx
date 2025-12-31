@@ -52,7 +52,10 @@ import { notify } from "../../../../../services/toastService";
 import ScheduledAssessmentResultView from "../../Assessment-Tab/AssessmentViewDetails/ScheduledAssessmentResultView";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
 import RoundStatusReasonModal from "../../CommonCode-AllTabs/RoundStatusReasonModal";
-import { NO_SHOW_OPTIONS, CANCEL_OPTIONS } from "../../../../../utils/roundHistoryOptions";
+import {
+  NO_SHOW_OPTIONS,
+  CANCEL_OPTIONS,
+} from "../../../../../utils/roundHistoryOptions";
 
 const RoundCard = ({
   round,
@@ -256,7 +259,10 @@ const RoundCard = ({
       };
 
       // Add cancellation / NoShow reason if provided
-      if ((newStatus === "Cancelled" || newStatus === "NoShow") && reasonValue) {
+      if (
+        (newStatus === "Cancelled" || newStatus === "NoShow") &&
+        reasonValue
+      ) {
         payload.cancellationReason = reasonValue;
         payload.comment = comment || null;
       }
@@ -1028,7 +1034,9 @@ const RoundCard = ({
         <div className="w-full max-w-xl h-full bg-white shadow-xl flex flex-col">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Round Activity</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Round Activity
+              </h3>
               <p className="text-xs text-gray-500">
                 {interviewData?.candidateId?.FirstName}{" "}
                 {interviewData?.candidateId?.LastName} - {round?.roundTitle}
@@ -1085,13 +1093,17 @@ const RoundCard = ({
                       <div className="px-4 py-3 bg-blue-50/60 text-xs text-gray-700">
                         {reasonLabel && (
                           <div className="mb-1">
-                            <span className="font-medium text-gray-500">Reason:</span>
+                            <span className="font-medium text-gray-500">
+                              Reason:
+                            </span>
                             <span className="ml-1">{reasonLabel}</span>
                           </div>
                         )}
                         {entry?.comment && (
                           <div>
-                            <span className="font-medium text-gray-500">Comment:</span>
+                            <span className="font-medium text-gray-500">
+                              Comment:
+                            </span>
                             <span className="ml-1">{entry.comment}</span>
                           </div>
                         )}
@@ -1777,19 +1789,20 @@ const RoundCard = ({
                         <Calendar className="h-4 w-4 mr-1" /> Reschedule
                       </button>
                     )}
-                  
+
                   {/* No Show */}
-                  {permissions.canCancel && round.roundTitle !== "Assessment" &&  (
-                    <button
-                      onClick={() => {
-                        setActionInProgress(true);
-                        setNoShowReasonModalOpen(true);
-                      }}
-                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                    >
-                      <XCircle className="h-4 w-4 mr-1" /> No Show
-                    </button>
-                  )}
+                  {permissions.canCancel &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => {
+                          setActionInProgress(true);
+                          setNoShowReasonModalOpen(true);
+                        }}
+                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                      >
+                        <XCircle className="h-4 w-4 mr-1" /> No Show
+                      </button>
+                    )}
 
                   {/* Cancel */}
 
@@ -1810,7 +1823,9 @@ const RoundCard = ({
                     )}
                   {/* Edit */}
                   {permissions.canEdit &&
-                    round?.interviewType.toLowerCase() !== "instant" && (
+                    ((round?.status === "Draft" &&
+                      round?.interviewType.toLowerCase() === "instant") ||
+                      round?.interviewType.toLowerCase() !== "instant") && (
                       <button
                         onClick={() => onEdit(round)}
                         className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"

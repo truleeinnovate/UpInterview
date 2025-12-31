@@ -702,7 +702,58 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
   };
 
   const ScreenShareBTN = ({ isMobile, isTab }) => {
-    const { localScreenShareOn, toggleScreenShare, presenterId } = useMeeting();
+    const { localScreenShareOn, toggleScreenShare, presenterId, localParticipant } = useMeeting();
+
+    const handleScreenShare = async () => {
+      console.log('Screen share button clicked');
+      console.log('Current presenterId:', presenterId);
+      console.log('localScreenShareOn:', localScreenShareOn);
+      console.log('Local participant ID:', localParticipant?.id);
+      
+      try {
+        if (!presenterId || localScreenShareOn) {
+          console.log('Initiating screen share...');
+          // Request screen share
+          const screenShareStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: true,
+          });
+          
+          console.log('Screen share stream obtained:', screenShareStream);
+          
+          // Handle when user stops sharing from the browser's UI
+          screenShareStream.getVideoTracks()[0].onended = () => {
+            console.log('Screen share ended by user');
+            if (localScreenShareOn) {
+              console.log('Stopping screen share via toggle');
+              toggleScreenShare();
+            }
+          };
+          
+          // Toggle screen share
+          await toggleScreenShare();
+          console.log('Screen share toggled successfully');
+        } else if (presenterId === localParticipant?.id) {
+          console.log('Stopping screen share...');
+          // Stop screen share
+          await toggleScreenShare();
+          console.log('Screen share stopped successfully');
+        } else {
+          console.log('Another participant is already presenting');
+        }
+      } catch (error) {
+        console.error('Error in screen share:', error);
+        if (error.name === 'NotAllowedError') {
+          console.error('Screen share permission denied by user');
+        } else if (error.name === 'NotFoundError') {
+          console.error('No screen sharing source selected');
+        } else if (error.name === 'NotReadableError') {
+          console.error('Could not start screen sharing due to a hardware error');
+        } else if (error.name === 'OverconstrainedError') {
+          console.error('Screen sharing failed due to constraints:', error.message);
+        }
+      }
+    };
 
     return isMobile || isTab ? (
       <MobileIconButton
@@ -711,7 +762,7 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
           presenterId
             ? localScreenShareOn
               ? "Stop Presenting"
-              : null
+              : `Presenting by ${presenterId === localParticipant?.id ? 'You' : 'Another user'}`
             : "Present Screen"
         }
         buttonText={
@@ -723,9 +774,7 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
         }
         isFocused={localScreenShareOn}
         Icon={ScreenShareIcon}
-        onClick={() => {
-          toggleScreenShare();
-        }}
+        onClick={handleScreenShare}
         disabled={
           presenterId
             ? localScreenShareOn
@@ -739,15 +788,13 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
     ) : (
       <OutlinedButton
         Icon={ScreenShareIcon}
-        onClick={() => {
-          toggleScreenShare();
-        }}
+        onClick={handleScreenShare}
         isFocused={localScreenShareOn}
         tooltip={
           presenterId
             ? localScreenShareOn
               ? "Stop Presenting"
-              : null
+              : `Presenting by ${presenterId === localParticipant?.id ? 'You' : 'Another user'}`
             : "Present Screen"
         }
         disabled={presenterId ? (localScreenShareOn ? false : true) : false}

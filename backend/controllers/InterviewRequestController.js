@@ -9,12 +9,12 @@ const InterviewRequest = require("../models/InterviewRequest");
 const { Contacts } = require("../models/Contacts");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
 const Wallet = require("../models/WalletTopup");
-const { Candidate } = require("../models/Candidate");
+const { Candidate } = require("../models/Candidate.js");
 const {
   MockInterviewRound,
-} = require("../models/Mockinterview/mockinterviewRound");
-const { MockInterview } = require("../models/Mockinterview/mockinterview");
-const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+} = require("../models/Mockinterview/mockinterviewRound.js");
+const { MockInterview } = require("../models/Mockinterview/mockinterview.js");
+const { generateUniqueId } = require("../services/uniqueIdGeneratorService.js");
 const { buildSmartRoundUpdate } = require("./interviewRoundsController.js");
 
 //old mansoor code i have changed this code because each interviwer send one request
@@ -604,22 +604,35 @@ exports.acceptInterviewRequest = async (req, res) => {
     if (!request) {
       return res.status(404).json({ message: "Interview request not found" });
     }
-    let round;
+    // let round;
 
     // Update based on interview type: MockInterviewRound or InterviewRounds
-    if (request.isMockInterview) {
-      round = await MockInterviewRound.findById(roundId);
-      if (!round) {
-        return res
-          .status(404)
-          .json({ message: "Mock interview round not found" });
-      }
-    } else {
-      round = await InterviewRounds.findById(roundId);
-      if (!round) {
-        return res.status(404).json({ message: "Interview round not found" });
-      }
+    // if (request.isMockInterview) {
+    //   round = await MockInterviewRound.findById(roundId);
+    //   if (!round) {
+    //     return res
+    //       .status(404)
+    //       .json({ message: "Mock interview round not found" });
+    //   }
+    // } else {
+    //   round = await InterviewRounds.findById(roundId);
+    //   if (!round) {
+    //     return res.status(404).json({ message: "Interview round not found" });
+    //   }
+    // }
+
+    /* =====================================================
+     * FETCH ROUND (mock / normal)
+     * =================================================== */
+    const RoundModel = request.isMockInterview
+      ? MockInterviewRound
+      : InterviewRounds;
+
+    const round = await RoundModel.findById(roundId);
+    if (!round) {
+      return res.status(404).json({ message: "Interview round not found" });
     }
+
     //schedule only update for 1 st time from second time rescheduled will update
     // Decide schedule action based on history
     const hasScheduledOnce = round.history?.some(
@@ -629,29 +642,84 @@ exports.acceptInterviewRequest = async (req, res) => {
     const scheduleAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
 
     if (!round.interviewers.includes(contactId)) {
-      round.interviewers.push(contactId);
-      round.status = scheduleAction;
+      // 🔧 CHANGED: build minimal update body
+      const updatedBody = {
+        status: scheduleAction,
+        dateTime: round.dateTime, // required for history
+        // round.interviewers.push(contactId);
+        // interviewers: [
+        //   ...(round.interviewers || []).map((id) => ({ _id: id })),
+        //   { _id: contactId },
+        // ],
+        // round.status = "Scheduled";
+        selectedInterviewers: [
+          ...(round.interviewers || []).map((id) => ({ _id: id })),
+          { _id: contactId },
+        ],
+      };
 
-      // Build the update payload using your helper
+      // 🔧 CHANGED: explicit change detection
+      const changes = {
+        anyChange: true,
+        statusChanged: round.status !== scheduleAction,
+        dateTimeChanged: false,
+      };
+
+      // 🔧 CHANGED: correct helper usage
       const updatePayload = buildSmartRoundUpdate({
         existingRound: round,
-        body: round, // new array with added interviewer
-        // You can pass optional reason if frontend provides it
-        // rescheduleReason: "added_new_interviewer",
-
-        actingAsUserId: req.user?._id || null, // or whoever is accepting the request
-        // changes,
+        body: updatedBody,
+        actingAsUserId: req.user?._id || null,
+        changes,
       });
 
-      // Apply atomic update with history tracking
-      // const updatedRound = await RoundModel.findByIdAndUpdate(
-      //   roundId,
-      //   updatePayload,
-      //   { new: true, runValidators: true }
-      // );
-      round.history.push(updatePayload);
+      console.log("updatePayload", updatePayload);
 
-      await round.save();
+      // ✅ IMPORTANT: atomic update (NO manual history push)
+      if (updatePayload) {
+        await RoundModel.findByIdAndUpdate(
+          roundId,
+          {
+            ...updatePayload,
+            interviewers: [
+              ...(round.interviewers || []).map((id) => ({ _id: id })),
+              { _id: contactId },
+            ],
+            selectedInterviewers: [
+              ...(round.interviewers || []).map((id) => ({ _id: id })),
+              { _id: contactId },
+            ],
+          },
+          {
+            new: true,
+            runValidators: true,
+          }
+        );
+      }
+
+      // round.interviewers.push(contactId);
+      // round.status = scheduleAction;
+
+      // // Build the update payload using your helper
+      // const updatePayload = buildSmartRoundUpdate({
+      //   existingRound: round,
+      //   body: round, // new array with added interviewer
+      //   // You can pass optional reason if frontend provides it
+      //   // rescheduleReason: "added_new_interviewer",
+
+      //   actingAsUserId: req.user?._id || null, // or whoever is accepting the request
+      //   // changes,
+      // });
+
+      // // Apply atomic update with history tracking
+      // // const updatedRound = await RoundModel.findByIdAndUpdate(
+      // //   roundId,
+      // //   updatePayload,
+      // //   { new: true, runValidators: true }
+      // // );
+      // round.history.push(updatePayload);
+
+      // await round.save();
     } else {
     }
 
@@ -932,6 +1000,7 @@ exports.acceptInterviewRequest = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 exports.getSingleInterviewRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -956,3 +1025,5 @@ exports.getSingleInterviewRequest = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// module.exports = createRequest;

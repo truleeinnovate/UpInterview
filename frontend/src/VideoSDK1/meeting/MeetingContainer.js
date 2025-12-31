@@ -367,10 +367,19 @@ export function MeetingContainer({
             {typeof localParticipantAllowedJoin === "boolean" ? (
               localParticipantAllowedJoin ? (
                 <div className="flex flex-col h-full w-full">
-                  <div className="flex-1 overflow-hidden">
+                  <div className="h-full">
                     {isPresenting ? (
                       <div className="h-full">
-                        <PresenterView height={containerHeight - bottomBarHeight} />
+                        <div style={{ border: '2px solid red', padding: '10px', marginBottom: '10px' }}>
+                          <p>Debug: Presenter View Active</p>
+                          <p>Presenter ID: {mMeeting.presenterId}</p>
+                          <p>Local Participant ID: {mMeeting.localParticipant?.id}</p>
+                          <p>Is Local Presenting: {mMeeting.localParticipant?.id === mMeeting.presenterId ? 'Yes' : 'No'}</p>
+                        </div>
+                        <PresenterView 
+                          height={containerHeight - bottomBarHeight} 
+                          onError={(error) => console.error('PresenterView error:', error)}
+                        />
                       </div>
                     ) : (
                       <div
