@@ -495,6 +495,12 @@ const ContactUsPage = lazy(() =>
 const ContactUsViewPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/ContactUs/ContactUsViewPage.jsx")
 );
+const InterviewPolicy = lazy(() =>
+  import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicy.jsx")
+);
+const RegionalTax = lazy(() =>
+  import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTax.jsx")
+);
 // v2.0.0 <------------------------------------------------------------------
 // v1.0.7 ------------------------------------------------------------------------------->
 // v1.0.8 ------------------------------------------------------------------------------->
@@ -528,9 +534,18 @@ const AuthRoutes = () => (
 
     <Route path="/video-dashboard" element={<VideoSDKDashboard1 />} />
 
-    <Route path="/video-sdk-candidate-details" element={<VideoSdkPanel panelType="candidate-details" />} />
-    <Route path="/video-sdk-feedback" element={<VideoSdkPanel panelType="feedback" />} />
-    <Route path="/video-sdk-interview-actions" element={<VideoSdkPanel panelType="interview-actions" />} />
+    <Route
+      path="/video-sdk-candidate-details"
+      element={<VideoSdkPanel panelType="candidate-details" />}
+    />
+    <Route
+      path="/video-sdk-feedback"
+      element={<VideoSdkPanel panelType="feedback" />}
+    />
+    <Route
+      path="/video-sdk-interview-actions"
+      element={<VideoSdkPanel panelType="interview-actions" />}
+    />
 
     <Route path="/assessmenttest" element={<AssessmentTest />} />
     <Route path="/pending-approval" element={<PendingApproval />} />
@@ -1448,13 +1463,28 @@ const MainAppRoutes = ({
                 <Route path="/master-data" element={<MasterData />} />
                 <Route path="/master-data/:type" element={<MasterTable />} />
                 {/* v2.0.0 <------------------------------------------------- */}
-                <Route
-                  path="/question-bank-manager"
-                  element={<QuestionBankManager />}
-                />
-                <Route path="/contact-us" element={<ContactUsPage />}>
-                  <Route path=":id" element={<ContactUsViewPage />} />
-                </Route>
+
+                {hasPermission("QuestionBankManager") && (
+                  <Route
+                    path="/question-bank-manager"
+                    element={<QuestionBankManager />}
+                  />
+                )}
+
+                {hasPermission("ContactUs") && (
+                  <Route path="/contact-us" element={<ContactUsPage />}>
+                    <Route path=":id" element={<ContactUsViewPage />} />
+                  </Route>
+                )}
+                {hasPermission("InterviewPolicy") && (
+                  <Route
+                    path="/interview-policy"
+                    element={<InterviewPolicy />}
+                  />
+                )}
+                {hasPermission("RegionalTax") && (
+                  <Route path="/regional-tax" element={<RegionalTax />} />
+                )}
                 {/* v2.0.0 -------------------------------------------------> */}
                 {/* v1.0.7 ---------------------------------------------------------------> */}
                 {/* v1.0.8 ---------------------------------------------------------------------> */}
@@ -1497,10 +1527,10 @@ const App = () => {
       "/callback",
       "/oauth2callback",
       "/join-meeting",
-      '/video-dashboard',
-      '/video-sdk-candidate-details',
-      '/video-sdk-feedback',
-      '/video-sdk-interview-actions',
+      "/video-dashboard",
+      "/video-sdk-candidate-details",
+      "/video-sdk-feedback",
+      "/video-sdk-interview-actions",
       "/code-editor",
       "/whiteboard"
     ].some(

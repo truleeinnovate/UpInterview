@@ -284,7 +284,8 @@ const NewAssessment = () => {
 
       setFormData({
         AssessmentTitle: assessment.AssessmentTitle || "",
-        Position: assessment.Position || "",
+        // Position: assessment.Position || "",
+        Position: assessment.Position?._id || assessment.Position || "",
         categoryOrTechnology: matchedCategory?.categoryOrTechnology || "",
         DifficultyLevel: assessment.DifficultyLevel || "",
         Duration: assessment.Duration || "60 Minutes",
@@ -825,7 +826,8 @@ const NewAssessment = () => {
         ...(formData.AssessmentTitle && {
           AssessmentTitle: formData.AssessmentTitle,
         }),
-        ...(formData.Position && { Position: formData.Position }),
+        // ...(formData.Position && { Position: formData.Position }),
+        Position: typeof formData.Position === 'object' ? formData.Position._id : formData.Position,
         ...(formData.Duration && { Duration: formData.Duration }),
         ...(formData.DifficultyLevel && {
           DifficultyLevel: formData.DifficultyLevel,
@@ -1798,7 +1800,9 @@ const NewAssessment = () => {
                           setShowDropdownDuration={setShowDropdownDuration}
                           positions={positionsForDropdown}
                           positionsLoading={positionsLoading}
-                          onPositionMenuScrollToBottom={handlePositionMenuScrollToBottom}
+                          onPositionMenuScrollToBottom={
+                            handlePositionMenuScrollToBottom
+                          }
                           onPositionInputChange={handlePositionSearchChange}
                           errors={errors}
                           isEditing={isEditing}
