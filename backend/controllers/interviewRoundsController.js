@@ -378,13 +378,11 @@ const updateInterviewRound = async (req, res) => {
     });
   }
   // console.log("existingRound", existingRound);
+  let updatedRound = null;
 
-  let updatePayload = buildSmartRoundUpdate({
-    existingRound,
-    body: req.body.round,
-    actingAsUserId,
-    changes,
-  });
+  console.log("updatedRound", updatedRound);
+
+  let updatePayload = null;
 
   // Safe initialization if buildSmartRoundUpdate returned null or no $push
   if (!updatePayload) {
@@ -436,41 +434,40 @@ const updateInterviewRound = async (req, res) => {
   console.log("isOutsource", isOutsource);
 
   // ranjith added this for outsource interviwers or internal interviewers
-  const hasInterviewers = req.body.round?.interviewers.length > 0 || false;
+  const hasInterviewers =
+    req.body.round?.interviewerType === "Internal"
+      ? req.body.round?.interviewers.length > 0 || false
+      : false;
 
   //  for outsource interviewers
   const hasselectedInterviewers =
-    req.body.round?.selectedInterviewers.length > 0 || false;
+    req.body.round?.interviewerType === "External"
+      ? req.body.round?.selectedInterviewers.length > 0 || false
+      : false;
   // req.body.round?.selectedInterviewers.length > 0
 
   console.log("req.body.round?.interviewers", req.body.round?.interviewers);
-  console.log(
-    "hasselectedInterviewers",
-    hasselectedInterviewers,
-    existingRound.status
-  );
+
   console.log(
     "req.body.round?.selectedInterviewers",
     req.body.round?.selectedInterviewers
   );
 
-  //  const updatePayload = buildSmartRoundUpdate({
-  //     existingRound: round,
-  //     body: req.body,
-  //     actingAsUserId,
-  //     changes,
-  //   });
-
-  let updatedRound = null;
-
   const statusAllowsQuestionUpdate = [
+    "Draft",
     "RequestSent",
     "Scheduled",
     "Rescheduled",
   ].includes(existingRound.status);
 
-  const interviewersUnchanged =
-    !changes.dateTimeChanged && !hasselectedInterviewers && !hasInterviewers;
+  const interviewersUnchanged = !changes.dateTimeChanged;
+  // && !hasselectedInterviewers && !hasInterviewers;
+
+  console.log("statusAllowsQuestionUpdate", statusAllowsQuestionUpdate);
+  console.log("interviewersUnchanged", interviewersUnchanged);
+  console.log("changes", changes);
+  console.log("questionsChanged", changes?.questionsChanged);
+  console.log("instructionsChanged", changes.instructionsChanged);
 
   const shouldUpdateQuestionsOrInstructions =
     statusAllowsQuestionUpdate &&
@@ -478,6 +475,8 @@ const updateInterviewRound = async (req, res) => {
     (changes.questionsChanged || changes.instructionsChanged);
 
   if (shouldUpdateQuestionsOrInstructions) {
+    console.log("Updating only questions or instructions");
+
     await handleInterviewQuestions(interviewId, roundId, req.body.questions);
   } else if (changes.instructionsChanged) {
     updatePayload.$set.instructions = req.body.round.instructions;
@@ -488,6 +487,7 @@ const updateInterviewRound = async (req, res) => {
       { new: true, runValidators: true }
     );
   } else {
+    let shouldcreateRequestFlow = false;
     // ==================================================================
     // OUTSOURCE LOGIC (mirroring Internal style)
     // ==================================================================
@@ -500,6 +500,7 @@ const updateInterviewRound = async (req, res) => {
       // 1. Draft → RequestSent (sending new requests)
       if (existingRound.status === "Draft" && hasselectedInterviewers) {
         updatePayload.$set.status = "RequestSent";
+        shouldcreateRequestFlow = true;
       }
 
       // 2. RequestSent → Draft (user removing interviewers / cancelling requests)
@@ -678,6 +679,7 @@ const updateInterviewRound = async (req, res) => {
 
         updatePayload.$set.status = scheduleAction;
         shouldSendInternalEmail = true; // First scheduling → send email
+        shouldcreateRequestFlow = true;
       }
       //  else if (
       //   wasScheduledBefore &&
@@ -769,7 +771,7 @@ const updateInterviewRound = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    console.log("updatedRound", updatedRound);
+    // console.log("updatedRound", updatedRound);
 
     // ==================================================================
     // SEND INTERNAL EMAIL ONLY WHEN STATUS BECOMES Scheduled/Rescheduled
@@ -786,8 +788,8 @@ const updateInterviewRound = async (req, res) => {
 
     // === Only trigger interviewer change flow if interviewers actually changed ===
     if (
-      hasselectedInterviewers ||
-      hasInterviewers
+      (hasselectedInterviewers || hasInterviewers) &&
+      shouldcreateRequestFlow
       // changes.interviewersChanged &&
       // req.body?.round?.selectedInterviewers?.length > 0
     ) {
@@ -806,6 +808,13 @@ const updateInterviewRound = async (req, res) => {
     }
   }
 
+  buildSmartRoundUpdate({
+    existingRound,
+    body: updatedRound,
+    actingAsUserId,
+    changes,
+  });
+
   console.log("updatedRoundfinal", updatedRound);
 
   return res.status(200).json({
@@ -814,6 +823,7 @@ const updateInterviewRound = async (req, res) => {
     updatedRound,
   });
 };
+
 //patch call use to update round status along with actions and reasons
 const updateInterviewRoundStatus = async (req, res) => {
   try {
@@ -929,154 +939,304 @@ const updateInterviewRoundStatus = async (req, res) => {
 //   }
 // };
 
+// /**
+//  * Builds a MongoDB update object for InterviewRounds with smart change detection
+//  * - Properly appends to history[] (append-only)
+//  * - Correctly updates currentAction / previousAction / reason fields
+//  * - Handles status changes, reschedules, interviewer changes, and generic fields
+//  *
+//  * @param {Object} params
+//  * @param {Object} params.existingRound - Current round document from DB
+//  * @param {Object} params.body - Incoming request body (or round data)
+//  * @param {String} params.actingAsUserId - User performing the action
+//  * @param {Object} params.changes - Result from detectRoundChanges()
+//  * @returns {Object|null} MongoDB update object or null if no changes
+//  */
+// function buildSmartRoundUpdate({
+//   existingRound = null,
+//   body,
+//   actingAsUserId,
+//   changes,
+//   isCreate = false,
+// }) {
+//   const update = {
+//     $set: {},
+//     $push: { history: [] },
+//   };
+
+//   console.log("bodybody", body);
+
+//   /* ------------------------------------
+//    * Helpers
+//    * ---------------------------------- */
+//   const resolveComment = (reasonCode, comment) =>
+//     reasonCode === "Other" ? comment || null : null;
+
+//   const normalizeAction = (status) =>
+//     status === "RequestSent" ? "RequestSent" : status;
+
+//   const extractInterviewers = () =>
+//     Array.isArray(body.selectedInterviewers)
+//       ? body.selectedInterviewers.map((i) => i.contact?._id || i._id)
+//       : [];
+
+//   const addHistoryEntry = ({
+//     action,
+//     scheduledAt,
+//     reasonCode = null,
+//     comment = null,
+//     interviewers = [],
+//   }) => {
+//     update.$push.history.push({
+//       action,
+//       scheduledAt,
+//       reasonCode,
+//       comment: resolveComment(reasonCode, comment),
+//       interviewers,
+//       participants: [],
+//       createdBy: actingAsUserId,
+//     });
+//   };
+
+//   /* =====================================================
+//    * CREATE FLOW
+//    * =================================================== */
+//   if (isCreate) {
+//     const status = body.status;
+//     const action = normalizeAction(status);
+//     const reasonCode = body.currentActionReason || null;
+
+//     // update.$set.status = status;
+//     update.$set.currentAction = action;
+//     update.$set.previousAction = null;
+//     update.$set.currentActionReason = reasonCode;
+//     update.$set.comments = resolveComment(reasonCode, body.comment);
+
+//     // History only if dateTime exists (policy-relevant)
+//     if (body.dateTime) {
+//       addHistoryEntry({
+//         action,
+//         scheduledAt: body.dateTime,
+//         reasonCode,
+//         comment: body.comment,
+//         interviewers: extractInterviewers(),
+//       });
+//     }
+
+//     return update;
+//   }
+
+//   /* =====================================================
+//    * UPDATE FLOW (unchanged core logic)
+//    * =================================================== */
+
+//   if (!changes?.anyChange) return null;
+
+//   // Generic field updates (except status)
+//   Object.keys(body).forEach((key) => {
+//     if (body[key] !== undefined && key !== "status") {
+//       update.$set[key] = body[key];
+//     }
+//   });
+
+//   // Status change
+//   if (changes.statusChanged && body.status) {
+//     const action = normalizeAction(body.status);
+//     const reasonCode =
+//       body.cancellationReason ||
+//       body.rescheduleReason ||
+//       body.currentActionReason ||
+//       null;
+
+//     update.$set.previousAction = existingRound.currentAction || null;
+//     update.$set.currentAction = action;
+//     update.$set.currentActionReason = reasonCode;
+//     update.$set.status = body.status;
+//     update.$set.comments = resolveComment(reasonCode, body.comment);
+
+//     if (["Scheduled", "Rescheduled", "Cancelled", "NoShow"].includes(action)) {
+//       addHistoryEntry({
+//         action,
+//         scheduledAt: body.dateTime || existingRound.dateTime || null,
+//         reasonCode,
+//         comment: body.comment,
+//         interviewers: extractInterviewers(),
+//       });
+//     }
+//   }
+
+//   // DateTime change → Reschedule
+//   if (changes.dateTimeChanged && existingRound.status === "Scheduled") {
+//     const reasonCode = body.rescheduleReason || "time_changed";
+
+//     update.$set.previousAction = existingRound.currentAction || null;
+//     update.$set.currentAction = "Rescheduled";
+//     update.$set.currentActionReason = reasonCode;
+//     update.$set.comments = resolveComment(reasonCode, body.comment);
+
+//     addHistoryEntry({
+//       action: "Rescheduled",
+//       scheduledAt: body.dateTime,
+//       reasonCode,
+//       comment: body.comment,
+//       interviewers: extractInterviewers(),
+//     });
+//   }
+
+//   // Cleanup
+//   if (update.$push.history.length === 0) delete update.$push;
+//   if (Object.keys(update.$set).length === 0) delete update.$set;
+//   if (!update.$set && !update.$push) return null;
+
+//   return update;
+// }
+
 /**
- * Builds a MongoDB update object for InterviewRounds with smart change detection
- * - Properly appends to history[] (append-only)
- * - Correctly updates currentAction / previousAction / reason fields
- * - Handles status changes, reschedules, interviewer changes, and generic fields
- *
- * @param {Object} params
- * @param {Object} params.existingRound - Current round document from DB
- * @param {Object} params.body - Incoming request body (or round data)
- * @param {String} params.actingAsUserId - User performing the action
- * @param {Object} params.changes - Result from detectRoundChanges()
- * @returns {Object|null} MongoDB update object or null if no changes
+ * Smart update builder for InterviewRounds
+ * ✅ Single place for ALL history creation
+ * ✅ Clear Internal vs External handling
+ * ✅ Append-only history
  */
 function buildSmartRoundUpdate({
-  existingRound = null,
+  existingRound,
   body,
   actingAsUserId,
   changes,
   isCreate = false,
 }) {
-  const update = {
-    $set: {},
-    $push: { history: [] },
-  };
+  const update = { $set: {}, $push: { history: [] } };
 
-  console.log("bodybody", body);
+  const isInternal = body.interviewerType === "Internal";
+  const isExternal = !isInternal;
 
-  /* ------------------------------------
-   * Helpers
-   * ---------------------------------- */
+  const now = new Date();
+
+  /* ---------------- Helpers ---------------- */
+
   const resolveComment = (reasonCode, comment) =>
     reasonCode === "Other" ? comment || null : null;
-
-  const normalizeAction = (status) =>
-    status === "RequestSent" ? "RequestSent" : status;
 
   const extractInterviewers = () =>
     Array.isArray(body.selectedInterviewers)
       ? body.selectedInterviewers.map((i) => i.contact?._id || i._id)
       : [];
 
-  const addHistoryEntry = ({
+  const addHistory = ({
     action,
     scheduledAt,
     reasonCode = null,
     comment = null,
-    interviewers = [],
   }) => {
     update.$push.history.push({
       action,
       scheduledAt,
       reasonCode,
       comment: resolveComment(reasonCode, comment),
-      interviewers,
+      interviewers: extractInterviewers(),
       participants: [],
       createdBy: actingAsUserId,
+      createdAt: now,
     });
   };
 
-  /* =====================================================
-   * CREATE FLOW
-   * =================================================== */
+  /* ================= CREATE ================= */
+
   if (isCreate) {
-    const status = body.status;
-    const action = normalizeAction(status);
-    const reasonCode = body.currentActionReason || null;
-
-    // update.$set.status = status;
-    update.$set.currentAction = action;
+    update.$set.status = body.status;
+    update.$set.currentAction = body.status;
     update.$set.previousAction = null;
-    update.$set.currentActionReason = reasonCode;
-    update.$set.comments = resolveComment(reasonCode, body.comment);
+    update.$set.currentActionReason = body.currentActionReason || null;
 
-    // History only if dateTime exists (policy-relevant)
     if (body.dateTime) {
-      addHistoryEntry({
-        action,
+      addHistory({
+        action: body.status,
         scheduledAt: body.dateTime,
-        reasonCode,
-        comment: body.comment,
-        interviewers: extractInterviewers(),
+        reasonCode: body.currentActionReason,
+        comment: body.comments,
       });
     }
 
     return update;
   }
 
-  /* =====================================================
-   * UPDATE FLOW (unchanged core logic)
-   * =================================================== */
-
   if (!changes?.anyChange) return null;
 
-  // Generic field updates (except status)
+  /* ============= GENERIC FIELD UPDATE ============= */
+
   Object.keys(body).forEach((key) => {
-    if (body[key] !== undefined && key !== "status") {
+    if (key !== "status" && body[key] !== undefined) {
       update.$set[key] = body[key];
     }
   });
 
-  // Status change
+  /* ============= STATUS CHANGE ============= */
+
   if (changes.statusChanged && body.status) {
-    const action = normalizeAction(body.status);
-    const reasonCode =
-      body.cancellationReason ||
-      body.rescheduleReason ||
+    update.$set.previousAction = existingRound.currentAction || null;
+    update.$set.currentAction = body.status;
+    update.$set.status = body.status;
+    update.$set.currentActionReason =
       body.currentActionReason ||
+      body.rescheduleReason ||
+      body.cancellationReason ||
       null;
 
-    update.$set.previousAction = existingRound.currentAction || null;
-    update.$set.currentAction = action;
-    update.$set.currentActionReason = reasonCode;
-    update.$set.status = body.status;
-    update.$set.comments = resolveComment(reasonCode, body.comment);
+    /* ---------- INTERNAL ---------- */
+    if (isInternal) {
+      if (
+        ["Scheduled", "Rescheduled", "Cancelled", "Draft"].includes(body.status)
+      ) {
+        addHistory({
+          action: body.status,
+          scheduledAt: body.dateTime || existingRound.dateTime,
+          reasonCode: update.$set.currentActionReason,
+          comment: body.comments,
+        });
+      }
+    }
 
-    if (["Scheduled", "Rescheduled", "Cancelled", "NoShow"].includes(action)) {
-      addHistoryEntry({
-        action,
-        scheduledAt: body.dateTime || existingRound.dateTime || null,
-        reasonCode,
-        comment: body.comment,
-        interviewers: extractInterviewers(),
-      });
+    /* ---------- EXTERNAL ---------- */
+    if (isExternal) {
+      if (
+        ["RequestSent", "Rescheduled", "Cancelled", "Draft"].includes(
+          body.status
+        )
+      ) {
+        addHistory({
+          action: body.status,
+          scheduledAt: body.dateTime || existingRound.dateTime,
+          reasonCode: update.$set.currentActionReason,
+          comment: body.comments,
+        });
+      }
     }
   }
 
-  // DateTime change → Reschedule
-  if (changes.dateTimeChanged && existingRound.status === "Scheduled") {
-    const reasonCode = body.rescheduleReason || "time_changed";
+  /* ============= RESCHEDULE WITHOUT STATUS CHANGE ============= */
 
+  if (
+    changes.dateTimeChanged &&
+    ["Scheduled", "Rescheduled", "RequestSent", "Draft"].includes(
+      existingRound.status
+    )
+  ) {
     update.$set.previousAction = existingRound.currentAction || null;
-    update.$set.currentAction = "Rescheduled";
-    update.$set.currentActionReason = reasonCode;
-    update.$set.comments = resolveComment(reasonCode, body.comment);
+    update.$set.currentAction = body.status; // || existingRound.status;
+    update.$set.currentActionReason = body.rescheduleReason || "time_changed";
 
-    addHistoryEntry({
-      action: "Rescheduled",
+    addHistory({
+      action: existingRound.status,
       scheduledAt: body.dateTime,
-      reasonCode,
-      comment: body.comment,
-      interviewers: extractInterviewers(),
+      reasonCode: update.$set.currentActionReason,
+      comment: body.comments,
     });
   }
 
-  // Cleanup
-  if (update.$push.history.length === 0) delete update.$push;
-  if (Object.keys(update.$set).length === 0) delete update.$set;
-  if (!update.$set && !update.$push) return null;
+  /* ============= CLEANUP ============= */
+
+  if (!update.$push.history.length) delete update.$push;
+  if (!Object.keys(update.$set).length) delete update.$set;
+  if (!update.$push && !update.$set) return null;
 
   return update;
 }
