@@ -349,6 +349,7 @@ const createSubscriptionControllers = async (req, res) => {
           ownerId: userDetails?.ownerId,
           walletCode: walletCode, // ✅ Set the walletCode here
           balance: 0, // Initial balance
+          holdAmount: 0,
           transactions: [], // Empty transactions
         });
 

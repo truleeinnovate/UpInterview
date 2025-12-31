@@ -196,6 +196,10 @@ const SubscriptionPlansPage = lazy(() =>
   import("./Pages/SuperAdmin-Part/Subscription-Plans/Plans.jsx")
 );
 
+const PlatformWalletPage = lazy(() =>
+  import("./Pages/SuperAdmin-Part/Wallet/PlatformWalletPage.jsx")
+);
+
 // Feedback Components
 const FeedbackTab = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback.jsx")
@@ -1391,6 +1395,12 @@ const MainAppRoutes = ({
                       />
                     )}
                   </Route>
+                )}
+                {hasPermission("Wallet") && (
+                  <Route
+                    path="/admin-wallet"
+                    element={<PlatformWalletPage />}
+                  />
                 )}
 
                 {/* SuperAdmin Support Desk */}

@@ -19,7 +19,8 @@ const {
   // Manual processing endpoints
   processManualWithdrawal,
   failManualWithdrawal,
-  getAllWithdrawalRequests
+  getAllWithdrawalRequests,
+  getPlatformWallet,
 } = require('../controllers/WalletControllers');
 const loggingService = require('../middleware/loggingService.js');
 const WalletRouter = express.Router();
@@ -30,6 +31,9 @@ WalletRouter.post('/create-order', loggingService.internalLoggingMiddleware,logg
 
 // POST /wallet/verify-payment - Verify payment and update wallet
 WalletRouter.post('/verify-payment', loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, walletVerifyPayment);
+
+// GET /wallet/platform - Get or create the platform (superadmin) wallet
+WalletRouter.get('/platform', getPlatformWallet);
 
 // Bank Account Routes
 // POST /wallet/bank-accounts - Add a new bank account

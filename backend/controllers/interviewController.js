@@ -17,6 +17,10 @@ const interviewQuestions = require("../models/Interview/selectedInterviewQuestio
 const { Position } = require("../models/Position/position.js");
 const Wallet = require("../models/WalletTopup");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+const {
+  WALLET_BUSINESS_TYPES,
+  createWalletTransaction,
+} = require("../utils/interviewWalletUtil");
 
 // Import usage service for internal interview tracking
 const {

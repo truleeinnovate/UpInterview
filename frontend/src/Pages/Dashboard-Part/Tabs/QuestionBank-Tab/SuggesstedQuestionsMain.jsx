@@ -77,7 +77,7 @@ function HeaderBar({
 
         {/* Dropdown */}
 
-        {type !== "assessment" && (
+        {type !== "assessment" && type !== "interviewerSection" && (
           <div className="w-48 flex-shrink-0">
             <DropdownSelect
               isSearchable={false}

@@ -237,6 +237,8 @@ const RoundFormInterviews = () => {
   const [internalInterviewers, setInternalInterviewers] = useState([]);
 
   const [externalInterviewers, setExternalInterviewers] = useState([]);
+  // Max hourly rate across all outsourced interviewers (used only for external rounds)
+  const [externalMaxHourlyRate, setExternalMaxHourlyRate] = useState(0);
   const [showDateChangeConfirmation, setShowDateChangeConfirmation] =
     useState(false);
   const [pendingDateChange, setPendingDateChange] = useState(null); // { type: 'interviewType' | 'scheduledDate' | 'duration', value: any }
@@ -1566,6 +1568,7 @@ const RoundFormInterviews = () => {
   const openInternalModal = () => {
     if (externalInterviewers.length > 0) {
       setExternalInterviewers([]);
+      setExternalMaxHourlyRate(0);
       setSelectedInterviewType(null);
       setHasManuallyClearedInterviewers(true); // Important: prevent edit data from reloading old external
     }
@@ -1584,7 +1587,7 @@ const RoundFormInterviews = () => {
     setShowOutsourcePopup(true);
   };
 
-  const handleExternalInterviewerSelect = (interviewers) => {
+  const handleExternalInterviewerSelect = (interviewers, maxHourlyRate) => {
     // if (selectedInterviewType === "Internal") {
     //   alert(
     //     "You need to clear Internal interviewers before selecting outsourced interviewers."
@@ -1610,6 +1613,7 @@ const RoundFormInterviews = () => {
 
     setSelectedInterviewType("External");
     setExternalInterviewers([...externalInterviewers, ...uniqueInterviewers]); // Append new interviewers
+    setExternalMaxHourlyRate(Number(maxHourlyRate) || 0);
     setHasManuallyClearedInterviewers(false); // Reset flag when adding new interviewers
   };
 
@@ -1670,6 +1674,7 @@ const RoundFormInterviews = () => {
         // Set flag when manually removing all external interviewers
         setHasManuallyClearedInterviewers(true);
         setSelectedInterviewType(null);
+        setExternalMaxHourlyRate(0);
       }
 
       return updatedInterviewers;
@@ -1700,6 +1705,7 @@ const RoundFormInterviews = () => {
 
     setInternalInterviewers([]);
     setExternalInterviewers([]);
+    setExternalMaxHourlyRate(0);
     setSelectedInterviewType(null);
     setInterviewerGroupName("");
     setInterviewerGroupId("");
@@ -1897,6 +1903,10 @@ const RoundFormInterviews = () => {
           interviewerType: selectedInterviewType,
           dateTime: combinedDateTime,
           interviewType,
+        }),
+        // For outsourced rounds, send the maxHourlyRate so backend can create a selection-time hold
+        ...(selectedInterviewType === "External" && {
+          maxHourlyRate: externalMaxHourlyRate,
         }),
         // ...(selectedInterviewType !== "external" && {
         //   interviewers: formattedInterviewers || [],

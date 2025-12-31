@@ -617,8 +617,9 @@ const CombinedNavbar = React.memo(() => {
           ...(checkPermission("Wallet")
             ? [
                 {
-                  to: "/wallet",
-                  label: "My Wallet",
+                  // For super admin, show platform wallet; for others, regular wallet
+                  to: userType === "superAdmin" ? "/admin-wallet" : "/wallet",
+                  label: userType === "superAdmin" ? "Wallet" : "My Wallet",
                   icon: <Wallet className="h-5 w-5" />,
                 },
               ]
