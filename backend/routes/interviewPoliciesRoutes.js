@@ -10,7 +10,7 @@ const {
 // Returns the InterviewPolicy row that would be applied for a given scenario
 router.post(
   "/settlement-policy",
-  loggingService.internalLoggingMiddleware,
+  // loggingService.internalLoggingMiddleware,
   getSettlementPolicy
 );
 
