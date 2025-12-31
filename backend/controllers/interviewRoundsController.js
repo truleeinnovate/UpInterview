@@ -365,6 +365,12 @@ const updateInterviewRound = async (req, res) => {
     return res.status(404).json({ message: "Round not found." });
   }
 
+  const hasAccepted = await InterviewRequest.exists({
+    roundId: existingRound._id,
+    status: "accepted",
+  });
+
+
   const changes = detectRoundChanges({
     existingRound,
     incomingRound: req?.body?.round,
@@ -509,11 +515,6 @@ const updateInterviewRound = async (req, res) => {
         hasselectedInterviewers
       ) {
         // PROTECT: Check if any request was already accepted
-        const hasAccepted = await InterviewRequest.exists({
-          roundId: existingRound._id,
-          status: "accepted",
-        });
-        console.log("hasAccepted", hasAccepted);
 
         if (hasAccepted) {
           return res.status(400).json({
@@ -540,11 +541,6 @@ const updateInterviewRound = async (req, res) => {
         hasInterviewers
       ) {
         // PROTECT: Check if accepted (should always be true, but safe)
-        const hasAccepted = await InterviewRequest.exists({
-          roundId: existingRound._id,
-          status: "accepted",
-        });
-
         if (hasAccepted) {
           // Cancel the accepted request
           await InterviewRequest.updateMany(
@@ -657,7 +653,7 @@ const updateInterviewRound = async (req, res) => {
     //   }
     // }
 
-    const shouldSendInternalEmail = false;
+    let shouldSendInternalEmail = false;
 
     // ==================================================================
     // INTERNAL LOGIC
@@ -888,7 +884,7 @@ const updateInterviewRoundStatus = async (req, res) => {
             roundId: updatedRound._id,
           },
         },
-        { status: () => ({ json: () => {} }), locals: {} }
+        { status: () => ({ json: () => { } }), locals: {} }
       );
     }
 
@@ -1338,7 +1334,7 @@ async function handleInterviewerRequestFlow({
           isMockInterview: false,
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} }
+      { status: () => ({ json: () => { } }), locals: {} }
     );
   }
 
@@ -1357,7 +1353,7 @@ async function handleInterviewerRequestFlow({
           type: "interview",
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} }
+      { status: () => ({ json: () => { } }), locals: {} }
     );
     console.log(
       "Outsource interview request emails sent successfully",
@@ -1396,7 +1392,7 @@ async function handleInternalRoundEmails({
       },
     },
     {
-      status: () => ({ json: () => {} }),
+      status: () => ({ json: () => { } }),
       locals: {},
     }
   );
@@ -1474,7 +1470,7 @@ function detectRoundChanges({
   if (
     incomingRound.dateTime &&
     new Date(incomingRound.dateTime).getTime() !==
-      new Date(existingRound.dateTime).getTime()
+    new Date(existingRound.dateTime).getTime()
   ) {
     changes.dateTimeChanged = true;
     changes.anyChange = true;
