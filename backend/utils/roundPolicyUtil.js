@@ -14,101 +14,42 @@
  * All time calculations are based on hours before scheduled start time.
  */
 
-const { SERVICE_CHARGE_PERCENT, GST_RATE } = require('../config');
-
-const getPayPercent = (isMockInterview, roundStatus, hoursBefore, isInterviewerNoShow = false) => {
-    let payPercent = 100;
-    let settlementScenario = "completed";
-
-    // Interviewer no-show: interviewer gets 0% regardless of timing or type
-    if (isInterviewerNoShow) {
-        return { payPercent: 0, settlementScenario: "interviewer_no_show" };
-    }
-
-    // Completed interview: full payment
-    if (roundStatus === "Completed") {
-        payPercent = 100;
-        settlementScenario = "completed";
-    }
-    // Candidate no-show or very late cancellation
-    else if (roundStatus === "NoShow" || roundStatus === "InCompleted") {
-        settlementScenario = "candidate_no_show";
-        payPercent = 100; // Interviewer gets full pay
-    }
-    // Explicitly cancelled by candidate or organization
-    else if (roundStatus === "Cancelled" || roundStatus === "Rescheduled") {
-        settlementScenario = "cancelled_or_rescheduled";
-
-        if (hoursBefore == null || isNaN(hoursBefore)) {
-            payPercent = 0; // Conservative default if timing unknown
-        } else if (isMockInterview) {
-            // === MOCK INTERVIEW POLICY ===
-            if (hoursBefore > 12) {
-                payPercent = 0;     // Cancelled >12h before → no pay
-            } else if (hoursBefore > 2) {
-                payPercent = 25;    // 2–12h → 25%
-            } else {
-                payPercent = 50;    // <2h or no-show → 50%
-            }
-        } else {
-            // === NORMAL INTERVIEW POLICY ===
-            if (hoursBefore > 24) {
-                payPercent = 0;     // >24h → no pay
-            } else if (hoursBefore > 12) {
-                payPercent = 25;    // 12–24h → 25%
-            } else if (hoursBefore > 2) {
-                payPercent = 50;    // 2–12h → 50%
-            } else {
-                payPercent = 100;   // <2h or no-show → full pay
-            }
-        }
-    }
-    // Default fallback (e.g. unknown status)
-    else {
-        payPercent = 0;
-        settlementScenario = "unknown_status";
-    }
-
-    return { payPercent, settlementScenario };
-};
+const { findPolicyForSettlement } = require("../controllers/interviewPoliciesController");
 
 /**
  * Compute final settlement amounts for interviewer
  * 
  * @param {number} baseAmount - Original interview fee (before any deductions)
  * @param {number} payPercent - Percentage interviewer should receive (from getPayPercent)
- * @param {number} serviceChargePercent - Platform service charge (default 10%)
- * @param {number} gstRate - GST rate on service charge (default 18%)
+ * @param {number} serviceChargePercent - Platform service charge
+ * @param {number} gstRate - GST rate on service charge
  * @returns Object with all calculated amounts
  */
 const computeSettlementAmounts = (
     baseAmount,
     payPercent,
-    serviceChargePercent = SERVICE_CHARGE_PERCENT,
-    gstRate = GST_RATE
+    serviceChargePercent,
+    gstRate
 ) => {
-    // Gross amount payable to interviewer before platform fees
     const grossSettlementAmount = Math.round((baseAmount * payPercent) / 100 * 100) / 100;
 
-    // Amount refunded to candidate (if any)
     const refundAmount = Math.max(0, baseAmount - grossSettlementAmount);
 
-    // Platform service charge (10% of gross settlement)
-    const serviceCharge = Math.round((grossSettlementAmount * serviceChargePercent) / 100 * 100) / 100;
+    const scPercent = typeof serviceChargePercent === "number" ? serviceChargePercent : 0;
+    const gst = typeof gstRate === "number" ? gstRate : 0;
 
-    // GST on service charge
-    const serviceChargeGst = Math.round((serviceCharge * gstRate) * 100) / 100;
+    const serviceCharge = Math.round((grossSettlementAmount * scPercent) / 100 * 100) / 100;
+    const serviceChargeGst = Math.round(serviceCharge * gst * 100) / 100;
 
-    // Final net amount paid to interviewer
     let settlementAmount = grossSettlementAmount - serviceCharge - serviceChargeGst;
     settlementAmount = Math.max(0, Math.round(settlementAmount * 100) / 100);
 
     return {
-        grossSettlementAmount,     // Amount before platform fee
-        refundAmount,              // Refunded to candidate
-        serviceCharge,             // Platform fee (10%)
-        serviceChargeGst,          // GST on platform fee
-        settlementAmount,          // Final payout to interviewer
+        grossSettlementAmount,
+        refundAmount,
+        serviceCharge,
+        serviceChargeGst,
+        settlementAmount,
     };
 };
 
@@ -124,8 +65,72 @@ const isFirstFreeReschedule = (history = []) => {
     return rescheduleCount === 0; // First reschedule is free
 };
 
+// ---------------------------------------------------------------------------
+// Legacy policy calculation (pre InterviewPolicy DB) - kept for reference only
+// ---------------------------------------------------------------------------
+// const getPayPercent = (
+//   isMockInterview,
+//   roundStatus,
+//   hoursBefore,
+//   isInterviewerNoShow = false
+// ) => {
+//   let payPercent = 100;
+//   let settlementScenario = "completed";
+//
+//   // Interviewer no-show: interviewer gets 0% regardless of timing or type
+//   if (isInterviewerNoShow) {
+//     return { payPercent: 0, settlementScenario: "interviewer_no_show" };
+//   }
+//
+//   // Completed interview: full payment
+//   if (roundStatus === "Completed") {
+//     payPercent = 100;
+//     settlementScenario = "completed";
+//   }
+//   // Candidate no-show or very late cancellation
+//   else if (roundStatus === "NoShow" || roundStatus === "InCompleted") {
+//     settlementScenario = "candidate_no_show";
+//     payPercent = 100; // Interviewer gets full pay
+//   }
+//   // Explicitly cancelled by candidate or organization
+//   else if (roundStatus === "Cancelled" || roundStatus === "Rescheduled") {
+//     settlementScenario = "cancelled_or_rescheduled";
+//
+//     if (hoursBefore == null || isNaN(hoursBefore)) {
+//       payPercent = 0; // Conservative default if timing unknown
+//     } else if (isMockInterview) {
+//       // === MOCK INTERVIEW POLICY ===
+//       if (hoursBefore > 12) {
+//         payPercent = 0; // Cancelled >12h before  no pay
+//       } else if (hoursBefore > 2) {
+//         payPercent = 25; // 2–12h  25%
+//       } else {
+//         payPercent = 50; // <2h or no-show  50%
+//       }
+//     } else {
+//       // === NORMAL INTERVIEW POLICY ===
+//       if (hoursBefore > 24) {
+//         payPercent = 0; // >24h  no pay
+//       } else if (hoursBefore > 12) {
+//         payPercent = 25; // 12–24h  25%
+//       } else if (hoursBefore > 2) {
+//         payPercent = 50; // 2–12h  50%
+//       } else {
+//         payPercent = 100; // <2h or no-show  full pay
+//       }
+//     }
+//   }
+//   // Default fallback (e.g. unknown status)
+//   else {
+//     payPercent = 0;
+//     settlementScenario = "unknown_status";
+//   }
+//
+//   return { payPercent, settlementScenario };
+// };
+
 module.exports = {
-    getPayPercent,
     computeSettlementAmounts,
     isFirstFreeReschedule,
+    findPolicyForSettlement,
 };

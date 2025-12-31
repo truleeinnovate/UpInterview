@@ -24,8 +24,21 @@ const {
 } = require("../models/MockInterview/mockinterviewRound");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds");
 const Invoicemodels = require("../models/Invoicemodels");
+const { RegionalTaxConfig } = require("../models/Pricing");
+const Tenant = require("../models/Tenant");
 
-const { getPayPercent, computeSettlementAmounts } = require('../utils/roundPolicyUtil');
+const {
+  computeSettlementAmounts,
+  findPolicyForSettlement,
+  isFirstFreeReschedule,
+} = require("../utils/roundPolicyUtil");
+
+// Legacy import before InterviewPolicy DB refactor:
+// const { getPayPercent, computeSettlementAmounts } = require("../utils/roundPolicyUtil");
+
+// Platform wallet owner for capturing platform fees & GST
+const PLATFORM_WALLET_OWNER_ID =
+  process.env.PLATFORM_WALLET_OWNER_ID || "PLATFORM";
 
 // Initialize Razorpay SDK
 // Note: This uses the same credentials for both Razorpay (payments) and RazorpayX (payouts)
@@ -36,6 +49,76 @@ const razorpay = new Razorpay({
   key_id: RAZORPAY_KEY_ID,
   key_secret: RAZORPAY_KEY_SECRET,
 });
+
+// Helper to get or create the global platform wallet (for superadmin)
+async function getOrCreatePlatformWallet(session = null) {
+  const ownerId = PLATFORM_WALLET_OWNER_ID;
+
+  // Locate the platform wallet by a fixed ownerId
+  let query = WalletTopup.findOne({ isCompany: true });
+  if (session) {
+    query = query.session(session);
+  }
+
+  let wallet = await query;
+
+  if (!wallet) {
+    // Create a new platform wallet with isCompany marked as true
+    wallet = new WalletTopup({
+      ownerId,
+      isCompany: true,
+      currency: "INR",
+      tenantId: "",
+      balance: 0,
+      holdAmount: 0,
+      transactions: [],
+    });
+
+    if (session) {
+      await wallet.save({ session });
+    } else {
+      await wallet.save();
+    }
+  } else if (!wallet.isCompany) {
+    // Backward compatibility: ensure existing platform wallet is flagged as company
+    wallet.isCompany = true;
+
+    if (session) {
+      await wallet.save({ session });
+    } else {
+      await wallet.save();
+    }
+  }
+
+  return wallet;
+}
+
+// Get or create the global platform wallet (superadmin)
+const getPlatformWallet = async (req, res) => {
+  try {
+    // Prefer any wallet that is explicitly marked as company
+    let wallet = await WalletTopup.findOne({
+      isCompany: true,
+    });
+
+    // Fallback: create or normalize the platform wallet if not found
+    if (!wallet) {
+      wallet = await getOrCreatePlatformWallet();
+    }
+
+    return res.status(200).json({
+      success: true,
+      wallet,
+    });
+  } catch (error) {
+    console.error("[getPlatformWallet] Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch platform wallet",
+      error: error.message,
+    });
+  }
+};
 
 /**
  * WEBHOOK SECRETS:
@@ -353,6 +436,7 @@ const walletVerifyPayment = async (req, res) => {
             walletCode: effectiveWalletCode,
             tenantId: tenantId || "",
             balance: 0,
+            holdAmount: 0,
             transactions: [],
           });
         } else if (!wallet.walletCode) {
@@ -388,9 +472,9 @@ const walletVerifyPayment = async (req, res) => {
       return res.status(400).json({ error: "Invalid amount provided" });
     }
 
-    // Add transaction - ensure lowercase transaction type and maintain compatibility with existing data structure
+    // Add transaction - semantic type `topup` for wallet credit
     const transaction = {
-      type: "credit", // Explicitly lowercase
+      type: "topup",
       amount: parsedAmount,
       description,
       relatedInvoiceId: razorpay_order_id, // Using relatedInvoiceId for compatibility
@@ -1775,9 +1859,9 @@ const createWithdrawalRequest = async (req, res) => {
     wallet.balance -= amount;
     wallet.holdAmount = (wallet.holdAmount || 0) + amount;
 
-    // Add transaction record with enhanced metadata
+    // Add transaction record with enhanced metadata (funds moved to HOLD bucket)
     wallet.transactions.push({
-      type: "debit",
+      type: "hold",
       amount,
       description: `Withdrawal request ${withdrawalRequest.withdrawalCode}`,
       status: "pending",
@@ -2007,7 +2091,7 @@ const failManualWithdrawal = async (req, res) => {
       );
 
       wallet.transactions.push({
-        type: "credit",
+        type: "refund",
         amount: withdrawalRequest.amount,
         description: `Withdrawal failed - Refund for ${withdrawalRequest.withdrawalCode}`,
         status: "completed",
@@ -2630,7 +2714,7 @@ const cancelWithdrawalRequest = async (req, res) => {
       );
 
       wallet.transactions.push({
-        type: "credit",
+        type: "refund",
         amount: withdrawalRequest.amount,
         description: `Withdrawal cancelled - Refund for ${withdrawalRequest.withdrawalCode}`,
         status: "completed",
@@ -3487,6 +3571,66 @@ const fixVerifiedBankAccounts = async (req, res) => {
 //   }
 // };
 
+
+
+
+
+/**
+ * Settle interview payment from an organization wallet HOLD to interviewer wallet,
+ * using InterviewPolicy + RegionalTaxConfig rules.
+ *
+ * API: POST /wallet/settle-interview
+ *
+ * Request body:
+ *   - roundId (string, required): InterviewRounds or MockInterviewRound ID.
+ *   - interviewerContactId (string, required): wallet owner ID for interviewer.
+ *   - companyName (string, optional): used in transaction descriptions.
+ *   - roundTitle (string, optional): used in descriptions.
+ *   - positionTitle (string, optional): used in descriptions.
+ *   - interviewerTenantId (string, optional): tenant for interviewer wallet.
+ *   - previewOnly (boolean, optional): true = calculate only, false = apply changes.
+ *
+ * Behaviour:
+ *   1) Finds the organization wallet that has a HOLD transaction for this round
+ *      (transactions.metadata.roundId === roundId).
+ *   2) Uses that HOLD amount as baseAmount.
+ *   3) Loads the round (normal or mock) to determine:
+ *        - status (Completed / Cancelled / NoShow / Rescheduled / InCompleted / Incomplete)
+ *        - currentAction (e.g. "Interviewer_NoShow")
+ *        - scheduled start time vs action time (to compute hoursBefore).
+ *   4) Determines payPercent according to status:
+ *        - currentAction === "Interviewer_NoShow":
+ *             payPercent = 0 (candidate/org gets full refund, interviewer gets 0).
+ *        - status === "Completed":
+ *             payPercent = 100 (full payout to interviewer, minus platform fee + GST).
+ *        - status in ["Cancelled","NoShow","InCompleted","Incomplete"]:
+ *             uses InterviewPolicy (category INTERVIEW/MOCK, type CANCEL) and
+ *             time window to find interviewerPayoutPercentage.
+ *        - status === "Rescheduled":
+ *             uses InterviewPolicy (type RESCHEDULE) and checks history;
+ *             if policy.firstRescheduleFree === true and this is first reschedule,
+ *             overrides payPercent = 0 (free reschedule).
+ *        - if no matching policy or timing invalid:
+ *             payPercent = 0 ("no_policy_found"/"policy_lookup_error").
+ *   5) Uses RegionalTaxConfig to get serviceCharge% and GST, then computes:
+ *        - grossSettlementAmount = baseAmount * payPercent / 100
+ *        - refundAmount = baseAmount - grossSettlementAmount
+ *        - serviceCharge on grossSettlementAmount
+ *        - serviceChargeGst on serviceCharge
+ *        - settlementAmount = grossSettlementAmount - serviceCharge - serviceChargeGst
+ *
+ * Preview mode (previewOnly = true):
+ *   - Returns all calculated values and wallet snapshot WITHOUT mutating any wallet.
+ *
+ * Apply mode (previewOnly = false):
+ *   - Converts org HOLD transaction to completed DEBIT for grossSettlementAmount.
+ *   - Decreases org holdAmount by baseAmount and increases balance by refundAmount.
+ *   - If settlementAmount > 0, credits interviewer wallet and adds a payout transaction.
+ *   - Credits platform wallet with platform fee and GST portions.
+ *   - Updates round settlementStatus/date and sends notification to interviewer.
+ */
+
+
 const settleInterviewPayment = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Settle Interview Payment";
@@ -3598,8 +3742,13 @@ const settleInterviewPayment = async (req, res) => {
 
     // Compute hoursBefore
     let hoursBefore = null;
-    if (scheduledTime && !isNaN(scheduledTime.getTime()) && !isNaN(actionTime.getTime())) {
-      hoursBefore = (scheduledTime.getTime() - actionTime.getTime()) / (1000 * 60 * 60);
+    if (
+      scheduledTime &&
+      !isNaN(scheduledTime.getTime()) &&
+      !isNaN(actionTime.getTime())
+    ) {
+      hoursBefore =
+        (scheduledTime.getTime() - actionTime.getTime()) / (1000 * 60 * 60);
       if (!isNaN(hoursBefore) && hoursBefore < 0) {
         hoursBefore = 0;
       }
@@ -3607,16 +3756,181 @@ const settleInterviewPayment = async (req, res) => {
 
     const isInterviewerNoShow = currentAction === "Interviewer_NoShow";
 
-    // Get payPercent and scenario using util
-    let { payPercent, settlementScenario } = getPayPercent(
-      isMockInterview,
-      roundStatus,
-      hoursBefore
-    );
+    // Legacy settlement logic (before InterviewPolicy DB, using getPayPercent helper):
+    // let payPercentLegacy;
+    // let settlementScenarioLegacy;
+    //
+    // if (isInterviewerNoShow) {
+    //   payPercentLegacy = 0;
+    //   settlementScenarioLegacy = "interviewer_no_show";
+    // } else {
+    //   const resultLegacy = getPayPercent(
+    //     isMockInterview,
+    //     roundStatus,
+    //     hoursBefore
+    //   );
+    //   payPercentLegacy = resultLegacy.payPercent;
+    //   settlementScenarioLegacy = resultLegacy.settlementScenario;
+    // }
+
+    let payPercent = 0;
+    let settlementScenario = "unknown_status";
+
+    // Track which InterviewPolicy was applied (if any) for traceability
+    let appliedPolicyId = null;
+    let appliedPolicyCategory = isMockInterview ? "MOCK" : "INTERVIEW";
+    let appliedPolicyName = null;
 
     if (isInterviewerNoShow) {
+      // Interviewer no-show: interviewer always gets 0%
       payPercent = 0;
       settlementScenario = "interviewer_no_show";
+      appliedPolicyName = "interviewer_no_show";
+    } else if (roundStatus === "Completed") {
+      // Completed interview: always pay 100%
+      payPercent = 100;
+      settlementScenario = "completed";
+      appliedPolicyName = "completed";
+    } else {
+      try {
+        const policy = await findPolicyForSettlement(
+          isMockInterview,
+          roundStatus,
+          hoursBefore
+        );
+
+        if (policy) {
+          // Base payout from DB policy
+          if (typeof policy.interviewerPayoutPercentage === "number") {
+            payPercent = policy.interviewerPayoutPercentage;
+          } else {
+            payPercent = 0;
+          }
+
+          if (policy.policyName) {
+            settlementScenario = policy.policyName;
+          }
+
+          // Capture applied policy identifiers for reporting / audit
+          if (policy._id) {
+            appliedPolicyId = policy._id;
+          }
+          if (policy.category) {
+            appliedPolicyCategory = policy.category;
+          }
+          if (policy.policyName) {
+            appliedPolicyName = policy.policyName;
+          }
+
+          // Handle first reschedule free using policy flag + history
+          if (
+            policy.type === "RESCHEDULE" &&
+            policy.firstRescheduleFree &&
+            isFirstFreeReschedule(
+              Array.isArray(roundDoc.history) ? roundDoc.history : []
+            )
+          ) {
+            payPercent = 0;
+            settlementScenario = policy.policyName || "first_reschedule_free";
+          }
+        } else {
+          // No matching policy found in DB
+          payPercent = 0;
+          settlementScenario = "no_policy_found";
+          appliedPolicyName = "no_policy_found";
+        }
+      } catch (policyErr) {
+        console.warn(
+          "[settleInterviewPayment] Failed to load InterviewPolicy:",
+          policyErr && policyErr.message ? policyErr.message : policyErr
+        );
+        payPercent = 0;
+        settlementScenario = "policy_lookup_error";
+        appliedPolicyName = "policy_lookup_error";
+      }
+    }
+
+    // Load regional tax config (service charge & GST) from DB based on tenant's region/currency
+    let serviceChargePercent = 0;
+    let gstRate = 0;
+
+    try {
+      // Derive tenant context for pricing lookup
+      const orgTenantId = orgWallet.tenantId || req?.body?.tenantId || "";
+
+      let regionCode = "IN";
+      let currencyCode = "INR";
+
+      if (orgTenantId) {
+        const tenantDoc = await Tenant.findById(orgTenantId).lean();
+        if (tenantDoc) {
+          if (tenantDoc.regionCode) {
+            regionCode = tenantDoc.regionCode;
+          } else if (tenantDoc.country) {
+            // Fallback: use country as region code if explicit regionCode not set
+            regionCode = tenantDoc.country;
+          }
+
+          if (tenantDoc.currency && tenantDoc.currency.code) {
+            currencyCode = tenantDoc.currency.code;
+          }
+        }
+      }
+
+      // 1) Try exact match on region + currency, status Active
+      let pricing = await RegionalTaxConfig.findOne({
+        status: "Active",
+        regionCode,
+        "currency.code": currencyCode,
+      })
+        .sort({ _id: -1 })
+        .lean();
+
+      // 2) Fallback: any Active default config for same currency
+      if (!pricing) {
+        pricing = await RegionalTaxConfig.findOne({
+          status: "Active",
+          isDefault: true,
+          "currency.code": currencyCode,
+        })
+          .sort({ _id: -1 })
+          .lean();
+      }
+
+      // 3) Fallback: any Active default config regardless of currency
+      if (!pricing) {
+        pricing = await RegionalTaxConfig.findOne({
+          status: "Active",
+          isDefault: true,
+        })
+          .sort({ _id: -1 })
+          .lean();
+      }
+
+      if (pricing) {
+        if (
+          pricing.serviceCharge &&
+          pricing.serviceCharge.enabled &&
+          typeof pricing.serviceCharge.percentage === "number"
+        ) {
+          serviceChargePercent = pricing.serviceCharge.percentage;
+        }
+
+        if (
+          pricing.gst &&
+          pricing.gst.enabled &&
+          typeof pricing.gst.percentage === "number"
+        ) {
+          gstRate = pricing.gst.percentage;
+        }
+      }
+    } catch (pricingErr) {
+      console.warn(
+        "[settleInterviewPayment] Failed to load RegionalTaxConfig:",
+        pricingErr && pricingErr.message ? pricingErr.message : pricingErr
+      );
+      serviceChargePercent = 0;
+      gstRate = 0;
     }
 
     // Compute amounts using util
@@ -3626,7 +3940,7 @@ const settleInterviewPayment = async (req, res) => {
       serviceCharge,
       serviceChargeGst,
       settlementAmount,
-    } = computeSettlementAmounts(baseAmount, payPercent);
+    } = computeSettlementAmounts(baseAmount, payPercent, serviceChargePercent, gstRate);
 
     if (isPreview) {
       const previewData = {
@@ -3637,6 +3951,9 @@ const settleInterviewPayment = async (req, res) => {
         serviceChargeGst,
         grossSettlementAmount,
         settlementScenario,
+        settlementPolicyId: appliedPolicyId,
+        settlementPolicyCategory: appliedPolicyCategory,
+        settlementPolicyName: appliedPolicyName || settlementScenario,
         organizationWallet: {
           ownerId: orgWallet.ownerId,
           balance: orgWallet.balance,
@@ -3683,6 +4000,9 @@ const settleInterviewPayment = async (req, res) => {
         "transactions.$.metadata.settlementServiceChargeGst": serviceChargeGst,
         "transactions.$.metadata.settlementGrossAmount": grossSettlementAmount,
         "transactions.$.metadata.settlementScenario": settlementScenario,
+        "transactions.$.metadata.settlementPolicyId": appliedPolicyId,
+        "transactions.$.metadata.settlementPolicyCategory": appliedPolicyCategory,
+        "transactions.$.metadata.settlementPolicyName": appliedPolicyName || settlementScenario,
       },
       $inc: {
         holdAmount: -baseAmount,
@@ -3710,7 +4030,7 @@ const settleInterviewPayment = async (req, res) => {
     // Log refund transaction if applicable
     if (refundAmount > 0) {
       const refundTransaction = {
-        type: "credit",
+        type: "refund",
         amount: refundAmount,
         description: `Refund for ${companyName || "Company"} - ${roundTitle || "Interview Round"}`,
         relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
@@ -3724,6 +4044,9 @@ const settleInterviewPayment = async (req, res) => {
           companyName: companyName || "Company",
           roundTitle: roundTitle || "Interview Round",
           positionTitle: positionTitle || "Position",
+          settlementPolicyId: appliedPolicyId,
+          settlementPolicyCategory: appliedPolicyCategory,
+          settlementPolicyName: appliedPolicyName || settlementScenario,
         },
         createdDate: new Date(),
         createdAt: new Date(),
@@ -3742,17 +4065,35 @@ const settleInterviewPayment = async (req, res) => {
     }).session(session);
 
     if (!interviewerWallet) {
-      // Create new wallet logic here if needed
-      // For now, assume it exists or handle creation
+      // Create basic interviewer wallet if it does not exist yet
+      interviewerWallet = new WalletTopup({
+        ownerId: interviewerContactId,
+        currency: "INR",
+        tenantId: interviewerTenantId || req?.body?.tenantId || "",
+        balance: 0,
+        holdAmount: 0,
+        transactions: [],
+      });
+
+      await interviewerWallet.save({ session });
     }
 
     let creditTransaction = null;
     let updatedInterviewerWallet = null;
 
     if (settlementAmount > 0) {
+      const interviewerPrevBalance = Number(interviewerWallet.balance || 0);
+      const interviewerPrevHold = Number(interviewerWallet.holdAmount || 0);
+      const interviewerNewBalance = interviewerPrevBalance + settlementAmount;
+
       creditTransaction = {
-        type: "credit",
+        type: "payout",
+        bucket: "AVAILABLE",
+        effect: "CREDIT",
         amount: settlementAmount,
+        gstAmount: 0,
+        serviceCharge: 0,
+        totalAmount: settlementAmount,
         description: `Payment from ${companyName || "Company"} - ${roundTitle || "Interview Round"} for ${positionTitle || "Position"}`,
         relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
         status: "completed",
@@ -3766,7 +4107,14 @@ const settleInterviewPayment = async (req, res) => {
           companyName: companyName || "Company",
           roundTitle: roundTitle || "Interview Round",
           positionTitle: positionTitle || "Position",
+          settlementPolicyId: appliedPolicyId,
+          settlementPolicyCategory: appliedPolicyCategory,
+          settlementPolicyName: appliedPolicyName || settlementScenario,
         },
+        balanceBefore: interviewerPrevBalance,
+        balanceAfter: interviewerNewBalance,
+        holdBalanceBefore: interviewerPrevHold,
+        holdBalanceAfter: interviewerPrevHold,
         createdDate: new Date(),
         createdAt: new Date(),
       };
@@ -3786,6 +4134,101 @@ const settleInterviewPayment = async (req, res) => {
           success: false,
           message: "Failed to update interviewer wallet",
         });
+      }
+    }
+
+    // ---------------- PLATFORM (SUPERADMIN) WALLET LEDGER -----------------
+    // Record platform fee and GST portions into a dedicated PLATFORM wallet
+    let updatedPlatformWallet = null;
+    let platformFeeTransaction = null;
+    let platformGstTransaction = null;
+
+    if (serviceCharge > 0 || serviceChargeGst > 0) {
+      const platformWallet = await getOrCreatePlatformWallet(session);
+      const platformPrevBalance = Number(platformWallet.balance || 0);
+      const platformPrevHold = Number(platformWallet.holdAmount || 0);
+
+      const platformTransactions = [];
+      let runningBalance = platformPrevBalance;
+
+      if (serviceCharge > 0) {
+        const nextBalance = runningBalance + serviceCharge;
+        platformFeeTransaction = {
+          type: "platform_fee",
+          bucket: "AVAILABLE",
+          effect: "CREDIT",
+          amount: serviceCharge,
+          gstAmount: 0,
+          serviceCharge: serviceCharge,
+          totalAmount: serviceCharge,
+          description: `Platform fee for ${companyName || "Company"} - ${roundTitle || "Interview Round"}`,
+          relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
+          status: "completed",
+          reason: "PLATFORM_COMMISSION",
+          metadata: {
+            ...(activeHoldTransaction.metadata || {}),
+            settlementDate: new Date(),
+            roundId: roundId,
+            organizationWalletId: orgWallet._id.toString(),
+            interviewerOwnerId: interviewerContactId,
+            settlementPolicyId: appliedPolicyId,
+            settlementPolicyCategory: appliedPolicyCategory,
+            settlementPolicyName: appliedPolicyName || settlementScenario,
+          },
+          balanceBefore: runningBalance,
+          balanceAfter: nextBalance,
+          holdBalanceBefore: platformPrevHold,
+          holdBalanceAfter: platformPrevHold,
+          createdDate: new Date(),
+          createdAt: new Date(),
+        };
+        platformTransactions.push(platformFeeTransaction);
+        runningBalance = nextBalance;
+      }
+
+      if (serviceChargeGst > 0) {
+        const nextBalance = runningBalance + serviceChargeGst;
+        platformGstTransaction = {
+          type: "platform_fee",
+          bucket: "AVAILABLE",
+          effect: "CREDIT",
+          amount: serviceChargeGst,
+          gstAmount: serviceChargeGst,
+          serviceCharge: 0,
+          totalAmount: serviceChargeGst,
+          description: `GST on platform fee for ${companyName || "Company"} - ${roundTitle || "Interview Round"}`,
+          relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
+          status: "completed",
+          reason: "PLATFORM_GST",
+          metadata: {
+            ...(activeHoldTransaction.metadata || {}),
+            settlementDate: new Date(),
+            roundId: roundId,
+            organizationWalletId: orgWallet._id.toString(),
+            interviewerOwnerId: interviewerContactId,
+          },
+          balanceBefore: runningBalance,
+          balanceAfter: nextBalance,
+          holdBalanceBefore: platformPrevHold,
+          holdBalanceAfter: platformPrevHold,
+          createdDate: new Date(),
+          createdAt: new Date(),
+        };
+        platformTransactions.push(platformGstTransaction);
+        runningBalance = nextBalance;
+      }
+
+      if (platformTransactions.length > 0) {
+        const totalDelta = runningBalance - platformPrevBalance;
+
+        updatedPlatformWallet = await WalletTopup.findByIdAndUpdate(
+          platformWallet._id,
+          {
+            $inc: { balance: totalDelta },
+            $push: { transactions: { $each: platformTransactions } },
+          },
+          { new: true, session }
+        );
       }
     }
 
@@ -3826,6 +4269,15 @@ const settleInterviewPayment = async (req, res) => {
           creditTransactionId: creditTransaction._id,
         }
         : null,
+      platformWallet:
+        updatedPlatformWallet && (platformFeeTransaction || platformGstTransaction)
+          ? {
+              ownerId: updatedPlatformWallet.ownerId,
+              balance: updatedPlatformWallet.balance,
+              lastFeeTransactionId: platformFeeTransaction?._id,
+              lastGstTransactionId: platformGstTransaction?._id,
+            }
+          : null,
       roundId,
       originalTransactionId: transactionId,
     };
@@ -3870,6 +4322,7 @@ const settleInterviewPayment = async (req, res) => {
 
 module.exports = {
   getWalletByOwnerId,
+  getPlatformWallet,
   createTopupOrder,
   walletVerifyPayment,
   addBankAccount,

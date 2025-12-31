@@ -299,7 +299,7 @@ function OutsourcedInterviewerModal({
   //----v1.0.1----->
 
   // console.log("maxHourlyRate===", maxHourlyRate);
-  console.log("🔍 Filtering interviewers...", interviewers);
+  //console.log("🔍 Filtering interviewers...", interviewers);
   // Fetch and filter interviewers based on skills and availability added by Ranjith
   useEffect(() => {
     // console.log("🔄 useEffect triggered - Starting interviewer filtering");
@@ -996,14 +996,7 @@ function OutsourcedInterviewerModal({
     // );
     fetchInterviewers(skills, candidateExperience, currentRole);
     requestSentRef.current = true;
-  }, [
-    skills,
-    dateTime,
-    currentRole,
-    navigatedfrom,
-    interviewers,
-    candidateExperience,
-  ]);
+  }, [skills, dateTime, currentRole, navigatedfrom, interviewers, candidateExperience, userId]);
 
   // Filter interviewers based on search term and applied rate range
   useEffect(() => {
@@ -1135,10 +1128,14 @@ function OutsourcedInterviewerModal({
 
   console.log("Selected Interviewers:", selectedInterviewersLocal);
 
+  // Compute available balance (balance - holdAmount) for gating outsourced selections
+  const walletRawBalance = Number(walletBalance?.balance || 0);
+  const walletHoldAmount = Number(walletBalance?.holdAmount || 0);
+  const availableBalance = walletRawBalance
+
   const handleProceed = () => {
     //<----v1.0.1-----
     //<-----v1.0.4-----Venkatesh---- Updated to calculate required amount based on experience level
-    const balance = parseInt(walletBalance?.balance) || 0;
 
     // Calculate the required amount based on selected interviewers' rates and experience level
     let requiredAmount = parseInt(maxHourlyRate); // Default to max rate
@@ -1179,15 +1176,16 @@ function OutsourcedInterviewerModal({
     }
     console.log("Required Amount:", requiredAmount);
     // && requiredAmount !== 0
-    if (balance >= requiredAmount) {
+    if (availableBalance >= requiredAmount && requiredAmount !== 0) {
       // console.log("Selected Interviewers:", selectedInterviewersLocal);
-      onProceed(selectedInterviewersLocal);
+      // Pass maxHourlyRate up so backend can create a selection-time hold for external interviewers
+      onProceed(selectedInterviewersLocal, parseInt(maxHourlyRate) || 0);
       onClose();
     } else {
       const required = Number(requiredAmount || 0).toFixed(2);
-      const currentBalance = Number(balance || 0).toFixed(2);
+      const currentBalance = Number(availableBalance || 0).toFixed(2);
       notify.error(
-        `Your wallet balance is less than the highest interviewer hourly rate.\nRequired: $${required}\nPlease add funds to proceed.`
+        `Your available wallet balance is less than the highest interviewer hourly rate.\nRequired: $${required}\nPlease add funds to proceed.`
       );
       setTimeout(() => setShowWalletModal(true), 1000);
     }
@@ -1233,16 +1231,16 @@ function OutsourcedInterviewerModal({
         <div className="w-full flex justify-end">
           <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-lg border border-gray-200 mr-6">
             <span className="text-sm font-medium text-gray-600">
-              Current Balance:
+              Available Balance:
             </span>
             <span
               className={`text-sm font-bold ${
-                (walletBalance?.balance || 0) >= maxHourlyRate
+                availableBalance >= maxHourlyRate
                   ? "text-green-600"
                   : "text-red-600"
               }`}
             >
-              ₹{Number(walletBalance?.balance || 0).toFixed(2)}
+              ₹{Number(availableBalance || 0).toFixed(2)}
             </span>
           </div>
         </div>

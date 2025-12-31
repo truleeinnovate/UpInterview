@@ -693,6 +693,15 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                   Round Information
                 </button>
                 <button
+                  onClick={() => setActiveTab('history')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'history'
+                      ? 'border-custom-blue text-custom-blue'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  Round History
+                </button>
+                <button
                   onClick={() => setActiveTab('transactions')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'transactions'
                       ? 'border-custom-blue text-custom-blue'
@@ -931,8 +940,80 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                   </div>
                 </DetailSection>
 
-                {/* Round History (matches InterviewRounds.history schema) */}
-                {interviewData.history && interviewData.history.length > 0 && (
+                {/* Settlement Information */}
+                {interviewData.settlementStatus && (
+                  <DetailSection title="Settlement Information">
+                    <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:gap-6">
+                      <DetailItem
+                        label="Settlement Status"
+                        value={
+                          <StatusBadge
+                            status={interviewData.settlementStatus}
+                            customColors={{
+                              pending: 'bg-yellow-100 text-yellow-800',
+                              completed: 'bg-green-100 text-green-800',
+                              failed: 'bg-red-100 text-red-800'
+                            }}
+                          />
+                        }
+                        icon={<CreditCard className="w-4 h-4" />}
+                      />
+                      <DetailItem
+                        label="Settlement Date"
+                        value={
+                          interviewData.settlementDate
+                            ? new Date(interviewData.settlementDate).toLocaleString('en-US', {
+                              dateStyle: 'medium',
+                              timeStyle: 'short'
+                            })
+                            : 'N/A'
+                        }
+                        icon={<Calendar className="w-4 h-4" />}
+                      />
+                      <DetailItem
+                        label="Hold Transaction ID"
+                        value={interviewData.holdTransactionId || 'N/A'}
+                        icon={<Hash className="w-4 h-4" />}
+                      />
+                    </div>
+                  </DetailSection>
+                )}
+
+                {/* Timestamps */}
+                <DetailSection title="Timestamps">
+                  <div className="grid grid-cols-2 sm:grid-cols-1  gap-4 sm:gap-6">
+                    <DetailItem
+                      label="Created At"
+                      value={interviewData.createdOn
+                        ? new Date(interviewData.createdOn).toLocaleString('en-US', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
+                        })
+                        : 'N/A'
+                      }
+                      icon={<Clock className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Updated At"
+                      value={interviewData.updatedAt
+                        ? new Date(interviewData.updatedAt).toLocaleString('en-US', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
+                        })
+                        : 'N/A'
+                      }
+                      icon={<Clock className="w-4 h-4" />}
+                    />
+                  </div>
+                </DetailSection>
+
+              </>
+            )}
+
+            {/* Round History Tab */}
+            {activeTab === 'history' && (
+              <>
+                {interviewData.history && interviewData.history.length > 0 ? (
                   <DetailSection title="Round History">
                     <div className="space-y-3">
                       {interviewData.history
@@ -1017,81 +1098,20 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                         })}
                     </div>
                   </DetailSection>
-                )}
-
-                {/* Settlement Information */}
-                {interviewData.settlementStatus && (
-                  <DetailSection title="Settlement Information">
-                    <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:gap-6">
-                      <DetailItem
-                        label="Settlement Status"
-                        value={
-                          <StatusBadge
-                            status={interviewData.settlementStatus}
-                            customColors={{
-                              pending: 'bg-yellow-100 text-yellow-800',
-                              completed: 'bg-green-100 text-green-800',
-                              failed: 'bg-red-100 text-red-800'
-                            }}
-                          />
-                        }
-                        icon={<CreditCard className="w-4 h-4" />}
-                      />
-                      <DetailItem
-                        label="Settlement Date"
-                        value={
-                          interviewData.settlementDate
-                            ? new Date(interviewData.settlementDate).toLocaleString('en-US', {
-                              dateStyle: 'medium',
-                              timeStyle: 'short'
-                            })
-                            : 'N/A'
-                        }
-                        icon={<Calendar className="w-4 h-4" />}
-                      />
-                      <DetailItem
-                        label="Hold Transaction ID"
-                        value={interviewData.holdTransactionId || 'N/A'}
-                        icon={<Hash className="w-4 h-4" />}
-                      />
+                ) : (
+                  <DetailSection title="Round History">
+                    <div className="text-center py-6 text-gray-500 text-sm">
+                      No history entries recorded for this round yet.
                     </div>
                   </DetailSection>
                 )}
-
-                {/* Timestamps */}
-                <DetailSection title="Timestamps">
-                  <div className="grid grid-cols-2 sm:grid-cols-1  gap-4 sm:gap-6">
-                    <DetailItem
-                      label="Created At"
-                      value={interviewData.createdOn
-                        ? new Date(interviewData.createdOn).toLocaleString('en-US', {
-                          dateStyle: 'medium',
-                          timeStyle: 'short'
-                        })
-                        : 'N/A'
-                      }
-                      icon={<Clock className="w-4 h-4" />}
-                    />
-                    <DetailItem
-                      label="Updated At"
-                      value={interviewData.updatedAt
-                        ? new Date(interviewData.updatedAt).toLocaleString('en-US', {
-                          dateStyle: 'medium',
-                          timeStyle: 'short'
-                        })
-                        : 'N/A'
-                      }
-                      icon={<Clock className="w-4 h-4" />}
-                    />
-                  </div>
-                </DetailSection>
-
               </>
             )}
 
             {/* Transactions Tab - Updated to show multiple cards */}
             {activeTab === 'transactions' && (
               <>
+
                 {transactionLoading ? (
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-custom-blue mx-auto"></div>

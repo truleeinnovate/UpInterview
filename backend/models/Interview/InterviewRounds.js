@@ -132,7 +132,6 @@ const interviewRoundSchema = new mongoose.Schema(
     meetingId: String,
     meetPlatform: String,
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
-
     scheduleAssessmentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ScheduledAssessment",
@@ -155,6 +154,10 @@ const interviewRoundSchema = new mongoose.Schema(
 
     // External system identifier
     externalId: { type: String, sparse: true, index: true }, // External system identifier
+
+    // Wallet hold tracking for outsourced interviewer payments
+    // holdTransactionId: { type: String },
+    // heldAmount: { type: Number },
   },
   { timestamps: true }
 );

@@ -17,6 +17,10 @@ const interviewQuestions = require("../models/Interview/selectedInterviewQuestio
 const { Position } = require("../models/Position/position.js");
 const Wallet = require("../models/WalletTopup");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+const {
+  WALLET_BUSINESS_TYPES,
+  createWalletTransaction,
+} = require("../utils/interviewWalletUtil");
 
 // Import usage service for internal interview tracking
 const {
@@ -853,6 +857,75 @@ const saveInterviewRound = async (req, res) => {
       return res.status(404).json({
         message: "Candidate not found for assessment sharing",
         status: "error",
+      });
+    }
+
+    // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (SELECTION TIME) ========================
+    // Option A: use maxHourlyRate from frontend as the full hold amount (no duration multiplier).
+    try {
+      const isExternalRound =
+        round?.interviewerType === "External" &&
+        savedRound.roundTitle !== "Assessment" &&
+        savedRound.interviewMode !== "Face to Face";
+
+      const selectedInterviewersPayload = Array.isArray(
+        req.body?.round?.selectedInterviewers
+      )
+        ? req.body.round.selectedInterviewers
+        : [];
+
+      const maxHourlyRateFromFrontend = Number(round?.maxHourlyRate || 0);
+
+      if (
+        isExternalRound &&
+        selectedInterviewersPayload.length > 0 &&
+        maxHourlyRateFromFrontend > 0
+      ) {
+        const orgWallet = await Wallet.findOne({ ownerId: interview.ownerId });
+        if (!orgWallet) {
+          return res.status(400).json({
+            status: "error",
+            message:
+              "No wallet found for this organization. Please set up a wallet before scheduling outsourced interviews.",
+          });
+        }
+
+        const walletBalance = Number(orgWallet.balance || 0);
+        const availableBalance = walletBalance
+
+        if (availableBalance < maxHourlyRateFromFrontend) {
+          return res.status(400).json({
+            status: "error",
+            message:
+              "Insufficient available wallet balance to send outsourced interview requests. Please add funds to your wallet.",
+          });
+        }
+
+        // Create a selection-time HOLD for the highest hourly rate among all outsourced interviewers.
+        await createWalletTransaction({
+          ownerId: interview.ownerId,
+          businessType: WALLET_BUSINESS_TYPES.HOLD_CREATE,
+          amount: maxHourlyRateFromFrontend,
+          description: `Selection-time hold for outsourced interview round ${savedRound.roundTitle}`,
+          relatedInvoiceId: savedRound._id.toString(),
+          metadata: {
+            interviewId: String(interview._id),
+            roundId: String(savedRound._id),
+            source: "selection_hold",
+            maxHourlyRate: maxHourlyRateFromFrontend,
+          },
+        });
+      }
+    } catch (walletError) {
+      console.error(
+        "[INTERVIEW] Error applying selection-time wallet hold:",
+        walletError
+      );
+      return res.status(400).json({
+        status: "error",
+        message:
+          walletError.message ||
+          "Failed to apply wallet hold for outsourced interview selection.",
       });
     }
 

@@ -13,6 +13,11 @@ const TenantSchema = new mongoose.Schema(
     company: { type: String },
     employees: { type: String },
     country: { type: String },
+    regionCode: { type: String, default:"IN"}, // e.g. IN, US, AE
+    currency: {
+      code: { type: String, default:"INR" }, // e.g. INR, USD
+      symbol: { type: String, default:"₹" }, // e.g. ₹, $
+    },
     type: { type: String, enum: ["organization", "individual"] },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     profileId: { type: String },
