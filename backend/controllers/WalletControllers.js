@@ -36,6 +36,8 @@ const {
 // Legacy import before InterviewPolicy DB refactor:
 // const { getPayPercent, computeSettlementAmounts } = require("../utils/roundPolicyUtil");
 
+const { getTaxConfigForTenant } = require("../utils/taxConfigUtil");
+
 // Platform wallet owner for capturing platform fees & GST
 const PLATFORM_WALLET_OWNER_ID =
   process.env.PLATFORM_WALLET_OWNER_ID || "PLATFORM";
@@ -3850,88 +3852,12 @@ const settleInterviewPayment = async (req, res) => {
       }
     }
 
-    // Load regional tax config (service charge & GST) from DB based on tenant's region/currency
-    let serviceChargePercent = 0;
-    let gstRate = 0;
-
-    try {
-      // Derive tenant context for pricing lookup
-      const orgTenantId = orgWallet.tenantId || req?.body?.tenantId || "";
-
-      let regionCode = "IN";
-      let currencyCode = "INR";
-
-      if (orgTenantId) {
-        const tenantDoc = await Tenant.findById(orgTenantId).lean();
-        if (tenantDoc) {
-          if (tenantDoc.regionCode) {
-            regionCode = tenantDoc.regionCode;
-          } else if (tenantDoc.country) {
-            // Fallback: use country as region code if explicit regionCode not set
-            regionCode = tenantDoc.country;
-          }
-
-          if (tenantDoc.currency && tenantDoc.currency.code) {
-            currencyCode = tenantDoc.currency.code;
-          }
-        }
-      }
-
-      // 1) Try exact match on region + currency, status Active
-      let pricing = await RegionalTaxConfig.findOne({
-        status: "Active",
-        regionCode,
-        "currency.code": currencyCode,
-      })
-        .sort({ _id: -1 })
-        .lean();
-
-      // 2) Fallback: any Active default config for same currency
-      if (!pricing) {
-        pricing = await RegionalTaxConfig.findOne({
-          status: "Active",
-          isDefault: true,
-          "currency.code": currencyCode,
-        })
-          .sort({ _id: -1 })
-          .lean();
-      }
-
-      // 3) Fallback: any Active default config regardless of currency
-      if (!pricing) {
-        pricing = await RegionalTaxConfig.findOne({
-          status: "Active",
-          isDefault: true,
-        })
-          .sort({ _id: -1 })
-          .lean();
-      }
-
-      if (pricing) {
-        if (
-          pricing.serviceCharge &&
-          pricing.serviceCharge.enabled &&
-          typeof pricing.serviceCharge.percentage === "number"
-        ) {
-          serviceChargePercent = pricing.serviceCharge.percentage;
-        }
-
-        if (
-          pricing.gst &&
-          pricing.gst.enabled &&
-          typeof pricing.gst.percentage === "number"
-        ) {
-          gstRate = pricing.gst.percentage;
-        }
-      }
-    } catch (pricingErr) {
-      console.warn(
-        "[settleInterviewPayment] Failed to load RegionalTaxConfig:",
-        pricingErr && pricingErr.message ? pricingErr.message : pricingErr
-      );
-      serviceChargePercent = 0;
-      gstRate = 0;
-    }
+    // Load regional tax config (service charge & GST) using shared util
+    const orgTenantId = orgWallet.tenantId || req?.body?.tenantId || "";
+    const {
+      serviceChargePercent,
+      gstRate,
+    } = await getTaxConfigForTenant({ tenantId: orgTenantId });
 
     // Compute amounts using util
     const {
