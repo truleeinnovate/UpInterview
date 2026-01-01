@@ -338,6 +338,69 @@ export class ZoomPlatform {
 }
 
 /**
+ * VideoSDK platform integration
+ */
+class VideoSDKPlatform {
+  constructor() {
+    this.API_BASE_URL = "https://api.videosdk.live";
+  }
+
+  async createMeeting(options) {
+    const { roundTitle, instructions, onProgress } = options;
+
+    try {
+      onProgress?.("Creating VideoSDK meeting...");
+      
+      // Get the VideoSDK token
+      const token = await this.getToken();
+      
+      // Create the meeting
+      const response = await fetch(`${this.API_BASE_URL}/v2/rooms`, {
+        method: "POST",
+        headers: { 
+          Authorization: token, 
+          "Content-Type": "application/json" 
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create VideoSDK meeting');
+      }
+
+      if (!data.roomId) {
+        throw new Error('No roomId received from VideoSDK API');
+      }
+
+      // Construct the meeting URL
+      const meetingLink = `${window.location.origin}/videosdk-meeting?meetingId=${data.roomId}`;
+      
+      onProgress?.("VideoSDK meeting created successfully!");
+      
+      return {
+        meetingLink,
+        meetingId: data.roomId,
+        title: roundTitle,
+        description: instructions,
+        platform: 'videosdk'
+      };
+    } catch (error) {
+      console.error("Error creating VideoSDK meeting:", error);
+      throw new Error(`Failed to create VideoSDK meeting: ${error.message}`);
+    }
+  }
+
+  async getToken() {
+    const token = process.env.REACT_APP_VIDEOSDK_TOKEN;
+    if (!token) {
+      throw new Error("VideoSDK token is not configured. Please set REACT_APP_VIDEOSDK_TOKEN in your environment variables.");
+    }
+    return token;
+  }
+}
+
+/**
  * Microsoft Teams platform integration (placeholder for future implementation)
  */
 export class TeamsPlatform {
@@ -357,16 +420,17 @@ export class TeamsPlatform {
 export class MeetingPlatformFactory {
   static createPlatform(platformType) {
     switch (platformType.toLowerCase()) {
-      case "googlemeet":
-      case "google":
+      case 'googlemeet':
         return new GoogleMeetPlatform();
-      case "zoommeet":
+      case 'zoom':
         return new ZoomPlatform();
-      case "teams":
-      case "microsoftteams":
+      case 'teams':
         return new TeamsPlatform();
+      case 'videosdk':
+      case 'platform': // For backward compatibility
+        return new VideoSDKPlatform();
       default:
-        throw new Error(`Unsupported meeting platform: ${platformType}`);
+        throw new Error(`Unsupported platform: ${platformType}`);
     }
   }
 }

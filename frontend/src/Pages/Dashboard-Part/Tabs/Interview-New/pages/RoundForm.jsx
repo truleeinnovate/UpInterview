@@ -2092,39 +2092,20 @@ const RoundFormInterviews = () => {
                   setMeetingCreationProgress(progress);
                 }
               );
-            } else if (selectedMeetingPlatform === "videosdk") {
-              try {
-                setMeetingCreationProgress("Creating VideoSDK meeting...");
-
-                // Import the createMeeting function from VideoSDK api
-                const { createMeeting } = await import(
-                  "../../../../../VideoSDK1/api.js"
-                );
-
-                // Get the token - make sure you have this in your environment or state
-                const token = process.env.REACT_APP_VIDEOSDK_TOKEN;
-
-                if (!token) {
-                  throw new Error("VideoSDK token is not configured");
+            } else if (selectedMeetingPlatform === "platform") {
+              meetingLink = await createMeeting(
+                "videosdk",
+                {
+                  roundTitle,
+                  instructions,
+                  combinedDateTime,
+                  duration,
+                  selectedInterviewers,
+                },
+                (progress) => {
+                  setMeetingCreationProgress(progress);
                 }
-
-                // Create the meeting
-                const { meetingId, err } = await createMeeting({ token });
-
-                if (err) {
-                  throw new Error(err);
-                }
-
-                // Construct the meeting URL - adjust the path as needed
-                meetingLink = `${window.location.origin}/videosdk-meeting?meetingId=${meetingId}`;
-
-                setMeetingCreationProgress("Meeting created successfully");
-              } catch (error) {
-                console.error("Error creating VideoSDK meeting:", error);
-                setMeetingCreationProgress(`Error: ${error.message}`);
-                setIsMeetingCreationLoading(false);
-                return;
-              }
+              );
             }
 
             // Fixed: was using undefined 'data'
