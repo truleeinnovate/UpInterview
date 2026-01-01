@@ -642,14 +642,16 @@ exports.acceptInterviewRequest = async (req, res) => {
     const hasScheduledOnce = round.history?.some(
       (h) => h.action === "Scheduled"
     );
-
+    // console.log("roundhasScheduledOnce", round);
     const scheduleAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
 
     if (!round.interviewers.includes(contactId)) {
       // 🔧 CHANGED: build minimal update body
+
       const updatedBody = {
         status: scheduleAction,
         dateTime: round.dateTime, // required for history
+        interviewerType: round.interviewerType,
         // round.interviewers.push(contactId);
         // interviewers: [
         //   ...(round.interviewers || []).map((id) => ({ _id: id })),
@@ -677,13 +679,12 @@ exports.acceptInterviewRequest = async (req, res) => {
         changes,
       });
 
-      console.log("updatePayload", updatePayload);
-
       // ✅ IMPORTANT: atomic update (NO manual history push)
       if (updatePayload) {
         await RoundModel.findByIdAndUpdate(
           roundId,
           {
+            status: scheduleAction,
             ...updatePayload,
             interviewers: [
               ...(round.interviewers || []).map((id) => ({ _id: id })),
@@ -1037,7 +1038,9 @@ exports.acceptInterviewRequest = async (req, res) => {
     try {
       const interviewerOwnerId = contact?.ownerId;
       if (interviewerOwnerId) {
-        const interviewerWallet = await Wallet.findOne({ ownerId: interviewerOwnerId });
+        const interviewerWallet = await Wallet.findOne({
+          ownerId: interviewerOwnerId,
+        });
 
         // Only create a hold if the interviewer already has a wallet set up.
         if (interviewerWallet) {
@@ -1069,9 +1072,10 @@ exports.acceptInterviewRequest = async (req, res) => {
       // Do not fail the accept flow if interviewer wallet hold creation fails.
     }
 
-    const transactionId = savedTransaction && savedTransaction._id
-      ? savedTransaction._id.toString()
-      : null;
+    const transactionId =
+      savedTransaction && savedTransaction._id
+        ? savedTransaction._id.toString()
+        : null;
 
     // Send emails
     try {

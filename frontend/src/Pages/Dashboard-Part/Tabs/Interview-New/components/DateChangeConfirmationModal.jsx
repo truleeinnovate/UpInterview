@@ -42,7 +42,8 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
       <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 p-4 rounded-lg">
         <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
         <p className="text-sm text-amber-800">
-          Unable to determine the settlement policy at this time. Proceeding may result in applicable charges.
+          Unable to determine the settlement policy at this time. Proceeding may
+          result in applicable charges.
         </p>
       </div>
     );
@@ -61,12 +62,15 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
   return (
     <div className="space-y-4">
       <p className="text-gray-700 text-sm">
-        You are about to <strong>reschedule</strong> a confirmed <strong>external interview</strong>.
+        You are about to <strong>reschedule</strong> a confirmed{" "}
+        <strong>external interview</strong>.
       </p>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm font-semibold text-blue-900 mb-1">
-          ⏱ Rescheduled {hoursBefore >= 24 ? "more than 24 hours" : `${hoursBefore} hours`} before the interview
+          ⏱ Rescheduled{" "}
+          {hoursBefore >= 24 ? "more than 24 hours" : `${hoursBefore} hours`}{" "}
+          before the interview
         </p>
         <p className="text-sm text-blue-800">
           Policy applied:{" "}
@@ -93,13 +97,16 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
           <div className="text-sm text-orange-800 space-y-1">
             <p>• Interviewer will receive: {interviewerPayoutPercentage}%</p>
             <p>• Platform fee: {platformFeePercentage}%</p>
-            <p>• You will be refunded: <strong>{100 - feePercentage}%</strong></p>
+            <p>
+              • You will be refunded: <strong>{100 - feePercentage}%</strong>
+            </p>
           </div>
         </div>
       )}
 
       <p className="text-xs text-gray-500 italic">
-        Proceeding will clear current interviewers and apply the policy immediately.
+        Proceeding will clear current interviewers and apply the policy
+        immediately.
       </p>
     </div>
   );
@@ -118,7 +125,7 @@ const DateChangeConfirmationModal = ({
   const isExternal = selectedInterviewType === "External";
   const isInternal = selectedInterviewType === "Internal";
   const isRequestSent = status === "RequestSent";
-  const isScheduledOrReschedule = ["Scheduled", "Reschedule"].includes(status);
+  const isScheduledOrReschedule = ["Scheduled", "Rescheduled"].includes(status);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
@@ -136,13 +143,16 @@ const DateChangeConfirmationModal = ({
           {isExternal && isRequestSent && (
             <div className="text-sm text-gray-700 leading-relaxed space-y-4">
               <p>
-                Interview invitations have already been successfully sent to the selected interviewers.
+                Interview invitations have already been successfully sent to the
+                selected interviewers.
               </p>
               <p>
-                Modifying the date, time, or interview type will <strong>automatically cancel</strong> all existing invitations.
+                Modifying the date, time, or interview type will{" "}
+                <strong>automatically cancel</strong> all existing invitations.
               </p>
               <p>
-                You will need to select new interviewers and send fresh invitations afterward.
+                You will need to select new interviewers and send fresh
+                invitations afterward.
               </p>
               <p className="font-medium">Are you sure you wish to proceed?</p>
             </div>
@@ -160,7 +170,8 @@ const DateChangeConfirmationModal = ({
           {isInternal && (
             <div className="text-sm text-gray-700 leading-relaxed space-y-4">
               <p>
-                Changing the interview date, time, or type will remove the currently assigned interviewers.
+                Changing the interview date, time, or type will remove the
+                currently assigned interviewers.
               </p>
               <p>
                 You will need to reselect interviewers to continue scheduling.
