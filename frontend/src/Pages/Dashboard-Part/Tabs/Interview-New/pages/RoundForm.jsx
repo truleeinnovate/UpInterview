@@ -2327,12 +2327,30 @@ const RoundFormInterviews = () => {
         response: err.response?.data,
       });
 
-      // Show error toast
-      notify.error("Failed to create interview round. Please try again.");
+      const backendMessage = err?.response?.data?.message;
+      const requiredTopupAmount = err?.response?.data?.requiredTopupAmount;
+      const numericTopup =
+        typeof requiredTopupAmount === "number"
+          ? requiredTopupAmount
+          : Number(requiredTopupAmount);
+
+      if (numericTopup && !Number.isNaN(numericTopup) && numericTopup > 0) {
+        notify.error(
+          `${
+            backendMessage ||
+            "Insufficient available wallet balance to send outsourced interview requests."
+          } Please add at least ₹${numericTopup.toFixed(2)} to your wallet.`,
+        );
+      } else if (backendMessage) {
+        notify.error(backendMessage);
+      } else {
+        notify.error("Failed to create interview round. Please try again.");
+      }
 
       setErrors({
         submit:
-          err instanceof Error ? err.message : "An unknown error occurred",
+          backendMessage ||
+          (err instanceof Error ? err.message : "An unknown error occurred"),
       });
     } finally {
       setIsSubmitting(false);
