@@ -1,7 +1,6 @@
 import React from 'react';
 
 const KPICard = ({ title, value, subtitle, icon: Icon, trend, trendValue, className = "" }) => {
-  console.log("KPI Card Props ===========================>: ", { title, value, subtitle, trend, trendValue, Icon })
 
   const getTrendColor = (trend) => {
     if (trend === 'up') return 'text-green-500';

@@ -6,7 +6,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import classNames from "classnames";
-import { Minimize, Expand, X, Clock, FileText } from "lucide-react";
+import { Minimize, Expand, X, Clock, FileText, BarChart3 } from "lucide-react";
 
 import Activity from "../../Tabs/CommonCode-AllTabs/Activity.jsx";
 // v1.0.0 <---------------------------------------------------------------
@@ -81,7 +81,8 @@ const TaskProfileDetails = ({ task, taskId, onClosetask }) => {
               }`}
               onClick={() => setActiveTab("activity")}
             >
-              <Clock className="w-4 h-4" />
+              {/* <Clock className="w-4 h-4" /> */}
+              <BarChart3 className="w-4 h-4" />
               Feeds
             </button>
           </div>

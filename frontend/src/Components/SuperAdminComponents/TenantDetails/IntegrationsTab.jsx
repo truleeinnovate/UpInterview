@@ -1,5 +1,6 @@
-import StatusBadge from "../common/StatusBadge";
+import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge";
 import { useState } from "react";
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 function IntegrationsTab({ isFullscreen = false }) {
   const [webhooks] = useState([
@@ -43,7 +44,7 @@ function IntegrationsTab({ isFullscreen = false }) {
             <h3 className="text-lg font-medium text-gray-900">
               ATS Integration
             </h3>
-            <StatusBadge status="active" />
+            <StatusBadge status="Active" />
           </div>
           <p className="text-sm text-gray-600 mb-4">Connected to Workday</p>
           <div className="space-y-2">
@@ -63,7 +64,7 @@ function IntegrationsTab({ isFullscreen = false }) {
             <h3 className="text-lg font-medium text-gray-900">
               HRIS Integration
             </h3>
-            <StatusBadge status="active" />
+            <StatusBadge status="Active" />
           </div>
           <p className="text-sm text-gray-600 mb-4">Connected to BambooHR</p>
           <div className="space-y-2">
@@ -83,7 +84,7 @@ function IntegrationsTab({ isFullscreen = false }) {
             <h3 className="text-lg font-medium text-gray-900">
               Calendar Integration
             </h3>
-            <StatusBadge status="active" />
+            <StatusBadge status="Active" />
           </div>
           <p className="text-sm text-gray-600 mb-4">
             Connected to Google Calendar
@@ -155,7 +156,7 @@ function IntegrationsTab({ isFullscreen = false }) {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
                   <h4 className="font-medium text-gray-900">{webhook.name}</h4>
-                  <StatusBadge status={webhook.status} />
+                  <StatusBadge status={capitalizeFirstLetter(webhook.status)} />
                 </div>
                 <div className="flex items-center space-x-2">
                   <button className="btn-secondary text-sm">Test</button>

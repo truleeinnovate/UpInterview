@@ -87,7 +87,7 @@ function QuestionHeaderBar({
     >
       <div className="flex items-center gap-2">
         {/* Interview Type Dropdown (using DropdownSelect) */}
-        {type !== "assessment" && (
+        {type !== "assessment" && type !== "interviewerSection" && (
           <div className="w-48">
             <DropdownSelect
               isSearchable={false}

@@ -45,7 +45,7 @@ const TechnicalType = ({ roundDetails, onCancel, onPrevious, onSave, roundNumber
     }));
   };
 
-  console.log('formdata in technical:', formData);
+  // console.log('formdata in technical:', formData);
 
 
   const handleSave = () => {

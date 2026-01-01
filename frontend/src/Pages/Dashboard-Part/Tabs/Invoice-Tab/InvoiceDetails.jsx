@@ -41,7 +41,7 @@ const UserInvoiceDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const invoiceData = location.state?.invoiceData;
-  console.log("invoiceData :", invoiceData);
+  // console.log("invoiceData :", invoiceData);
 
   const [showEditForm, setShowEditForm] = useState(false);
   const [userToEdit, setUserToEdit] = useState(null);

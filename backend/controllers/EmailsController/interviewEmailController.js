@@ -687,7 +687,7 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       type,
     } = req.body;
 
-    console.log("req.body", req.body);
+    console.log("req.body sendOutsourceInterviewRequestEmails", req.body);
 
     // Set company name and support email from environment variables or defaults
     const companyName = process.env.COMPANY_NAME || "UpInterview";
@@ -1231,5 +1231,241 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
       "Failed to send cancellation emails",
       error.message
     );
+  }
+};
+
+
+//if scheduled round modifies interviewer then emails trigger
+
+exports.sendInterviewerCancelledEmails = async (req, res = null) => {
+  console.log("sendInterviewerCancelledEmails called:", req.body);
+
+  try {
+    const {
+      interviewId,
+      roundId,
+      cancelledInterviewerId,
+      type = "interview",
+      interviewerType, // "Internal" | "External"
+    } = req.body;
+
+    /* ================= VALIDATION ================= */
+    if (!mongoose.isValidObjectId(interviewId))
+      return returnError("Invalid interview ID");
+    if (!mongoose.isValidObjectId(roundId))
+      return returnError("Invalid round ID");
+    if (!mongoose.isValidObjectId(cancelledInterviewerId))
+      return returnError("Invalid cancelled interviewer ID");
+    if (!["Internal", "External"].includes(interviewerType))
+      return returnError("Invalid interviewerType");
+
+    /* ================= FETCH INTERVIEW ================= */
+    const interview =
+      type === "mockinterview"
+        ? await MockInterview.findById(interviewId)
+        : await Interview.findById(interviewId)
+            .populate("candidateId")
+            .populate("ownerId")
+            .populate("positionId", "title");
+
+    if (!interview) return returnError("Interview not found");
+
+    /* ================= CANDIDATE ================= */
+    const candidate =
+      type === "mockinterview"
+        ? await Contacts.findOne({ ownerId: interview.ownerId })
+        : interview.candidateId;
+
+    if (!candidate) return returnError("Candidate not found");
+
+    const candidateName =
+      type === "mockinterview"
+        ? [candidate.firstName, candidate.lastName].filter(Boolean).join(" ")
+        : [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ");
+
+    const candidateEmail =
+      type === "mockinterview" ? candidate.email : candidate.Email;
+
+    /* ================= SCHEDULER ================= */
+    let schedulerName = "Scheduler";
+    let schedulerEmail = null;
+
+    if (interview.ownerId) {
+      const scheduler = await Contacts.findOne({ ownerId: interview.ownerId });
+      schedulerEmail = scheduler?.email;
+      schedulerName =
+        [scheduler?.firstName, scheduler?.lastName].filter(Boolean).join(" ") ||
+        schedulerName;
+    }
+
+    /* ================= TENANT / COMPANY ================= */
+    const tenant = await Tenant.findById(interview.tenantId);
+    const companyName = process.env.COMPANY_NAME || "UpInterview";
+
+    const orgCompanyName =
+      tenant?.type !== "individual" && tenant?.company?.trim()
+        ? tenant.company.trim()
+        : null;
+
+    const supportEmail =
+      process.env.SUPPORT_EMAIL || "support@upinterview.com";
+
+    /* ================= ROUND ================= */
+    const round =
+      type === "mockinterview"
+        ? await MockInterviewRound.findById(roundId)
+        : await InterviewRounds.findById(roundId);
+
+    if (!round) return returnError("Round not found");
+
+    const roundTitle = round.roundTitle || "Interview Round";
+    const dateTime = round.dateTime || "To be rescheduled";
+    const duration = round.duration || "60 minutes";
+    const interviewMode = round.interviewMode || "Online";
+    const position = interview.positionId?.title || "Not specified";
+
+    /* ================= INTERVIEWER ================= */
+    const cancelledInterviewer = await Contacts.findById(cancelledInterviewerId);
+    if (!cancelledInterviewer?.email)
+      return returnError("Cancelled interviewer not found or no email");
+
+    const cancelledInterviewerName =
+      [cancelledInterviewer.firstName, cancelledInterviewer.lastName]
+        .filter(Boolean)
+        .join(" ") || "Interviewer";
+
+    /* ================= TEMPLATE CATEGORY ================= */
+    const interviewerTemplateCategory =
+      interviewerType === "Internal"
+        ? "internal_interviewer_cancelled_interviewer"
+        : "outsource_interviewer_cancelled_interviewer";
+
+    const templates = {
+      interviewer: await getTemplate(interviewerTemplateCategory),
+      candidate: await getTemplate("interviewer_cancelled_candidate"),
+      scheduler: await getTemplate("interviewer_cancelled_scheduler"),
+    };
+
+    if (!templates.interviewer || !templates.candidate || !templates.scheduler)
+      return returnError("Required email template missing");
+
+    /* ================= COMMON DATA ================= */
+    const templateData = {
+      interviewerName: cancelledInterviewerName,
+      candidateName,
+      schedulerName,
+      companyName,
+      orgCompanyName,
+      roundTitle,
+      dateTime,
+      duration,
+      interviewMode,
+      position,
+      supportEmail,
+    };
+
+    const emailPromises = [];
+    const notifications = [];
+
+    /* ================= INTERVIEWER EMAIL ================= */
+    sendRenderedEmail(
+      templates.interviewer,
+      cancelledInterviewer.email,
+      templateData,
+      "interviewer"
+    );
+
+    /* ================= CANDIDATE EMAIL ================= */
+    if (candidateEmail) {
+      sendRenderedEmail(
+        templates.candidate,
+        candidateEmail,
+        templateData,
+        "candidate"
+      );
+    }
+
+    /* ================= SCHEDULER EMAIL ================= */
+    if (schedulerEmail) {
+      sendRenderedEmail(
+        templates.scheduler,
+        schedulerEmail,
+        templateData,
+        "scheduler"
+      );
+    }
+
+    /* ================= SAVE & SEND ================= */
+    if (notifications.length) await Notification.insertMany(notifications);
+
+    const results = await Promise.all(emailPromises);
+
+    await Notification.updateMany(
+      { objectId: roundId },
+      { status: "Success" }
+    );
+
+    const response = {
+      success: true,
+      message: "Interviewer cancellation emails sent successfully",
+      data: {
+        emailsSent: results.length,
+      },
+    };
+
+    if (res) return res.status(200).json(response);
+    return response;
+
+    /* ================= HELPERS ================= */
+
+    function sendRenderedEmail(template, to, data, recipientType) {
+      const subject = render(template.subject, data);
+      const body = render(template.body, data);
+
+      emailPromises.push(sendEmail(to, subject, body));
+
+      notifications.push(
+        createNotification(subject, body, to, interview, roundId)
+      );
+    }
+  } catch (error) {
+    console.error("sendInterviewerCancelledEmails error:", error);
+    return returnError("Failed to send cancellation emails", error);
+  }
+
+  /* ================= GLOBAL HELPERS ================= */
+
+  function render(template, data) {
+    return Handlebars.compile(template)(data);
+  }
+
+  async function getTemplate(category) {
+    return emailTemplateModel.findOne({
+      category,
+      isSystemTemplate: true,
+      isActive: true,
+    });
+  }
+
+  function createNotification(title, body, email, interview, roundId) {
+    return {
+      title,
+      body,
+      notificationType: "email",
+      object: { objectName: "interviewer_cancelled", objectId: roundId },
+      status: "Pending",
+      tenantId: interview.tenantId,
+      ownerId: interview.ownerId,
+      recipientId: email,
+      createdBy: interview.ownerId,
+      updatedBy: interview.ownerId,
+    };
+  }
+
+  function returnError(message, error = null) {
+    const err = { success: false, message };
+    if (error) err.error = error.message;
+    if (res) res.status(400).json(err);
+    return err;
   }
 };

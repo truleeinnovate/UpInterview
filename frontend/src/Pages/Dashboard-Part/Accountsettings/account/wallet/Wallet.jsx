@@ -17,12 +17,19 @@ import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 import { useWallet } from "../../../../../apiHooks/useWallet"; //<----v1.0.0-----
 
 export const getTransactionTypeStyle = (type) => {
-  switch (type) {
+  const t = (type || "").toString().toLowerCase();
+  switch (t) {
     case "credit":
+    case "topup":
+    case "refund":
+    case "payout":
+    case "platform_fee":
       return "text-green-600";
     case "debit":
       return "text-red-600";
     case "hold":
+    case "hold adjust":
+    case "hold release":
       return "text-yellow-600";
     default:
       return "text-gray-600";

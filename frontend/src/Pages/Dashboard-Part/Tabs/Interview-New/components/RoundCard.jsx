@@ -53,6 +53,7 @@ import ScheduledAssessmentResultView from "../../Assessment-Tab/AssessmentViewDe
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
 import RoundStatusReasonModal from "../../CommonCode-AllTabs/RoundStatusReasonModal";
 import { NO_SHOW_OPTIONS, CANCEL_OPTIONS } from "../../../../../utils/roundHistoryOptions";
+import RoundActivityModal from "./RoundActivityModal";
 
 const RoundCard = ({
   round,
@@ -256,7 +257,10 @@ const RoundCard = ({
       };
 
       // Add cancellation / NoShow reason if provided
-      if ((newStatus === "Cancelled" || newStatus === "NoShow") && reasonValue) {
+      if (
+        (newStatus === "Cancelled" || newStatus === "NoShow") &&
+        reasonValue
+      ) {
         payload.cancellationReason = reasonValue;
         payload.comment = comment || null;
       }
@@ -321,8 +325,18 @@ const RoundCard = ({
   const internalInterviewers =
     round?.interviewerType === "Internal" ? round?.interviewers || [] : [];
 
+  // const externalInterviewers =
+  //   round?.interviewerType === "External" ? round?.interviewers || [] : [];
   const externalInterviewers =
-    round?.interviewerType === "External" ? round?.interviewers || [] : [];
+    round?.interviewerType === "External"
+      ? Array.isArray(round?.interviewers) && round.interviewers.length > 0
+        ? round.interviewers
+        : Array.isArray(round?.pendingOutsourceRequests)
+        ? round.pendingOutsourceRequests
+            .map((req) => req.interviewerId)
+            .filter(Boolean)
+        : []
+      : [];
 
   // Get questions
   const questions = round?.questions || [];
@@ -864,7 +878,7 @@ const RoundCard = ({
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: false,
+      canReschedule: true,
       canCancel: false,
       canComplete: false,
       canReject: false,
@@ -1009,104 +1023,6 @@ const RoundCard = ({
   };
 
   // 5. Cancel/NoShow reasons handled via shared modal
-
-  const renderActivityModal = () => {
-    const historyEntries = Array.isArray(round?.history)
-      ? [...round.history].sort((a, b) => {
-          const aTime = new Date(a?.updatedAt || a?.scheduledAt || 0).getTime();
-          const bTime = new Date(b?.updatedAt || b?.scheduledAt || 0).getTime();
-          return bTime - aTime;
-        })
-      : [];
-
-    return createPortal(
-      <div className="fixed inset-0 z-50 flex">
-        <div
-          className="flex-1 bg-black bg-opacity-40"
-          onClick={() => setShowActivityModal(false)}
-        />
-        <div className="w-full max-w-xl h-full bg-white shadow-xl flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Round Activity</h3>
-              <p className="text-xs text-gray-500">
-                {interviewData?.candidateId?.FirstName}{" "}
-                {interviewData?.candidateId?.LastName} - {round?.roundTitle}
-              </p>
-            </div>
-            <button
-              onClick={() => setShowActivityModal(false)}
-              className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
-            >
-              <XCircle className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto px-5 py-4 bg-gray-50">
-            {historyEntries.length === 0 ? (
-              <div className="text-sm text-gray-500">
-                No activity recorded for this round yet.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {historyEntries.map((entry, index) => {
-                  const timestamp = entry?.updatedAt || entry?.scheduledAt;
-                  const reasonLabel = entry?.reasonCode || entry?.reason;
-                  const actor = entry?.updatedByName || "";
-
-                  return (
-                    <div
-                      key={`${timestamp || index}-${index}`}
-                      className="rounded-xl border border-blue-100 bg-blue-50"
-                    >
-                      <div className="flex items-start justify-between px-4 py-3 border-b border-blue-100">
-                        <div>
-                          <div className="flex items-center gap-2 text-sm font-semibold text-blue-900">
-                            <Activity className="h-4 w-4" />
-                            <span>{entry?.action || "Activity"}</span>
-                          </div>
-                          {timestamp && (
-                            <div className="mt-1 flex items-center gap-2 text-xs text-gray-600">
-                              <Clock className="h-3 w-3" />
-                              <span>{formatDate(timestamp)}</span>
-                            </div>
-                          )}
-                          {actor && (
-                            <div className="mt-1 text-xs text-gray-500">
-                              By {actor}
-                            </div>
-                          )}
-                        </div>
-                        {entry?.action && (
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                            {entry.action}
-                          </span>
-                        )}
-                      </div>
-                      <div className="px-4 py-3 bg-blue-50/60 text-xs text-gray-700">
-                        {reasonLabel && (
-                          <div className="mb-1">
-                            <span className="font-medium text-gray-500">Reason:</span>
-                            <span className="ml-1">{reasonLabel}</span>
-                          </div>
-                        )}
-                        {entry?.comment && (
-                          <div>
-                            <span className="font-medium text-gray-500">Comment:</span>
-                            <span className="ml-1">{entry.comment}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>,
-      document.body
-    );
-  };
   console.log("round", round);
 
   return (
@@ -1777,19 +1693,20 @@ const RoundCard = ({
                         <Calendar className="h-4 w-4 mr-1" /> Reschedule
                       </button>
                     )}
-                  
+
                   {/* No Show */}
-                  {permissions.canCancel && round.roundTitle !== "Assessment" &&  (
-                    <button
-                      onClick={() => {
-                        setActionInProgress(true);
-                        setNoShowReasonModalOpen(true);
-                      }}
-                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                    >
-                      <XCircle className="h-4 w-4 mr-1" /> No Show
-                    </button>
-                  )}
+                  {permissions.canCancel &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => {
+                          setActionInProgress(true);
+                          setNoShowReasonModalOpen(true);
+                        }}
+                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                      >
+                        <XCircle className="h-4 w-4 mr-1" /> No Show
+                      </button>
+                    )}
 
                   {/* Cancel */}
 
@@ -1810,7 +1727,9 @@ const RoundCard = ({
                     )}
                   {/* Edit */}
                   {permissions.canEdit &&
-                    round?.interviewType.toLowerCase() !== "instant" && (
+                    ((round?.status === "Draft" &&
+                      round?.interviewType.toLowerCase() === "instant") ||
+                      round?.interviewType.toLowerCase() !== "instant") && (
                       <button
                         onClick={() => onEdit(round)}
                         className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
@@ -1933,7 +1852,12 @@ const RoundCard = ({
       </div>
 
       {/*  cancelllation modal */}
-      {showActivityModal && renderActivityModal()}
+      <RoundActivityModal
+        isOpen={showActivityModal}
+        onClose={() => setShowActivityModal(false)}
+        round={round}
+        interviewData={interviewData}
+      />
 
       {/* Shared reason modal for Cancel */}
       <RoundStatusReasonModal

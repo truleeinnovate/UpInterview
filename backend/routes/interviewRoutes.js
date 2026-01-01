@@ -4,7 +4,7 @@ const express = require("express");
 const router = express.Router();
 const {
   createInterview,
-  saveInterviewRound,
+  // saveInterviewRound,
   getDashboardStats,
   deleteRound,
   getInterviews,
@@ -12,7 +12,7 @@ const {
   getAllInterviewRounds, // Added new function
   getInterviewRoundTransaction, // Added transaction fetch function
   updateInterview,
-  updateInterviewRound,
+  // updateInterviewRound,
   updateInterviewStatus,
   checkInternalInterviewUsage,
   deleteInterview,
@@ -46,18 +46,18 @@ router.patch(
 router.delete("/delete-interview/:id", deleteInterview);
 
 //  interview Rounds post APi's routes
-router.post(
-  "/save-round",
-  loggingService.internalLoggingMiddleware,
-  saveInterviewRound
-);
+// router.post(
+//   "/save-round",
+//   loggingService.internalLoggingMiddleware,
+//   saveInterviewRound
+// );
 
-//  interview round update routes
-router.patch(
-  "/update-round/:roundId",
-  loggingService.internalLoggingMiddleware,
-  updateInterviewRound
-);
+// //  interview round update routes
+// router.patch(
+//   "/update-round/:roundId",
+//   loggingService.internalLoggingMiddleware,
+//   updateInterviewRound
+// );
 
 //  interview round delete routes
 router.delete("/delete-round/:id", deleteRound);

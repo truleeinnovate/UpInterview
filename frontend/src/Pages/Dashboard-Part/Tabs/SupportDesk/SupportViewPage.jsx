@@ -17,6 +17,7 @@ import {
   FileText,
   History,
   Info,
+  BarChart3,
 } from "lucide-react";
 // v1.0.0 <-------------------------------------------------------------------------
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
@@ -40,12 +41,12 @@ const SupportViewPage = () => {
   const [activeTab, setActiveTab] = useState("details");
   const { id } = useParams();
 
-  console.log("SupportViewPage Ticket ID:", id);
+  // console.log("SupportViewPage Ticket ID:", id);
 
   const { data: ticket, isLoading, isError } = useTicketById(id);
 
   const ticketData = ticket?.ticket || {};
-  console.log("ticketData", ticketData);
+  // console.log("ticketData", ticketData);
   // console.log("lastModifiedBy:", ticketData.updatedByUserId);
 
   useEffect(() => {
@@ -81,7 +82,7 @@ const SupportViewPage = () => {
             }`}
             onClick={() => setActiveTab("details")}
           >
-            <Info className="w-4 h-4" />
+            <FileText className="w-4 h-4" />
             Details
           </button>
           <button
@@ -92,7 +93,8 @@ const SupportViewPage = () => {
             }`}
             onClick={() => setActiveTab("activity")}
           >
-            <History className="w-4 h-4" />
+            {/* <History className="w-4 h-4" /> */}
+            <BarChart3 className="w-4 h-4" />
             Feeds
           </button>
         </div>

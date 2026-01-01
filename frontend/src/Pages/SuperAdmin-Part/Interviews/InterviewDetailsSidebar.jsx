@@ -2,10 +2,12 @@
 // v1.0.2  - Venkatesh -  Added Tabs for Basic Information and Transactions
 // v1.0.3 - Venkatesh - Added transaction display and settlement functionality for interview payments
 // v1.0.4 - Venkatesh - Changed Basic Information to Round Information and added Candidate/Position details
+// v1.0.5 - Updated to show multiple transactions in cards, each with settlement button if applicable
+// v1.0.6 - Added editable fields in settlement popup for admin overrides
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { Calendar, Clock, User, Briefcase, Users, Hash, KeyRound, Stamp, PictureInPicture, StampIcon, User2, CreditCard, DollarSign, FileText, CheckCircle, ChevronRight, ListChecks, AlertCircle, History, Mail, Phone, GraduationCap, Building2, MapPin, School, Circle } from 'lucide-react';
+import { Calendar, Clock, User, Briefcase, Users, Hash, KeyRound, Stamp, PictureInPicture, StampIcon, User2, CreditCard, DollarSign, FileText, CheckCircle, ChevronRight, ListChecks, AlertCircle, History, Mail, Phone, GraduationCap, Building2, MapPin, School, Circle, Edit } from 'lucide-react';
 import SidebarPopup from '../../../Components/Shared/SidebarPopup/SidebarPopup.jsx';
 import StatusBadge from '../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
 import axios from 'axios';
@@ -19,14 +21,16 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
   const [showCandidateSidebar, setShowCandidateSidebar] = useState(false);
   const [showPositionSidebar, setShowPositionSidebar] = useState(false);
   const [candidateData, setCandidateData] = useState(null);
-  console.log("intData----",interviewData);
+  console.log("intData----", interviewData);
   const [positionData, setPositionData] = useState(null);
   //console.log("positionDat--",positionData);
   const [loading, setLoading] = useState(false);
   const [transactionData, setTransactionData] = useState(null);
   const [transactionLoading, setTransactionLoading] = useState(false);
   const [showSettlementModal, setShowSettlementModal] = useState(false);
+  const [selectedTransactionId, setSelectedTransactionId] = useState(null);
   const [settlementPreview, setSettlementPreview] = useState(null);
+  const [settlementOverrides, setSettlementOverrides] = useState({});
   const [settlementResult, setSettlementResult] = useState(null);
   const [settlementLoading, setSettlementLoading] = useState(false);
   const [settlementError, setSettlementError] = useState(null);
@@ -42,7 +46,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
       if (activeTab === 'transactions' && !transactionData && !transactionLoading) {
         setTransactionLoading(true);
         try {
-          const authToken = Cookies.get('authToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
+          const authToken = Cookies.get('authToken');
           const response = await axios.get(
             `${config.REACT_APP_API_URL}/interview/interview-rounds/${interviewData._id}/transaction`,
             {
@@ -51,9 +55,9 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
               },
             }
           );
-          
+
           if (response.data.success && response.data.data) {
-            console.log("response.data.data--",response.data.data);
+            console.log("response.data.data--", response.data.data);
             setTransactionData(response.data.data);
           }
         } catch (error) {
@@ -63,7 +67,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
         }
       }
     };
-    
+
     fetchTransactionData();
   }, [isOpen, activeTab, interviewData?._id, transactionData, transactionLoading]);
 
@@ -78,16 +82,18 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
       setSettlementResult(null);
       setSettlementError(null);
       setSettlementLoading(false);
+      setSettlementOverrides({});
+      setSelectedTransactionId(null);
     }
   }, [isOpen]);
 
   useEffect(() => {
     const fetchInterviewData = async () => {
       // Check if this is a mock interview
-      const isMockInterview = interviewData?.dataType === 'mock' || 
-                             (typeof interviewData?.candidate === 'object' && interviewData?.candidate !== null) ||
-                             (typeof interviewData?.position === 'object' && interviewData?.position !== null);
-      
+      const isMockInterview = interviewData?.dataType === 'mock' ||
+        (typeof interviewData?.candidate === 'object' && interviewData?.candidate !== null) ||
+        (typeof interviewData?.position === 'object' && interviewData?.position !== null);
+
       if (isMockInterview) {
         // For mock interviews, data is already provided in the interviewData
         if (interviewData.candidate) {
@@ -95,7 +101,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
             setCandidateData({
               FirstName: interviewData.candidate.name?.split(' ')[0] || interviewData.candidate.name || 'Unknown',
               LastName: interviewData.candidate.name?.split(' ').slice(1).join(' ') || '',
-              
+
               higherQualification: interviewData.candidate.higherQualification || 'N/A',
               currentExperience: interviewData.candidate.currentExperience || 'N/A',
               Role: interviewData.candidate.Role || 'N/A',
@@ -116,7 +122,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
             });
           }
         }
-        
+
         if (interviewData.position) {
           if (typeof interviewData.position === 'object') {
             setPositionData({
@@ -140,27 +146,27 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
             });
           }
         }
-        
+
         setLoading(false);
         return;
       }
-      
+
       // Determine candidate/position IDs coming from Super Admin list
       const candidateId = interviewData?.candidateId || interviewData?.candidate;
       const positionId = interviewData?.positionId || interviewData?.position;
 
       // For regular interviews, fetch candidate and position data from API
       if (!candidateId || !positionId ||
-          typeof candidateId !== 'string' || typeof positionId !== 'string') {
+        typeof candidateId !== 'string' || typeof positionId !== 'string') {
         setLoading(false);
         return;
       }
-      
+
       setLoading(true);
       try {
         // Get auth token from cookies or localStorage
         const authToken = Cookies.get('authToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
-        
+
         // Fetch candidate data
         if (candidateId) {
           try {
@@ -177,7 +183,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
             console.error('Error fetching candidate:', err.message);
           }
         }
-        
+
         // Fetch position data
         if (positionId) {
           try {
@@ -203,11 +209,8 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
 
     fetchInterviewData();
   }, [interviewData]);
-  
-  if (!interviewData) return null;
 
-  const txData = transactionData?.holdTransactionData || interviewData.holdTransactionData;
-  const txId = transactionData?.holdTransactionId || interviewData.holdTransactionId;
+  if (!interviewData) return null;
 
   const formatAmount = (val) =>
     typeof val === 'number' && !Number.isNaN(val) ? val.toFixed(2) : 'N/A';
@@ -217,11 +220,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
     onClose();
   };
 
-  const buildSettlementRequestBody = () => {
-    if (!txData || !txId) {
-      return { error: 'No transaction data available for settlement' };
-    }
-
+  const buildSettlementRequestBody = (txId) => {
     // Get interviewer's ownerId for wallet operations (wallet is tied to ownerId, not _id)
     const interviewerContactId =
       interviewData.interviewers && interviewData.interviewers[0]?.ownerId;
@@ -242,19 +241,21 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
   };
 
   // Preview settlement calculations without applying them
-  const handleSettlementPreview = async () => {
-    const payload = buildSettlementRequestBody();
+  const handleSettlementPreview = async (txId) => {
+    const payload = buildSettlementRequestBody(txId);
     if (!payload || payload.error) {
       setSettlementError(payload?.error || 'Unable to prepare settlement request');
       setShowSettlementModal(true);
       return;
     }
 
+    setSelectedTransactionId(txId);
     setShowSettlementModal(true);
     setSettlementLoading(true);
     setSettlementError(null);
     setSettlementResult(null);
     setSettlementPreview(null);
+    setSettlementOverrides({});
 
     try {
       const response = await fetch(
@@ -276,6 +277,16 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
       if (response.ok && data.success) {
         const result = data.data || {};
         setSettlementPreview(result);
+        // Initialize overrides with preview values
+        setSettlementOverrides({
+          grossSettlementAmount: result.grossSettlementAmount,
+          serviceCharge: result.serviceCharge,
+          serviceChargeGst: result.serviceChargeGst,
+          settlementAmount: result.settlementAmount,
+          refundAmount: result.refundAmount,
+          payPercent: result.payPercent,
+          settlementScenario: result.settlementScenario,
+        });
         setSettlementError(null);
       } else {
         setSettlementError(
@@ -290,9 +301,9 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
     }
   };
 
-  // Handle settlement button click
+  // Handle settlement button click with possible overrides
   const handleSettlement = async () => {
-    const payload = buildSettlementRequestBody();
+    const payload = buildSettlementRequestBody(selectedTransactionId);
     if (!payload || payload.error) {
       setSettlementError(payload?.error || 'Unable to prepare settlement request');
       return;
@@ -308,9 +319,12 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          ...payload,
+          overrides: settlementOverrides, // Send overrides if backend supports
+        })
       });
-      
+
       const data = await response.json();
       if (response.ok && data.success) {
         const result = data.data || {};
@@ -325,6 +339,14 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
     } finally {
       setSettlementLoading(false);
     }
+  };
+
+  // Handle override changes
+  const handleOverrideChange = (field, value) => {
+    setSettlementOverrides(prev => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   // Section component with consistent styling
@@ -342,7 +364,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
   // Custom Candidate View Component without edit buttons
   const CandidateDetailView = ({ candidate }) => {
     if (!candidate) return null;
-    
+
     return (
       <div className="space-y-6">
         {/* Header with Avatar */}
@@ -506,7 +528,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
           </DetailSection>
         )}
 
-        
+
       </div>
     );
   };
@@ -514,17 +536,17 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
   // Custom Position View Component without edit buttons
   const PositionDetailView = ({ position }) => {
     if (!position) return null;
-    
+
     return (
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-center gap-4 p-6 bg-gradient-to-r from-gray-50 to-white rounded-lg">
           <div className="relative">
-            
-              <div className="w-20 h-20 rounded-full bg-custom-blue flex items-center justify-center text-white text-2xl font-semibold shadow-lg">
-                {position.title?.charAt(0)?.toUpperCase() || '?'}
-              </div>
-            
+
+            <div className="w-20 h-20 rounded-full bg-custom-blue flex items-center justify-center text-white text-2xl font-semibold shadow-lg">
+              {position.title?.charAt(0)?.toUpperCase() || '?'}
+            </div>
+
           </div>
           <div>
             <h3 className="text-2xl font-bold text-gray-900">
@@ -535,7 +557,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
             </p>
           </div>
         </div>
-        
+
 
         {/* Job Details */}
         <DetailSection title="Job Details">
@@ -591,8 +613,8 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
           <DetailSection title="Skills">
             <div className="flex flex-wrap gap-2">
               {position.skills.map((skill, index) => (
-                <span 
-                  key={index} 
+                <span
+                  key={index}
                   className="px-3 py-1.5 bg-custom-blue/10 text-custom-blue text-sm font-medium rounded-full"
                 >
                   {skill.skill || skill}
@@ -645,869 +667,1011 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
 
   return (
     <>
-    <SidebarPopup
-      isOpen={isOpen}
-      title="Interview Round Details"
-      subTitle={interviewData.interviewCode || 'Interview Details'}
-      onClose={onClose}
-      id={interviewData._id}
-      showEdit={false}
-      onEdit={handleEdit}
-      icon={<Calendar className="w-5 h-5" />}
-      headerAction={
-        activeTab === 'transactions' &&
-        (transactionData?.holdTransactionData || interviewData.holdTransactionData) &&
-        interviewData.settlementStatus !== 'completed' &&
-        (interviewData.status === "Completed" || interviewData.status === "Cancelled") && (
-        <button
-          onClick={() => {
-            setSettlementPreview(null);
-            setSettlementResult(null);
-            setSettlementError(null);
-            handleSettlementPreview();
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-        >
-          <CheckCircle className="w-4 h-4" />
-          Settlement
-        </button>
-        )
-      }
-    >
-      <div className="bg-gray-50 min-h-full">
-        {/* Tab Navigation */}
-        <div className="border-b border-gray-200 bg-white">
-          <div className="px-6">
-            <nav className="flex space-x-8" aria-label="Tabs">
-              <button
-                onClick={() => setActiveTab('round')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === 'round'
-                    ? 'border-custom-blue text-custom-blue'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Round Information
-              </button>
-              <button
-                onClick={() => setActiveTab('transactions')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === 'transactions'
-                    ? 'border-custom-blue text-custom-blue'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Transactions
-                {(transactionData?.holdTransactionData || interviewData.holdTransactionData) && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    1
-                  </span>
-                )}
-              </button>
-            </nav>
+      <SidebarPopup
+        isOpen={isOpen}
+        title="Interview Round Details"
+        subTitle={interviewData.interviewCode || 'Interview Details'}
+        onClose={onClose}
+        id={interviewData._id}
+        showEdit={false}
+        onEdit={handleEdit}
+        icon={<Calendar className="w-5 h-5" />}
+        headerAction={null} // Removed global settlement button, now per transaction
+      >
+        <div className="bg-gray-50 min-h-full">
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200 bg-white">
+            <div className="px-6">
+              <nav className="flex space-x-8" aria-label="Tabs">
+                <button
+                  onClick={() => setActiveTab('round')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'round'
+                      ? 'border-custom-blue text-custom-blue'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  Round Information
+                </button>
+                <button
+                  onClick={() => setActiveTab('history')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'history'
+                      ? 'border-custom-blue text-custom-blue'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  Round History
+                </button>
+                <button
+                  onClick={() => setActiveTab('transactions')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'transactions'
+                      ? 'border-custom-blue text-custom-blue'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  Payment Transactions
+                  {transactionData?.transactions?.length > 0 && (
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {transactionData.transactions.length}
+                    </span>
+                  )}
+                </button>
+              </nav>
+            </div>
           </div>
-        </div>
 
-        <div className="px-6 py-6">
-          {/* Round Information Tab */}
-          {activeTab === 'round' && (
-            <>
-            {/* Candidate and Position Quick Access */}
-          {interviewData?.dataType !== 'mock' ? (
-          <DetailSection title="Quick Access">
-            <div className="grid grid-cols-2 gap-3">
-              {/* Candidate Button */}
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="w-8 h-8 bg-custom-blue/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-custom-blue" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-900">Candidate</p>
-                    <p className="text-xs text-gray-500 truncate">
-                      
-                        {`${candidateData?.FirstName} ${candidateData?.LastName}`.trim()}
-                        
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowCandidateSidebar(true)}
-                  className="flex items-center gap-1 px-2 py-1 bg-custom-blue text-white rounded hover:bg-custom-blue/80 transition-colors text-xs font-medium ml-2 flex-shrink-0"
-                >
-                  <span>View</span>
-                  <ChevronRight className="w-3 h-3" />
-                </button>
-              </div>
-
-              {/* Position Button */}
-            
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="w-8 h-8 bg-custom-blue/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Briefcase className="w-4 h-4 text-custom-blue" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-900">Position</p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {positionData?.title}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowPositionSidebar(true)}
-                  className="flex items-center gap-1 px-2 py-1 bg-custom-blue text-white rounded hover:bg-custom-blue/80 transition-colors text-xs font-medium ml-2 flex-shrink-0"
-                >
-                  <span>View</span>
-                  <ChevronRight className="w-3 h-3" />
-                </button>
-              </div>
-            
-            </div>
-          </DetailSection>
-           ) : (
-            <DetailSection title="Candidate Details">
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:gap-6">
-              <DetailItem 
-                label="Candidate Name" 
-                value={`${candidateData?.FirstName} ${candidateData?.LastName}`.trim() || 'N/A'}
-                icon={<User className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Role" 
-                value={candidateData?.Role || 'N/A'}
-                icon={<Briefcase className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Technology" 
-                value={candidateData?.Technology || 'N/A'}
-                icon={<Hash className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Higher Qualification" 
-                value={candidateData?.higherQualification || 'N/A'}
-                icon={<GraduationCap className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Current Experience" 
-                value={candidateData?.currentExperience ? `${candidateData.currentExperience} Years` : 'N/A'}
-                icon={<Briefcase className="w-4 h-4" />}
-              />
-            </div>
-            
-            {/* Display Skills if available */}
-            {candidateData?.skills && candidateData.skills.length > 0 && (
-              <div className="mt-4">
-                <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Skills</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  {candidateData.skills.map((skill, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-custom-blue rounded-full mt-1.5 flex-shrink-0"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{skill.skill || skill}</p>
-                        {skill.experience && skill.expertise && (
-                          <p className="text-xs text-gray-500">
-                            {skill.experience} - {skill.expertise}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </DetailSection>
-           )}
-
-
-              {/* Round Information */}
-          <DetailSection title="Round Details">
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:gap-6">
-              <DetailItem 
-                label="Interview Code" 
-                value={interviewData.interviewCode}
-                icon={<Hash className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Round Title" 
-                value={interviewData.roundTitle}
-                icon={<Briefcase className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Round Sequence" 
-                value={interviewData.sequence ? `Round ${interviewData.sequence}` : 'N/A'}
-                icon={<KeyRound className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Interview Mode" 
-                value={interviewData.interviewMode}
-                icon={<PictureInPicture  className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Interview Type" 
-                value={interviewData.interviewType}
-                icon={<StampIcon  className="w-4 h-4" />}
-              />
-            </div>
-          </DetailSection>
-
-          {/* Schedule Information */}
-          <DetailSection title="Schedule Information">
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:gap-6">
-              <DetailItem 
-                label="Scheduled Date & Time" 
-                value={interviewData.dateTime || 'Not scheduled'}
-                icon={<Calendar className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Duration" 
-                value={interviewData.duration ? `${interviewData.duration} minutes` : 'N/A'}
-                icon={<Clock className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Instructions" 
-                value={interviewData.instructions || 'N/A'}
-                icon={<ListChecks className="w-4 h-4" />}
-              />
-            </div>
-          </DetailSection>
-
-          {/* Interview Team */}
-          <DetailSection title="Interview Team">
-            <div className="grid grid-cols-2 sm:grid-cols-1  gap-4 sm:gap-6">
-              <DetailItem 
-                label="Interviewers" 
-                value={interviewData.interviewerNames || 'No interviewers assigned'}
-                icon={<Users className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Interviewer Type" 
-                value={interviewData.interviewerType || 'N/A'}
-                icon={<User2 className="w-4 h-4" />}
-              />
-              {interviewData?.interviewerGroupId && (<DetailItem 
-                label="Interviewer Group" 
-                value={interviewData.interviewerGroupId || 'N/A'}
-                icon={<Users className="w-4 h-4" />}
-              />)}
-            </div>
-          </DetailSection>
-
-          {/* Round Status & Actions */}
-          <DetailSection title="Status & Actions">
-            <div className="grid grid-cols-2 sm:grid-cols-1  gap-4 sm:gap-6">
-              <DetailItem 
-                label="Current Status" 
-                value={<StatusBadge status={interviewData.status || 'Draft'} />}
-                icon={<Stamp className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Current Action" 
-                value={interviewData.currentAction || 'None'}
-                icon={<AlertCircle className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Previous Action" 
-                value={interviewData.previousAction || 'None'}
-                icon={<History className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Current Action Reason" 
-                value={interviewData.currentActionReason || 'N/A'}
-                icon={<AlertCircle className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Previous Action Reason" 
-                value={interviewData.previousActionReason || 'N/A'}
-                icon={<History className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Rejection Reason" 
-                value={interviewData.rejectionReason || 'N/A'}
-                icon={<AlertCircle className="w-4 h-4" />}
-              />
-            </div>
-          </DetailSection>
-
-          {/* Round History (matches InterviewRounds.history schema) */}
-          {interviewData.history && interviewData.history.length > 0 && (
-            <DetailSection title="Round History">
-              <div className="space-y-3">
-                {interviewData.history
-                  .filter((h) => h && typeof h === 'object')
-                  .map((historyItem, index) => {
-                    const reasonLabel = historyItem.reasonCode;
-                    return (
-                      <div
-                        key={index}
-                        className="bg-gray-50 rounded-lg p-4 border border-gray-100"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <History className="w-4 h-4 text-custom-blue" />
-                            <span className="text-sm font-medium text-gray-900">
-                              {historyItem.action || 'Action'}
-                            </span>
+          <div className="px-6 py-6">
+            {/* Round Information Tab */}
+            {activeTab === 'round' && (
+              <>
+                {/* Candidate and Position Quick Access */}
+                {interviewData?.dataType !== 'mock' ? (
+                  <DetailSection title="Quick Access">
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Candidate Button */}
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2 flex-1">
+                          <div className="w-8 h-8 bg-custom-blue/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <User className="w-4 h-4 text-custom-blue" />
                           </div>
-                          <span className="text-xs text-gray-500">
-                            {historyItem.scheduledAt
-                              ? historyItem.scheduledAt
-                              : 'N/A'}
-                          </span>
-                        </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-gray-900">Candidate</p>
+                            <p className="text-xs text-gray-500 truncate">
 
-                        {(reasonLabel || historyItem.comment) && (
-                          <div className="mb-2">
-                            {reasonLabel && (
-                              <p className="text-xs text-gray-600">
-                                <span className="font-semibold">Reason:</span>{' '}
-                                {reasonLabel}
-                              </p>
-                            )}
-                            {historyItem.comment && (
-                              <p className="text-xs text-gray-600 mt-1">
-                                <span className="font-semibold">Comment:</span>{' '}
-                                {historyItem.comment}
-                              </p>
-                            )}
-                          </div>
-                        )}
+                              {`${candidateData?.FirstName} ${candidateData?.LastName}`.trim()}
 
-                        {Array.isArray(historyItem.participants) &&
-                          historyItem.participants.length > 0 && (
-                            <div className="mb-2">
-                              <p className="text-xs font-semibold text-gray-600 mb-1">
-                                Participants:
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {historyItem.participants.map((participant, pIndex) => (
-                                  <span
-                                    key={pIndex}
-                                    className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded text-xs"
-                                  >
-                                    <Circle
-                                      className={`w-2 h-2 ${
-                                        participant?.status === 'Joined'
-                                          ? 'text-green-500'
-                                          : 'text-gray-400'
-                                      }`}
-                                    />
-                                    <span className="text-gray-700">{participant?.role}</span>
-                                    {participant?.status && (
-                                      <span className="text-gray-500">({participant.status})</span>
-                                    )}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                        <div className="flex items-center gap-4 mt-2 pt-2 border-t border-gray-100">
-          
-                          {(historyItem.createdBy) && (
-                            <p className="text-xs text-gray-500">
-                              By:{' '}
-                              {historyItem.createdBy}
                             </p>
-                          )}
+                          </div>
                         </div>
+                        <button
+                          onClick={() => setShowCandidateSidebar(true)}
+                          className="flex items-center gap-1 px-2 py-1 bg-custom-blue text-white rounded hover:bg-custom-blue/80 transition-colors text-xs font-medium ml-2 flex-shrink-0"
+                        >
+                          <span>View</span>
+                          <ChevronRight className="w-3 h-3" />
+                        </button>
                       </div>
-                    );
-                  })}
-              </div>
-            </DetailSection>
-          )}
 
-          {/* Settlement Information */}
-          {interviewData.settlementStatus && (
-            <DetailSection title="Settlement Information">
-              <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:gap-6">
-                <DetailItem 
-                  label="Settlement Status" 
-                  value={
-                    <StatusBadge 
-                      status={interviewData.settlementStatus} 
-                      customColors={{
-                        pending: 'bg-yellow-100 text-yellow-800',
-                        completed: 'bg-green-100 text-green-800',
-                        failed: 'bg-red-100 text-red-800'
-                      }}
-                    />
-                  }
-                  icon={<CreditCard className="w-4 h-4" />}
-                />
-                <DetailItem 
-                  label="Settlement Date" 
-                  value={
-                    interviewData.settlementDate 
-                      ? new Date(interviewData.settlementDate).toLocaleString('en-US', {
-                          dateStyle: 'medium',
-                          timeStyle: 'short'
-                        })
-                      : 'N/A'
-                  }
-                  icon={<Calendar className="w-4 h-4" />}
-                />
-                <DetailItem 
-                  label="Hold Transaction ID" 
-                  value={interviewData.holdTransactionId || 'N/A'}
-                  icon={<Hash className="w-4 h-4" />}
-                />
-              </div>
-            </DetailSection>
-          )}
+                      {/* Position Button */}
 
-          {/* Timestamps */}
-          <DetailSection title="Timestamps">
-            <div className="grid grid-cols-2 sm:grid-cols-1  gap-4 sm:gap-6">
-              <DetailItem 
-                label="Created At" 
-                value={interviewData.createdOn 
-                  ? new Date(interviewData.createdOn).toLocaleString('en-US', {
-                      dateStyle: 'medium',
-                      timeStyle: 'short'
-                    })
-                  : 'N/A'
-                }
-                icon={<Clock className="w-4 h-4" />}
-              />
-              <DetailItem 
-                label="Updated At" 
-                value={interviewData.updatedAt 
-                  ? new Date(interviewData.updatedAt).toLocaleString('en-US', {
-                      dateStyle: 'medium',
-                      timeStyle: 'short'
-                    })
-                  : 'N/A'
-                }
-                icon={<Clock className="w-4 h-4" />}
-              />
-            </div>
-          </DetailSection>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2 flex-1">
+                          <div className="w-8 h-8 bg-custom-blue/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Briefcase className="w-4 h-4 text-custom-blue" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-gray-900">Position</p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {positionData?.title}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setShowPositionSidebar(true)}
+                          className="flex items-center gap-1 px-2 py-1 bg-custom-blue text-white rounded hover:bg-custom-blue/80 transition-colors text-xs font-medium ml-2 flex-shrink-0"
+                        >
+                          <span>View</span>
+                          <ChevronRight className="w-3 h-3" />
+                        </button>
+                      </div>
 
-            </>
-          )}
-
-          {/* Transactions Tab */}
-          {activeTab === 'transactions' && (
-            <>
-              {transactionLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-custom-blue mx-auto"></div>
-                  <p className="text-sm text-gray-500 mt-2">Loading transaction details...</p>
-                </div>
-              ) : (transactionData?.holdTransactionData || interviewData.holdTransactionData) ? (() => {
-                const txData = transactionData?.holdTransactionData || interviewData.holdTransactionData;
-                const settlementStatus = transactionData?.settlementStatus || interviewData.settlementStatus;
-                const settlementDate = transactionData?.settlementDate || interviewData.settlementDate;
-                
-                return (
-                <DetailSection title="Hold Transaction Details">
-                  <div className="space-y-6">
-                    {/* Transaction Status Badge */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                      <span className="text-sm font-medium text-gray-900">Transaction Status</span>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        txData?.status === 'completed' 
-                          ? 'bg-green-100 text-green-800' 
-                          : txData?.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {txData?.status?.toUpperCase() || 'N/A'}
-                      </span>
                     </div>
-
-                    {/* Transaction Details */}
-                    <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                      <DetailItem 
-                        label="Transaction Type" 
-                        value={txData?.type?.toUpperCase() || 'N/A'}
-                        icon={<CreditCard className="w-4 h-4" />}
+                  </DetailSection>
+                ) : (
+                  <DetailSection title="Candidate Details">
+                    <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:gap-6">
+                      <DetailItem
+                        label="Candidate Name"
+                        value={`${candidateData?.FirstName} ${candidateData?.LastName}`.trim() || 'N/A'}
+                        icon={<User className="w-4 h-4" />}
                       />
-                      <DetailItem 
-                        label="Amount" 
-                        value={`₹${txData?.amount || 0}`}
-                        icon={<DollarSign className="w-4 h-4" />}
+                      <DetailItem
+                        label="Role"
+                        value={candidateData?.Role || 'N/A'}
+                        icon={<Briefcase className="w-4 h-4" />}
                       />
-                      <DetailItem 
-                        label="Description" 
-                        value={txData?.description || 'N/A'}
-                        icon={<FileText className="w-4 h-4" />}
-                      />
-                      <DetailItem 
-                        label="Invoice ID" 
-                        value={txData?.relatedInvoiceId || 'N/A'}
+                      <DetailItem
+                        label="Technology"
+                        value={candidateData?.Technology || 'N/A'}
                         icon={<Hash className="w-4 h-4" />}
                       />
-                      <DetailItem 
-                        label="Transaction Date" 
+                      <DetailItem
+                        label="Higher Qualification"
+                        value={candidateData?.higherQualification || 'N/A'}
+                        icon={<GraduationCap className="w-4 h-4" />}
+                      />
+                      <DetailItem
+                        label="Current Experience"
+                        value={candidateData?.currentExperience ? `${candidateData.currentExperience} Years` : 'N/A'}
+                        icon={<Briefcase className="w-4 h-4" />}
+                      />
+                    </div>
+
+                    {/* Display Skills if available */}
+                    {candidateData?.skills && candidateData.skills.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Skills</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          {candidateData.skills.map((skill, index) => (
+                            <div key={index} className="flex items-start gap-2">
+                              <div className="w-2 h-2 bg-custom-blue rounded-full mt-1.5 flex-shrink-0"></div>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-900">{skill.skill || skill}</p>
+                                {skill.experience && skill.expertise && (
+                                  <p className="text-xs text-gray-500">
+                                    {skill.experience} - {skill.expertise}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </DetailSection>
+                )}
+
+
+                {/* Round Information */}
+                <DetailSection title="Round Details">
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:gap-6">
+                    <DetailItem
+                      label="Interview Code"
+                      value={interviewData.interviewCode}
+                      icon={<Hash className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Round Title"
+                      value={interviewData.roundTitle}
+                      icon={<Briefcase className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Round Sequence"
+                      value={interviewData.sequence ? `Round ${interviewData.sequence}` : 'N/A'}
+                      icon={<KeyRound className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Interview Mode"
+                      value={interviewData.interviewMode}
+                      icon={<PictureInPicture className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Interview Type"
+                      value={interviewData.interviewType}
+                      icon={<StampIcon className="w-4 h-4" />}
+                    />
+                  </div>
+                </DetailSection>
+
+                {/* Schedule Information */}
+                <DetailSection title="Schedule Information">
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:gap-6">
+                    <DetailItem
+                      label="Scheduled Date & Time"
+                      value={interviewData.dateTime || 'Not scheduled'}
+                      icon={<Calendar className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Duration"
+                      value={interviewData.duration ? `${interviewData.duration} minutes` : 'N/A'}
+                      icon={<Clock className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Instructions"
+                      value={interviewData.instructions || 'N/A'}
+                      icon={<ListChecks className="w-4 h-4" />}
+                    />
+                  </div>
+                </DetailSection>
+
+                {/* Interview Team */}
+                <DetailSection title="Interview Team">
+                  <div className="grid grid-cols-2 sm:grid-cols-1  gap-4 sm:gap-6">
+                    <DetailItem
+                      label="Interviewers"
+                      value={interviewData.interviewerNames || 'No interviewers assigned'}
+                      icon={<Users className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Interviewer Type"
+                      value={interviewData.interviewerType || 'N/A'}
+                      icon={<User2 className="w-4 h-4" />}
+                    />
+                    {interviewData?.interviewerGroupId && (<DetailItem
+                      label="Interviewer Group"
+                      value={interviewData.interviewerGroupId || 'N/A'}
+                      icon={<Users className="w-4 h-4" />}
+                    />)}
+                  </div>
+                </DetailSection>
+
+                {/* Round Status & Actions */}
+                <DetailSection title="Status & Actions">
+                  <div className="grid grid-cols-2 sm:grid-cols-1  gap-4 sm:gap-6">
+                    <DetailItem
+                      label="Current Status"
+                      value={<StatusBadge status={interviewData.status || 'Draft'} />}
+                      icon={<Stamp className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Current Action"
+                      value={interviewData.currentAction || 'None'}
+                      icon={<AlertCircle className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Previous Action"
+                      value={interviewData.previousAction || 'None'}
+                      icon={<History className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Current Action Reason"
+                      value={interviewData.currentActionReason || 'N/A'}
+                      icon={<AlertCircle className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Previous Action Reason"
+                      value={interviewData.previousActionReason || 'N/A'}
+                      icon={<History className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Rejection Reason"
+                      value={interviewData.rejectionReason || 'N/A'}
+                      icon={<AlertCircle className="w-4 h-4" />}
+                    />
+                  </div>
+                </DetailSection>
+
+                {/* Settlement Information */}
+                {interviewData.settlementStatus && (
+                  <DetailSection title="Settlement Information">
+                    <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:gap-6">
+                      <DetailItem
+                        label="Settlement Status"
                         value={
-                          txData?.createdAt 
-                            ? new Date(txData.createdAt).toLocaleString('en-US', {
-                                dateStyle: 'medium',
-                                timeStyle: 'short'
-                              })
+                          <StatusBadge
+                            status={interviewData.settlementStatus}
+                            customColors={{
+                              pending: 'bg-yellow-100 text-yellow-800',
+                              completed: 'bg-green-100 text-green-800',
+                              failed: 'bg-red-100 text-red-800'
+                            }}
+                          />
+                        }
+                        icon={<CreditCard className="w-4 h-4" />}
+                      />
+                      <DetailItem
+                        label="Settlement Date"
+                        value={
+                          interviewData.settlementDate
+                            ? new Date(interviewData.settlementDate).toLocaleString('en-US', {
+                              dateStyle: 'medium',
+                              timeStyle: 'short'
+                            })
                             : 'N/A'
                         }
                         icon={<Calendar className="w-4 h-4" />}
                       />
+                      <DetailItem
+                        label="Hold Transaction ID"
+                        value={interviewData.holdTransactionId || 'N/A'}
+                        icon={<Hash className="w-4 h-4" />}
+                      />
                     </div>
+                  </DetailSection>
+                )}
 
-                    {/* Metadata Section */}
-                    {txData?.metadata && (
-                      <div className="pt-4 border-t border-gray-100">
-                        <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">
-                          Transaction Metadata
-                        </h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <DetailItem 
-                            label="Hourly Rate" 
-                            value={`₹${txData?.metadata?.rate || txData?.metadata?.hourlyRate || 0}`}
-                            icon={<DollarSign className="w-4 h-4" />}
-                          />
-                          <DetailItem 
-                            label="Duration" 
-                            value={`${txData?.metadata?.durationInMinutes || 0} minutes`}
-                            icon={<Clock className="w-4 h-4" />}
-                          />
-                          <DetailItem 
-                            label="Previous Balance" 
-                            value={`₹${txData?.metadata?.prevBalance || 0}`}
-                            icon={<CreditCard className="w-4 h-4" />}
-                          />
-                          <DetailItem 
-                            label="New Balance" 
-                            value={`₹${txData?.metadata?.newBalance || 0}`}
-                            icon={<CreditCard className="w-4 h-4" />}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Settlement Info */}
-                    {settlementStatus === 'completed' ? (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div className="flex items-start">
-                          <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" />
-                          <div>
-                            <h4 className="text-sm font-medium text-green-900 mb-1">Payment Settled</h4>
-                            <p className="text-sm text-green-700">
-                              This payment has been successfully settled to the interviewer's wallet.
-                              {settlementDate && (
-                                <span className="block mt-1">
-                                  Settled on: {new Date(settlementDate).toLocaleString()}
-                                </span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="flex items-start">
-                          <CheckCircle className="w-5 h-5 text-custom-blue mt-0.5 mr-3 flex-shrink-0" />
-                          <div>
-                            <h4 className="text-sm font-medium text-custom-blue mb-1">Ready for Settlement</h4>
-                            <p className="text-sm text-custom-blue">
-                              This hold transaction can be settled after the interview is completed. 
-                              Click the Settlement button above to process the payment.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                {/* Timestamps */}
+                <DetailSection title="Timestamps">
+                  <div className="grid grid-cols-2 sm:grid-cols-1  gap-4 sm:gap-6">
+                    <DetailItem
+                      label="Created At"
+                      value={interviewData.createdOn
+                        ? new Date(interviewData.createdOn).toLocaleString('en-US', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
+                        })
+                        : 'N/A'
+                      }
+                      icon={<Clock className="w-4 h-4" />}
+                    />
+                    <DetailItem
+                      label="Updated At"
+                      value={interviewData.updatedAt
+                        ? new Date(interviewData.updatedAt).toLocaleString('en-US', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
+                        })
+                        : 'N/A'
+                      }
+                      icon={<Clock className="w-4 h-4" />}
+                    />
                   </div>
                 </DetailSection>
-                );
-              })() : (
-                <DetailSection title="No Transaction Data">
-                  <div className="text-center py-8">
-                    <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-sm text-gray-500">No transaction data available for this interview round.</p>
-                  </div>
-                </DetailSection>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    </SidebarPopup>
 
-    {showSettlementModal &&
-      createPortal(
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <h3 className="text-sm font-semibold text-gray-900">
-                Settle Interview Payment
-              </h3>
-            </div>
-            <button
-              onClick={() => {
-                setShowSettlementModal(false);
-                setSettlementResult(null);
-                setSettlementError(null);
-              }}
-              className="text-gray-400 hover:text-gray-600 text-sm"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="px-5 py-4">
-            {settlementError && (
-              <div className="mb-3 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
-                {settlementError}
-              </div>
+              </>
             )}
 
-            {settlementLoading && (
-              <p className="text-sm text-gray-600">Calculating settlement, please wait...</p>
-            )}
-
-            {/* Preview state: show detailed calculation before actual settlement */}
-            {!settlementLoading && !settlementResult && (
+            {/* Round History Tab */}
+            {activeTab === 'history' && (
               <>
-                <p className="text-sm text-gray-600 mb-3">
-                  Preview of settlement calculation as per policy (including service charge and GST). Confirm to apply this settlement.
-                </p>
-                {txData && (
-                  <div className="bg-gray-50 border border-gray-100 rounded-md px-3 py-2 text-sm text-gray-700 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Held amount</span>
-                      <span className="font-medium">₹{formatAmount(txData.amount)}</span>
+                {interviewData.history && interviewData.history.length > 0 ? (
+                  <DetailSection title="Round History">
+                    <div className="space-y-3">
+                      {interviewData.history
+                        .filter((h) => h && typeof h === 'object')
+                        .map((historyItem, index) => {
+                          const reasonLabel = historyItem.reasonCode;
+                          return (
+                            <div
+                              key={index}
+                              className="bg-gray-50 rounded-lg p-4 border border-gray-100"
+                            >
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <History className="w-4 h-4 text-custom-blue" />
+                                  <span className="text-sm font-medium text-gray-900">
+                                    {historyItem.action || 'Action'}
+                                  </span>
+                                </div>
+                                <span className="text-xs text-gray-500">
+                                  {historyItem.scheduledAt
+                                    ? historyItem.scheduledAt
+                                    : 'N/A'}
+                                </span>
+                              </div>
+
+                              {(reasonLabel || historyItem.comment) && (
+                                <div className="mb-2">
+                                  {reasonLabel && (
+                                    <p className="text-xs text-gray-600">
+                                      <span className="font-semibold">Reason:</span>{' '}
+                                      {reasonLabel}
+                                    </p>
+                                  )}
+                                  {historyItem.comment && (
+                                    <p className="text-xs text-gray-600 mt-1">
+                                      <span className="font-semibold">Comment:</span>{' '}
+                                      {historyItem.comment}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+
+                              {Array.isArray(historyItem.participants) &&
+                                historyItem.participants.length > 0 && (
+                                  <div className="mb-2">
+                                    <p className="text-xs font-semibold text-gray-600 mb-1">
+                                      Participants:
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {historyItem.participants.map((participant, pIndex) => (
+                                        <span
+                                          key={pIndex}
+                                          className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded text-xs"
+                                        >
+                                          <Circle
+                                            className={`w-2 h-2 ${participant?.status === 'Joined'
+                                                ? 'text-green-500'
+                                                : 'text-gray-400'
+                                              }`}
+                                          />
+                                          <span className="text-gray-700">{participant?.role}</span>
+                                          {participant?.status && (
+                                            <span className="text-gray-500">({participant.status})</span>
+                                          )}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                              <div className="flex items-center gap-4 mt-2 pt-2 border-t border-gray-100">
+
+                                {(historyItem.createdBy) && (
+                                  <p className="text-xs text-gray-500">
+                                    By:{' '}
+                                    {historyItem.createdBy}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                     </div>
-
-                    {settlementPreview && (
-                      <>
-                        {typeof settlementPreview.grossSettlementAmount === 'number' && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Gross payout (before charges)</span>
-                            <span className="font-medium">
-                              ₹{formatAmount(settlementPreview.grossSettlementAmount)}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Service charge (10% of gross)</span>
-                          <span className="font-medium">
-                            ₹{formatAmount(settlementPreview.serviceCharge)}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">GST on service charge (18%)</span>
-                          <span className="font-medium">
-                            ₹{formatAmount(settlementPreview.serviceChargeGst)}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Net paid to interviewer</span>
-                          <span className="font-medium">
-                            ₹{formatAmount(settlementPreview.settlementAmount)}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Refund to organization wallet</span>
-                          <span className="font-medium">
-                            ₹{formatAmount(settlementPreview.refundAmount)}
-                          </span>
-                        </div>
-
-                        {typeof settlementPreview.payPercent === 'number' && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Payout percentage</span>
-                            <span className="font-medium">{settlementPreview.payPercent}%</span>
-                          </div>
-                        )}
-
-                        {settlementPreview.settlementScenario && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Scenario</span>
-                            <span className="font-medium capitalize">
-                              {settlementPreview.settlementScenario}
-                            </span>
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    {!settlementPreview && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Settlement preview will appear here once calculated.
-                      </p>
-                    )}
-                  </div>
+                  </DetailSection>
+                ) : (
+                  <DetailSection title="Round History">
+                    <div className="text-center py-6 text-gray-500 text-sm">
+                      No history entries recorded for this round yet.
+                    </div>
+                  </DetailSection>
                 )}
               </>
             )}
 
-            {!settlementLoading && settlementResult && (
+            {/* Transactions Tab - Updated to show multiple cards */}
+            {activeTab === 'transactions' && (
               <>
-                <p className="text-sm text-gray-600 mb-3">
-                  Settlement completed as per policy. Here is the breakdown:
-                </p>
-                <div className="bg-gray-50 border border-gray-100 rounded-md px-3 py-2 text-sm text-gray-700 space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Paid to interviewer</span>
-                    <span className="font-medium">
-                      ₹{formatAmount(settlementResult.settlementAmount)}
-                    </span>
+
+                {transactionLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-custom-blue mx-auto"></div>
+                    <p className="text-sm text-gray-500 mt-2">Loading transaction details...</p>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Refund to organization wallet</span>
-                    <span className="font-medium">
-                      ₹{formatAmount(settlementResult.refundAmount)}
-                    </span>
+                ) : transactionData?.transactions?.length > 0 ? (
+                  <DetailSection title="Transaction History">
+                    <div className="space-y-4">
+                      {transactionData.transactions.map((tx) => (
+                        <div key={tx._id} className="bg-white border border-gray-100 rounded-lg p-4 shadow-sm">
+                          {/* Transaction Header */}
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <CreditCard className="w-5 h-5 text-custom-blue" />
+                              <h4 className="text-sm font-semibold text-gray-900">
+                                {tx.type.toUpperCase()} Transaction
+                              </h4>
+                            </div>
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${tx.status === 'completed'
+                                ? 'bg-green-100 text-green-800'
+                                : tx.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                              {tx.status.toUpperCase()}
+                            </span>
+                          </div>
+
+                          {/* Transaction Details */}
+                          <div className="grid grid-cols-2 gap-4 mb-4">
+                            <DetailItem
+                              label="Amount"
+                              value={`₹${formatAmount(tx.amount)}`}
+                              icon={<DollarSign className="w-4 h-4" />}
+                            />
+                            <DetailItem
+                              label="Date"
+                              value={tx.createdAt ? new Date(tx.createdAt).toLocaleString() : 'N/A'}
+                              icon={<Calendar className="w-4 h-4" />}
+                            />
+                            <DetailItem
+                              label="Description"
+                              value={tx.description || 'N/A'}
+                              icon={<FileText className="w-4 h-4" />}
+                            />
+                            <DetailItem
+                              label="Invoice ID"
+                              value={tx.relatedInvoiceId || 'N/A'}
+                              icon={<Hash className="w-4 h-4" />}
+                            />
+                          </div>
+
+                          {/* Metadata if available */}
+                          {tx.metadata && Object.keys(tx.metadata).length > 0 && (
+                            <div className="pt-4 border-t border-gray-100">
+                              <h5 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                                Metadata
+                              </h5>
+                              <div className="grid grid-cols-2 gap-4">
+                                {tx.metadata.hourlyRate && (
+                                  <DetailItem
+                                    label="Hourly Rate"
+                                    value={`₹${formatAmount(tx.metadata.hourlyRate)}`}
+                                    icon={<DollarSign className="w-4 h-4" />}
+                                  />
+                                )}
+                                {tx.metadata.durationInMinutes && (
+                                  <DetailItem
+                                    label="Duration"
+                                    value={`${tx.metadata.durationInMinutes} minutes`}
+                                    icon={<Clock className="w-4 h-4" />}
+                                  />
+                                )}
+                                {/* Add more metadata fields as needed */}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Settlement Button if applicable */}
+                          {tx.type === 'hold' && tx.status !== 'completed' && (
+                            <div className="mt-4 flex justify-end">
+                              <button
+                                onClick={() => handleSettlementPreview(tx._id)}
+                                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                                Settle This Transaction
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </DetailSection>
+                ) : (
+                  <DetailSection title="No Transaction Data">
+                    <div className="text-center py-8">
+                      <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-sm text-gray-500">No transaction data available for this interview round.</p>
+                    </div>
+                  </DetailSection>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </SidebarPopup>
+
+      {/* Settlement Modal - Full Version with Round History */}
+      {showSettlementModal && selectedTransactionId && (
+        createPortal(
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-60 overflow-y-auto">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 my-8 max-h-[92vh] overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Settle Interview Payment</h3>
+                    <p className="text-sm text-gray-600 mt-0.5">
+                      Round: <span className="font-medium">{interviewData.roundTitle || 'Untitled Round'}</span>
+                      ({interviewData.interviewCode || 'No Code'})
+                    </p>
                   </div>
-                  {typeof settlementResult.payPercent === "number" && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Payout percentage</span>
-                      <span className="font-medium">{settlementResult.payPercent}%</span>
-                    </div>
-                  )}
-                  {typeof settlementResult.serviceCharge === "number" &&
-                    settlementResult.serviceCharge > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Service charge (10% of payout)</span>
-                        <span className="font-medium">
-                          ₹{formatAmount(settlementResult.serviceCharge)}
-                        </span>
-                      </div>
-                    )}
-                  {settlementResult.settlementScenario && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Scenario</span>
-                      <span className="font-medium capitalize">
-                        {settlementResult.settlementScenario}
-                      </span>
-                    </div>
-                  )}
-                  {typeof settlementResult.payPercent === "number" &&
-                    settlementResult.payPercent === 0 && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Note: As per policy this resulted in a full refund (no payout to interviewer).
-                      </p>
-                    )}
                 </div>
-              </>
-            )}
-          </div>
-
-          <div className="px-5 py-3 border-t border-gray-100 flex justify-end gap-2">
-            {!settlementLoading && !settlementResult && (
-              <>
                 <button
                   onClick={() => {
                     setShowSettlementModal(false);
                     setSettlementResult(null);
                     setSettlementError(null);
+                    setSettlementOverrides({});
+                    setSettlementPreview(null);
+                    setSelectedTransactionId(null);
                   }}
-                  className="px-3 py-1.5 text-xs rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50"
+                  className="p-2 rounded-full hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-colors"
                 >
-                  Cancel
+                  ✕
                 </button>
-                <button
-                  onClick={handleSettlement}
-                  className="px-3 py-1.5 text-xs rounded-md bg-green-600 text-white hover:bg-green-700 flex items-center gap-1"
-                >
-                  <CheckCircle className="w-3 h-3" />
-                  Settle Now
-                </button>
-              </>
-            )}
+              </div>
 
-            {!settlementLoading && settlementResult && (
-              <>
-                <button
-                  onClick={() => {
-                    setShowSettlementModal(false);
-                    setSettlementResult(null);
-                    setSettlementError(null);
-                  }}
-                  className="px-3 py-1.5 text-xs rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    window.location.reload();
-                  }}
-                  className="px-3 py-1.5 text-xs rounded-md bg-custom-blue text-white hover:bg-custom-blue/90"
-                >
-                  Close & Refresh
-                </button>
-              </>
-            )}
+              {/* Scrollable Content */}
+              <div className="flex-1 px-6 py-5 overflow-y-auto space-y-6">
+
+                {/* Round Context */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Round Information
+                  </h4>
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                    <div>
+                      <span className="text-blue-700 font-medium">Scheduled Date & Time:</span>
+                      <p className="text-blue-900 mt-0.5">
+                        {interviewData.dateTime
+                          ? new Date(interviewData.dateTime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+                          : 'Not scheduled'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-blue-700 font-medium">Current Status:</span>
+                      <p className="mt-0.5">
+                        <StatusBadge status={interviewData.status || 'Unknown'} />
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-blue-700 font-medium">Current Action:</span>
+                      <p className="text-blue-900 mt-0.5">{interviewData.currentAction || 'None'}</p>
+                    </div>
+                    <div>
+                      <span className="text-blue-700 font-medium">Previous Action:</span>
+                      <p className="text-blue-900 mt-0.5">{interviewData.previousAction || 'None'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Round History (Scheduled/Rescheduled/Cancelled etc.) - Improved with robust date handling */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <History className="w-4 h-4" />
+                    Round Lifecycle History
+                  </h4>
+
+                  {interviewData.history && interviewData.history.length > 0 ? (
+                    <div className="space-y-4 max-h-72 overflow-y-auto pr-2">
+                      {interviewData.history
+                        .filter(h => h && h.action)
+                        .sort((a, b) => {
+                          // Sort by updatedAt (most reliable timestamp), fallback to index
+                          const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
+                          const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
+                          return dateA - dateB;
+                        })
+                        .map((entry, index) => {
+                          // Safely format scheduledAt (string or date)
+                          let scheduledDisplay = 'N/A';
+                          if (entry.scheduledAt) {
+                            const schedDate = new Date(entry.scheduledAt);
+                            if (!isNaN(schedDate.getTime())) {
+                              scheduledDisplay = schedDate.toLocaleString('en-US', {
+                                dateStyle: 'medium',
+                                timeStyle: 'short'
+                              });
+                            } else {
+                              scheduledDisplay = entry.scheduledAt + ' (Invalid date)';
+                            }
+                          }
+
+                          // Safely format updatedAt (action timestamp)
+                          let actionTimeDisplay = 'N/A';
+                          if (entry.updatedAt) {
+                            const actionDate = new Date(entry.updatedAt);
+                            if (!isNaN(actionDate.getTime())) {
+                              actionTimeDisplay = actionDate.toLocaleString('en-US', {
+                                dateStyle: 'medium',
+                                timeStyle: 'short'
+                              });
+                            } else {
+                              actionTimeDisplay = 'Invalid timestamp';
+                            }
+                          }
+
+                          return (
+                            <div
+                              key={index}
+                              className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow transition-shadow"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${entry.action === 'Scheduled' ? 'bg-blue-500' :
+                                      entry.action === 'Rescheduled' ? 'bg-orange-500' :
+                                        entry.action === 'Cancelled' ? 'bg-red-500' :
+                                          entry.action === 'Completed' ? 'bg-green-500' :
+                                            'bg-gray-500'
+                                    }`}>
+                                    {index + 1}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-gray-900 capitalize">
+                                      {entry.action || 'Unknown Action'}
+                                    </p>
+                                    {entry.scheduledAt && (
+                                      <p className="text-xs text-gray-600 mt-0.5">
+                                        <span className="font-medium">Scheduled for:</span> {scheduledDisplay}
+                                      </p>
+                                    )}
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Action taken on: {actionTimeDisplay}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Reason / Comment */}
+                              {(entry.reasonCode || entry.comment) && (
+                                <div className="mt-3 pt-3 border-t border-gray-100">
+                                  {entry.reasonCode && (
+                                    <p className="text-sm text-gray-700">
+                                      <span className="font-medium">Reason:</span> {entry.reasonCode}
+                                    </p>
+                                  )}
+                                  {entry.comment && (
+                                    <p className="text-sm text-gray-700 mt-1 italic">
+                                      <span className="font-medium">Comment:</span> {entry.comment}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Participants */}
+                              {entry.participants && entry.participants.length > 0 && (
+                                <div className="mt-3">
+                                  <p className="text-xs font-medium text-gray-600 mb-1">Participants:</p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {entry.participants.map((p, pIdx) => (
+                                      <span
+                                        key={pIdx}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 rounded-full text-xs"
+                                      >
+                                        <Circle
+                                          className={`w-3 h-3 ${p.status === 'Joined' ? 'text-green-500' : 'text-gray-400'
+                                            }`}
+                                        />
+                                        {p.role || 'Unknown'}
+                                        {p.status && <span className="text-gray-500">({p.status})</span>}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Created By */}
+                              {entry.createdBy && (
+                                <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                                  Performed by: {typeof entry.createdBy === 'object' ? entry.createdBy.name || entry.createdBy.email || 'User' : entry.createdBy}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-gray-500 text-sm">
+                      No history entries recorded for this round yet.
+                    </div>
+                  )}
+                </div>
+
+                {/* Transaction History (optional - if you still want it) */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" />
+                    Wallet Transactions
+                  </h4>
+                  <div className="space-y-3 max-h-56 overflow-y-auto">
+                    {transactionData.transactions
+                      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+                      .map((tx) => {
+                        const isSelected = tx._id === selectedTransactionId;
+                        return (
+                          <div
+                            key={tx._id}
+                            className={`p-3 rounded-lg border ${isSelected ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                              }`}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${tx.type === 'hold' ? 'bg-yellow-500' :
+                                    tx.type === 'debit' ? 'bg-red-500' :
+                                      'bg-green-500'
+                                  }`}>
+                                  {tx.type.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 capitalize">{tx.type}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {new Date(tx.createdAt).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold">
+                                  {tx.type === 'credit' ? '+' : ''}₹{formatAmount(tx.amount)}
+                                </p>
+                                <p className="text-xs text-gray-500 capitalize">{tx.status}</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                {/* Settlement Calculation - Editable */}
+                {!settlementLoading && !settlementResult && settlementPreview && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-5">
+                    <p className="text-sm text-amber-800 font-medium mb-4">
+                      Settlement Calculation (Editable)
+                    </p>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Gross Payout</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={settlementOverrides.grossSettlementAmount ?? settlementPreview.grossSettlementAmount}
+                          onChange={(e) => handleOverrideChange('grossSettlementAmount', parseFloat(e.target.value) || 0)}
+                          className="w-32 px-3 py-2 border border-gray-300 rounded-md text-right"
+                        />
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Service Charge (10%)</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={settlementOverrides.serviceCharge ?? settlementPreview.serviceCharge}
+                          onChange={(e) => handleOverrideChange('serviceCharge', parseFloat(e.target.value) || 0)}
+                          className="w-32 px-3 py-2 border border-gray-300 rounded-md text-right"
+                        />
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">GST (18%)</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={settlementOverrides.serviceChargeGst ?? settlementPreview.serviceChargeGst}
+                          onChange={(e) => handleOverrideChange('serviceChargeGst', parseFloat(e.target.value) || 0)}
+                          className="w-32 px-3 py-2 border border-gray-300 rounded-md text-right"
+                        />
+                      </div>
+                      <div className="flex justify-between items-center pt-3 border-t">
+                        <span className="text-gray-800 font-semibold">Net to Interviewer</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={settlementOverrides.settlementAmount ?? settlementPreview.settlementAmount}
+                          onChange={(e) => handleOverrideChange('settlementAmount', parseFloat(e.target.value) || 0)}
+                          className="w-32 px-3 py-2 border-2 border-green-500 rounded-md text-right font-bold bg-green-50"
+                        />
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700">Refund</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={settlementOverrides.refundAmount ?? settlementPreview.refundAmount}
+                          onChange={(e) => handleOverrideChange('refundAmount', parseFloat(e.target.value) || 0)}
+                          className="w-32 px-3 py-2 border border-gray-300 rounded-md text-right"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Loading / Success / Error States */}
+                {settlementLoading && (
+                  <div className="text-center py-10">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Processing settlement...</p>
+                  </div>
+                )}
+
+                {settlementError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
+                    {settlementError}
+                  </div>
+                )}
+
+                {settlementResult && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                    <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
+                    <h4 className="text-lg font-semibold text-green-900 mb-3">Settlement Successful!</h4>
+                    <div className="text-left space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Paid to Interviewer:</span>
+                        <span className="font-medium">₹{formatAmount(settlementResult.settlementAmount)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Refunded:</span>
+                        <span className="font-medium">₹{formatAmount(settlementResult.refundAmount)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Payout %:</span>
+                        <span className="font-medium">{settlementResult.payPercent}%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-4 bg-gray-50">
+                {!settlementResult && (
+                  <button
+                    onClick={() => {
+                      setShowSettlementModal(false);
+                      setSettlementResult(null);
+                      setSettlementError(null);
+                      setSettlementOverrides({});
+                      setSettlementPreview(null);
+                      setSelectedTransactionId(null);
+                    }}
+                    className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                )}
+                {!settlementLoading && !settlementResult && settlementPreview && (
+                  <button
+                    onClick={handleSettlement}
+                    className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                    Confirm Settlement
+                  </button>
+                )}
+                {settlementResult && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowSettlementModal(false);
+                        setSettlementResult(null);
+                        setSettlementOverrides({});
+                        setSelectedTransactionId(null);
+                      }}
+                      className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                    >
+                      Close
+                    </button>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="px-6 py-2.5 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 font-medium"
+                    >
+                      Refresh & Close
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      )}
+
+      {/* Separate Candidate Details Sidebar */}
+      {showCandidateSidebar && (
+        <SidebarPopup
+          isOpen={showCandidateSidebar}
+          onClose={() => setShowCandidateSidebar(false)}
+          title="Candidate Details"
+          icon={<User className="w-5 h-5" />}
+          onBack={() => setShowCandidateSidebar(false)}
+        >
+          <div className="bg-gray-50 min-h-full">
+            <div className="px-6 py-6">
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-custom-blue mx-auto"></div>
+                  <p className="text-sm text-gray-500 mt-2">Loading candidate details...</p>
+                </div>
+              ) : candidateData ? (
+                <CandidateDetailView candidate={candidateData} />
+              ) : (
+                <div className="text-center py-8">
+                  <User className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No candidate data available</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </div>,
-      document.body
-    )}
+        </SidebarPopup>
+      )}
 
-    {/* Separate Candidate Details Sidebar */}
-    {showCandidateSidebar && (
-    <SidebarPopup
-      isOpen={showCandidateSidebar}
-      onClose={() => setShowCandidateSidebar(false)}
-      title="Candidate Details"
-      icon={<User className="w-5 h-5" />}
-      onBack={() => setShowCandidateSidebar(false)}
-    >
-      <div className="bg-gray-50 min-h-full">
-        <div className="px-6 py-6">
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-custom-blue mx-auto"></div>
-              <p className="text-sm text-gray-500 mt-2">Loading candidate details...</p>
+      {/* Separate Position Details Sidebar */}
+      {showPositionSidebar && (
+        <SidebarPopup
+          isOpen={showPositionSidebar}
+          onClose={() => setShowPositionSidebar(false)}
+          title="Position Details"
+          icon={<Briefcase className="w-5 h-5" />}
+          onBack={() => setShowPositionSidebar(false)}
+        >
+          <div className="bg-gray-50 min-h-full">
+            <div className="px-6 py-6">
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-custom-blue mx-auto"></div>
+                  <p className="text-sm text-gray-500 mt-2">Loading position details...</p>
+                </div>
+              ) : positionData ? (
+                <PositionDetailView position={positionData} />
+              ) : (
+                <div className="text-center py-8">
+                  <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No position data available</p>
+                </div>
+              )}
             </div>
-          ) : candidateData ? (
-            <CandidateDetailView candidate={candidateData} />
-          ) : (
-            <div className="text-center py-8">
-              <User className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No candidate data available</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </SidebarPopup>
-    )}
-
-    {/* Separate Position Details Sidebar */}
-    {showPositionSidebar && (
-    <SidebarPopup
-      isOpen={showPositionSidebar}
-      onClose={() => setShowPositionSidebar(false)}
-      title="Position Details"
-      icon={<Briefcase className="w-5 h-5" />}
-      onBack={() => setShowPositionSidebar(false)}
-    >
-      <div className="bg-gray-50 min-h-full">
-        <div className="px-6 py-6">
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-custom-blue mx-auto"></div>
-              <p className="text-sm text-gray-500 mt-2">Loading position details...</p>
-            </div>
-          ) : positionData ? (
-            <PositionDetailView position={positionData} />
-          ) : (
-            <div className="text-center py-8">
-              <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No position data available</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </SidebarPopup>
-    )}
+          </div>
+        </SidebarPopup>
+      )}
     </>
   );
 };

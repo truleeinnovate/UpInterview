@@ -152,7 +152,7 @@ const AddSupportForm = ({ mode }) => {
     candidateLimit: Infinity,
   });
 
-  console.log("currentRole", currentRole);
+  // console.log("currentRole", currentRole);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -486,7 +486,7 @@ const AddSupportForm = ({ mode }) => {
 
   const handleAddCandidate = async (e) => {
     e.preventDefault();
-    console.log("Starting add candidate process...");
+    // console.log("Starting add candidate process...");
 
     // Get user token information
     const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -498,7 +498,7 @@ const AddSupportForm = ({ mode }) => {
     // const userName = Cookies.get('userName')
     // const orgId = Cookies.get('organizationId')
 
-    console.log("User info:", { userId, userName, orgId });
+    // console.log("User info:", { userId, userName, orgId });
 
     // Validate form data
     const { formIsValid, newErrors } = validateCandidateForm(
@@ -515,7 +515,7 @@ const AddSupportForm = ({ mode }) => {
 
     // Prepare candidate data
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-    console.log("Current date and time:", currentDateTime);
+    // console.log("Current date and time:", currentDateTime);
 
     const data = {
       FirstName: formData.FirstName,
@@ -542,7 +542,7 @@ const AddSupportForm = ({ mode }) => {
       tenantId: orgId,
     };
 
-    console.log("Submitting candidate data:", data);
+    // console.log("Submitting candidate data:", data);
 
     try {
       // getting the API from the apihooks for add or update candidate (post or patch)
@@ -551,7 +551,7 @@ const AddSupportForm = ({ mode }) => {
       resetFormData();
       console.log("Form reset completed");
 
-      console.log("Navigation to candidate list completed");
+      // console.log("Navigation to candidate list completed");
     } catch (error) {
       console.error("Failed to add candidate:", error);
       if (error.response) {
@@ -562,7 +562,7 @@ const AddSupportForm = ({ mode }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Starting submit process...");
+    // console.log("Starting submit process...");
 
     // Get user token information
     const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -610,7 +610,7 @@ const AddSupportForm = ({ mode }) => {
       tenantId: orgId,
     };
 
-    console.log("Submitting candidate data:", data);
+    // console.log("Submitting candidate data:", data);
 
     try {
       let candidateId;

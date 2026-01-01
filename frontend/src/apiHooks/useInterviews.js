@@ -20,15 +20,15 @@ export const useInterviews = (
   const initialLoad = useRef(true);
 
   const params =
-    // useMemo(() => (
-    {
-      ...filters,
+  // useMemo(() => (
+  {
+    ...filters,
 
-      page: page,
-      limit: limit,
-      type: type,
-      upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
-    };
+    page: page,
+    limit: limit,
+    type: type,
+    upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
+  };
   //console.log("params", params);
 
   // ),
@@ -181,7 +181,7 @@ export const useInterviews = (
   const saveInterviewRound = useMutation({
     mutationFn: async (payload) => {
       const response = await axios.post(
-        `${config.REACT_APP_API_URL}/interview/save-round`,
+        `${config.REACT_APP_API_URL}/interview-rounds/save-round`,
         payload,
         {
           headers: {
@@ -214,7 +214,7 @@ export const useInterviews = (
   const updateInterviewRound = useMutation({
     mutationFn: async (payload) => {
       const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/interview/update-round/${payload.roundId}`,
+        `${config.REACT_APP_API_URL}/interview-rounds/update-round/${payload.roundId}`,
         payload,
         {
           headers: {

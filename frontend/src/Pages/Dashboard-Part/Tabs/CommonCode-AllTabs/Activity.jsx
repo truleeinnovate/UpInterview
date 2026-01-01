@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 
 import { config } from "../../../../config";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 function Activity({ parentId, parentId2, mode }) {
   const [feeds, setFeeds] = useState([]);
@@ -92,11 +93,15 @@ function Activity({ parentId, parentId2, mode }) {
     const fetchFeeds = async () => {
       setLoading(true);
       try {
-
         // First try with parentId
         const response = await axios.get(`${config.REACT_APP_API_URL}/feeds`, {
           params: { parentId },
         });
+        console.log("PARENT ID ==================>", parentId);
+        console.log(
+          "RESPONSE FOR ASSESSMENT FEEDS ==================>",
+          response
+        );
 
         // Check if response has data
         if (
@@ -146,6 +151,7 @@ function Activity({ parentId, parentId2, mode }) {
       setError("No parent ID provided");
     }
   }, [parentId, parentId2]); // Add both to dependency array
+  console.log("ASSESSMENT FEEDS ===============================> :", feeds);
 
   // Filter feeds client-side
   const filteredFeeds = useMemo(() => {
@@ -313,15 +319,17 @@ function Activity({ parentId, parentId2, mode }) {
         {skills.map((skill, index) => (
           <span
             key={index}
-            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
+            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-custom-blue/10 text-custom-blue border border-blue-200"
           >
             <Tag className="mr-1 h-4 w-4" />
             {skill.skill || skill}
             {skill.experience && (
-              <span className="ml-1 text-blue-600">({skill.experience})</span>
+              <span className="ml-1 text-custom-blue">
+                ({skill.experience})
+              </span>
             )}
             {skill.expertise && (
-              <span className="ml-1 text-blue-600">({skill.expertise})</span>
+              <span className="ml-1 text-custom-blue">({skill.expertise})</span>
             )}
           </span>
         ))}
@@ -331,7 +339,6 @@ function Activity({ parentId, parentId2, mode }) {
 
   const renderMetadataContent = (feed) => {
     const { parentObject, metadata, action, fieldMessage } = feed;
-
     // Helper function to truncate long text with ellipsis
     const truncateText = (text, maxLength = 30) => {
       if (typeof text !== "string") return text;
@@ -421,6 +428,8 @@ function Activity({ parentId, parentId2, mode }) {
       case "position_created":
       case "ticket_created":
       case "task_created":
+      case "assessment_created":
+      case "assessment_list_created":
         // Don't show update cases for Position Round parentObject
 
         return (
@@ -491,10 +500,12 @@ function Activity({ parentId, parentId2, mode }) {
                     fieldName !== "round" &&
                     fieldName !== "rounds" && (
                       <div key={index} className="space-y-2">
-                        <div className="flex items-center space-x-2 sm:space-y-2 sm:text-xs">
+                        {/* <div className="flex items-center space-x-2 sm:space-y-2 sm:text-xs">
                           {getFieldIcon(fieldName)}
-                          <span className="text-gray-600">{message}</span>
-                        </div>
+                          <span className="text-gray-600">
+                            {message}
+                          </span>
+                        </div> */}
                         {fieldName === "skills" ? (
                           // Special handling for skills with side-by-side comparison
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
@@ -552,6 +563,84 @@ function Activity({ parentId, parentId2, mode }) {
                 )
             ) : (
               <div>No changes recorded</div>
+            )}
+          </div>
+        );
+
+      // Case for Multi-step forms
+      case "assessment_updated":
+        // Define a comprehensive list of system fields to ignore
+        const EXCLUDED_FIELDS = [
+          "id",
+          "_id",
+          "tenantId",
+          "__v",
+          "ownerId",
+          "createdBy",
+          "updatedBy",
+          "createdAt",
+          "updatedAt",
+          "LastModifiedById",
+          "CreatedBy",
+          "CreatedDate",
+          "ModifiedDate",
+          "ModifiedBy",
+          "updated_by",
+          "created_by",
+        ];
+
+        return (
+          <div className="space-y-4">
+            {metadata?.steps ? (
+              metadata.steps.map((step, idx) => (
+                <div
+                  key={idx}
+                  className="border-l-2 border-custom-blue/30 pl-4 py-1"
+                >
+                  <h5 className="text-sm font-semibold text-gray-700 mb-2">
+                    {step.stepName || `Step ${idx + 1}`}
+                  </h5>
+                  <div className="grid grid-cols-1 gap-2">
+                    {Object.entries(step.data || {})
+                      .filter(([key]) => !EXCLUDED_FIELDS.includes(key))
+                      .map(([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex items-center space-x-2 text-sm"
+                        >
+                          <span className="text-gray-500 capitalize">
+                            {key.replace(/([A-Z])/g, " $1").trim()}:
+                          </span>
+                          <span className="font-medium text-gray-800">
+                            {formatValue(key, value)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              // Fallback for flat multi-feed summaries
+              <div className="bg-white/60 p-3 rounded-md border border-gray-100">
+                <p className="text-sm font-medium mb-2">Updates performed:</p>
+                <ul className="list-decimal list-inside text-sm space-y-1 text-gray-600">
+                  {fieldMessage
+                    ?.filter(
+                      (msg) =>
+                        !EXCLUDED_FIELDS.some(
+                          (field) =>
+                            msg.fieldName?.toLowerCase() ===
+                              field.toLowerCase() ||
+                            msg.message
+                              ?.toLowerCase()
+                              .includes(field.toLowerCase())
+                        )
+                    )
+                    .map((msg, i) => (
+                      <li key={i}>{msg.message}</li>
+                    ))}
+                </ul>
+              </div>
             )}
           </div>
         );
@@ -655,12 +744,6 @@ function Activity({ parentId, parentId2, mode }) {
     // v1.0.3 ------------------------------------------------------------------------------->
   };
 
-  // v1.0.0 <------------------------------------------------------------------------
-  const capitalizeFirstLetter = (str) =>
-    str?.charAt(0)?.toUpperCase() + str?.slice(1);
-
-  // v1.0.0 ------------------------------------------------------------------------>
-
   // v.0.1 <------------------------------------------------------------------------------------
   return (
     // v1.0.2 <----------------------------------------------------------------------------------------
@@ -701,7 +784,7 @@ function Activity({ parentId, parentId2, mode }) {
                         key={type}
                         className={`w-full text-left px-2 py-1 rounded text-sm ${
                           typeFilter === type
-                            ? "bg-blue-50 text-blue-700"
+                            ? "bg-custom-blue/10 text-custom-blue"
                             : "text-gray-700 hover:bg-gray-50"
                         }`}
                         onClick={() => {

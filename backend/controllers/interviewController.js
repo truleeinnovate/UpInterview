@@ -17,6 +17,10 @@ const interviewQuestions = require("../models/Interview/selectedInterviewQuestio
 const { Position } = require("../models/Position/position.js");
 const Wallet = require("../models/WalletTopup");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+const {
+  WALLET_BUSINESS_TYPES,
+  createWalletTransaction,
+} = require("../utils/interviewWalletUtil");
 
 // Import usage service for internal interview tracking
 const {
@@ -38,18 +42,19 @@ const {
 } = require("./candidatePositionController.js");
 // const { createInterviewRequest } = require("../utils/interviewRequest.js");
 const InterviewRequest = require("../models/InterviewRequest.js");
-const { createRequest } = require("./InterviewRequestController.js");
-const {
-  shareAssessment,
-} = require("./EmailsController/assessmentEmailController.js");
-const {
-  sendOutsourceInterviewRequestEmails,
-  sendInterviewRoundCancellationEmails,
-} = require("./EmailsController/interviewEmailController.js");
-const {
-  buildSmartRoundUpdate,
-  parseDateTimeString,
-} = require("./interviewRoundsController.js");
+// const { createRequest } = require("./InterviewRequestController.js");
+// const {
+//   shareAssessment,
+// } = require("./EmailsController/assessmentEmailController.js");
+// const {
+//   sendOutsourceInterviewRequestEmails,
+//   sendInterviewRoundCancellationEmails,
+//   sendInterviewRoundEmails
+// } = require("./EmailsController/interviewEmailController.js");
+// const {
+//   buildSmartRoundUpdate,
+//   parseDateTimeString,
+// } = require("./interviewRoundsController.js");
 
 //  post call for interview page
 // const createInterview = async (req, res) => {
@@ -703,763 +708,691 @@ const updateInterview = async (req, res) => {
   }
 };
 
-async function handleInterviewQuestions(interviewId, roundId, questions) {
-  // Add null check for questions parameter
-  if (!questions || !Array.isArray(questions)) {
-    return;
-  }
-
-  const existingQuestions = await interviewQuestions.find({
-    interviewId,
-    roundId,
-  });
-  const existingQuestionIds = existingQuestions.map((q) => q._id.toString());
-  const newQuestionIds = questions.map((q) => q._id).filter((id) => id);
-
-  const questionsToDelete = existingQuestionIds.filter(
-    (id) => !newQuestionIds.includes(id)
-  );
-  if (questionsToDelete.length > 0) {
-    await interviewQuestions.deleteMany({ _id: { $in: questionsToDelete } });
-  }
-
-  for (const q of questions) {
-    if (q._id) {
-      await interviewQuestions.findByIdAndUpdate(q._id, q, { new: true });
-    } else {
-      await interviewQuestions.create({
-        interviewId,
-        roundId,
-        order: q.order,
-        customizations: q.customizations,
-        mandatory: q.mandatory,
-        tenantId: q.tenantId,
-        ownerId: q.ownerId,
-        questionId: q.questionId,
-        source: q.source,
-        snapshot: q.snapshot,
-        addedBy: q.addedBy,
-      });
-    }
-  }
-}
-
-async function processInterviewers(interviewers) {
-  if (!Array.isArray(interviewers)) {
-    return [];
-  }
-
-  const processedInterviewers = [];
-  for (const interviewer of interviewers) {
-    try {
-      if (
-        mongoose.Types.ObjectId.isValid(interviewer) &&
-        !Array.isArray(interviewer)
-      ) {
-        processedInterviewers.push(interviewer);
-        continue;
-      }
-      if (interviewer.email) {
-        let contact = await Contacts.findOne({ email: interviewer.email });
-        if (!contact) {
-          contact = new Contacts({
-            firstName: interviewer.name?.split(" ")[0] || "Unknown",
-            lastName: interviewer.name?.split(" ").slice(1).join(" ") || "User",
-            email: interviewer.email,
-            phone: interviewer.phone || "",
-            technology: interviewer.technology ? [interviewer.technology] : [],
-            contactType: "Interviewer",
-            createdDate: new Date(),
-          });
-          await contact.save();
-        }
-        if (contact._id) {
-          processedInterviewers.push(contact._id);
-        }
-      }
-    } catch (error) {
-      console.error("Error processing interviewer:", error);
-    }
-  }
-  return processedInterviewers;
-}
-
-// post call for interview round creation
-const saveInterviewRound = async (req, res) => {
-  res.locals.loggedByController = true;
-  res.locals.processName = "Save Interview Round";
-
-  try {
-    const { interviewId, round, roundId, questions } = req.body;
-
-    //  // Validate the request data
-    //  const validationResult = validateInterviewRound(req.body, !!roundId);
-
-    //  if (validationResult.error) {
-    //    return res.status(400).json({
-    //      message: "Validation failed",
-    //      errors: validationResult.error
-    //    });
-    //  }
-
-    // Initialize emailResult variable
-    let emailResult = { success: false, message: "No email sending attempted" };
-
-    if (!interviewId || !round) {
-      return res
-        .status(400)
-        .json({ message: "Interview ID and round data are required." });
-    }
-
-    if (round.interviewers) {
-      round.interviewers = await processInterviewers(round.interviewers);
-    }
-
-    let savedRound;
-
-    let totalRounds = await InterviewRounds.countDocuments({ interviewId });
-    let newSequence = round.sequence || totalRounds + 1;
-
-    await InterviewRounds.updateMany(
-      { interviewId, sequence: { $gte: newSequence } },
-      { $inc: { sequence: 1 } }
-    );
-
-    // Handle meetLink field separately for new rounds too
-    const { meetPlatform, meetLink, ...otherRoundData } = round;
-    const newInterviewRound = new InterviewRounds({
-      interviewId,
-      ...otherRoundData,
-      sequence: newSequence,
-    });
-
-    // Set meetLink directly if it exists
-    if (meetLink && Array.isArray(meetLink)) {
-      newInterviewRound.meetLink = meetLink;
-      newInterviewRound.meetPlatform = meetPlatform;
-    }
-
-    // For new rounds there is no previous status; if caller sets a status
-    // like "Scheduled" we still want to emit the webhook once it is saved.
-    const oldStatusForWebhook = undefined;
-    savedRound = await newInterviewRound.save();
-
-    const interview = await Interview.findById(interviewId).lean();
-    console.log("interview", interview);
-
-    const candidate = await Candidate.findById(interview.candidateId).lean();
-
-    if (!candidate) {
-      return res.status(404).json({
-        message: "Candidate not found for assessment sharing",
-        status: "error",
-      });
-    }
-
-    // =================== start == assessment mails sending functionality == start ========================
-
-    let linkExpiryDays = null;
-    if (round?.selectedAssessmentData?.ExpiryDate) {
-      const expiryDate = new Date(round.selectedAssessmentData.ExpiryDate);
-      const today = new Date();
-      const diffTime = expiryDate.getTime() - today.getTime();
-      linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    }
-
-    console.log("[ASSESSMENT] Preparing assessment share payload", {
-      interviewId,
-      roundTitle: savedRound?.roundTitle,
-      assessmentId: round?.assessmentId,
-      candidateId: interview?.candidateId,
-      linkExpiryDays,
-      tenantId: interview?.tenantId,
-      ownerId: interview?.ownerId,
-    });
-
-    if (savedRound.roundTitle === "Assessment") {
-      try {
-        console.log("[ASSESSMENT] shareAssessment() triggered");
-
-        let assessmentResponse = null;
-        let responseStatus = 200;
-
-        const mockRes = {
-          status: function (statusCode) {
-            responseStatus = statusCode;
-            console.log(
-              "[ASSESSMENT] shareAssessment response status:",
-              statusCode
-            );
-            return this;
-          },
-          json: function (data) {
-            assessmentResponse = data;
-            console.log("[ASSESSMENT] shareAssessment response body:", data);
-            return this;
-          },
-        };
-
-        const payload = {
-          assessmentId: round?.assessmentId,
-          selectedCandidates: [candidate],
-          linkExpiryDays,
-          organizationId: interview?.tenantId.toString(),
-          userId: interview?.ownerId.toString(),
-        };
-
-        console.log("[ASSESSMENT] shareAssessment payload:", payload);
-
-        await shareAssessment({ body: payload }, mockRes);
-
-        console.log("[ASSESSMENT] shareAssessment completed");
-
-        if (responseStatus !== 200 || !assessmentResponse?.success) {
-          console.error("[ASSESSMENT] shareAssessment failed", {
-            responseStatus,
-            assessmentResponse,
-          });
-
-          return res.status(404).json({
-            message: "Assessment sharing failed",
-            details: assessmentResponse?.message || "Unknown error",
-            status: "error",
-          });
-        }
-
-        console.log("[ASSESSMENT] Assessment shared successfully");
-      } catch (error) {
-        console.error("[ASSESSMENT] Error during shareAssessment execution:", {
-          message: error.message,
-          stack: error.stack,
-        });
-
-        return res.status(404).json({
-          message: "Assessment sharing failed",
-          details: error.message,
-          status: "error",
-        });
-      }
-    }
-
-    // if (savedRound.roundTitle === "Assessment") {
-    //   let assessmentResult = await shareAssessment(
-    //     {
-    //       body: {
-    //         assessmentId: savedRound?.assessmentId,
-    //         selectedCandidates: [interview?.candidateId],
-    //         linkExpiryDays,
-    //         organizationId: interview?.tenantId,
-    //         userId: interview?.ownerId,
-    //       },
-    //     },
-    //     {
-    //       status: (code) => ({
-    //         json: (data) => {
-    //           // Capture the response from shareAssessment
-    //           if (code !== 200) {
-    //             throw new Error(
-    //               `Assessment sharing failed: ${
-    //                 data?.message || "Unknown error"
-    //               }`
-    //             );
-    //           }
-    //           return data;
-    //         },
-    //       }),
-    //       locals: {},
-    //     }
-    //   );
-
-    //   console.log("assessmentResult", assessmentResult);
-
-    //   if (!assessmentResult?.success) {
-    //     return res.status(404).json({
-    //       message: "Assessment sharing failed",
-    //       details: assessmentResult?.message || "Unknown error",
-    //     });
-    //   }
-    // }
-
-    //================ end ==   assessment mails sending fuctionality == end =======================
-
-    // ================= CREATE INTERVIEW REQUEST (BACKEND ONLY) =================
-    if (
-      interview &&
-      savedRound.roundTitle !== "Assessment" &&
-      savedRound.interviewMode !== "Face to Face" &&
-      Array.isArray(req.body?.round?.selectedInterviewers) &&
-      req.body?.round?.selectedInterviewers.length > 0
-    ) {
-      for (const interviewer of req.body?.round?.selectedInterviewers) {
-        const interviewerType = interviewer.type?.toLowerCase(); // "internal" | "external"
-        // const isInternal = interviewerType === "internal";
-
-        await createRequest(
-          {
-            body: {
-              tenantId: interview.tenantId,
-              ownerId: interview.ownerId,
-              scheduledInterviewId: interview._id,
-              interviewerType,
-              interviewerId: interviewer.contact?._id || interviewer._id,
-              contactId: interviewer.contact?._id,
-              dateTime: savedRound.dateTime,
-              duration: savedRound.duration,
-              candidateId: interview.candidateId,
-              positionId: interview.positionId,
-              roundId: savedRound._id,
-              expiryDateTime: req.body.round.expiryDateTime, // ✅ FROM FRONTEND
-              isMockInterview: false,
-            },
-          },
-          {
-            status: () => ({
-              json: () => { },
-            }),
-            locals: {},
-          }
-        );
-      }
-    }
-
-    // sending outsource interview request emails fuctionality === start === =====================
-    if (
-      interview &&
-      savedRound?.round?.interviewerType !== "Internal" &&
-      savedRound.interviewMode !== "Face to Face" &&
-      req.body?.round?.selectedInterviewers &&
-      req.body?.round?.selectedInterviewers.length > 0
-    ) {
-      let emailOusourceResult = await sendOutsourceInterviewRequestEmails(
-        {
-          body: {
-            interviewId: interview?._id,
-            roundId: savedRound?._id,
-            interviewerIds: req.body?.round?.selectedInterviewers.map(
-              (interviewer) => interviewer.contact?._id || interviewer._id
-            ),
-            type: "interview",
-          },
-        },
-        {
-          status: () => ({
-            json: () => { },
-          }),
-          locals: {},
-        }
-      );
-
-      console.log("emailOusourceResult", emailOusourceResult);
-    }
-    // sending outsource interview request emails fuctionality === end === =====================
-
-    // Trigger interview.round.status.updated if status is one of the allowed values
-    await triggerInterviewRoundStatusUpdated(savedRound, oldStatusForWebhook);
-    await reorderInterviewRounds(interviewId);
-
-    // Create notification for round scheduling
-    if (savedRound.dateTime || savedRound.interviewers?.length > 0) {
-      try {
-        await createInterviewRoundScheduledNotification(savedRound);
-      } catch (notificationError) {
-        console.error(
-          "[INTERVIEW] Error creating round scheduled notification:",
-          notificationError
-        );
-        // Continue execution even if notification fails
-      }
-    }
-
-    // Only call handleInterviewQuestions if questions is provided
-    if (questions && Array.isArray(questions)) {
-      try {
-        await handleInterviewQuestions(interviewId, savedRound._id, questions);
-      } catch (error) {
-        console.error("[INTERVIEW] Error handling interview questions:", error);
-        // Continue execution even if question handling fails
-      }
-    } else {
-    }
-
-    // Email sending is now handled in the frontend after meeting links are generated
-    // This ensures emails contain the proper encrypted meeting links
-    emailResult = {
-      success: true,
-      message:
-        "Emails will be sent from frontend after meeting links are generated",
-    };
-
-    // Enrich logging context with parent interview identifiers when possible
-    let parentInterviewForLog = null;
-    try {
-      parentInterviewForLog = await Interview.findById(interviewId).select(
-        "tenantId ownerId"
-      );
-    } catch (e) {
-      // Ignore enrichment errors for logging
-    }
-
-    const requestSentInterviewers = await InterviewRequest.find({
-      roundId: savedRound._id,
-      status: "inprogress", // RequestSent
-    }).select("interviewerId");
-
-    if (requestSentInterviewers.length > 0) {
-      const participants = requestSentInterviewers
-        .map((r) => r.interviewerId)
-        .filter(Boolean);
-
-      await InterviewRounds.findByIdAndUpdate(
-        savedRound._id,
-        {
-          $set: {
-            previousAction: savedRound.currentAction,
-            currentAction: savedRound?.status, // or the updated status
-            currentActionReason: null,
-          },
-          $push: {
-            history: {
-              scheduledAt: savedRound.dateTime, // must be valid Date
-              action: savedRound?.status, // updated status
-              reasonCode: null,
-              comment: null,
-              participants,
-              updatedBy: parentInterviewForLog?.ownerId,
-              updatedAt: new Date(),
-            },
-          },
-        },
-        { new: true }
-      );
-    }
-
-    res.locals.logData = {
-      tenantId: parentInterviewForLog?.tenantId?.toString() || "",
-      ownerId: parentInterviewForLog?.ownerId?.toString() || "",
-      processName: "Save Interview Round",
-      requestBody: req.body,
-      status: "success",
-      message: roundId
-        ? "Interview round updated successfully."
-        : "Interview round created successfully.",
-      responseBody: {
-        savedRound,
-        emailResult,
-      },
-    };
-
-    return res.status(200).json({
-      message: roundId
-        ? "Round updated successfully."
-        : "Interview round created successfully.",
-      savedRound,
-      emailResult,
-      status: "ok",
-    });
-
-    async function reorderInterviewRounds(interviewId) {
-      const rounds = await InterviewRounds.find({ interviewId });
-      rounds.sort((a, b) => a.sequence - b.sequence);
-
-      for (let i = 0; i < rounds.length; i++) {
-        rounds[i].sequence = i + 1;
-        await rounds[i].save();
-      }
-    }
-  } catch (error) {
-    console.error("Error saving interview round:", error);
-
-    res.locals.logData = {
-      tenantId: "",
-      ownerId: "",
-      processName: "Save Interview Round",
-      requestBody: req.body,
-      status: "error",
-      message: error.message,
-    };
-
-    return res
-      .status(500)
-      .json({ message: "Internal server error.", error: error.message });
-  }
-};
-
-// PATCH call for interview round update
-const updateInterviewRound = async (req, res) => {
-  const { interviewId, round, questions } = req.body;
-  const { actingAsUserId } = res.locals.auth;
-
-  let roundIdParam = req.params.roundId;
-
-  // console.log("[DEBUG] Full request body:", JSON.stringify(req.body, null, 2));
-  // console.log("[DEBUG] roundId from params:", roundIdParam);
-  // console.log("[DEBUG] actingAsUserId:", actingAsUserId);
-
-  console.log(" req.body", req.body);
-
-  if (!mongoose.Types.ObjectId.isValid(roundIdParam)) {
-    console.log("[ERROR] Invalid roundId:", roundIdParam);
-    return res.status(400).json({ message: "Invalid roundId" });
-  }
-
-  const roundId = new mongoose.Types.ObjectId(roundIdParam);
-
-  if (!interviewId || !roundId || !round) {
-    console.log("[ERROR] Missing required fields:", {
-      interviewId,
-      roundId,
-      round,
-    });
-    return res.status(400).json({
-      message: "Interview ID, Round ID, and round data are required.",
-    });
-  }
-
-  // Process interviewers if provided
-  if (round.interviewers) {
-    round.interviewers = await processInterviewers(round.interviewers);
-  }
-
-  const existingRound = await InterviewRounds.findById(roundId).lean();
-  if (!existingRound) {
-    console.log("[ERROR] Round not found for ID:", roundId);
-    return res.status(404).json({ message: "Round not found." });
-  }
-
-  // console.log(
-  //   "[DEBUG] Existing round data:",
-  //   JSON.stringify(existingRound, null, 2)
-  // );
-  // console.log(
-  //   "[DEBUG] Selected interviewers from frontend:",
-  //   JSON.stringify(req?.body?.round?.selectedInterviewers, null, 2)
-  // );
-
-  const changes = detectRoundChanges({
-    existingRound,
-    incomingRound: req?.body?.round,
-    selectedInterviewers: req?.body?.round?.selectedInterviewers || [],
-  });
-
-  // console.log("[DEBUG] Detected changes:", JSON.stringify(changes, null, 2));
-
-  if (!changes.anyChange) {
-    // console.log("[INFO] No changes detected - returning noop");
-    return res.status(200).json({
-      message: "No changes detected. Round not updated.",
-      status: "noop",
-    });
-  }
-
-  const updatePayload = buildSmartRoundUpdate({
-    existingRound,
-    body: req.body.round,
-    actingAsUserId,
-    changes,
-  });
-
-  const updatedRound = await InterviewRounds.findByIdAndUpdate(
-    roundId,
-    updatePayload,
-    { new: true, runValidators: true }
-  );
-
-  console.log("changes.interviewersChanged", changes.interviewersChanged);
-  // && updatedRound?.status === "RequestSent" || updatedRound?.status === "RequestSent"
-  // Interviewer change flow
-  if (changes.interviewersChanged) {
-    if (
-      req.body.round?.interviewerType !== "Internal" &&
-      req.body.round?.interviewMode !== "Face to Face" &&
-      req.body?.round?.selectedInterviewers &&
-      req.body.round?.selectedInterviewers.length > 0
-    ) {
-      await handleInterviewerChangeFlow({
-        existingRound,
-        newInterviewers: req.body.round.selectedInterviewers || [],
-        interviewId,
-      });
-
-      const finalRound = await InterviewRounds.findByIdAndUpdate(
-        roundId,
-        { status: "RequestSent" },
-        { new: true }
-      );
-
-      return res.status(200).json({
-        message: "Round updated successfully (with interviewer change)",
-        status: "ok",
-        updatedRound: finalRound,
-      });
-    }
-  }
-
-  return res.status(200).json({
-    message: "Round updated successfully",
-    status: "ok",
-    updatedRound,
-  });
-};
-
-async function handleInterviewerChangeFlow({
-  existingRound,
-  newInterviewers,
-  interviewId,
-}) {
-  console.log("[INTERVIEWER CHANGE FLOW] Starting...");
-  console.log("[DEBUG] Old interviewers:", existingRound.interviewers);
-  console.log("[DEBUG] New interviewers:", newInterviewers);
-
-  // 1. Cancel old interview requests
-  const cancelledCount = await InterviewRequest.updateMany(
-    { roundId: existingRound._id, status: "inprogress" },
-    { status: "cancelled", respondedAt: new Date() }
-  );
-  console.log(
-    "[DEBUG] Cancelled old requests count:",
-    cancelledCount.modifiedCount
-  );
-
-  // 2. Send cancellation emails
-  console.log("[EMAIL] Sending cancellation emails...");
-  // existing  interviwers notification have to send to email cancelled
-  // try {
-
-  //   // await sendInterviewRoundCancellationEmails(
-  //   //   {
-  //   //     body: {
-  //   //       interviewId: interviewId,
-  //   //       roundId: existingRound?._id,
-  //   //     },
-  //   //   },
-  //   //   { status: () => ({ json: () => {} }), locals: {} }
-  //   // );
-  //   console.log("[EMAIL] Cancellation emails sent successfully");
-  // } catch (err) {
-  //   console.error("[EMAIL ERROR] Failed to send cancellation emails:", err);
-  // }
-
-  // 3. Fetch interview details
-  const interview = await Interview.findById(interviewId).lean();
-  if (!interview) {
-    console.error("[ERROR] Interview not found:", interviewId);
-    return;
-  }
-  // if (interview &&
-  //       savedRound.roundTitle !== "Assessment" &&
-  //       savedRound.interviewMode !== "Face to Face" &&
-  //       // Array.isArray(req.body?.round?.selectedInterviewers
-
-  //       )
-  // 4. Create new requests
-  for (const interviewer of newInterviewers) {
-    console.log(
-      "[DEBUG] Creating request for interviewer:",
-      interviewer._id || interviewer.contact?._id
-    );
-
-    try {
-      await createRequest(
-        {
-          body: {
-            tenantId: interview.tenantId,
-            ownerId: interview.ownerId,
-            scheduledInterviewId: interview._id,
-            interviewerType: existingRound?.interviewerType,
-            interviewerId: interviewer.contact?._id || interviewer._id,
-            contactId: interviewer.contact?._id,
-            dateTime: existingRound.dateTime,
-            duration: existingRound.duration,
-            candidateId: interview.candidateId,
-            positionId: interview.positionId,
-            roundId: existingRound._id,
-            expiryDateTime: existingRound.expiryDateTime,
-            isMockInterview: false,
-          },
-        },
-        {
-          status: () => ({ json: () => { } }),
-          locals: {},
-        }
-      );
-
-      let emailOusourceResult = await sendOutsourceInterviewRequestEmails(
-        {
-          body: {
-            interviewId: interview?._id,
-            roundId: existingRound?._id,
-            interviewerIds: newInterviewers.map(
-              (interviewer) => interviewer.contact?._id || interviewer._id
-            ),
-            type: "interview",
-          },
-        },
-        {
-          status: () => ({
-            json: () => { },
-          }),
-          locals: {},
-        }
-      );
-
-      console.log("emailOusourceResult", emailOusourceResult);
-
-      console.log(
-        "[DEBUG] Request created for:",
-        interviewer._id || interviewer.contact?._id
-      );
-    } catch (err) {
-      console.error("[ERROR] Failed to create request for:", interviewer, err);
-    }
-  }
-
-  console.log("[INTERVIEWER CHANGE FLOW] Completed");
-}
-
-function detectRoundChanges({
-  existingRound,
-  incomingRound,
-  selectedInterviewers,
-}) {
-  const changes = {
-    statusChanged: false,
-    dateTimeChanged: false,
-    interviewersChanged: false,
-    anyChange: false,
-  };
-
-  // Status change
-  if (incomingRound.status && incomingRound.status !== existingRound.status) {
-    changes.statusChanged = true;
-    changes.anyChange = true;
-  }
-
-  // DateTime change
-  if (
-    incomingRound.dateTime &&
-    new Date(incomingRound.dateTime).getTime() !==
-    new Date(existingRound.dateTime).getTime()
-  ) {
-    changes.dateTimeChanged = true;
-    changes.anyChange = true;
-  }
-
-  // Interviewers change
-  const oldIds = (existingRound.interviewers || [])
-    .map((i) => String(i.contact?._id || i._id))
-    .sort();
-
-  const newIds = (selectedInterviewers || [])
-    .map((i) => String(i.contact?._id || i._id))
-    .sort();
-
-  if (JSON.stringify(oldIds) !== JSON.stringify(newIds)) {
-    changes.interviewersChanged = true;
-    changes.anyChange = true;
-  }
-
-  return changes;
-}
+// async function handleInterviewQuestions(interviewId, roundId, questions) {
+//   // Add null check for questions parameter
+//   if (!questions || !Array.isArray(questions)) {
+//     return;
+//   }
+
+//   const existingQuestions = await interviewQuestions.find({
+//     interviewId,
+//     roundId,
+//   });
+//   const existingQuestionIds = existingQuestions.map((q) => q._id.toString());
+//   const newQuestionIds = questions.map((q) => q._id).filter((id) => id);
+
+//   const questionsToDelete = existingQuestionIds.filter(
+//     (id) => !newQuestionIds.includes(id)
+//   );
+//   if (questionsToDelete.length > 0) {
+//     await interviewQuestions.deleteMany({ _id: { $in: questionsToDelete } });
+//   }
+
+//   for (const q of questions) {
+//     if (q._id) {
+//       await interviewQuestions.findByIdAndUpdate(q._id, q, { new: true });
+//     } else {
+//       await interviewQuestions.create({
+//         interviewId,
+//         roundId,
+//         order: q.order,
+//         customizations: q.customizations,
+//         mandatory: q.mandatory,
+//         tenantId: q.tenantId,
+//         ownerId: q.ownerId,
+//         questionId: q.questionId,
+//         source: q.source,
+//         snapshot: q.snapshot,
+//         addedBy: q.addedBy,
+//       });
+//     }
+//   }
+// }
+
+// async function processInterviewers(interviewers) {
+//   if (!Array.isArray(interviewers)) {
+//     return [];
+//   }
+
+//   const processedInterviewers = [];
+//   for (const interviewer of interviewers) {
+//     try {
+//       if (
+//         mongoose.Types.ObjectId.isValid(interviewer) &&
+//         !Array.isArray(interviewer)
+//       ) {
+//         processedInterviewers.push(interviewer);
+//         continue;
+//       }
+//       if (interviewer.email) {
+//         let contact = await Contacts.findOne({ email: interviewer.email });
+//         if (!contact) {
+//           contact = new Contacts({
+//             firstName: interviewer.name?.split(" ")[0] || "Unknown",
+//             lastName: interviewer.name?.split(" ").slice(1).join(" ") || "User",
+//             email: interviewer.email,
+//             phone: interviewer.phone || "",
+//             technology: interviewer.technology ? [interviewer.technology] : [],
+//             contactType: "Interviewer",
+//             createdDate: new Date(),
+//           });
+//           await contact.save();
+//         }
+//         if (contact._id) {
+//           processedInterviewers.push(contact._id);
+//         }
+//       }
+//     } catch (error) {
+//       console.error("Error processing interviewer:", error);
+//     }
+//   }
+//   return processedInterviewers;
+// }
+
+// // post call for interview round creation
+// const saveInterviewRound = async (req, res) => {
+//   res.locals.loggedByController = true;
+//   res.locals.processName = "Save Interview Round";
+
+//   try {
+//     const { interviewId, round, roundId, questions } = req.body;
+
+//     //  // Validate the request data
+//     //  const validationResult = validateInterviewRound(req.body, !!roundId);
+
+//     //  if (validationResult.error) {
+//     //    return res.status(400).json({
+//     //      message: "Validation failed",
+//     //      errors: validationResult.error
+//     //    });
+//     //  }
+
+//     // Initialize emailResult variable
+//     let emailResult = { success: false, message: "No email sending attempted" };
+
+//     if (!interviewId || !round) {
+//       return res
+//         .status(400)
+//         .json({ message: "Interview ID and round data are required." });
+//     }
+
+//     if (round.interviewers) {
+//       round.interviewers = await processInterviewers(round.interviewers);
+//     }
+
+//     let savedRound;
+
+//     let totalRounds = await InterviewRounds.countDocuments({ interviewId });
+//     let newSequence = round.sequence || totalRounds + 1;
+
+//     await InterviewRounds.updateMany(
+//       { interviewId, sequence: { $gte: newSequence } },
+//       { $inc: { sequence: 1 } }
+//     );
+
+//     // Handle meetLink field separately for new rounds too
+//     const { meetPlatform, meetLink, ...otherRoundData } = round;
+//     const newInterviewRound = new InterviewRounds({
+//       interviewId,
+//       ...otherRoundData,
+//       sequence: newSequence,
+//     });
+
+//     // Set meetLink directly if it exists
+//     if (meetLink && Array.isArray(meetLink)) {
+//       newInterviewRound.meetLink = meetLink;
+//       newInterviewRound.meetPlatform = meetPlatform;
+//     }
+
+//     // For new rounds there is no previous status; if caller sets a status
+//     // like "Scheduled" we still want to emit the webhook once it is saved.
+//     const oldStatusForWebhook = undefined;
+//     savedRound = await newInterviewRound.save();
+
+//     const interview = await Interview.findById(interviewId).lean();
+//     console.log("interview", interview);
+
+//     const candidate = await Candidate.findById(interview.candidateId).lean();
+
+//     if (!candidate) {
+//       return res.status(404).json({
+//         message: "Candidate not found for assessment sharing",
+//         status: "error",
+//       });
+//     }
+
+//     // ================= HISTORY (CREATE FLOW) =================
+//     const historyUpdate = buildSmartRoundUpdate({
+//       body: round,
+//       actingAsUserId: interview?.ownerId,
+//       isCreate: true,
+//     });
+
+//     if (historyUpdate) {
+//       await InterviewRounds.findByIdAndUpdate(
+//         savedRound._id,
+//         historyUpdate,
+//         { new: true }
+//       );
+//     }
+
+//     // =================== start == assessment mails sending functionality == start ========================
+
+//     let linkExpiryDays = null;
+//     if (round?.selectedAssessmentData?.ExpiryDate) {
+//       const expiryDate = new Date(round.selectedAssessmentData.ExpiryDate);
+//       const today = new Date();
+//       const diffTime = expiryDate.getTime() - today.getTime();
+//       linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+//     }
+
+//     console.log("[ASSESSMENT] Preparing assessment share payload", {
+//       interviewId,
+//       roundTitle: savedRound?.roundTitle,
+//       assessmentId: round?.assessmentId,
+//       candidateId: interview?.candidateId,
+//       linkExpiryDays,
+//       tenantId: interview?.tenantId,
+//       ownerId: interview?.ownerId,
+//     });
+
+//     if (savedRound.roundTitle === "Assessment") {
+//       try {
+//         console.log("[ASSESSMENT] shareAssessment() triggered");
+
+//         let assessmentResponse = null;
+//         let responseStatus = 200;
+
+//         const mockRes = {
+//           status: function (statusCode) {
+//             responseStatus = statusCode;
+//             console.log(
+//               "[ASSESSMENT] shareAssessment response status:",
+//               statusCode
+//             );
+//             return this;
+//           },
+//           json: function (data) {
+//             assessmentResponse = data;
+//             console.log("[ASSESSMENT] shareAssessment response body:", data);
+//             return this;
+//           },
+//         };
+
+//         const payload = {
+//           assessmentId: round?.assessmentId,
+//           selectedCandidates: [candidate],
+//           linkExpiryDays,
+//           organizationId: interview?.tenantId.toString(),
+//           userId: interview?.ownerId.toString(),
+//         };
+
+//         console.log("[ASSESSMENT] shareAssessment payload:", payload);
+
+//         await shareAssessment({ body: payload }, mockRes);
+
+//         console.log("[ASSESSMENT] shareAssessment completed");
+
+//         if (responseStatus !== 200 || !assessmentResponse?.success) {
+//           console.error("[ASSESSMENT] shareAssessment failed", {
+//             responseStatus,
+//             assessmentResponse,
+//           });
+
+//           return res.status(404).json({
+//             message: "Assessment sharing failed",
+//             details: assessmentResponse?.message || "Unknown error",
+//             status: "error",
+//           });
+//         }
+
+//         console.log("[ASSESSMENT] Assessment shared successfully");
+//       } catch (error) {
+//         console.error("[ASSESSMENT] Error during shareAssessment execution:", {
+//           message: error.message,
+//           stack: error.stack,
+//         });
+
+//         return res.status(404).json({
+//           message: "Assessment sharing failed",
+//           details: error.message,
+//           status: "error",
+//         });
+//       }
+//     }
+
+//     //================ end ==   assessment mails sending fuctionality == end =======================
+
+//     if (
+//       interview &&
+//       savedRound.roundTitle !== "Assessment" &&
+//       Array.isArray(req.body?.round?.selectedInterviewers) &&
+//       req.body.round.selectedInterviewers.length > 0
+//     ) {
+//       // ================= CREATE INTERVIEW REQUEST for internal or external (BACKEND ONLY) =================
+//       await handleInterviewerRequestFlow({
+//         interviewId,
+//         round: savedRound,
+//         selectedInterviewers: req.body.round.selectedInterviewers,
+//         cancelOldRequests: false, // CREATE
+//       });
+//       //sending emails for internal interviewers,scheduler,candidate.for external we will send where outsource accept
+//       if (savedRound.interviewerType === "Internal") {
+//         await handleInternalRoundEmails({
+//           interviewId: interview._id,
+//           roundId: savedRound._id,
+//           round: savedRound,
+//           selectedInterviewers: req.body.round.selectedInterviewers,
+//         });
+//       }
+
+//     }
+
+//     // sending outsource interview request emails fuctionality === end === =====================
+
+//     // Trigger interview.round.status.updated if status is one of the allowed values
+//     await triggerInterviewRoundStatusUpdated(savedRound, oldStatusForWebhook);
+//     await reorderInterviewRounds(interviewId);
+
+//     // Create notification for round scheduling
+//     if (savedRound.dateTime || savedRound.interviewers?.length > 0) {
+//       try {
+//         await createInterviewRoundScheduledNotification(savedRound);
+//       } catch (notificationError) {
+//         console.error(
+//           "[INTERVIEW] Error creating round scheduled notification:",
+//           notificationError
+//         );
+//         // Continue execution even if notification fails
+//       }
+//     }
+
+//     // Only call handleInterviewQuestions if questions is provided
+//     if (questions && Array.isArray(questions)) {
+//       try {
+//         await handleInterviewQuestions(interviewId, savedRound._id, questions);
+//       } catch (error) {
+//         console.error("[INTERVIEW] Error handling interview questions:", error);
+//         // Continue execution even if question handling fails
+//       }
+//     } else {
+//     }
+
+//     // Email sending is now handled in the frontend after meeting links are generated
+//     // This ensures emails contain the proper encrypted meeting links
+//     emailResult = {
+//       success: true,
+//       message:
+//         "Emails will be sent from frontend after meeting links are generated",
+//     };
+
+//     // Enrich logging context with parent interview identifiers when possible
+//     let parentInterviewForLog = null;
+//     try {
+//       parentInterviewForLog = await Interview.findById(interviewId).select(
+//         "tenantId ownerId"
+//       );
+//     } catch (e) {
+//       // Ignore enrichment errors for logging
+//     }
+//     res.locals.logData = {
+//       tenantId: parentInterviewForLog?.tenantId?.toString() || "",
+//       ownerId: parentInterviewForLog?.ownerId?.toString() || "",
+//       processName: "Save Interview Round",
+//       requestBody: req.body,
+//       status: "success",
+//       message: roundId
+//         ? "Interview round updated successfully."
+//         : "Interview round created successfully.",
+//       responseBody: {
+//         savedRound,
+//         emailResult,
+//       },
+//     };
+
+//     return res.status(200).json({
+//       message: roundId
+//         ? "Round updated successfully."
+//         : "Interview round created successfully.",
+//       savedRound,
+//       emailResult,
+//       status: "ok",
+//     });
+
+//     async function reorderInterviewRounds(interviewId) {
+//       const rounds = await InterviewRounds.find({ interviewId });
+//       rounds.sort((a, b) => a.sequence - b.sequence);
+
+//       for (let i = 0; i < rounds.length; i++) {
+//         rounds[i].sequence = i + 1;
+//         await rounds[i].save();
+//       }
+//     }
+//   } catch (error) {
+//     console.error("Error saving interview round:", error);
+
+//     res.locals.logData = {
+//       tenantId: "",
+//       ownerId: "",
+//       processName: "Save Interview Round",
+//       requestBody: req.body,
+//       status: "error",
+//       message: error.message,
+//     };
+
+//     return res
+//       .status(500)
+//       .json({ message: "Internal server error.", error: error.message });
+//   }
+// };
+
+// // PATCH call for interview round update
+// const updateInterviewRound = async (req, res) => {
+//   const { interviewId, round, questions } = req.body;
+//   const { actingAsUserId } = res.locals.auth;
+
+//   let roundIdParam = req.params.roundId;
+
+//   console.log(" req.body", req.body);
+
+//   if (!mongoose.Types.ObjectId.isValid(roundIdParam)) {
+//     return res.status(400).json({ message: "Invalid roundId" });
+//   }
+
+//   const roundId = new mongoose.Types.ObjectId(roundIdParam);
+
+//   if (!interviewId || !roundId || !round) {
+//     return res.status(400).json({
+//       message: "Interview ID, Round ID, and round data are required.",
+//     });
+//   }
+
+//   if (round.interviewers) {
+//     round.interviewers = await processInterviewers(round.interviewers);
+//   }
+
+//   const existingRound = await InterviewRounds.findById(roundId).lean();
+//   if (!existingRound) {
+//     return res.status(404).json({ message: "Round not found." });
+//   }
+
+//   const changes = detectRoundChanges({
+//     existingRound,
+//     incomingRound: req?.body?.round,
+//     selectedInterviewers: req?.body?.round?.selectedInterviewers || [],
+//   });
+
+//   if (!changes.anyChange) {
+//     return res.status(200).json({
+//       message: "No changes detected. Round not updated.",
+//       status: "noop",
+//     });
+//   }
+
+//   let updatePayload = buildSmartRoundUpdate({
+//     existingRound,
+//     body: req.body.round,
+//     actingAsUserId,
+//     changes,
+//   });
+
+//   // Safe initialization if buildSmartRoundUpdate returned null or no $push
+//   if (!updatePayload) {
+//     updatePayload = { $set: {} };
+//   }
+//   if (!updatePayload.$push) {
+//     updatePayload.$push = { history: [] };
+//   }
+//   if (!Array.isArray(updatePayload.$push.history)) {
+//     updatePayload.$push.history = [];
+//   }
+
+//   const isInternal = req.body.round?.interviewerType === "Internal";
+//   const isOutsource = req.body.round?.interviewerType !== "Internal";
+
+//   // === OUTSOURCE RESCHEDULING: Cancel old requests, keep RequestSent ===
+//   if (
+//     isOutsource &&
+//     changes.dateTimeChanged &&
+//     existingRound.status === "RequestSent"
+//   ) {
+//     await InterviewRequest.updateMany(
+//       { roundId: existingRound._id, status: "inprogress" },
+//       { status: "withdrawn", respondedAt: new Date() }
+//     );
+
+//     updatePayload.$set.status = "RequestSent";
+
+//     // Safely check and add Rescheduled history
+//     const hasRescheduled = updatePayload.$push.history.some(h => h.action === "Rescheduled");
+//     if (!hasRescheduled) {
+//       updatePayload.$push.history.push({
+//         action: "Rescheduled",
+//         scheduledAt: req.body.round.dateTime,
+//         updatedAt: new Date(),
+//         createdBy: actingAsUserId,
+//         reasonCode: req.body.round.currentActionReason || "time_changed",
+//         comment: req.body.round.comments || null,
+//       });
+//     }
+//   }
+
+//   // === INTERNAL RESCHEDULING: Correct Scheduled vs Rescheduled ===
+//   if (
+//     isInternal &&
+//     (changes.dateTimeChanged || changes.interviewersChanged)
+//   ) {
+//     const hasScheduledOnce = existingRound.history?.some(h => h.action === "Scheduled");
+//     const correctAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
+
+//     const newEntry = {
+//       action: correctAction,
+//       scheduledAt: req.body.round.dateTime,
+//       updatedAt: new Date(),
+//       createdBy: actingAsUserId,
+//       reasonCode: req.body.round.currentActionReason || null,
+//       comment: req.body.round.comments || null,
+//     };
+
+//     const existingIndex = updatePayload.$push.history.findIndex(h =>
+//       ["Scheduled", "Rescheduled"].includes(h.action)
+//     );
+
+//     if (existingIndex !== -1) {
+//       updatePayload.$push.history[existingIndex] = newEntry;
+//     } else {
+//       updatePayload.$push.history.push(newEntry);
+//     }
+//   }
+
+//   const updatedRound = await InterviewRounds.findByIdAndUpdate(
+//     roundId,
+//     updatePayload,
+//     { new: true, runValidators: true }
+//   );
+
+//   // === Only trigger interviewer change flow if interviewers actually changed ===
+//   if (
+//     changes.interviewersChanged &&
+//     req.body?.round?.selectedInterviewers?.length > 0
+//   ) {
+//     await handleInterviewerRequestFlow({
+//       interviewId,
+//       round: existingRound,
+//       selectedInterviewers: req.body.round.selectedInterviewers,
+//       cancelOldRequests: true, // PATCH
+//     });
+//     //if internal interviwers change then send mails
+//     await handleInternalRoundEmails({
+//       interviewId: interviewId,
+//       roundId: updatedRound._id,
+//       round: updatedRound,
+//       selectedInterviewers: req.body.round.selectedInterviewers,
+//       isEdit: true, // 🔥 dummy for now
+//     });
+
+//     await InterviewRounds.findByIdAndUpdate(
+//       roundId,
+//       { status: "RequestSent" },
+//       { new: true }
+//     );
+//   }
+
+//   return res.status(200).json({
+//     message: "Round updated successfully",
+//     status: "ok",
+//     updatedRound,
+//   });
+// };
+
+// //this will help to create request for internal or external.if internl default it make accepted.dont send outsource emails to internal.
+// async function handleInterviewerRequestFlow({
+//   interviewId,
+//   round,
+//   selectedInterviewers,
+//   cancelOldRequests = false,
+// }) {
+//   const interview = await Interview.findById(interviewId).lean();
+//   if (!interview) return;
+
+//   // 1️⃣ Cancel old requests (PATCH only)
+//   if (cancelOldRequests) {
+//     await InterviewRequest.updateMany(
+//       { roundId: round._id, status: "inprogress" },
+//       { status: "withdrawn", respondedAt: new Date() }
+//     );
+//   }
+
+//   const resolveInterviewerId = (interviewer) =>
+//     interviewer?.contact?._id || interviewer?._id;
+
+//   // 2️⃣ Create requests (Internal + External)
+//   for (const interviewer of selectedInterviewers) {
+
+//     const interviewerId = resolveInterviewerId(interviewer);
+
+//     if (!mongoose.Types.ObjectId.isValid(interviewerId)) {
+//       console.error("Invalid interviewerId", interviewer);
+//       continue;
+//     }
+//     await createRequest(
+//       {
+//         body: {
+//           tenantId: interview.tenantId,
+//           ownerId: interview.ownerId,
+//           scheduledInterviewId: interview._id,
+//           interviewerType: round.interviewerType, // 🔥 SOURCE OF TRUTH
+//           interviewerId,
+//           dateTime: round.dateTime,
+//           duration: round.duration,
+//           candidateId: interview.candidateId,
+//           positionId: interview.positionId,
+//           roundId: round._id,
+//           expiryDateTime: round.expiryDateTime,
+//           isMockInterview: false,
+//         },
+//       },
+//       { status: () => ({ json: () => { } }), locals: {} }
+//     );
+//   }
+
+//   // 3️⃣ Send outsource emails (External ONLY)
+//   if (round.interviewerType === "External") {
+//     await sendOutsourceInterviewRequestEmails(
+//       {
+//         body: {
+//           interviewId: interview._id,
+//           roundId: round._id,
+//           interviewerIds: selectedInterviewers,
+//           type: "interview",
+//         },
+//       },
+//       { status: () => ({ json: () => { } }), locals: {} }
+//     );
+//     console.log("Outsource interview request emails sent successfully", selectedInterviewers);
+//   }
+// }
+
+// //this will help to send emails when round select internal interviewers then it will send email to scheduler,interviewers,candidate.
+// async function handleInternalRoundEmails({
+//   interviewId,
+//   roundId,
+//   round,
+//   selectedInterviewers,
+//   isEdit = false, // PATCH → true
+// }) {
+//   // 🔒 Only Internal rounds
+//   if (round.interviewerType !== "Internal") return;
+
+//   // 🔒 Must have selected interviewers
+//   if (!Array.isArray(selectedInterviewers) || selectedInterviewers.length === 0)
+//     return;
+
+//   // 🧪 PATCH dummy condition (replace later with diff check)
+//   if (isEdit) {
+//     const dummyInterviewerChanged = true; // TODO: replace later
+//     if (!dummyInterviewerChanged) return;
+//   }
+
+//   await sendInterviewRoundEmails(
+//     {
+//       body: {
+//         interviewId,
+//         roundId,
+//         sendEmails: true,
+//       },
+//     },
+//     {
+//       status: () => ({ json: () => { } }),
+//       locals: {},
+//     }
+//   );
+// }
+
+// function detectRoundChanges({
+//   existingRound,
+//   incomingRound,
+//   selectedInterviewers,
+// }) {
+//   const changes = {
+//     statusChanged: false,
+//     dateTimeChanged: false,
+//     interviewersChanged: false,
+//     anyChange: false,
+//   };
+
+//   // Status change
+//   if (incomingRound.status && incomingRound.status !== existingRound.status) {
+//     changes.statusChanged = true;
+//     changes.anyChange = true;
+//   }
+
+//   // DateTime change
+//   if (
+//     incomingRound.dateTime &&
+//     new Date(incomingRound.dateTime).getTime() !==
+//     new Date(existingRound.dateTime).getTime()
+//   ) {
+//     changes.dateTimeChanged = true;
+//     changes.anyChange = true;
+//   }
+
+//   // Interviewers change
+//   const oldIds = (existingRound.interviewers || [])
+//     .map((i) => String(i.contact?._id || i._id))
+//     .sort();
+
+//   const newIds = (selectedInterviewers || [])
+//     .map((i) => String(i.contact?._id || i._id))
+//     .sort();
+
+//   if (JSON.stringify(oldIds) !== JSON.stringify(newIds)) {
+//     changes.interviewersChanged = true;
+//     changes.anyChange = true;
+//   }
+
+//   return changes;
+// }
 
 // const updateInterviewRound = async (req, res) => {
 //   // const { roundId } = req.params;
@@ -1812,59 +1745,6 @@ function detectRoundChanges({
 // };
 
 // Helper function to trigger webhook for interview round status updates
-const triggerInterviewRoundStatusUpdated = async (
-  round,
-  oldStatus,
-  interview = null
-) => {
-  try {
-    // Skip if no status change or if status is not set
-    if (!round.status || round.status === oldStatus) {
-      return;
-    }
-
-    // Skip draft status as per requirements
-    if (round.status === "Draft") {
-      return;
-    }
-
-    // If interview is not provided, fetch it
-    if (!interview) {
-      interview = await Interview.findById(round.interviewId).lean();
-      if (!interview) {
-        console.error("Interview not found for round:", round._id);
-        return;
-      }
-    }
-
-    // Prepare the webhook data
-    const webhookData = {
-      interviewId: interview._id,
-      interviewCode: interview.interviewCode,
-      roundId: round._id,
-      roundTitle: round.roundTitle,
-      previousStatus: oldStatus,
-      newStatus: round.status,
-      updatedAt: new Date().toISOString(),
-      candidateId: interview.candidateId,
-      positionId: interview.positionId,
-      tenantId: interview.tenantId,
-    };
-
-    // Trigger the webhook
-    await triggerWebhook(
-      EVENT_TYPES.INTERVIEW_ROUND_STATUS_UPDATED,
-      webhookData,
-      interview.tenantId
-    );
-
-    console.log(
-      `Webhook triggered for interview round ${round._id} status change: ${oldStatus} -> ${round.status}`
-    );
-  } catch (error) {
-    console.error("Error in triggerInterviewRoundStatusUpdated:", error);
-  }
-};
 
 // v1.0.2 <-----------------------------------------
 
@@ -2344,26 +2224,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-        from: "mockinterviews",
-        localField: "mockInterviewId",
-        foreignField: "_id",
-        as: "mainInterview",
-      }
+          from: "mockinterviews",
+          localField: "mockInterviewId",
+          foreignField: "_id",
+          as: "mainInterview",
+        }
       : {
-        from: "interviews",
-        localField: "interviewId",
-        foreignField: "_id",
-        as: "mainInterview",
-      };
+          from: "interviews",
+          localField: "interviewId",
+          foreignField: "_id",
+          as: "mainInterview",
+        };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2385,23 +2265,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-          {
-            $addFields: {
-              mainTenantIdNormalized: {
-                $cond: [
-                  {
-                    $and: [
-                      { $ne: ["$mainInterview.tenantId", null] },
-                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                    ],
-                  },
-                  { $toObjectId: "$mainInterview.tenantId" },
-                  null,
-                ],
+            {
+              $addFields: {
+                mainTenantIdNormalized: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $ne: ["$mainInterview.tenantId", null] },
+                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                      ],
+                    },
+                    { $toObjectId: "$mainInterview.tenantId" },
+                    null,
+                  ],
+                },
               },
             },
-          },
-        ]
+          ]
         : []),
       // Lookup tenant for organization info
       {
@@ -2609,6 +2489,120 @@ const getAllInterviewRounds = async (req, res) => {
 };
 
 // Get wallet transaction data for a specific interview round
+// const getInterviewRoundTransaction = async (req, res) => {
+//   try {
+//     const { id: roundId } = req.params;
+
+//     if (!roundId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Round ID is required",
+//       });
+//     }
+
+//     // Determine if this is a mock interview round
+//     let round = await InterviewRounds.findById(roundId);
+//     let isMock = false;
+
+//     if (!round) {
+//       // Try to find as mock interview round
+//       round = await MockInterviewRound.findById(roundId);
+//       isMock = true;
+//     }
+
+//     if (!round) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Interview round not found",
+//       });
+//     }
+
+//     // Fetch wallet transaction data based on roundId (preferred) or legacy holdTransactionId
+//     let holdTransactionData = null;
+//     let resolvedHoldTransactionId = null;
+//     let roundTransactions = [];
+
+//     try {
+//       const roundIdStr = round._id.toString();
+
+//       // Preferred: find wallet and all transactions using metadata.roundId
+//       const walletByMetadata = await Wallet.findOne({
+//         "transactions.metadata.roundId": roundIdStr,
+//       });
+
+//       if (walletByMetadata && Array.isArray(walletByMetadata.transactions)) {
+//         // All transactions for this round (hold + debit after settlement, etc.)
+//         roundTransactions = walletByMetadata.transactions.filter(
+//           (t) => t && t.metadata && String(t.metadata.roundId) === roundIdStr
+//         );
+
+//         if (roundTransactions.length > 0) {
+//           // Prefer the original hold transaction if it still exists
+//           const preferredHold = roundTransactions.find(
+//             (t) => String(t.type).toLowerCase() === "hold"
+//           );
+
+//           const primaryTx =
+//             preferredHold || roundTransactions[roundTransactions.length - 1];
+
+//           if (primaryTx) {
+//             holdTransactionData = primaryTx;
+//             resolvedHoldTransactionId = primaryTx._id
+//               ? primaryTx._id.toString()
+//               : null;
+//           }
+//         }
+//       }
+
+//       // Legacy fallback: use round.holdTransactionId if metadata lookup failed
+//       if (!holdTransactionData && round.holdTransactionId) {
+//         const walletById = await Wallet.findOne({
+//           "transactions._id": round.holdTransactionId,
+//         });
+
+//         if (walletById && Array.isArray(walletById.transactions)) {
+//           const legacyTx = walletById.transactions.find(
+//             (t) => t._id && t._id.toString() === round.holdTransactionId
+//           );
+
+//           if (legacyTx) {
+//             holdTransactionData = legacyTx;
+//             resolvedHoldTransactionId = legacyTx._id
+//               ? legacyTx._id.toString()
+//               : round.holdTransactionId;
+//             // For legacy data, expose this single transaction in the array as well
+//             roundTransactions = [legacyTx];
+//           }
+//         }
+//       }
+//     } catch (error) {
+//       console.error(
+//         `Error fetching transaction for round ${round._id}:`,
+//         error
+//       );
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       data: {
+//         roundId: round._id,
+//         holdTransactionId: resolvedHoldTransactionId,
+//         holdTransactionData: holdTransactionData,
+//         transactions: roundTransactions,
+//         settlementStatus: round.settlementStatus || "pending",
+//         settlementDate: round.settlementDate || null,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error fetching interview round transaction:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch transaction data",
+//       error: error.message,
+//     });
+//   }
+// };
+
 const getInterviewRoundTransaction = async (req, res) => {
   try {
     const { id: roundId } = req.params;
@@ -2620,12 +2614,11 @@ const getInterviewRoundTransaction = async (req, res) => {
       });
     }
 
-    // Determine if this is a mock interview round
+    // Determine if mock or normal
     let round = await InterviewRounds.findById(roundId);
     let isMock = false;
 
     if (!round) {
-      // Try to find as mock interview round
       round = await MockInterviewRound.findById(roundId);
       isMock = true;
     }
@@ -2637,80 +2630,61 @@ const getInterviewRoundTransaction = async (req, res) => {
       });
     }
 
-    // Fetch wallet transaction data based on roundId (preferred) or legacy holdTransactionId
-    let holdTransactionData = null;
-    let resolvedHoldTransactionId = null;
+    const roundIdStr = round._id.toString();
+
+    // Find wallet with transactions for this round
+    const wallet = await Wallet.findOne({
+      "transactions.metadata.roundId": roundIdStr,
+    });
+
     let roundTransactions = [];
+    let activeHoldTransactionId = null;
+    let activeHoldTransactionData = null;
+    let settlementStatus = "pending";
+    let settlementDate = null;
 
-    try {
-      const roundIdStr = round._id.toString();
+    if (wallet && Array.isArray(wallet.transactions)) {
+      roundTransactions = wallet.transactions
+        .filter((t) => t.metadata && t.metadata.roundId === roundIdStr)
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); // Ascending chronological
 
-      // Preferred: find wallet and all transactions using metadata.roundId
-      const walletByMetadata = await Wallet.findOne({
-        "transactions.metadata.roundId": roundIdStr,
-      });
+      // Active hold: latest hold not completed
+      const activeHold = [...roundTransactions]
+        .reverse()
+        .find((t) => t.type === "hold" && t.status !== "completed");
 
-      if (walletByMetadata && Array.isArray(walletByMetadata.transactions)) {
-        // All transactions for this round (hold + debit after settlement, etc.)
-        roundTransactions = walletByMetadata.transactions.filter(
-          (t) => t && t.metadata && String(t.metadata.roundId) === roundIdStr
-        );
-
-        if (roundTransactions.length > 0) {
-          // Prefer the original hold transaction if it still exists
-          const preferredHold = roundTransactions.find(
-            (t) => String(t.type).toLowerCase() === "hold"
-          );
-
-          const primaryTx =
-            preferredHold || roundTransactions[roundTransactions.length - 1];
-
-          if (primaryTx) {
-            holdTransactionData = primaryTx;
-            resolvedHoldTransactionId = primaryTx._id
-              ? primaryTx._id.toString()
-              : null;
-          }
-        }
+      if (activeHold) {
+        activeHoldTransactionId = activeHold._id.toString();
+        activeHoldTransactionData = activeHold;
       }
 
-      // Legacy fallback: use round.holdTransactionId if metadata lookup failed
-      if (!holdTransactionData && round.holdTransactionId) {
-        const walletById = await Wallet.findOne({
-          "transactions._id": round.holdTransactionId,
-        });
-
-        if (walletById && Array.isArray(walletById.transactions)) {
-          const legacyTx = walletById.transactions.find(
-            (t) => t._id && t._id.toString() === round.holdTransactionId
-          );
-
-          if (legacyTx) {
-            holdTransactionData = legacyTx;
-            resolvedHoldTransactionId = legacyTx._id
-              ? legacyTx._id.toString()
-              : round.holdTransactionId;
-            // For legacy data, expose this single transaction in the array as well
-            roundTransactions = [legacyTx];
-          }
-        }
-      }
-    } catch (error) {
-      console.error(
-        `Error fetching transaction for round ${round._id}:`,
-        error
+      // Check if settled: look for a debit with settlementStatus completed
+      const settlementTx = roundTransactions.find(
+        (t) =>
+          t.type === "debit" &&
+          t.metadata &&
+          t.metadata.settlementStatus === "completed"
       );
+
+      if (settlementTx) {
+        settlementStatus = "completed";
+        settlementDate =
+          settlementTx.metadata.settledAt || settlementTx.createdAt;
+      }
     }
+
+    // Legacy fallback if needed (but prefer metadata)
+    // ... (add if you have legacy data)
 
     res.status(200).json({
       success: true,
       data: {
         roundId: round._id,
-        holdTransactionId: resolvedHoldTransactionId,
-        holdTransactionData: holdTransactionData,
-        transactions: roundTransactions,
-        settlementStatus: round.settlementStatus || "pending",
-        settlementDate: round.settlementDate || null,
+        holdTransactionId: activeHoldTransactionId, // For backward compat, active one
+        holdTransactionData: activeHoldTransactionData,
+        transactions: roundTransactions, // All history
+        settlementStatus,
+        settlementDate,
       },
     });
   } catch (error) {
@@ -2722,6 +2696,122 @@ const getInterviewRoundTransaction = async (req, res) => {
     });
   }
 };
+
+// const getInterviewDataforOrg = async (req, res) => {
+//   try {
+//     const { interviewId } = req.params;
+
+//     // 1️⃣ Fetch interview
+//     const interview = await Interview.findById(interviewId)
+//       .populate({
+//         path: "candidateId",
+//         select:
+//           "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
+//       })
+//       .populate({
+//         path: "positionId",
+//         select: "title companyname Location skills minexperience maxexperience",
+//       })
+//       .populate("templateId")
+//       .lean();
+
+//     if (!interview) {
+//       return res.status(404).json({ message: "Interview not found" });
+//     }
+
+//     // 2️⃣ Fetch rounds
+//     const rounds = await InterviewRounds.find({ interviewId })
+//       .populate({
+//         path: "interviewers",
+//         select: "firstName lastName email",
+//       })
+//       .lean();
+
+//     const roundIds = rounds.map((r) => r._id);
+
+//     // 3️⃣ Fetch questions
+//     const questions = await interviewQuestions
+//       .find({ roundId: { $in: roundIds } })
+//       .select("roundId snapshot")
+//       .lean();
+
+//     const questionMap = {};
+//     questions.forEach((q) => {
+//       const key = String(q.roundId);
+//       if (!questionMap[key]) questionMap[key] = [];
+//       questionMap[key].push(q);
+//     });
+
+//     // 4️⃣ Fetch Interview Requests (only once)
+//     const interviewRequests = await InterviewRequest.find({
+//       roundId: { $in: roundIds },
+//       status: "inprogress",
+//     })
+//       .populate({
+//         path: "interviewerId",
+//         select: "firstName lastName email",
+//       })
+//       .lean();
+//     console.log("interviewRequests", interviewRequests);
+
+//     // Create lookup map → roundId => request
+//     const requestMap = {};
+
+//     interviewRequests.forEach((req) => {
+//       const roundKey = String(req.roundId);
+
+//       if (!requestMap[roundKey]) {
+//         requestMap[roundKey] = [];
+//       }
+
+//       requestMap[roundKey].push(req);
+//     });
+
+//     console.log("requestMap FINAL", requestMap);
+
+//     // 5️⃣ Build rounds response
+//     const fullRounds = rounds.map((round) => {
+//       let interviewers = round.interviewers || [];
+
+//       // 👉 Condition check
+//       if (
+//         interviewers.length === 0 &&
+//         round.status === "RequestSent" &&
+//         interview.status === "InProgress"
+//       ) {
+//         const requests = requestMap[String(round._id)] || [];
+
+//         console.log("requests count:", requests.length);
+
+//         if (requests.length > 0) {
+//           interviewers = requests
+//             .map((r) => r.interviewerId)
+//             .filter(Boolean);
+//         }
+//       }
+
+//       return {
+//         ...round,
+//         interviewers,
+//         questions: questionMap[String(round._id)] || [],
+//       };
+//     });
+
+//     interview.rounds = fullRounds;
+
+//     return res.json({
+//       success: true,
+//       data: interview,
+//     });
+//   } catch (err) {
+//     console.error("Interview Fetch Failed:", err);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//       error: err.message,
+//     });
+//   }
+// };
 
 const getInterviewDataforOrg = async (req, res) => {
   try {
@@ -2745,7 +2835,7 @@ const getInterviewDataforOrg = async (req, res) => {
       return res.status(404).json({ message: "Interview not found" });
     }
 
-    // 2️⃣ Fetch rounds
+    // 2️⃣ Fetch rounds with accepted interviewers populated
     const rounds = await InterviewRounds.find({ interviewId })
       .populate({
         path: "interviewers",
@@ -2768,8 +2858,8 @@ const getInterviewDataforOrg = async (req, res) => {
       questionMap[key].push(q);
     });
 
-    // 4️⃣ Fetch Interview Requests (only once)
-    const interviewRequests = await InterviewRequest.find({
+    // 4️⃣ Fetch ONLY pending (inprogress) outsource requests
+    const pendingRequests = await InterviewRequest.find({
       roundId: { $in: roundIds },
       status: "inprogress",
     })
@@ -2778,51 +2868,26 @@ const getInterviewDataforOrg = async (req, res) => {
         select: "firstName lastName email",
       })
       .lean();
-    console.log("interviewRequests", interviewRequests);
 
-    // Create lookup map → roundId => request
-    const requestMap = {};
-
-    interviewRequests.forEach((req) => {
+    // Map: roundId → array of pending requests
+    const pendingRequestMap = {};
+    pendingRequests.forEach((req) => {
       const roundKey = String(req.roundId);
-
-      if (!requestMap[roundKey]) {
-        requestMap[roundKey] = [];
+      if (!pendingRequestMap[roundKey]) {
+        pendingRequestMap[roundKey] = [];
       }
-
-      requestMap[roundKey].push(req);
+      pendingRequestMap[roundKey].push(req);
     });
-
-    console.log("requestMap FINAL", requestMap);
 
     // 5️⃣ Build rounds response
     const fullRounds = rounds.map((round) => {
-      let interviewers = round.interviewers || [];
-
-      // 👉 Condition check
-      if (
-        interviewers.length === 0 &&
-        round.status === "RequestSent" &&
-        interview.status === "InProgress"
-      ) {
-        const requests = requestMap[String(round._id)] || [];
-
-        console.log("requests count:", requests.length);
-
-        if (requests.length > 0) {
-          interviewers = requests
-            .map((r) => r.interviewerId)
-            .filter(Boolean);
-        }
-      }
-
-
-
-
       return {
         ...round,
-        interviewers,
+        // Keep interviewers = only accepted ones (from round.interviewers)
+        interviewers: round.interviewers || [],
         questions: questionMap[String(round._id)] || [],
+        // Expose pending requests separately — frontend will use this when RequestSent
+        pendingOutsourceRequests: pendingRequestMap[String(round._id)] || [],
       };
     });
 
@@ -2841,71 +2906,6 @@ const getInterviewDataforOrg = async (req, res) => {
     });
   }
 };
-
-// const getInterviewDataforOrg = async (req, res) => {
-//   try {
-//     const { interviewId } = req.params;
-
-//     // STEP 1: Fetch interview with population
-//     const interview = await Interview.findById(interviewId)
-//       .populate({
-//         path: "candidateId",
-//         select:
-//           "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
-//         model: "Candidate",
-//       })
-//       .populate({
-//         path: "positionId",
-//         select: "title companyname Location skills minexperience maxexperience",
-//         model: "Position",
-//       })
-//       .populate({ path: "templateId" })
-//       .lean();
-
-//     if (!interview) {
-//       return res.status(404).json({ message: "Interview not found" });
-//     }
-
-//     // STEP 2: Get all rounds for THIS interview
-//     const rounds = await InterviewRounds.find({ interviewId })
-//       .populate({
-//         path: "interviewers",
-//         select: "firstName lastName email",
-//       })
-//       .lean();
-
-//     // STEP 3: Fetch questions for rounds
-//     const roundIds = rounds.map((r) => r._id);
-//     const questions = await interviewQuestions
-//       .find({
-//         roundId: { $in: roundIds },
-//       })
-//       .select("roundId snapshot")
-//       .lean();
-
-//     // STEP 4: Map questions → rounds
-//     const questionMap = {};
-//     questions.forEach((q) => {
-//       const key = String(q.roundId);
-//       if (!questionMap[key]) questionMap[key] = [];
-//       questionMap[key].push(q);
-//     });
-
-//     const fullRounds = rounds.map((r) => ({
-//       ...r,
-//       questions: questionMap[String(r._id)] || [],
-//     }));
-
-//     // STEP 5: Attach rounds to interview
-//     interview.rounds = fullRounds;
-
-//     return res.json({ success: true, data: interview });
-//   } catch (err) {
-//     console.error("Interview Fetch Failed:", err);
-//     return res.status(500).json({ message: "Server error", error: err });
-//   }
-// };
-
 // Export all controller functions
 module.exports = {
   createInterview,
@@ -2913,8 +2913,8 @@ module.exports = {
   getAllInterviewRounds, // Added new function
   getInterviewRoundTransaction, // Added transaction fetch function
   updateInterview,
-  saveInterviewRound,
-  updateInterviewRound,
+  // saveInterviewRound,
+  // updateInterviewRound,
   getDashboardStats,
   deleteRound,
   getInterviews,

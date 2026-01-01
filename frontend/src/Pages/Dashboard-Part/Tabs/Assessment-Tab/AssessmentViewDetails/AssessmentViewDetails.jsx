@@ -8,7 +8,16 @@
 
 import { useState, useEffect } from "react";
 import { Tab } from "@headlessui/react";
-import { Minimize, Expand, X } from "lucide-react";
+import {
+  Minimize,
+  Expand,
+  X,
+  BarChart3,
+  FileText,
+  FileQuestion,
+  ClipboardCheck,
+  AwardIcon,
+} from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 // <---------------------- v1.0.0
 import AssessmentsTab from "./AssessmentViewAssessmentTab.jsx";
@@ -93,7 +102,8 @@ function AssessmentView() {
     {
       id: "Details",
       name: "Details",
-      icon: "📋",
+      // icon: "📋",
+      icon: FileText,
       content: (
         <DetailsTab
           assessment={assessment}
@@ -104,7 +114,8 @@ function AssessmentView() {
     {
       id: "Questions",
       name: "Questions",
-      icon: "❓",
+      // icon: "❓",
+      icon: FileQuestion ,
       content: (
         <QuestionsTab
           sections={assessmentQuestions.sections || []}
@@ -116,13 +127,15 @@ function AssessmentView() {
     {
       id: "Assessments",
       name: "Assessments",
-      icon: "📑",
+      // icon: "📑",
+      icon: ClipboardCheck ,
       content: <AssessmentsTab assessment={assessment} />,
     },
     {
       id: "Results",
       name: "Results",
-      icon: "📈",
+      // icon: "📈",
+      icon: AwardIcon ,
       content: (
         <AssessmentResultsTab
           assessment={assessment}
@@ -135,8 +148,9 @@ function AssessmentView() {
     },
     {
       id: "Activity",
-      name: "Activity",
-      icon: "📊",
+      name: "Feeds",
+      // icon: "📊",
+      icon: BarChart3,
       content: <Activity parentId={id} />,
     },
   ];
@@ -219,21 +233,25 @@ function AssessmentView() {
                     onChange={setSelectedTab}
                   >
                     <Tab.List className="flex space-x-3 border-b border-gray-200 px-2 overflow-x-auto">
-                      {tabs.map((tab, idx) => (
-                        <Tab
-                          key={idx}
-                          className={({ selected }) =>
-                            `py-4 px-4 text-sm font-medium border-b-2 focus:outline-none flex items-center ${
-                              selected
-                                ? "border-custom-blue text-custom-blue"
-                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                            }`
-                          }
-                        >
-                          <span className="mr-2">{tab.icon}</span>
-                          {tab.name}
-                        </Tab>
-                      ))}
+                      {tabs.map((tab, idx) => {
+                        const Icon = tab.icon;
+                        return (
+                          <Tab
+                            key={idx}
+                            className={({ selected }) =>
+                              `py-4 px-4 text-sm font-medium border-b-2 focus:outline-none flex items-center gap-1 ${
+                                selected
+                                  ? "border-custom-blue text-custom-blue"
+                                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                              }`
+                            }
+                          >
+                            {/* <span className="mr-2">{tab.icon}</span> */}
+                            <Icon className="h-4 w-4" />
+                            {tab.name}
+                          </Tab>
+                        );
+                      })}
                     </Tab.List>
                     <Tab.Panels className="p-4">
                       {tabs.map((tab, idx) => (

@@ -1274,6 +1274,10 @@ app.use("/schedule-assessment", scheduledAssessmentRouter);
 const contactRoutes = require("./routes/contactRoutes");
 app.use("/", contactRoutes);
 
+// Interview Policies API (for previewing settlement policy from frontend)
+const interviewPoliciesRoutes = require("./routes/interviewPoliciesRoutes");
+app.use("/interview-policies", interviewPoliciesRoutes);
+
 // ----------------------------------------------------->
 
 // support desk

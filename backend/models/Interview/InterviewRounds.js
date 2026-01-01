@@ -52,13 +52,15 @@ const roundHistorySchema = new mongoose.Schema(
     // reason: { type: String },
     reasonCode: { type: String }, // e.g. "candidate_requested"
     comment: { type: String }, // only when reasonCode === "other"
-    participants: [participantSchema],
-    interviewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }],
+    participants: [participantSchema],//this will track participants joined or not in video call or interview
+    interviewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }],//when user select outsource or internal this will track
 
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    updatedAt: { type: Date, default: Date.now },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    // updatedAt: { type: Date, default: Date.now },
+  },
+   {
+    timestamps: { createdAt: true, updatedAt: false },
   }
-  // { _id: false }
 );
 
 // Main Interview Round Schema
@@ -130,7 +132,6 @@ const interviewRoundSchema = new mongoose.Schema(
     meetingId: String,
     meetPlatform: String,
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
-
     scheduleAssessmentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ScheduledAssessment",
@@ -144,15 +145,19 @@ const interviewRoundSchema = new mongoose.Schema(
     // These fields are set by WalletControllers.settleInterviewPayment to reflect
     // the final outcome of policy-based settlement for this round. They are also
     // surfaced in Super Admin UI (table + sidebar) to show per-round settlement status.
-    settlementStatus: {
-      type: String,
-      enum: ["pending", "completed", "failed"],
-      default: "pending",
-    },
-    settlementDate: { type: Date },
+    // settlementStatus: {
+    //   type: String,
+    //   enum: ["pending", "completed", "failed"],
+    //   default: "pending",
+    // },
+    // settlementDate: { type: Date },
 
     // External system identifier
     externalId: { type: String, sparse: true, index: true }, // External system identifier
+
+    // Wallet hold tracking for outsourced interviewer payments
+    // holdTransactionId: { type: String },
+    // heldAmount: { type: Number },
   },
   { timestamps: true }
 );

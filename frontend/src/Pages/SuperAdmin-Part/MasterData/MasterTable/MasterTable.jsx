@@ -6,12 +6,20 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useParams, useNavigate } from "react-router-dom";
-import { Eye, Pencil, Trash2, ArrowLeft, AlertTriangle } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  Trash2,
+  ArrowLeft,
+  AlertTriangle,
+  MoreVertical,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../Components/Shared/Table/TableView";
-import MasterKanban from "../MasterKanban";
+// import MasterKanban from "../MasterKanban";
+import MasterKanban from "../../../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import { useMediaQuery } from "react-responsive";
 import MasterForm from "../MasterForm";
@@ -28,6 +36,103 @@ import { useMasterData } from "../../../../apiHooks/useMasterData";
 // v1.0.0 ------------------------------------------------------------------------>
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { formatDateTime } from "../../../../utils/dateFormatter.js";
+
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Helper function to map master data types to query keys
 const getMasterDataKey = (type) => {
@@ -58,6 +163,31 @@ const getMasterDataKeys = (type) => {
     category: "category",
   };
   return typeMap[type] || type;
+};
+
+const getMasterTitles = (type) => {
+  switch (type) {
+    case "industries":
+      return "Industrie";
+    case "technology":
+      return "Technologie";
+    case "skills":
+      return "Skill";
+    case "locations":
+      return "Location";
+    case "roles":
+      return "Role";
+    case "qualification":
+      return "Qualification";
+    case "universitycollege":
+      return "University/College";
+    case "company":
+      return "Companie";
+    case "category":
+      return "Categorie";
+    default:
+      return type;
+  }
 };
 
 const MasterTable = ({ permissions = {} }) => {
@@ -117,7 +247,6 @@ const MasterTable = ({ permissions = {} }) => {
     loadQualifications,
     loadLocations,
   } = useMasterData(paramsData, "Super Admin", type);
-  console.log("masterData=======", masterData);
 
   // Fetch Data
   // useEffect(() => {
@@ -212,7 +341,6 @@ const MasterTable = ({ permissions = {} }) => {
           `${config.REACT_APP_API_URL}/master-data/${type}/${selectedMaster._id}`,
           payload
         );
-        console.log("Updated master:", res);
         notify.success(`Master updated successfully!`);
       } else {
         // Create new master
@@ -231,10 +359,10 @@ const MasterTable = ({ permissions = {} }) => {
       });
 
       // Also refetch the local data
-      const fetchRes = await axios.get(
-        `${config.REACT_APP_API_URL}/master-data/${type}`
-      );
-      console.log("fetchRes", fetchRes);
+      // const fetchRes = await axios.get(
+      //   `${config.REACT_APP_API_URL}/master-data/${type}`
+      // );
+      // console.log("fetchRes", fetchRes);
       // console.log("Refetched master data:", fetchRes);
       // setMasterData(fetchRes.data?.data);
 
@@ -570,7 +698,7 @@ const MasterTable = ({ permissions = {} }) => {
   // v1.0.1 ------------------------------------------------------------>
 
   // v1.0.1 <------------------------------------------------------------
-  const tableActions = [
+  const actions = [
     {
       key: "view",
       label: "View",
@@ -746,7 +874,7 @@ const MasterTable = ({ permissions = {} }) => {
           <ArrowLeft size={20} />
         </button>
         <Header
-          title={capitalizeFirstLetter(type)}
+          title={`${getMasterTitles(type)}s`}
           onAddClick={() => {
             setPopupMode("create");
             setIsPopupOpen(true);
@@ -787,7 +915,7 @@ const MasterTable = ({ permissions = {} }) => {
           <TableView
             data={currentFilteredRows}
             columns={tableColumns}
-            actions={tableActions}
+            actions={actions}
             loading={isLoading}
             emptyState="No Master data found."
             customHeight="h-[calc(100vh-14rem)]"
@@ -813,23 +941,33 @@ const MasterTable = ({ permissions = {} }) => {
               }))}
               masterData={masterData}
               columns={kanbanColumns}
-              renderActions={(item) =>
-                tableActions.map((action) => (
-                  <button
-                    key={action.key}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      action.onClick(item);
-                    }}
-                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"
-                    title={action.label}
-                  >
-                    {action.icon}
-                  </button>
-                ))
-              }
+              // renderActions={(item) =>
+              //   tableActions.map((action) => (
+              //     <button
+              //       key={action.key}
+              //       onClick={(e) => {
+              //         e.stopPropagation();
+              //         action.onClick(item);
+              //       }}
+              //       className="p-1.5 text-custom-blue hover:bg-custom-blue/10 rounded-lg"
+              //       title={action.label}
+              //     >
+              //       {action.icon}
+              //     </button>
+              //   ))
+              // }
+              renderActions={(item) => (
+                <KanbanActionsMenu item={item} kanbanActions={actions} />
+              )}
+              onTitleClick={(item) => {
+                setSelectedMaster(item);
+                setPopupMode("edit");
+                setIsPopupOpen(true);
+              }}
               loading={isLoading}
               emptyState="No master data found."
+              kanbanTitle={getMasterTitles(type)}
+              customHeight = "calc(100vh - 282px)"
             />
           </div>
         )}

@@ -7,15 +7,126 @@ import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup"
 import TableView from "../../../Components/Shared/Table/TableView";
 import StatusBadge from "../../../Components/SuperAdminComponents/common/StatusBadge";
 import PlanKanbanView from "./PlanKanbanView";
+import KanbanView from "../../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import PlanFormModal from "./PlanFormModal";
 import PlanViewModal from "./PlanViewModal";
 import { useSubscriptionPlansAdmin } from "../../../apiHooks/useSubscriptionPlansAdmin";
 import { usePermissionCheck } from "../../../utils/permissionUtils";
-import { Eye, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  BadgePercent,
+  CircleDot,
+  CheckCircle2,
+  Clock,
+  Hash,
+  Activity,
+  MoreVertical,
+} from "lucide-react";
 import ConfirmationPopup from "../../Dashboard-Part/Tabs/Assessment-Tab/ConfirmationPopup.jsx";
 //import { useScrollLock } from '../../../apiHooks/scrollHook/useScrollLock';
 import { formatDateTime } from "../../../utils/dateFormatter.js";
 import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+
+const KanbanActionsMenu = ({ item, kanbanActions }) => {
+  const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const mainActions = kanbanActions.filter((a) =>
+    ["view", "edit"].includes(a.key)
+  );
+  const overflowActions = kanbanActions.filter(
+    (a) => !["view", "edit"].includes(a.key)
+  );
+
+  //  Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsKanbanMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={menuRef} className="flex items-center gap-2 relative">
+      {/* Always visible actions */}
+      {mainActions.map((action) => {
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const bgClass =
+          action.key === "view"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : action.key === "edit"
+            ? "text-green-600 hover:bg-green-600/10"
+            : "text-blue-600 bg-green-600/10";
+
+        return (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick(item, e);
+            }}
+            className={`${baseClasses} ${bgClass}`}
+            title={action.label}
+          >
+            {action.icon}
+          </button>
+        );
+      })}
+
+      {/* More button (shows dropdown) */}
+      {overflowActions.length > 0 && (
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsKanbanMoreOpen((prev) => !prev);
+            }}
+            className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="More"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isKanbanMoreOpen && (
+            <div
+              className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {overflowActions.map((action) => (
+                <button
+                  key={action.key}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsKanbanMoreOpen(false);
+                    action.onClick(item, e);
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  title={action.label}
+                >
+                  {action.icon && (
+                    <span className="mr-2 w-4 h-4 text-gray-500">
+                      {action.icon}
+                    </span>
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ITEMS_PER_PAGE = 10;
 
@@ -23,16 +134,6 @@ const defaultFilters = {
   subscriptionTypes: [], // 'organization' | 'individual'
   activeStates: [], // 'Active' | 'Inactive'
   createdDate: "", // '', 'last7', 'last30'
-};
-
-const formatDate = (val) => {
-  if (!val) return "N/A";
-  try {
-    const d = new Date(val);
-    return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
-  } catch {
-    return "N/A";
-  }
 };
 
 const getPriceForCycle = (plan, cycle) => {
@@ -496,15 +597,31 @@ export default function Plans() {
             autoHeight={false}
           />
         ) : (
-          <PlanKanbanView
-            currentPlans={plans}
-            plans={plans}
-            loading={isLoading || isMutating}
-            onView={handleView}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            canEdit={canEdit}
-            canDelete={canDelete}
+          // <PlanKanbanView
+          //   currentPlans={plans}
+          //   plans={plans}
+          //   loading={isLoading || isMutating}
+          //   onView={handleView}
+          //   onEdit={handleEdit}
+          //   onDelete={handleDelete}
+          //   canEdit={canEdit}
+          //   canDelete={canDelete}
+          // />
+          <KanbanView
+            loading={isLoading}
+            data={plans.map((plan) => ({
+              ...plan,
+              id: plan._id,
+              title: plan?.name || "N/A",
+              subTitle: plan?.planId || "N/A",
+            }))}
+            columns={columns}
+            // v2.0.1 <-------------------------------------------------
+            renderActions={(item) => (
+              <KanbanActionsMenu item={item} kanbanActions={actions} />
+            )}
+            emptyState="No Active Plans Found"
+            kanbanTitle="Subscription Plan"
           />
         )}
       </div>

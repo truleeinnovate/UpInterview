@@ -23,9 +23,9 @@ const router = express.Router();
 // Validation endpoint for step-wise validation
 router.post("/validate/:tab", validateAssessmentStep);
 
-router.post("/new-assessment", loggingService.internalLoggingMiddleware, newAssessment);
+router.post("/new-assessment", loggingService.internalLoggingMiddleware, loggingService.FeedsMiddleware, newAssessment);
 
-router.patch("/update/:id", loggingService.internalLoggingMiddleware, updateAssessment);
+router.patch("/update/:id", loggingService.internalLoggingMiddleware, loggingService.FeedsMiddleware, updateAssessment);
 
 // SUPER ADMIN added by Ashok ----------------------------------------->
 // Place static route BEFORE param routes so '/all-assessments' is not
@@ -45,7 +45,7 @@ router.get(
 );
 router.get("/:id", getAssessmentById);
 
-router.post("/create-list", loggingService.internalLoggingMiddleware, createList);
+router.post("/create-list", loggingService.internalLoggingMiddleware, loggingService.FeedsMiddleware, createList);
 // router.get("/lists", getLists);
 
 // Delete assessment
