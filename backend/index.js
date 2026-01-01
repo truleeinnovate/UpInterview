@@ -1911,7 +1911,7 @@ app.get("/get-token", (req, res) => {
 
   let payload = {
     apikey: API_KEY,
-    permissions: ["allow_join", "allow_mod"],
+    permissions: ["allow_join", "allow_mod", "allow_screen_share"],
   };
 
   if (roomId || peerId) {
@@ -1929,24 +1929,8 @@ app.get("/get-token", (req, res) => {
   res.json({ token });
 });
 
-//post
-// app.post("/create-meeting/", (req, res) => {
-//   const { token, region } = req.body;
-//   const url = `${process.env.VIDEOSDK_API_ENDPOINT}/rooms`;
-//   const options = {
-//     method: "POST",
-//     headers: { Authorization: token, "Content-Type": "application/json" },
-//     body: JSON.stringify({ region }),
-//   };
-
-//   fetch(url, options)
-//     .then((response) => response.json())
-//     .then((result) => res.json(result))
-//     .catch((error) => console.error("error", error));
-// });
-
 // create debug code
-app.post("/create-meeting/", async (req, res) => {
+app.post("/create-meeting", async (req, res) => {
   try {
     console.log("🟡 /create-meeting API HIT");
 

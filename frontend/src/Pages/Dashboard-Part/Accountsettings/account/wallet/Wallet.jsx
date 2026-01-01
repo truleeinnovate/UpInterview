@@ -50,6 +50,7 @@ export const calculatePendingBalance = (walletBalance) => {
 const Wallet = () => {
   const { checkPermission, isInitialized } = usePermissionCheck();
   const { data: walletBalance, isLoading, refetch } = useWallet(); //<----v1.0.0-----
+  console.log(" walletBalance", walletBalance);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [viewingBalance, setViewingBalance] = useState(false);
   const [isTopupOpen, setIsTopupOpen] = useState(false);

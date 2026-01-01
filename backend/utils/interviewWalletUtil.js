@@ -10,6 +10,7 @@ const WalletTopup = require("../models/WalletTopup");
  * `type` field (credit/debit/hold) and appropriate balance/holdAmount deltas.
  */
 const WALLET_BUSINESS_TYPES = {
+  HOLD_ADJUST: "HOLD_ADJUST",
   HOLD_CREATE: "HOLD_CREATE", // Move available balance -> hold
   HOLD_RELEASE: "HOLD_RELEASE", // Release hold back to available balance
   HOLD_DEBIT: "HOLD_DEBIT", // Convert part/all of hold into a debit (payout/charge)
@@ -51,7 +52,7 @@ function computeWalletDeltas(businessType, amount) {
     case WALLET_BUSINESS_TYPES.HOLD_RELEASE:
       // Release hold back to available balance
       return {
-        txType: "credit",
+        txType: "hold_release",
         balanceDelta: amt,
         holdDelta: -amt,
       };
@@ -97,12 +98,12 @@ function computeWalletDeltas(businessType, amount) {
         holdDelta: 0,
       };
 
-    case WALLET_BUSINESS_TYPES.INTERVIEWER_HOLD_CREATE:
+    case WALLET_BUSINESS_TYPES.HOLD_ADJUST:
       // For interviewer wallets: represent a pending payout as "on hold".
       // We do not change balance yet, only increase holdAmount so the wallet
       // UI can show this as money on hold for future settlement.
       return {
-        txType: "hold",
+        txType: "hold_adjust",
         balanceDelta: 0,
         holdDelta: amt,
       };
@@ -139,19 +140,33 @@ async function createWalletTransaction({
   metadata = {},
   status = "pending",
   session = null,
+  gstAmount = 0,
+  serviceCharge = 0,
+  reason = undefined,
+  // interviewId = undefined,
+  // roundId = undefined,
+  // interviewerId = undefined,
+  // companyId = undefined,
+  // policyApplied = undefined,
+  // notes = undefined,
 }) {
   if (!ownerId) {
     throw new Error("ownerId is required to create a wallet transaction");
   }
 
-  const normalizedAmount = normalizeAmount(amount);
-  if (normalizedAmount <= 0) {
+  const normalizedAmount = normalizeAmount(amount); // base amount
+  const normalizedGstAmount = normalizeAmount(gstAmount);
+  const normalizedServiceCharge = normalizeAmount(serviceCharge);
+  const totalAmountValue =
+    normalizedAmount + normalizedGstAmount + normalizedServiceCharge;
+
+  if (totalAmountValue <= 0) {
     throw new Error("amount must be a positive number");
   }
 
   const { txType, balanceDelta, holdDelta } = computeWalletDeltas(
     businessType,
-    normalizedAmount
+    totalAmountValue
   );
 
   // Fetch current wallet state (outside of update so we can store prev values in metadata)
@@ -171,14 +186,10 @@ async function createWalletTransaction({
   const newBalance = prevBalance + balanceDelta;
   const newHoldAmount = prevHoldAmount + holdDelta;
 
-  // Prepare full metadata with audit fields
+  // Prepare metadata (keep caller-provided fields only; audit is implicit
+  // from balanceBefore/After and holdBalanceBefore/After fields below).
   const txMetadata = {
     ...metadata,
-    businessType,
-    prevBalance,
-    prevHoldAmount,
-    newBalance,
-    newHoldAmount,
   };
 
   // Derive bucket/effect for the primary impacted bucket.
@@ -191,9 +202,9 @@ async function createWalletTransaction({
   }
 
   let effect = "NONE";
-  if (txType === "credit") {
+  if (txType === "credit" || txType === "hold_release" || txType === "hold_adjust") {
     effect = "CREDIT";
-  } else if (txType === "debit") {
+  } else if (txType === "debit" || txType === "hold"|| txType === "") {
     effect = "DEBIT";
   }
 
@@ -201,10 +212,18 @@ async function createWalletTransaction({
     type: txType,
     bucket,
     effect,
+    // Wallet-level identifiers
+    walletId: ownerId,
+    // interviewId: txInterviewId,
+    // roundId: txRoundId,
+    // Ensure every transaction has a clear reason; prefer explicit reason,
+    // then metadata.source.
+    reason: reason || metadata.source,
+    // Financial breakdown
     amount: normalizedAmount,
-    gstAmount: 0,
-    serviceCharge: 0,
-    totalAmount: normalizedAmount,
+    gstAmount: normalizedGstAmount,
+    serviceCharge: normalizedServiceCharge,
+    totalAmount: totalAmountValue,
     description: description || "",
     relatedInvoiceId: relatedInvoiceId || undefined,
     status: status || "pending", // callers can override/mark completed later if needed
