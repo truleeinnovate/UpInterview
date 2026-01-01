@@ -11,8 +11,8 @@ import {
 } from "../../utils/timezoneUtils";
 
 const CandidateView = ({ onBack, feedbackData, decodedData }) => {
-  // console.log("CandidateView feedbackData", feedbackData);
-  // console.log("CandidateView decodedData", decodedData);
+  console.log("CandidateView feedbackData", feedbackData);
+  console.log("CandidateView decodedData", decodedData);
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [showCountdown, setShowCountdown] = useState(false);
@@ -288,7 +288,7 @@ const CandidateView = ({ onBack, feedbackData, decodedData }) => {
               {/* Join Meeting Button */}
               <button
                 onClick={() => window.open(decodedData?.meetLink, "_blank")}
-                disabled={!isButtonEnabled}
+                // disabled={!isButtonEnabled}
                 className={`w-full md:text-sm ${
                   isButtonEnabled
                     ? "bg-[#217989] hover:bg-[#1a616e] hover:scale-105"
