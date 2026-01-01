@@ -4,17 +4,8 @@
 // v1.0.3  -  Ashok   -  fixed responsiveness style issues in form
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import {
-  Search,
-  X,
-  ChevronDown,
-  ChevronUp,
-  Minimize,
-  Expand,
-} from "lucide-react";
-import { useCustomContext } from "../../../../../../Context/Contextfetch";
+import { Search, X, ChevronDown, ChevronUp } from "lucide-react";
 import useInterviewers from "../../../../../../hooks/useInterviewers";
-import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
 // v1.0.1 <------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 import { useGroupsQuery } from "../../../../../../apiHooks/useInterviewerGroups.js";
@@ -194,6 +185,8 @@ const InternalInterviews = ({
   useEffect(() => {
     setFilteredData(FilteredData);
   }, [FilteredData]);
+
+  // console.log("filteredData", filteredData);
 
   const handleSearchInputChange = (event) => {
     setSearchQuery(event.target.value);
@@ -449,10 +442,11 @@ const InternalInterviews = ({
                             : "no name available"}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {Array.isArray(item.technologies) &&
-                          item.technologies.length > 0
+                          {item?.currentRole || "No role available"}
+                          {/* {Array.isArray(item.technologies) &&
+                          item.currentSkill.length > 0
                             ? item.technologies.join(", ")
-                            : "no technology available"}
+                            : "no technology available"} */}
                         </p>
                       </div>
                     </>

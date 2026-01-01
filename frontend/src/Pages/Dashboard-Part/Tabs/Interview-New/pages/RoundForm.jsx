@@ -176,40 +176,6 @@ const RoundFormInterviews = () => {
   const [ownerData, setOwnerData] = useState(null);
   const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
 
-  const handleAssessmentMenuScrollToBottom = () => {
-    if (isAssessmentQueryLoading) return;
-    if (!totalAssessments || assessmentLimit >= totalAssessments) return;
-
-    setAssessmentLimit((prev) => prev + ASSESSMENT_DROPDOWN_LIMIT);
-  };
-
-  useEffect(() => {
-    const fetchOwnerData = async () => {
-      if (!organization && userId) {
-        try {
-          const response = await axios.get(
-            `${config.REACT_APP_API_URL}/users/owner/${userId}`
-          );
-
-          setOwnerData(response.data);
-        } catch (error) {
-          console.error("Error fetching owner data:", error);
-        }
-      }
-    };
-    fetchOwnerData();
-  }, [organization, userId]);
-
-  useEffect(() => {
-    if (interview) {
-      setCandidate(interview?.candidateId || null);
-      setPosition(interview?.positionId || null);
-      setRounds(interview?.rounds || []);
-      setSelectedMeetingPlatform(data?.data?.defaultProvider);
-      // setTemplate(interview?.templateId || null)
-    }
-  }, [interview, data]);
-
   const navigate = useNavigate();
   const [roundTitle, setRoundTitle] = useState("");
   const [customRoundTitle, setCustomRoundTitle] = useState("");
@@ -257,6 +223,42 @@ const RoundFormInterviews = () => {
   // while editing
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
+  const location = useLocation();
+  const isReschedule = location.state?.isReschedule || false;
+
+  const handleAssessmentMenuScrollToBottom = () => {
+    if (isAssessmentQueryLoading) return;
+    if (!totalAssessments || assessmentLimit >= totalAssessments) return;
+
+    setAssessmentLimit((prev) => prev + ASSESSMENT_DROPDOWN_LIMIT);
+  };
+
+  useEffect(() => {
+    const fetchOwnerData = async () => {
+      if (!organization && userId) {
+        try {
+          const response = await axios.get(
+            `${config.REACT_APP_API_URL}/users/owner/${userId}`
+          );
+
+          setOwnerData(response.data);
+        } catch (error) {
+          console.error("Error fetching owner data:", error);
+        }
+      }
+    };
+    fetchOwnerData();
+  }, [organization, userId]);
+
+  useEffect(() => {
+    if (interview) {
+      setCandidate(interview?.candidateId || null);
+      setPosition(interview?.positionId || null);
+      setRounds(interview?.rounds || []);
+      setSelectedMeetingPlatform(data?.data?.defaultProvider);
+      // setTemplate(interview?.templateId || null)
+    }
+  }, [interview, data]);
 
   // useEffect(() => {
   //   if (
@@ -460,13 +462,13 @@ const RoundFormInterviews = () => {
       prev.map((question) =>
         question.questionId === questionId
           ? {
-            ...question,
-            snapshot: {
-              ...question.snapshot,
-              mandatory:
-                question.snapshot.mandatory === "true" ? "false" : "true",
-            },
-          }
+              ...question,
+              snapshot: {
+                ...question.snapshot,
+                mandatory:
+                  question.snapshot.mandatory === "true" ? "false" : "true",
+              },
+            }
           : question
       )
     );
@@ -527,7 +529,7 @@ const RoundFormInterviews = () => {
     };
   }, [roundId]);
 
-  console.log("roundEditData roundEditData", roundEditData);
+  // console.log("roundEditData roundEditData", roundEditData);
 
   const editingAssessmentId =
     isEditing && roundEditData && roundEditData.assessmentId
@@ -542,40 +544,40 @@ const RoundFormInterviews = () => {
   const assessmentOptions = React.useMemo(() => {
     const baseOptions = Array.isArray(assessmentData)
       ? assessmentData.map((a) => {
-        const titleLabel = a.AssessmentTitle || "Untitled Assessment";
-        const typeLabel = a.type
-          ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
-          : "";
+          const titleLabel = a.AssessmentTitle || "Untitled Assessment";
+          const typeLabel = a.type
+            ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
+            : "";
 
-        return {
-          value: a._id,
-          label: (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                width: "98%",
-              }}
-            >
-              <span>{titleLabel}</span>
-              {typeLabel && (
-                <span
-                  className={
-                    "text-md " +
-                    (a.type === "custom"
-                      ? "text-custom-blue"
-                      : "text-green-600")
-                  }
-                >
-                  {typeLabel}
-                </span>
-              )}
-            </div>
-          ),
-          searchLabel: titleLabel,
-        };
-      })
+          return {
+            value: a._id,
+            label: (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "98%",
+                }}
+              >
+                <span>{titleLabel}</span>
+                {typeLabel && (
+                  <span
+                    className={
+                      "text-md " +
+                      (a.type === "custom"
+                        ? "text-custom-blue"
+                        : "text-green-600")
+                    }
+                  >
+                    {typeLabel}
+                  </span>
+                )}
+              </div>
+            ),
+            searchLabel: titleLabel,
+          };
+        })
       : [];
 
     if (editingAssessmentId && editingAssessment) {
@@ -591,7 +593,7 @@ const RoundFormInterviews = () => {
 
         const editingTypeLabel = editingAssessment.type
           ? editingAssessment.type.charAt(0).toUpperCase() +
-          editingAssessment.type.slice(1)
+            editingAssessment.type.slice(1)
           : "";
 
         baseOptions.push({
@@ -966,226 +968,27 @@ const RoundFormInterviews = () => {
     editingAssessment,
   ]);
 
-  console.log("ExternalInterviewers", externalInterviewers, status);
+  // SUPER SIMPLE: Just check if field should be disabled
+  const shouldDisable = (fieldName) => {
+    // Fields that should be disabled in these statuses
+    const disabledInStatus = {
+      interviewMode: ["RequestSent", "Scheduled", "Rescheduled"],
+      duration: ["RequestSent", "Scheduled", "Rescheduled"],
+      interviewType: ["RequestSent", "Scheduled", "Rescheduled"],
+      scheduledDate: ["RequestSent", "Scheduled", "Rescheduled"],
+      internalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+      externalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+      removeInterviewerBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+      clearInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+      dateChangeConfirmation: ["RequestSent", "Scheduled", "Rescheduled"],
+    };
 
-  // useEffect(() => {
-  //   if (isEditing && roundEditData && !hasManuallyClearedInterviewers) {
-  //     // Update assessmentTemplate only if different
+    const statusList = disabledInStatus[fieldName] || [];
+    return statusList.includes(status);
+  };
 
-  //     const foundGroup = groups?.find(
-  //       (g) => g?._id === roundEditData?.interviewerGroupId
-  //     );
+  // console.log("ExternalInterviewers", externalInterviewers, status);
 
-  //     // Find full assessment object by id instead of relying on paginated list
-  //     const fullAssessment =
-  //       roundEditData?.roundTitle === "Assessment" &&
-  //       roundEditData?.assessmentId
-  //         ? editingAssessment || null
-  //         : null;
-
-  //     const newAssessmentTemplate =
-  //       roundEditData?.roundTitle === "Assessment" &&
-  //       roundEditData?.assessmentId
-  //         ? {
-  //             assessmentId: roundEditData?.assessmentId,
-  //             assessmentName:
-  //               editingAssessment?.AssessmentTitle ||
-  //               assessmentTemplate?.assessmentName ||
-  //               "",
-  //           }
-  //         : { assessmentId: "", assessmentName: "" };
-  //     if (
-  //       JSON.stringify(assessmentTemplate) !==
-  //       JSON.stringify(newAssessmentTemplate)
-  //     ) {
-  //       setAssessmentTemplate(newAssessmentTemplate);
-  //       setSelectedAssessmentData(fullAssessment);
-  //     }
-
-  //     // Update other states only if different
-  //     if (roundTitle !== roundEditData.roundTitle)
-  //       setRoundTitle(roundEditData.roundTitle);
-  //     if (interviewType !== roundEditData.interviewType)
-  //       setInterviewType(roundEditData.interviewType);
-  //     if (interviewMode !== roundEditData.interviewMode)
-  //       setInterviewMode(roundEditData.interviewMode);
-  //     if (selectedInterviewType !== roundEditData.interviewerType)
-  //       setSelectedInterviewType(
-  //         roundEditData.interviewerType || roundEditData?.interviewerType
-  //       );
-  //     if (
-  //       JSON.stringify(interviewQuestionsList) !==
-  //       JSON.stringify(roundEditData.questions)
-  //     ) {
-  //       setInterviewQuestionsList(roundEditData.questions);
-  //     }
-  //     if (status !== roundEditData.status) setStatus(roundEditData.status);
-  //     if (instructions !== (roundEditData.instructions || ""))
-  //       setInstructions(roundEditData.instructions || "");
-  //     if (sequence !== roundEditData.sequence)
-  //       setSequence(roundEditData.sequence);
-  //     if (duration !== (roundEditData.duration || 60))
-  //       setDuration(Number(roundEditData.duration) || 60);
-  //     if (interviewerGroupName !== (foundGroup?.name || "")) {
-  //       setInterviewerGroupName(foundGroup?.name || "");
-  //       // setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
-  //     }
-  //     if (interviewerGroupId !== (roundEditData?.interviewerGroupId || "")) {
-  //       setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
-  //     }
-  //     if (interviewerViewType !== (roundEditData?.interviewerViewType || "")) {
-  //       setInterviewerViewType(roundEditData?.interviewerViewType || "");
-  //     }
-
-  //     // Update interviewers only if different
-  //     if (
-  //       roundEditData.interviewers &&
-  //       roundEditData.interviewers.length > 0 &&
-  //       selectedInterviewType === null
-  //     ) {
-  //       if (roundEditData.interviewerType === "Internal") {
-  //         const normalizedInterviewers = roundEditData.interviewers.map(
-  //           (interviewer) => ({
-  //             _id: interviewer._id,
-  //             firstName: interviewer?.firstName,
-  //             lastName: interviewer?.lastName,
-  //             email: interviewer?.email,
-  //           })
-  //         );
-  //         if (
-  //           JSON.stringify(internalInterviewers) !==
-  //           JSON.stringify(normalizedInterviewers)
-  //         ) {
-  //           setInternalInterviewers(normalizedInterviewers);
-  //           setExternalInterviewers([]);
-  //         }
-  //       } else if (roundEditData.interviewerType === "External") {
-  //         // FIX: Properly normalize External interviewers
-  //         const normalizedExternal = roundEditData.interviewers.map(
-  //           (interviewer) => ({
-  //             id: interviewer._id, // backend uses _id as id for external
-  //             _id: interviewer._id, // keep both for consistency
-  //             firstName:
-  //               interviewer.contact?.firstName || interviewer.firstName || "",
-  //             lastName:
-  //               interviewer.contact?.lastName || interviewer.lastName || "",
-  //             email: interviewer.email,
-  //             contact: interviewer.contact, // preserve full contact if needed
-  //           })
-  //         );
-  //         if (
-  //           JSON.stringify(externalInterviewers) !==
-  //           JSON.stringify(normalizedExternal)
-  //         ) {
-  //           setExternalInterviewers(normalizedExternal);
-  //           setInternalInterviewers([]);
-  //         }
-  //       }
-  //     }
-  //     // ADD THIS SECTION inside the useEffect that handles isEditing && roundEditData
-  //     if (roundEditData?.dateTime && interviewType === "scheduled") {
-  //       // Parse the string like "27-12-2025 04:47 AM - 05:47 AM"
-  //       const match = roundEditData.dateTime.match(
-  //         /^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)/
-  //       );
-  //       if (match) {
-  //         let [, day, month, year, hour, minute, ampm] = match;
-  //         let hours = parseInt(hour, 10);
-  //         if (ampm === "PM" && hours !== 12) hours += 12;
-  //         if (ampm === "AM" && hours === 12) hours = 0;
-
-  //         const parsedDate = new Date(
-  //           year,
-  //           month - 1,
-  //           day,
-  //           hours,
-  //           parseInt(minute, 10)
-  //         );
-
-  //         if (!isNaN(parsedDate.getTime())) {
-  //           // 1. Set the datetime-local input value (local time)
-  //           setScheduledDate(formatForDatetimeLocal(parsedDate));
-
-  //           // 2. Calculate UTC ISO strings for backend
-  //           const localTimeStr = moment(parsedDate).format("YYYY-MM-DD HH:mm");
-  //           const utcStart = moment
-  //             .tz(
-  //               localTimeStr,
-  //               "YYYY-MM-DD HH:mm",
-  //               Intl.DateTimeFormat().resolvedOptions().timeZone
-  //             )
-  //             .utc()
-  //             .toDate();
-
-  //           const utcEnd = new Date(utcStart);
-  //           utcEnd.setMinutes(utcEnd.getMinutes() + duration);
-
-  //           setStartTime(utcStart.toISOString());
-  //           setEndTime(utcEnd.toISOString());
-
-  //           // 3. Update displayed combinedDateTime
-  //           const formattedStart = formatDateTime(utcStart, true);
-  //           const formattedEnd = formatDateTime(utcEnd, false);
-  //           setCombinedDateTime(`${formattedStart} - ${formattedEnd}`);
-  //         }
-  //       }
-  //     }
-
-  //     // Fetch assessment questions if needed
-  //     if (
-  //       roundEditData.roundTitle === "Assessment" &&
-  //       roundEditData.assessmentId
-  //     ) {
-  //       if (assessmentTemplate.assessmentId !== roundEditData.assessmentId) {
-  //         setQuestionsLoading(true);
-  //         fetchAssessmentQuestions(roundEditData.assessmentId).then(
-  //           ({ data, error }) => {
-  //             setQuestionsLoading(false);
-  //             if (data) {
-  //               setSectionQuestions(data?.sections || {});
-  //             } else {
-  //               console.error("Error fetching assessment questions:", error);
-  //             }
-  //           }
-  //         );
-  //       }
-  //     }
-  //   } else {
-  //     const maxSequence =
-  //       rounds?.length > 0 ? Math.max(...rounds.map((r) => r.sequence)) : 0;
-  //     if (sequence !== maxSequence + 1) {
-  //       setSequence(maxSequence + 1);
-  //     }
-  //   }
-  // }, [
-  //   rounds,
-  //   roundId,
-  //   // internalInterviewers, // Add this
-  //   // externalInterviewers, // Add this
-
-  //   // assessmentTemplate,
-  //   // isEditing,
-  //   // duration,
-  //   // editingAssessment,
-  //   // groups,
-  //   // // externalInterviewers,
-  //   // instructions,
-  //   // internalInterviewers,
-  //   hasManuallyClearedInterviewers,
-  //   roundEditData,
-  //   // interviewMode,
-  //   // interviewQuestionsList,
-  //   // interviewType,
-  //   // interviewerGroupId,
-  //   // interviewerGroupName,
-  //   // interviewerViewType,
-  //   // roundTitle,
-  //   // selectedInterviewType,
-  //   // sequence,
-  //   // status,
-  // ]);
-
-  // Replace the existing scheduledDate change handler with this enhanced version
   const handleScheduledDateChange = (e) => {
     const val = e.target.value;
 
@@ -1235,36 +1038,6 @@ const RoundFormInterviews = () => {
 
     setScheduledDate(newScheduledDate);
   };
-
-  // const handleRoundTitleUnifiedChange = (e) => {
-  //   const value = e.target.value;
-
-  //   // If already in custom mode, treat changes as typing the custom title
-  //   if (isCustomRoundTitle) {
-  //     setCustomRoundTitle(value);
-  //     setErrors((prev) => ({ ...prev, roundTitle: "" }));
-  //     return;
-  //   }
-
-  //   // DropdownWithSearchField sends an empty string when "Other" is chosen.
-  //   // Enter custom mode and keep roundTitle as "Other" for submission mapping.
-  //   if (value === "") {
-  //     setIsCustomRoundTitle(true);
-  //     setRoundTitle("Other");
-  //     setCustomRoundTitle("");
-  //      setInterviewQuestionsList([]);
-  //     setErrors((prev) => ({ ...prev, roundTitle: "" }));
-  //     return;
-  //   }
-
-  //   // Normal predefined selection
-  //   setRoundTitle(value);
-  //   setCustomRoundTitle("");
-  //   if (value === "Assessment") {
-  //     setInterviewMode("Virtual");
-  //   }
-  //   setErrors((prev) => ({ ...prev, roundTitle: "", interviewMode: "" }));
-  // };
 
   const handleRoundTitleUnifiedChange = (e) => {
     const value = e.target.value;
@@ -1453,18 +1226,15 @@ const RoundFormInterviews = () => {
       if (selectedInterviewType === "External") {
         setSelectedInterviewType(null);
       }
-      // if (status === "RequestSent") {
-      //   setStatus("Draft");
-      // }
     }
 
-    if (
-      status === "Scheduled" ||
-      status === "Rescheduled" ||
-      status === "RequestSent"
-    ) {
-      setStatus("Draft");
-    }
+    // if (
+    //   status === "Scheduled" ||
+    //   status === "Rescheduled" ||
+    //   status === "RequestSent"
+    // ) {
+    //   setStatus("Draft");
+    // }
 
     // ADD THIS: Clear internal interviewers as well
     if (internalInterviewers.length > 0) {
@@ -1520,14 +1290,13 @@ const RoundFormInterviews = () => {
 
     // Step 6: Trigger the full submit (which calls PATCH API) after state updates
     // We use setTimeout to ensure all state changes above are applied first
-    // let c = 1;
-    setTimeout(() => {
-      handleSubmit(new Event("submit"), "changes-confirmed"); // Fake event to match handleSubmit signature
-    }, 100);
+    // setTimeout(() => {
+    handleSubmit(new Event("submit"), "changes-confirmed"); // Fake event to match handleSubmit signature
+    // }, 100);
 
-    // // Clear pending state
-    // setShowDateChangeConfirmation(false);
-    // setPendingDateChange(null);
+    // Clear pending state
+    setShowDateChangeConfirmation(false);
+    setPendingDateChange(null);
   };
 
   const handleInternalInterviewerSelect = (
@@ -1757,94 +1526,7 @@ const RoundFormInterviews = () => {
   const isInternalSelected = selectedInterviewType === "Internal";
   const isExternalSelected = selectedInterviewType === "External";
 
-  // const selectedInterviewersData = selectedInterviewers.map((interviewer) => {
-  //   // if (isInternalSelected) {
-  //   //   // For internal interviewers, access `contactId._id`
-  //   //   return interviewer; // Use optional chaining to avoid errors
-  //   // } else if (isExternalSelected) {
-  //   //   // For external interviewers, access `id` directly
-  //   //   return interviewer._id;
-  //   // }
-
-  //   return interviewer; // Fallback for unexpected cases
-  // }).filter(Boolean);
-
-  //   useEffect(() => {
-  //     if (isEditing && roundEditData) {
-  //       setAssessmentTemplate(
-  //         roundEditData.roundTitle === "Assessment" && roundEditData.assessmentId
-  //           ? {
-  //             assessmentId: roundEditData.assessmentId,
-  //             assessmentName: assessmentData.find((a) => a._id === roundEditData.assessmentId)?.AssessmentTitle || '',
-  //           }
-  //           : { assessmentId: '', assessmentName: '' }
-  //       );
-  //       setRoundTitle(roundEditData.roundTitle);
-  //       setInterviewType(roundEditData.interviewType);
-  //       setInterviewMode(roundEditData.interviewMode);
-  //       setSelectedInterviewType(roundEditData.interviewerType);
-  //       setInterviewQuestionsList(roundEditData.questions);
-  //       setStatus(roundEditData.status);
-  //       setInstructions(roundEditData.instructions || '');
-  //       setSequence(roundEditData.sequence);
-  //       setDuration(roundEditData.duration || 60);
-  //       setInterviewerGroupName(roundEditData?.interviewerGroupName ||'');
-  //       setInterviewerViewType(roundEditData?.interviewerViewType ||'');
-
-  //       if (roundEditData.interviewers && roundEditData.interviewers.length > 0) {
-  //         const normalizedInterviewers = roundEditData.interviewers.map((interviewer) => ({
-  //           _id: interviewer._id, // Directly use _id as contactId
-  //           firstName: interviewer.firstName,
-  //           lastName: interviewer.lastName,
-  //           email: interviewer.email,
-  //         }));
-
-  //         if (roundEditData.interviewerType === "Internal") {
-  //           setInternalInterviewers(normalizedInterviewers);
-  //         } else if (roundEditData.interviewerType === "External") {
-  //           setExternalInterviewers(normalizedInterviewers); // Reuse the same structure
-  //         }
-  //       }
-
-  //       if (roundEditData.roundTitle === "Assessment" && roundEditData.assessmentId) {
-  //         setAssessmentTemplate({
-  //           assessmentId: roundEditData.assessmentId,
-  //           assessmentName: assessmentData.find((a) => a._id === roundEditData.assessmentId)?.AssessmentTitle || '',
-  //         });
-
-  //         if (roundEditData?.assessmentId) {
-  //           setQuestionsLoading(true)
-  //           fetchAssessmentQuestions(roundEditData?.assessmentId).then(({ data, error }) => {
-  //             if (data) {
-  //               setQuestionsLoading(false)
-  //               setSectionQuestions(data?.sections);
-
-  //             } else {
-  //               console.error('Error fetching assessment questions:', error);
-  //               setQuestionsLoading(false)
-  //             }
-  //           });
-  //         }
-
-  //         // fetchQuestionsForAssessment(roundEditData.assessmentId);
-  //       }
-
-  //     } else {
-  //       // For new round, set the sequence to be after the last round
-  //       const maxSequence = rounds?.length > 0
-  //         ? Math.max(...rounds.map(r => r.sequence))
-  //         : 0;
-  //       setSequence(maxSequence + 1);const response = await saveInterviewRound(payload);
-
-  //     }
-  //   },
-  //   [rounds, isEditing, roundEditData, navigate, assessmentData, fetchAssessmentQuestions]
-  //   // [rounds, isEditing, roundEditData, navigate, assessmentData, fetchAssessmentQuestions]
-  // );
-
-  const location = useLocation();
-  const isReschedule = location.state?.isReschedule || false;
-
+  // handling the submit function for round form update and create round
   const handleSubmit = async (e, type) => {
     e.preventDefault();
 
@@ -1854,8 +1536,6 @@ const RoundFormInterviews = () => {
     }
 
     setIsSubmitting(true);
-
-    const successMessages = []; // To collect and show success messages sequentially
 
     try {
       // Clean interviewers data to remove undefined fields (commented as per original)
@@ -1912,8 +1592,8 @@ const RoundFormInterviews = () => {
         status: isReschedule
           ? "Rescheduled"
           : roundTitle === "Assessment"
-            ? "Scheduled"
-            : status,
+          ? "Scheduled"
+          : status,
 
         // stateisReschedule  status: roundTitle === "Assessment" ? "Scheduled" :  status,
         ...(roundTitle !== "Assessment" && {
@@ -1935,13 +1615,16 @@ const RoundFormInterviews = () => {
         // External interviewers: send their _id
         ...(selectedInterviewType === "External" &&
           formattedInterviewers.length === 0 && {
-          interviewers: [],
-          // externalInterviewers.map((i) => i._id || i.id)
-        }),
+            interviewers: [],
+            // externalInterviewers.map((i) => i._id || i.id)
+          }),
         // ✅ ADD THESE TWO LINES (VERY IMPORTANT) - KEPT EXACTLY AS REQUESTED
         selectedInterviewers, // ← backend uses this to create requests
         expiryDateTime, // ← backend uses frontend expiry
         selectedAssessmentData,
+        // ✅ ALWAYS send meeting platform
+        meetPlatform:
+          interviewMode !== "Face to Face" ? selectedMeetingPlatform : null,
       };
 
       const validationErrors = validateInterviewRoundData(roundData);
@@ -1958,23 +1641,23 @@ const RoundFormInterviews = () => {
 
       const payload = isEditing
         ? {
-          interviewId,
-          round: roundData,
-          roundId,
-          questions: interviewQuestionsList,
-        }
+            interviewId,
+            round: roundData,
+            roundId,
+            questions: interviewQuestionsList,
+          }
         : {
-          interviewId,
-          round: roundData,
-          questions:
-            interviewQuestionsList.map((q) => ({
-              questionId: q.questionId,
-              snapshot: {
-                ...q.snapshot,
-                mandatory: q.snapshot.mandatory || "false",
-              },
-            })) || [],
-        };
+            interviewId,
+            round: roundData,
+            questions:
+              interviewQuestionsList.map((q) => ({
+                questionId: q.questionId,
+                snapshot: {
+                  ...q.snapshot,
+                  mandatory: q.snapshot.mandatory || "false",
+                },
+              })) || [],
+          };
 
       console.log("payload", payload);
 
@@ -2075,9 +1758,9 @@ const RoundFormInterviews = () => {
                 userId: undefined,
                 ...(interviewType === "scheduled" &&
                   formattedStartTime && {
-                  start_time: formattedStartTime,
-                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                }),
+                    start_time: formattedStartTime,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  }),
                 settings: {
                   join_before_host: true,
                   host_video: false,
@@ -2115,8 +1798,8 @@ const RoundFormInterviews = () => {
                 payload.round.meetingId = meetingLink?.start_url
                   ? meetingLink?.start_url
                   : meetingLink;
-                payload.round.meetPlatform = selectedMeetingPlatform;
               }
+
               // payload?.round?.meetingId = meetingLink?.start_url
               //   ? meetingLink?.start_url
               //   : meetingLink
@@ -2150,8 +1833,9 @@ const RoundFormInterviews = () => {
             const usageInfo = usageCheck.usageStats || usageCheck.usage || {};
             notify.error(
               `Cannot schedule: ${usageCheck.message}. ` +
-              `Used: ${usageInfo.utilized || 0}/${usageInfo.entitled || 0
-              } interviews.`,
+                `Used: ${usageInfo.utilized || 0}/${
+                  usageInfo.entitled || 0
+                } interviews.`,
               { duration: 5000 }
             );
             setIsSubmitting(false);
@@ -2768,193 +2452,196 @@ const RoundFormInterviews = () => {
                                 ) : (
                                   <div className="space-y-4">
                                     {!sectionQuestions ||
-                                      sectionQuestions.noQuestions ? (
+                                    sectionQuestions.noQuestions ? (
                                       <div className="text-center py-4 text-gray-500">
                                         No Sections available for this
                                         Assessment
                                       </div>
                                     ) : //  <div className="space-y-4">
-                                      Object.keys(sectionQuestions).length > 0 ? (
-                                        Object.entries(sectionQuestions).map(
-                                          ([sectionId, sectionData]) => {
-                                            // Find section details from assessmentData
-                                            // const selectedAssessment = assessmentData.find(
-                                            //   a => a._id === formData.assessmentTemplate[0].assessmentId
-                                            // );
+                                    Object.keys(sectionQuestions).length > 0 ? (
+                                      Object.entries(sectionQuestions).map(
+                                        ([sectionId, sectionData]) => {
+                                          // Find section details from assessmentData
+                                          // const selectedAssessment = assessmentData.find(
+                                          //   a => a._id === formData.assessmentTemplate[0].assessmentId
+                                          // );
 
-                                            // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
+                                          // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
 
-                                            if (
-                                              !sectionData ||
-                                              !Array.isArray(
-                                                sectionData.questions
-                                              )
-                                            ) {
-                                              return (
-                                                <div
-                                                  key={sectionId}
-                                                  className="border rounded-md shadow-sm p-4"
-                                                >
-                                                  <div className="text-center py-4 text-gray-500">
-                                                    No Valid data for this section
-                                                  </div>
-                                                </div>
-                                              );
-                                            }
-
+                                          if (
+                                            !sectionData ||
+                                            !Array.isArray(
+                                              sectionData.questions
+                                            )
+                                          ) {
                                             return (
                                               <div
                                                 key={sectionId}
                                                 className="border rounded-md shadow-sm p-4"
                                               >
-                                                <button
-                                                  onClick={(e) =>
-                                                    toggleSection(sectionId, e)
-                                                  }
-                                                  className="flex justify-between items-center w-full"
-                                                >
-                                                  <span className="font-medium">
-                                                    {sectionData?.sectionName
-                                                      ? sectionData?.sectionName
+                                                <div className="text-center py-4 text-gray-500">
+                                                  No Valid data for this section
+                                                </div>
+                                              </div>
+                                            );
+                                          }
+
+                                          return (
+                                            <div
+                                              key={sectionId}
+                                              className="border rounded-md shadow-sm p-4"
+                                            >
+                                              <button
+                                                onClick={(e) =>
+                                                  toggleSection(sectionId, e)
+                                                }
+                                                className="flex justify-between items-center w-full"
+                                              >
+                                                <span className="font-medium">
+                                                  {sectionData?.sectionName
+                                                    ? sectionData?.sectionName
                                                         .charAt(0)
                                                         .toUpperCase() +
                                                       sectionData?.sectionName.slice(
                                                         1
                                                       )
-                                                      : "Unnamed Section"}
-                                                  </span>
-                                                  <ChevronUp
-                                                    className={`transform transition-transform ${expandedSections[sectionId]
+                                                    : "Unnamed Section"}
+                                                </span>
+                                                <ChevronUp
+                                                  className={`transform transition-transform ${
+                                                    expandedSections[sectionId]
                                                       ? ""
                                                       : "rotate-180"
-                                                      }`}
-                                                  />
-                                                </button>
+                                                  }`}
+                                                />
+                                              </button>
 
-                                                {expandedSections[sectionId] && (
-                                                  <div className="mt-4 space-y-3">
-                                                    {sectionData?.questions
-                                                      .length > 0 ? (
-                                                      sectionData?.questions.map(
-                                                        (question, idx) => (
+                                              {expandedSections[sectionId] && (
+                                                <div className="mt-4 space-y-3">
+                                                  {sectionData?.questions
+                                                    .length > 0 ? (
+                                                    sectionData?.questions.map(
+                                                      (question, idx) => (
+                                                        <div
+                                                          key={
+                                                            question._id || idx
+                                                          }
+                                                          className="border rounded-md shadow-sm overflow-hidden"
+                                                        >
                                                           <div
-                                                            key={
-                                                              question._id || idx
-                                                            }
-                                                            className="border rounded-md shadow-sm overflow-hidden"
-                                                          >
-                                                            <div
-                                                              onClick={() =>
-                                                                setExpandedQuestions(
-                                                                  (prev) => ({
-                                                                    ...prev,
-                                                                    [question._id]:
-                                                                      !prev[
+                                                            onClick={() =>
+                                                              setExpandedQuestions(
+                                                                (prev) => ({
+                                                                  ...prev,
+                                                                  [question._id]:
+                                                                    !prev[
                                                                       question
                                                                         ._id
-                                                                      ],
-                                                                  })
-                                                                )
-                                                              }
-                                                              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                                                            >
-                                                              <div className="flex items-center gap-2">
-                                                                <span className="font-medium text-gray-600">
-                                                                  {idx + 1}.
-                                                                </span>
-                                                                <p className="text-sm text-gray-700">
-                                                                  {question
-                                                                    .snapshot
-                                                                    ?.questionText ||
-                                                                    "No question text"}
-                                                                </p>
-                                                              </div>
-                                                              <ChevronDown
-                                                                className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
+                                                                    ],
+                                                                })
+                                                              )
+                                                            }
+                                                            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                                          >
+                                                            <div className="flex items-center gap-2">
+                                                              <span className="font-medium text-gray-600">
+                                                                {idx + 1}.
+                                                              </span>
+                                                              <p className="text-sm text-gray-700">
+                                                                {question
+                                                                  .snapshot
+                                                                  ?.questionText ||
+                                                                  "No question text"}
+                                                              </p>
+                                                            </div>
+                                                            <ChevronDown
+                                                              className={`w-5 h-5 text-gray-400 transition-transform ${
+                                                                expandedQuestions[
                                                                   question._id
                                                                 ]
                                                                   ? "transform rotate-180"
                                                                   : ""
-                                                                  }`}
-                                                              />
-                                                            </div>
+                                                              }`}
+                                                            />
+                                                          </div>
 
-                                                            {expandedQuestions[
-                                                              question._id
-                                                            ] && (
-                                                                <div className="px-4 py-3">
-                                                                  <div className="flex justify-between mb-2">
-                                                                    <div className="flex items-center gap-2">
-                                                                      <span className="text-sm font-medium text-gray-500">
-                                                                        Type:
-                                                                      </span>
-                                                                      <span className="text-sm text-gray-700">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.questionType ||
-                                                                          "Not specified"}
-                                                                      </span>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                      <span className="text-sm font-medium text-gray-500">
-                                                                        Score:
-                                                                      </span>
-                                                                      <span className="text-sm text-gray-700">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.score ||
-                                                                          "0"}
-                                                                      </span>
-                                                                    </div>
-                                                                  </div>
+                                                          {expandedQuestions[
+                                                            question._id
+                                                          ] && (
+                                                            <div className="px-4 py-3">
+                                                              <div className="flex justify-between mb-2">
+                                                                <div className="flex items-center gap-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Type:
+                                                                  </span>
+                                                                  <span className="text-sm text-gray-700">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.questionType ||
+                                                                      "Not specified"}
+                                                                  </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Score:
+                                                                  </span>
+                                                                  <span className="text-sm text-gray-700">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.score ||
+                                                                      "0"}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
 
-                                                                  {/* Display question options if MCQ */}
-                                                                  {question.snapshot
-                                                                    ?.questionType ===
-                                                                    "MCQ" && (
-                                                                      <div className="mt-2">
-                                                                        <span className="text-sm font-medium text-gray-500">
-                                                                          Options:
-                                                                        </span>
-                                                                        <div className="grid grid-cols-2 gap-2 mt-1">
-                                                                          {question.snapshot?.options?.map(
-                                                                            (
-                                                                              option,
-                                                                              optIdx
-                                                                            ) => (
-                                                                              <div
-                                                                                key={
-                                                                                  optIdx
-                                                                                }
-                                                                                //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                                className={`text-sm p-2 rounded border ${option ===
-                                                                                  question
-                                                                                    .snapshot
-                                                                                    .correctAnswer
-                                                                                  ? "bg-green-50 border-green-200 text-green-800"
-                                                                                  : "bg-gray-50 border-gray-200"
-                                                                                  }`}
-                                                                              >
-                                                                                {
-                                                                                  option
-                                                                                }
-                                                                                {option ===
-                                                                                  question
-                                                                                    .snapshot
-                                                                                    .correctAnswer && (
-                                                                                    <span className="ml-2 text-green-600">
-                                                                                      ✓
-                                                                                    </span>
-                                                                                  )}
-                                                                              </div>
-                                                                            )
+                                                              {/* Display question options if MCQ */}
+                                                              {question.snapshot
+                                                                ?.questionType ===
+                                                                "MCQ" && (
+                                                                <div className="mt-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Options:
+                                                                  </span>
+                                                                  <div className="grid grid-cols-2 gap-2 mt-1">
+                                                                    {question.snapshot?.options?.map(
+                                                                      (
+                                                                        option,
+                                                                        optIdx
+                                                                      ) => (
+                                                                        <div
+                                                                          key={
+                                                                            optIdx
+                                                                          }
+                                                                          //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                          className={`text-sm p-2 rounded border ${
+                                                                            option ===
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer
+                                                                              ? "bg-green-50 border-green-200 text-green-800"
+                                                                              : "bg-gray-50 border-gray-200"
+                                                                          }`}
+                                                                        >
+                                                                          {
+                                                                            option
+                                                                          }
+                                                                          {option ===
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer && (
+                                                                            <span className="ml-2 text-green-600">
+                                                                              ✓
+                                                                            </span>
                                                                           )}
                                                                         </div>
-                                                                      </div>
+                                                                      )
                                                                     )}
+                                                                  </div>
+                                                                </div>
+                                                              )}
 
-                                                                  {/* Display correct answer */}
-                                                                  {/* <div className="mt-2">
+                                                              {/* Display correct answer */}
+                                                              {/* <div className="mt-2">
                                                                                               <span className="text-sm font-medium text-gray-500">
                                                                                                 Correct Answer:
                                                                                               </span>
@@ -2963,52 +2650,52 @@ const RoundFormInterviews = () => {
                                                                                               </div>
                                                                                             </div> */}
 
-                                                                  {/* Additional question metadata */}
-                                                                  <div className="grid grid-cols-2 gap-4 mt-3">
-                                                                    <div>
-                                                                      <span className="text-xs font-medium text-gray-500">
-                                                                        Difficulty:
-                                                                      </span>
-                                                                      <span className="text-xs text-gray-700 ml-1">
-                                                                        {question
-                                                                          .snapshot
-                                                                          ?.difficultyLevel ||
-                                                                          "Not specified"}
-                                                                      </span>
-                                                                    </div>
-                                                                    <div>
-                                                                      <span className="text-xs font-medium text-gray-500">
-                                                                        Skills:
-                                                                      </span>
-                                                                      <span className="text-xs text-gray-700 ml-1">
-                                                                        {question.snapshot?.skill?.join(
-                                                                          ", "
-                                                                        ) || "None"}
-                                                                      </span>
-                                                                    </div>
-                                                                  </div>
+                                                              {/* Additional question metadata */}
+                                                              <div className="grid grid-cols-2 gap-4 mt-3">
+                                                                <div>
+                                                                  <span className="text-xs font-medium text-gray-500">
+                                                                    Difficulty:
+                                                                  </span>
+                                                                  <span className="text-xs text-gray-700 ml-1">
+                                                                    {question
+                                                                      .snapshot
+                                                                      ?.difficultyLevel ||
+                                                                      "Not specified"}
+                                                                  </span>
                                                                 </div>
-                                                              )}
-                                                          </div>
-                                                        )
+                                                                <div>
+                                                                  <span className="text-xs font-medium text-gray-500">
+                                                                    Skills:
+                                                                  </span>
+                                                                  <span className="text-xs text-gray-700 ml-1">
+                                                                    {question.snapshot?.skill?.join(
+                                                                      ", "
+                                                                    ) || "None"}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                        </div>
                                                       )
-                                                    ) : (
-                                                      <div className="text-center py-4 text-gray-500">
-                                                        No Questions found in this
-                                                        section
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                )}
-                                              </div>
-                                            );
-                                          }
-                                        )
-                                      ) : (
-                                        <div className="text-center py-4 text-gray-500">
-                                          No Assessment data available
-                                        </div>
-                                      )}
+                                                    )
+                                                  ) : (
+                                                    <div className="text-center py-4 text-gray-500">
+                                                      No Questions found in this
+                                                      section
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        }
+                                      )
+                                    ) : (
+                                      <div className="text-center py-4 text-gray-500">
+                                        No Assessment data available
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -3030,24 +2717,27 @@ const RoundFormInterviews = () => {
                             type="button"
                             // onClick={() => setInterviewType("instant")}
                             onClick={() => handleInterviewTypeChange("instant")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "instant"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                             key="instant-btn"
-                          // disabled={status === "RequestSent"}
+                            // disabled={status === "RequestSent"}
                           >
                             <Clock
-                              className={`h-6 w-6 ${interviewType === "instant"
-                                ? "text-custom-blue/70"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue/70"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "instant"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Instant Interview
                             </span>
@@ -3062,24 +2752,27 @@ const RoundFormInterviews = () => {
                               handleInterviewTypeChange("scheduled")
                             } // Use new handler
                             // onClick={() => setInterviewType("scheduled")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "scheduled"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                             // disabled={status === "RequestSent"}
                             key="scheduled-btn"
                           >
                             <Calendar
-                              className={`h-6 w-6 ${interviewType === "scheduled"
-                                ? "text-custom-blue/70"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue/70"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "scheduled"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Schedule for Later
                             </span>
@@ -3234,16 +2927,16 @@ const RoundFormInterviews = () => {
                                 // - Editing/rescheduling and original type was External
                                 // - Or currently External is selected (in create mode)
                                 (isEditing || isReschedule) &&
-                                  roundEditData?.interviewerType === "External"
+                                roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : ""
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
                               }
                               disabled={
                                 ((isEditing || isReschedule) &&
                                   roundEditData?.interviewerType ===
-                                  "External") ||
+                                    "External") ||
                                 isExternalSelected ||
                                 status === "RequestSent"
                               }
@@ -3255,11 +2948,11 @@ const RoundFormInterviews = () => {
                               // }
                               title={
                                 (isEditing || isReschedule) &&
-                                  roundEditData?.interviewerType === "External"
+                                roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
                                   : isExternalSelected
-                                    ? "Clear outsourced interviewers first"
-                                    : ""
+                                  ? "Clear outsourced interviewers first"
+                                  : ""
                               }
                             >
                               <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
@@ -3276,21 +2969,22 @@ const RoundFormInterviews = () => {
                               size="sm"
                               className={
                                 (isEditing || isReschedule) &&
-                                  roundEditData?.interviewerType === "External"
+                                roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : ""
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
                               }
                               disabled={
                                 ((isEditing || isReschedule) &&
                                   roundEditData?.interviewerType ===
-                                  "External") ||
+                                    "External") ||
                                 isInternalSelected ||
                                 interviewMode === "Face to Face" ||
-                                status === "RequestSent" ||
-                                status === "Scheduled" ||
-                                status === "Rescheduled"
+                                // status === "RequestSent" ||
+                                // status === "Scheduled" ||
+                                // status === "Rescheduled"
+                                shouldDisable("internalInterviewersBtn")
                               }
                               // disabled={
                               //   ((isEditing || isReschedule) &&
@@ -3300,11 +2994,11 @@ const RoundFormInterviews = () => {
                               // }
                               title={
                                 (isEditing || isReschedule) &&
-                                  roundEditData?.interviewerType === "External"
+                                roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
                                   : isExternalSelected
-                                    ? "Clear outsourced interviewers first"
-                                    : ""
+                                  ? "Clear outsourced interviewers first"
+                                  : ""
                               }
                             >
                               <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
@@ -3323,33 +3017,35 @@ const RoundFormInterviews = () => {
                             size="sm"
                             className={
                               (isEditing || isReschedule) &&
-                                roundEditData?.interviewerType === "Internal"
+                              roundEditData?.interviewerType === "Internal"
                                 ? "opacity-50 cursor-not-allowed"
                                 : isInternalSelected ||
                                   interviewMode === "Face to Face"
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
                             }
                             disabled={
                               ((isEditing || isReschedule) &&
                                 roundEditData?.interviewerType ===
-                                "Internal") ||
+                                  "Internal") ||
                               isInternalSelected ||
                               interviewMode === "Face to Face" ||
-                              status === "RequestSent" ||
-                              status === "Rescheduled" ||
-                              (status === "Scheduled" &&
-                                internalInterviewers.length > 0)
+                              shouldDisable("externalInterviewersBtn")
+                              // status === "RequestSent" ||
+                              // status === "Rescheduled" ||
+                              // // (
+                              // status === "Scheduled"
+                              // && internalInterviewers.length > 0)
                             }
                             title={
                               (isEditing || isReschedule) &&
-                                roundEditData?.interviewerType === "Internal"
+                              roundEditData?.interviewerType === "Internal"
                                 ? "Cannot change from Internal to Outsourced interviewers in edit/reschedule"
                                 : isInternalSelected
-                                  ? "Clear internal interviewers first"
-                                  : interviewMode === "Face to Face"
-                                    ? "Outsourced interviewers not allowed for Face-to-Face"
-                                    : ""
+                                ? "Clear internal interviewers first"
+                                : interviewMode === "Face to Face"
+                                ? "Outsourced interviewers not allowed for Face-to-Face"
+                                : ""
                             }
                           >
                             <Users className="h-4 w-4 sm:mr-0 mr-1 text-orange-600" />
@@ -3428,14 +3124,16 @@ const RoundFormInterviews = () => {
                                   type="button"
                                   onClick={handleClearAllInterviewers}
                                   disabled={
-                                    status === "RequestSent" ||
-                                    status === "Scheduled" ||
-                                    status === "ReScheduled"
+                                    shouldDisable("clearInterviewersBtn")
+                                    // status === "RequestSent" ||
+                                    // status === "Scheduled" ||
+                                    // status === "ReScheduled"
                                   }
                                   title={
-                                    status === "RequestSent"
-                                      ? "Cannot clear interviewers after request is sent"
-                                      : "Clear All"
+                                    // status === "RequestSent"
+                                    //   ? "Cannot clear interviewers after request is sent"
+                                    //   :
+                                    "Clear All"
                                   }
                                   className="text-sm text-red-600 hover:text-red-800 flex items-center"
                                 >
@@ -3452,7 +3150,7 @@ const RoundFormInterviews = () => {
                               <section className="mb-4 mt-2 w-full">
                                 <h4 className="text-sm font-semibold text-gray-600 mb-3">
                                   {interviewerViewType === "groups" ||
-                                    interviewerGroupId
+                                  interviewerGroupId
                                     ? "Interviewer Groups "
                                     : "Internal Interviewers "}
                                   <span className="text-xs text-custom-blue">
@@ -3493,20 +3191,20 @@ const RoundFormInterviews = () => {
                                         <ul className="list-disc list-inside text-xs text-blue-800 ml-1">
                                           {/* Check if we have a group with usersNames */}
                                           {interviewerGroupId &&
-                                            selectedInterviewers[0]?.usersNames
+                                          selectedInterviewers[0]?.usersNames
                                             ? // Render group members from usersNames
-                                            selectedInterviewers[0].usersNames.map(
-                                              (name, i) => (
-                                                <li
-                                                  key={`${selectedInterviewers[0]._id}-user-${i}`}
-                                                >
-                                                  {name}
-                                                </li>
+                                              selectedInterviewers[0].usersNames.map(
+                                                (name, i) => (
+                                                  <li
+                                                    key={`${selectedInterviewers[0]._id}-user-${i}`}
+                                                  >
+                                                    {name}
+                                                  </li>
+                                                )
                                               )
-                                            )
                                             : interviewerGroupId &&
                                               selectedInterviewers[0]?.userIds
-                                              ? // Fallback: if we have group but no usersNames, show placeholder
+                                            ? // Fallback: if we have group but no usersNames, show placeholder
                                               selectedInterviewers[0].userIds.map(
                                                 (userId, i) => (
                                                   <li
@@ -3516,16 +3214,18 @@ const RoundFormInterviews = () => {
                                                   </li>
                                                 )
                                               )
-                                              : // Render individual interviewers
+                                            : // Render individual interviewers
                                               selectedInterviewers.map(
                                                 (interviewer, index) => (
                                                   <li
                                                     key={`${interviewer._id}-${index}`}
                                                   >
-                                                    {`${interviewer.firstName ||
+                                                    {`${
+                                                      interviewer.firstName ||
                                                       ""
-                                                      } ${interviewer.lastName || ""
-                                                      }`.trim() ||
+                                                    } ${
+                                                      interviewer.lastName || ""
+                                                    }`.trim() ||
                                                       interviewer.email}
                                                   </li>
                                                 )
@@ -3546,9 +3246,11 @@ const RoundFormInterviews = () => {
                                           <div className="flex items-center">
                                             <User className="h-4 w-4 text-blue-600 mr-2" />
                                             <span className="text-sm font-medium text-blue-900 truncate">
-                                              {`${interviewer?.firstName || ""
-                                                } ${interviewer?.lastName || ""
-                                                }`.trim() || interviewer?.email}
+                                              {`${
+                                                interviewer?.firstName || ""
+                                              } ${
+                                                interviewer?.lastName || ""
+                                              }`.trim() || interviewer?.email}
                                             </span>
                                           </div>
                                           <button
@@ -3561,15 +3263,22 @@ const RoundFormInterviews = () => {
                                             // disabled={status === "RequestSent"}
                                             disabled={
                                               // status === "RequestSent" ||
-                                              status === "Scheduled" ||
-                                              status === "ReScheduled"
+                                              // status === "Scheduled" ||
+                                              // status === "ReScheduled"
+                                              shouldDisable(
+                                                "removeInterviewerBtn"
+                                              )
                                             }
-                                            className={`text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100 ${status === "RequestSent" ||
-                                              status === "Scheduled" ||
-                                              status === "ReScheduled"
-                                              ? "opacity-50 cursor-not-allowed"
-                                              : ""
-                                              }`}
+                                            className={`text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100 ${
+                                              // status === "RequestSent" ||
+                                              // status === "Scheduled" ||
+                                              // status === "ReScheduled"
+                                              shouldDisable(
+                                                "removeInterviewerBtn"
+                                              )
+                                                ? "opacity-50 cursor-not-allowed"
+                                                : ""
+                                            }`}
                                             // className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
                                             title="Remove interviewer"
                                           >
@@ -3615,7 +3324,7 @@ const RoundFormInterviews = () => {
                                       key={interviewer._id || interviewer?.id}
                                       className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 p-3 shadow-sm hover:shadow-md transition-shadow duration-200 min-w-0"
 
-                                    // className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
+                                      // className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
                                     >
                                       <div className="flex items-center min-w-0 flex-1">
                                         <span className="ml-2 text-sm text-orange-800 truncate">
@@ -3636,24 +3345,25 @@ const RoundFormInterviews = () => {
                                             interviewer.id || interviewer._id
                                           )
                                         }
-                                        className={`text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100 ${status === "RequestSent" ||
-                                          status === "Scheduled" ||
-                                          status === "ReScheduled"
-                                          ? "opacity-50 cursor-not-allowed"
-                                          : ""
-                                          }`}
+                                        className={`text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100 ${
+                                          shouldDisable("removeInterviewerBtn")
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : ""
+                                        }`}
                                         title={
-                                          status === "RequestSent"
-                                            ? "Cannot remove interviewers after request is sent"
-                                            : "Remove interviewer"
+                                          // status === "RequestSent"
+                                          //   ? "Cannot remove interviewers after request is sent"
+                                          //   :
+                                          "Remove interviewer"
                                         }
                                         disabled={
-                                          status === "RequestSent" ||
-                                          status === "Scheduled" ||
-                                          status === "ReScheduled"
+                                          shouldDisable("removeInterviewerBtn")
+                                          // status === "RequestSent" ||
+                                          // status === "Scheduled" ||
+                                          // status === "ReScheduled"
                                         }
-                                      // className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
-                                      // title="Remove interviewer"
+                                        // className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
+                                        // title="Remove interviewer"
                                       >
                                         <X className="h-4 w-4" />
                                       </button>
@@ -3697,10 +3407,11 @@ const RoundFormInterviews = () => {
                                     return (
                                       <li
                                         key={qIndex}
-                                        className={`flex justify-between items-center p-3 border rounded-md ${isMandatory
-                                          ? "border-red-500"
-                                          : "border-gray-300"
-                                          }`}
+                                        className={`flex justify-between items-center p-3 border rounded-md ${
+                                          isMandatory
+                                            ? "border-red-500"
+                                            : "border-gray-300"
+                                        }`}
                                       >
                                         <span className="text-gray-900 font-medium">
                                           {qIndex + 1}.{" "}
@@ -3819,10 +3530,10 @@ const RoundFormInterviews = () => {
                         isMeetingCreationLoading
                           ? meetingCreationProgress || "Creating meeting..."
                           : isSubmitting
-                            ? "Submitting..."
-                            : isEditing
-                              ? "Updating..."
-                              : "Saving..."
+                          ? "Submitting..."
+                          : isEditing
+                          ? "Updating..."
+                          : "Saving..."
                       }
                       disabled={isSubmitting}
                     >
@@ -3870,84 +3581,25 @@ const RoundFormInterviews = () => {
           // defaultViewType={interviewerViewType}
           selectedGroupName={interviewerGroupName}
           selectedGroupId={interviewerGroupId}
-        // key={`${internalInterviewers.length}-${interviewerGroupId}`}
-        //  clearOnViewTypeChange={true}
+          // key={`${internalInterviewers.length}-${interviewerGroupId}`}
+          //  clearOnViewTypeChange={true}
         />
       )}
 
-      {/* {showDateChangeConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Confirm Change
-            </h3>
-            <p className="text-gray-700 mb-6">
-              Interview requests have already been sent. Changing the date,
-              time, or type will cancel those requests and you’ll need to select
-              interviewers again. Continue?
-            </p>
-
-            <div className="flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowDateChangeConfirmation(false);
-                  setPendingDateChange(null);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDateChange}
-                // onClick={() => {
-                //   if (pendingDateChange) {
-                //     if (pendingDateChange.type === "interviewType") {
-                //       setInterviewType(pendingDateChange.value);
-                //     } else if (pendingDateChange.type === "scheduledDate") {
-                //       setScheduledDate(pendingDateChange.value);
-                //     }
-                //   }
-
-                //   // Clear external interviewers
-                //   setExternalInterviewers([]);
-                //   if (selectedInterviewType === "External") {
-                //     setSelectedInterviewType(null);
-                //   }
-
-                //   // If status was RequestSent, change it back to Draft
-                //   if (status === "RequestSent") {
-                //     setStatus("Draft");
-                //   }
-
-                //   setShowDateChangeConfirmation(false);
-                //   setPendingDateChange(null);
-                // }}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-              >
-                {status === "RequestSent"
-                  ? "Proceed & Clear Invitations"
-                  : "Proceed & Clear Interviewers"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
-
-      {showDateChangeConfirmation && (
-        <DateChangeConfirmationModal
-          isOpen={showDateChangeConfirmation}
-          onClose={() => {
-            setShowDateChangeConfirmation(false);
-            setPendingDateChange(null);
-          }}
-          onConfirm={handleConfirmDateChange}
-          selectedInterviewType={selectedInterviewType}
-          status={status}
-          combinedDateTime={combinedDateTime} // your formatted date string
-        />
-      )}
+      {showDateChangeConfirmation &&
+        shouldDisable("dateChangeConfirmation") && (
+          <DateChangeConfirmationModal
+            isOpen={showDateChangeConfirmation}
+            onClose={() => {
+              setShowDateChangeConfirmation(false);
+              setPendingDateChange(null);
+            }}
+            onConfirm={handleConfirmDateChange}
+            selectedInterviewType={selectedInterviewType}
+            status={status}
+            combinedDateTime={combinedDateTime} // your formatted date string
+          />
+        )}
     </div>
   );
 };
