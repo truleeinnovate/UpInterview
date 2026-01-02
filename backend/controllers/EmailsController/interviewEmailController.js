@@ -4,10 +4,10 @@ const CryptoJS = require("crypto-js");
 const { Interview } = require("../../models/Interview/Interview.js");
 const {
   MockInterview,
-} = require("../../models/MockInterview/MockInterview.js");
+} = require("../../models/Mockinterview/mockinterview.js");
 const {
   MockInterviewRound,
-} = require("../../models/MockInterview/mockinterviewRound.js");
+} = require("../../models/Mockinterview/mockinterviewRound.js");
 const {
   InterviewRounds,
 } = require("../../models/Interview/InterviewRounds.js");

@@ -25,8 +25,8 @@ const {
 const {
   WALLET_BUSINESS_TYPES,
   createWalletTransaction,
+  applySelectionTimeWalletHoldForOutsourcedRound,
 } = require("../utils/interviewWalletUtil");
-const { getTaxConfigForTenant, computeBaseGstGross } = require("../utils/taxConfigUtil");
 
 //--------------------------------------- Main controllers -------------------------------------------
 
@@ -131,92 +131,18 @@ const saveInterviewRound = async (req, res) => {
 
 
     // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (SELECTION TIME) ========================
-    // Option A: use maxHourlyRate from frontend as the full hold amount (no duration multiplier)
-    // and include GST based on RegionalTaxConfig so that the organization is charged
-    // `maxHourlyRate + GST` at selection time.
-    try {
-      const isExternalRound =
-        round?.interviewerType === "External" &&
-        savedRound.roundTitle !== "Assessment" &&
-        savedRound.interviewMode !== "Face to Face";
+    // Delegate to helper so this controller stays clean and focused.
+    const walletHoldResponse = await applySelectionTimeWalletHoldForOutsourcedRound({
+      req,
+      res,
+      interview,
+      round,
+      savedRound,
+    });
 
-      const selectedInterviewersPayload = Array.isArray(
-        req.body?.round?.selectedInterviewers
-      )
-        ? req.body.round.selectedInterviewers
-        : [];
-
-      const maxHourlyRateFromFrontend = Number(round?.maxHourlyRate || 0);
-
-      if (
-        isExternalRound &&
-        selectedInterviewersPayload.length > 0 &&
-        maxHourlyRateFromFrontend > 0
-      ) {
-        const orgWallet = await Wallet.findOne({ ownerId: interview.ownerId });
-        if (!orgWallet) {
-          return res.status(400).json({
-            status: "error",
-            message:
-              "No wallet found for this organization. Please set up a wallet before scheduling outsourced interviews.",
-          });
-        }
-        // Derive GST rate from shared tax config helper using the wallet's tenant
-        const orgTenantId = orgWallet.tenantId || interview?.tenantId || "";
-        const { gstRate } = await getTaxConfigForTenant({ tenantId: orgTenantId });
-
-        // Compute selection-time gross amount = base + GST using shared helper
-        const {
-          baseAmount: selectionBaseAmount,
-          gstAmount: selectionGstAmount,
-          grossAmount: selectionGrossAmount,
-        } = computeBaseGstGross(maxHourlyRateFromFrontend, gstRate);
-
-        const walletBalance = Number(orgWallet.balance || 0);
-        const availableBalance = walletBalance;
-
-        if (availableBalance < selectionGrossAmount) {
-          const requiredTopupAmount = Math.max(
-            0,
-            Math.round((selectionGrossAmount - availableBalance) * 100) / 100
-          );
-
-          return res.status(400).json({
-            status: "error",
-            message:
-              "Insufficient available wallet balance to send outsourced interview requests. Please add funds to your wallet.",
-            requiredTopupAmount,
-            requiredHoldAmount: selectionGrossAmount,
-            availableBalance,
-          });
-        }
-
-        // Create a selection-time HOLD for the highest hourly rate among all outsourced interviewers.
-        await createWalletTransaction({
-          ownerId: interview.ownerId,
-          businessType: WALLET_BUSINESS_TYPES.HOLD_CREATE,
-          amount: selectionBaseAmount,
-          gstAmount: selectionGstAmount,
-          description: `Selection-time hold for outsourced interview round ${savedRound.roundTitle}`,
-          relatedInvoiceId: savedRound._id.toString(),
-          metadata: {
-            interviewId: String(interview._id),
-            roundId: String(savedRound._id),
-            source: "selection_hold",
-          },
-        });
-      }
-    } catch (walletError) {
-      console.error(
-        "[INTERVIEW] Error applying selection-time wallet hold:",
-        walletError
-      );
-      return res.status(400).json({
-        status: "error",
-        message:
-          walletError.message ||
-          "Failed to apply wallet hold for outsourced interview selection.",
-      });
+    if (walletHoldResponse) {
+      // Helper already sent a response (e.g. error); stop further processing.
+      return walletHoldResponse;
     }
 
 

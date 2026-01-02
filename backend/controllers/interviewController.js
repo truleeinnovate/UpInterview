@@ -36,7 +36,7 @@ const {
 } = require("./PushNotificationControllers/pushNotificationInterviewController");
 const {
   MockInterviewRound,
-} = require("../models/MockInterview/mockinterviewRound.js");
+} = require("../models/Mockinterview/mockinterviewRound.js");
 const {
   createCandidatePositionService,
 } = require("./candidatePositionController.js");
