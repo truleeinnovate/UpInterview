@@ -383,6 +383,68 @@ const updateInterviewRound = async (req, res) => {
     return res.status(404).json({ message: "Round not found." });
   }
 
+
+  // === NEW: EARLY SAFE UPDATE PATH ===
+  const incomingRound = round || {};
+  const onlySafeFields = Object.keys(incomingRound).every(key =>
+    ["instructions", "sequence"].includes(key)
+  );
+
+  const hasQuestionsUpdate = questions &&
+    JSON.stringify(questions) !== JSON.stringify(existingRound.questions || []);
+
+  if (onlySafeFields || hasQuestionsUpdate) {
+    console.log("Safe update: only instructions, sequence, or questions");
+
+    const updateOps = { $set: {}, $push: { history: [] } };
+
+    if (incomingRound.instructions !== undefined && incomingRound.instructions !== existingRound.instructions) {
+      updateOps.$set.instructions = incomingRound.instructions;
+      updateOps.$push.history.push({
+        action: "Updated",
+        field: "instructions",
+        updatedAt: new Date(),
+        createdBy: actingAsUserId,
+      });
+    }
+
+    if (incomingRound.sequence !== undefined && incomingRound.sequence !== existingRound.sequence) {
+      updateOps.$set.sequence = incomingRound.sequence;
+      updateOps.$push.history.push({
+        action: "Updated",
+        field: "sequence",
+        updatedAt: new Date(),
+        createdBy: actingAsUserId,
+      });
+    }
+
+    // Handle questions update
+    if (hasQuestionsUpdate) {
+      await handleInterviewQuestions(interviewId, roundId, questions);
+    }
+
+    // Apply round field updates if any
+    if (Object.keys(updateOps.$set).length > 0) {
+      const updatedRound = await InterviewRounds.findByIdAndUpdate(
+        roundId,
+        updateOps,
+        { new: true }
+      );
+
+      return res.status(200).json({
+        message: "Round updated (instructions/sequence only)",
+        status: "ok",
+        updatedRound,
+      });
+    }
+
+    // If only questions were updated
+    return res.status(200).json({
+      message: "Questions updated successfully",
+      status: "ok",
+    });
+  }
+
   const hasAccepted = await InterviewRequest.exists({
     roundId: existingRound._id,
     status: "accepted",
@@ -426,41 +488,6 @@ const updateInterviewRound = async (req, res) => {
   const isInternal = req.body.round?.interviewerType === "Internal";
   const isOutsource = req.body.round?.interviewerType !== "Internal";
 
-  // === OUTSOURCE RESCHEDULING: Cancel old requests, keep RequestSent ===
-  // if (
-  //   isOutsource &&
-  //   changes.dateTimeChanged
-  // ) {
-
-  //   if (existingRound.status === "RequestSent") {
-  //   await InterviewRequest.updateMany(
-  //     { roundId: existingRound._id, status: "inprogress" },
-  //     { status: "withdrawn", respondedAt: new Date() }
-  //   );
-
-  //   updatePayload.$set.status = "RequestSent";
-
-  //   // Safely check and add Rescheduled history
-  //   const hasRescheduled = updatePayload.$push.history.some(
-  //     (h) => h.action === "Rescheduled"
-  //   );
-  //   if (!hasRescheduled) {
-  //     updatePayload.$push.history.push({
-  //       action: "Rescheduled",
-  //       scheduledAt: req.body.round.dateTime,
-  //       updatedAt: new Date(),
-  //       createdBy: actingAsUserId,
-  //       reasonCode: req.body.round.currentActionReason || "time_changed",
-  //       comment: req.body.round.comments || null,
-  //     });
-  //   }
-  // }
-
-  // if (existingRound.status === "Scheduled") {
-  // }
-
-  // console.log("isOutsource", isOutsource);
-
   // ranjith added this for outsource interviwers or internal interviewers
   const hasInterviewers =
     req.body.round?.interviewerType === "Internal"
@@ -474,18 +501,6 @@ const updateInterviewRound = async (req, res) => {
       : // ||
       // req.body.round?.interviewers.length > 0
       false;
-  // req.body.round?.selectedInterviewers.length > 0
-
-  // console.log(
-  //   "req.body.round?.selectedInterviewers",
-  //   req.body.round?.selectedInterviewers
-  // );
-
-  // console.log(
-  //   "req.body.round?.selectedInterviewers",
-  //   req.body.round?.selectedInterviewers
-  // );
-
   const statusAllowsQuestionUpdate = [
     "Draft",
     "RequestSent",
@@ -502,28 +517,28 @@ const updateInterviewRound = async (req, res) => {
   // console.log("questionsChanged", changes?.questionsChanged);
   // console.log("instructionsChanged", changes.instructionsChanged);
 
-  const shouldUpdateQuestionsOrInstructions =
-    statusAllowsQuestionUpdate &&
-    // changes?.interviewersChanged &&
-    (changes.questionsChanged || changes.instructionsChanged);
-  console.log(
-    "shouldUpdateQuestionsOrInstructions",
-    shouldUpdateQuestionsOrInstructions
-  );
+  // const shouldUpdateQuestionsOrInstructions =
+  //   statusAllowsQuestionUpdate &&
+  //   // changes?.interviewersChanged &&
+  //   (changes.questionsChanged || changes.instructionsChanged);
+  // console.log(
+  //   "shouldUpdateQuestionsOrInstructions",
+  //   shouldUpdateQuestionsOrInstructions
+  // );
 
-  if (shouldUpdateQuestionsOrInstructions) {
-    console.log("Updating only questions or instructions");
+  // if (shouldUpdateQuestionsOrInstructions) {
+  //   console.log("Updating only questions or instructions");
 
-    await handleInterviewQuestions(interviewId, roundId, req.body.questions);
-  } else if (changes.instructionsChanged) {
-    updatePayload.$set.instructions = req.body.round.instructions;
+  //   await handleInterviewQuestions(interviewId, roundId, req.body.questions);
+  // } else if (changes.instructionsChanged) {
+  //   updatePayload.$set.instructions = req.body.round.instructions;
 
-    updatedRound = await InterviewRounds.findByIdAndUpdate(
-      roundId,
-      updatePayload,
-      { new: true, runValidators: true }
-    );
-  } else {
+  //   updatedRound = await InterviewRounds.findByIdAndUpdate(
+  //     roundId,
+  //     updatePayload,
+  //     { new: true, runValidators: true }
+  //   );
+  // } else {
     let shouldcreateRequestFlow = false;
     // ==================================================================
     // OUTSOURCE LOGIC (mirroring Internal style)
@@ -834,7 +849,6 @@ const updateInterviewRound = async (req, res) => {
       //   { new: true }
       // );
     }
-  }
 
   return res.status(200).json({
     message: "Round updated successfully",
