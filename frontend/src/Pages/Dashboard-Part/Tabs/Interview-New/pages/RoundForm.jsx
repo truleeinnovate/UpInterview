@@ -474,13 +474,37 @@ const RoundFormInterviews = () => {
     );
   };
 
+  // const handleRemoveQuestion = (questionId, e) => {
+  //   e?.preventDefault(); // Prevent default behavior if event is provided
+  //   e?.stopPropagation(); // Stop event bubbling if event is provided
+
+  //   console.log("Removing question with ID:", questionId);
+
+  //   setInterviewQuestionsList((prev) =>
+  //     prev.filter(
+  //       (question) =>
+  //         question.questionId || question._id || question.id !== questionId
+  //     )
+  //   );
+  //   setRemovedQuestionIds((prev) => [...prev, questionId]);
+  // };
+
   const handleRemoveQuestion = (questionId, e) => {
-    e?.preventDefault(); // Prevent default behavior if event is provided
-    e?.stopPropagation(); // Stop event bubbling if event is provided
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    console.log("Removing question with ID:", questionId);
 
     setInterviewQuestionsList((prev) =>
-      prev.filter((question) => question.questionId !== questionId)
+      prev.filter((question) => {
+        // Match against all possible ID fields
+        const id = question.questionId || question._id || question.id;
+        // ||
+        // question.snapshot?._id;
+        return id !== questionId;
+      })
     );
+
     setRemovedQuestionIds((prev) => [...prev, questionId]);
   };
 
@@ -2113,7 +2137,7 @@ const RoundFormInterviews = () => {
           `${
             backendMessage ||
             "Insufficient available wallet balance to send outsourced interview requests."
-          } Please add at least ₹${numericTopup.toFixed(2)} to your wallet.`,
+          } Please add at least ₹${numericTopup.toFixed(2)} to your wallet.`
         );
       } else if (backendMessage) {
         notify.error(backendMessage);
@@ -2260,6 +2284,7 @@ const RoundFormInterviews = () => {
     //   await fetchQuestionsForAssessment(assessmentTemplate.assessmentId);
     // }
   };
+  console.log("interviewQuestionsList", interviewQuestionsList);
 
   return (
     <div className="h-[calc(100vh-4rem)] mt-2 overflow-y-auto bg-gray-50">
@@ -3530,7 +3555,9 @@ const RoundFormInterviews = () => {
                                         <button
                                           onClick={(e) =>
                                             handleRemoveQuestion(
-                                              question.questionId,
+                                              question.questionId ||
+                                                question.id ||
+                                                question._id,
                                               e
                                             )
                                           }

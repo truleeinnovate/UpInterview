@@ -388,11 +388,16 @@ const updateInterviewRound = async (req, res) => {
     status: "accepted",
   });
 
-  const changes = detectRoundChanges({
+  const changes = await detectRoundChanges({
     existingRound,
-    incomingRound: req?.body?.round,
+    incomingRound: {
+      ...req?.body?.round,
+      questions: questions || [],
+    },
     selectedInterviewers: req?.body?.round?.selectedInterviewers || [],
   });
+
+  console.log("changesDone", changes);
 
   if (!changes.anyChange) {
     return res.status(200).json({
@@ -471,10 +476,10 @@ const updateInterviewRound = async (req, res) => {
       false;
   // req.body.round?.selectedInterviewers.length > 0
 
-  console.log(
-    "req.body.round?.selectedInterviewers",
-    req.body.round?.selectedInterviewers
-  );
+  // console.log(
+  //   "req.body.round?.selectedInterviewers",
+  //   req.body.round?.selectedInterviewers
+  // );
 
   // console.log(
   //   "req.body.round?.selectedInterviewers",
@@ -491,16 +496,20 @@ const updateInterviewRound = async (req, res) => {
   const interviewersUnchanged = !changes.dateTimeChanged;
   // && !hasselectedInterviewers && !hasInterviewers;
 
-  console.log("statusAllowsQuestionUpdate", statusAllowsQuestionUpdate);
-  console.log("interviewersUnchanged", interviewersUnchanged);
-  console.log("changes", changes);
-  console.log("questionsChanged", changes?.questionsChanged);
-  console.log("instructionsChanged", changes.instructionsChanged);
+  // console.log("statusAllowsQuestionUpdate", statusAllowsQuestionUpdate);
+  // console.log("interviewersUnchanged", interviewersUnchanged);
+
+  // console.log("questionsChanged", changes?.questionsChanged);
+  // console.log("instructionsChanged", changes.instructionsChanged);
 
   const shouldUpdateQuestionsOrInstructions =
     statusAllowsQuestionUpdate &&
-    interviewersUnchanged &&
+    // changes?.interviewersChanged &&
     (changes.questionsChanged || changes.instructionsChanged);
+  console.log(
+    "shouldUpdateQuestionsOrInstructions",
+    shouldUpdateQuestionsOrInstructions
+  );
 
   if (shouldUpdateQuestionsOrInstructions) {
     console.log("Updating only questions or instructions");
@@ -598,78 +607,7 @@ const updateInterviewRound = async (req, res) => {
           }
         }
       }
-
-      // console.log("updatePayload", updatePayload);
-
-      // 4. Rescheduling (date/time changed while RequestSent or Scheduled)
-      // if (
-      //   // changes.dateTimeChanged &&
-      //   // (wasRequestSentBefore || wasScheduledBefore)
-      //   //  &&
-      //   willSendRequests // ranjith added this condition
-      // ) {
-      //   // PROTECT: If already accepted, block date change
-      //   const hasAccepted = await InterviewRequest.exists({
-      //     roundId: existingRound._id,
-      //     status: "accepted",
-      //   });
-
-      //   if (hasAccepted) {
-      //     return res.status(400).json({
-      //       message:
-      //         "Cannot reschedule: An outsource interviewer has already accepted this round.",
-      //       status: "error",
-      //     });
-      //   }
-
-      //   // Add Rescheduled history entry
-      //   const hasRescheduledEntry = updatePayload.$push.history.some(
-      //     (h) => h.action === "Rescheduled"
-      //   );
-
-      //   if (!hasRescheduledEntry) {
-      //     updatePayload.$push.history.push({
-      //       action: "Rescheduled",
-      //       scheduledAt: req.body.round.dateTime || existingRound.dateTime,
-      //       updatedAt: new Date(),
-      //       createdBy: actingAsUserId,
-      //       reasonCode: req.body.round.currentActionReason || "time_changed",
-      //       comment: req.body.round.comments || null,
-      //       interviewers: [],
-      //       participants: [],
-      //     });
-      //   }
-
-      //   // Keep status as RequestSent (since no one accepted yet)
-      //   updatePayload.$set.status = "RequestSent";
-      // }
     }
-    // === INTERNAL RESCHEDULING: Correct Scheduled vs Rescheduled ===
-    // if (isInternal && (changes.dateTimeChanged || changes.interviewersChanged)) {
-    //   const hasScheduledOnce = existingRound.history?.some(
-    //     (h) => h.action === "Scheduled"
-    //   );
-    //   const correctAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
-
-    //   const newEntry = {
-    //     action: correctAction,
-    //     scheduledAt: req.body.round.dateTime,
-    //     updatedAt: new Date(),
-    //     createdBy: actingAsUserId,
-    //     reasonCode: req.body.round.currentActionReason || null,
-    //     comment: req.body.round.comments || null,
-    //   };
-
-    //   const existingIndex = updatePayload.$push.history.findIndex((h) =>
-    //     ["Scheduled", "Rescheduled"].includes(h.action)
-    //   );
-
-    //   if (existingIndex !== -1) {
-    //     updatePayload.$push.history[existingIndex] = newEntry;
-    //   } else {
-    //     updatePayload.$push.history.push(newEntry);
-    //   }
-    // }
 
     let shouldSendInternalEmail = false;
 
@@ -773,8 +711,7 @@ const updateInterviewRound = async (req, res) => {
       // }
     }
     let smartUpdate;
-    console.log("updatePayload", updatePayload);
-    console.log("existingRound", existingRound);
+
     if (
       updatePayload.$set.status !== existingRound.status &&
       updatePayload.$set.status
@@ -797,13 +734,9 @@ const updateInterviewRound = async (req, res) => {
       });
     }
 
-    console.log("smartUpdate", smartUpdate);
-
     // merging history from both updates interviwers and date time change
     function mergeUpdates(a, b) {
       const out = {};
-
-      console.log("merging", a);
 
       if (a?.$set || b?.$set) {
         out.$set = { ...(a?.$set || {}), ...(b?.$set || {}) };
@@ -822,13 +755,13 @@ const updateInterviewRound = async (req, res) => {
       updatePayload.$set.dateTime = req.body?.round?.dateTime;
     }
 
-    // let finalUpdate = mergeUpdates(
-    //   updatePayload,
-    //   updatePayload.$set.status !== existingRound.status &&
-    //     updatePayload.$set.status !== ""
-    //     ? smartUpdate
-    //     : null
-    // );
+    if (changes.questionsChanged) {
+      await handleInterviewQuestions(interviewId, roundId, req.body.questions);
+    }
+
+    if (changes.instructionsChanged) {
+      updatePayload.$set.instructions = req.body.round.instructions;
+    }
 
     // -------------------------------
     // 4️⃣ FINAL UPDATE (IMPORTANT)
@@ -867,8 +800,6 @@ const updateInterviewRound = async (req, res) => {
       finalUpdate,
       { new: true, runValidators: true }
     );
-
-    // console.log("updatedRound", updatedRound);
 
     // ==================================================================
     // SEND INTERNAL EMAIL ONLY WHEN STATUS BECOMES Scheduled/Rescheduled
@@ -1562,63 +1493,127 @@ async function handleInternalRoundEmails({
 //   return changes;
 // }
 
-function detectRoundChanges({
+// function detectRoundChanges({
+//   existingRound,
+//   incomingRound,
+//   selectedInterviewers = [],
+//   compareInterviewers = true,
+//   compareQuestions = true,
+//   compareInstructions = true,
+// }) {
+//   const changes = {
+//     statusChanged: false,
+//     dateTimeChanged: false,
+//     // interviewersChanged: false,
+//     instructionsChanged: false, // ✅ NEW
+//     questionsChanged: false, // ✅ NEW
+//     anyChange: false,
+//   };
+
+//   console.log("detectRoundChanges", {
+//     existingRound,
+//     incomingRound,
+//   });
+
+//   // Status change
+//   if (incomingRound.status && incomingRound.status !== existingRound.status) {
+//     changes.statusChanged = true;
+//     changes.anyChange = true;
+//   }
+
+//   // DateTime change
+//   if (
+//     incomingRound.dateTime &&
+//     incomingRound.dateTime !== existingRound.dateTime
+//     // incomingRound.dateTime &&
+//     // new Date(incomingRound.dateTime).getTime() !==
+//     //   new Date(existingRound.dateTime).getTime()
+//   ) {
+//     changes.dateTimeChanged = true;
+//     changes.anyChange = true;
+//   }
+
+//   // Interviewers change (optional)
+//   // if (compareInterviewers) {
+//   //   const oldIds = (existingRound.interviewers || [])
+//   //     .map((i) => String(i.contact?._id || i._id))
+//   //     .sort();
+
+//   //   const newIds = (selectedInterviewers || [])
+//   //     .map((i) => String(i.contact?._id || i._id))
+//   //     .sort();
+
+//   //   if (JSON.stringify(oldIds) !== JSON.stringify(newIds)) {
+//   //     changes.interviewersChanged = true;
+//   //     changes.anyChange = true;
+//   //   }
+//   // }
+
+//   // Instructions change (optional)
+//   if (
+//     compareInstructions &&
+//     incomingRound.instructions !== undefined &&
+//     incomingRound.instructions !== existingRound.instructions
+//   ) {
+//     changes.instructionsChanged = true;
+//     changes.anyChange = true;
+//   }
+
+//   // Questions change (optional – deep compare)
+//   if (compareQuestions) {
+//     const oldQuestions = JSON.stringify(existingRound.questions || []);
+//     const newQuestions = JSON.stringify(incomingRound.questions || []);
+
+//       const existingQuestions = await interviewQuestions.find({
+//   interviewId : existingRound?.interviewId,
+//   roundId: existingRound?._id,
+// });
+
+//     if (oldQuestions !== newQuestions) {
+//       changes.questionsChanged = true;
+//       changes.anyChange = true;
+//     }
+//   }
+
+//   return changes;
+// }
+
+async function detectRoundChanges({
   existingRound,
   incomingRound,
   selectedInterviewers = [],
   compareInterviewers = true,
-  compareQuestions = true,
   compareInstructions = true,
+  compareQuestions = true,
 }) {
   const changes = {
     statusChanged: false,
     dateTimeChanged: false,
-    // interviewersChanged: false,
-    instructionsChanged: false, // ✅ NEW
-    questionsChanged: false, // ✅ NEW
+    interviewersChanged: false,
+    instructionsChanged: false,
+    questionsChanged: false,
     anyChange: false,
   };
 
-  console.log("detectRoundChanges", {
-    existingRound,
-    incomingRound,
-  });
+  // console.log("detectRoundChanges", { existingRound, incomingRound });
 
-  // Status change
+  // 1. Status change
   if (incomingRound.status && incomingRound.status !== existingRound.status) {
     changes.statusChanged = true;
     changes.anyChange = true;
   }
 
-  // DateTime change
-  if (
-    incomingRound.dateTime &&
-    incomingRound.dateTime !== existingRound.dateTime
-    // incomingRound.dateTime &&
-    // new Date(incomingRound.dateTime).getTime() !==
-    //   new Date(existingRound.dateTime).getTime()
-  ) {
-    changes.dateTimeChanged = true;
-    changes.anyChange = true;
+  // 2. DateTime change (safe date comparison)
+  if (incomingRound.dateTime || existingRound.dateTime) {
+    const oldTime = existingRound.dateTime;
+    const newTime = incomingRound.dateTime;
+    if (oldTime !== newTime) {
+      changes.dateTimeChanged = true;
+      changes.anyChange = true;
+    }
   }
 
-  // Interviewers change (optional)
-  // if (compareInterviewers) {
-  //   const oldIds = (existingRound.interviewers || [])
-  //     .map((i) => String(i.contact?._id || i._id))
-  //     .sort();
-
-  //   const newIds = (selectedInterviewers || [])
-  //     .map((i) => String(i.contact?._id || i._id))
-  //     .sort();
-
-  //   if (JSON.stringify(oldIds) !== JSON.stringify(newIds)) {
-  //     changes.interviewersChanged = true;
-  //     changes.anyChange = true;
-  //   }
-  // }
-
-  // Instructions change (optional)
+  // 3. Instructions change
   if (
     compareInstructions &&
     incomingRound.instructions !== undefined &&
@@ -1628,14 +1623,142 @@ function detectRoundChanges({
     changes.anyChange = true;
   }
 
-  // Questions change (optional – deep compare)
-  if (compareQuestions) {
-    const oldQuestions = JSON.stringify(existingRound.questions || []);
-    const newQuestions = JSON.stringify(incomingRound.questions || []);
+  // 4. Interviewers change (uncomment and fix if needed)
+  // if (compareInterviewers) {
+  //   const oldIds = (existingRound.interviewers || []).map(String).sort();
+  //   const newIds = (selectedInterviewers || []).map(i => String(i._id || i)).sort();
+  //   if (JSON.stringify(oldIds) !== JSON.stringify(newIds)) {
+  //     changes.interviewersChanged = true;
+  //     changes.anyChange = true;
+  //   }
+  // }
 
-    if (oldQuestions !== newQuestions) {
+  // 5. Questions change – CORRECT WAY
+  // if (compareQuestions) {
+  //   const incomingQuestions = incomingRound.questions || [];
+
+  //   console.log("incomingQuestions", incomingQuestions);
+
+  //   // Fetch actual existing questions from DB
+  //   const existingQuestionsFromDB = await interviewQuestions
+  //     .find({
+  //       // interviewId: existingRound.interviewId,
+  //       roundId: existingRound._id,
+  //     })
+  //     .lean();
+
+  //   console.log("existingQuestionsFromDB", existingQuestionsFromDB);
+
+  //   // Create maps keyed by _id (for updates) and order+snapshot (for new ones)
+  //   const existingMap = new Map();
+  //   existingQuestionsFromDB.forEach((q) => {
+  //     existingMap.set(q._id.toString(), q);
+  //   });
+  //   console.log("existingMap", existingMap);
+
+  //   let hasChanged = false;
+
+  //   // Check length first
+  //   if (existingQuestionsFromDB.length !== incomingQuestions.length) {
+  //     hasChanged = true;
+  //   } else {
+  //     // Deep compare each question
+  //     for (const incoming of incomingQuestions) {
+  //       if (incoming.questionId) {
+  //         // Existing question being updated
+  //         const existing = existingMap.get(incoming.questionId.toString());
+  //         if (!existing) {
+  //           hasChanged = true;
+  //           break;
+  //         }
+
+  //         // Compare relevant fields (you can adjust which ones matter)
+  //         const fieldsToCompare = [
+  //           "order",
+  //           "customizations",
+  //           "mandatory",
+  //           "snapshot",
+  //           "source",
+  //         ];
+  //         for (const field of fieldsToCompare) {
+  //           if (
+  //             JSON.stringify(incoming[field]) !==
+  //             JSON.stringify(existing[field])
+  //           ) {
+  //             hasChanged = true;
+  //             break;
+  //           }
+  //         }
+  //         if (hasChanged) break;
+  //       } else {
+  //         // New question added → definitely changed
+  //         hasChanged = true;
+  //         break;
+  //       }
+  //     }
+
+  //     // Also check if any existing question was removed
+  //     if (!hasChanged) {
+  //       const incomingIds = incomingQuestions
+  //         .filter((q) => q._id)
+  //         .map((q) => q._id);
+
+  //       if (
+  //         existingQuestionsFromDB.some(
+  //           (q) => !incomingIds.includes(q._id.toString())
+  //         )
+  //       ) {
+  //         hasChanged = true;
+  //       }
+  //     }
+  //   }
+
+  //   if (hasChanged) {
+  //     changes.questionsChanged = true;
+  //     changes.anyChange = true;
+  //   }
+  // }
+
+  if (compareQuestions) {
+    const incomingQuestions = incomingRound.questions || [];
+
+    const existingQuestionsFromDB = await interviewQuestions
+      .find({
+        interviewId: existingRound.interviewId,
+        roundId: existingRound._id,
+      })
+      .lean();
+
+    // Simple but effective: if lengths differ → changed
+    if (existingQuestionsFromDB.length !== incomingQuestions.length) {
       changes.questionsChanged = true;
       changes.anyChange = true;
+    } else {
+      // Optional: deep compare snapshot.questionId or order/customizations
+      // But usually, if user opened question editor → assume changed
+      // OR compare by source + questionId + order
+      const existingSet = new Set(
+        existingQuestionsFromDB.map(
+          (q) => `${q.questionId}|${q.source}|${q.order}|${q.mandatory}`
+        )
+      );
+      console.log("existingSet", existingSet);
+
+      const incomingSet = new Set(
+        incomingQuestions.map(
+          (q) => `${q.questionId}|${q.source}|${q.order}|${q.mandatory}`
+        )
+      );
+
+      console.log("incomingSet", incomingSet);
+
+      if (
+        existingSet.size !== incomingSet.size ||
+        ![...existingSet].every((val) => incomingSet.has(val))
+      ) {
+        changes.questionsChanged = true;
+        changes.anyChange = true;
+      }
     }
   }
 
