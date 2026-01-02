@@ -4,6 +4,11 @@ const router = express.Router();
 const loggingService = require("../middleware/loggingService");
 const {
   getSettlementPolicy,
+  createInterviewPolicy,
+  getAllPolicies,
+  getPolicyById,
+  updatePolicy,
+  deletePolicy,
 } = require("../controllers/interviewPoliciesController");
 
 // POST /interview-policies/settlement-policy
@@ -13,5 +18,19 @@ router.post(
   // loggingService.internalLoggingMiddleware,
   getSettlementPolicy
 );
+
+router.post(
+  "/create-policy",
+  loggingService.internalLoggingMiddleware,
+  createInterviewPolicy
+);
+
+router.get("/", loggingService.internalLoggingMiddleware, getAllPolicies);
+
+router.get("/:id", loggingService.internalLoggingMiddleware, getPolicyById);
+
+router.put("/:id", loggingService.internalLoggingMiddleware, updatePolicy);
+
+router.delete("/:id", loggingService.internalLoggingMiddleware, deletePolicy);
 
 module.exports = router;
