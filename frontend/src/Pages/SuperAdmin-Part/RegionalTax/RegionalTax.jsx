@@ -10,6 +10,12 @@ import { Eye, Pencil, Trash2, MoreVertical } from "lucide-react";
 import { formatDateTime } from "../../../utils/dateFormatter.js";
 import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import DeleteConfirmModal from "../../Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
+import {
+  useRegionalTaxConfigs,
+  useDeleteRegionalTaxConfig,
+} from "../../../apiHooks/useTenantTaxConfig.js";
+import { notify } from "../../../services/toastService.js";
+import { FilterPopup } from "../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 
 // --- STATIC DATA BASED ON YOUR JSON ---
 const generateRegionalTaxData = () => {
@@ -123,14 +129,79 @@ const RegionalTax = () => {
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const filterIconRef = useRef(null);
 
-  const [taxData, setTaxData] = useState(generateRegionalTaxData());
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
-
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [regionalTaxToDelete, setRegionalTaxToDelete] = useState(null);
 
-  // Updated Table Columns to match Regional Tax structure
+  const ITEMS_PER_PAGE = 10;
+
+  const { data: taxConfigData } = useRegionalTaxConfigs();
+
+  const { mutate: deleteRegionalTax } = useDeleteRegionalTaxConfig();
+
+  const defaultFilters = {
+    status: [],
+    gstEnabled: [],
+    serviceChargeEnabled: [],
+  };
+
+  const [selectedFilters, setSelectedFilters] = useState(defaultFilters);
+  const [tempFilters, setTempFilters] = useState(defaultFilters);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  const processedData = React.useMemo(() => {
+    let result = [...(taxConfigData || [])];
+
+    // Search
+    if (debouncedSearch) {
+      result = result.filter(
+        (t) =>
+          t.country?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+          t.regionCode?.toLowerCase().includes(debouncedSearch.toLowerCase())
+      );
+    }
+
+    // Status
+    if (selectedFilters.status.length > 0) {
+      result = result.filter((t) => selectedFilters.status.includes(t.status));
+    }
+
+    // GST
+    if (selectedFilters.gstEnabled.length > 0) {
+      result = result.filter((t) =>
+        selectedFilters.gstEnabled.includes(
+          t.gst?.enabled ? "Enabled" : "Disabled"
+        )
+      );
+    }
+
+    // Service Charge
+    if (selectedFilters.serviceChargeEnabled.length > 0) {
+      result = result.filter((t) =>
+        selectedFilters.serviceChargeEnabled.includes(
+          t.serviceCharge?.enabled ? "Enabled" : "Disabled"
+        )
+      );
+    }
+
+    return result;
+  }, [taxConfigData, debouncedSearch, selectedFilters]);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [debouncedSearch, selectedFilters]);
+
+  const totalPages = Math.ceil(processedData.length / ITEMS_PER_PAGE);
+
+  const paginatedData = processedData.slice(
+    currentPage * ITEMS_PER_PAGE,
+    (currentPage + 1) * ITEMS_PER_PAGE
+  );
+
   const columns = [
     {
       key: "country",
@@ -200,11 +271,26 @@ const RegionalTax = () => {
     },
   ];
 
-  const filteredData = taxData.filter(
+  const filteredData = taxConfigData?.filter(
     (t) =>
-      t.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.regionCode.toLowerCase().includes(searchQuery.toLowerCase())
+      t?.country?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
+      t?.regionCode?.toLowerCase()?.includes(searchQuery?.toLowerCase())
   );
+
+  const handleDeleteConfirm = () => {
+    if (!regionalTaxToDelete?._id) return;
+
+    deleteRegionalTax(regionalTaxToDelete._id, {
+      onSuccess: () => {
+        notify.success("Regional tax deleted successfully");
+        setShowDeleteConfirmModal(false);
+        setRegionalTaxToDelete(null);
+      },
+      onError: (error) => {
+        notify.error("Failed to delete regional tax");
+      },
+    });
+  };
 
   return (
     <div className="w-full px-6 py-2">
@@ -221,20 +307,24 @@ const RegionalTax = () => {
         searchQuery={searchQuery}
         onSearch={(e) => setSearchQuery(e.target.value)}
         currentPage={currentPage}
-        totalPages={1}
-        onPrevPage={() => {}}
-        onNextPage={() => {}}
+        totalPages={totalPages}
+        onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
+        onNextPage={() =>
+          setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
+        }
         onFilterClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
-        isFilterActive={false}
+        isFilterActive={
+          JSON.stringify(selectedFilters) !== JSON.stringify(defaultFilters)
+        }
         isFilterPopupOpen={isFilterPopupOpen}
-        dataLength={filteredData.length}
+        dataLength={processedData.length}
         filterIconRef={filterIconRef}
       />
 
       <div className="fixed sm:top-64 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
         {view === "table" ? (
           <TableView
-            data={filteredData}
+            data={paginatedData}
             columns={columns}
             actions={actions}
             emptyState="No Regional Tax data found."
@@ -243,7 +333,7 @@ const RegionalTax = () => {
         ) : (
           <KanbanView
             loading={false}
-            data={filteredData.map((tax) => ({
+            data={paginatedData.map((tax) => ({
               ...tax,
               id: tax?._id,
               title: tax?.country,
@@ -260,14 +350,99 @@ const RegionalTax = () => {
             kanbanTitle="Regional Tax"
           />
         )}
+
+        <FilterPopup
+          isOpen={isFilterPopupOpen}
+          onClose={() => setIsFilterPopupOpen(false)}
+          onApply={() => {
+            setSelectedFilters(tempFilters);
+            setIsFilterPopupOpen(false);
+          }}
+          onClearAll={() => {
+            setTempFilters(defaultFilters);
+            setSelectedFilters(defaultFilters);
+            setIsFilterPopupOpen(false);
+          }}
+          filterIconRef={filterIconRef}
+        >
+          <div className="p-4 space-y-4">
+            {/* Status */}
+            <div>
+              <h4 className="font-semibold mb-2">Status</h4>
+              {["Active", "Inactive"].map((s) => (
+                <label key={s} className="flex gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="accent-custom-blue"
+                    checked={tempFilters.status.includes(s)}
+                    onChange={(e) => {
+                      const next = e.target.checked
+                        ? [...tempFilters.status, s]
+                        : tempFilters.status.filter((i) => i !== s);
+                      setTempFilters({ ...tempFilters, status: next });
+                    }}
+                  />
+                  {s}
+                </label>
+              ))}
+            </div>
+
+            {/* GST */}
+            <div>
+              <h4 className="font-semibold mb-2">GST</h4>
+              {["Enabled", "Disabled"].map((g) => (
+                <label key={g} className="flex gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="accent-custom-blue"
+                    checked={tempFilters.gstEnabled.includes(g)}
+                    onChange={(e) => {
+                      const next = e.target.checked
+                        ? [...tempFilters.gstEnabled, g]
+                        : tempFilters.gstEnabled.filter((i) => i !== g);
+                      setTempFilters({ ...tempFilters, gstEnabled: next });
+                    }}
+                  />
+                  {g}
+                </label>
+              ))}
+            </div>
+
+            {/* Service Charge */}
+            <div>
+              <h4 className="font-semibold mb-2">Service Charge</h4>
+              {["Enabled", "Disabled"].map((s) => (
+                <label key={s} className="flex gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="accent-custom-blue"
+                    checked={tempFilters.serviceChargeEnabled.includes(s)}
+                    onChange={(e) => {
+                      const next = e.target.checked
+                        ? [...tempFilters.serviceChargeEnabled, s]
+                        : tempFilters.serviceChargeEnabled.filter(
+                            (i) => i !== s
+                          );
+                      setTempFilters({
+                        ...tempFilters,
+                        serviceChargeEnabled: next,
+                      });
+                    }}
+                  />
+                  {s}
+                </label>
+              ))}
+            </div>
+          </div>
+        </FilterPopup>
       </div>
 
       <DeleteConfirmModal
         isOpen={showDeleteConfirmModal}
         onClose={() => setShowDeleteConfirmModal(false)}
-        // onConfirm={handleDeleteConfirm}
-        title="Policy"
-        // entityName={policyToDelete?.policyName.replace(/_/g, " ").toUpperCase()}
+        onConfirm={handleDeleteConfirm}
+        title="Regional Tax"
+        entityName={regionalTaxToDelete?.policyName}
       />
 
       <Outlet />
