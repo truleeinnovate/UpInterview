@@ -30,7 +30,7 @@ import {
 
 // import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
-import RejectionModal from "./RejectionModal";
+// import RejectionModal from "./RejectionModal";
 import FeedbackModal from "./FeedbackModal";
 import RoundFeedbackTab from "./RoundFeedbackTab";
 import { Button } from "../../CommonCode-AllTabs/ui/button";
@@ -52,7 +52,11 @@ import { notify } from "../../../../../services/toastService";
 import ScheduledAssessmentResultView from "../../Assessment-Tab/AssessmentViewDetails/ScheduledAssessmentResultView";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
 import RoundStatusReasonModal from "../../CommonCode-AllTabs/RoundStatusReasonModal";
-import { NO_SHOW_OPTIONS, CANCEL_OPTIONS } from "../../../../../utils/roundHistoryOptions";
+import {
+  NO_SHOW_OPTIONS,
+  CANCEL_OPTIONS,
+  REJECT_OPTIONS,
+} from "../../../../../utils/roundHistoryOptions";
 import RoundActivityModal from "./RoundActivityModal";
 
 const RoundCard = ({
@@ -91,6 +95,10 @@ const RoundCard = ({
   // Add near other state declarations
   const [cancelReasonModalOpen, setCancelReasonModalOpen] = useState(false);
   const [noShowReasonModalOpen, setNoShowReasonModalOpen] = useState(false);
+  const [rejectReasonModalOpen, setRejectReasonModalOpen] = useState(false);
+  const [completedReasonModalOpen, setCompletedReasonModalOpen] =
+    useState(false);
+  const [selectedReasonModalOpen, setSelectedReasonModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
   // v1.0.1 <--------------------------------------------
@@ -240,7 +248,7 @@ const RoundCard = ({
       }
       return;
     }
-    console.log("status reason", newStatus, reasonValue);
+    // console.log("status reason", newStatus, reasonValue);
 
     try {
       // const response = await axios.post(
@@ -253,7 +261,7 @@ const RoundCard = ({
       const payload = {
         roundId: round?._id,
         interviewId: interview?._id,
-        status: newStatus,
+        action: newStatus,
       };
 
       // Add cancellation / NoShow reason if provided
@@ -282,6 +290,7 @@ const RoundCard = ({
     }
   };
 
+  // handling Cancellation functionlity
   const handleCancelWithReason = async ({ reason, comment }) => {
     try {
       await handleStatusChange("Cancelled", reason, comment || null);
@@ -292,6 +301,7 @@ const RoundCard = ({
     }
   };
 
+  // handling No show functionlity
   const handleNoShowWithReason = async ({ reason, comment }) => {
     try {
       await handleStatusChange("NoShow", reason, comment || null);
@@ -302,18 +312,55 @@ const RoundCard = ({
     }
   };
 
-  const handleConfirmStatusChange = () => {
-    if (confirmAction) {
-      handleStatusChange(confirmAction);
+  // handling Rejection functionlity
+  const handleRejectWithReason = async ({ reason, comment }) => {
+    try {
+      await handleStatusChange("Rejected", reason, comment || null);
+      setRejectReasonModalOpen(false);
+      setActionInProgress(false);
+    } catch (error) {
+      setActionInProgress(false);
     }
-    setShowConfirmModal(false);
-    setActionInProgress(false);
   };
 
-  const handleReject = (reason) => {
-    handleStatusChange("Rejected", reason);
-    setShowRejectionModal(false);
+  // handling Completion functionlity
+  // setCompletedReasonModalOpen
+
+  const handleConfirmStatusChange = async ({
+    change = false,
+    reason,
+    comment,
+  }) => {
+    try {
+      // completedReasonModalOpen status handling
+      if (completedReasonModalOpen && change) {
+        await handleStatusChange("Completed", reason, comment || null);
+        setCompletedReasonModalOpen(false);
+        setActionInProgress(false);
+      }
+      // selectedReasonModalOpen status handling
+      else if (selectedReasonModalOpen && change) {
+        await handleStatusChange("Selected", reason, comment || null);
+        setSelectedReasonModalOpen(false);
+        setActionInProgress(false);
+      }
+    } catch (error) {
+      setActionInProgress(false);
+    }
   };
+
+  // const handleConfirmStatusChange = () => {
+  //   if (confirmAction) {
+  //     handleStatusChange(confirmAction);
+  //   }
+  //   setShowConfirmModal(false);
+  //   setActionInProgress(false);
+  // };
+
+  // const handleReject = (reason) => {
+  //   handleStatusChange("Rejected", reason);
+  //   setShowRejectionModal(false);
+  // };
 
   // const handleRemoveInterviewer = (interviewerId) => {
   //   const updatedRound = {
@@ -1760,7 +1807,12 @@ const RoundCard = ({
                   {permissions.canComplete &&
                     round.roundTitle !== "Assessment" && (
                       <button
-                        onClick={() => handleActionClick("Completed")}
+                        onClick={() => {
+                          setActionInProgress(true);
+                          setCompletedReasonModalOpen(true);
+                          // setConfirmAction("Selected");
+                        }}
+                        // onClick={() => handleActionClick("Completed")}
                         className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
                       >
                         <CheckCircle className="h-4 w-4 mr-1" /> Complete
@@ -1769,7 +1821,12 @@ const RoundCard = ({
                   {/* Select */}
                   {permissions.canSelect && (
                     <button
-                      onClick={handleSelect}
+                      // onClick={handleSelect}
+                      onClick={() => {
+                        setActionInProgress(true);
+                        setSelectedReasonModalOpen(true);
+                        // setConfirmAction("Selected");
+                      }}
                       className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
                     >
                       <CheckCircle className="h-4 w-4 mr-1" /> Select
@@ -1778,9 +1835,13 @@ const RoundCard = ({
                   {/* Reject */}
                   {permissions.canReject && (
                     <button
-                      onClick={() =>
-                        setShowRejectionModal(true) || setActionInProgress(true)
-                      }
+                      onClick={() => {
+                        setActionInProgress(true);
+                        setRejectReasonModalOpen(true);
+                      }}
+                      // onClick={() =>
+                      //   setShowRejectionModal(true) || setActionInProgress(true)
+                      // }
                       className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
                     >
                       <ThumbsDown className="h-4 w-4 mr-1" /> Reject
@@ -1887,19 +1948,38 @@ const RoundCard = ({
         confirmLabel="Confirm No Show"
       />
 
-      {showConfirmModal &&
+      {/* Shared reason modal for Reject */}
+      <RoundStatusReasonModal
+        isOpen={rejectReasonModalOpen}
+        title="Reject Candidate"
+        label="Reason for Rejection"
+        options={REJECT_OPTIONS}
+        onClose={() => {
+          setRejectReasonModalOpen(false);
+          setActionInProgress(false);
+        }}
+        onConfirm={handleRejectWithReason}
+        confirmLabel="Confirm Reject"
+        confirmButtonVariant="destructive" // optional: makes button red
+      />
+
+      {(completedReasonModalOpen || selectedReasonModalOpen) &&
         createPortal(
           // v1.0.5 <--------------------------------------------------------------------------------
           <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
             <div className="bg-white p-5 rounded-lg shadow-md">
               <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-3">
-                Are you sure you want to {confirmAction.toLowerCase()} this
-                round?
+                Are you sure you want to{" "}
+                {completedReasonModalOpen ? "Complete" : "Reject"} this round?
               </h3>
               <div className="flex justify-end space-x-3">
                 <Button
                   variant="outline"
-                  onClick={() => setShowConfirmModal(false)}
+                  onClick={() => {
+                    setCompletedReasonModalOpen(false);
+                    setSelectedReasonModalOpen(false);
+                    setActionInProgress(false);
+                  }}
                 >
                   No, Cancel
                 </Button>
@@ -1909,7 +1989,8 @@ const RoundCard = ({
                     "bg-red-600 hover:bg-red-700"
                   }`}
                   variant="success"
-                  onClick={handleConfirmStatusChange}
+                  onClick={() => handleConfirmStatusChange({ change: true })}
+                  // onClick={handleConfirmStatusChange({ change: true })}
                 >
                   Yes, Confirm
                 </Button>
@@ -1943,6 +2024,8 @@ const RoundCard = ({
           document.body
           // v1.0.5 ------------------------------------------------------------------------------------------>
         )}
+
+      {/*      
       {showRejectionModal && (
         <RejectionModal
           onClose={() => setShowRejectionModal(false)}
@@ -1950,6 +2033,9 @@ const RoundCard = ({
           roundName={round.name}
         />
       )}
+
+      */}
+
       {showFeedbackModal && (
         <FeedbackModal
           onClose={() => setShowFeedbackModal(false)}
