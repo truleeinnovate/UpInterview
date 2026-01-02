@@ -1,5 +1,5 @@
 const Tenant = require("../models/Tenant");
-const { RegionalTaxConfig } = require("../models/Pricing");
+const { RegionalTaxConfig } = require("../models/RegionalTaxConfig");
 
 // Helper to normalize percentage-like values from config.
 // Accepts either 0.18 (fraction) or 18 (percent) and always returns "percent" units.

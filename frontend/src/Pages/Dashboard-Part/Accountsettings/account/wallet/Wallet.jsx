@@ -408,8 +408,8 @@ const Wallet = () => {
                             ? "-"
                             : "~"}
                           ₹
-                          {transaction.amount
-                            ? transaction.amount.toFixed(2)
+                          {transaction.totalAmount
+                            ? transaction.totalAmount.toFixed(2)
                             : "0.00"}
                         </p>
                         <span

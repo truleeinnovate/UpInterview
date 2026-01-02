@@ -24,7 +24,7 @@ const {
 } = require("../models/Mockinterview/mockinterviewRound");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds");
 const Invoicemodels = require("../models/Invoicemodels");
-const { RegionalTaxConfig } = require("../models/Pricing");
+const { RegionalTaxConfig } = require("../models/RegionalTaxConfig");
 const Tenant = require("../models/Tenant");
 
 const {
