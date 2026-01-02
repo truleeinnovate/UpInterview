@@ -129,24 +129,21 @@ const saveInterviewRound = async (req, res) => {
       });
     }
 
-
     // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (SELECTION TIME) ========================
     // Delegate to helper so this controller stays clean and focused.
-    const walletHoldResponse = await applySelectionTimeWalletHoldForOutsourcedRound({
-      req,
-      res,
-      interview,
-      round,
-      savedRound,
-    });
+    const walletHoldResponse =
+      await applySelectionTimeWalletHoldForOutsourcedRound({
+        req,
+        res,
+        interview,
+        round,
+        savedRound,
+      });
 
     if (walletHoldResponse) {
       // Helper already sent a response (e.g. error); stop further processing.
       return walletHoldResponse;
     }
-
-
-
 
     // =================== start == assessment mails sending functionality == start ========================
 
@@ -922,6 +919,7 @@ const updateInterviewRoundStatus = async (req, res) => {
     const { actingAsUserId } = res.locals.auth;
 
     console.log("req.body", req.body);
+    console.log("roundId", roundId);
 
     if (!roundId) {
       return res
@@ -948,12 +946,16 @@ const updateInterviewRoundStatus = async (req, res) => {
       (changed) => changed === true
     );
 
+    console.log("changes", changes);
+
     const updatePayload = buildSmartRoundUpdate({
       existingRound: round,
       body: req.body,
       actingAsUserId,
       changes,
+      statusChanged: true,
     });
+    console.log("updatePayload", updatePayload);
 
     if (!updatePayload) {
       return res.status(400).json({
@@ -1194,6 +1196,7 @@ function buildSmartRoundUpdate({
   actingAsUserId,
   changes,
   isCreate = false,
+  statusChanged = false,
 }) {
   const update = { $set: {}, $push: { history: [] } };
 
@@ -1310,6 +1313,38 @@ function buildSmartRoundUpdate({
   //     }
   //   }
   // }
+
+  if (statusChanged) {
+    update.$set.previousAction = existingRound.currentAction || null;
+    update.$set.currentAction = body.status;
+    update.$set.status = body.status;
+    update.$set.currentActionReason =
+      body.currentActionReason ||
+      body.rescheduleReason ||
+      body.cancellationReason ||
+      null;
+
+    //  update.$set.previousAction = existingRound.currentAction || null;
+    // update.$set.currentAction = body.status; // || existingRound.status;
+    // update.$set.currentActionReason = body.rescheduleReason || "time_changed";
+
+    // update.$set.interviewers =
+    //   body.status === "Draft"
+    //     ? []
+    //     : Array.isArray(body.selectedInterviewers)
+    //     ? existingRound.interviewers.map((i) => i.contact?._id || i._id)
+    //     : [];
+    // update.$set.participants = [];
+
+    // /* ---------- adding histotry status changing ---------- */
+
+    addHistory({
+      action: body.status, //existingRound.status,
+      scheduledAt: existingRound.dateTime,
+      reasonCode: body.currentActionReason,
+      comment: body.comments,
+    });
+  }
 
   /* ============= RESCHEDULE WITHOUT STATUS CHANGE ============= */
 
