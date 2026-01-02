@@ -467,8 +467,8 @@ const updateInterviewRound = async (req, res) => {
     req.body.round?.interviewerType === "External"
       ? req.body.round?.selectedInterviewers.length > 0
       : // ||
-        // req.body.round?.interviewers.length > 0
-        false;
+      // req.body.round?.interviewers.length > 0
+      false;
   // req.body.round?.selectedInterviewers.length > 0
 
   console.log(
@@ -913,83 +913,248 @@ const updateInterviewRound = async (req, res) => {
 };
 
 //patch call use to update round status along with actions and reasons
+// const updateInterviewRoundStatus = async (req, res) => {
+//   try {
+//     const { roundId } = req.params;
+//     const { actingAsUserId } = res.locals.auth;
+
+//     console.log("req.body", req.body);
+//     console.log("roundId", roundId);
+
+//     if (!roundId) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "roundId required" });
+//     }
+
+//     const round = await InterviewRounds.findById(roundId);
+//     if (!round) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Round not found" });
+//     }
+
+//     // Compute changes dynamically
+//     const changes = {
+//       statusChanged:
+//         req.body.status !== undefined && req.body.status !== round.status,
+//       dateTimeChanged:
+//         req.body.dateTime !== undefined && req.body.dateTime !== round.dateTime,
+//       // Add more as needed, e.g., interviewersChanged: !_.isEqual(req.body.interviewers, round.interviewers) // if using lodash for deep compare
+//     };
+//     changes.anyChange = Object.values(changes).some(
+//       (changed) => changed === true
+//     );
+
+//     console.log("changes", changes);
+
+//     const updatePayload = buildSmartRoundUpdate({
+//       existingRound: round,
+//       body: req.body,
+//       actingAsUserId,
+//       changes,
+//       statusChanged: true,
+//     });
+//     console.log("updatePayload", updatePayload);
+
+//     if (!updatePayload) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Nothing to update",
+//       });
+//     }
+
+//     updatedRound = await InterviewRounds.findByIdAndUpdate(
+//       roundId,
+//       updatePayload,
+//       { new: true, runValidators: true }
+//     )
+//       .populate("interviewId", "title candidateName")
+//       .populate("interviewers", "firstName lastName email");
+
+//     // Side effects (emails, notifications)
+//     if (req.body.status === "Cancelled") {
+//       await sendInterviewRoundCancellationEmails(
+//         {
+//           body: {
+//             interviewId: updatedRound.interviewId,
+//             roundId: updatedRound._id,
+//           },
+//         },
+//         { status: () => ({ json: () => {} }), locals: {} }
+//       );
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Interview round updated successfully",
+//       data: updatedRound,
+//     });
+//   } catch (error) {
+//     console.error("updateInterviewRoundStatus error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
 const updateInterviewRoundStatus = async (req, res) => {
   try {
     const { roundId } = req.params;
     const { actingAsUserId } = res.locals.auth;
+    const { action, reasonCode, comment } = req.body; // reasonCode = your selected reason, comment = "Other" text
 
     console.log("req.body", req.body);
-    console.log("roundId", roundId);
 
-    if (!roundId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "roundId required" });
-    }
-
-    const round = await InterviewRounds.findById(roundId);
-    if (!round) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Round not found" });
-    }
-
-    // Compute changes dynamically
-    const changes = {
-      statusChanged:
-        req.body.status !== undefined && req.body.status !== round.status,
-      dateTimeChanged:
-        req.body.dateTime !== undefined && req.body.dateTime !== round.dateTime,
-      // Add more as needed, e.g., interviewersChanged: !_.isEqual(req.body.interviewers, round.interviewers) // if using lodash for deep compare
-    };
-    changes.anyChange = Object.values(changes).some(
-      (changed) => changed === true
-    );
-
-    console.log("changes", changes);
-
-    const updatePayload = buildSmartRoundUpdate({
-      existingRound: round,
-      body: req.body,
-      actingAsUserId,
-      changes,
-      statusChanged: true,
-    });
-    console.log("updatePayload", updatePayload);
-
-    if (!updatePayload) {
+    if (!roundId || !action) {
       return res.status(400).json({
         success: false,
-        message: "Nothing to update",
+        message: "roundId and action are required",
       });
     }
 
-    updatedRound = await InterviewRounds.findByIdAndUpdate(
+    const existingRound = await InterviewRounds.findById(roundId)
+      .populate("interviewId", "title candidateName")
+      .populate("interviewers", "firstName lastName email");
+
+    if (!existingRound) {
+      return res.status(404).json({ success: false, message: "Round not found" });
+    }
+
+    // Map frontend "action" to actual status
+    const actionToStatusMap = {
+      Completed: "Completed",
+      Selected: "Selected",
+      Rejected: "Rejected",
+      NoShow: "NoShow",
+      Cancelled: "Cancelled",
+    };
+
+    const newStatus = actionToStatusMap[action];
+    if (!newStatus) {
+      return res.status(400).json({ success: false, message: "Invalid action" });
+    }
+
+    // Detect changes
+    const changes = {
+      statusChanged: newStatus !== existingRound.status,
+      dateTimeChanged: false, // assuming no datetime change in this endpoint
+      anyChange: true,
+    };
+
+    // Build body for buildSmartRoundUpdate — this is key!
+    const smartBody = {
+      status: newStatus,
+      interviewerType: existingRound.interviewerType,
+      selectedInterviewers: existingRound.interviewers, // preserve current
+      // Pass reason via generic fields that buildSmartRoundUpdate understands
+      currentActionReason: reasonCode || null,
+      comments: comment || null,
+      // Optional: for reschedule cases (not used here, but safe)
+      rescheduleReason: reasonCode || null,
+    };
+
+    // Let buildSmartRoundUpdate handle status change + history + reason
+    let smartUpdate = buildSmartRoundUpdate({
+      existingRound,
+      body: smartBody,
+      actingAsUserId,
+      changes,
+      statusChanged: changes.statusChanged,
+    });
+
+    // Extra logic ONLY for Cancelled (outside smart update)
+    let extraUpdate = { $set: {} };
+    let shouldSendCancellationEmail = false;
+
+    if (action === "Completed") {
+      //add wallet and policy code
+    }
+
+    if (action === "Cancelled") {
+
+      //add wallet and policy code
+
+      extraUpdate.$set.interviewers = []; // Clear interviewers
+
+      // Cancel accepted interview requests
+      const hasAccepted = await InterviewRequest.countDocuments({
+        roundId: existingRound._id,
+        status: "accepted",
+      });
+
+      if (hasAccepted > 0) {
+        await InterviewRequest.updateMany(
+          { roundId: existingRound._id, status: "accepted" },
+          { status: "cancelled", respondedAt: new Date() }
+        );
+      }
+
+      shouldSendCancellationEmail = true;
+    }
+
+    // Merge smartUpdate (status + history) with extraUpdate (cancel-specific)
+    function mergeUpdates(a, b) {
+      const out = {};
+
+      if (a?.$set || b?.$set) {
+        out.$set = { ...(a?.$set || {}), ...(b?.$set || {}) };
+      }
+
+      if (a?.$push?.history || b?.$push?.history) {
+        out.$push = {
+          history: [
+            ...(a?.$push?.history || []),
+            ...(b?.$push?.history || []),
+          ],
+        };
+      }
+
+      return out;
+    }
+
+    let finalUpdate = smartUpdate;
+
+    if (Object.keys(extraUpdate.$set).length > 0) {
+      finalUpdate = mergeUpdates(smartUpdate || { $set: {}, $push: { history: [] } }, extraUpdate);
+    }
+
+    // Safety check
+    if (!finalUpdate || (!finalUpdate.$set && !finalUpdate.$push)) {
+      return res.status(400).json({ success: false, message: "Nothing to update" });
+    }
+
+    // Apply update
+    const updatedRound = await InterviewRounds.findByIdAndUpdate(
       roundId,
-      updatePayload,
+      finalUpdate,
       { new: true, runValidators: true }
     )
       .populate("interviewId", "title candidateName")
       .populate("interviewers", "firstName lastName email");
 
-    // Side effects (emails, notifications)
-    if (req.body.status === "Cancelled") {
+    // Send cancellation email
+    if (shouldSendCancellationEmail) {
       await sendInterviewRoundCancellationEmails(
         {
           body: {
             interviewId: updatedRound.interviewId,
             roundId: updatedRound._id,
+            reasonCode,
+            comment,
           },
         },
-        { status: () => ({ json: () => {} }), locals: {} }
+        { status: () => ({ json: () => { } }), locals: {} }
       );
     }
 
     return res.status(200).json({
       success: true,
-      message: "Interview round updated successfully",
+      message: "Interview round status updated successfully",
       data: updatedRound,
     });
+
   } catch (error) {
     console.error("updateInterviewRoundStatus error:", error);
     return res.status(500).json({
@@ -998,191 +1163,6 @@ const updateInterviewRoundStatus = async (req, res) => {
     });
   }
 };
-
-// // Helper function to parse dateTime string
-// const parseDateTimeString = (dateTimeStr) => {
-//   if (!dateTimeStr) return null;
-
-//   try {
-//     // Check the format first
-//     if (dateTimeStr.includes(" - ")) {
-//       // Format: '27-12-2025 06:13 PM - 07:13 PM'
-//       // Extract the start date part
-//       const startDateTimeStr = dateTimeStr.split(" - ")[0]; // '27-12-2025 06:13 PM'
-
-//       // Parse day-month-year time with AM/PM
-//       const [datePart, timePart, meridiem] = startDateTimeStr.split(" ");
-//       const [day, month, year] = datePart.split("-").map(Number);
-
-//       let [hours, minutes] = timePart.split(":").map(Number);
-
-//       // Convert to 24-hour format
-//       if (meridiem === "PM" && hours < 12) hours += 12;
-//       if (meridiem === "AM" && hours === 12) hours = 0;
-
-//       // Create Date object (month is 0-indexed in JavaScript)
-//       return new Date(year, month - 1, day, hours, minutes);
-//     } else {
-//       // Try direct Date parsing for other formats
-//       return new Date(dateTimeStr);
-//     }
-//   } catch (error) {
-//     console.error("Error parsing dateTime:", error);
-//     return null;
-//   }
-// };
-
-// /**
-//  * Builds a MongoDB update object for InterviewRounds with smart change detection
-//  * - Properly appends to history[] (append-only)
-//  * - Correctly updates currentAction / previousAction / reason fields
-//  * - Handles status changes, reschedules, interviewer changes, and generic fields
-//  *
-//  * @param {Object} params
-//  * @param {Object} params.existingRound - Current round document from DB
-//  * @param {Object} params.body - Incoming request body (or round data)
-//  * @param {String} params.actingAsUserId - User performing the action
-//  * @param {Object} params.changes - Result from detectRoundChanges()
-//  * @returns {Object|null} MongoDB update object or null if no changes
-//  */
-// function buildSmartRoundUpdate({
-//   existingRound = null,
-//   body,
-//   actingAsUserId,
-//   changes,
-//   isCreate = false,
-// }) {
-//   const update = {
-//     $set: {},
-//     $push: { history: [] },
-//   };
-
-//   console.log("bodybody", body);
-
-//   /* ------------------------------------
-//    * Helpers
-//    * ---------------------------------- */
-//   const resolveComment = (reasonCode, comment) =>
-//     reasonCode === "Other" ? comment || null : null;
-
-//   const normalizeAction = (status) =>
-//     status === "RequestSent" ? "RequestSent" : status;
-
-//   const extractInterviewers = () =>
-//     Array.isArray(body.selectedInterviewers)
-//       ? body.selectedInterviewers.map((i) => i.contact?._id || i._id)
-//       : [];
-
-//   const addHistoryEntry = ({
-//     action,
-//     scheduledAt,
-//     reasonCode = null,
-//     comment = null,
-//     interviewers = [],
-//   }) => {
-//     update.$push.history.push({
-//       action,
-//       scheduledAt,
-//       reasonCode,
-//       comment: resolveComment(reasonCode, comment),
-//       interviewers,
-//       participants: [],
-//       createdBy: actingAsUserId,
-//     });
-//   };
-
-//   /* =====================================================
-//    * CREATE FLOW
-//    * =================================================== */
-//   if (isCreate) {
-//     const status = body.status;
-//     const action = normalizeAction(status);
-//     const reasonCode = body.currentActionReason || null;
-
-//     // update.$set.status = status;
-//     update.$set.currentAction = action;
-//     update.$set.previousAction = null;
-//     update.$set.currentActionReason = reasonCode;
-//     update.$set.comments = resolveComment(reasonCode, body.comment);
-
-//     // History only if dateTime exists (policy-relevant)
-//     if (body.dateTime) {
-//       addHistoryEntry({
-//         action,
-//         scheduledAt: body.dateTime,
-//         reasonCode,
-//         comment: body.comment,
-//         interviewers: extractInterviewers(),
-//       });
-//     }
-
-//     return update;
-//   }
-
-//   /* =====================================================
-//    * UPDATE FLOW (unchanged core logic)
-//    * =================================================== */
-
-//   if (!changes?.anyChange) return null;
-
-//   // Generic field updates (except status)
-//   Object.keys(body).forEach((key) => {
-//     if (body[key] !== undefined && key !== "status") {
-//       update.$set[key] = body[key];
-//     }
-//   });
-
-//   // Status change
-//   if (changes.statusChanged && body.status) {
-//     const action = normalizeAction(body.status);
-//     const reasonCode =
-//       body.cancellationReason ||
-//       body.rescheduleReason ||
-//       body.currentActionReason ||
-//       null;
-
-//     update.$set.previousAction = existingRound.currentAction || null;
-//     update.$set.currentAction = action;
-//     update.$set.currentActionReason = reasonCode;
-//     update.$set.status = body.status;
-//     update.$set.comments = resolveComment(reasonCode, body.comment);
-
-//     if (["Scheduled", "Rescheduled", "Cancelled", "NoShow"].includes(action)) {
-//       addHistoryEntry({
-//         action,
-//         scheduledAt: body.dateTime || existingRound.dateTime || null,
-//         reasonCode,
-//         comment: body.comment,
-//         interviewers: extractInterviewers(),
-//       });
-//     }
-//   }
-
-//   // DateTime change → Reschedule
-//   if (changes.dateTimeChanged && existingRound.status === "Scheduled") {
-//     const reasonCode = body.rescheduleReason || "time_changed";
-
-//     update.$set.previousAction = existingRound.currentAction || null;
-//     update.$set.currentAction = "Rescheduled";
-//     update.$set.currentActionReason = reasonCode;
-//     update.$set.comments = resolveComment(reasonCode, body.comment);
-
-//     addHistoryEntry({
-//       action: "Rescheduled",
-//       scheduledAt: body.dateTime,
-//       reasonCode,
-//       comment: body.comment,
-//       interviewers: extractInterviewers(),
-//     });
-//   }
-
-//   // Cleanup
-//   if (update.$push.history.length === 0) delete update.$push;
-//   if (Object.keys(update.$set).length === 0) delete update.$set;
-//   if (!update.$set && !update.$push) return null;
-
-//   return update;
-// }
 
 /**
  * Smart update builder for InterviewRounds
@@ -1473,7 +1453,7 @@ async function handleInterviewerRequestFlow({
           isMockInterview: false,
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} }
+      { status: () => ({ json: () => { } }), locals: {} }
     );
   }
 
@@ -1492,7 +1472,7 @@ async function handleInterviewerRequestFlow({
           type: "interview",
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} }
+      { status: () => ({ json: () => { } }), locals: {} }
     );
     console.log(
       "Outsource interview request emails sent successfully",
@@ -1531,7 +1511,7 @@ async function handleInternalRoundEmails({
       },
     },
     {
-      status: () => ({ json: () => {} }),
+      status: () => ({ json: () => { } }),
       locals: {},
     }
   );
