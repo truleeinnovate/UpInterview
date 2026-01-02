@@ -342,6 +342,8 @@ const updateInterviewRound = async (req, res) => {
 
   let roundIdParam = req.params.roundId;
 
+  console.log("req.bodyround", req.body);
+
   if (!mongoose.Types.ObjectId.isValid(roundIdParam)) {
     return res.status(400).json({ message: "Invalid roundId" });
   }
@@ -471,11 +473,11 @@ const updateInterviewRound = async (req, res) => {
   const interviewersUnchanged = !changes.dateTimeChanged;
   // && !hasselectedInterviewers && !hasInterviewers;
 
-  // console.log("statusAllowsQuestionUpdate", statusAllowsQuestionUpdate);
-  // console.log("interviewersUnchanged", interviewersUnchanged);
-  // console.log("changes", changes);
-  // console.log("questionsChanged", changes?.questionsChanged);
-  // console.log("instructionsChanged", changes.instructionsChanged);
+  console.log("statusAllowsQuestionUpdate", statusAllowsQuestionUpdate);
+  console.log("interviewersUnchanged", interviewersUnchanged);
+  console.log("changes", changes);
+  console.log("questionsChanged", changes?.questionsChanged);
+  console.log("instructionsChanged", changes.instructionsChanged);
 
   const shouldUpdateQuestionsOrInstructions =
     statusAllowsQuestionUpdate &&
@@ -1540,6 +1542,11 @@ function detectRoundChanges({
     questionsChanged: false, // ✅ NEW
     anyChange: false,
   };
+
+  console.log("detectRoundChanges", {
+    existingRound,
+    incomingRound,
+  });
 
   // Status change
   if (incomingRound.status && incomingRound.status !== existingRound.status) {
