@@ -502,8 +502,21 @@ const ContactUsViewPage = lazy(() =>
 const InterviewPolicy = lazy(() =>
   import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicy.jsx")
 );
+const InterviewPolicyDetails = lazy(() =>
+  import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicyDetails.jsx")
+);
+const InterviewPolicyForm = lazy(() =>
+  import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicyForm.jsx")
+);
+
 const RegionalTax = lazy(() =>
   import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTax.jsx")
+);
+const RegionalTaxForm = lazy(() =>
+  import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTaxForm.jsx")
+);
+const RegionalTaxDetails = lazy(() =>
+  import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTaxDetails.jsx")
 );
 // v2.0.0 <------------------------------------------------------------------
 // v1.0.7 ------------------------------------------------------------------------------->
@@ -1486,15 +1499,38 @@ const MainAppRoutes = ({
                     <Route path=":id" element={<ContactUsViewPage />} />
                   </Route>
                 )}
+
+                {/* Super Admin new Routes */}
                 {hasPermission("InterviewPolicy") && (
-                  <Route
-                    path="/interview-policy"
-                    element={<InterviewPolicy />}
-                  />
+                  <Route path="/interview-policy" element={<InterviewPolicy />}>
+                    <Route
+                      path="new"
+                      element={<InterviewPolicyForm mode="Create" />}
+                    />
+                    <Route
+                      path="view/:id"
+                      element={<InterviewPolicyDetails />}
+                    />
+                    <Route
+                      path="edit/:id"
+                      element={<InterviewPolicyForm mode="Edit" />}
+                    />
+                  </Route>
                 )}
                 {hasPermission("RegionalTax") && (
-                  <Route path="/regional-tax" element={<RegionalTax />} />
+                  <Route path="/regional-tax" element={<RegionalTax />}>
+                    <Route
+                      path="new"
+                      element={<RegionalTaxForm mode="Create" />}
+                    />
+                    <Route path="view/:id" element={<RegionalTaxDetails />} />
+                    <Route
+                      path="edit/:id"
+                      element={<RegionalTaxForm mode="Edit" />}
+                    />
+                  </Route>
                 )}
+
                 {/* v2.0.0 -------------------------------------------------> */}
                 {/* v1.0.7 ---------------------------------------------------------------> */}
                 {/* v1.0.8 ---------------------------------------------------------------------> */}
@@ -1542,7 +1578,7 @@ const App = () => {
       "/video-sdk-feedback",
       "/video-sdk-interview-actions",
       "/code-editor",
-      "/whiteboard"
+      "/whiteboard",
     ].some(
       (path) =>
         location.pathname === path ||

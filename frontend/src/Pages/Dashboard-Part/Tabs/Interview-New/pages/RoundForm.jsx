@@ -1876,39 +1876,20 @@ const RoundFormInterviews = () => {
                   setMeetingCreationProgress(progress);
                 }
               );
-            } else if (selectedMeetingPlatform === "videosdk") {
-              try {
-                setMeetingCreationProgress("Creating VideoSDK meeting...");
-
-                // Import the createMeeting function from VideoSDK api
-                const { createMeeting } = await import(
-                  "../../../../../VideoSDK1/api.js"
-                );
-
-                // Get the token - make sure you have this in your environment or state
-                const token = process.env.REACT_APP_VIDEOSDK_TOKEN;
-
-                if (!token) {
-                  throw new Error("VideoSDK token is not configured");
+            } else if (selectedMeetingPlatform === "platform") {
+              meetingLink = await createMeeting(
+                "videosdk",
+                {
+                  roundTitle,
+                  instructions,
+                  combinedDateTime,
+                  duration,
+                  selectedInterviewers,
+                },
+                (progress) => {
+                  setMeetingCreationProgress(progress);
                 }
-
-                // Create the meeting
-                const { meetingId, err } = await createMeeting({ token });
-
-                if (err) {
-                  throw new Error(err);
-                }
-
-                // Construct the meeting URL - adjust the path as needed
-                meetingLink = `${window.location.origin}/videosdk-meeting?meetingId=${meetingId}`;
-
-                setMeetingCreationProgress("Meeting created successfully");
-              } catch (error) {
-                console.error("Error creating VideoSDK meeting:", error);
-                setMeetingCreationProgress(`Error: ${error.message}`);
-                setIsMeetingCreationLoading(false);
-                return;
-              }
+              );
             }
 
             // Fixed: was using undefined 'data'
@@ -2120,12 +2101,30 @@ const RoundFormInterviews = () => {
         response: err.response?.data,
       });
 
-      // Show error toast
-      notify.error("Failed to create interview round. Please try again.");
+      const backendMessage = err?.response?.data?.message;
+      const requiredTopupAmount = err?.response?.data?.requiredTopupAmount;
+      const numericTopup =
+        typeof requiredTopupAmount === "number"
+          ? requiredTopupAmount
+          : Number(requiredTopupAmount);
+
+      if (numericTopup && !Number.isNaN(numericTopup) && numericTopup > 0) {
+        notify.error(
+          `${
+            backendMessage ||
+            "Insufficient available wallet balance to send outsourced interview requests."
+          } Please add at least ₹${numericTopup.toFixed(2)} to your wallet.`,
+        );
+      } else if (backendMessage) {
+        notify.error(backendMessage);
+      } else {
+        notify.error("Failed to create interview round. Please try again.");
+      }
 
       setErrors({
         submit:
-          err instanceof Error ? err.message : "An unknown error occurred",
+          backendMessage ||
+          (err instanceof Error ? err.message : "An unknown error occurred"),
       });
     } finally {
       setIsSubmitting(false);

@@ -31,17 +31,23 @@ const computeSettlementAmounts = (
     serviceChargePercent,
     gstRate
 ) => {
-    const grossSettlementAmount = Math.round((baseAmount * payPercent) / 100 * 100) / 100;
+    // All percentages here are in "percent" units (e.g. 10 = 10%, 18 = 18%).
+    const grossSettlementAmount =
+        Math.round(((baseAmount * payPercent) / 100) * 100) / 100;
 
     const refundAmount = Math.max(0, baseAmount - grossSettlementAmount);
 
-    const scPercent = typeof serviceChargePercent === "number" ? serviceChargePercent : 0;
-    const gst = typeof gstRate === "number" ? gstRate : 0;
+    const scPercent =
+        typeof serviceChargePercent === "number" ? serviceChargePercent : 0;
+    const gstPercent = typeof gstRate === "number" ? gstRate : 0;
 
-    const serviceCharge = Math.round((grossSettlementAmount * scPercent) / 100 * 100) / 100;
-    const serviceChargeGst = Math.round(serviceCharge * gst * 100) / 100;
+    const serviceCharge =
+        Math.round(((grossSettlementAmount * scPercent) / 100) * 100) / 100;
+    const serviceChargeGst =
+        Math.round(((serviceCharge * gstPercent) / 100) * 100) / 100;
 
-    let settlementAmount = grossSettlementAmount - serviceCharge - serviceChargeGst;
+    let settlementAmount =
+        grossSettlementAmount - serviceCharge - serviceChargeGst;
     settlementAmount = Math.max(0, Math.round(settlementAmount * 100) / 100);
 
     return {

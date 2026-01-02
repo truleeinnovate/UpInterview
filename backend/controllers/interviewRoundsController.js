@@ -2,11 +2,7 @@ const mongoose = require("mongoose");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds");
 const { Interview } = require("../models/Interview/Interview.js");
 const InterviewRequest = require("../models/InterviewRequest.js");
-// With this:
-// const { createRequest } = require("./InterviewRequestController.js");
-
-// const { createRequest } = require("./InterviewRequestController.js");
-
+const Wallet = require("../models/WalletTopup");
 const { Candidate } = require("../models/candidate.js");
 const {
   shareAssessment,
@@ -26,6 +22,11 @@ const {
 const {
   createInterviewRoundScheduledNotification,
 } = require("./PushNotificationControllers/pushNotificationInterviewController.js");
+const {
+  WALLET_BUSINESS_TYPES,
+  createWalletTransaction,
+  applySelectionTimeWalletHoldForOutsourcedRound,
+} = require("../utils/interviewWalletUtil");
 
 //--------------------------------------- Main controllers -------------------------------------------
 
@@ -127,6 +128,26 @@ const saveInterviewRound = async (req, res) => {
         new: true,
       });
     }
+
+
+    // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (SELECTION TIME) ========================
+    // Delegate to helper so this controller stays clean and focused.
+    const walletHoldResponse = await applySelectionTimeWalletHoldForOutsourcedRound({
+      req,
+      res,
+      interview,
+      round,
+      savedRound,
+    });
+
+    if (walletHoldResponse) {
+      // Helper already sent a response (e.g. error); stop further processing.
+      return walletHoldResponse;
+    }
+
+
+
+
     // =================== start == assessment mails sending functionality == start ========================
 
     const candidate = await Candidate.findById(interview.candidateId).lean();

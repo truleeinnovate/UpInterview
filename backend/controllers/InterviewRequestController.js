@@ -8,17 +8,15 @@ const Interview = require("../models/Interview/Interview.js");
 const InterviewRequest = require("../models/InterviewRequest");
 const { Contacts } = require("../models/Contacts");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
-const Wallet = require("../models/WalletTopup");
-const { Candidate } = require("../models/Candidate.js");
+//const Wallet = require("../models/WalletTopup");
 const {
   MockInterviewRound,
 } = require("../models/Mockinterview/mockinterviewRound.js");
-const { MockInterview } = require("../models/Mockinterview/mockinterview.js");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService.js");
 const { buildSmartRoundUpdate } = require("./interviewRoundsController.js");
 const {
-  WALLET_BUSINESS_TYPES,
-  createWalletTransaction,
+  applyAcceptInterviewWalletFlow,
+  computeInterviewPricingForAccept,
 } = require("../utils/interviewWalletUtil");
 
 //old mansoor code i have changed this code because each interviwer send one request
@@ -751,326 +749,82 @@ exports.acceptInterviewRequest = async (req, res) => {
       return res.status(404).json({ message: "Interviewer contact not found" });
     }
 
-    // Validate duration
-    const duration = request.duration;
-    const durationInMinutes = parseInt(duration?.split(" ")[0], 10);
-    if (isNaN(durationInMinutes) || durationInMinutes <= 0) {
-      return res.status(400).json({
+    const pricingResult = await computeInterviewPricingForAccept({
+      request,
+      round,
+      contact,
+      contactId,
+    });
+
+    if (pricingResult && pricingResult.error) {
+      return res.status(pricingResult.statusCode || 400).json({
         success: false,
-        message: `Invalid duration in interview request. Expected format like "30 minutes".`,
+        message: pricingResult.error,
       });
     }
 
-    // Determine rate based on experience level
-    let rate;
-    let experienceLevel;
+    const {
+      durationInMinutes,
+      totalAmount,
+      appliedDiscountPercentage,
+    } = pricingResult;
 
-    if (request.isMockInterview) {
-      let mockInterview = null;
-      try {
-        mockInterview = await MockInterview.findById(round.mockInterviewId);
-        if (!mockInterview) {
-        }
-      } catch (error) {
-        console.error("Invalid MockInterview ID:", error.message);
-      }
+    const acceptWalletResult = await applyAcceptInterviewWalletFlow({
+      request,
+      round,
+      roundId,
+      requestId,
+      contact,
+      totalAmount,
+    });
 
-      const expertiseYears = Number(mockInterview.currentExperience);
-      if (isNaN(expertiseYears) || expertiseYears < 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid or missing expertiseLevel for interviewer (${mockInterview}). Must be a non-negative number.`,
-        });
-      }
-      if (expertiseYears <= 3) {
-        experienceLevel = "junior";
-      } else if (expertiseYears <= 6) {
-        experienceLevel = "mid";
-      } else {
-        experienceLevel = "senior";
-      }
-      rate = contact.rates?.[experienceLevel]?.inr;
-      if (typeof rate !== "number" || rate <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid or missing INR rate for ${experienceLevel} level in contact (${contactId}).`,
-        });
-      }
-    } else {
-      // Regular interview: Map candidate's CurrentExperience to level
-      const candidate = await Candidate.findById(request.candidateId);
-      if (!candidate) {
-        return res.status(404).json({ message: "Candidate not found" });
-      }
-      const experienceYears = Number(candidate.CurrentExperience);
-      if (isNaN(experienceYears) || experienceYears < 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid or missing CurrentExperience for candidate (${request.candidateId}).`,
-        });
-      }
-      if (experienceYears <= 3) {
-        experienceLevel = "junior";
-      } else if (experienceYears <= 6) {
-        experienceLevel = "mid";
-      } else {
-        experienceLevel = "senior";
-      }
-      rate = contact.rates?.[experienceLevel]?.inr;
-      if (typeof rate !== "number" || rate <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid or missing INR rate for ${experienceLevel} level in contact (${contactId}).`,
-        });
-      }
-    }
-
-    // Calculate base amount
-    let totalAmount = (rate * durationInMinutes) / 60;
-    if (isNaN(totalAmount) || totalAmount <= 0) {
-      return res.status(400).json({
+    if (acceptWalletResult && acceptWalletResult.error) {
+      return res.status(acceptWalletResult.statusCode || 400).json({
         success: false,
-        message:
-          "Failed to calculate interview fee. Please check rate and duration.",
+        message: acceptWalletResult.error,
       });
     }
 
-    // Apply discount if it's a mock interview
-    let appliedDiscountPercentage = 0;
-    let discountAmount = 0;
-    if (request.isMockInterview && contact.mock_interview_discount) {
-      appliedDiscountPercentage =
-        parseFloat(contact.mock_interview_discount) || 0;
-      if (appliedDiscountPercentage > 0 && appliedDiscountPercentage <= 100) {
-        discountAmount = (totalAmount * appliedDiscountPercentage) / 100;
-        totalAmount -= discountAmount;
-      }
-    }
-
-    // Fetch wallet and derive available balance, taking existing holds into account
-    const wallet = await Wallet.findOne({ ownerId: request.ownerId });
-    if (!wallet) {
-      return res.status(400).json({
-        success: false,
-        message: "No wallet found for this organization.",
-      });
-    }
-
-    const walletBalance = Number(wallet.balance || 0);
-
-    // With the shared wallet helper, `balance` already reflects available funds
-    // after all previous holds. We keep the pre-check simple and only look at
-    // this round's selection-time hold (if any) plus the current balance.
-    const availableBalanceBefore = walletBalance;
-
-    // Try to locate an existing selection-time HOLD for this round (created at round save)
-    let selectionHoldTx = null;
-    if (Array.isArray(wallet.transactions) && wallet.transactions.length > 0) {
-      selectionHoldTx = wallet.transactions
-        .slice()
-        .reverse()
-        .find((t) => {
-          if (!t || !t.type || !t.status) return false;
-          const txType = String(t.type).toLowerCase();
-          const txStatus = String(t.status).toLowerCase();
-          const meta = t.metadata || {};
-          return (
-            txType === "hold" &&
-            txStatus === "pending" &&
-            String(meta.roundId || "") === String(roundId) &&
-            meta.source === "selection_hold"
-          );
-        });
-    }
-
-    const selectionHoldAmount = selectionHoldTx
-      ? Number(selectionHoldTx.amount || 0)
-      : 0;
-
-    // Effective funds we can use for the final HOLD, considering this round's
-    // selection-time hold. We keep the logic simple: available balance now
-    // plus whatever was reserved for this round must cover the final
-    // interviewer amount.
-    const effectiveAvailable = availableBalanceBefore + selectionHoldAmount;
-
-    if (effectiveAvailable < totalAmount) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Insufficient available balance in wallet to accept this interview request.",
-      });
-    }
-
-    const holdID =
-      request?.interviewRequestCode || String(requestId).slice(-10);
-
-    // Description reused for both final hold record and fallback hold create
-    const holdDescription = `Hold for ${
-      request.isMockInterview ? "mock " : ""
-    }interview round ${round?.roundTitle}`;
-
-    let updatedWallet = wallet;
-    let savedTransaction = null;
-
-    if (selectionHoldTx && selectionHoldAmount > 0) {
-      // Simple adjustment logic:
-      // - selectionHoldAmount was reserved at selection time (e.g. 4000)
-      // - totalAmount is final interviewer amount (e.g. 1400)
-      // - we release only the difference (4000 - 1400 = 2600) back to org wallet
-      //   as a credit, and leave the remaining 1400 effectively held.
-      const releaseAmount = Math.max(selectionHoldAmount - totalAmount, 0);
-
-      if (releaseAmount > 0) {
-        const releaseResult = await createWalletTransaction({
-          ownerId: request.ownerId,
-          businessType: WALLET_BUSINESS_TYPES.HOLD_RELEASE,
-          amount: releaseAmount,
-          description: `Refund unused selection-time hold for interview round ${round?.roundTitle}`,
-          relatedInvoiceId: selectionHoldTx.relatedInvoiceId || holdID,
-          status: "completed",
-          metadata: {
-            interviewId: String(
-              request.isMockInterview
-                ? round?.mockInterviewId
-                : round?.interviewId || ""
-            ),
-            roundId: String(roundId),
-            requestId: String(requestId),
-            source: "selection_hold_refund_on_accept",
-            originalSelectionHoldTransactionId: selectionHoldTx._id
-              ? selectionHoldTx._id.toString()
-              : undefined,
-            selectionHoldAmount,
-            finalHoldAmount: totalAmount,
-          },
-        });
-
-        updatedWallet = releaseResult.wallet;
-      }
-
-      // Create a non-mutating hold record for the final interviewer amount so
-      // that transaction history clearly shows the final hold (e.g. 1400)
-      // without double-counting holdAmount.
-      const noteResult = await createWalletTransaction({
-        ownerId: request.ownerId,
-        businessType: WALLET_BUSINESS_TYPES.HOLD_NOTE,
-        amount: totalAmount,
-        description: holdDescription,
-        relatedInvoiceId: holdID,
-        metadata: {
-          interviewId: String(
-            request.isMockInterview
-              ? round?.mockInterviewId
-              : round?.interviewId || ""
-          ),
-          roundId: String(roundId),
-          requestId: String(requestId),
-          interviewerContactId: String(contact._id),
-          rate: rate, // Store selected rate
-          experienceLevel: experienceLevel,
-          duration: String(duration),
-          durationInMinutes: durationInMinutes,
-          isMockInterview: Boolean(request.isMockInterview),
-          mockInterviewDiscount: request.isMockInterview
-            ? appliedDiscountPercentage
-            : null,
-          calculation: {
-            formula:
-              request.isMockInterview && appliedDiscountPercentage > 0
-                ? "(rate * minutes / 60) - discount"
-                : "rate * minutes / 60",
-            rate: rate,
-            minutes: durationInMinutes,
-            discountPercentage: appliedDiscountPercentage,
-          },
-          source: "interview_accept_hold",
-        },
-      });
-
-      updatedWallet = noteResult.wallet;
-      savedTransaction = noteResult.transaction;
-    } else {
-      // Fallback for legacy cases where no selection-time hold was created:
-      // create a real HOLD for the full interviewer amount.
-      const holdResult = await createWalletTransaction({
-        ownerId: request.ownerId,
-        businessType: WALLET_BUSINESS_TYPES.HOLD_CREATE,
-        amount: totalAmount,
-        description: holdDescription,
-        relatedInvoiceId: holdID,
-        metadata: {
-          interviewId: String(
-            request.isMockInterview
-              ? round?.mockInterviewId
-              : round?.interviewId || ""
-          ),
-          roundId: String(roundId),
-          requestId: String(requestId),
-          interviewerContactId: String(contact._id),
-          rate: rate, // Store selected rate
-          experienceLevel: experienceLevel,
-          duration: String(duration),
-          durationInMinutes: durationInMinutes,
-          isMockInterview: Boolean(request.isMockInterview),
-          mockInterviewDiscount: request.isMockInterview
-            ? appliedDiscountPercentage
-            : null,
-          calculation: {
-            formula:
-              request.isMockInterview && appliedDiscountPercentage > 0
-                ? "(rate * minutes / 60) - discount"
-                : "rate * minutes / 60",
-            rate: rate,
-            minutes: durationInMinutes,
-            discountPercentage: appliedDiscountPercentage,
-          },
-          source: "interview_accept_hold",
-        },
-      });
-
-      updatedWallet = holdResult.wallet;
-      savedTransaction = holdResult.transaction;
-    }
+    const { wallet: updatedWallet, transaction: savedTransaction } = acceptWalletResult;
 
     // ================== INTERVIEWER WALLET HOLD (PENDING PAYOUT) ==================
     // Mirror the final interviewer amount as a hold in the interviewer's wallet so
     // their wallet shows this amount under `holdAmount` and in transaction history.
-    try {
-      const interviewerOwnerId = contact?.ownerId;
-      if (interviewerOwnerId) {
-        const interviewerWallet = await Wallet.findOne({
-          ownerId: interviewerOwnerId,
-        });
+    // try {
+    //   const interviewerOwnerId = contact?.ownerId;
+    //   if (interviewerOwnerId) {
+    //     const interviewerWallet = await Wallet.findOne({ ownerId: interviewerOwnerId });
 
-        // Only create a hold if the interviewer already has a wallet set up.
-        if (interviewerWallet) {
-          await createWalletTransaction({
-            ownerId: String(interviewerOwnerId),
-            businessType: WALLET_BUSINESS_TYPES.INTERVIEWER_HOLD_CREATE,
-            amount: totalAmount,
-            description: holdDescription,
-            relatedInvoiceId: holdID,
-            metadata: {
-              interviewId: String(
-                request.isMockInterview
-                  ? round?.mockInterviewId
-                  : round?.interviewId || ""
-              ),
-              roundId: String(roundId),
-              requestId: String(requestId),
-              organizationOwnerId: String(request.ownerId),
-              source: "interviewer_pending_payout_hold",
-            },
-          });
-        }
-      }
-    } catch (interviewerHoldErr) {
-      console.error(
-        "[acceptInterviewRequest] Failed to create interviewer wallet hold:",
-        interviewerHoldErr
-      );
-      // Do not fail the accept flow if interviewer wallet hold creation fails.
-    }
+    //     // Only create a hold if the interviewer already has a wallet set up.
+    //     if (interviewerWallet) {
+    //       await createWalletTransaction({
+    //         ownerId: String(interviewerOwnerId),
+    //         businessType: WALLET_BUSINESS_TYPES.HOLD_ADJUST,
+    //         amount: totalAmount,
+    //         //gstAmount: legacyGstAmount,
+    //         description: holdDescription,
+    //         relatedInvoiceId: holdID,
+    //         metadata: {
+    //           interviewId: String(
+    //             request.isMockInterview
+    //               ? round?.mockInterviewId
+    //               : round?.interviewId || ""
+    //           ),
+    //           roundId: String(roundId),
+    //           requestId: String(requestId),
+    //           organizationOwnerId: String(request.ownerId),
+    //           source: "interviewer_pending_payout_hold",
+    //         },
+    //       });
+    //     }
+    //   }
+    // } catch (interviewerHoldErr) {
+    //   console.error(
+    //     "[acceptInterviewRequest] Failed to create interviewer wallet hold:",
+    //     interviewerHoldErr
+    //   );
+    //   // Do not fail the accept flow if interviewer wallet hold creation fails.
+    // }
 
     const transactionId =
       savedTransaction && savedTransaction._id
