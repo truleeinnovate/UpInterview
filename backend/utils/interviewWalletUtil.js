@@ -23,6 +23,7 @@ const WALLET_BUSINESS_TYPES = {
   HOLD_DEBIT: "HOLD_DEBIT", // Convert part/all of hold into a debit (payout/charge)
   REFUND: "REFUND", // Credit back to wallet balance (no hold change)
   TOPUP_CREDIT: "TOPUP_CREDIT", // Generic credit/topup
+  SUBSCRIBE_CREDITED: "SUBSCRIBE_CREDITED", // Subscription plan credits
   GENERIC_DEBIT: "GENERIC_DEBIT", // Generic debit from available balance
   HOLD_NOTE: "HOLD_NOTE", // Ledger-only hold record (no balance/hold change)
   INTERVIEWER_HOLD_CREATE: "INTERVIEWER_HOLD_CREATE", // Pending payout hold in interviewer wallet (no balance change, holdAmount increases)
@@ -76,7 +77,7 @@ function computeWalletDeltas(businessType, amount) {
     case WALLET_BUSINESS_TYPES.REFUND:
       // Pure refund back to wallet (no hold change)
       return {
-        txType: "credit",
+        txType: "credited",
         balanceDelta: amt,
         holdDelta: 0,
       };
@@ -84,7 +85,15 @@ function computeWalletDeltas(businessType, amount) {
     case WALLET_BUSINESS_TYPES.TOPUP_CREDIT:
       // Generic top-up credit
       return {
-        txType: "credit",
+        txType: "credited",
+        balanceDelta: amt,
+        holdDelta: 0,
+      };
+
+    case WALLET_BUSINESS_TYPES.SUBSCRIBE_CREDITED:
+      // Subscription plan credits
+      return {
+        txType: "credited",
         balanceDelta: amt,
         holdDelta: 0,
       };
@@ -209,9 +218,9 @@ async function createWalletTransaction({
   }
 
   let effect = "NONE";
-  if (txType === "credit" || txType === "hold_release" || txType === "hold_adjust") {
+  if (txType === "credited" || txType === "hold_release" || txType === "hold_adjust") {
     effect = "CREDIT";
-  } else if (txType === "debit" || txType === "hold"|| txType === "") {
+  } else if (txType === "debit" || txType === "hold" || txType === "") {
     effect = "DEBIT";
   }
 
@@ -599,9 +608,8 @@ async function applyAcceptInterviewWalletFlow({
     request?.interviewRequestCode || String(requestId).slice(-10);
 
   // Description reused for both final hold record and fallback hold create
-  const holdDescription = `Hold for ${
-    request.isMockInterview ? "mock " : ""
-  }interview round ${round?.roundTitle}`;
+  const holdDescription = `Hold for ${request.isMockInterview ? "mock " : ""
+    }interview round ${round?.roundTitle}`;
 
   let updatedWallet = wallet;
   let savedTransaction = null;

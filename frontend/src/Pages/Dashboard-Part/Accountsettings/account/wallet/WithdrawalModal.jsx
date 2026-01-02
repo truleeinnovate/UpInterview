@@ -15,12 +15,12 @@ export function WithdrawalModal({ onClose, onSuccess }) {
   const { userProfile } = useUserProfile();
   const ownerId = userProfile?.id || userProfile?._id;
   const tenantId = userProfile?.tenantId;
-  
+
   // API hooks
   const { data: walletData } = useWallet();
   const { data: bankAccounts = [], isLoading: loadingAccounts } = useBankAccounts(ownerId);
   const { mutate: createWithdrawal, isLoading: processingWithdrawal } = useCreateWithdrawal();
-  
+
   // State
   const [amount, setAmount] = useState("");
   const [selectedBankAccount, setSelectedBankAccount] = useState(null);
@@ -30,7 +30,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
   // const [showModeDropdown, setShowModeDropdown] = useState(false); // Commented for manual payout
   const [fees, setFees] = useState(null);
   const [errors, setErrors] = useState({});
-  
+
   // Debug logging
   // console.log("WithdrawalModal Debug:", {
   //   ownerId,
@@ -38,12 +38,12 @@ export function WithdrawalModal({ onClose, onSuccess }) {
   //   loadingAccounts,
   //   userProfile
   // });
-  
+
   // Get verified bank accounts only
   const verifiedAccounts = bankAccounts.filter(acc => acc.isVerified && acc.isActive);
-  //console.log("Verified accounts:", verifiedAccounts);
-  const availableBalance = walletData?.balance - (walletData?.holdAmount || 0);
-  
+  // Balance already represents available funds (holdAmount was subtracted when holds were created)
+  const availableBalance = walletData?.balance || 0;
+
   // Calculate fees when amount changes
   useEffect(() => {
     const amountNum = parseFloat(amount);
@@ -53,7 +53,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
       setFees(null);
     }
   }, [amount]);
-  
+
   // Set default bank account
   useEffect(() => {
     if (verifiedAccounts.length > 0 && !selectedBankAccount) {
@@ -61,10 +61,10 @@ export function WithdrawalModal({ onClose, onSuccess }) {
       setSelectedBankAccount(defaultAccount);
     }
   }, [verifiedAccounts, selectedBankAccount]);
-  
+
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!amount || parseFloat(amount) <= 0) {
       newErrors.amount = "Please enter a valid amount";
     } else if (parseFloat(amount) < 100) {
@@ -72,22 +72,22 @@ export function WithdrawalModal({ onClose, onSuccess }) {
     } else if (parseFloat(amount) > availableBalance) {
       newErrors.amount = `Insufficient balance. Available: ₹${availableBalance?.toFixed(2)}`;
     }
-    
+
     if (!selectedBankAccount) {
       newErrors.bankAccount = "Please select a bank account";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     const withdrawalData = {
       ownerId,
       tenantId,
@@ -103,7 +103,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
         availableBalance: availableBalance
       }
     };
-    
+
     createWithdrawal(withdrawalData, {
       onSuccess: (data) => {
         notify.success(`Withdrawal request submitted successfully! Your request ID is ${data.withdrawalRequest?.withdrawalCode || ""}. It will be processed by our admin team within 24-48 hours.`);
@@ -117,7 +117,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
       }
     });
   };
-  
+
   // Commented for manual payout - will be used in future for Razorpay integration
   // const withdrawalModes = [
   //   { 
@@ -145,10 +145,10 @@ export function WithdrawalModal({ onClose, onSuccess }) {
   //     timeline: "30-60 minutes"
   //   }
   // ];
-  
+
   return (
-    <SidebarPopup 
-      title="Withdraw Funds" 
+    <SidebarPopup
+      title="Withdraw Funds"
       onClose={onClose}
       headerAction={
         <button
@@ -182,7 +182,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               <CreditCard className="h-8 w-8 text-custom-blue" />
             </div>
           </div>
-          
+
           {/* Low Balance Warning */}
           {availableBalance < 100 && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -197,7 +197,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               </div>
             </div>
           )}
-          
+
           {/* Withdrawal Amount */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -229,11 +229,9 @@ export function WithdrawalModal({ onClose, onSuccess }) {
                     }
                   }
                 }}
-                className={`w-full pl-8 pr-3 py-2 border ${
-                  errors.amount ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg focus:outline-none ${
-                  availableBalance < 100 ? 'bg-gray-100 cursor-not-allowed' : ''
-                }`}
+                className={`w-full pl-8 pr-3 py-2 border ${errors.amount ? 'border-red-500' : 'border-gray-300'
+                  } rounded-lg focus:outline-none ${availableBalance < 100 ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
                 placeholder={`Enter amount (Max: ₹${availableBalance?.toFixed(2) || '0.00'})`}
               />
             </div>
@@ -257,7 +255,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               )}
             </div>
           </div>
-          
+
           {/* Fee Breakdown */}
           {fees && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-2">
@@ -285,7 +283,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               </div>
             </div>
           )}
-          
+
           {/* Bank Account Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -308,9 +306,8 @@ export function WithdrawalModal({ onClose, onSuccess }) {
                 <button
                   type="button"
                   onClick={() => setShowBankDropdown(!showBankDropdown)}
-                  className={`w-full px-3 py-2 border ${
-                    errors.bankAccount ? 'border-red-500' : 'border-gray-300'
-                  } rounded-lg text-left flex justify-between items-center hover:bg-gray-50`}
+                  className={`w-full px-3 py-2 border ${errors.bankAccount ? 'border-red-500' : 'border-gray-300'
+                    } rounded-lg text-left flex justify-between items-center hover:bg-gray-50`}
                 >
                   {selectedBankAccount ? (
                     <div>
@@ -322,11 +319,10 @@ export function WithdrawalModal({ onClose, onSuccess }) {
                   ) : (
                     <span className="text-gray-400">Select bank account</span>
                   )}
-                  <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${
-                    showBankDropdown ? 'transform rotate-180' : ''
-                  }`} />
+                  <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${showBankDropdown ? 'transform rotate-180' : ''
+                    }`} />
                 </button>
-                
+
                 {showBankDropdown && (
                   <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
                     {verifiedAccounts.map((account) => (
@@ -337,9 +333,8 @@ export function WithdrawalModal({ onClose, onSuccess }) {
                           setSelectedBankAccount(account);
                           setShowBankDropdown(false);
                         }}
-                        className={`w-full px-4 py-3 text-left hover:bg-gray-50 border-b last:border-b-0 ${
-                          selectedBankAccount?._id === account._id ? 'bg-blue-50' : ''
-                        }`}
+                        className={`w-full px-4 py-3 text-left hover:bg-gray-50 border-b last:border-b-0 ${selectedBankAccount?._id === account._id ? 'bg-blue-50' : ''
+                          }`}
                       >
                         <div>
                           <p className="font-medium">{account.accountHolderName}</p>
@@ -362,7 +357,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               <p className="mt-1 text-sm text-red-500">{errors.bankAccount}</p>
             )}
           </div>
-          
+
           {/* Transfer Mode - Commented for Manual Payout */}
           {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -417,7 +412,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               )}
             </div>
           </div> */}
-          
+
           {/* Processing Time Notice for Manual Payout */}
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
             <div className="flex items-start space-x-2">
@@ -430,7 +425,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               </div>
             </div>
           </div>
-          
+
           {/* Notes (Optional) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -444,7 +439,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               rows="3"
             />
           </div>
-          
+
           {/* Security Note */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <div className="flex items-start space-x-2">
@@ -461,7 +456,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               </div>
             </div>
           </div>
-          
+
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3 pt-4">
             <button

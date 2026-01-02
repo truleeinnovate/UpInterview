@@ -38,6 +38,12 @@ const {
 
 const { getTaxConfigForTenant } = require("../utils/taxConfigUtil");
 
+// Import common wallet transaction utility
+const {
+  createWalletTransaction,
+  WALLET_BUSINESS_TYPES,
+} = require("../utils/interviewWalletUtil");
+
 // Platform wallet owner for capturing platform fees & GST
 const PLATFORM_WALLET_OWNER_ID =
   process.env.PLATFORM_WALLET_OWNER_ID || "PLATFORM";
@@ -474,20 +480,6 @@ const walletVerifyPayment = async (req, res) => {
       return res.status(400).json({ error: "Invalid amount provided" });
     }
 
-    // Add transaction - semantic type `topup` for wallet credit
-    const transaction = {
-      type: "topup",
-      amount: parsedAmount,
-      description,
-      relatedInvoiceId: razorpay_order_id, // Using relatedInvoiceId for compatibility
-      status: "completed",
-      metadata: {
-        paymentId: razorpay_payment_id,
-        orderId: razorpay_order_id,
-      },
-      createdDate: new Date(),
-    };
-
     // Check if this payment has already been processed
     const existingTransaction = wallet.transactions.find(
       (txn) => txn.metadata && txn.metadata.paymentId === razorpay_payment_id
@@ -508,13 +500,28 @@ const walletVerifyPayment = async (req, res) => {
     let receipt = null;
     let payment = null;
     let recordCreationError = null;
+    let transaction = null;
 
-    // Update wallet balance and add transaction
+    // Update wallet balance and add transaction using common function
     try {
-      // Credit transactions always increase the available balance immediately
-      wallet.balance += parsedAmount;
-      wallet.transactions.push(transaction);
-      await wallet.save();
+      // Use common createWalletTransaction function for consistent wallet updates
+      const transactionResult = await createWalletTransaction({
+        ownerId,
+        businessType: WALLET_BUSINESS_TYPES.TOPUP_CREDIT,
+        amount: parsedAmount,
+        description,
+        relatedInvoiceId: razorpay_order_id,
+        status: "completed",
+        reason: "WALLET_TOPUP",
+        metadata: {
+          paymentId: razorpay_payment_id,
+          orderId: razorpay_order_id,
+          source: "razorpay_topup",
+        },
+      });
+
+      wallet = transactionResult.wallet;
+      transaction = transactionResult.transaction;
       // console.log("Wallet updated successfully", { balance: wallet.balance });
 
       /* ------------------------------------------------------------------
@@ -1677,8 +1684,9 @@ const createWithdrawalRequest = async (req, res) => {
       });
     }
 
-    // Check available balance (balance - holdAmount)
-    const availableBalance = wallet.balance - (wallet.holdAmount || 0);
+    // Check available balance
+    // Note: balance already represents available funds (holdAmount was subtracted when holds were created)
+    const availableBalance = wallet.balance || 0;
     if (availableBalance < amount) {
       res.locals.logData = {
         tenantId,
@@ -1857,28 +1865,34 @@ const createWithdrawalRequest = async (req, res) => {
       });
     }
 
-    // Deduct amount from wallet and add to hold
-    wallet.balance -= amount;
-    wallet.holdAmount = (wallet.holdAmount || 0) + amount;
-
-    // Add transaction record with enhanced metadata (funds moved to HOLD bucket)
-    wallet.transactions.push({
-      type: "hold",
-      amount,
-      description: `Withdrawal request ${withdrawalRequest.withdrawalCode}`,
-      status: "pending",
-      metadata: {
-        withdrawalRequestId: withdrawalRequest._id,
-        withdrawalCode: withdrawalRequest.withdrawalCode,
-        bankAccountId,
+    // Deduct amount from wallet and add to hold using common function
+    try {
+      await createWalletTransaction({
+        ownerId,
+        businessType: WALLET_BUSINESS_TYPES.HOLD_CREATE,
         amount,
-        processingType: "manual",
-        requestedAt: new Date(),
-      },
-      createdDate: new Date(),
-    });
-
-    await wallet.save();
+        description: `Withdrawal request ${withdrawalRequest.withdrawalCode}`,
+        relatedInvoiceId: withdrawalRequest._id.toString(),
+        status: "pending",
+        reason: "WITHDRAWAL_HOLD",
+        metadata: {
+          withdrawalRequestId: withdrawalRequest._id,
+          withdrawalCode: withdrawalRequest.withdrawalCode,
+          bankAccountId,
+          processingType: "manual",
+          requestedAt: new Date(),
+          source: "withdrawal_request",
+        },
+      });
+    } catch (walletError) {
+      console.error("Error creating withdrawal hold transaction:", walletError);
+      // Rollback withdrawal request if wallet update fails
+      await WithdrawalRequest.findByIdAndDelete(withdrawalRequest._id);
+      return res.status(500).json({
+        error: "Failed to hold amount in wallet. Withdrawal request cancelled.",
+        details: walletError.message,
+      });
+    }
 
     // Create push notification for pending withdrawal
     try {
@@ -2081,58 +2095,50 @@ const failManualWithdrawal = async (req, res) => {
 
     await withdrawalRequest.save();
 
-    // Refund amount back to wallet
-    const wallet = await WalletTopup.findOne({
-      ownerId: withdrawalRequest.ownerId,
-    });
-    if (wallet) {
-      wallet.balance += withdrawalRequest.amount;
-      wallet.holdAmount = Math.max(
-        0,
-        (wallet.holdAmount || 0) - withdrawalRequest.amount
-      );
-
-      wallet.transactions.push({
-        type: "refund",
+    // Refund amount back to wallet using common function
+    let wallet = null;
+    try {
+      const refundResult = await createWalletTransaction({
+        ownerId: withdrawalRequest.ownerId,
+        businessType: WALLET_BUSINESS_TYPES.HOLD_RELEASE,
         amount: withdrawalRequest.amount,
         description: `Withdrawal failed - Refund for ${withdrawalRequest.withdrawalCode}`,
+        relatedInvoiceId: withdrawalRequest._id.toString(),
         status: "completed",
+        reason: "WITHDRAWAL_FAILED_REFUND",
         metadata: {
           withdrawalRequestId: withdrawalRequest._id,
           withdrawalCode: withdrawalRequest.withdrawalCode,
           failureReason: withdrawalRequest.failureReason,
+          failedAt: new Date(),
+          failedBy,
+          source: "withdrawal_failed_refund",
         },
-        createdDate: new Date(),
       });
-
-      await wallet.save();
+      wallet = refundResult.wallet;
+    } catch (walletError) {
+      console.error("Error refunding failed withdrawal:", walletError);
+      // Continue processing even if wallet update fails - log for manual intervention
     }
 
-    // Update wallet - remove from pending to failed
-    const walletUpdate = await WalletTopup.findOne({
-      ownerId: withdrawalRequest.ownerId,
-    });
-    if (walletUpdate) {
-      //walletUpdate.holdAmount = Math.max(0, (wallet.holdAmount || 0) - withdrawalRequest.amount);
-
-      // Update transaction status
-      const transaction = walletUpdate.transactions.find(
-        (t) =>
-          t.metadata?.withdrawalRequestId?.toString() ===
-          withdrawalRequest._id.toString()
+    // Update the original hold transaction status to failed
+    try {
+      await WalletTopup.updateOne(
+        {
+          ownerId: withdrawalRequest.ownerId,
+          "transactions.metadata.withdrawalRequestId": withdrawalRequest._id.toString(),
+          "transactions.type": "hold",
+        },
+        {
+          $set: {
+            "transactions.$.status": "failed",
+            "transactions.$.metadata.failedAt": new Date(),
+            "transactions.$.metadata.failureReason": withdrawalRequest.failureReason,
+          },
+        }
       );
-      if (transaction) {
-        transaction.status = "failed";
-        transaction.metadata = {
-          //...transaction.metadata,
-          failedAt: new Date(),
-          withdrawalRequestId: withdrawalRequest._id,
-          withdrawalCode: withdrawalRequest.withdrawalCode,
-          failureReason: withdrawalRequest.failureReason,
-        };
-      }
-
-      await walletUpdate.save();
+    } catch (updateError) {
+      console.error("Error updating original hold transaction:", updateError);
     }
 
     // Create push notification for failed withdrawal
@@ -2177,7 +2183,6 @@ const failManualWithdrawal = async (req, res) => {
       responseBody: {
         withdrawalRequest,
         wallet,
-        walletUpdate,
       },
     };
 
@@ -2265,33 +2270,52 @@ const processManualWithdrawal = async (req, res) => {
 
     await withdrawalRequest.save();
 
-    // Update wallet - remove from hold
-    const wallet = await WalletTopup.findOne({
-      ownerId: withdrawalRequest.ownerId,
-    });
-    if (wallet) {
-      wallet.holdAmount = Math.max(
-        0,
-        (wallet.holdAmount || 0) - withdrawalRequest.amount
-      );
-
-      // Update transaction status
-      const transaction = wallet.transactions.find(
-        (t) =>
-          t.metadata?.withdrawalRequestId?.toString() ===
-          withdrawalRequest._id.toString()
-      );
-      if (transaction) {
-        transaction.status = "completed";
-        transaction.metadata = {
-          ...transaction.metadata,
+    // Update wallet - debit from hold using common function
+    let wallet = null;
+    try {
+      const debitResult = await createWalletTransaction({
+        ownerId: withdrawalRequest.ownerId,
+        businessType: WALLET_BUSINESS_TYPES.HOLD_DEBIT,
+        amount: withdrawalRequest.amount,
+        description: `Withdrawal completed - Payout for ${withdrawalRequest.withdrawalCode}`,
+        relatedInvoiceId: withdrawalRequest._id.toString(),
+        status: "completed",
+        reason: "WITHDRAWAL_PAYOUT",
+        metadata: {
+          withdrawalRequestId: withdrawalRequest._id,
+          withdrawalCode: withdrawalRequest.withdrawalCode,
           completedAt: new Date(),
           transactionReference,
           processedBy,
-        };
-      }
+          actualMode: actualMode || withdrawalRequest.mode,
+          source: "withdrawal_payout_completed",
+        },
+      });
+      wallet = debitResult.wallet;
+    } catch (walletError) {
+      console.error("Error completing withdrawal transaction:", walletError);
+      // Continue processing even if wallet update fails - log for manual intervention
+    }
 
-      await wallet.save();
+    // Update the original hold transaction status to completed
+    try {
+      await WalletTopup.updateOne(
+        {
+          ownerId: withdrawalRequest.ownerId,
+          "transactions.metadata.withdrawalRequestId": withdrawalRequest._id.toString(),
+          "transactions.type": "hold",
+        },
+        {
+          $set: {
+            "transactions.$.status": "completed",
+            "transactions.$.metadata.completedAt": new Date(),
+            "transactions.$.metadata.transactionReference": transactionReference,
+            "transactions.$.metadata.processedBy": processedBy,
+          },
+        }
+      );
+    } catch (updateError) {
+      console.error("Error updating original hold transaction:", updateError);
     }
 
     // Create push notification for completed withdrawal
@@ -2704,30 +2728,29 @@ const cancelWithdrawalRequest = async (req, res) => {
       reason || "User requested cancellation";
     await withdrawalRequest.save();
 
-    // Refund amount back to wallet
-    const wallet = await WalletTopup.findOne({
-      ownerId: withdrawalRequest.ownerId,
-    });
-    if (wallet) {
-      wallet.balance += withdrawalRequest.amount;
-      wallet.holdAmount = Math.max(
-        0,
-        (wallet.holdAmount || 0) - withdrawalRequest.amount
-      );
-
-      wallet.transactions.push({
-        type: "refund",
+    // Refund amount back to wallet using common function
+    let wallet = null;
+    try {
+      const refundResult = await createWalletTransaction({
+        ownerId: withdrawalRequest.ownerId,
+        businessType: WALLET_BUSINESS_TYPES.HOLD_RELEASE,
         amount: withdrawalRequest.amount,
         description: `Withdrawal cancelled - Refund for ${withdrawalRequest.withdrawalCode}`,
+        relatedInvoiceId: withdrawalRequest._id.toString(),
         status: "completed",
+        reason: "WITHDRAWAL_CANCELLED_REFUND",
         metadata: {
           withdrawalRequestId: withdrawalRequest._id,
           withdrawalCode: withdrawalRequest.withdrawalCode,
+          cancellationReason: reason || "User requested cancellation",
+          cancelledAt: new Date(),
+          source: "withdrawal_cancelled_refund",
         },
-        createdDate: new Date(),
       });
-
-      await wallet.save();
+      wallet = refundResult.wallet;
+    } catch (walletError) {
+      console.error("Error refunding cancelled withdrawal:", walletError);
+      // Continue processing even if wallet update fails - log for manual intervention
     }
 
     // Create push notification for canceled withdrawal
@@ -4198,11 +4221,11 @@ const settleInterviewPayment = async (req, res) => {
       platformWallet:
         updatedPlatformWallet && (platformFeeTransaction || platformGstTransaction)
           ? {
-              ownerId: updatedPlatformWallet.ownerId,
-              balance: updatedPlatformWallet.balance,
-              lastFeeTransactionId: platformFeeTransaction?._id,
-              lastGstTransactionId: platformGstTransaction?._id,
-            }
+            ownerId: updatedPlatformWallet.ownerId,
+            balance: updatedPlatformWallet.balance,
+            lastFeeTransactionId: platformFeeTransaction?._id,
+            lastGstTransactionId: platformGstTransaction?._id,
+          }
           : null,
       roundId,
       originalTransactionId: transactionId,

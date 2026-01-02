@@ -22,6 +22,7 @@ const {
   getAllWithdrawalRequests,
   getPlatformWallet,
 } = require('../controllers/WalletControllers');
+const { getTenantTaxConfig } = require('../controllers/RegionalTaxConfigController');
 const loggingService = require('../middleware/loggingService.js');
 const WalletRouter = express.Router();
 
@@ -34,6 +35,9 @@ WalletRouter.post('/verify-payment', loggingService.internalLoggingMiddleware,lo
 
 // GET /wallet/platform - Get or create the platform (superadmin) wallet
 WalletRouter.get('/platform', getPlatformWallet);
+
+// GET /wallet/tax-config - Get GST and service charge configuration for current tenant
+WalletRouter.get('/tax-config', getTenantTaxConfig);
 
 // Bank Account Routes
 // POST /wallet/bank-accounts - Add a new bank account

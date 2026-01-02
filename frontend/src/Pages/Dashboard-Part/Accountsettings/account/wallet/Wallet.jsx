@@ -19,6 +19,7 @@ import { useWallet } from "../../../../../apiHooks/useWallet"; //<----v1.0.0----
 export const getTransactionTypeStyle = (type) => {
   const t = (type || "").toString().toLowerCase();
   switch (t) {
+    case "credited":
     case "credit":
     case "topup":
     case "refund":
@@ -29,7 +30,9 @@ export const getTransactionTypeStyle = (type) => {
       return "text-red-600";
     case "hold":
     case "hold adjust":
+    case "hold_adjust":
     case "hold release":
+    case "hold_release":
       return "text-yellow-600";
     default:
       return "text-gray-600";
@@ -273,9 +276,8 @@ const Wallet = () => {
             <button
               ref={topUpButtonRef}
               onClick={() => setIsTopupOpen(true)}
-              className={`sm:px-2 px-4 sm:py-1 py-2 bg-custom-blue text-white rounded-lg text-sm hover:bg-custom-blue/90 ${
-                animateTopUp ? "top-up-button-animation pulse-glow" : ""
-              }`}
+              className={`sm:px-2 px-4 sm:py-1 py-2 bg-custom-blue text-white rounded-lg text-sm hover:bg-custom-blue/90 ${animateTopUp ? "top-up-button-animation pulse-glow" : ""
+                }`}
             >
               Top Up
             </button>
@@ -355,13 +357,13 @@ const Wallet = () => {
                   const dateA = a.createdAt
                     ? new Date(a.createdAt)
                     : a.createdDate
-                    ? new Date(a.createdDate)
-                    : new Date(0);
+                      ? new Date(a.createdDate)
+                      : new Date(0);
                   const dateB = b.createdAt
                     ? new Date(b.createdAt)
                     : b.createdDate
-                    ? new Date(b.createdDate)
-                    : new Date(0);
+                      ? new Date(b.createdDate)
+                      : new Date(0);
                   return dateB - dateA; // Sort in descending order (newest first)
                 })
                 .map((transaction) => (
@@ -376,21 +378,20 @@ const Wallet = () => {
                           {transaction.createdAt
                             ? new Date(transaction.createdAt).toLocaleString()
                             : transaction.createdDate
-                            ? new Date(transaction.createdDate).toLocaleString()
-                            : "N/A"}
+                              ? new Date(transaction.createdDate).toLocaleString()
+                              : "N/A"}
                         </p>
                         <span
-                          className={`text-sm px-2 py-0.5 rounded-full ${
-                            transaction.type === "credit"
-                              ? "bg-green-100 text-green-800"
-                              : transaction.type === "debit"
+                          className={`text-sm px-2 py-0.5 rounded-full ${transaction.type === "credited" || transaction.type === "credit"
+                            ? "bg-green-100 text-green-800"
+                            : transaction.type === "debit"
                               ? "bg-red-100 text-red-800"
                               : "bg-yellow-100 text-yellow-800"
-                          }`}
+                            }`}
                         >
                           {transaction.type
                             ? transaction.type.charAt(0).toUpperCase() +
-                              transaction.type.slice(1)
+                            transaction.type.slice(1)
                             : "Unknown"}
                         </span>
                       </div>
@@ -402,26 +403,25 @@ const Wallet = () => {
                             transaction.type
                           )}`}
                         >
-                          {transaction.type === "credit"
+                          {transaction.type === "credited" || transaction.type === "credit"
                             ? "+"
                             : transaction.type === "debit"
-                            ? "-"
-                            : "~"}
+                              ? "-"
+                              : "~"}
                           ₹
                           {transaction.totalAmount
                             ? transaction.totalAmount.toFixed(2)
                             : "0.00"}
                         </p>
                         <span
-                          className={`text-sm px-2 py-1 rounded-full ${
-                            transaction.status === "completed"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
+                          className={`text-sm px-2 py-1 rounded-full ${transaction.status === "completed"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                            }`}
                         >
                           {transaction.status
                             ? transaction.status.charAt(0).toUpperCase() +
-                              transaction.status.slice(1)
+                            transaction.status.slice(1)
                             : "Pending"}
                         </span>
                       </div>

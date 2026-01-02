@@ -5,17 +5,25 @@ function StatusBadge({ status, size = "md", className = "" }) {
   const getStatusVariant = (status) => {
     switch (status) {
       case "In Progress":
+      case "InProgress":
       case "Scheduled":
+      case "Rescheduled":
         return "info";
       case "Completed":
+      case "Selected":
         return "success";
       case "Cancelled":
+      case "NoShow":
+      case "InComplete":
         return "danger";
       case "Rejected":
         return "purple";
       case "Pending":
         return "warning";
-
+      case "Draft":
+        return "gray";
+      case "RequestSent" || "Request Sent":
+        return "orange";
       default:
         return "secondary";
     }

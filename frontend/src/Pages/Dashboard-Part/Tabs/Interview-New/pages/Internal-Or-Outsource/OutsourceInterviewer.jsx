@@ -33,6 +33,7 @@ import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import { notify } from "../../../../../../services/toastService.js";
 import useInterviewers from "../../../../../../hooks/useInterviewers.js";
 import { useIndividualLogin } from "../../../../../../apiHooks/useIndividualLogin.js";
+import { useTenantTaxConfig } from "../../../../../../apiHooks/useTenantTaxConfig";
 
 const OutsourcedInterviewerCard = ({
   interviewer,
@@ -275,6 +276,10 @@ function OutsourcedInterviewerModal({
   const [filteredInterviewers, setFilteredInterviewers] = useState([]);
   const [baseInterviewers, setBaseInterviewers] = useState([]);
   const [showWalletModal, setShowWalletModal] = useState(false); //<----v1.0.1-----
+
+  // Fetch tenant tax configuration (GST, service charge, etc.)
+  const { data: tenantTaxConfig } = useTenantTaxConfig();
+  const gstRate = typeof tenantTaxConfig?.gstRate === "number" ? tenantTaxConfig.gstRate : 0;
 
   //<----v1.0.1-----
   //<-----v1.0.4-----Venkatesh---- Updated to compute the highest rate from all contacts and all levels (junior/mid/senior)
@@ -1138,8 +1143,8 @@ function OutsourcedInterviewerModal({
     //<-----v1.0.4-----Venkatesh---- Updated to calculate required amount based on experience level
 
     // Calculate the required amount based on selected interviewers' rates and experience level
-    let requiredAmount = parseInt(maxHourlyRate); // Default to max rate
-
+    let baseRequiredAmount = parseInt(maxHourlyRate); // Default to max rate (base, without GST)
+    console.log("baseRequiredAmount", baseRequiredAmount);
     if (selectedInterviewersLocal.length > 0) {
       // If interviewers are selected, calculate based on their actual rates
       const selectedRates = selectedInterviewersLocal.map((interviewer) => {
@@ -1171,21 +1176,41 @@ function OutsourcedInterviewerModal({
         // return contact.rates[experienceLevel]?.inr || 0;
       });
 
-      // Use the highest rate among selected interviewers
-      requiredAmount = Math.max(...selectedRates, 0);
+      // Use the highest rate among selected interviewers, but never below the
+      // global maxHourlyRate. This keeps the frontend check aligned with the
+      // backend, which uses maxHourlyRate for selection-time wallet holds.
+      const maxSelectedRate = Math.max(...selectedRates, 0);
+      baseRequiredAmount = Math.max(baseRequiredAmount, maxSelectedRate);
     }
-    console.log("Required Amount:", requiredAmount);
-    // && requiredAmount !== 0
-    if (availableBalance >= requiredAmount && requiredAmount !== 0) {
+    console.log("Base Required Amount (without GST):", baseRequiredAmount);
+
+    // Apply GST using same formula as backend helper (computeBaseGstGross)
+    const base = Number(baseRequiredAmount || 0);
+    const rate = typeof gstRate === "number" ? gstRate : 0;
+
+    let grossRequiredAmount = 0;
+    if (!isFinite(base) || base <= 0) {
+      grossRequiredAmount = 0;
+    } else if (!isFinite(rate) || rate <= 0) {
+      grossRequiredAmount = base;
+    } else {
+      const gstAmount = Math.round(((base * rate) / 100) * 100) / 100;
+      grossRequiredAmount = Math.round((base + gstAmount) * 100) / 100;
+    }
+
+    console.log("Required Amount with GST:", grossRequiredAmount, "(GST rate:", gstRate, ")");
+
+    // && grossRequiredAmount !== 0
+    if (availableBalance >= grossRequiredAmount && grossRequiredAmount !== 0) {
       // console.log("Selected Interviewers:", selectedInterviewersLocal);
       // Pass maxHourlyRate up so backend can create a selection-time hold for external interviewers
       onProceed(selectedInterviewersLocal, parseInt(maxHourlyRate) || 0);
       onClose();
     } else {
-      const required = Number(requiredAmount || 0).toFixed(2);
-      const currentBalance = Number(availableBalance || 0).toFixed(2);
+      const required = Number(grossRequiredAmount || 0).toFixed(2);
+      //const currentBalance = Number(availableBalance || 0).toFixed(2);
       notify.error(
-        `Your available wallet balance is less than the highest interviewer hourly rate.\nRequired: $${required}\nPlease add funds to proceed.`
+        `Your available wallet balance is less than the highest interviewer hourly rate (including GST).\nRequired: ₹${required}\nPlease add funds to proceed.`
       );
       setTimeout(() => setShowWalletModal(true), 1000);
     }

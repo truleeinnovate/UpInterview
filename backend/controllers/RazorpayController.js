@@ -21,6 +21,12 @@ const { Users } = require("../models/Users.js");
 const {
   CreateOrGetVideoCallingSettings,
 } = require("./VideoCallingSettingControllers/VideoCallingSettingController.js");
+
+// Import common wallet transaction utility
+const {
+  createWalletTransaction,
+  WALLET_BUSINESS_TYPES,
+} = require("../utils/interviewWalletUtil");
 const createInvoice = helpers.createInvoice;
 const createReceipt = helpers.createReceipt;
 const calculateEndDate = helpers.calculateEndDate;
@@ -617,10 +623,10 @@ const verifyPayment = async (req, res) => {
                       f?.name === "Internal_Interviews"
                         ? "Internal Interviews"
                         : f?.name === "Question_Bank_Access"
-                        ? "Question Bank Access"
-                        : f?.name === "Bandwidth"
-                        ? "User Bandwidth"
-                        : f?.name,
+                          ? "Question Bank Access"
+                          : f?.name === "Bandwidth"
+                            ? "User Bandwidth"
+                            : f?.name,
                     utilized: 0,
                     remaining: Number(f?.limit) || 0,
                   }));
@@ -722,16 +728,25 @@ const verifyPayment = async (req, res) => {
             }
 
             if (!updatedTransaction) {
-              // If no pending transaction found, add a new one
-              //wallet.balance += plan.walletCredits;
-              wallet.transactions.push({
-                type: "credit",
-                amount: plan.walletCredits,
-                description: `Credits from ${plan.name} subscription`,
-                relatedInvoiceId: relatedInvoiceId,
-                status: "completed",
-                createdDate: new Date(),
-              });
+              // If no pending transaction found, add subscription credits using common function
+              try {
+                await createWalletTransaction({
+                  ownerId,
+                  businessType: WALLET_BUSINESS_TYPES.SUBSCRIBE_CREDITED,
+                  amount: plan.walletCredits,
+                  description: `Credits from ${plan.name} subscription`,
+                  relatedInvoiceId: relatedInvoiceId,
+                  status: "completed",
+                  reason: "SUBSCRIPTION_CREDITS",
+                  metadata: {
+                    planId: plan._id,
+                    planName: plan.name,
+                    source: "subscription_credits",
+                  },
+                });
+              } catch (walletError) {
+                console.error("Error adding subscription credits:", walletError);
+              }
             }
 
             await wallet.save();
@@ -767,16 +782,25 @@ const verifyPayment = async (req, res) => {
           }
 
           if (!updatedTransaction) {
-            // If no pending transaction found, add a new one
-            //wallet.balance += plan.walletCredits;
-            wallet.transactions.push({
-              type: "credit",
-              amount: plan.walletCredits,
-              description: `Credits from ${plan.name} subscription`,
-              relatedInvoiceId: relatedInvoiceId,
-              status: "completed",
-              createdDate: new Date(),
-            });
+            // If no pending transaction found, add subscription credits using common function
+            try {
+              await createWalletTransaction({
+                ownerId,
+                businessType: WALLET_BUSINESS_TYPES.SUBSCRIBE_CREDITED,
+                amount: plan.walletCredits,
+                description: `Credits from ${plan.name} subscription`,
+                relatedInvoiceId: relatedInvoiceId,
+                status: "completed",
+                reason: "SUBSCRIPTION_CREDITS",
+                metadata: {
+                  planId: plan._id,
+                  planName: plan.name,
+                  source: "subscription_credits",
+                },
+              });
+            } catch (walletError) {
+              console.error("Error adding subscription credits:", walletError);
+            }
           }
 
           await wallet.save();
@@ -1467,30 +1491,32 @@ const handlePaymentFailed = async (payment, res) => {
       // Calculate amount in rupees (payment.amount is in paise)
       const amount = payment.amount / 100;
 
-      // Push failed transaction history
-      const failedTransaction = {
-        type: "credit",
-        amount: amount,
-        description: `Wallet Top-up failed - ${
-          payment.error_description || payment.error_code || "Payment failed"
-        }`,
-        status: "failed",
-        metadata: {
-          paymentId: payment.id,
-          orderId: payment.order_id,
-          errorCode: payment.error_code,
-          errorDescription: payment.error_description,
-          errorSource: payment.error_source,
-          errorStep: payment.error_step,
-          errorReason: payment.error_reason,
-          walletCode: walletCode || wallet.walletCode,
-          razorpayPaymentId: payment.id,
-        },
-        createdDate: new Date(),
-      };
-
-      wallet.transactions.push(failedTransaction);
-      await wallet.save();
+      // Record failed transaction using common function
+      try {
+        await createWalletTransaction({
+          ownerId,
+          businessType: WALLET_BUSINESS_TYPES.SUBSCRIBE_CREDITED,
+          amount: amount,
+          description: `Wallet Top-up failed - ${payment.error_description || payment.error_code || "Payment failed"}`,
+          relatedInvoiceId: payment.order_id,
+          status: "failed",
+          reason: "TOPUP_FAILED",
+          metadata: {
+            paymentId: payment.id,
+            orderId: payment.order_id,
+            errorCode: payment.error_code,
+            errorDescription: payment.error_description,
+            errorSource: payment.error_source,
+            errorStep: payment.error_step,
+            errorReason: payment.error_reason,
+            walletCode: walletCode || wallet.walletCode,
+            razorpayPaymentId: payment.id,
+            source: "razorpay_topup_failed",
+          },
+        });
+      } catch (walletError) {
+        console.error("Error recording failed wallet top-up:", walletError);
+      }
 
       // Update logging context for wallet top-up
       res.locals.logData = {
@@ -1504,7 +1530,8 @@ const handlePaymentFailed = async (payment, res) => {
         },
         responseBody: {
           wallet: wallet._id,
-          failedTransaction,
+          amount: amount,
+          reason: "TOPUP_FAILED",
         },
       };
 
@@ -2722,10 +2749,10 @@ const handleSubscriptionCharged = async (subscription, res) => {
             f?.name === "Internal_Interviews"
               ? "Internal Interviews"
               : f?.name === "Question_Bank_Access"
-              ? "Question Bank Access"
-              : f?.name === "Bandwidth"
-              ? "User Bandwidth"
-              : f?.name,
+                ? "Question Bank Access"
+                : f?.name === "Bandwidth"
+                  ? "User Bandwidth"
+                  : f?.name,
           utilized: 0,
           remaining: Number(f?.limit) || 0,
         }));
@@ -2949,9 +2976,8 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
       if (userProfile.name) {
         customerName = userProfile.name;
       } else if (userProfile.firstName || userProfile.lastName) {
-        customerName = `${userProfile.firstName || ""} ${
-          userProfile.lastName || ""
-        }`.trim();
+        customerName = `${userProfile.firstName || ""} ${userProfile.lastName || ""
+          }`.trim();
       }
 
       customerEmail = userProfile.email || "";
@@ -3364,11 +3390,11 @@ const createRecurringSubscription = async (req, res) => {
         // Build features from plan if available
         const featureList = Array.isArray(plandata?.features)
           ? plandata.features.map((feature) => ({
-              name: feature.name,
-              limit:
-                feature.limit === "unlimited" ? -1 : Number(feature.limit) || 0,
-              description: feature.description,
-            }))
+            name: feature.name,
+            limit:
+              feature.limit === "unlimited" ? -1 : Number(feature.limit) || 0,
+            description: feature.description,
+          }))
           : [];
 
         const newSubscriptionRecord = new CustomerSubscription({
