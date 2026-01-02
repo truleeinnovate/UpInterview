@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - removed logs middleware for get calls
+
 const express = require("express");
 const router = express.Router();
 
@@ -25,9 +27,9 @@ router.post(
   createInterviewPolicy
 );
 
-router.get("/", loggingService.internalLoggingMiddleware, getAllPolicies);
+router.get("/", getAllPolicies);
 
-router.get("/:id", loggingService.internalLoggingMiddleware, getPolicyById);
+router.get("/:id", getPolicyById);
 
 router.put("/:id", loggingService.internalLoggingMiddleware, updatePolicy);
 

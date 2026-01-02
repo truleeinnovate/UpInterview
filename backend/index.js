@@ -1278,6 +1278,8 @@ app.use("/", contactRoutes);
 const interviewPoliciesRoutes = require("./routes/interviewPoliciesRoutes");
 app.use("/interview-policies", interviewPoliciesRoutes);
 
+const regionalTaxConfigRoutes = require("./routes/RegionalTaxConfigRoutes/regionalTaxConfigRoute.js");
+app.use("/regional-taxes", regionalTaxConfigRoutes);
 // ----------------------------------------------------->
 
 // support desk
@@ -1791,10 +1793,6 @@ app.use("/external", externalRoutes);
 const analyticsRoutes = require("./routes/AnalyticsRoutes/analytics.js");
 app.use("/analytics", analyticsRoutes);
 
-
-
-
-
 // Create meeting endpoint
 // app.post('/api/create-meeting', async (req, res) => {
 //   try {
@@ -1896,7 +1894,6 @@ app.use("/analytics", analyticsRoutes);
 //     return res.status(err.response?.status || 500).json({ error: err.response?.data || err.message });
 //   }
 // });
-
 
 // v1
 // get
