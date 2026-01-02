@@ -8,23 +8,16 @@ const Interview = require("../models/Interview/Interview.js");
 const InterviewRequest = require("../models/InterviewRequest");
 const { Contacts } = require("../models/Contacts");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
-const Wallet = require("../models/WalletTopup");
-const { Candidate } = require("../models/Candidate.js");
+//const Wallet = require("../models/WalletTopup");
 const {
   MockInterviewRound,
 } = require("../models/Mockinterview/mockinterviewRound.js");
-const { MockInterview } = require("../models/Mockinterview/mockinterview.js");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService.js");
 const { buildSmartRoundUpdate } = require("./interviewRoundsController.js");
 const {
-  WALLET_BUSINESS_TYPES,
-  createWalletTransaction,
+  applyAcceptInterviewWalletFlow,
+  computeInterviewPricingForAccept,
 } = require("../utils/interviewWalletUtil");
-const {
-  getTaxConfigForTenant,
-  normalizePercentage,
-  computeBaseGstGross,
-} = require("../utils/taxConfigUtil");
 
 //old mansoor code i have changed this code because each interviwer send one request
 
@@ -756,365 +749,43 @@ exports.acceptInterviewRequest = async (req, res) => {
       return res.status(404).json({ message: "Interviewer contact not found" });
     }
 
-    // Validate duration
-    const duration = request.duration;
-    const durationInMinutes = parseInt(duration?.split(" ")[0], 10);
-    if (isNaN(durationInMinutes) || durationInMinutes <= 0) {
-      return res.status(400).json({
+    const pricingResult = await computeInterviewPricingForAccept({
+      request,
+      round,
+      contact,
+      contactId,
+    });
+
+    if (pricingResult && pricingResult.error) {
+      return res.status(pricingResult.statusCode || 400).json({
         success: false,
-        message: `Invalid duration in interview request. Expected format like "30 minutes".`,
+        message: pricingResult.error,
       });
     }
 
-    // Determine rate based on experience level
-    let rate;
-    let experienceLevel;
-
-    if (request.isMockInterview) {
-      let mockInterview = null;
-      try {
-        mockInterview = await MockInterview.findById(round.mockInterviewId);
-        if (!mockInterview) {
-        }
-      } catch (error) {
-        console.error("Invalid MockInterview ID:", error.message);
-      }
-
-      const expertiseYears = Number(mockInterview.currentExperience);
-      if (isNaN(expertiseYears) || expertiseYears < 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid or missing expertiseLevel for interviewer (${mockInterview}). Must be a non-negative number.`,
-        });
-      }
-      if (expertiseYears <= 3) {
-        experienceLevel = "junior";
-      } else if (expertiseYears <= 6) {
-        experienceLevel = "mid";
-      } else {
-        experienceLevel = "senior";
-      }
-      rate = contact.rates?.[experienceLevel]?.inr;
-      if (typeof rate !== "number" || rate <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid or missing INR rate for ${experienceLevel} level in contact (${contactId}).`,
-        });
-      }
-    } else {
-      // Regular interview: Map candidate's CurrentExperience to level
-      const candidate = await Candidate.findById(request.candidateId);
-      if (!candidate) {
-        return res.status(404).json({ message: "Candidate not found" });
-      }
-      const experienceYears = Number(candidate.CurrentExperience);
-      if (isNaN(experienceYears) || experienceYears < 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid or missing CurrentExperience for candidate (${request.candidateId}).`,
-        });
-      }
-      if (experienceYears <= 3) {
-        experienceLevel = "junior";
-      } else if (experienceYears <= 6) {
-        experienceLevel = "mid";
-      } else {
-        experienceLevel = "senior";
-      }
-      rate = contact.rates?.[experienceLevel]?.inr;
-      if (typeof rate !== "number" || rate <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid or missing INR rate for ${experienceLevel} level in contact (${contactId}).`,
-        });
-      }
-    }
-
-    // Calculate base amount
-    let totalAmount = (rate * durationInMinutes) / 60;
-    if (isNaN(totalAmount) || totalAmount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Failed to calculate interview fee. Please check rate and duration.",
-      });
-    }
-
-    // Apply discount if it's a mock interview
-    let appliedDiscountPercentage = 0;
-    let discountAmount = 0;
-    if (request.isMockInterview && contact.mock_interview_discount) {
-      appliedDiscountPercentage =
-        parseFloat(contact.mock_interview_discount) || 0;
-      if (appliedDiscountPercentage > 0 && appliedDiscountPercentage <= 100) {
-        discountAmount = (totalAmount * appliedDiscountPercentage) / 100;
-        totalAmount -= discountAmount;
-      }
-    }
-
-    // Fetch wallet and derive available balance, taking existing holds into account
-    const wallet = await Wallet.findOne({ ownerId: request.ownerId });
-    if (!wallet) {
-      return res.status(400).json({
-        success: false,
-        message: "No wallet found for this organization.",
-      });
-    }
-
-    const walletBalance = Number(wallet.balance || 0);
-
-    // With the shared wallet helper, `balance` already reflects available funds
-    // after all previous holds. We keep the pre-check simple and only look at
-    // this round's selection-time hold (if any) plus the current balance.
-    const availableBalanceBefore = walletBalance;
-
-    // Try to locate an existing selection-time HOLD for this round (created at round save)
-    let selectionHoldTx = null;
-    if (Array.isArray(wallet.transactions) && wallet.transactions.length > 0) {
-      selectionHoldTx = wallet.transactions
-        .slice()
-        .reverse()
-        .find((t) => {
-          if (!t || !t.type || !t.status) return false;
-          const txType = String(t.type).toLowerCase();
-          const txStatus = String(t.status).toLowerCase();
-          const meta = t.metadata || {};
-          return (
-            txType === "hold" &&
-            txStatus === "pending" &&
-            String(meta.roundId || "") === String(roundId) &&
-            meta.source === "selection_hold"
-          );
-        });
-    }
-
-    const selectionHoldAmount = selectionHoldTx
-      ? Number(selectionHoldTx.amount || 0)
-      : 0;
-
-    // Effective funds we can use for the final HOLD, considering this round's
-    // selection-time hold. We keep the logic simple: available balance now
-    // plus whatever was reserved for this round must cover the final
-    // interviewer amount.
-    // Determine GST rate for acceptance. Prefer the rate captured at selection
-    // time (selectionGstRate) so that acceptance and settlement use a
-    // consistent tax basis. Fall back to 0 if not present.
-    let acceptGstRate = 0;
-    if (selectionHoldTx && selectionHoldTx.metadata) {
-      const metaRate = selectionHoldTx.metadata.selectionGstRate;
-      if (typeof metaRate === "number" && !isNaN(metaRate)) {
-        // Normalize so both 0.18 and 18 end up as 18 (percent units)
-        acceptGstRate = normalizePercentage(metaRate);
-      }
-    }
-
-    // Compute gross amount for this accepted interviewer: base + GST using shared helper
     const {
-      baseAmount: acceptBaseAmount,
-      gstAmount: acceptGstAmount,
-      grossAmount: acceptGrossAmount,
-    } = computeBaseGstGross(totalAmount, acceptGstRate);
+      durationInMinutes,
+      totalAmount,
+      appliedDiscountPercentage,
+    } = pricingResult;
 
-    const effectiveAvailable = availableBalanceBefore + selectionHoldAmount;
+    const acceptWalletResult = await applyAcceptInterviewWalletFlow({
+      request,
+      round,
+      roundId,
+      requestId,
+      contact,
+      totalAmount,
+    });
 
-    if (effectiveAvailable < acceptGrossAmount) {
-      return res.status(400).json({
+    if (acceptWalletResult && acceptWalletResult.error) {
+      return res.status(acceptWalletResult.statusCode || 400).json({
         success: false,
-        message:
-          "Insufficient available balance in wallet to accept this interview request.",
+        message: acceptWalletResult.error,
       });
     }
 
-    const holdID =
-      request?.interviewRequestCode || String(requestId).slice(-10);
-
-    // Description reused for both final hold record and fallback hold create
-    const holdDescription = `Hold for ${
-      request.isMockInterview ? "mock " : ""
-    }interview round ${round?.roundTitle}`;
-
-    let updatedWallet = wallet;
-    let savedTransaction = null;
-
-    if (selectionHoldTx && selectionHoldAmount > 0) {
-      // Simple adjustment logic (GROSS amounts):
-      // - selectionHoldAmount was reserved at selection time (e.g. 4000 + GST)
-      // - acceptGrossAmount is final interviewer amount (e.g. 1500 + GST)
-      // - we release only the difference back to org wallet and leave the
-      //   remaining gross amount effectively held for this round.
-      const releaseAmount = Math.max(selectionHoldAmount - acceptGrossAmount, 0);
-
-      if (releaseAmount > 0) {
-        const selectionGstAmountMeta = selectionHoldTx?.metadata
-          ? Number(selectionHoldTx.metadata.selectionGstAmount || 0)
-          : 0;
-        const releaseGstAmount = Math.max(
-          selectionGstAmountMeta - (acceptGstAmount || 0),
-          0
-        );
-
-        const releaseResult = await createWalletTransaction({
-          ownerId: request.ownerId,
-          businessType: WALLET_BUSINESS_TYPES.HOLD_RELEASE,
-          amount: Math.max(releaseAmount - releaseGstAmount, 0),
-          gstAmount: releaseGstAmount,
-          description: `Refund unused selection-time hold for interview round ${round?.roundTitle}`,
-          relatedInvoiceId: selectionHoldTx.relatedInvoiceId || holdID,
-          status: "completed",
-          reason: request.isMockInterview
-            ? "MOCK_INTERVIEW_ACCEPTED_REFUND"
-            : "INTERVIEW_ACCEPTED_REFUND",
-          metadata: {
-            interviewId: String(
-              request.isMockInterview
-                ? round?.mockInterviewId
-                : round?.interviewId || ""
-            ),
-            roundId: String(roundId),
-            requestId: String(requestId),
-            source: "selection_hold_refund_on_accept",
-            // originalSelectionHoldTransactionId: selectionHoldTx._id
-            //   ? selectionHoldTx._id.toString()
-            //   : undefined,
-            // selectionHoldAmount,
-            // selectionGstAmount: selectionGstAmountMeta,
-            // releaseBaseAmount: Math.max(releaseAmount - releaseGstAmount, 0),
-            // releaseGstAmount,
-            // finalHoldAmountBase: acceptBaseAmount,
-            // finalHoldGstRate: acceptGstRate,
-            // finalHoldGstAmount: acceptGstAmount,
-            // finalHoldGrossAmount: acceptGrossAmount,
-          },
-        });
-
-        updatedWallet = releaseResult.wallet;
-      }
-
-      // Create a non-mutating hold record for the final interviewer amount so
-      // that transaction history clearly shows the final gross hold
-      // (e.g. 1500 + GST) without double-counting holdAmount.
-      // without double-counting holdAmount.
-      const noteResult = await createWalletTransaction({
-        ownerId: request.ownerId,
-        businessType: WALLET_BUSINESS_TYPES.HOLD_NOTE,
-        amount: acceptGrossAmount,
-        gstAmount: acceptGstAmount,
-        description: holdDescription,
-        relatedInvoiceId: holdID,
-        reason: request.isMockInterview
-          ? "MOCK_INTERVIEW_ROUND_SENT"
-          : "INTERVIEW_ROUND_SENT",
-        metadata: {
-          interviewId: String(
-            request.isMockInterview
-              ? round?.mockInterviewId
-              : round?.interviewId || ""
-          ),
-          roundId: String(roundId),
-          requestId: String(requestId),
-          interviewerContactId: String(contact._id),
-          // rate: rate, // Store selected rate
-          // experienceLevel: experienceLevel,
-          // duration: String(duration),
-          // durationInMinutes: durationInMinutes,
-          // isMockInterview: Boolean(request.isMockInterview),
-          // mockInterviewDiscount: request.isMockInterview
-          //   ? appliedDiscountPercentage
-          //   : null,
-          // calculation: {
-          //   formula:
-          //     request.isMockInterview && appliedDiscountPercentage > 0
-          //       ? "(rate * minutes / 60) - discount"
-          //       : "rate * minutes / 60",
-          //   rate: rate,
-          //   minutes: durationInMinutes,
-          //   discountPercentage: appliedDiscountPercentage,
-          // },
-          // acceptedBaseAmount: acceptBaseAmount,
-          // acceptedGstRate: acceptGstRate,
-          // acceptedGstAmount: acceptGstAmount,
-          // acceptedGrossAmount: acceptGrossAmount,
-          source: "interview_accept_hold",
-        },
-      });
-
-      updatedWallet = noteResult.wallet;
-      savedTransaction = noteResult.transaction;
-
-      try {
-        await Wallet.updateOne(
-          { ownerId: request.ownerId, "transactions._id": selectionHoldTx._id },
-          { $set: { "transactions.$.status": "completed" } }
-        );
-      } catch (statusUpdateErr) {
-        console.error(
-          "[acceptInterviewRequest] Failed to update selection hold status:",
-          statusUpdateErr
-        );
-      }
-    } else {
-      // Fallback for legacy cases where no selection-time hold was created:
-      // create a real HOLD for the full interviewer gross amount (base + GST).
-
-      // Use shared tax config helper for GST
-      const orgTenantId = request.tenantId || "";
-      const { gstRate: legacyGstRate } = await getTaxConfigForTenant({
-        tenantId: orgTenantId,
-      });
-
-      const {
-        baseAmount: legacyBaseAmount,
-        gstAmount: legacyGstAmount,
-        grossAmount: legacyGrossAmount,
-      } = computeBaseGstGross(totalAmount, legacyGstRate);
-
-      const holdResult = await createWalletTransaction({
-        ownerId: request.ownerId,
-        businessType: WALLET_BUSINESS_TYPES.HOLD_CREATE,
-        amount: legacyBaseAmount,
-        gstAmount: legacyGstAmount,
-        description: holdDescription,
-        relatedInvoiceId: holdID,
-        reason: request.isMockInterview
-          ? "MOCK_INTERVIEW_ACCEPTED"
-          : "INTERVIEW_ACCEPTED",
-        metadata: {
-          interviewId: String(
-            request.isMockInterview
-              ? round?.mockInterviewId
-              : round?.interviewId || ""
-          ),
-          roundId: String(roundId),
-          requestId: String(requestId),
-          interviewerContactId: String(contact._id),
-          // rate: rate, // Store selected rate
-          // experienceLevel: experienceLevel,
-          // duration: String(duration),
-          // durationInMinutes: durationInMinutes,
-          // isMockInterview: Boolean(request.isMockInterview),
-          // mockInterviewDiscount: request.isMockInterview
-          //   ? appliedDiscountPercentage
-          //   : null,
-          // calculation: {
-          //   formula:
-          //     request.isMockInterview && appliedDiscountPercentage > 0
-          //       ? "(rate * minutes / 60) - discount"
-          //       : "rate * minutes / 60",
-          //   rate: rate,
-          //   minutes: durationInMinutes,
-          //   discountPercentage: appliedDiscountPercentage,
-          // },
-          // legacyBaseAmount,
-          // legacyGstRate,
-          // legacyGstAmount,
-          // legacyGrossAmount,
-          source: "interview_accept_hold",
-        },
-      });
-
-      updatedWallet = holdResult.wallet;
-      savedTransaction = holdResult.transaction;
-    }
+    const { wallet: updatedWallet, transaction: savedTransaction } = acceptWalletResult;
 
     // ================== INTERVIEWER WALLET HOLD (PENDING PAYOUT) ==================
     // Mirror the final interviewer amount as a hold in the interviewer's wallet so

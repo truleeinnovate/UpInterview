@@ -21,7 +21,7 @@ const crypto = require("crypto");
 const https = require("https");
 const {
   MockInterviewRound,
-} = require("../models/MockInterview/mockinterviewRound");
+} = require("../models/Mockinterview/mockinterviewRound");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds");
 const Invoicemodels = require("../models/Invoicemodels");
 const { RegionalTaxConfig } = require("../models/Pricing");
