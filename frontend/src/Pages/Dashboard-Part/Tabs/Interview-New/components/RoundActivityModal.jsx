@@ -81,8 +81,6 @@ const RoundActivityModal = ({ isOpen, onClose, round, interviewData }) => {
           </button>
         </div>
 
-
-
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-5 py-4 bg-gray-50">
           {historyEntries.length === 0 ? (
