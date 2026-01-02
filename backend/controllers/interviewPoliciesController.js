@@ -130,8 +130,7 @@ const getSettlementPolicy = async (req, res) => {
           !isNaN(actionTime.getTime())
         ) {
           let diffHours =
-            (scheduledTime.getTime() - actionTime.getTime()) /
-            (1000 * 60 * 60);
+            (scheduledTime.getTime() - actionTime.getTime()) / (1000 * 60 * 60);
 
           if (!isNaN(diffHours) && diffHours < 0) {
             diffHours = 0;
@@ -170,7 +169,195 @@ const getSettlementPolicy = async (req, res) => {
   }
 };
 
+//  * Create Interview Policy
+const createInterviewPolicy = async (req, res) => {
+  try {
+    const {
+      policyName,
+      category,
+      type,
+      timeBeforeInterviewMin,
+      timeBeforeInterviewMax,
+      feePercentage,
+      interviewerPayoutPercentage,
+      platformFeePercentage,
+      firstRescheduleFree,
+      gstIncluded,
+      status,
+    } = req.body;
+
+    /* -------------------- Basic Validation -------------------- */
+    if (!policyName) {
+      return res.status(400).json({
+        success: false,
+        message: "Policy name is required",
+      });
+    }
+
+    if (!category || !type) {
+      return res.status(400).json({
+        success: false,
+        message: "Category and type are required",
+      });
+    }
+
+    if (
+      timeBeforeInterviewMin === undefined ||
+      timeBeforeInterviewMin === null
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum time before interview is required",
+      });
+    }
+
+    /* -------------------- Uniqueness Check -------------------- */
+    const existingPolicy = await InterviewPolicy.findOne({ policyName });
+    if (existingPolicy) {
+      return res.status(409).json({
+        success: false,
+        message: "Policy with this name already exists",
+      });
+    }
+
+    /* -------------------- Create Policy -------------------- */
+    const policy = await InterviewPolicy.create({
+      policyName,
+      category,
+      type,
+      timeBeforeInterviewMin,
+      timeBeforeInterviewMax,
+      feePercentage,
+      interviewerPayoutPercentage,
+      platformFeePercentage,
+      firstRescheduleFree,
+      gstIncluded,
+      status,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Interview policy created successfully",
+      data: policy,
+    });
+  } catch (error) {
+    console.error("Create Interview Policy Error:", error);
+
+    // Mongo unique index error safety
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Policy name must be unique",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create interview policy",
+      error: error.message,
+    });
+  }
+};
+
+// API: GET ALL
+const getAllPolicies = async (req, res) => {
+  try {
+    const policies = await InterviewPolicy.find().sort({ _id: -1 }).lean();
+
+    return res.status(200).json({
+      success: true,
+      policies,
+    });
+  } catch (error) {
+    console.error("[getAllPolicies] Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch policies",
+      error: error.message,
+    });
+  }
+};
+
+// API: GET
+const getPolicyById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const policy = await InterviewPolicy.findById(id).lean();
+
+    if (!policy) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Policy not found" });
+    }
+
+    return res.status(200).json({ success: true, policy });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching policy",
+      error: error.message,
+    });
+  }
+};
+
+// API: PUT
+const updatePolicy = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const updatedPolicy = await InterviewPolicy.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).lean();
+
+    if (!updatedPolicy) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Policy not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Policy updated successfully",
+      policy: updatedPolicy,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Update failed", error: error.message });
+  }
+};
+
+// API: DELETE
+const deletePolicy = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedPolicy = await InterviewPolicy.findByIdAndDelete(id);
+
+    if (!deletedPolicy) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Policy not found" });
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Policy deleted successfully" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Delete failed", error: error.message });
+  }
+};
+
 module.exports = {
   findPolicyForSettlement,
+  createInterviewPolicy,
   getSettlementPolicy,
+  getAllPolicies,
+  getPolicyById,
+  updatePolicy,
+  deletePolicy,
 };
