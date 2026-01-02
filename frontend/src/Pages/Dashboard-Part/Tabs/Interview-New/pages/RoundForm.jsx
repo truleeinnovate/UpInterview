@@ -1216,49 +1216,53 @@ const RoundFormInterviews = () => {
   };
 
   // Also need to handle the confirmation popup actions for edit and rescheduled:
+  // CHANGE 1: Modify handleConfirmDateChange to return the new values
   const handleConfirmDateChange = () => {
     if (!pendingDateChange) return;
+    console.log("Confirming date change:", pendingDateChange);
 
-    // Always clear external interviewers on confirmed change
+    // Clear interviewers when confirmed (for both internal and external)
     if (externalInterviewers.length > 0) {
       setExternalInterviewers([]);
-      setHasManuallyClearedInterviewers(true);
+      setExternalMaxHourlyRate(0);
       if (selectedInterviewType === "External") {
         setSelectedInterviewType(null);
       }
+      setHasManuallyClearedInterviewers(true);
     }
 
-    // if (
-    //   status === "Scheduled" ||
-    //   status === "Rescheduled" ||
-    //   status === "RequestSent"
-    // ) {
-    //   setStatus("Draft");
-    // }
-
-    // ADD THIS: Clear internal interviewers as well
     if (internalInterviewers.length > 0) {
       setInternalInterviewers([]);
       setInterviewerGroupName("");
       setInterviewerGroupId("");
       setInterviewerViewType("individuals");
-      setHasManuallyClearedInterviewers(true);
       if (selectedInterviewType === "Internal") {
         setSelectedInterviewType(null);
       }
+      setHasManuallyClearedInterviewers(true);
     }
 
-    // Apply the actual change
-    if (pendingDateChange.type === "interviewType") {
-      const newType = pendingDateChange.value;
-      setInterviewType(newType);
+    // CHANGED: Calculate new values immediately instead of relying on state updates
+    let newInterviewType = interviewType;
+    let newScheduledDate = scheduledDate;
+    let newCombinedDateTime = combinedDateTime;
+    let newStartTime = startTime;
+    let newEndTime = endTime;
 
-      // Handle instant timing if switching to instant
-      if (newType === "instant") {
+    // Apply the change and calculate new times immediately
+    if (pendingDateChange.type === "interviewType") {
+      newInterviewType = pendingDateChange.value;
+      setInterviewType(newInterviewType);
+
+      if (newInterviewType === "instant") {
+        newScheduledDate = "";
         setScheduledDate("");
+
+        // Calculate instant time: now + 15 minutes
         const now = new Date();
         now.setMinutes(now.getMinutes() + 15);
         now.setSeconds(0, 0);
+
         const localTimeStr = moment(now).format("YYYY-MM-DD HH:mm");
         const utcStart = moment
           .tz(
@@ -1268,33 +1272,113 @@ const RoundFormInterviews = () => {
           )
           .utc()
           .toDate();
+
         const end = new Date(utcStart);
         end.setMinutes(end.getMinutes() + duration);
-        setStartTime(utcStart.toISOString());
-        setEndTime(end.toISOString());
+
+        // Store new values in variables
+        newStartTime = utcStart.toISOString();
+        newEndTime = end.toISOString();
+
         const formattedStart = formatDateTime(utcStart, true);
         const formattedEnd = formatDateTime(end, false);
-        setCombinedDateTime(`${formattedStart} - ${formattedEnd}`);
+        newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
+
+        // Update state
+        setStartTime(newStartTime);
+        setEndTime(newEndTime);
+        setCombinedDateTime(newCombinedDateTime);
+      } else if (newInterviewType === "scheduled") {
+        // Use existing scheduledDate or set minimum
+        if (!scheduledDate) {
+          const minVal = twoHoursFromNowLocal();
+          newScheduledDate = minVal;
+          setScheduledDate(minVal);
+        }
+
+        // Calculate times for scheduled date
+        const date = new Date(newScheduledDate);
+        const localTimeStr = moment(date).format("YYYY-MM-DD HH:mm");
+        const utcStart = moment
+          .tz(
+            localTimeStr,
+            "YYYY-MM-DD HH:mm",
+            Intl.DateTimeFormat().resolvedOptions().timeZone
+          )
+          .utc()
+          .toDate();
+
+        const end = new Date(utcStart);
+        end.setMinutes(end.getMinutes() + duration);
+
+        newStartTime = utcStart.toISOString();
+        newEndTime = end.toISOString();
+
+        const formattedStart = formatDateTime(utcStart, true);
+        const formattedEnd = formatDateTime(end, false);
+        newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
+
+        setStartTime(newStartTime);
+        setEndTime(newEndTime);
+        setCombinedDateTime(newCombinedDateTime);
       }
     } else if (pendingDateChange.type === "scheduledDate") {
       const minVal = twoHoursFromNowLocal();
-      const newScheduledDate =
-        pendingDateChange.value && pendingDateChange.value < minVal
-          ? minVal
-          : pendingDateChange.value;
+      newScheduledDate =
+        pendingDateChange.value < minVal ? minVal : pendingDateChange.value;
       setScheduledDate(newScheduledDate);
+
+      // Calculate times for new scheduled date
+      const date = new Date(newScheduledDate);
+      const localTimeStr = moment(date).format("YYYY-MM-DD HH:mm");
+      const utcStart = moment
+        .tz(
+          localTimeStr,
+          "YYYY-MM-DD HH:mm",
+          Intl.DateTimeFormat().resolvedOptions().timeZone
+        )
+        .utc()
+        .toDate();
+
+      const end = new Date(utcStart);
+      end.setMinutes(end.getMinutes() + duration);
+
+      newStartTime = utcStart.toISOString();
+      newEndTime = end.toISOString();
+
+      const formattedStart = formatDateTime(utcStart, true);
+      const formattedEnd = formatDateTime(end, false);
+      newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
+
+      setStartTime(newStartTime);
+      setEndTime(newEndTime);
+      setCombinedDateTime(newCombinedDateTime);
     }
 
-    // Step 5: Mark this as a confirmed change so handleSubmit knows to close popup on success
+    // console.log("=== NEW VALUES CALCULATED ===");
+    // console.log("newInterviewType:", newInterviewType);
+    // console.log("newScheduledDate:", newScheduledDate);
+    // console.log("newCombinedDateTime:", newCombinedDateTime);
+    // console.log("newStartTime:", newStartTime);
+    // console.log("newEndTime:", newEndTime);
+    // console.log("============================");
+
+    // Mark as confirmed
     setPendingDateChange((prev) => ({ ...prev, confirmed: true }));
 
-    // Step 6: Trigger the full submit (which calls PATCH API) after state updates
-    // We use setTimeout to ensure all state changes above are applied first
-    // setTimeout(() => {
-    handleSubmit(new Event("submit"), "changes-confirmed"); // Fake event to match handleSubmit signature
-    // }, 100);
+    // CHANGED: Pass the new calculated values directly to handleSubmit
+    // Use setTimeout to ensure state updates have propagated
+    setTimeout(() => {
+      handleSubmit(new Event("submit"), "changes-confirmed", {
+        interviewType: newInterviewType,
+        scheduledDate: newScheduledDate,
+        combinedDateTime: newCombinedDateTime,
+        startTime: newStartTime,
+        endTime: newEndTime,
+      });
+    }, 100);
 
-    // Clear pending state
+    // Close confirmation popup and clear pending change
     setShowDateChangeConfirmation(false);
     setPendingDateChange(null);
   };
@@ -1527,7 +1611,7 @@ const RoundFormInterviews = () => {
   const isExternalSelected = selectedInterviewType === "External";
 
   // handling the submit function for round form update and create round
-  const handleSubmit = async (e, type) => {
+  const handleSubmit = async (e, type, overrides = {}) => {
     e.preventDefault();
 
     // Prevent multiple submissions
@@ -1544,6 +1628,20 @@ const RoundFormInterviews = () => {
       //   return rest;
       // };
       // const cleanedInterviewers = selectedInterviewersData.map(cleanInterviewer);
+
+      // Use override values if provided, otherwise use state
+      const effectiveInterviewType = overrides.interviewType || interviewType;
+      const effectiveCombinedDateTime =
+        overrides.combinedDateTime || combinedDateTime;
+      const effectiveStartTime = overrides.startTime || startTime;
+      const effectiveEndTime = overrides.endTime || endTime;
+
+      // console.log("=== EFFECTIVE VALUES IN SUBMIT ===");
+      // console.log("effectiveInterviewType:", effectiveInterviewType);
+      // console.log("effectiveCombinedDateTime:", effectiveCombinedDateTime);
+      // console.log("effectiveStartTime:", effectiveStartTime);
+      // console.log("effectiveEndTime:", effectiveEndTime);
+      // console.log("==================================");
 
       // Format interviewers data based on view type
       let formattedInterviewers = [];
@@ -1598,8 +1696,11 @@ const RoundFormInterviews = () => {
         // stateisReschedule  status: roundTitle === "Assessment" ? "Scheduled" :  status,
         ...(roundTitle !== "Assessment" && {
           interviewerType: selectedInterviewType,
-          dateTime: combinedDateTime,
-          interviewType,
+          dateTime: effectiveCombinedDateTime, // CHANGED: Use effective value
+          interviewType: effectiveInterviewType, // CHANGED: Use effective value
+          // interviewerType: selectedInterviewType,
+          // dateTime: combinedDateTime,
+          // interviewType,
         }),
         // For outsourced rounds, send the maxHourlyRate so backend can create a selection-time hold
         ...(selectedInterviewType === "External" && {
@@ -1756,7 +1857,7 @@ const RoundFormInterviews = () => {
                 topic: roundTitle,
                 duration: Number(duration),
                 userId: undefined,
-                ...(interviewType === "scheduled" &&
+                ...(effectiveInterviewType === "scheduled" &&
                   formattedStartTime && {
                     start_time: formattedStartTime,
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -1843,6 +1944,14 @@ const RoundFormInterviews = () => {
           }
         }
       }
+
+      // console.log("=== PAYLOAD DEBUG ===");
+      // console.log("roundData.dateTime:", roundData.dateTime);
+      // console.log("roundData.interviewType:", roundData.interviewType);
+      // console.log("combinedDateTime state:", combinedDateTime);
+      // console.log("startTime state:", startTime);
+      // console.log("endTime state:", endTime);
+      // console.log("=====================");
 
       // Use saveInterviewRound mutation from useInterviews hook
       let response;
