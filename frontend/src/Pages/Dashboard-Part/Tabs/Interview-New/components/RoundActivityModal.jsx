@@ -174,6 +174,7 @@ const RoundActivityModal = ({ isOpen, onClose, round, interviewData }) => {
                       )}
                     </div>
 
+
                     {/* Reason/Comment Section */}
                     {hasDetails && (
                       <div className="mt-2 text-sm text-gray-600 space-y-1">
