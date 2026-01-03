@@ -398,9 +398,10 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       });
 
       const baseUrl = `${config.REACT_APP_API_URL_FRONTEND}/join-meeting`;
-      const meetingLink = round.meetingId;
-      const encryptedMeetingLink = encryptData(meetingLink);
+      // const meetingLink = round.meetingId;
+      // const encryptedMeetingLink = encryptData(meetingLink);
       const encryptedRoundId = encryptData(roundId);
+
 
       // Send email to candidate
       if (candidateTemplate && candidateEmail) {
@@ -423,17 +424,18 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{orgCompanyName}}/g, tenantCompanyName)
           .replace(/{{position}}/g, position);
 
-        if (meetingLink && meetingLink.length > 0) {
-          const candidateUrl = `${baseUrl}?candidate=true&meeting=${encodeURIComponent(
-            encryptedMeetingLink
-          )}&round=${encodeURIComponent(encryptedRoundId)}`;
-          emailBody = emailBody.replace(/{{meetingLink}}/g, candidateUrl);
-        } else {
-          emailBody = emailBody.replace(
-            "{{meetingLink}}",
-            "Meeting link will be provided later"
-          );
-        }
+        // if (meetingLink && meetingLink.length > 0) {
+        // const candidateUrl = `${baseUrl}?candidate=true&meeting=${encodeURIComponent(
+        //   encryptedMeetingLink
+        // )}&round=${encodeURIComponent(encryptedRoundId)}`;
+        const candidateUrl = `${baseUrl}?candidate=true&round=${encodeURIComponent(encryptedRoundId)}`;
+        emailBody = emailBody.replace(/{{meetingLink}}/g, candidateUrl);
+        // } else {
+        //   emailBody = emailBody.replace(
+        //     "{{meetingLink}}",
+        //     "Meeting link will be provided later"
+        //   );
+        // }
 
         emailPromises.push(
           sendEmail(candidateEmail, emailSubject, emailBody)
@@ -485,25 +487,30 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             .replace(/{{orgCompanyName}}/g, tenantCompanyName)
             .replace(/{{position}}/g, position);
 
-          const meetingLink = round.meetingId;
+          // const meetingLink = round.meetingId;
 
-          if (meetingLink && meetingLink.length > 0) {
-            const encryptedInterviewerId = encryptData(interviewer._id);
-            const encryptedOwnerId = encryptData(interviewer.ownerId);
-            const interviewerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(
-              encryptedMeetingLink
-            )}&round=${encodeURIComponent(
-              encryptedRoundId
-            )}&interviewertoken=${encodeURIComponent(
-              encryptedInterviewerId
-            )}&owner=${encodeURIComponent(encryptedOwnerId)}`;
-            emailBody = emailBody.replace("{{meetingLink}}", interviewerLink);
-          } else {
-            emailBody = emailBody.replace(
-              "{{meetingLink}}",
-              "Meeting link will be provided later"
-            );
-          }
+          // if (meetingLink && meetingLink.length > 0) {
+          const encryptedInterviewerId = encryptData(interviewer._id);
+          const encryptedOwnerId = encryptData(interviewer.ownerId);
+          // const interviewerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(
+          //   encryptedMeetingLink
+          // )}&round=${encodeURIComponent(
+          //   encryptedRoundId
+          // )}&interviewertoken=${encodeURIComponent(
+          //   encryptedInterviewerId
+          // )}&owner=${encodeURIComponent(encryptedOwnerId)}`;
+          const interviewerLink = `${baseUrl}?interviewer=true&round=${encodeURIComponent(
+            encryptedRoundId
+          )}&interviewertoken=${encodeURIComponent(
+            encryptedInterviewerId
+          )}&owner=${encodeURIComponent(encryptedOwnerId)}`;
+          emailBody = emailBody.replace("{{meetingLink}}", interviewerLink);
+          // } else {
+          //   emailBody = emailBody.replace(
+          //     "{{meetingLink}}",
+          //     "Meeting link will be provided later"
+          //   );
+          // }
 
           emailPromises.push(
             sendEmail(interviewer.email, emailSubject, emailBody)
@@ -559,23 +566,28 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{orgCompanyName}}/g, tenantCompanyName)
           .replace(/{{position}}/g, position);
 
-        if (meetingLink && meetingLink.length > 0) {
-          const encryptedSchedulerId = encryptData(scheduler?._id);
-          const encryptedSchedulerOwnerId = encryptData(scheduler?.ownerId);
-          const schedulerLink = `${baseUrl}?scheduler=true&meeting=${encodeURIComponent(
-            encryptedMeetingLink
-          )}&round=${encodeURIComponent(
-            encryptedRoundId
-          )}&schedulertoken=${encodeURIComponent(
-            encryptedSchedulerId
-          )}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
-          emailBody = emailBody.replace(/{{meetingLink}}/g, schedulerLink);
-        } else {
-          emailBody = emailBody.replace(
-            /{{meetingLink}}/g,
-            "Meeting link will be provided later"
-          );
-        }
+        // if (meetingLink && meetingLink.length > 0) {
+        const encryptedSchedulerId = encryptData(scheduler?._id);
+        const encryptedSchedulerOwnerId = encryptData(scheduler?.ownerId);
+        // const schedulerLink = `${baseUrl}?scheduler=true&meeting=${encodeURIComponent(
+        //   encryptedMeetingLink
+        // )}&round=${encodeURIComponent(
+        //   encryptedRoundId
+        // )}&schedulertoken=${encodeURIComponent(
+        //   encryptedSchedulerId
+        // )}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
+        const schedulerLink = `${baseUrl}?scheduler=true&round=${encodeURIComponent(
+          encryptedRoundId
+        )}&schedulertoken=${encodeURIComponent(
+          encryptedSchedulerId
+        )}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
+        emailBody = emailBody.replace(/{{meetingLink}}/g, schedulerLink);
+        // } else {
+        //   emailBody = emailBody.replace(
+        //     /{{meetingLink}}/g,
+        //     "Meeting link will be provided later"
+        //   );
+        // }
 
         emailPromises.push(
           sendEmail(schedulerEmail, emailSubject, emailBody)
@@ -1264,9 +1276,9 @@ exports.sendInterviewerCancelledEmails = async (req, res = null) => {
       type === "mockinterview"
         ? await MockInterview.findById(interviewId)
         : await Interview.findById(interviewId)
-            .populate("candidateId")
-            .populate("ownerId")
-            .populate("positionId", "title");
+          .populate("candidateId")
+          .populate("ownerId")
+          .populate("positionId", "title");
 
     if (!interview) return returnError("Interview not found");
 
