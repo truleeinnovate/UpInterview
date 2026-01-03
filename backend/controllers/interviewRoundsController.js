@@ -61,6 +61,7 @@ const saveInterviewRound = async (req, res) => {
       { interviewId, sequence: { $gte: newSequence } },
       { $inc: { sequence: 1 } }
     );
+    let generateMeetingLink = false;
 
     // Extract meetLink/meetPlatform
     const { meetPlatform, meetLink, ...otherRoundData } = round;
@@ -82,6 +83,7 @@ const saveInterviewRound = async (req, res) => {
         finalStatus = "RequestSent";
         // NOTE: Wallet hold for outsourced interviewers will be applied AFTER round is saved
         // See below after savedRound is created
+        generateMeetingLink = true;
       }
     } else {
       // Internal
@@ -90,6 +92,7 @@ const saveInterviewRound = async (req, res) => {
 
       if (hasInterviewers && hasDateTime) {
         finalStatus = "Scheduled"; // First scheduling
+        generateMeetingLink = true;
       }
     }
 
@@ -323,12 +326,11 @@ const saveInterviewRound = async (req, res) => {
     };
 
     return res.status(200).json({
-      message: roundId
-        ? "Round updated successfully."
-        : "Interview round created successfully.",
+      message: "Interview round created successfully.",
       savedRound,
       emailResult,
       status: "ok",
+      generateMeetingLink,
     });
 
     async function reorderInterviewRounds(interviewId) {
@@ -388,17 +390,47 @@ const updateInterviewRound = async (req, res) => {
     return res.status(404).json({ message: "Round not found." });
   }
 
+  const updateType = req.body.updateType;
+  console.log("updateType", updateType);
+
+
+  const incomingRound = round || {};
+
+  //after round create in post meeting id will update using this if condtion
+  if (incomingRound.meetingId || incomingRound.meetPlatform) {
+    const updateOps = { $set: {} };
+
+    if (incomingRound.meetingId) updateOps.$set.meetingId = incomingRound.meetingId;
+    if (incomingRound.meetPlatform) updateOps.$set.meetPlatform = incomingRound.meetPlatform;
+
+    const updatedRound = await InterviewRounds.findByIdAndUpdate(
+      roundId,
+      updateOps,
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: "Meeting link saved",
+      status: "ok",
+      updatedRound,
+    });
+  }
+
 
   // === NEW: EARLY SAFE UPDATE PATH ===
-  const incomingRound = round || {};
-  const onlySafeFields = Object.keys(incomingRound).every(key =>
-    ["instructions", "sequence"].includes(key)
-  );
+  // Safe path only if:
+  // - No dangerous fields (interviewers, dateTime, status, etc.)
+  // - And at least one safe change (instructions, sequence, or questions)
 
-  const hasQuestionsUpdate = questions &&
-    JSON.stringify(questions) !== JSON.stringify(existingRound.questions || []);
+  const incomingKeys = Object.keys(incomingRound);
+  const hasOnlySafeChanges =
+    incomingKeys.length > 0 &&
+    incomingKeys.every(key => ["instructions", "sequence"].includes(key));
 
-  if (onlySafeFields || hasQuestionsUpdate) {
+  const hasOnlyQuestionsChange =
+    incomingKeys.length === 0 && hasQuestionsUpdate;
+
+  if ((hasOnlySafeChanges || hasOnlyQuestionsChange) && updateType === "SAFE_UPDATE") {
     console.log("Safe update: only instructions, sequence, or questions");
 
     const updateOps = { $set: {}, $push: { history: [] } };
@@ -477,17 +509,17 @@ const updateInterviewRound = async (req, res) => {
 
   // console.log("updatedRound", updatedRound);
 
-  let updatePayload = null;
+  let updatePayload = {
+    $set: {},
+    $push: { history: [] }
+  };
 
-  // Safe initialization if buildSmartRoundUpdate returned null or no $push
-  if (!updatePayload) {
-    updatePayload = { $set: {} };
+  // Always save interviewers if sent
+  if (req.body.round?.interviewerType) {
+    updatePayload.$set.interviewerType = req.body.round.interviewerType;
   }
-  if (!updatePayload.$push) {
-    updatePayload.$push = { history: [] };
-  }
-  if (!Array.isArray(updatePayload.$push.history)) {
-    updatePayload.$push.history = [];
+  if (req.body.round?.interviewers && Array.isArray(req.body.round.interviewers)) {
+    updatePayload.$set.interviewers = req.body.round.interviewers;
   }
 
   const isInternal = req.body.round?.interviewerType === "Internal";
@@ -495,17 +527,13 @@ const updateInterviewRound = async (req, res) => {
 
   // ranjith added this for outsource interviwers or internal interviewers
   const hasInterviewers =
-    req.body.round?.interviewerType === "Internal"
-      ? req.body.round?.interviewers.length > 0 || false
-      : false;
+    Array.isArray(req.body.round?.interviewers) &&
+    req.body.round.interviewers.length > 0;
 
   //  for outsource interviewers
   const hasselectedInterviewers =
-    req.body.round?.interviewerType === "External"
-      ? req.body.round?.selectedInterviewers.length > 0
-      : // ||
-      // req.body.round?.interviewers.length > 0
-      false;
+    Array.isArray(req.body.round?.selectedInterviewers) &&
+    req.body.round.selectedInterviewers.length > 0;
   const statusAllowsQuestionUpdate = [
     "Draft",
     "RequestSent",
@@ -545,6 +573,7 @@ const updateInterviewRound = async (req, res) => {
   //   );
   // } else {
   let shouldcreateRequestFlow = false;
+  let generateMeetingLink = false;
   // ==================================================================
   // OUTSOURCE LOGIC (mirroring Internal style)
   // ==================================================================
@@ -553,14 +582,15 @@ const updateInterviewRound = async (req, res) => {
     if (existingRound.status === "Draft" && hasselectedInterviewers) {
       updatePayload.$set.status = "RequestSent";
       shouldcreateRequestFlow = true;
-
+      generateMeetingLink = true;
+      
       // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (SELECTION TIME) ========================
       // Fetch the interview document for wallet operations
       const interview = await Interview.findById(interviewId).lean();
       if (!interview) {
         return res.status(404).json({ message: "Interview not found for wallet hold." });
       }
-
+ 
       // Delegate to helper so this controller stays clean and focused.
       const walletHoldResponse =
         await applySelectionTimeWalletHoldForOutsourcedRound({
@@ -570,17 +600,19 @@ const updateInterviewRound = async (req, res) => {
           round: req.body.round,
           savedRound: existingRound,
         });
-
+ 
       if (walletHoldResponse) {
         // Helper already sent a response (e.g. error); stop further processing.
         return walletHoldResponse;
       }
+
     }
 
     // 2. RequestSent → Draft (user removing interviewers / cancelling requests)
     else if (
-      existingRound.status === "RequestSent" &&
-      hasselectedInterviewers
+      existingRound.status === "RequestSent" && updateType === "CLEAR_INTERVIEWERS"
+      //  &&
+      // hasselectedInterviewers
     ) {
       // PROTECT: Check if any request was already accepted
 
@@ -597,7 +629,8 @@ const updateInterviewRound = async (req, res) => {
         { roundId: existingRound._id, status: "inprogress" },
         { status: "withdrawn", respondedAt: new Date() }
       );
-
+      // console.log("withdrawnRequests", withdrawnRequests);
+      
       // Refund the selection time hold - full amount + GST (no policy)
       try {
         await processWithdrawnRefund({
@@ -614,14 +647,12 @@ const updateInterviewRound = async (req, res) => {
 
     // 3. Scheduled → Draft (cancelling after acceptance)
     else if (
-      (existingRound.status === "Scheduled" ||
-        existingRound.status === "Rescheduled") &&
-      // hasInterviewers
-      hasselectedInterviewers
-
+      ["Scheduled", "Rescheduled"].includes(existingRound.status) && updateType === "CLEAR_INTERVIEWERS"
+      // &&
+      // hasselectedInterviewers  // ← cleared (selectedInterviewers empty or not sent)
     ) {
-
-
+      // PROTECT: Check if accepted (should always be true, but safe)
+      
       // Auto reschedule settlement process - pay interviewer based on policy before resetting
       if (hasAccepted) {
         try {
@@ -635,8 +666,7 @@ const updateInterviewRound = async (req, res) => {
           // Continue with reschedule even if settlement fails
         }
       }
-
-      // PROTECT: Check if accepted (should always be true, but safe)
+      
       if (hasAccepted) {
         // Cancel the accepted request
         await InterviewRequest.updateMany(
@@ -647,9 +677,6 @@ const updateInterviewRound = async (req, res) => {
 
       updatePayload.$set.status = "Draft";
       updatePayload.$set.interviewers = []; // Clear assigned interviewer
-
-
-
 
       // === SEND CANCELLATION EMAILS ===
       // Only if there was an accepted interviewer (we know who was cancelled)
@@ -693,7 +720,9 @@ const updateInterviewRound = async (req, res) => {
 
     const willBeScheduled = hasInterviewers && !!req.body.round.dateTime;
 
-    if (existingRound.status === "Draft" && willBeScheduled) {
+    if (existingRound.status === "Draft"
+      //  && willBeScheduled
+    ) {
       // Decide schedule action based on history
       const hasScheduledOnce = existingRound?.history?.some(
         (h) => h.action === "Scheduled"
@@ -704,6 +733,8 @@ const updateInterviewRound = async (req, res) => {
       updatePayload.$set.status = scheduleAction;
       shouldSendInternalEmail = true; // First scheduling → send email
       shouldcreateRequestFlow = true;
+      generateMeetingLink = true;
+
     }
     //  else if (
     //   wasScheduledBefore &&
@@ -713,9 +744,9 @@ const updateInterviewRound = async (req, res) => {
     //   shouldSendInternalEmail = true; // Rescheduling → send email
     // }
     else if (
-      (existingRound.status === "Rescheduled" ||
-        existingRound.status === "Scheduled") &&
-      hasInterviewers
+      ["Scheduled", "Rescheduled"].includes(existingRound.status) && updateType === "CLEAR_INTERVIEWERS"
+      // &&
+      // hasInterviewers
     ) {
       // User cleared interviewers → cancel
       updatePayload.$set.status = "Draft";
@@ -782,25 +813,35 @@ const updateInterviewRound = async (req, res) => {
     //   }
     // }
   }
-  let smartUpdate;
 
-  if (
-    updatePayload.$set.status !== existingRound.status &&
-    updatePayload.$set.status
-  ) {
+  // === DATE/TIME CHANGE (always save if sent) ===
+  if (req.body.round?.dateTime) {
+    updatePayload.$set.dateTime = req.body.round.dateTime;
+  }
+
+  // === INSTRUCTIONS CHANGE ===
+  if (req.body.round?.instructions !== undefined) {
+    updatePayload.$set.instructions = req.body.round.instructions;
+  }
+
+
+  // Handle questions update in main flow (safe path already handles it)
+  if (changes.questionsChanged || (req.body.questions && req.body.questions.length > 0)) {
+    await handleInterviewQuestions(interviewId, roundId, req.body.questions);
+  }
+
+
+  let smartUpdate = null;
+
+  if (updatePayload.$set.status && updatePayload.$set.status !== existingRound.status) {
     smartUpdate = buildSmartRoundUpdate({
       existingRound,
       body: {
-        // ...updatePayload,
-        selectedInterviewers: req.body.round.selectedInterviewers,
-        status: updatePayload.$set.status, //|| existingRound.status,
-        interviewerType: existingRound.interviewerType,
+        selectedInterviewers: req.body.round?.selectedInterviewers || [],
+        status: updatePayload.$set.status,
+        interviewerType: req.body.round?.interviewerType || existingRound.interviewerType,
+        dateTime: req.body.round?.dateTime,
       },
-      // body: updatePayload,
-      // {
-      //   ...updatedRound,
-      //   interviewerType: existingRound?.interviewerType,
-      // },
       actingAsUserId,
       changes,
     });
@@ -822,31 +863,18 @@ const updateInterviewRound = async (req, res) => {
 
     return out;
   }
-  //  date time change handling separately
-  if (changes.dateTimeChanged) {
-    updatePayload.$set.dateTime = req.body?.round?.dateTime;
-  }
-
-  if (changes.questionsChanged) {
-    await handleInterviewQuestions(interviewId, roundId, req.body.questions);
-  }
-
-  if (changes.instructionsChanged) {
-    updatePayload.$set.instructions = req.body.round.instructions;
-  }
-
   // -------------------------------
   // 4️⃣ FINAL UPDATE (IMPORTANT)
   // -------------------------------
-  let finalUpdate;
+  // === MERGE HISTORY ===
+  let finalUpdate = updatePayload;
 
-  // ✅ Only merge history if smartUpdate exists
-  if (smartUpdate?.$push?.history?.length) {
-    finalUpdate = mergeUpdates(updatePayload, smartUpdate);
-  } else {
-    // 🚫 No history creation
+  if (smartUpdate?.$push?.history?.length > 0) {
     finalUpdate = {
       $set: updatePayload.$set,
+      $push: {
+        history: [...updatePayload.$push.history, ...smartUpdate.$push.history]
+      }
     };
   }
 
@@ -877,6 +905,8 @@ const updateInterviewRound = async (req, res) => {
   // SEND INTERNAL EMAIL ONLY WHEN STATUS BECOMES Scheduled/Rescheduled
   // ==================================================================
   if (shouldSendInternalEmail && isInternal) {
+    console.log("shouldSendInternalEmail", shouldSendInternalEmail);
+    console.log("isInternal", isInternal);
     await handleInternalRoundEmails({
       interviewId,
       roundId: updatedRound._id,
@@ -911,6 +941,7 @@ const updateInterviewRound = async (req, res) => {
     message: "Round updated successfully",
     status: "ok",
     updatedRound,
+    generateMeetingLink,
   });
 };
 
