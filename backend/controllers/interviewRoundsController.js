@@ -27,6 +27,7 @@ const {
   createWalletTransaction,
   applySelectionTimeWalletHoldForOutsourcedRound,
   processAutoSettlement,
+  processWithdrawnRefund,
 } = require("../utils/interviewWalletUtil");
 
 //--------------------------------------- Main controllers -------------------------------------------
@@ -66,7 +67,7 @@ const saveInterviewRound = async (req, res) => {
     const { meetPlatform, meetLink, ...otherRoundData } = round;
 
     // Fetch interview to get ownerId (needed for history)
-    const interview = await Interview.findById(interviewId).lean();
+    let interview = await Interview.findById(interviewId).lean();
     if (!interview) {
       return res.status(404).json({ message: "Interview not found" });
     }
@@ -80,6 +81,8 @@ const saveInterviewRound = async (req, res) => {
       // External / Outsource
       if (req.body.round?.selectedInterviewers?.length > 0) {
         finalStatus = "RequestSent";
+        // NOTE: Wallet hold for outsourced interviewers will be applied AFTER round is saved
+        // See below after savedRound is created
         generateMeetingLink = true;
       }
     } else {
@@ -116,6 +119,22 @@ const saveInterviewRound = async (req, res) => {
     // ==================== SAVE THE ROUND ====================
     const savedRound = await newInterviewRound.save();
 
+    // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (NOW THAT savedRound EXISTS) ========================
+    if (round.interviewerType !== "Internal" && req.body.round?.selectedInterviewers?.length > 0) {
+      const walletHoldResponse = await applySelectionTimeWalletHoldForOutsourcedRound({
+        req,
+        res,
+        interview,
+        round,
+        savedRound,
+      });
+
+      if (walletHoldResponse) {
+        // Helper already sent a response (e.g. error); stop further processing.
+        return walletHoldResponse;
+      }
+    }
+
     // ================= HISTORY (CREATE FLOW) =================
 
     //history should be update after creation of round
@@ -133,21 +152,6 @@ const saveInterviewRound = async (req, res) => {
       });
     }
 
-    // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (SELECTION TIME) ========================
-    // Delegate to helper so this controller stays clean and focused.
-    const walletHoldResponse =
-      await applySelectionTimeWalletHoldForOutsourcedRound({
-        req,
-        res,
-        interview,
-        round,
-        savedRound,
-      });
-
-    if (walletHoldResponse) {
-      // Helper already sent a response (e.g. error); stop further processing.
-      return walletHoldResponse;
-    }
 
     // =================== start == assessment mails sending functionality == start ========================
 
@@ -579,6 +583,28 @@ const updateInterviewRound = async (req, res) => {
       updatePayload.$set.status = "RequestSent";
       shouldcreateRequestFlow = true;
       generateMeetingLink = true;
+      
+      // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (SELECTION TIME) ========================
+      // Fetch the interview document for wallet operations
+      const interview = await Interview.findById(interviewId).lean();
+      if (!interview) {
+        return res.status(404).json({ message: "Interview not found for wallet hold." });
+      }
+ 
+      // Delegate to helper so this controller stays clean and focused.
+      const walletHoldResponse =
+        await applySelectionTimeWalletHoldForOutsourcedRound({
+          req,
+          res,
+          interview,
+          round: req.body.round,
+          savedRound: existingRound,
+        });
+ 
+      if (walletHoldResponse) {
+        // Helper already sent a response (e.g. error); stop further processing.
+        return walletHoldResponse;
+      }
 
     }
 
@@ -604,6 +630,17 @@ const updateInterviewRound = async (req, res) => {
         { status: "withdrawn", respondedAt: new Date() }
       );
       // console.log("withdrawnRequests", withdrawnRequests);
+      
+      // Refund the selection time hold - full amount + GST (no policy)
+      try {
+        await processWithdrawnRefund({
+          roundId: existingRound._id.toString(),
+        });
+        console.log("[saveInterviewRound] Selection hold refunded for withdrawn round:", existingRound._id);
+      } catch (refundError) {
+        console.error("[saveInterviewRound] Error refunding selection hold:", refundError);
+        // Continue - don't block status update
+      }
 
       updatePayload.$set.status = "Draft";
     }
@@ -615,6 +652,21 @@ const updateInterviewRound = async (req, res) => {
       // hasselectedInterviewers  // ← cleared (selectedInterviewers empty or not sent)
     ) {
       // PROTECT: Check if accepted (should always be true, but safe)
+      
+      // Auto reschedule settlement process - pay interviewer based on policy before resetting
+      if (hasAccepted) {
+        try {
+          await processAutoSettlement({
+            roundId: existingRound._id.toString(),
+            action: "Rescheduled",
+          });
+          console.log("[saveInterviewRound] Auto-settlement for rescheduled round:", existingRound._id);
+        } catch (settlementError) {
+          console.error("[saveInterviewRound] Auto-settlement error for rescheduled round:", settlementError);
+          // Continue with reschedule even if settlement fails
+        }
+      }
+      
       if (hasAccepted) {
         // Cancel the accepted request
         await InterviewRequest.updateMany(

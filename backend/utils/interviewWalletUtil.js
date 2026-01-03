@@ -837,9 +837,9 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
     return null;
   }
 
-  // Only process for Completed or Cancelled actions
-  if (action !== "Completed" && action !== "Cancelled") {
-    console.log("[processAutoSettlement] Skipping - action not Completed or Cancelled");
+  // Only process for Completed, Cancelled, or Rescheduled actions
+  if (action !== "Completed" && action !== "Cancelled" && action !== "Rescheduled") {
+    console.log("[processAutoSettlement] Skipping - action not Completed, Cancelled, or Rescheduled");
     return null;
   }
 
@@ -876,6 +876,7 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
     }
 
     const interviewerOwnerId = contactDoc.ownerId?.toString();
+    const interviewertenantId = contactDoc.tenantId?.toString();
     if (!interviewerOwnerId) {
       console.log("[processAutoSettlement] Contact has no ownerId:", interviewerContactId);
       return null;
@@ -993,6 +994,61 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
         settlementScenario = "no_policy_found";
         appliedPolicyName = "no_policy_found";
       }
+    } else if (action === "Rescheduled") {
+      // Calculate hours before interview for reschedule policy
+      let scheduledTime = null;
+      if (roundDoc.dateTime && typeof roundDoc.dateTime === "string") {
+        try {
+          const dateTimeStr = roundDoc.dateTime.split(" - ")[0].trim();
+          const match = dateTimeStr.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)$/i);
+          if (match) {
+            const [, day, month, year, hours, minutes, period] = match;
+            let hour = parseInt(hours, 10);
+            if (period.toUpperCase() === "PM" && hour !== 12) hour += 12;
+            if (period.toUpperCase() === "AM" && hour === 12) hour = 0;
+            scheduledTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hour, parseInt(minutes));
+          }
+        } catch (e) {
+          console.warn("[processAutoSettlement] Error parsing dateTime for reschedule:", e);
+        }
+      }
+      const actionTime = new Date();
+
+      let hoursBefore = null;
+      if (scheduledTime && !isNaN(scheduledTime.getTime())) {
+        hoursBefore = (scheduledTime.getTime() - actionTime.getTime()) / (1000 * 60 * 60);
+        if (hoursBefore < 0) hoursBefore = 0;
+      }
+
+      const isMockInterview = Boolean(acceptedRequest.isMockInterview);
+
+      // Use "Rescheduled" status to look up RESCHEDULE type policies
+      const policy = await findPolicyForSettlement(isMockInterview, "Rescheduled", hoursBefore);
+
+      if (policy) {
+        payPercent = typeof policy.interviewerPayoutPercentage === "number"
+          ? policy.interviewerPayoutPercentage
+          : 0;
+        // Store platformFeePercentage from policy for reschedule-specific calculation
+        // This will be used instead of the general service charge
+        settlementScenario = policy.policyName || "reschedule_policy_applied";
+        appliedPolicyId = policy._id?.toString() || null;
+        appliedPolicyName = policy.policyName || "reschedule_policy";
+
+        // TODO: firstRescheduleFree logic - commented out for now
+        // if (policy.firstRescheduleFree) {
+        //   const { isFirstFreeReschedule } = require("./roundPolicyUtil");
+        //   if (isFirstFreeReschedule(roundDoc.history)) {
+        //     payPercent = 0;
+        //     settlementScenario = "first_reschedule_free";
+        //   }
+        // }
+      } else {
+        // No policy found - default to full refund (0% to interviewer)
+        payPercent = 0;
+        settlementScenario = "no_reschedule_policy_found";
+        appliedPolicyName = "no_reschedule_policy_found";
+      }
     }
 
     // 7. Get tax config for service charge percentage
@@ -1103,7 +1159,7 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
           ownerId: interviewerOwnerId,
           walletCode: walletCode,
           currency: "INR",
-          tenantId: contactDoc.tenantId?.toString() || "",
+          tenantId: interviewertenantId || "",
           balance: 0,
           holdAmount: 0,
           transactions: [],
@@ -1119,13 +1175,13 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
       const invoiceCode = await generateUniqueId("INVC", Invoicemodels, "invoiceCode");
 
       invoiceDoc = await Invoicemodels.create({
-        tenantId: interview.tenantId?.toString() || "",
-        ownerId: interviewerContactId,
+        tenantId: interviewertenantId || "",
+        ownerId: interviewerOwnerId,
         type: "payout",
         planName: `Interview Payment - ${roundTitle}`,
         totalAmount: settlementAmount,
         amountPaid: settlementAmount,
-        status: "paid",
+        status: "credited",
         invoiceCode: invoiceCode,
         relatedObjectId: mongoose.Types.ObjectId.isValid(roundId)
           ? new mongoose.Types.ObjectId(roundId)
@@ -1269,6 +1325,123 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
   }
 }
 
+/**
+ * Process full refund for withdrawn requests (selection time hold).
+ * This is called when RequestSent → Draft and requests are withdrawn before any acceptance.
+ * No policy needed - full refund of hold amount + GST to organization.
+ *
+ * @param {Object} params
+ * @param {String} params.roundId - Interview round ID
+ * @returns {Promise<Object|null>} Refund result or null if no hold found
+ */
+async function processWithdrawnRefund({ roundId }) {
+  if (!roundId) {
+    console.log("[processWithdrawnRefund] Missing roundId");
+    return null;
+  }
+
+  try {
+    console.log("[processWithdrawnRefund] Processing refund for round:", roundId);
+
+    // 1. Find the organization wallet with HOLD transaction for this round
+    const orgWallet = await WalletTopup.findOne({
+      "transactions.metadata.roundId": roundId,
+      "transactions.type": "hold",
+      "transactions.status": "pending",
+    });
+
+    if (!orgWallet) {
+      console.log("[processWithdrawnRefund] No organization wallet with hold found for round:", roundId);
+      return null;
+    }
+
+    // 2. Find the active hold transaction
+    const activeHoldTransaction = orgWallet.transactions.find(
+      (tx) =>
+        tx.metadata?.roundId === roundId &&
+        tx.type === "hold" &&
+        tx.status === "pending"
+    );
+
+    if (!activeHoldTransaction) {
+      console.log("[processWithdrawnRefund] No active hold transaction found for round:", roundId);
+      return null;
+    }
+
+    const transactionId = activeHoldTransaction._id;
+    const baseAmount = Number(activeHoldTransaction.amount || 0);
+    const gstAmount = Number(activeHoldTransaction.gstAmount || 0);
+    const totalHoldAmount = Number(activeHoldTransaction.totalAmount || baseAmount + gstAmount);
+
+    console.log("[processWithdrawnRefund] Found hold to refund:", {
+      baseAmount,
+      gstAmount,
+      totalHoldAmount,
+    });
+
+    // 3. Update org wallet - release hold and refund full amount + GST
+    const refundAmount = totalHoldAmount; // Full amount including GST
+
+    const orgWalletUpdate = {
+      $set: {
+        "transactions.$.type": "refund",
+        "transactions.$.status": "completed",
+        "transactions.$.description": `Refund - Requests withdrawn before acceptance`,
+        "transactions.$.metadata.refundedAt": new Date(),
+        "transactions.$.metadata.refundReason": "WITHDRAWN_BEFORE_ACCEPTANCE",
+      },
+      $inc: {
+        holdAmount: -totalHoldAmount,
+        balance: refundAmount,
+      },
+    };
+
+    const updatedOrgWallet = await WalletTopup.findOneAndUpdate(
+      { _id: orgWallet._id, "transactions._id": transactionId },
+      orgWalletUpdate,
+      { new: true }
+    );
+
+    if (!updatedOrgWallet) {
+      console.error("[processWithdrawnRefund] Failed to update organization wallet");
+      return null;
+    }
+
+    // 4. Create refund transaction for audit trail using common function
+    // await createWalletTransaction({
+    //   ownerId: orgWallet.ownerId,
+    //   businessType: WALLET_BUSINESS_TYPES.REFUND,
+    //   amount: baseAmount,
+    //   gstAmount: gstAmount,
+    //   description: `Full refund - Requests withdrawn before acceptance`,
+    //   relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
+    //   status: "completed",
+    //   reason: "WITHDRAWN_BEFORE_ACCEPTANCE_REFUND",
+    //   metadata: {
+    //     roundId: roundId,
+    //     originalTransactionId: transactionId?.toString(),
+    //     refundDate: new Date(),
+    //   },
+    // });
+
+    console.log("[processWithdrawnRefund] Full refund completed:", {
+      roundId,
+      refundAmount,
+    });
+
+    return {
+      success: true,
+      roundId,
+      refundAmount,
+      baseAmount,
+      gstAmount,
+    };
+  } catch (error) {
+    console.error("[processWithdrawnRefund] Error:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   WALLET_BUSINESS_TYPES,
   createWalletTransaction,
@@ -1276,4 +1449,5 @@ module.exports = {
   applySelectionTimeWalletHoldForOutsourcedRound,
   applyAcceptInterviewWalletFlow,
   processAutoSettlement,
+  processWithdrawnRefund,
 };
