@@ -187,6 +187,6 @@ module.exports = {
   resolveTenantRegionAndCurrency,
   findActiveRegionalTaxConfig,
   normalizePercentage,
-   computeBaseGstGross,
+  computeBaseGstGross,
   getTaxConfigForTenant,
 };

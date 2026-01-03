@@ -1,7 +1,9 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v2.0.0 - Added video preview and updated layout
 
-import React, { useEffect, useState } from "react";
-import { Video, LogOut, MessageSquare, Clock, MapPin } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { Video, LogOut, MessageSquare, Clock, MapPin, Mic, MicOff, VideoOff } from "lucide-react";
+import { useMediaDevice } from "@videosdk.live/react-sdk";
 
 import {
   formatToLocalTime,
@@ -25,7 +27,6 @@ const CandidateView = ({
   // console.log("CandidateView decodedData", decodedData);
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
-  const [showCountdown, setShowCountdown] = useState(false);
   const [localInterviewTime, setLocalInterviewTime] = useState("");
   const [localEndTime, setLocalEndTime] = useState("");
   const location = useLocation();
@@ -69,6 +70,19 @@ const CandidateView = ({
   const feedbackData = propFeedbackData || candidateData;
 
   console.log("feedbackData", feedbackData);
+
+  // Video preview states
+  const [micOn, setMicOn] = useState(false);
+  const [webcamOn, setWebcamOn] = useState(false);
+  const [videoTrack, setVideoTrack] = useState(null);
+  const [audioTrack, setAudioTrack] = useState(null);
+  const videoPlayerRef = useRef();
+  const audioPlayerRef = useRef();
+  const videoTrackRef = useRef();
+  const audioTrackRef = useRef();
+
+  // Get media devices
+  const { getCameras, getMicrophones, getPlaybackDevices } = useMediaDevice();
 
   // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
   const parseCustomDateTime = (dateTimeStr) => {
@@ -159,6 +173,66 @@ const CandidateView = ({
   //   feedbackData?.round?.duration
   // );
 
+  // Initialize video preview
+  useEffect(() => {
+    const initVideoPreview = async () => {
+      try {
+        if (webcamOn) {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+          });
+
+          if (videoPlayerRef.current) {
+            videoPlayerRef.current.srcObject = stream;
+            const videoTracks = stream.getVideoTracks();
+            const audioTracks = stream.getAudioTracks();
+
+            if (videoTracks.length > 0) {
+              setVideoTrack(videoTracks[0]);
+              videoTrackRef.current = videoTracks[0];
+            }
+
+            if (audioTracks.length > 0) {
+              setAudioTrack(audioTracks[0]);
+              audioTrackRef.current = audioTracks[0];
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error accessing media devices:", error);
+      }
+    };
+
+    initVideoPreview();
+
+    // Cleanup function
+    return () => {
+      if (videoTrackRef.current) {
+        videoTrackRef.current.stop();
+      }
+      if (audioTrackRef.current) {
+        audioTrackRef.current.stop();
+      }
+    };
+  }, [webcamOn]);
+
+  // Toggle microphone
+  const toggleMic = () => {
+    if (audioTrackRef.current) {
+      audioTrackRef.current.enabled = !audioTrackRef.current.enabled;
+      setMicOn(!micOn);
+    }
+  };
+
+  // Toggle webcam
+  const toggleWebcam = () => {
+    if (videoTrackRef.current) {
+      videoTrackRef.current.enabled = !videoTrackRef.current.enabled;
+      setWebcamOn(!webcamOn);
+    }
+  };
+
   return (
     // v1.0.0 <-----------------------------------------------------------------------------
     <div className="min-h-screen bg-gradient-to-br from-[#217989] to-[#1a616e] p-4">
@@ -177,9 +251,54 @@ const CandidateView = ({
             {/* Welcome Card */}
             <div className="bg-white rounded-2xl shadow-2xl sm:p-4 md:p-4 p-8 text-center">
               <div className="mb-8">
-                <div className="sm:w-16 sm:h-16 md:w-16 md:h-16 w-20 h-20 bg-[#217989] rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Video className="sm:w-8 sm:h-8 md:h-8 md:w-8 w-10 h-10 text-white" />
-                </div>
+
+                {/* Video Preview Section */}
+                {console.log('sfsd', feedbackData?.round?.meetPlatform)}
+                {feedbackData?.round?.meetPlatform === "platform" && (
+                  <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden mb-8">
+                    <div className="relative aspect-video bg-black">
+                      <video
+                        ref={videoPlayerRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        {!webcamOn && (
+                          <div className="text-white text-lg bg-black bg-opacity-50 p-4 rounded-full">
+                            Camera is off
+                          </div>
+                        )}
+                      </div>
+                      <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
+                        <button
+                          onClick={toggleMic}
+                          className={`p-3 rounded-full ${micOn ? 'bg-white text-gray-800' : 'bg-red-600 text-white'}`}
+                          aria-label={micOn ? 'Mute microphone' : 'Unmute microphone'}
+                        >
+                          {micOn ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+                        </button>
+
+                        <button
+                          onClick={toggleWebcam}
+                          className={`p-3 rounded-full ${webcamOn ? 'bg-white text-gray-800' : 'bg-red-600 text-white'}`}
+                          aria-label={webcamOn ? 'Turn off camera' : 'Turn on camera'}
+                        >
+                          {webcamOn ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <audio ref={audioPlayerRef} autoPlay playsInline className="hidden" />
+                  </div>
+                )}
+
+                {feedbackData?.round?.meetPlatform !== "platform" && (
+                  <div className="sm:w-16 sm:h-16 md:w-16 md:h-16 w-20 h-20 bg-[#217989] rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Video className="sm:w-8 sm:h-8 md:h-8 md:w-8 w-10 h-10 text-white" />
+                  </div>
+                )}
                 <h1 className="sm:text-lg md:text-lg lg:text-lg xl:text-xl 2xl:text-2xl font-bold text-gray-800 mb-2">
                   Welcome,{" "}
                   {feedbackData?.FirstName || feedbackData?.LastName
@@ -337,14 +456,33 @@ const CandidateView = ({
               </button> */}
 
               {/* Join Meeting Button */}
+              {console.log('decodedData?.meetLink', decodedData?.meetLink)}
+              {console.log('decodedData', decodedData)}
               <button
-                onClick={() => window.open(decodedData?.meetLink, "_blank")}
+                // onClick={() => window.open(decodedData?.meetLink, "_blank")}
+
+                onClick={() => {
+                  if (feedbackData?.round?.meetPlatform === "platform") {
+                    const currentUrl = new URL(window.location.href);
+
+                    // change only the path
+                    currentUrl.pathname = "/video-call";
+
+                    // Add meetLink and encoded decodedData to URL
+                    currentUrl.searchParams.set('meetLink', decodedData?.meetLink || '');
+                    currentUrl.searchParams.set('meetingData', encodeURIComponent(JSON.stringify(decodedData || {})));
+
+                    window.open(currentUrl.toString(), "_blank");
+                  } else {
+                    window.open(decodedData?.meetLink, "_blank");
+                  }
+                }}
+
                 // disabled={!isButtonEnabled}
-                className={`w-full md:text-sm ${
-                  isButtonEnabled
-                    ? "bg-[#217989] hover:bg-[#1a616e] hover:scale-105"
-                    : "bg-gray-400 cursor-not-allowed sm:text-sm"
-                } text-white font-bold sm:py-3 md:py-3 py-4 sm:px-4 md:px-4 lg:px-4 xl:px-8 2xl:px-8 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg mb-4`}
+                className={`w-full md:text-sm ${isButtonEnabled
+                  ? "bg-[#217989] hover:bg-[#1a616e] hover:scale-105"
+                  : "bg-gray-400 cursor-not-allowed sm:text-sm"
+                  } text-white font-bold sm:py-3 md:py-3 py-4 sm:px-4 md:px-4 lg:px-4 xl:px-8 2xl:px-8 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg mb-4`}
               >
                 <Video className="w-6 h-6" />
                 {isButtonEnabled

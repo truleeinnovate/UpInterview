@@ -110,7 +110,7 @@ const InterviewPolicyForm = ({ onClose, mode }) => {
             value={formData.policyName}
             onChange={handleChange}
             className="w-full border p-2 rounded"
-            placeholder="e.g., Late Cancel - 24 Hours"
+            placeholder="Policy Name"
           />
         </div>
 
@@ -180,6 +180,9 @@ const InterviewPolicyForm = ({ onClose, mode }) => {
           <div>
             <label className="block text-xs font-medium">Fee %</label>
             <input
+              min="0"
+              max="100"
+              step="0.01"
               type="number"
               name="feePercentage"
               value={formData.feePercentage}
@@ -190,6 +193,9 @@ const InterviewPolicyForm = ({ onClose, mode }) => {
           <div>
             <label className="block text-xs font-medium">Interviewer %</label>
             <input
+              min="0"
+              max="100"
+              step="0.01"
               type="number"
               name="interviewerPayoutPercentage"
               value={formData.interviewerPayoutPercentage}
@@ -200,6 +206,9 @@ const InterviewPolicyForm = ({ onClose, mode }) => {
           <div>
             <label className="block text-xs font-medium">Platform %</label>
             <input
+              min="0"
+              max="100"
+              step="0.01"
               type="number"
               name="platformFeePercentage"
               value={formData.platformFeePercentage}

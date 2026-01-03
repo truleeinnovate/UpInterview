@@ -1278,6 +1278,8 @@ app.use("/", contactRoutes);
 const interviewPoliciesRoutes = require("./routes/interviewPoliciesRoutes");
 app.use("/interview-policies", interviewPoliciesRoutes);
 
+const regionalTaxConfigRoutes = require("./routes/RegionalTaxConfigRoutes/regionalTaxConfigRoute.js");
+app.use("/regional-taxes", regionalTaxConfigRoutes);
 // ----------------------------------------------------->
 
 // support desk
@@ -1717,20 +1719,24 @@ app.post("/api/create-meeting", async (req, res) => {
     const token = await getS2SToken();
 
     // Validate start_time
-    if (start_time) {
-      const startDate = new Date(start_time);
-      if (isNaN(startDate.getTime())) {
+    if (start_time && timezone) {
+      const now = new Date();
+
+      // Treat start_time as timezone-based, NOT UTC
+      const startWithTZ = new Date(
+        `${start_time}${start_time.includes("Z") ? "" : ""}`
+      );
+
+      // Allow 2-minute buffer (network + Zoom strictness)
+      const minFuture = new Date(now.getTime() + 2 * 60 * 1000);
+
+      if (startWithTZ <= minFuture) {
         return res.status(400).json({
-          error:
-            "Invalid start_time format. Use ISO 8601 format: YYYY-MM-DDTHH:mm:ss",
+          error: "start_time must be at least 2 minutes in the future",
         });
       }
-      if (startDate <= new Date()) {
-        return res
-          .status(400)
-          .json({ error: "start_time must be in the future" });
-      }
     }
+
 
     const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
     const type = start_time ? 2 : 1;
@@ -1786,14 +1792,10 @@ app.use("/upinterviewEnterpriseContact", upinterviewEnterpriseContactRoutes);
 
 // for external api routes
 const externalRoutes = require("./routes/external.routes");
-app.use("/external", externalRoutes);
+app.use("/api/external", externalRoutes);
 
 const analyticsRoutes = require("./routes/AnalyticsRoutes/analytics.js");
 app.use("/analytics", analyticsRoutes);
-
-
-
-
 
 // Create meeting endpoint
 // app.post('/api/create-meeting', async (req, res) => {
@@ -1896,7 +1898,6 @@ app.use("/analytics", analyticsRoutes);
 //     return res.status(err.response?.status || 500).json({ error: err.response?.data || err.message });
 //   }
 // });
-
 
 // v1
 // get
