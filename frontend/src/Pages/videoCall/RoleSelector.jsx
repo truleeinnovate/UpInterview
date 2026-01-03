@@ -17,7 +17,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   const [localInterviewTime, setLocalInterviewTime] = useState("");
   const [localEndTime, setLocalEndTime] = useState("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-
+  console.log("Feedback Data in RoleSelector:", feedbackData);
   // Function to update interview status to "in-progress"
   const updateInterviewStatus = async () => {
     try {
@@ -43,6 +43,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
         interviewId: feedbackData?.interviewRound?.interviewId,
         status: "InProgress",
       });
+      console.log("Status update response:", response);
 
       // toast.success("Interview marked as in progress", {});
     } catch (error) {

@@ -23,6 +23,7 @@ import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import axios from "axios";
 import {
   useCreateFeedback,
+  useFeedbackData,
   useUpdateFeedback,
 } from "../../apiHooks/useFeedbacks";
 import { useScrollLock } from "../../apiHooks/scrollHook/useScrollLock.js";
@@ -30,6 +31,7 @@ import { SchedulerViewMode } from "./SchedulerViewMode.jsx";
 import DescriptionField from "../../Components/FormFields/DescriptionField.jsx";
 import DropdownSelect from "../../Components/Dropdowns/DropdownSelect.jsx";
 import { notify } from "../../services/toastService.js";
+import { extractUrlData } from "../../apiHooks/useVideoCall.js";
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -73,7 +75,7 @@ const FeedbackForm = ({
   candidateId,
   positionId,
   interviewerId,
-  feedbackCandidate,
+  // feedbackCandidate,
   // tenantId,
   isEditMode,
   isViewMode,
@@ -88,21 +90,35 @@ const FeedbackForm = ({
   useScrollLock(true);
   const location = useLocation();
   const locationFeedback = location.state?.feedback;
+
+  // Extract URL data once
+  const urlData = useMemo(
+    () => extractUrlData(location.search),
+    [location.search]
+  );
+
+  // Feedback query (existing)
+  const {
+    data: feedbackDatas,
+    isLoading: feedbackLoading,
+    isError: feedbackError,
+  } = useFeedbackData(
+    !urlData.isCandidate ? urlData.interviewRoundId : null,
+    !urlData.isCandidate ? urlData.interviewerId : null
+  );
+
   const feedbackData = useMemo(() => {
-    return locationFeedback || feedbackCandidate || {};
-  }, [locationFeedback, feedbackCandidate]);
+    return locationFeedback || feedbackDatas || {};
+  }, [locationFeedback, feedbackDatas]);
+
   // const feedbackData = React.useMemo(() => locationFeedback || {}, [locationFeedback]);
   const feedbackId = feedbackData._id || null;
-  // const skillsData = feedbackData.skills || [];
-  // const overallImpressionTabData = feedbackData.overallImpression || {};
-  // console.log("feedbackData edit mode", feedbackData);
-  // Fixed: Properly initialize skills data with fallback
+
   const skillsData = feedbackData.skills || [];
 
   // Fixed: Properly initialize overall impression data with fallback
   const overallImpressionTabData = feedbackData?.overallImpression || {};
-  //  console.log("feedbackData edit mode", feedbackData);
-  //  console.log("overallImpressionTabData",overallImpressionTabData?.overallRating,isAddMode);
+
   const navigate = useNavigate();
 
   // const [overallRating, setOverallRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.overallRating) || 0);
@@ -115,8 +131,6 @@ const FeedbackForm = ({
       ? overallImpressionTabData?.overallRating
       : 0
   );
-
-  // console.log("overallImpressionTabData",overallRating);
 
   // Fixed: Proper initialization for communication rating with proper fallbacks
   const [communicationRating, setCommunicationRating] = useState(
@@ -156,7 +170,7 @@ const FeedbackForm = ({
   const mergedQuestions = useMemo(() => {
     // Get existing interviewer questions from API
     const existingInterviewerQuestions =
-      feedbackCandidate?.interviewData?.questionFeedback || [];
+      feedbackData?.interviewData?.questionFeedback || [];
 
     // Get newly added questions from interviewerSectionData
     const newlyAddedQuestions = (interviewerSectionData || []).filter(
@@ -185,7 +199,7 @@ const FeedbackForm = ({
 
     // Combine both for submission purposes
     return [...existingInterviewerQuestions, ...newlyAddedQuestions];
-  }, [feedbackCandidate, interviewerSectionData]);
+  }, [feedbackData, interviewerSectionData]);
   // console.log("mergedQuestions",mergedQuestions);
 
   //<---v1.0.0-----
@@ -271,9 +285,7 @@ const FeedbackForm = ({
 
   const questionsWithFeedback = React.useMemo(() => {
     // Start with interviewer-added questions from preselected/merged data
-    const allQuestions = [
-      ...(filteredInterviewerQuestions || []),
-    ];
+    const allQuestions = [...(filteredInterviewerQuestions || [])];
 
     // console.log("allQuestions", allQuestions);
 
@@ -1035,8 +1047,8 @@ const FeedbackForm = ({
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
         feedbackCode:
-          feedbackCandidate?.interviewRound?.interviewCode ||
-          "" + "-" + feedbackCandidate?.interviewRound?.sequence ||
+          feedbackData?.interviewRound?.interviewCode ||
+          "" + "-" + feedbackData?.interviewRound?.sequence ||
           "",
         positionId: positionId || "",
         interviewerId: interviewerId || "",
@@ -1221,8 +1233,8 @@ const FeedbackForm = ({
           note: skill.comments || "",
         })),
         feedbackCode:
-          feedbackCandidate?.interviewRound?.interviewCode ||
-          "" + "-" + feedbackCandidate?.interviewRound?.sequence ||
+          feedbackData?.interviewRound?.interviewCode ||
+          "" + "-" + feedbackData?.interviewRound?.sequence ||
           "",
         questionFeedback: [
           // Interviewer section questions
@@ -1451,43 +1463,45 @@ const FeedbackForm = ({
         </div>
 
         <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Overall Rating{" "}
-              {!isViewMode && <span className="text-red-500">*</span>}
-            </label>
-            <div className="flex items-center">
-              {renderStarRating(overallRating, handleOverallRatingChange)}
-              <span className="ml-2 text-sm text-gray-600">
-                {overallRating}/5
-              </span>
-            </div>
-            {errors.overallRating && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.overallRating}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Communication Rating{" "}
-              {!isViewMode && <span className="text-red-500">*</span>}
-            </label>
-            <div className="flex items-center">
-              {renderStarRating(
-                communicationRating,
-                handleCommunicationRatingChange
+          <div className="flex space-x-10 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Overall Rating{" "}
+                {!isViewMode && <span className="text-red-500">*</span>}
+              </label>
+              <div className="flex items-center">
+                {renderStarRating(overallRating, handleOverallRatingChange)}
+                <span className="ml-2 text-sm text-gray-600">
+                  {overallRating}/5
+                </span>
+              </div>
+              {errors.overallRating && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.overallRating}
+                </p>
               )}
-              <span className="ml-2 text-sm text-gray-600">
-                {communicationRating}/5
-              </span>
             </div>
-            {errors.communicationRating && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.communicationRating}
-              </p>
-            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Communication Rating{" "}
+                {!isViewMode && <span className="text-red-500">*</span>}
+              </label>
+              <div className="flex items-center">
+                {renderStarRating(
+                  communicationRating,
+                  handleCommunicationRatingChange
+                )}
+                <span className="ml-2 text-sm text-gray-600">
+                  {communicationRating}/5
+                </span>
+              </div>
+              {errors.communicationRating && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.communicationRating}
+                </p>
+              )}
+            </div>
           </div>
 
           <div>

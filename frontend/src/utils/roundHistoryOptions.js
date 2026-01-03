@@ -37,3 +37,16 @@ export const REJECT_OPTIONS = [
   { label: "Communication issues", value: "communication_issues" },
   { label: "Other", value: "other" },
 ];
+
+// Incomplete status reasons
+export const INTERVIEW_INCOMPLETE_REASONS = [
+  { label: "Need more information", value: "need_more_information" },
+  { label: "Waiting for feedback", value: "waiting_for_feedback" },
+  { label: "Pending documentation", value: "pending_documentation" },
+  { label: "Awaiting decision", value: "awaiting_decision" },
+  { label: "Follow-up required", value: "follow_up_required" },
+  { label: "Incomplete data", value: "incomplete_data" },
+  { label: "On hold", value: "on_hold" },
+  { label: "Rescheduled", value: "rescheduled" },
+  { label: "Other", value: "other" },
+];

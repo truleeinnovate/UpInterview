@@ -14,7 +14,7 @@ const videoCallingSettingsSchema = new mongoose.Schema(
     defaultProvider: {
       type: String,
       enum: ["platform", "zoom", "google-meet", "teams"],
-      default: "zoom",
+      default: "platform",
     },
     credentialType: {
       type: String,

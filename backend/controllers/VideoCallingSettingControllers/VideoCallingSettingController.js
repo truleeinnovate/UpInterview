@@ -395,7 +395,7 @@ const CreateOrGetVideoCallingSettings = async (tenantId, ownerId) => {
 
       ownerId,
 
-      defaultProvider: "zoom",
+      defaultProvider: "platform",
 
       credentialType: "platform",
 
@@ -440,7 +440,7 @@ const CreateOrGetVideoCallingSettings = async (tenantId, ownerId) => {
       },
 
       uiState: {
-        lastConfiguredProvider: "zoom",
+        lastConfiguredProvider: "platform",
 
         showCredentialHelp: true,
 

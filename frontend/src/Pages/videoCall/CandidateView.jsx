@@ -9,15 +9,66 @@ import {
   getTimeUntilInterview,
   getDateStatus,
 } from "../../utils/timezoneUtils";
+import { useMemo } from "react";
+import {
+  extractUrlData,
+  useCandidateDetails,
+} from "../../apiHooks/useVideoCall";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const CandidateView = ({ onBack, feedbackData, decodedData }) => {
-  console.log("CandidateView feedbackData", feedbackData);
-  console.log("CandidateView decodedData", decodedData);
+const CandidateView = ({
+  onBack,
+  feedbackData: propFeedbackData,
+  decodedData: propDecodedData,
+}) => {
+  // console.log("CandidateView feedbackData", feedbackData);
+  // console.log("CandidateView decodedData", decodedData);
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [showCountdown, setShowCountdown] = useState(false);
   const [localInterviewTime, setLocalInterviewTime] = useState("");
   const [localEndTime, setLocalEndTime] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [currentRole, setCurrentRole] = useState(null);
+  // const [decodedData, setDecodedData] = useState(null);
+  const [urlRoleInfo, setUrlRoleInfo] = useState(null);
+
+  // Extract URL data once
+  const urlData = useMemo(
+    () => extractUrlData(location.search),
+    [location.search]
+  );
+
+  const decodedData = propDecodedData || urlData;
+
+  useEffect(() => {
+    if (!decodedData) return;
+
+    const effectiveIsInterviewer =
+      decodedData.isInterviewer || decodedData.isSchedule;
+    const roleInfo = {
+      isCandidate: decodedData.isCandidate,
+      isInterviewer: effectiveIsInterviewer,
+      hasRolePreference: decodedData.isCandidate || effectiveIsInterviewer,
+    };
+    // setUrlRoleInfo(roleInfo);
+  }, [decodedData]);
+
+  // Candidate query
+  const {
+    data: candidateData,
+    isLoading: candidateLoading,
+    isError: candidateError,
+  } = useCandidateDetails(
+    urlData.isCandidate ? urlData.interviewRoundId : null
+  );
+
+  console.log("propFeedbackData", propFeedbackData);
+
+  const feedbackData = propFeedbackData || candidateData;
+
+  console.log("feedbackData", feedbackData);
 
   // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
   const parseCustomDateTime = (dateTimeStr) => {
