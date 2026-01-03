@@ -140,7 +140,7 @@ const RoundFormInterviews = () => {
     useState(false);
   const [meetingCreationProgress, setMeetingCreationProgress] = useState("");
   const [selectedMeetingPlatform, setSelectedMeetingPlatform] =
-    useState("zoom"); // Default to Google Meet googlemeet
+    useState("platform"); // Default to Google Meet googlemeet
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
   // v1.0.2 <-----------------------------------------
 
