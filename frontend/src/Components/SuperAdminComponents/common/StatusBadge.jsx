@@ -57,7 +57,9 @@
       case "closed":
       case "blacklisted":
       case "high":
-        return "badge-error";
+        return "badge-error px-2 py-1 rounded-full font-semibold";
+      case "credited":
+        return "badge-success px-2 py-1 rounded-full font-semibold";
       default:
         return "badge-neutral px-2 py-1 rounded-full font-semibold";
     }

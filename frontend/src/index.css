@@ -253,6 +253,10 @@ textarea,
   @apply bg-rose-100 text-rose-700 rounded-full px-2 py-1 text-xs font-medium;
 }
 
+.badge-success {
+  @apply bg-green-100 text-green-700 rounded-full px-2 py-1 text-xs font-medium;
+}
+
 .badge-neutral {
   @apply bg-gray-100 text-gray-700 rounded-full px-2 py-1 text-xs font-medium;
 }
