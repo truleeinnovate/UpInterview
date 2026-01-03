@@ -350,17 +350,17 @@ export class VideoSDKPlatform {
 
     try {
       onProgress?.("Creating VideoSDK meeting...");
-      
+
       // Get the VideoSDK token
       const token = await this.getToken();
-      
+
       // Prepare the request payload
       const payload = {
         title: roundTitle,
         description: instructions,
         // Add any additional VideoSDK specific parameters here
       };
-      
+
       // Create the meeting
       const response = await fetch(`${this.API_BASE_URL}/v2/rooms`, {
         method: "POST",
@@ -383,10 +383,10 @@ export class VideoSDKPlatform {
       }
 
       // Construct the meeting URL
-      const meetingLink = `${window.location.origin}/videosdk-meeting?meetingId=${data.roomId}`;
-      
+      const meetingLink = `${data.roomId}`;
+
       onProgress?.("VideoSDK meeting created successfully!");
-      
+
       // Return in the expected format
       return meetingLink;
     } catch (error) {

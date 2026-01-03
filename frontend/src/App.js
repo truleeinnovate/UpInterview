@@ -549,7 +549,7 @@ const AuthRoutes = () => (
     <Route path="/resetPassword" element={<ResetPassword />} />
     <Route path="/forgot-password" element={<ForgetPassword />} />
 
-    <Route path="/video-dashboard" element={<VideoSDKDashboard1 />} />
+    <Route path="/video-call" element={<VideoSDKDashboard1 />} />
 
     <Route
       path="/video-sdk-candidate-details"
@@ -1573,7 +1573,7 @@ const App = () => {
       "/callback",
       "/oauth2callback",
       "/join-meeting",
-      "/video-dashboard",
+      "/video-call",
       "/video-sdk-candidate-details",
       "/video-sdk-feedback",
       "/video-sdk-interview-actions",
