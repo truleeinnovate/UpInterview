@@ -412,9 +412,9 @@ const InterviewerView = ({
             <div className="py-6 sm:px-3 px-6">
               {activeTab === "candidate" && (
                 <CandidateMiniTab
-                  selectedData={selectedCandidate}
+                  // selectedData={selectedCandidate}
                   isAddMode={true}
-                  decodedData={decodedData}
+                  // decodedData={decodedData}
                 />
               )}
               {!decodedData?.schedule && activeTab === "questions" && (
@@ -455,7 +455,7 @@ const InterviewerView = ({
                   candidateId={selectedCandidate?.candidate?._id}
                   positionId={selectedCandidate?.position?._id}
                   interviewerId={decodedData?.interviewerId}
-                  feedbackCandidate={selectedCandidate}
+                  // feedbackCandidate={selectedCandidate}
                   // tenantId={decodedData?.tenantId}
                   // isEditMode={false}
                   // feedbackId={null}

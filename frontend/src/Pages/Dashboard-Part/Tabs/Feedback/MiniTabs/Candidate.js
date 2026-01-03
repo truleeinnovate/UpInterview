@@ -14,17 +14,63 @@ import {
   Video,
 } from "lucide-react";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
+import { useMemo } from "react";
+import {
+  extractUrlData,
+  useCandidateDetails,
+} from "../../../../../apiHooks/useVideoCall";
+import { useEffect } from "react";
+import { useFeedbackData } from "../../../../../apiHooks/useFeedbacks";
 // import { Users, Video, LogOut, User, MessageSquare, FileText } from 'lucide-react';
-const CandidateMiniTab = ({ selectedData, isAddMode, decodedData }) => {
+const CandidateMiniTab = ({
+  selectedData: propsSelecteData,
+  isAddMode,
+  decodedData: propsDecodedData,
+}) => {
   useScrollLock(true);
   const location = useLocation();
   const feedback = location.state?.feedback || {};
-  const candidateData = selectedData?.candidate
-    ? selectedData?.candidate
-    : feedback.candidateId || {};
-  const positionData = selectedData?.position
-    ? selectedData?.position
-    : feedback.positionId || {};
+
+  // Extract URL data once
+  const urlData = useMemo(
+    () => extractUrlData(location.search),
+    [location.search]
+  );
+
+  const decodedData = propsDecodedData || urlData;
+
+  // useEffect(() => {
+  //   if (!decodedData) return;
+
+  //   const effectiveIsInterviewer =
+  //     decodedData.isInterviewer || decodedData.isSchedule;
+  //   const roleInfo = {
+  //     isCandidate: decodedData.isCandidate,
+  //     isInterviewer: effectiveIsInterviewer,
+  //     hasRolePreference: decodedData.isCandidate || effectiveIsInterviewer,
+  //   };
+  //   // setUrlRoleInfo(roleInfo);
+  // }, [decodedData]);
+
+  // Candidate query
+  // Feedback query (existing)
+  const {
+    data: feedbackData,
+    isLoading: feedbackLoading,
+    isError: feedbackError,
+  } = useFeedbackData(
+    !urlData.isCandidate ? urlData.interviewRoundId : null,
+    !urlData.isCandidate ? urlData.interviewerId : null
+  );
+
+  const candidateData =
+    propsSelecteData?.candidate || feedbackData?.candidate
+      ? propsSelecteData?.candidate || feedbackData?.candidate
+      : feedback.candidateId || {};
+  const positionData =
+    propsSelecteData?.position || feedbackData?.position
+      ? propsSelecteData?.position || feedbackData?.position
+      : feedback.positionId || {};
   const interviewRoundData = feedback.interviewRoundId || {};
 
   const [expandedSections, setExpandedSections] = useState({
