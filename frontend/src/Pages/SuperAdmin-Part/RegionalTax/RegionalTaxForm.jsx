@@ -121,6 +121,7 @@ const RegionalTaxForm = ({ mode }) => {
             onChange={(e) =>
               setFormData({ ...formData, country: e.target.value })
             }
+            placeholder="Enter Country"
             className="w-full border rounded px-3 py-2"
             required
           />
@@ -135,6 +136,7 @@ const RegionalTaxForm = ({ mode }) => {
             onChange={(e) =>
               setFormData({ ...formData, regionCode: e.target.value })
             }
+            placeholder="Enter Region Code"
             className="w-full border rounded px-3 py-2"
             required
           />
@@ -151,6 +153,7 @@ const RegionalTaxForm = ({ mode }) => {
             onChange={(e) =>
               setFormData({ ...formData, currencyCode: e.target.value })
             }
+            placeholder="Enter Currency Code"
             className="w-full border rounded px-3 py-2"
             required
           />
@@ -181,6 +184,8 @@ const RegionalTaxForm = ({ mode }) => {
           <input
             type="number"
             min="0"
+            max="100"
+            step="0.01"
             value={formData.gstPercentage}
             onChange={(e) =>
               setFormData({ ...formData, gstPercentage: e.target.value })
@@ -197,6 +202,8 @@ const RegionalTaxForm = ({ mode }) => {
           <input
             type="number"
             min="0"
+            max="100"
+            step="0.01"
             value={formData.serviceChargePercentage}
             onChange={(e) =>
               setFormData({
