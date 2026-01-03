@@ -26,6 +26,7 @@ const {
   WALLET_BUSINESS_TYPES,
   createWalletTransaction,
   applySelectionTimeWalletHoldForOutsourcedRound,
+  processAutoSettlement,
 } = require("../utils/interviewWalletUtil");
 
 //--------------------------------------- Main controllers -------------------------------------------
@@ -1003,7 +1004,7 @@ const updateInterviewRoundStatus = async (req, res) => {
   try {
     const { roundId } = req.params;
     const { actingAsUserId } = res.locals.auth;
-    const { action, reasonCode, comment } = req.body; // reasonCode = your selected reason, comment = "Other" text
+    const { action, reasonCode, comment, cancellationReason } = req.body; // reasonCode = your selected reason, comment = "Other" text, cancellationReason = specific cancellation reason
 
     console.log("req.body", req.body);
 
@@ -1069,12 +1070,32 @@ const updateInterviewRoundStatus = async (req, res) => {
     let shouldSendCancellationEmail = false;
 
     if (action === "Completed") {
-      //add wallet and policy code
+      // Auto-settlement for completed interviews
+      try {
+        await processAutoSettlement({
+          roundId: existingRound._id.toString(),
+          action: "Completed",
+        });
+        console.log("[updateInterviewRoundStatus] Auto-settlement completed for round:", existingRound._id);
+      } catch (settlementError) {
+        console.error("[updateInterviewRoundStatus] Auto-settlement error:", settlementError);
+        // Continue with status update even if settlement fails
+      }
     }
 
     if (action === "Cancelled") {
-
-      //add wallet and policy code
+      // Auto-settlement for cancelled interviews
+      try {
+        await processAutoSettlement({
+          roundId: existingRound._id.toString(),
+          action: "Cancelled",
+          cancellationReason: cancellationReason || reasonCode || null,
+        });
+        console.log("[updateInterviewRoundStatus] Auto-settlement for cancelled round:", existingRound._id);
+      } catch (settlementError) {
+        console.error("[updateInterviewRoundStatus] Auto-settlement error for cancelled round:", settlementError);
+        // Continue with status update even if settlement fails
+      }
 
       extraUpdate.$set.interviewers = []; // Clear interviewers
 
