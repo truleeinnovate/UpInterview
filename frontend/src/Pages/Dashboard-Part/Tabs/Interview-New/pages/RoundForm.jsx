@@ -1401,7 +1401,7 @@ const RoundFormInterviews = () => {
     // CHANGED: Pass the new calculated values directly to handleSubmit
     // Use setTimeout to ensure state updates have propagated
     setTimeout(() => {
-      handleSubmit(new Event("submit"), "changes-confirmed", {
+      handleSubmit(new Event("submit"), "confirmClearinterviwers", {
         interviewType: newInterviewType,
         scheduledDate: newScheduledDate,
         combinedDateTime: newCombinedDateTime,
@@ -1654,8 +1654,9 @@ const RoundFormInterviews = () => {
     setIsSubmitting(true);
 
     try {
+      let updateType = "FULL_UPDATE";
       // === NEW: SAFE UPDATE PATH FOR EDIT MODE (only questions/instructions/sequence) ===
-      if (isEditing && type !== "changes-confirmed") {
+      if (isEditing && type !== "confirmClearinterviwers") {
         // Compare critical fields
         const criticalFieldsUnchanged =
           interviewType === originalInterviewType &&
@@ -1679,10 +1680,11 @@ const RoundFormInterviews = () => {
 
         if (criticalFieldsUnchanged && safeFieldsChanged) {
           console.log("Safe update detected: only instructions, sequence, or questions changed");
-
+          updateType = "SAFE_UPDATE";
           const safePayload = {
             interviewId,
             roundId,
+            updateType,
             round: {
               instructions,
               sequence,
@@ -1806,9 +1808,9 @@ const RoundFormInterviews = () => {
         selectedInterviewers, // ← backend uses this to create requests
         expiryDateTime, // ← backend uses frontend expiry
         selectedAssessmentData,
-        // ✅ ALWAYS send meeting platform
-        meetPlatform:
-          interviewMode !== "Face to Face" ? selectedMeetingPlatform : null,
+        // // ✅ ALWAYS send meeting platform
+        // meetPlatform:
+        //   interviewMode !== "Face to Face" ? selectedMeetingPlatform : null,
       };
 
       const validationErrors = validateInterviewRoundData(roundData);
@@ -1821,6 +1823,11 @@ const RoundFormInterviews = () => {
 
       console.log("roundData", roundData);
 
+      // ✅ CLEAR INTERVIEWERS (popup confirmed)
+      if (type === "confirmClearinterviwers") {
+        updateType = "CLEAR_INTERVIEWERS";
+      }
+
       // v1.0.1 --------------------------------------------------------------------------------->
 
       const payload = isEditing
@@ -1829,10 +1836,12 @@ const RoundFormInterviews = () => {
           round: roundData,
           roundId,
           questions: interviewQuestionsList,
+          updateType,
         }
         : {
           interviewId,
           round: roundData,
+          updateType,
           questions:
             interviewQuestionsList.map((q) => ({
               questionId: q.questionId,
@@ -1845,161 +1854,12 @@ const RoundFormInterviews = () => {
 
       console.log("payload", payload);
 
-      const shouldGenerateMeeting =
-        !isEditing && // 🧩 Skip in edit mode
-        payload?.round?.interviewMode !== "Face to Face" &&
-        Array.isArray(selectedInterviewers) &&
-        selectedInterviewers.length > 0;
+      // const shouldGenerateMeeting =
+      //   !isEditing && // 🧩 Skip in edit mode
+      //   payload?.round?.interviewMode !== "Face to Face" &&
+      //   Array.isArray(selectedInterviewers) &&
+      //   selectedInterviewers.length > 0;
 
-      // meeting gerating google or zoom etc......
-      let meetingLink = null;
-      if (payload.round.roundTitle !== "Assessment") {
-        try {
-          // v1.0.3 <-----------------------------------------------------------
-          setMeetingCreationProgress("Creating links...");
-          // v1.0.3 ----------------------------------------------------------->
-          // Import the meeting platform utility
-          const { createMeeting } = await import(
-            "../../../../../utils/meetingPlatforms.js"
-          );
-
-          if (shouldGenerateMeeting) {
-            setIsMeetingCreationLoading(true);
-            // ========================================
-            // Google Meet creation
-            // ========================================
-            if (selectedMeetingPlatform === "google-meet") {
-              meetingLink = await createMeeting(
-                "googlemeet",
-                {
-                  roundTitle,
-                  instructions,
-                  combinedDateTime,
-                  duration,
-                  selectedInterviewers,
-                },
-                (progress) => {
-                  setMeetingCreationProgress(progress);
-                }
-              );
-
-              // ========================================
-              // Zoom meeting creation
-              // ========================================
-            } else if (selectedMeetingPlatform === "zoom") {
-              // Format helper
-              function formatStartTimeForZoom(input) {
-                if (!input || typeof input !== "string") return undefined;
-
-                // Expected: "20-12-2025 07:36 PM - 08:36 PM"
-                const match = input.match(
-                  /^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})\s+(AM|PM)/
-                );
-
-                if (!match) return undefined;
-
-                let [, day, month, year, hh, mm, meridiem] = match;
-
-                day = Number(day);
-                month = Number(month);
-                year = Number(year);
-
-                let hours = Number(hh);
-                const minutes = Number(mm);
-
-                if (meridiem === "PM" && hours !== 12) hours += 12;
-                if (meridiem === "AM" && hours === 12) hours = 0;
-
-                const localDate = new Date(
-                  year,
-                  month - 1,
-                  day,
-                  hours,
-                  minutes,
-                  0
-                );
-
-                if (isNaN(localDate.getTime())) return undefined;
-
-                // Zoom expects LOCAL time when timezone is provided
-                return (
-                  `${localDate.getFullYear()}-` +
-                  `${String(localDate.getMonth() + 1).padStart(2, "0")}-` +
-                  `${String(localDate.getDate()).padStart(2, "0")}T` +
-                  `${String(localDate.getHours()).padStart(2, "0")}:` +
-                  `${String(localDate.getMinutes()).padStart(2, "0")}:00`
-                );
-              }
-
-              const formattedStartTime =
-                formatStartTimeForZoom(combinedDateTime);
-              if (!formattedStartTime)
-                throw new Error("Invalid start time format");
-
-              const payloads = {
-                topic: roundTitle,
-                duration: Number(duration),
-                userId: undefined,
-                ...(effectiveInterviewType === "scheduled" &&
-                  formattedStartTime && {
-                  start_time: formattedStartTime,
-                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                }),
-                settings: {
-                  join_before_host: true,
-                  host_video: false,
-                  participant_video: false,
-                },
-              };
-
-              meetingLink = await createMeeting(
-                "zoommeet",
-                { payload: payloads },
-                (progress) => {
-                  setMeetingCreationProgress(progress);
-                }
-              );
-            } else if (selectedMeetingPlatform === "platform") {
-              meetingLink = await createMeeting(
-                "videosdk",
-                {
-                  roundTitle,
-                  instructions,
-                  combinedDateTime,
-                  duration,
-                  selectedInterviewers,
-                },
-                (progress) => {
-                  setMeetingCreationProgress(progress);
-                }
-              );
-            }
-
-            // Fixed: was using undefined 'data'
-            if (meetingLink) {
-              // Correct way to add meetingId and meetPlatform to payload.round
-              if (payload.round) {
-                payload.round.meetingId = meetingLink?.start_url
-                  ? meetingLink?.start_url
-                  : meetingLink;
-              }
-
-              // payload?.round?.meetingId = meetingLink?.start_url
-              //   ? meetingLink?.start_url
-              //   : meetingLink
-              // payload?.round?.meetPlatform = selectedMeetingPlatform
-            }
-          }
-        } catch (err) {
-          console.error("Error in meeting creation:", err);
-          setErrors({
-            meetingCreation: err.message || "Failed to create meeting",
-          });
-        } finally {
-          setIsMeetingCreationLoading(false);
-          setMeetingCreationProgress("");
-        }
-      }
       // Check internal interview usage before scheduling
       if (selectedInterviewType === "Internal" && status === "Scheduled") {
         // Check if this is a new scheduling (not already scheduled)
@@ -2044,6 +1904,121 @@ const RoundFormInterviews = () => {
       } else {
         response = await saveInterviewRound(payload);
       }
+      console.log("response generateMeetingLink", response.generateMeetingLink);
+
+      // meeting gerating google or zoom etc......
+      // After successful round create/update
+      if (response.status === "ok") {
+        const roundIdToUse = response.savedRound?._id || response.updatedRound?._id || roundId;
+
+        // Only generate meeting if backend says so
+        if (response.generateMeetingLink && roundData.interviewMode !== "Face to Face") {
+          setIsMeetingCreationLoading(true);
+          setMeetingCreationProgress("Creating meeting link...");
+
+          try {
+            const { createMeeting } = await import("../../../../../utils/meetingPlatforms.js");
+
+            let meetingLink = null;
+
+            if (selectedMeetingPlatform === "google-meet") {
+              meetingLink = await createMeeting(
+                "googlemeet",
+                {
+                  roundTitle,
+                  instructions,
+                  combinedDateTime,
+                  duration,
+                  selectedInterviewers,
+                },
+                (progress) => setMeetingCreationProgress(progress)
+              );
+            } else if (selectedMeetingPlatform === "zoom") {
+              function formatStartTimeForZoom(combinedDateTime) {
+                if (!combinedDateTime) return null;
+
+                // Parse using dayjs or native Date safely
+                const [datePart, timePart, meridiem] = combinedDateTime.split(" ");
+                const [day, month, year] = datePart.split("-").map(Number);
+                let [hours, minutes] = timePart.split(":").map(Number);
+
+                if (meridiem === "PM" && hours !== 12) hours += 12;
+                if (meridiem === "AM" && hours === 12) hours = 0;
+
+                // Create LOCAL date
+                const localDate = new Date(year, month - 1, day, hours, minutes, 0);
+
+                // Enforce 15 minutes from NOW (FINAL safety)
+                const minFuture = new Date();
+                minFuture.setMinutes(minFuture.getMinutes() + 15);
+
+                const safeDate = localDate < minFuture ? minFuture : localDate;
+
+                // Zoom expects: YYYY-MM-DDTHH:mm:ss (NO Z)
+                return safeDate.toISOString().replace("Z", "").slice(0, 19);
+              }
+
+
+              const formattedStartTime = formatStartTimeForZoom(combinedDateTime);
+              if (!formattedStartTime) throw new Error("Invalid start time");
+
+              const zoomPayload = {
+                topic: roundTitle,
+                duration: Number(duration),
+                ...(effectiveInterviewType === "scheduled" && formattedStartTime && {
+                  start_time: formattedStartTime,
+                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                }),
+                type: 2, // scheduled
+                settings: {
+                  join_before_host: true,
+                  host_video: false,
+                  participant_video: false,
+                },
+              };
+
+              meetingLink = await createMeeting(
+                "zoommeet",
+                { payload: zoomPayload },
+                (progress) => setMeetingCreationProgress(progress)
+              );
+            } else if (selectedMeetingPlatform === "platform") {
+              meetingLink = await createMeeting(
+                "videosdk",
+                {
+                  roundTitle,
+                  instructions,
+                  combinedDateTime,
+                  duration,
+                  selectedInterviewers,
+                },
+                (progress) => setMeetingCreationProgress(progress)
+              );
+            }
+
+            if (meetingLink) {
+              // Reuse updateInterviewRound to silently save meeting link
+              const meetingPayload = {
+                interviewId,
+                updateType: "MEETING_UPDATE",
+                roundId: roundIdToUse,
+                round: {
+                  meetingId: meetingLink?.start_url || meetingLink,
+                  meetPlatform: selectedMeetingPlatform,
+                },
+                questions: [], // no change
+              };
+
+              await updateInterviewRound(meetingPayload);
+
+              setMeetingCreationProgress("Meeting link saved successfully!");
+            }
+          } catch (err) {
+            console.error("Meeting creation failed:", err);
+            notify.warn("Round saved, but meeting link could not be created.");
+          }
+        }
+      }
 
       // Trust backend's returned status
       const newStatus =
@@ -2052,128 +2027,46 @@ const RoundFormInterviews = () => {
         setStatus(newStatus);
       }
 
-      // ✅ Collect success messages instead of showing immediately
-      // successMessages.push("Interview round created successfully!");
 
-      const targetRoundId = response?.savedRound?._id || roundId;
-
-      // console.log("assessment reespone", response);
-
-      if (payload.round.roundTitle === "Assessment") {
-        if (response.status === "ok") {
-          navigate(`/interviews/${interviewId}`);
-        }
-      }
-
-      if (payload.round.roundTitle !== "Assessment") {
-        if (response.status === "ok") {
-          if (type === "changes-confirmed") {
-            // Close confirmation popup only if changes were confirmed
-            setShowDateChangeConfirmation(false);
-            setPendingDateChange(null);
-          } else {
-            // ✅ Navigate only once, after toasts
-            setTimeout(() => {
-              navigate(`/interviews/${interviewId}`);
-            });
-          }
-        }
-        // successMessages.length * 1000 + 500
-        // changes-confirmed
-      }
-
-      // if (payload.round.roundTitle !== "Assessment") {
-      //   // don't remove this code related to agora video room
-      //   // if (response.status === 'ok'){
-      //   //   const video_call_res = await axios.post(`${config.REACT_APP_API_URL}/api/agora/create-video-room`,
-      //   //     {
-      //   //       title: roundTitle,
-      //   //       enablePSTN: false
-      //   //     }
-      //   //   )
-
-      //   // }
-
-      //   // internal  interview  email sent
-      //   // Meeting platform link creation
+      // if (payload.round.roundTitle === "Assessment") {
       //   if (response.status === "ok") {
-      //     // Handle Face to Face (no meeting link)
-      //     // need to ask with ranjith why we use this code -ashraf
-      //     // if (!shouldGenerateMeeting && selectedInterviewers?.length > 0) {
-      //     //   const faceToFaceRoundData = {
-      //     //     ...roundData,
-      //     //     status: isReschedule ? "Rescheduled" : "Scheduled",
-      //     //   };
-
-      //     //   const updatePayload = {
-      //     //     interviewId,
-      //     //     roundId: targetRoundId,
-      //     //     round: faceToFaceRoundData,
-      //     //     ...(isEditing ? { questions: interviewQuestionsList } : {}),
-      //     //   };
-
-      //     //   await updateInterviewRound(updatePayload);
-      //     // }
-
-      //     // ✅ Email sending logic (internal interviewers)
-      //     // try {
-      //     //   // const isInternal = selectedInterviewType === "Internal";
-
-      //     //   // const shouldSendEmails =
-      //     //   //   selectedInterviewType === "Internal" &&
-      //     //   //   Array.isArray(selectedInterviewers) &&
-      //     //   //   selectedInterviewers.length > 0;
-
-      //     //   // if (shouldSendEmails && isInternal) {
-      //     //   //   const emailResponse = await axios.post(
-      //     //   //     `${config.REACT_APP_API_URL}/emails/interview/round-emails`,
-      //     //   //     {
-      //     //   //       interviewId: interviewId,
-      //     //   //       roundId: targetRoundId,
-      //     //   //       sendEmails: true,
-      //     //   //     },
-      //     //   //     {
-      //     //   //       headers: {
-      //     //   //         "Content-Type": "application/json",
-      //     //   //         Authorization: `Bearer ${Cookies.get("authToken")}`,
-      //     //   //       },
-      //     //   //     }
-      //     //   //   );
-
-      //     //   //   if (emailResponse.data.success) {
-      //     //   //     successMessages.push(
-      //     //   //       "Interview round created and emails sent successfully!"
-      //     //   //     );
-      //     //   //     if (emailResponse.data.data.emailsSent > 0) {
-      //     //   //       successMessages.push(
-      //     //   //         `Emails sent to ${emailResponse.data.data.emailsSent} recipients`
-      //     //   //       );
-      //     //   //     }
-      //     //   //   } else {
-      //     //   //     notify.error("Round created but email sending failed");
-      //     //   //   }
-      //     //   // }
-      //     // } catch (emailError) {
-      //     //   console.error("Error sending emails:", emailError);
-      //     //   notify.error("Round created but email sending failed");
-      //     // }
-
-      //     // ✅ Show all collected success messages sequentially
-      //     for (const [i, msg] of successMessages.entries()) {
-      //       setTimeout(() => {
-      //         notify.success(msg);
-      //       }, i * 1000);
-      //     }
-
-      //     // ✅ Navigate only once, after toasts
-      //     setTimeout(() => {
-      //       navigate(`/interviews/${interviewId}`);
-      //     }, successMessages.length * 1000 + 500);
-
-      //     // Removed duplicate navigate here to prevent double navigation
-      //     // navigate(`/interviews/${interviewId}`);
+      //     navigate(`/interviews/${interviewId}`);
       //   }
       // }
+
+      // if (payload.round.roundTitle !== "Assessment") {
+      //   if (response.status === "ok") {
+      //     if (type === "changes-confirmed") {
+      //       // Close confirmation popup only if changes were confirmed
+      //       setShowDateChangeConfirmation(false);
+      //       setPendingDateChange(null);
+      //     } else {
+      //       // ✅ Navigate only once, after toasts
+      //       setTimeout(() => {
+      //         navigate(`/interviews/${interviewId}`);
+      //       });
+      //     }
+      //   }
+      //   // successMessages.length * 1000 + 500
+      //   // changes-confirmed
+      // }
+
+
+      // === FINAL SUCCESS ===
+      notify.success("Round saved successfully!");
+
+      // Handle confirmation popup
+      // Handle confirmation popup
+      if (type === "confirmClearinterviwers") {
+        setShowDateChangeConfirmation(false);
+        setPendingDateChange(null);
+
+        // DO NOT NAVIGATE — stay on form so user can reselect interviewers
+        // The round is now in Draft, interviewers cleared — perfect for re-selection
+      } else {
+        // Normal save (user clicked "Add Round" or "Update Round")
+        navigate(`/interviews/${interviewId}`);
+      }
     } catch (err) {
       console.error("=== Form Submission Error ===");
       console.error("Error submitting the form:", err);
@@ -2209,6 +2102,7 @@ const RoundFormInterviews = () => {
       });
     } finally {
       setIsSubmitting(false);
+      setMeetingCreationProgress("");
     }
   };
 
@@ -3162,7 +3056,7 @@ const RoundFormInterviews = () => {
                                   roundEditData?.interviewerType ===
                                   "External") ||
                                 isInternalSelected ||
-                                interviewMode === "Face to Face" ||
+                                // interviewMode === "Face to Face" ||
                                 // status === "RequestSent" ||
                                 // status === "Scheduled" ||
                                 // status === "Rescheduled"
