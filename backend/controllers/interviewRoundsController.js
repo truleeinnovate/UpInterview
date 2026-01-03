@@ -60,6 +60,7 @@ const saveInterviewRound = async (req, res) => {
       { interviewId, sequence: { $gte: newSequence } },
       { $inc: { sequence: 1 } }
     );
+    let generateMeetingLink = false;
 
     // Extract meetLink/meetPlatform
     const { meetPlatform, meetLink, ...otherRoundData } = round;
@@ -79,6 +80,7 @@ const saveInterviewRound = async (req, res) => {
       // External / Outsource
       if (req.body.round?.selectedInterviewers?.length > 0) {
         finalStatus = "RequestSent";
+        generateMeetingLink = true;
       }
     } else {
       // Internal
@@ -87,6 +89,7 @@ const saveInterviewRound = async (req, res) => {
 
       if (hasInterviewers && hasDateTime) {
         finalStatus = "Scheduled"; // First scheduling
+        generateMeetingLink = true;
       }
     }
 
@@ -319,12 +322,11 @@ const saveInterviewRound = async (req, res) => {
     };
 
     return res.status(200).json({
-      message: roundId
-        ? "Round updated successfully."
-        : "Interview round created successfully.",
+      message: "Interview round created successfully.",
       savedRound,
       emailResult,
       status: "ok",
+      generateMeetingLink,
     });
 
     async function reorderInterviewRounds(interviewId) {
@@ -384,17 +386,47 @@ const updateInterviewRound = async (req, res) => {
     return res.status(404).json({ message: "Round not found." });
   }
 
+  const updateType = req.body.updateType;
+  console.log("updateType", updateType);
+
+
+  const incomingRound = round || {};
+
+  //after round create in post meeting id will update using this if condtion
+  if (incomingRound.meetingId || incomingRound.meetPlatform) {
+    const updateOps = { $set: {} };
+
+    if (incomingRound.meetingId) updateOps.$set.meetingId = incomingRound.meetingId;
+    if (incomingRound.meetPlatform) updateOps.$set.meetPlatform = incomingRound.meetPlatform;
+
+    const updatedRound = await InterviewRounds.findByIdAndUpdate(
+      roundId,
+      updateOps,
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: "Meeting link saved",
+      status: "ok",
+      updatedRound,
+    });
+  }
+
 
   // === NEW: EARLY SAFE UPDATE PATH ===
-  const incomingRound = round || {};
-  const onlySafeFields = Object.keys(incomingRound).every(key =>
-    ["instructions", "sequence"].includes(key)
-  );
+  // Safe path only if:
+  // - No dangerous fields (interviewers, dateTime, status, etc.)
+  // - And at least one safe change (instructions, sequence, or questions)
 
-  const hasQuestionsUpdate = questions &&
-    JSON.stringify(questions) !== JSON.stringify(existingRound.questions || []);
+  const incomingKeys = Object.keys(incomingRound);
+  const hasOnlySafeChanges =
+    incomingKeys.length > 0 &&
+    incomingKeys.every(key => ["instructions", "sequence"].includes(key));
 
-  if (onlySafeFields || hasQuestionsUpdate) {
+  const hasOnlyQuestionsChange =
+    incomingKeys.length === 0 && hasQuestionsUpdate;
+
+  if ((hasOnlySafeChanges || hasOnlyQuestionsChange) && updateType === "SAFE_UPDATE") {
     console.log("Safe update: only instructions, sequence, or questions");
 
     const updateOps = { $set: {}, $push: { history: [] } };
@@ -473,17 +505,17 @@ const updateInterviewRound = async (req, res) => {
 
   // console.log("updatedRound", updatedRound);
 
-  let updatePayload = null;
+  let updatePayload = {
+    $set: {},
+    $push: { history: [] }
+  };
 
-  // Safe initialization if buildSmartRoundUpdate returned null or no $push
-  if (!updatePayload) {
-    updatePayload = { $set: {} };
+  // Always save interviewers if sent
+  if (req.body.round?.interviewerType) {
+    updatePayload.$set.interviewerType = req.body.round.interviewerType;
   }
-  if (!updatePayload.$push) {
-    updatePayload.$push = { history: [] };
-  }
-  if (!Array.isArray(updatePayload.$push.history)) {
-    updatePayload.$push.history = [];
+  if (req.body.round?.interviewers && Array.isArray(req.body.round.interviewers)) {
+    updatePayload.$set.interviewers = req.body.round.interviewers;
   }
 
   const isInternal = req.body.round?.interviewerType === "Internal";
@@ -491,17 +523,13 @@ const updateInterviewRound = async (req, res) => {
 
   // ranjith added this for outsource interviwers or internal interviewers
   const hasInterviewers =
-    req.body.round?.interviewerType === "Internal"
-      ? req.body.round?.interviewers.length > 0 || false
-      : false;
+    Array.isArray(req.body.round?.interviewers) &&
+    req.body.round.interviewers.length > 0;
 
   //  for outsource interviewers
   const hasselectedInterviewers =
-    req.body.round?.interviewerType === "External"
-      ? req.body.round?.selectedInterviewers.length > 0
-      : // ||
-      // req.body.round?.interviewers.length > 0
-      false;
+    Array.isArray(req.body.round?.selectedInterviewers) &&
+    req.body.round.selectedInterviewers.length > 0;
   const statusAllowsQuestionUpdate = [
     "Draft",
     "RequestSent",
@@ -540,321 +568,328 @@ const updateInterviewRound = async (req, res) => {
   //     { new: true, runValidators: true }
   //   );
   // } else {
-    let shouldcreateRequestFlow = false;
-    // ==================================================================
-    // OUTSOURCE LOGIC (mirroring Internal style)
-    // ==================================================================
-    if (isOutsource) {
-      // 1. Draft → RequestSent (sending new requests)
-      if (existingRound.status === "Draft" && hasselectedInterviewers) {
-        updatePayload.$set.status = "RequestSent";
-        shouldcreateRequestFlow = true;
-      }
+  let shouldcreateRequestFlow = false;
+  let generateMeetingLink = false;
+  // ==================================================================
+  // OUTSOURCE LOGIC (mirroring Internal style)
+  // ==================================================================
+  if (isOutsource) {
+    // 1. Draft → RequestSent (sending new requests)
+    if (existingRound.status === "Draft" && hasselectedInterviewers) {
+      updatePayload.$set.status = "RequestSent";
+      shouldcreateRequestFlow = true;
+      generateMeetingLink = true;
 
-      // 2. RequestSent → Draft (user removing interviewers / cancelling requests)
-      else if (
-        existingRound.status === "RequestSent" &&
-        hasselectedInterviewers
-      ) {
-        // PROTECT: Check if any request was already accepted
-
-        if (hasAccepted) {
-          return res.status(400).json({
-            message:
-              "Cannot cancel requests: At least one outsource interviewer has already accepted this round.",
-            status: "error",
-          });
-        }
-
-        // Safe to withdraw inprogress requests
-        await InterviewRequest.updateMany(
-          { roundId: existingRound._id, status: "inprogress" },
-          { status: "withdrawn", respondedAt: new Date() }
-        );
-        // console.log("withdrawnRequests", withdrawnRequests);
-
-        updatePayload.$set.status = "Draft";
-      }
-
-      // 3. Scheduled → Draft (cancelling after acceptance)
-      else if (
-        (existingRound.status === "Scheduled" ||
-          existingRound.status === "Rescheduled") &&
-        // hasInterviewers
-        hasselectedInterviewers
-      ) {
-        // PROTECT: Check if accepted (should always be true, but safe)
-        if (hasAccepted) {
-          // Cancel the accepted request
-          await InterviewRequest.updateMany(
-            { roundId: existingRound._id, status: "accepted" },
-            { status: "cancelled", respondedAt: new Date() }
-          );
-        }
-
-        updatePayload.$set.status = "Draft";
-        updatePayload.$set.interviewers = []; // Clear assigned interviewer
-
-        // === SEND CANCELLATION EMAILS ===
-        // Only if there was an accepted interviewer (we know who was cancelled)
-        if (
-          hasAccepted &&
-          existingRound.interviewers &&
-          existingRound.interviewers.length > 0
-        ) {
-          const cancelledInterviewerId = existingRound.interviewers[0]; // Assuming one accepted
-
-          try {
-            await sendInterviewerCancelledEmails({
-              body: {
-                interviewId: interviewId,
-                roundId: roundId,
-                cancelledInterviewerId: cancelledInterviewerId,
-                type: "interview",
-                interviewerType: "External",
-              },
-            });
-            console.log(
-              "Cancellation emails sent for cancelled outsource interviewer"
-            );
-          } catch (emailError) {
-            console.error("Failed to send cancellation emails:", emailError);
-            // Do not block the update — just log
-          }
-        }
-      }
     }
 
-    let shouldSendInternalEmail = false;
+    // 2. RequestSent → Draft (user removing interviewers / cancelling requests)
+    else if (
+      existingRound.status === "RequestSent" && updateType === "CLEAR_INTERVIEWERS"
+      //  &&
+      // hasselectedInterviewers
+    ) {
+      // PROTECT: Check if any request was already accepted
 
-    // ==================================================================
-    // INTERNAL LOGIC
-    // ==================================================================
-    if (isInternal) {
-      const wasScheduledBefore = ["Scheduled", "Rescheduled"].includes(
-        existingRound.status
-      );
-
-      const willBeScheduled = hasInterviewers && !!req.body.round.dateTime;
-
-      if (existingRound.status === "Draft" && willBeScheduled) {
-        // Decide schedule action based on history
-        const hasScheduledOnce = existingRound?.history?.some(
-          (h) => h.action === "Scheduled"
-        );
-
-        const scheduleAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
-
-        updatePayload.$set.status = scheduleAction;
-        shouldSendInternalEmail = true; // First scheduling → send email
-        shouldcreateRequestFlow = true;
+      if (hasAccepted) {
+        return res.status(400).json({
+          message:
+            "Cannot cancel requests: At least one outsource interviewer has already accepted this round.",
+          status: "error",
+        });
       }
-      //  else if (
-      //   wasScheduledBefore &&
-      //   (changes.dateTimeChanged || changes.interviewersChanged)
-      // ) {
-      //   updatePayload.$set.status = "Rescheduled";
-      //   shouldSendInternalEmail = true; // Rescheduling → send email
-      // }
-      else if (
-        (existingRound.status === "Rescheduled" ||
-          existingRound.status === "Scheduled") &&
-        hasInterviewers
-      ) {
-        // User cleared interviewers → cancel
-        updatePayload.$set.status = "Draft";
-        updatePayload.$set.interviewers = []; // making accepted interviwers clear
+
+      // Safe to withdraw inprogress requests
+      await InterviewRequest.updateMany(
+        { roundId: existingRound._id, status: "inprogress" },
+        { status: "withdrawn", respondedAt: new Date() }
+      );
+      // console.log("withdrawnRequests", withdrawnRequests);
+
+      updatePayload.$set.status = "Draft";
+    }
+
+    // 3. Scheduled → Draft (cancelling after acceptance)
+    else if (
+      ["Scheduled", "Rescheduled"].includes(existingRound.status) && updateType === "CLEAR_INTERVIEWERS"
+      // &&
+      // hasselectedInterviewers  // ← cleared (selectedInterviewers empty or not sent)
+    ) {
+      // PROTECT: Check if accepted (should always be true, but safe)
+      if (hasAccepted) {
+        // Cancel the accepted request
         await InterviewRequest.updateMany(
           { roundId: existingRound._id, status: "accepted" },
           { status: "cancelled", respondedAt: new Date() }
         );
+      }
 
-        // === SEND CANCELLATION EMAILS ===
-        // Only if there was an accepted interviewer (we know who was cancelled)
-        if (
-          hasAccepted &&
-          existingRound.interviewers &&
-          existingRound.interviewers.length > 0
-        ) {
-          const cancelledInterviewerId = existingRound.interviewers[0]; // Assuming one accepted
+      updatePayload.$set.status = "Draft";
+      updatePayload.$set.interviewers = []; // Clear assigned interviewer
 
-          try {
-            await sendInterviewerCancelledEmails({
-              body: {
-                interviewId: interviewId,
-                roundId: roundId,
-                cancelledInterviewerId: cancelledInterviewerId,
-                type: "interview",
-                interviewerType: "Internal",
-              },
-            });
-            console.log(
-              "Cancellation emails sent for cancelled outsource interviewer"
-            );
-          } catch (emailError) {
-            console.error("Failed to send cancellation emails:", emailError);
-            // Do not block the update — just log
-          }
+      // === SEND CANCELLATION EMAILS ===
+      // Only if there was an accepted interviewer (we know who was cancelled)
+      if (
+        hasAccepted &&
+        existingRound.interviewers &&
+        existingRound.interviewers.length > 0
+      ) {
+        const cancelledInterviewerId = existingRound.interviewers[0]; // Assuming one accepted
+
+        try {
+          await sendInterviewerCancelledEmails({
+            body: {
+              interviewId: interviewId,
+              roundId: roundId,
+              cancelledInterviewerId: cancelledInterviewerId,
+              type: "interview",
+              interviewerType: "External",
+            },
+          });
+          console.log(
+            "Cancellation emails sent for cancelled outsource interviewer"
+          );
+        } catch (emailError) {
+          console.error("Failed to send cancellation emails:", emailError);
+          // Do not block the update — just log
         }
       }
-
-      // Internal rescheduling history entry
-      // if (changes.dateTimeChanged || changes.interviewersChanged) {
-      //   const hasScheduledOnce = existingRound.history?.some(
-      //     (h) => h.action === "Scheduled"
-      //   );
-      //   const correctAction =
-      //     hasScheduledOnce || wasScheduledBefore ? "Rescheduled" : "Scheduled";
-
-      //   const newEntry = {
-      //     action: correctAction,
-      //     scheduledAt: req.body.round.dateTime || existingRound.dateTime,
-      //     updatedAt: new Date(),
-      //     createdBy: actingAsUserId,
-      //     reasonCode: req.body.round.currentActionReason || "updated",
-      //     comment: req.body.round.comments || null,
-      //   };
-
-      //   const existingIndex = updatePayload.$push.history.findIndex((h) =>
-      //     ["Scheduled", "Rescheduled"].includes(h.action)
-      //   );
-
-      //   if (existingIndex !== -1) {
-      //     updatePayload.$push.history[existingIndex] = newEntry;
-      //   } else {
-      //     updatePayload.$push.history.push(newEntry);
-      //   }
-      // }
     }
-    let smartUpdate;
+  }
 
-    if (
-      updatePayload.$set.status !== existingRound.status &&
-      updatePayload.$set.status
+  let shouldSendInternalEmail = false;
+
+  // ==================================================================
+  // INTERNAL LOGIC
+  // ==================================================================
+  if (isInternal) {
+    const wasScheduledBefore = ["Scheduled", "Rescheduled"].includes(
+      existingRound.status
+    );
+
+    const willBeScheduled = hasInterviewers && !!req.body.round.dateTime;
+
+    if (existingRound.status === "Draft"
+      //  && willBeScheduled
     ) {
-      smartUpdate = buildSmartRoundUpdate({
-        existingRound,
-        body: {
-          // ...updatePayload,
-          selectedInterviewers: req.body.round.selectedInterviewers,
-          status: updatePayload.$set.status, //|| existingRound.status,
-          interviewerType: existingRound.interviewerType,
-        },
-        // body: updatePayload,
-        // {
-        //   ...updatedRound,
-        //   interviewerType: existingRound?.interviewerType,
-        // },
-        actingAsUserId,
-        changes,
-      });
+      // Decide schedule action based on history
+      const hasScheduledOnce = existingRound?.history?.some(
+        (h) => h.action === "Scheduled"
+      );
+
+      const scheduleAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
+
+      updatePayload.$set.status = scheduleAction;
+      shouldSendInternalEmail = true; // First scheduling → send email
+      shouldcreateRequestFlow = true;
+      generateMeetingLink = true;
+
     }
+    //  else if (
+    //   wasScheduledBefore &&
+    //   (changes.dateTimeChanged || changes.interviewersChanged)
+    // ) {
+    //   updatePayload.$set.status = "Rescheduled";
+    //   shouldSendInternalEmail = true; // Rescheduling → send email
+    // }
+    else if (
+      ["Scheduled", "Rescheduled"].includes(existingRound.status) && updateType === "CLEAR_INTERVIEWERS"
+      // &&
+      // hasInterviewers
+    ) {
+      // User cleared interviewers → cancel
+      updatePayload.$set.status = "Draft";
+      updatePayload.$set.interviewers = []; // making accepted interviwers clear
+      await InterviewRequest.updateMany(
+        { roundId: existingRound._id, status: "accepted" },
+        { status: "cancelled", respondedAt: new Date() }
+      );
 
-    // merging history from both updates interviwers and date time change
-    function mergeUpdates(a, b) {
-      const out = {};
+      // === SEND CANCELLATION EMAILS ===
+      // Only if there was an accepted interviewer (we know who was cancelled)
+      if (
+        hasAccepted &&
+        existingRound.interviewers &&
+        existingRound.interviewers.length > 0
+      ) {
+        const cancelledInterviewerId = existingRound.interviewers[0]; // Assuming one accepted
 
-      if (a?.$set || b?.$set) {
-        out.$set = { ...(a?.$set || {}), ...(b?.$set || {}) };
+        try {
+          await sendInterviewerCancelledEmails({
+            body: {
+              interviewId: interviewId,
+              roundId: roundId,
+              cancelledInterviewerId: cancelledInterviewerId,
+              type: "interview",
+              interviewerType: "Internal",
+            },
+          });
+          console.log(
+            "Cancellation emails sent for cancelled outsource interviewer"
+          );
+        } catch (emailError) {
+          console.error("Failed to send cancellation emails:", emailError);
+          // Do not block the update — just log
+        }
       }
-
-      if (a?.$push?.history || b?.$push?.history) {
-        out.$push = {
-          history: [...(a?.$push?.history || []), ...(b?.$push?.history || [])],
-        };
-      }
-
-      return out;
-    }
-    //  date time change handling separately
-    if (changes.dateTimeChanged) {
-      updatePayload.$set.dateTime = req.body?.round?.dateTime;
     }
 
-    if (changes.questionsChanged) {
-      await handleInterviewQuestions(interviewId, roundId, req.body.questions);
+    // Internal rescheduling history entry
+    // if (changes.dateTimeChanged || changes.interviewersChanged) {
+    //   const hasScheduledOnce = existingRound.history?.some(
+    //     (h) => h.action === "Scheduled"
+    //   );
+    //   const correctAction =
+    //     hasScheduledOnce || wasScheduledBefore ? "Rescheduled" : "Scheduled";
+
+    //   const newEntry = {
+    //     action: correctAction,
+    //     scheduledAt: req.body.round.dateTime || existingRound.dateTime,
+    //     updatedAt: new Date(),
+    //     createdBy: actingAsUserId,
+    //     reasonCode: req.body.round.currentActionReason || "updated",
+    //     comment: req.body.round.comments || null,
+    //   };
+
+    //   const existingIndex = updatePayload.$push.history.findIndex((h) =>
+    //     ["Scheduled", "Rescheduled"].includes(h.action)
+    //   );
+
+    //   if (existingIndex !== -1) {
+    //     updatePayload.$push.history[existingIndex] = newEntry;
+    //   } else {
+    //     updatePayload.$push.history.push(newEntry);
+    //   }
+    // }
+  }
+
+  // === DATE/TIME CHANGE (always save if sent) ===
+  if (req.body.round?.dateTime) {
+    updatePayload.$set.dateTime = req.body.round.dateTime;
+  }
+
+  // === INSTRUCTIONS CHANGE ===
+  if (req.body.round?.instructions !== undefined) {
+    updatePayload.$set.instructions = req.body.round.instructions;
+  }
+
+
+  // Handle questions update in main flow (safe path already handles it)
+  if (changes.questionsChanged || (req.body.questions && req.body.questions.length > 0)) {
+    await handleInterviewQuestions(interviewId, roundId, req.body.questions);
+  }
+
+
+  let smartUpdate = null;
+
+  if (updatePayload.$set.status && updatePayload.$set.status !== existingRound.status) {
+    smartUpdate = buildSmartRoundUpdate({
+      existingRound,
+      body: {
+        selectedInterviewers: req.body.round?.selectedInterviewers || [],
+        status: updatePayload.$set.status,
+        interviewerType: req.body.round?.interviewerType || existingRound.interviewerType,
+        dateTime: req.body.round?.dateTime,
+      },
+      actingAsUserId,
+      changes,
+    });
+  }
+
+  // merging history from both updates interviwers and date time change
+  function mergeUpdates(a, b) {
+    const out = {};
+
+    if (a?.$set || b?.$set) {
+      out.$set = { ...(a?.$set || {}), ...(b?.$set || {}) };
     }
 
-    if (changes.instructionsChanged) {
-      updatePayload.$set.instructions = req.body.round.instructions;
-    }
-
-    // -------------------------------
-    // 4️⃣ FINAL UPDATE (IMPORTANT)
-    // -------------------------------
-    let finalUpdate;
-
-    // ✅ Only merge history if smartUpdate exists
-    if (smartUpdate?.$push?.history?.length) {
-      finalUpdate = mergeUpdates(updatePayload, smartUpdate);
-    } else {
-      // 🚫 No history creation
-      finalUpdate = {
-        $set: updatePayload.$set,
+    if (a?.$push?.history || b?.$push?.history) {
+      out.$push = {
+        history: [...(a?.$push?.history || []), ...(b?.$push?.history || [])],
       };
     }
 
-    console.log("finalUpdate", finalUpdate);
+    return out;
+  }
+  // -------------------------------
+  // 4️⃣ FINAL UPDATE (IMPORTANT)
+  // -------------------------------
+  // === MERGE HISTORY ===
+  let finalUpdate = updatePayload;
 
-    //     const smartUpdate = buildSmartRoundUpdate({
-    //   existingRound,
-    //   body: {
-    //     ...req.body.round,
-    //     status: businessUpdate.$set.status || existingRound.status,
-    //     interviewerType: existingRound.interviewerType,
-    //   },
-    //   actingAsUserId,
-    //   changes,
-    // });
+  if (smartUpdate?.$push?.history?.length > 0) {
+    finalUpdate = {
+      $set: updatePayload.$set,
+      $push: {
+        history: [...updatePayload.$push.history, ...smartUpdate.$push.history]
+      }
+    };
+  }
 
-    // ==================================================================
-    // APPLY UPDATE
-    // ==================================================================
+  console.log("finalUpdate", finalUpdate);
 
-    updatedRound = await InterviewRounds.findByIdAndUpdate(
-      roundId,
-      finalUpdate,
-      { new: true, runValidators: true }
-    );
+  //     const smartUpdate = buildSmartRoundUpdate({
+  //   existingRound,
+  //   body: {
+  //     ...req.body.round,
+  //     status: businessUpdate.$set.status || existingRound.status,
+  //     interviewerType: existingRound.interviewerType,
+  //   },
+  //   actingAsUserId,
+  //   changes,
+  // });
 
-    // ==================================================================
-    // SEND INTERNAL EMAIL ONLY WHEN STATUS BECOMES Scheduled/Rescheduled
-    // ==================================================================
-    if (shouldSendInternalEmail && isInternal) {
-      await handleInternalRoundEmails({
-        interviewId,
-        roundId: updatedRound._id,
-        round: updatedRound,
-        selectedInterviewers: req.body.round.selectedInterviewers,
-        isEdit: true,
-      });
-    }
+  // ==================================================================
+  // APPLY UPDATE
+  // ==================================================================
 
-    // === Only trigger interviewer change flow if interviewers actually changed ===
-    if (
-      (hasselectedInterviewers || hasInterviewers) &&
-      shouldcreateRequestFlow
-      // changes.interviewersChanged &&
-      // req.body?.round?.selectedInterviewers?.length > 0
-    ) {
-      await handleInterviewerRequestFlow({
-        interviewId,
-        round: existingRound,
-        selectedInterviewers: req.body.round?.selectedInterviewers,
-        // cancelOldRequests: true, // PATCH
-      });
+  updatedRound = await InterviewRounds.findByIdAndUpdate(
+    roundId,
+    finalUpdate,
+    { new: true, runValidators: true }
+  );
 
-      // await InterviewRounds.findByIdAndUpdate(
-      //   roundId,
-      //   { status: "RequestSent" },
-      //   { new: true }
-      // );
-    }
+  // ==================================================================
+  // SEND INTERNAL EMAIL ONLY WHEN STATUS BECOMES Scheduled/Rescheduled
+  // ==================================================================
+  if (shouldSendInternalEmail && isInternal) {
+    console.log("shouldSendInternalEmail", shouldSendInternalEmail);
+    console.log("isInternal", isInternal);
+    await handleInternalRoundEmails({
+      interviewId,
+      roundId: updatedRound._id,
+      round: updatedRound,
+      selectedInterviewers: req.body.round.selectedInterviewers,
+      isEdit: true,
+    });
+  }
+
+  // === Only trigger interviewer change flow if interviewers actually changed ===
+  if (
+    (hasselectedInterviewers || hasInterviewers) &&
+    shouldcreateRequestFlow
+    // changes.interviewersChanged &&
+    // req.body?.round?.selectedInterviewers?.length > 0
+  ) {
+    await handleInterviewerRequestFlow({
+      interviewId,
+      round: existingRound,
+      selectedInterviewers: req.body.round?.selectedInterviewers,
+      // cancelOldRequests: true, // PATCH
+    });
+
+    // await InterviewRounds.findByIdAndUpdate(
+    //   roundId,
+    //   { status: "RequestSent" },
+    //   { new: true }
+    // );
+  }
 
   return res.status(200).json({
     message: "Round updated successfully",
     status: "ok",
     updatedRound,
+    generateMeetingLink,
   });
 };
 

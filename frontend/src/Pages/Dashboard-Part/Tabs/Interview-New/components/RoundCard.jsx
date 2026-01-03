@@ -1732,7 +1732,7 @@ const RoundCard = ({
                   {permissions.canReschedule &&
                     round?.roundTitle !== "Assessment" && (
                       // round.interviewerType === "External" &&
-                      // !round.isInstant &&
+                      round.interviewType !== "instant" &&
                       <button
                         onClick={() => onEdit(round, { isReschedule: true })}
                         className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
