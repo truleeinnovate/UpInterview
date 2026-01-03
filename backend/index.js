@@ -1786,7 +1786,7 @@ app.use("/upinterviewEnterpriseContact", upinterviewEnterpriseContactRoutes);
 
 // for external api routes
 const externalRoutes = require("./routes/external.routes");
-app.use("/external", externalRoutes);
+app.use("/api/external", externalRoutes);
 
 const analyticsRoutes = require("./routes/AnalyticsRoutes/analytics.js");
 app.use("/analytics", analyticsRoutes);
