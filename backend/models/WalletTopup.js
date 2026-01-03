@@ -12,6 +12,7 @@ const VALID_TRANSACTION_TYPES = [
   "platform_fee",
   // Legacy directional types kept for backward compatibility
   "credit",
+  "credited",
   "debit",
 ];
 
