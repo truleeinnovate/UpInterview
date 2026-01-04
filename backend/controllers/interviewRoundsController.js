@@ -135,22 +135,7 @@ const saveInterviewRound = async (req, res) => {
       }
     }
 
-    // ================= HISTORY (CREATE FLOW) =================
 
-    //history should be update after creation of round
-    const historyUpdate = buildSmartRoundUpdate({
-      body: otherRoundData,
-      actingAsUserId: interview?.ownerId,
-      isCreate: true,
-    });
-
-    // console.log("historyUpdate", historyUpdate);
-
-    if (historyUpdate) {
-      await InterviewRounds.findByIdAndUpdate(savedRound._id, historyUpdate, {
-        new: true,
-      });
-    }
 
 
     // =================== start == assessment mails sending functionality == start ========================
@@ -207,7 +192,19 @@ const saveInterviewRound = async (req, res) => {
 
         await shareAssessment({ body: payload }, mockRes);
 
-        console.log("[ASSESSMENT] shareAssessment completed");
+        const scheduledAssessmentId =
+          assessmentResponse?.data?.scheduledAssessmentId;
+
+        if (!scheduledAssessmentId) {
+          return res.status(500).json({
+            message: "Assessment created but scheduleAssessmentId missing",
+            status: "error",
+          });
+        }
+
+        // ✅ Persist in round
+        savedRound.scheduleAssessmentId = scheduledAssessmentId;
+        await savedRound.save();
 
         if (responseStatus !== 200 || !assessmentResponse?.success) {
           console.error("[ASSESSMENT] shareAssessment failed", {
@@ -238,6 +235,25 @@ const saveInterviewRound = async (req, res) => {
     }
 
     //================ end ==   assessment mails sending fuctionality == end =======================
+
+    // ================= HISTORY (CREATE FLOW) =================
+
+    //history should be update after creation of round
+    const historyUpdate = buildSmartRoundUpdate({
+      body: otherRoundData,
+      actingAsUserId: interview?.ownerId,
+      isCreate: true,
+    });
+
+    // console.log("historyUpdate", historyUpdate);
+
+    if (historyUpdate) {
+      await InterviewRounds.findByIdAndUpdate(savedRound._id, historyUpdate, {
+        new: true,
+      });
+    }
+
+
 
     if (
       interview &&
@@ -363,7 +379,8 @@ const saveInterviewRound = async (req, res) => {
 // PATCH call for interview round update
 const updateInterviewRound = async (req, res) => {
   const { interviewId, round, questions } = req.body;
-  const { actingAsUserId } = res.locals.auth;
+  const { actingAsUserId, actingAsTenantId } = res.locals.auth;
+
 
   let roundIdParam = req.params.roundId;
 
@@ -392,6 +409,95 @@ const updateInterviewRound = async (req, res) => {
 
   const updateType = req.body.updateType;
   console.log("updateType", updateType);
+  let updatePayload = {
+    $set: {},
+    $push: { history: [] }
+  };
+
+  // =======================================================
+  // ASSESSMENT (DRAFT → SCHEDULED ONLY)
+  // =======================================================
+  // Fetch interview to get ownerId (needed for history)
+  let interview = await Interview.findById(interviewId).lean();
+  if (!interview) {
+    return res.status(404).json({ message: "Interview not found" });
+  }
+
+  const candidate = await Candidate.findById(interview.candidateId).lean();
+
+  if (!candidate) {
+    return res.status(404).json({
+      message: "Candidate not found for assessment sharing",
+      status: "error",
+    });
+  }
+
+  let linkExpiryDays = null;
+  if (round?.selectedAssessmentData?.ExpiryDate) {
+    const expiryDate = new Date(round.selectedAssessmentData.ExpiryDate);
+    const today = new Date();
+    const diffTime = expiryDate.getTime() - today.getTime();
+    linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+if (
+  existingRound.roundTitle === "Assessment" &&
+  !existingRound.scheduleAssessmentId
+) {
+
+  console.log("[ASSESSMENT] Auto scheduling assessment");
+
+  const interview = await Interview.findById(interviewId).lean();
+  if (!interview) {
+    return res.status(404).json({ message: "Interview not found" });
+  }
+
+  const candidate = await Candidate.findById(interview.candidateId).lean();
+  if (!candidate) {
+    return res.status(404).json({
+      message: "Candidate not found for assessment",
+    });
+  }
+
+  let assessmentResponse = null;
+  let responseStatus = 200;
+
+  const mockRes = {
+    status(code) {
+      responseStatus = code;
+      return this;
+    },
+    json(data) {
+      assessmentResponse = data;
+      return this;
+    },
+  };
+
+  const payload = {
+    assessmentId: existingRound.assessmentId,
+    selectedCandidates: [candidate],
+    organizationId: actingAsTenantId,
+    userId: actingAsUserId,
+  };
+
+  await shareAssessment({ body: payload }, mockRes);
+
+  if (responseStatus !== 200 || !assessmentResponse?.success) {
+    return res.status(400).json({
+      message: "Assessment scheduling failed",
+      status: "error",
+    });
+  }
+
+  updatePayload.$set.scheduleAssessmentId =
+    assessmentResponse.data.scheduledAssessmentId;
+
+  console.log(
+    "[ASSESSMENT] Scheduled assessment created:",
+    updatePayload.$set.scheduleAssessmentId
+  );
+}
+
 
 
   const incomingRound = round || {};
@@ -509,10 +615,7 @@ const updateInterviewRound = async (req, res) => {
 
   // console.log("updatedRound", updatedRound);
 
-  let updatePayload = {
-    $set: {},
-    $push: { history: [] }
-  };
+
 
   // Always save interviewers if sent
   if (req.body.round?.interviewerType) {
@@ -583,14 +686,14 @@ const updateInterviewRound = async (req, res) => {
       updatePayload.$set.status = "RequestSent";
       shouldcreateRequestFlow = true;
       generateMeetingLink = true;
-      
+
       // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (SELECTION TIME) ========================
       // Fetch the interview document for wallet operations
       const interview = await Interview.findById(interviewId).lean();
       if (!interview) {
         return res.status(404).json({ message: "Interview not found for wallet hold." });
       }
- 
+
       // Delegate to helper so this controller stays clean and focused.
       const walletHoldResponse =
         await applySelectionTimeWalletHoldForOutsourcedRound({
@@ -600,7 +703,7 @@ const updateInterviewRound = async (req, res) => {
           round: req.body.round,
           savedRound: existingRound,
         });
- 
+
       if (walletHoldResponse) {
         // Helper already sent a response (e.g. error); stop further processing.
         return walletHoldResponse;
@@ -630,7 +733,7 @@ const updateInterviewRound = async (req, res) => {
         { status: "withdrawn", respondedAt: new Date() }
       );
       // console.log("withdrawnRequests", withdrawnRequests);
-      
+
       // Refund the selection time hold - full amount + GST (no policy)
       try {
         await processWithdrawnRefund({
@@ -652,7 +755,7 @@ const updateInterviewRound = async (req, res) => {
       // hasselectedInterviewers  // ← cleared (selectedInterviewers empty or not sent)
     ) {
       // PROTECT: Check if accepted (should always be true, but safe)
-      
+
       // Auto reschedule settlement process - pay interviewer based on policy before resetting
       if (hasAccepted) {
         try {
@@ -666,7 +769,7 @@ const updateInterviewRound = async (req, res) => {
           // Continue with reschedule even if settlement fails
         }
       }
-      
+
       if (hasAccepted) {
         // Cancel the accepted request
         await InterviewRequest.updateMany(

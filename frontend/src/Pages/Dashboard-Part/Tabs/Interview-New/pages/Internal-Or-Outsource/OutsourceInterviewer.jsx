@@ -104,11 +104,10 @@ const OutsourcedInterviewerCard = ({
 
   return (
     <div
-      className={`bg-white rounded-lg border ${
-        isSelected
+      className={`bg-white rounded-lg border ${isSelected
           ? "border-orange-500 ring-2 ring-orange-200"
           : "border-gray-200"
-      } p-4 shadow-sm hover:shadow-md transition-all`}
+        } p-4 shadow-sm hover:shadow-md transition-all`}
     >
       <div className="w-full">
         <div className="flex items-center gap-3 w-full">
@@ -148,9 +147,8 @@ const OutsourcedInterviewerCard = ({
 
       <div className="mt-3 w-40">
         <div
-          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${
-            isExpanded ? "line-clamp-none" : "truncate"
-          }`}
+          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${isExpanded ? "line-clamp-none" : "line-clamp-2"
+            }`}
         >
           {introduction}
         </div>
@@ -170,6 +168,7 @@ const OutsourcedInterviewerCard = ({
           )}
         </button>
       </div>
+
 
       <div className="mt-3">
         <div className="flex flex-wrap gap-1">
@@ -649,10 +648,9 @@ function OutsourcedInterviewerModal({
               (interviewer) => {
                 const interviewerSkills = interviewer.contact?.skills || [];
                 console.log(
-                  `👤 Checking interviewer: ${
-                    interviewer.contact?.firstName ||
-                    interviewer.contact?.UserName ||
-                    "Unknown"
+                  `👤 Checking interviewer: ${interviewer.contact?.firstName ||
+                  interviewer.contact?.UserName ||
+                  "Unknown"
                   }`
                 );
                 console.log("📝 Interviewer's Skills:", interviewerSkills);
@@ -699,8 +697,7 @@ function OutsourcedInterviewerModal({
                 });
 
                 console.log(
-                  `🎯 ${
-                    interviewer.contact?.firstName || "Unknown"
+                  `🎯 ${interviewer.contact?.firstName || "Unknown"
                   } Skill Match Status: ${hasMatchingSkill}`
                 );
                 return hasMatchingSkill;
@@ -1259,11 +1256,10 @@ function OutsourcedInterviewerModal({
               Available Balance:
             </span>
             <span
-              className={`text-sm font-bold ${
-                availableBalance >= maxHourlyRate
+              className={`text-sm font-bold ${availableBalance >= maxHourlyRate
                   ? "text-green-600"
                   : "text-red-600"
-              }`}
+                }`}
             >
               ₹{Number(availableBalance || 0).toFixed(2)}
             </span>
@@ -1398,11 +1394,10 @@ function OutsourcedInterviewerModal({
           {/* v1.0.3 <--------------------------------------------------------------------- */}
           <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
             <div
-              className={`grid gap-4 ${
-                isFullscreen
+              className={`grid gap-4 ${isFullscreen
                   ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
                   : "grid-cols-1"
-              }`}
+                }`}
             >
               {filteredInterviewers.map((interviewer) => (
                 // <OutsourcedInterviewerCard
