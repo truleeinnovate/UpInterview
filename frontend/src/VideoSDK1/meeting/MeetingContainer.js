@@ -21,10 +21,14 @@ import { useMeetingAppContext } from "../MeetingAppContextDef";
 import { MessageSquare, Users, User, ClipboardList, ClipboardCheck, BookOpen } from "lucide-react";
 import { openPanelInNewTab } from '../utils/openInNewTab';
 import QuestionBank from "../../Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank";
- 
+
 export function MeetingContainer({
   onMeetingLeave,
   setIsMeetingLeft,
+  isCandidate = false,
+  isInterviewer = false,
+  isSchedule = false,
+  candidateData
 }) {
   const {
     setSelectedMic,
@@ -280,7 +284,7 @@ export function MeetingContainer({
             <div
               key={`pip-${participantId}`}
               className="w-full relative flex-shrink-0"
-              style={{ 
+              style={{
                 height: videoHeight,
                 minHeight: '120px' // Minimum for visibility, like laptop preview size
               }}
@@ -293,6 +297,69 @@ export function MeetingContainer({
       </div>
     );
   };
+
+
+  // Navigation items configuration
+  const getNavigationItems = () => {
+    return [
+      {
+        id: "chat",
+        label: "Chat",
+        tooltip: "Chat",
+        icon: <MessageSquare className="w-4 h-4" />,
+        show: true
+      },
+      {
+        id: "participants",
+        label: "Participants",
+        tooltip: "Participants",
+        icon: <Users className="w-4 h-4" />,
+        show: true
+      },
+      {
+        id: "candidate",
+        label: "Candidate Details",
+        tooltip: "Candidate Details",
+        icon: <User className="w-4 h-4" />,
+        show: isCandidate || isInterviewer
+      },
+      {
+        id: "feedback",
+        label: "Feedback Form",
+        tooltip: "Feedback Form",
+        icon: <ClipboardList className="w-4 h-4" />,
+        show: isCandidate || isInterviewer
+      },
+      {
+        id: "questionbank",
+        label: "Question Bank",
+        tooltip: "Question Bank",
+        icon: <BookOpen className="w-4 h-4" />,
+        show: isCandidate || isInterviewer
+      },
+      {
+        id: "interviewactions",
+        label: "Interview Actions",
+        tooltip: "Interview Actions",
+        icon: <ClipboardCheck className="w-4 h-4" />,
+        show: isCandidate || isInterviewer
+      }
+    ].filter(item => item.show === true);
+  };
+
+  // Add this useEffect to handle messages from parent window
+useEffect(() => {
+  const handleMessage = (event) => {
+    if (event.origin !== window.location.origin) return;
+    if (event.data?.type === 'PANEL_DATA') {
+      // Handle any initialization if needed
+      console.log('Received panel data:', event.data);
+    }
+  };
+
+  window.addEventListener('message', handleMessage);
+  return () => window.removeEventListener('message', handleMessage);
+}, []);
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -322,51 +389,14 @@ export function MeetingContainer({
             </div>
 
             {/* Navigation Items */}
-            <div className="flex items-center space-x-2">
-              {[
-                {
-                  id: "chat",
-                  label: "Chat",
-                  icon: <MessageSquare className="w-4 h-4" />,
-                  tooltip: "Chat"
-                },
-                {
-                  id: "participants",
-                  label: "Participants",
-                  icon: <Users className="w-4 h-4" />,
-                  tooltip: "Participants"
-                },
-                {
-                  id: "candidate",
-                  label: "Candidate Details",
-                  icon: <User className="w-4 h-4" />,
-                  tooltip: "Candidate Details"
-                },
-                {
-                  id: "questionbank", // New Question Bank item
-                  label: "Question Bank",
-                  icon: <BookOpen className="w-4 h-4" />,
-                  tooltip: "Question Bank"
-                },
-                {
-                  id: "feedback",
-                  label: "Feedback Form",
-                  icon: <ClipboardList className="w-4 h-4" />,
-                  tooltip: "Feedback Form"
-                },
-                {
-                  id: "interviewactions",
-                  label: "Interview Actions",
-                  icon: <ClipboardCheck className="w-4 h-4" />,
-                  tooltip: "Interview"
-                },
-              ].map((item) => (
+            <div className="flex items-center space-x-2 mr-3">
+              {getNavigationItems().map((item) => (
                 <div key={item.id} className="group relative">
                   <button
                     onClick={() => handleSidebarItemClick(item.id)}
                     className={`p-2.5 rounded-md flex items-center justify-center transition-colors ${sideBarMode === item.id.toUpperCase()
-                      ? 'bg-blue-100 text-custom-blue border-2 border-custom-blue'
-                      : 'text-custom-blue hover:bg-gray-100 border border-custom-blue hover:border-custom-blue'
+                      ? "bg-blue-100 text-custom-blue border-2 border-custom-blue"
+                      : "text-custom-blue hover:bg-gray-100 border border-custom-blue hover:border-custom-blue"
                       }`}
                     aria-label={item.label}
                   >
@@ -407,9 +437,9 @@ export function MeetingContainer({
                         </div>
                         {/* UPDATED: PiP Participants - 20% right, vertical stack */}
                         <div className="w-1/5 h-full border-l border-gray-600">
-                          <ParticipantPiPStrip 
-                            participantIds={Array.from(uniqueParticipants)} 
-                            height={containerHeight - bottomBarHeight} 
+                          <ParticipantPiPStrip
+                            participantIds={Array.from(uniqueParticipants)}
+                            height={containerHeight - bottomBarHeight}
                           />
                         </div>
                       </div>
@@ -483,38 +513,15 @@ export function MeetingContainer({
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
-                        className="p-1 rounded-full hover:bg-gray-100"
-                        onClick={() => {
-                          // Prepare data based on the panel type
-                          let panelData = {};
-                          if (sideBarMode === 'CANDIDATE') {
-                            panelData = {
-                              id: "candidate-1",
-                              name: "John Doe",
-                              email: "john@example.com",
-                              position: "Software Engineer"
-                            };
-                          } else if (sideBarMode === 'FEEDBACK') {
-                            // Add feedback form data if needed
-                            panelData = {};
-                          } else if (sideBarMode === 'INTERVIEWACTIONS') {
-                            // Add interview actions data if needed
-                            panelData = {
-                              interviewRound: {
-                                dateTime: new Date().toLocaleString(),
-                                status: 'Scheduled',
-                                _id: 'mock-id'
-                              }
-                            };
-                          } else if (sideBarMode === 'QUESTIONBANK') {
-                            window.open('/question-bank', '_blank');
-                            return;
-                          }
-                          openPanelInNewTab(sideBarMode, panelData);
-                        }}
-                      >
-                        <ExternalLink className="h-4 w-4 text-gray-500" />
-                      </button>
+  className="p-1 rounded-full hover:bg-gray-100"
+  onClick={() => {
+    if (!sideBarMode) return;
+    openPanelInNewTab(sideBarMode, sideBarMode === 'CANDIDATE' ? candidateData : {});
+  }}
+>
+  <ExternalLink className="h-4 w-4 text-gray-500" />
+</button>
+
                       <button
                         className="p-1 rounded-full hover:bg-gray-100"
                         onClick={() => setSideBarMode(null)}
@@ -529,15 +536,7 @@ export function MeetingContainer({
                   {/* Sidebar Content */}
                   <div className="flex-1 overflow-y-auto">
                     {sideBarMode === 'CANDIDATE' ? (
-                      <CandidateDetails
-                        candidate={{
-                          id: "candidate-1",
-                          name: "John Doe",
-                          email: "john@example.com",
-                          position: "Software Engineer"
-                        }}
-                        onClose={() => setSideBarMode(null)}
-                      />
+                      <CandidateDetails candidate={candidateData} />
                     ) : sideBarMode === 'FEEDBACK' ? (
                       <FeedbackForm
                         onClose={() => setSideBarMode(null)}

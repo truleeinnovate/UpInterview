@@ -456,8 +456,6 @@ const CandidateView = ({
               </button> */}
 
               {/* Join Meeting Button */}
-              {console.log('decodedData?.meetLink', decodedData?.meetLink)}
-              {console.log('decodedData', decodedData)}
               <button
                 // onClick={() => window.open(decodedData?.meetLink, "_blank")}
 
