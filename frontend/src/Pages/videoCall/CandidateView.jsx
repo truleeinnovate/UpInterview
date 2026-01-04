@@ -80,6 +80,7 @@ const CandidateView = ({
   const audioPlayerRef = useRef();
   const videoTrackRef = useRef();
   const audioTrackRef = useRef();
+  const micStreamRef = useRef();
 
   // Get media devices
   const { getCameras, getMicrophones, getPlaybackDevices } = useMediaDevice();
@@ -175,10 +176,14 @@ const CandidateView = ({
 
   // Initialize video preview
   useEffect(() => {
+    if (feedbackData?.round?.meetPlatform !== "platform") return;
+    
+    let stream = null;
+
     const initVideoPreview = async () => {
       try {
         if (webcamOn) {
-          const stream = await navigator.mediaDevices.getUserMedia({
+          stream = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: true
           });
@@ -189,13 +194,14 @@ const CandidateView = ({
             const audioTracks = stream.getAudioTracks();
 
             if (videoTracks.length > 0) {
-              setVideoTrack(videoTracks[0]);
               videoTrackRef.current = videoTracks[0];
+              setVideoTrack(videoTracks[0]);
             }
 
             if (audioTracks.length > 0) {
-              setAudioTrack(audioTracks[0]);
               audioTrackRef.current = audioTracks[0];
+              audioTrackRef.current.enabled = micOn;
+              setAudioTrack(audioTracks[0]);
             }
           }
         }
@@ -208,28 +214,90 @@ const CandidateView = ({
 
     // Cleanup function
     return () => {
-      if (videoTrackRef.current) {
-        videoTrackRef.current.stop();
+      // Store refs in variables
+      const videoPlayer = videoPlayerRef.current;
+      const currentVideoTrack = videoTrackRef.current;
+      const currentAudioTrack = audioTrackRef.current;
+      const currentMicStream = micStreamRef.current;
+      
+      // Clean up video player
+      if (videoPlayer?.srcObject) {
+        videoPlayer.srcObject.getTracks().forEach(track => track.stop());
+        videoPlayer.srcObject = null;
       }
-      if (audioTrackRef.current) {
-        audioTrackRef.current.stop();
+      
+      // Clean up mic stream
+      if (currentMicStream) {
+        currentMicStream.getTracks().forEach(track => track.stop());
       }
+      
+      // Stop individual tracks if they exist
+      if (currentVideoTrack) {
+        currentVideoTrack.stop();
+      }
+      if (currentAudioTrack) {
+        currentAudioTrack.stop();
+      }
+      
+      // Clear refs
+      videoTrackRef.current = null;
+      audioTrackRef.current = null;
+      micStreamRef.current = null;
     };
-  }, [webcamOn]);
+  }, [webcamOn, micOn, feedbackData?.round?.meetPlatform]);
 
   // Toggle microphone
-  const toggleMic = () => {
-    if (audioTrackRef.current) {
-      audioTrackRef.current.enabled = !audioTrackRef.current.enabled;
-      setMicOn(!micOn);
+  const toggleMic = async () => {
+    try {
+      if (!audioTrackRef.current) {
+        // If we don't have an audio track yet, create one and turn it on
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioTracks = stream.getAudioTracks();
+        if (audioTracks.length > 0) {
+          audioTrackRef.current = audioTracks[0];
+          // Start with the mic on
+          audioTrackRef.current.enabled = true;
+          setMicOn(true);
+          
+          // Store the stream to clean it up later
+          micStreamRef.current = stream;
+        }
+      } else {
+        // Toggle the existing audio track
+        audioTrackRef.current.enabled = !audioTrackRef.current.enabled;
+        setMicOn(prev => !prev);
+      }
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      setMicOn(false);
     }
   };
 
   // Toggle webcam
-  const toggleWebcam = () => {
-    if (videoTrackRef.current) {
-      videoTrackRef.current.enabled = !videoTrackRef.current.enabled;
-      setWebcamOn(!webcamOn);
+  const toggleWebcam = async () => {
+    try {
+      if (!videoTrackRef.current) {
+        // Initialize webcam if not already done
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: true,
+          audio: false  // We handle audio separately
+        });
+        const videoTracks = stream.getVideoTracks();
+        if (videoTracks.length > 0) {
+          videoTrackRef.current = videoTracks[0];
+          if (videoPlayerRef.current) {
+            videoPlayerRef.current.srcObject = new MediaStream([videoTracks[0]]);
+          }
+          setWebcamOn(true);
+        }
+      } else {
+        // Toggle existing webcam
+        videoTrackRef.current.enabled = !videoTrackRef.current.enabled;
+        setWebcamOn(prev => !prev);
+      }
+    } catch (error) {
+      console.error("Error accessing webcam:", error);
+      setWebcamOn(false);
     }
   };
 
@@ -456,8 +524,6 @@ const CandidateView = ({
               </button> */}
 
               {/* Join Meeting Button */}
-              {console.log('decodedData?.meetLink', decodedData?.meetLink)}
-              {console.log('decodedData', decodedData)}
               <button
                 // onClick={() => window.open(decodedData?.meetLink, "_blank")}
 

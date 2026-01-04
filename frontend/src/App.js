@@ -89,6 +89,8 @@ const VideoCallLanding = lazy(() =>
   import("./Pages/CustomVideoCall/Landing.jsx")
 );
 const VideoSDKDashboard1 = lazy(() => import("./VideoSDK1/Dashboard"));
+const FullScreenPanel = lazy(() => import("./VideoSDK1/FullScreenPanel.jsx"));
+
 const VideoCallJoinRoom = lazy(() =>
   import("./Pages/CustomVideoCall/JoinRoom.jsx")
 );
@@ -549,7 +551,15 @@ const AuthRoutes = () => (
     <Route path="/resetPassword" element={<ResetPassword />} />
     <Route path="/forgot-password" element={<ForgetPassword />} />
 
-    <Route path="/video-call" element={<VideoSDKDashboard1 />} />
+    <Route
+      path="/video-call"
+      element={
+        <Suspense fallback={<div><Loading /></div>}>
+          <VideoSDKDashboard1 />
+        </Suspense>
+      }
+    />
+    <Route path="/fullscreen/:panelType" element={<FullScreenPanel />} />
 
     <Route
       path="/video-sdk-candidate-details"

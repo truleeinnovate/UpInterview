@@ -2666,7 +2666,7 @@ const getInterviewRoundTransaction = async (req, res) => {
       // Check if settled: look for a debit with settlementStatus completed
       const settlementTx = roundTransactions.find(
         (t) =>
-          t.type === "debit" &&
+          t.type === "debited" &&
           t.metadata &&
           t.metadata.settlementStatus === "completed"
       );

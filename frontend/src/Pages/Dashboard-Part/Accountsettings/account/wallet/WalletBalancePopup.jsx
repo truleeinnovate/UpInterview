@@ -3,7 +3,7 @@
 
 import { Wallet, TrendingUp, CreditCard, Shield, DollarSign, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { calculatePendingBalance } from "./Wallet";
+//import { calculatePendingBalance } from "./Wallet";
 // v1.0.1 <---------------------------------------------------------
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 // v1.0.1 --------------------------------------------------------->
@@ -12,7 +12,7 @@ import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarP
 const WalletBalancePopup = ({ walletBalance, onClose }) => {
   const navigate = useNavigate();
 
-  const pendingBalance = calculatePendingBalance(walletBalance);
+  //const pendingBalance = calculatePendingBalance(walletBalance);
   const totalBalance = (walletBalance?.balance || 0) + (walletBalance?.holdAmount || 0);
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -66,7 +66,7 @@ const WalletBalancePopup = ({ walletBalance, onClose }) => {
               <Wallet className="w-6 h-6 text-custom-blue mr-2" />
               <h3 className="text-lg font-semibold text-gray-800">Balance Overview</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Available Balance */}
               <div className="bg-white rounded-lg p-4 shadow-sm">
@@ -78,7 +78,7 @@ const WalletBalancePopup = ({ walletBalance, onClose }) => {
                   ₹{(walletBalance?.balance || 0).toFixed(2)}
                 </p>
               </div>
-              
+
               {/* On Hold */}
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
@@ -89,7 +89,7 @@ const WalletBalancePopup = ({ walletBalance, onClose }) => {
                   ₹{(walletBalance?.holdAmount || 0).toFixed(2)}
                 </p>
               </div>
-              
+
               {/* Total Balance */}
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
@@ -105,7 +105,7 @@ const WalletBalancePopup = ({ walletBalance, onClose }) => {
 
 
           {/* Pending Balance Info (if any) */}
-          {pendingBalance > 0 && (
+          {/* {pendingBalance > 0 && (
             <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
               <div className="flex items-start">
                 <Info className="w-5 h-5 text-yellow-600 mr-2 mt-0.5" />
@@ -119,7 +119,7 @@ const WalletBalancePopup = ({ walletBalance, onClose }) => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </SidebarPopup>

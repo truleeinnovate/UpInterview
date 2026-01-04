@@ -47,6 +47,7 @@ const InterviewsMiniTabComponent = ({
   setPreselectedQuestionsResponses,
   handlePreselectedQuestionResponse,
   decodedData,
+  autoSaveQuestions,
 }) => {
   useScrollLock(true);
   const [interviewMiniTab, setInterviewMiniTab] = useState(1);
@@ -70,6 +71,7 @@ const InterviewsMiniTabComponent = ({
             handlePreselectedQuestionResponse={
               handlePreselectedQuestionResponse
             }
+            triggerAutoSave={autoSaveQuestions}
           />
         ); //<----v1.0.0---
       case 2:
@@ -98,6 +100,7 @@ const InterviewsMiniTabComponent = ({
             handleToggleMandatory={handleToggleMandatory}
             interviewData={interviewData}
             decodedData={decodedData}
+            triggerAutoSave={autoSaveQuestions}
           />
         ); //<----v1.0.0---
       default:
@@ -113,7 +116,13 @@ const InterviewsMiniTabComponent = ({
         <div className="mb-6">
           <div className="flex justify-end items-center gap-3">
             <button
-              onClick={() => window.open(decodedData.meetLink, "_blank")}
+              onClick={() =>
+                window.open(
+                  // decodedData.meetLink
+                  interviewData?.meetingId,
+                  "_blank"
+                )
+              }
               className="text-sm bg-custom-blue hover:bg-custom-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
             >
               <Video className="w-4 h-4" />

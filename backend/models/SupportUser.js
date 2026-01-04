@@ -25,7 +25,7 @@ const TicketSchema = new mongoose.Schema(
     priority: { type: String, default: "Medium" },
     assignedTo: { type: String, default: "Ashraf" },
     assignedToId: { type: String, default: "67f7792abd343483ba4c642e" },
-    description: { type: String, required: true, maxlength: 1000 },//<----v1.0.1----
+    description: { type: String, required: true, maxlength: 1000 }, //<----v1.0.1----
     statusHistory: [StatusHistorySchema],
     attachment: {
       filename: String,
@@ -35,13 +35,15 @@ const TicketSchema = new mongoose.Schema(
       fileSize: Number,
       uploadDate: Date,
     },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    parentId: { type: mongoose.Schema.Types.Mixed }, //<----v1.0.1----
     // createdByUserId: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },//<----v1.0.1----
     // updatedByUserId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-    ownerId: { type: String, required: true },//<----v1.0.1----
-    tenantId: { type: String, required: true },//<----v1.0.1----
+    ownerId: { type: String, required: true }, //<----v1.0.1----
+    tenantId: { type: String, required: true }, //<----v1.0.1----
   },
   { timestamps: true }
 );

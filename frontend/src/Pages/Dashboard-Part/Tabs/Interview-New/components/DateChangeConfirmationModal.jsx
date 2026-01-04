@@ -96,7 +96,7 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
           </p>
           <div className="text-sm text-orange-800 space-y-1">
             <p>• Interviewer will receive: {interviewerPayoutPercentage}%</p>
-            <p>• Platform fee: {platformFeePercentage}%</p>
+            <p>• GST: {interviewerPayoutPercentage}%</p>
             <p>
               • You will be refunded: <strong>{100 - feePercentage}%</strong>
             </p>
@@ -197,8 +197,8 @@ const DateChangeConfirmationModal = ({
             {isExternal && isRequestSent
               ? "Proceed & Cancel Invitations"
               : isExternal && isScheduledOrReschedule
-              ? "Proceed & Apply Policy"
-              : "Proceed & Clear Interviewers"}
+                ? "Proceed & Apply Policy"
+                : "Proceed & Clear Interviewers"}
           </button>
         </div>
       </div>

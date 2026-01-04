@@ -26,7 +26,7 @@ export const getTransactionTypeStyle = (type) => {
     case "payout":
     case "platform_fee":
       return "text-green-600";
-    case "debit":
+    case "debited":
       return "text-red-600";
     case "hold":
     case "hold adjust":
@@ -39,16 +39,16 @@ export const getTransactionTypeStyle = (type) => {
   }
 };
 
-export const calculatePendingBalance = (walletBalance) => {
-  if (!walletBalance?.transactions) return 0;
+// export const calculatePendingBalance = (walletBalance) => {
+//   if (!walletBalance?.transactions) return 0;
 
-  return walletBalance.transactions.reduce((total, transaction) => {
-    if (transaction.type.toLowerCase() === "hold") {
-      return total + transaction.amount;
-    }
-    return total;
-  }, 0);
-};
+//   return walletBalance.transactions.reduce((total, transaction) => {
+//     if (transaction.type.toLowerCase() === "hold") {
+//       return total + transaction.amount;
+//     }
+//     return total;
+//   }, 0);
+// };
 
 const Wallet = () => {
   const { checkPermission, isInitialized } = usePermissionCheck();
@@ -77,7 +77,7 @@ const Wallet = () => {
     return null;
   }
 
-  const pendingBalance = calculatePendingBalance(walletBalance); //<----v1.0.0-----
+  //const pendingBalance = calculatePendingBalance(walletBalance); //<----v1.0.0-----
   const walletTransactions = walletBalance?.transactions || [];
 
   const handleTopup = async (topupData) => {
@@ -310,12 +310,12 @@ const Wallet = () => {
               </button> */}
               </div>
               <div className="mt-2 flex sm:flex-col sm:space-x-0 space-x-4 text-sm">
-                <div>
+                {/* <div>
                   <span className="text-gray-500">Pending Balance: </span>
                   <span className="text-sm font-medium">
                     ₹{pendingBalance.toFixed(2)}
                   </span>
-                </div>
+                </div> */}
                 <div>
                   <span className="text-gray-500">Hold Amount: </span>
                   <span className="text-sm font-medium text-yellow-600">
@@ -366,71 +366,169 @@ const Wallet = () => {
                       : new Date(0);
                   return dateB - dateA; // Sort in descending order (newest first)
                 })
-                .map((transaction) => (
-                  <div
-                    key={transaction._id}
-                    className="flex items-center justify-between border-b pb-4 last:border-b-0"
-                  >
-                    <div>
-                      <p className="font-medium">{transaction.description}</p>
-                      <div className="flex items-center space-x-2">
-                        <p className="text-sm text-gray-500">
+                .map((transaction) => {
+                  // Extract round title from description if available
+                  const getRoundTitle = (desc) => {
+                    if (!desc) return null;
+                    // Common patterns: "... for interview round <title>", "... round <title>"
+                    const roundMatch = desc.match(/round\s+([^,]+)/i);
+                    if (roundMatch) return roundMatch[1].trim();
+                    return null;
+                  };
+
+                  // Get interview reference code
+                  const getInterviewRef = (txn) => {
+                    if (txn.relatedInvoiceId) {
+                      // If it's an ObjectId-like string, show shortened version
+                      if (txn.relatedInvoiceId.length === 24) {
+                        return `TXN-${txn.relatedInvoiceId.slice(-6).toUpperCase()}`;
+                      }
+                      return txn.relatedInvoiceId;
+                    }
+                    if (txn.metadata?.requestId) {
+                      return `REQ-${txn.metadata.requestId.slice(-6).toUpperCase()}`;
+                    }
+                    return null;
+                  };
+
+                  const roundTitle = getRoundTitle(transaction.description);
+                  const interviewRef = getInterviewRef(transaction);
+                  const hasGst = transaction.gstAmount != null && transaction.gstAmount > 0;
+
+                  return (
+                    <div
+                      key={transaction._id}
+                      className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors mb-3 last:mb-0"
+                    >
+                      {/* Top Row: Type Badge, Reference, Date */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`text-xs font-medium px-2.5 py-1 rounded-full ${transaction.type === "credited" || transaction.type === "credit"
+                              ? "bg-green-100 text-green-700"
+                              : transaction.type === "debited"
+                                ? "bg-red-100 text-red-700"
+                                : transaction.type === "hold" || transaction.type === "hold_adjust"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : transaction.type === "hold_release"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : transaction.type === "refund"
+                                      ? "bg-purple-100 text-purple-700"
+                                      : "bg-gray-100 text-gray-700"
+                              }`}
+                          >
+                            {transaction.type
+                              ? transaction.type
+                                .split('_')
+                                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                .join(' ')
+                              : "Unknown"}
+                          </span>
+                          {interviewRef && (
+                            <span className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-0.5 rounded">
+                              {interviewRef}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-500">
                           {transaction.createdAt
-                            ? new Date(transaction.createdAt).toLocaleString()
+                            ? new Date(transaction.createdAt).toLocaleString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })
                             : transaction.createdDate
-                              ? new Date(transaction.createdDate).toLocaleString()
+                              ? new Date(transaction.createdDate).toLocaleString('en-IN', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })
                               : "N/A"}
-                        </p>
-                        <span
-                          className={`text-sm px-2 py-0.5 rounded-full ${transaction.type === "credited" || transaction.type === "credit"
-                            ? "bg-green-100 text-green-800"
-                            : transaction.type === "debit"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
-                            }`}
-                        >
-                          {transaction.type
-                            ? transaction.type.charAt(0).toUpperCase() +
-                            transaction.type.slice(1)
-                            : "Unknown"}
                         </span>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p
-                          className={`font-medium ${getTransactionTypeStyle(
-                            transaction.type
-                          )}`}
-                        >
-                          {transaction.type === "credited" || transaction.type === "credit"
-                            ? "+"
-                            : transaction.type === "debit"
-                              ? "-"
-                              : "~"}
-                          ₹
-                          {transaction.totalAmount
-                            ? transaction.totalAmount.toFixed(2)
-                            : "0.00"}
+
+                      {/* Middle Row: Description & Round Title */}
+                      <div className="mb-3">
+                        <p className="text-sm font-medium text-gray-800 line-clamp-1">
+                          {transaction.description || "Transaction"}
                         </p>
-                        <span
-                          className={`text-sm px-2 py-1 rounded-full ${transaction.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                            }`}
-                        >
-                          {transaction.status
-                            ? transaction.status.charAt(0).toUpperCase() +
-                            transaction.status.slice(1)
-                            : "Pending"}
-                        </span>
+                        {roundTitle && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            <span className="font-medium">Round:</span> {roundTitle}
+                          </p>
+                        )}
                       </div>
-                      <ViewDetailsButton
-                        onClick={() => setSelectedTransaction(transaction)}
-                      />
+                      {/* Bottom Row: Amount Breakdown & Actions */}
+                      <div className="flex items-end justify-between">
+                        <div className="flex items-center gap-4">
+                          {/* Base Amount - For payouts with service charge deduction, show as Gross */}
+                          <div>
+                            <p className="text-xs text-gray-500">
+                              {transaction.serviceCharge != null && transaction.serviceCharge < 0 ? "Gross" : "Amount"}
+                            </p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              ₹{(transaction.amount || 0).toFixed(2)}
+                            </p>
+                          </div>
+                          {/* GST if available */}
+                          {hasGst && (
+                            <div>
+                              <p className="text-xs text-gray-500">GST</p>
+                              <p className="text-sm font-medium text-gray-600">
+                                ₹{transaction.gstAmount.toFixed(2)}
+                              </p>
+                            </div>
+                          )}
+                          {/* Service Charge if available (negative value means deduction) */}
+                          {(transaction.serviceCharge != null && transaction.serviceCharge !== 0) && (
+                            <div>
+                              <p className="text-xs text-gray-500">
+                                Service {transaction.metadata?.serviceChargePercent ? `(${transaction.metadata.serviceChargePercent}%)` : ''}
+                              </p>
+                              <p className="text-sm font-medium text-red-500">
+                                -₹{Math.abs(transaction.serviceCharge).toFixed(2)}
+                              </p>
+                            </div>
+                          )}
+                          {/* Total Amount */}
+                          <div className="border-l pl-4 ml-2">
+                            <p className="text-xs text-gray-500">Total</p>
+                            <p
+                              className={`text-base font-bold ${getTransactionTypeStyle(transaction.type)}`}
+                            >
+                              {transaction.effect === "CREDITED" || transaction.type === "credited" || transaction.type === "credit" || transaction.type === "hold_release"
+                                ? "+"
+                                : transaction.effect === "DEBITED" || transaction.type === "debited" || transaction.type === "hold"
+                                  ? "-"
+                                  : ""}
+                              ₹{transaction.totalAmount ? transaction.totalAmount.toFixed(2) : "0.00"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full font-medium ${transaction.status === "completed"
+                              ? "bg-green-50 text-green-700 border border-green-200"
+                              : "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                              }`}
+                          >
+                            {transaction.status
+                              ? transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)
+                              : "Pending"}
+                          </span>
+                          <ViewDetailsButton
+                            onClick={() => setSelectedTransaction(transaction)}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
             ) : (
               <div className="text-center py-4 text-gray-500">
                 No transaction history available

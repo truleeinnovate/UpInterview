@@ -10,9 +10,11 @@ import {
   ChevronDown,
 } from "lucide-react";
 
-const CandidateDetails = ({ candidate }) => {
-  const [expandedSections, setExpandedSections] = useState({
-    skills: false,
+const CandidateDetails = ({ candidate, isFullScreen = false }) => {
+  console.log('candidate in candidate details ', candidate)
+  console.log('candidate.position in candidate details ', candidate?.position)
+    const [expandedSections, setExpandedSections] = useState({
+    skills: true,
     certificates: false,
     projects: false,
   });
@@ -24,17 +26,11 @@ const CandidateDetails = ({ candidate }) => {
     }));
   };
 
-  // Mock position data since it's not in the candidate object
-  const position = {
-    title: candidate.position,
-    department: "Engineering",
-  };
-
   // Use candidate data directly
   const candidateDetails = {
-    skills: candidate.skills || [],
-    certificates: candidate.certificates || [],
-    projects: candidate.projects || [],
+    skills: candidate?.skills || candidate?.candidate?.skills || [],
+    certificates: candidate?.certificates || candidate?.candidate?.certificates || [],
+    projects: candidate?.projects || candidate?.candidate?.projects || [],
   };
 
   return (
@@ -54,21 +50,21 @@ const CandidateDetails = ({ candidate }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p className="text-sm font-medium text-gray-500">Name</p>
-            <p className="text-sm text-gray-900">{candidate?.name}</p>
+            <p className="text-sm text-gray-900">{candidate?.FirstName || candidate?.candidate?.FirstName} {" "} {candidate?.LastName || candidate?.candidate?.LastName}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Experience</p>
-            <p className="text-gray-900">{candidate?.experience}</p>
+            <p className="text-gray-900">{(candidate?.CurrentExperience || candidate?.candidate?.CurrentExperience) ? `${candidate?.CurrentExperience || candidate?.candidate?.CurrentExperience} years` : ''}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">
               Position Applied
             </p>
-            <p className="text-gray-900">{position?.title}</p>
+            <p className="text-gray-900">{candidate?.position.title}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Department</p>
-            <p className="text-gray-900">{position?.department}</p>
+            <p className="text-sm font-medium text-gray-500">Company Name</p>
+            <p className="text-gray-900">{candidate?.position?.companyname}</p>
           </div>
         </div>
       </div>
@@ -103,23 +99,25 @@ const CandidateDetails = ({ candidate }) => {
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
               >
                 <div>
-                  <p className="font-medium text-gray-900">{skill.name}</p>
+                  <p className="font-medium text-gray-900">{skill.skill}</p>
                   <p className="text-sm text-gray-500">
-                    {skill.years} years experience
+                    {skill.experience}
                   </p>
                 </div>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    skill.level === "Expert"
-                      ? "bg-green-100 text-green-800"
-                      : skill.level === "Advanced"
-                      ? "bg-blue-100 text-blue-800"
-                      : skill.level === "Intermediate"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
+                  className={'px-2 py-1 rounded-full text-xs font-medium'
+                  //    ${
+                  //   skill.expertise === "Expert"
+                  //     ? "bg-green-100 text-green-800"
+                  //     : skill.expertise === "Advanced"
+                  //     ? "bg-blue-100 text-blue-800"
+                  //     : skill.expertise === "Intermediate"
+                  //     ? "bg-yellow-100 text-yellow-800"
+                  //     : "bg-gray-100 text-gray-800"
+                  // }
+                  }
                 >
-                  {skill.level}
+                  {skill.expertise}
                 </span>
               </div>
             ))}
@@ -128,7 +126,7 @@ const CandidateDetails = ({ candidate }) => {
       </div>
 
       {/* Certificates */}
-      <div className="bg-white rounded-lg p-6 shadow-sm">
+      {/* <div className="bg-white rounded-lg p-6 shadow-sm">
         <button
           onClick={() => toggleSection("certificates")}
           className="flex items-center justify-between w-full text-left"
@@ -161,10 +159,10 @@ const CandidateDetails = ({ candidate }) => {
             ))}
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Projects */}
-      <div className="bg-white rounded-lg p-6 shadow-sm">
+      {/* <div className="bg-white rounded-lg p-6 shadow-sm">
         <button
           onClick={() => toggleSection("projects")}
           className="flex items-center justify-between w-full text-left"
@@ -208,7 +206,7 @@ const CandidateDetails = ({ candidate }) => {
             ))}
           </div>
         )}
-      </div>
+      </div> */}
     </div>
     // v1.0.0 ------------------------------------------------------------------------>
   );

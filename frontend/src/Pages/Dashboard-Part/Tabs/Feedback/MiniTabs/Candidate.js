@@ -109,7 +109,13 @@ const CandidateMiniTab = ({
         <div className="top-14 right-4 z-40 pt-3">
           <div className="flex justify-end items-center gap-3">
             <button
-              onClick={() => window.open(decodedData.meetLink, "_blank")}
+              onClick={() =>
+                window.open(
+                  feedbackData?.interviewRound?.meetingId,
+                  // decodedData.meetLink
+                  "_blank"
+                )
+              }
               className="text-sm bg-custom-blue hover:bg-custom-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
             >
               <Video className="w-4 h-4" />

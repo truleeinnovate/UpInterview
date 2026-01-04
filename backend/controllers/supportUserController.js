@@ -13,6 +13,7 @@ const {
 //----v1.0.1---->
 
 const { hasPermission } = require("../middleware/permissionMiddleware");
+const { InterviewRounds } = require("../models/Interview/InterviewRounds");
 
 exports.createTicket = async (req, res) => {
   res.locals.loggedByController = true;
@@ -72,6 +73,10 @@ exports.createTicket = async (req, res) => {
       organization,
       createdByUserId,
       ticketCode,
+      parentId:
+        req.body?.FeedbackIssueType === "FeedbackInterviewTechIssue"
+          ? req.body?.roundId
+          : null,
     });
 
     await supportNotif.notifyOnTicketCreated(ticket);
