@@ -22,6 +22,7 @@ const InternalInterviews = ({
 }) => {
   const { data: groups = [] } = useGroupsQuery();
   const { interviewers } = useInterviewers();
+  //console.log("interviewers", interviewers);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -155,21 +156,21 @@ const InternalInterviews = ({
       // Groups filtering remains unchanged
       return Array.isArray(groups)
         ? groups.filter((group) => {
-            // Filter by search query
-            const matchesSearch = [group.name, group.description].some(
-              (field) =>
-                field && field.toLowerCase().includes(searchQuery.toLowerCase())
+          // Filter by search query
+          const matchesSearch = [group.name, group.description].some(
+            (field) =>
+              field && field.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+
+          // For editing - check if this group matches the selected group name
+          const isSelectedGroup = selectedGroupName
+            ? group.name === selectedGroupName
+            : selectedInterviewersProp.some(
+              (selected) => selected._id === group._id
             );
 
-            // For editing - check if this group matches the selected group name
-            const isSelectedGroup = selectedGroupName
-              ? group.name === selectedGroupName
-              : selectedInterviewersProp.some(
-                  (selected) => selected._id === group._id
-                );
-
-            return matchesSearch || isSelectedGroup;
-          })
+          return matchesSearch || isSelectedGroup;
+        })
         : [];
     }
   }, [
@@ -275,13 +276,12 @@ const InternalInterviews = ({
   return (
     // v1.0.3 <----------------------------------------------------------------------------------
     <SidebarPopup
-      title={`Select Internal ${
-        viewType === "individuals" ? "Individuals" : "Groups"
-      }`}
+      title={`Select Internal ${viewType === "individuals" ? "Individuals" : "Groups"
+        }`}
       onClose={onClose}
       // v1.0.2 <--------------------------------
       setIsFullscreen={setIsFullscreen}
-      // v1.0.2 -------------------------------->
+    // v1.0.2 -------------------------------->
     >
       <div className="flex flex-col h-full">
         {/* <------------------------------- v1.0.0  */}
@@ -341,9 +341,8 @@ const InternalInterviews = ({
 
               {/* Role Filter Dropdown */}
               <div
-                className={`flex-1 relative ${
-                  viewType === "groups" && "hidden"
-                }`}
+                className={`flex-1 relative ${viewType === "groups" && "hidden"
+                  }`}
                 ref={roleDropdownRef}
               >
                 <button
@@ -381,9 +380,8 @@ const InternalInterviews = ({
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder={`Search ${
-                      viewType === "individuals" ? "interviewers" : "groups"
-                    }...`}
+                    placeholder={`Search ${viewType === "individuals" ? "interviewers" : "groups"
+                      }...`}
                     value={searchQuery}
                     onChange={handleSearchInputChange}
                     className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -395,26 +393,23 @@ const InternalInterviews = ({
           {/* v1.0.2 <-------------------------------------------------------------------------- */}
           <div
             className={`grid gap-3 sm:grid-cols-1 md:grid-cols-2 
-            ${
-              isFullscreen
+            ${isFullscreen
                 ? "lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
                 : "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-            }
+              }
           `}
           >
             {/* v1.0.2 --------------------------------------------------------------------------> */}
             {filteredData?.map((item) => (
               <div
                 key={item._id}
-                className={`flex items-center justify-between p-3 rounded-md ${
-                  navigatedfrom !== "dashboard"
-                    ? "cursor-pointer"
-                    : "cursor-default"
-                } ${
-                  navigatedfrom !== "dashboard" && isInterviewerSelected(item)
+                className={`flex items-center justify-between p-3 rounded-md ${navigatedfrom !== "dashboard"
+                  ? "cursor-pointer"
+                  : "cursor-default"
+                  } ${navigatedfrom !== "dashboard" && isInterviewerSelected(item)
                     ? "bg-custom-bg border border-custom-blue"
                     : "hover:bg-gray-50 border border-gray-200"
-                }`}
+                  }`}
                 onClick={() =>
                   navigatedfrom !== "dashboard" && handleSelectClick(item)
                 }
@@ -473,7 +468,7 @@ const InternalInterviews = ({
                         </p>
                         <p className="text-xs text-gray-500">
                           {Array.isArray(item.usersNames) &&
-                          item.usersNames.length > 0
+                            item.usersNames.length > 0
                             ? item.usersNames.join(", ")
                             : "No users available"}
                         </p>

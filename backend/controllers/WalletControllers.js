@@ -3318,7 +3318,7 @@ const fixVerifiedBankAccounts = async (req, res) => {
 //     // 3. Update the hold transaction to debit/completed in organization wallet
 //     const orgWalletUpdate = {
 //       $set: {
-//         "transactions.$.type": "debit",
+//         "transactions.$.type": "debited",
 //         "transactions.$.status": "completed",
 //         // Amount debited from organization wallet is the gross payout
 //         // determined by the policy (before platform charges & GST)
@@ -3935,7 +3935,7 @@ const settleInterviewPayment = async (req, res) => {
     // Update org wallet: settle the hold to debit
     const orgWalletUpdate = {
       $set: {
-        "transactions.$.type": "debit",
+        "transactions.$.type": "debited",
         "transactions.$.status": "completed",
         "transactions.$.amount": grossSettlementAmount,
         "transactions.$.description": `Settled payment to interviewer for ${companyName || "Company"} - ${roundTitle || "Interview Round"}`,
@@ -4038,7 +4038,7 @@ const settleInterviewPayment = async (req, res) => {
       creditTransaction = {
         type: "payout",
         bucket: "AVAILABLE",
-        effect: "CREDIT",
+        effect: "CREDITED",
         amount: settlementAmount,
         gstAmount: 0,
         serviceCharge: 0,
@@ -4105,7 +4105,7 @@ const settleInterviewPayment = async (req, res) => {
         platformFeeTransaction = {
           type: "platform_fee",
           bucket: "AVAILABLE",
-          effect: "CREDIT",
+          effect: "CREDITED",
           amount: serviceCharge,
           gstAmount: 0,
           serviceCharge: serviceCharge,
@@ -4140,7 +4140,7 @@ const settleInterviewPayment = async (req, res) => {
         platformGstTransaction = {
           type: "platform_fee",
           bucket: "AVAILABLE",
-          effect: "CREDIT",
+          effect: "CREDITED",
           amount: serviceChargeGst,
           gstAmount: serviceChargeGst,
           serviceCharge: 0,

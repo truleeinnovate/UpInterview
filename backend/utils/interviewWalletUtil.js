@@ -20,11 +20,11 @@ const WALLET_BUSINESS_TYPES = {
   HOLD_ADJUST: "HOLD_ADJUST",
   HOLD_CREATE: "HOLD_CREATE", // Move available balance -> hold
   HOLD_RELEASE: "HOLD_RELEASE", // Release hold back to available balance
-  HOLD_DEBIT: "HOLD_DEBIT", // Convert part/all of hold into a debit (payout/charge)
+  HOLD_DEBIT: "HOLD_DEBITED", // Convert part/all of hold into a debit (payout/charge)
   REFUND: "REFUND", // Credit back to wallet balance (no hold change)
-  TOPUP_CREDIT: "TOPUP_CREDIT", // Generic credit/topup
+  TOPUP_CREDIT: "TOPUP_CREDITED", // Generic credit/topup
   SUBSCRIBE_CREDITED: "SUBSCRIBE_CREDITED", // Subscription plan credits
-  GENERIC_DEBIT: "GENERIC_DEBIT", // Generic debit from available balance
+  GENERIC_DEBIT: "GENERIC_DEBITED", // Generic debit from available balance
   HOLD_NOTE: "HOLD_NOTE", // Ledger-only hold record (no balance/hold change)
   INTERVIEWER_HOLD_CREATE: "INTERVIEWER_HOLD_CREATE", // Pending payout hold in interviewer wallet (no balance change, holdAmount increases)
 };
@@ -69,7 +69,7 @@ function computeWalletDeltas(businessType, amount) {
       // Use held funds for a payment; reduce hold, no balance change
       // (The original debit was already accounted when HOLD_CREATE happened.)
       return {
-        txType: "debit",
+        txType: "debited",
         balanceDelta: 0,
         holdDelta: -amt,
       };
@@ -101,7 +101,7 @@ function computeWalletDeltas(businessType, amount) {
     case WALLET_BUSINESS_TYPES.GENERIC_DEBIT:
       // Generic debit from available balance (no hold involvement)
       return {
-        txType: "debit",
+        txType: "debited",
         balanceDelta: -amt,
         holdDelta: 0,
       };
@@ -219,9 +219,9 @@ async function createWalletTransaction({
 
   let effect = "NONE";
   if (txType === "credited" || txType === "hold_release" || txType === "hold_adjust") {
-    effect = "CREDIT";
-  } else if (txType === "debit" || txType === "hold" || txType === "") {
-    effect = "DEBIT";
+    effect = "CREDITED";
+  } else if (txType === "debited" || txType === "hold" || txType === "") {
+    effect = "DEBITED";
   }
 
   const transaction = {
@@ -942,7 +942,6 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
     // 6. Determine pay percentage based on action
     let payPercent = 0;
     let settlementScenario = "unknown_status";
-    let appliedPolicyId = null;
     let appliedPolicyName = null;
 
     if (action === "Completed") {
@@ -981,7 +980,7 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
       const isMockInterview = Boolean(acceptedRequest.isMockInterview);
 
       const policy = await findPolicyForSettlement(isMockInterview, "Cancelled", hoursBefore);
-
+      let appliedPolicyId = null;
       if (policy) {
         payPercent = typeof policy.interviewerPayoutPercentage === "number"
           ? policy.interviewerPayoutPercentage
@@ -1093,7 +1092,7 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
     // 9. Update organization wallet - settle the hold to debit
     const orgWalletUpdate = {
       $set: {
-        "transactions.$.type": "debit",
+        "transactions.$.type": "debited",
         "transactions.$.status": "completed",
         "transactions.$.amount": grossSettlementAmount,
         "transactions.$.description": `Settled payment for ${companyName} - ${roundTitle}`,
@@ -1208,10 +1207,12 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
       });
 
       // Credit interviewer wallet using common function
+      // Note: serviceCharge is already deducted from settlementAmount, so we don't pass it
+      // as a transaction param (would add to totalAmount). Instead, we store the breakdown in metadata.
       await createWalletTransaction({
         ownerId: interviewerOwnerId,
         businessType: WALLET_BUSINESS_TYPES.TOPUP_CREDIT,
-        amount: settlementAmount,
+        amount: settlementAmount, // Net amount after service charge deduction
         description: `Payment from ${companyName} - ${roundTitle} for ${positionTitle}`,
         relatedInvoiceId: invoiceDoc._id.toString(),
         status: "completed",
@@ -1224,6 +1225,11 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
           companyName: companyName,
           roundTitle: roundTitle,
           positionTitle: positionTitle,
+          // Amount breakdown for UI display
+          grossAmount: grossSettlementAmount, // Amount before service charge deduction
+          serviceChargeDeducted: serviceCharge, // Service charge that was deducted
+          serviceChargePercent: scPercent, // Service charge percentage (e.g., 10)
+          netAmount: settlementAmount, // Final amount credited (same as transaction.amount)
         },
       });
     }
@@ -1244,7 +1250,7 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
           platformTransactions.push({
             type: "platform_fee",
             bucket: "AVAILABLE",
-            effect: "CREDIT",
+            effect: "CREDITED",
             amount: serviceCharge,
             serviceCharge: serviceCharge,
             totalAmount: serviceCharge,
@@ -1271,7 +1277,7 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
           platformTransactions.push({
             type: "platform_fee",
             bucket: "AVAILABLE",
-            effect: "CREDIT",
+            effect: "CREDITED",
             amount: gstForPlatform,
             gstAmount: gstForPlatform,
             totalAmount: gstForPlatform,
@@ -1373,68 +1379,68 @@ async function processWithdrawnRefund({ roundId }) {
     const gstAmount = Number(activeHoldTransaction.gstAmount || 0);
     const totalHoldAmount = Number(activeHoldTransaction.totalAmount || baseAmount + gstAmount);
 
-    console.log("[processWithdrawnRefund] Found hold to refund:", {
-      baseAmount,
-      gstAmount,
-      totalHoldAmount,
-    });
+    // console.log("[processWithdrawnRefund] Found hold to refund:", {
+    //   transactionId: transactionId?.toString(),
+    //   baseAmount,
+    //   gstAmount,
+    //   totalHoldAmount,
+    // });
 
-    // 3. Update org wallet - release hold and refund full amount + GST
-    const refundAmount = totalHoldAmount; // Full amount including GST
-
-    const orgWalletUpdate = {
+    // 3. Mark the original hold transaction as completed (preserve original type for audit trail)
+    // This keeps the hold record intact - we just mark it as "completed" to indicate it's been processed
+    const holdCompletionUpdate = {
       $set: {
-        "transactions.$.type": "refund",
         "transactions.$.status": "completed",
-        "transactions.$.description": `Refund - Requests withdrawn before acceptance`,
-        "transactions.$.metadata.refundedAt": new Date(),
-        "transactions.$.metadata.refundReason": "WITHDRAWN_BEFORE_ACCEPTANCE",
-      },
-      $inc: {
-        holdAmount: -totalHoldAmount,
-        balance: refundAmount,
+        "transactions.$.metadata.processedAt": new Date(),
+        "transactions.$.metadata.processedReason": "WITHDRAWN_BEFORE_ACCEPTANCE",
+        "transactions.$.metadata.refundTransactionCreated": true,
       },
     };
 
-    const updatedOrgWallet = await WalletTopup.findOneAndUpdate(
+    await WalletTopup.findOneAndUpdate(
       { _id: orgWallet._id, "transactions._id": transactionId },
-      orgWalletUpdate,
-      { new: true }
+      holdCompletionUpdate
     );
 
-    if (!updatedOrgWallet) {
-      console.error("[processWithdrawnRefund] Failed to update organization wallet");
-      return null;
-    }
+    //console.log("[processWithdrawnRefund] Marked hold transaction as completed");
 
-    // 4. Create refund transaction for audit trail using common function
-    // await createWalletTransaction({
-    //   ownerId: orgWallet.ownerId,
-    //   businessType: WALLET_BUSINESS_TYPES.REFUND,
-    //   amount: baseAmount,
-    //   gstAmount: gstAmount,
-    //   description: `Full refund - Requests withdrawn before acceptance`,
-    //   relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
-    //   status: "completed",
-    //   reason: "WITHDRAWN_BEFORE_ACCEPTANCE_REFUND",
-    //   metadata: {
-    //     roundId: roundId,
-    //     originalTransactionId: transactionId?.toString(),
-    //     refundDate: new Date(),
-    //   },
-    // });
-
-    console.log("[processWithdrawnRefund] Full refund completed:", {
-      roundId,
-      refundAmount,
+    // 4. Create a NEW refund transaction using createWalletTransaction() for proper audit trail
+    // This will:
+    // - Release the hold amount (reduce holdAmount)
+    // - Credit back to available balance
+    // - Create a clear refund record in transaction history
+    const refundResult = await createWalletTransaction({
+      ownerId: orgWallet.ownerId,
+      businessType: WALLET_BUSINESS_TYPES.HOLD_RELEASE, // Releases hold and credits to available
+      amount: baseAmount,
+      gstAmount: gstAmount,
+      description: `Full refund - Requests withdrawn before acceptance`,
+      relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
+      status: "completed",
+      reason: "WITHDRAWN_BEFORE_ACCEPTANCE_REFUND",
+      metadata: {
+        roundId: roundId,
+        originalTransactionId: transactionId?.toString(),
+        originalHoldAmount: totalHoldAmount,
+        refundDate: new Date(),
+        source: "withdrawn_refund",
+      },
     });
+
+    // console.log("[processWithdrawnRefund] Created refund transaction:", {
+    //   roundId,
+    //   refundAmount: totalHoldAmount,
+    //   newBalance: refundResult.wallet?.balance,
+    // });
 
     return {
       success: true,
       roundId,
-      refundAmount,
+      refundAmount: totalHoldAmount,
       baseAmount,
       gstAmount,
+      refundTransaction: refundResult.transaction,
+      wallet: refundResult.wallet,
     };
   } catch (error) {
     console.error("[processWithdrawnRefund] Error:", error);

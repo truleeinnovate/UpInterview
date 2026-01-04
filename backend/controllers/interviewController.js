@@ -2224,26 +2224,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-          from: "mockinterviews",
-          localField: "mockInterviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        }
+        from: "mockinterviews",
+        localField: "mockInterviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      }
       : {
-          from: "interviews",
-          localField: "interviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        };
+        from: "interviews",
+        localField: "interviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2265,23 +2265,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-            {
-              $addFields: {
-                mainTenantIdNormalized: {
-                  $cond: [
-                    {
-                      $and: [
-                        { $ne: ["$mainInterview.tenantId", null] },
-                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                      ],
-                    },
-                    { $toObjectId: "$mainInterview.tenantId" },
-                    null,
-                  ],
-                },
+          {
+            $addFields: {
+              mainTenantIdNormalized: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ["$mainInterview.tenantId", null] },
+                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                    ],
+                  },
+                  { $toObjectId: "$mainInterview.tenantId" },
+                  null,
+                ],
               },
             },
-          ]
+          },
+        ]
         : []),
       // Lookup tenant for organization info
       {
@@ -2661,7 +2661,7 @@ const getInterviewRoundTransaction = async (req, res) => {
       // Check if settled: look for a debit with settlementStatus completed
       const settlementTx = roundTransactions.find(
         (t) =>
-          t.type === "debit" &&
+          t.type === "debited" &&
           t.metadata &&
           t.metadata.settlementStatus === "completed"
       );

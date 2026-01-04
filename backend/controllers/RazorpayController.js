@@ -734,14 +734,14 @@ const verifyPayment = async (req, res) => {
                   ownerId,
                   businessType: WALLET_BUSINESS_TYPES.SUBSCRIBE_CREDITED,
                   amount: plan.walletCredits,
-                  description: `Credits from ${plan.name} subscription`,
+                  description: `Credited from ${plan.name} subscription`,
                   relatedInvoiceId: relatedInvoiceId,
                   status: "completed",
-                  reason: "SUBSCRIPTION_CREDITS",
+                  reason: "SUBSCRIPTION_CREDITED",
                   metadata: {
                     planId: plan._id,
                     planName: plan.name,
-                    source: "subscription_credits",
+                    source: "subscription_credited",
                   },
                 });
               } catch (walletError) {
@@ -788,10 +788,10 @@ const verifyPayment = async (req, res) => {
                 ownerId,
                 businessType: WALLET_BUSINESS_TYPES.SUBSCRIBE_CREDITED,
                 amount: plan.walletCredits,
-                description: `Credits from ${plan.name} subscription`,
+                description: `Credited from ${plan.name} subscription`,
                 relatedInvoiceId: relatedInvoiceId,
                 status: "completed",
-                reason: "SUBSCRIPTION_CREDITS",
+                reason: "SUBSCRIPTION_CREDITED",
                 metadata: {
                   planId: plan._id,
                   planName: plan.name,
