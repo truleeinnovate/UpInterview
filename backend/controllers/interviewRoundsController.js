@@ -120,14 +120,18 @@ const saveInterviewRound = async (req, res) => {
     const savedRound = await newInterviewRound.save();
 
     // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (NOW THAT savedRound EXISTS) ========================
-    if (round.interviewerType !== "Internal" && req.body.round?.selectedInterviewers?.length > 0) {
-      const walletHoldResponse = await applySelectionTimeWalletHoldForOutsourcedRound({
-        req,
-        res,
-        interview,
-        round,
-        savedRound,
-      });
+    if (
+      round.interviewerType !== "Internal" &&
+      req.body.round?.selectedInterviewers?.length > 0
+    ) {
+      const walletHoldResponse =
+        await applySelectionTimeWalletHoldForOutsourcedRound({
+          req,
+          res,
+          interview,
+          round,
+          savedRound,
+        });
 
       if (walletHoldResponse) {
         // Helper already sent a response (e.g. error); stop further processing.
@@ -151,7 +155,6 @@ const saveInterviewRound = async (req, res) => {
         new: true,
       });
     }
-
 
     // =================== start == assessment mails sending functionality == start ========================
 
@@ -393,15 +396,16 @@ const updateInterviewRound = async (req, res) => {
   const updateType = req.body.updateType;
   console.log("updateType", updateType);
 
-
   const incomingRound = round || {};
 
   //after round create in post meeting id will update using this if condtion
   if (incomingRound.meetingId || incomingRound.meetPlatform) {
     const updateOps = { $set: {} };
 
-    if (incomingRound.meetingId) updateOps.$set.meetingId = incomingRound.meetingId;
-    if (incomingRound.meetPlatform) updateOps.$set.meetPlatform = incomingRound.meetPlatform;
+    if (incomingRound.meetingId)
+      updateOps.$set.meetingId = incomingRound.meetingId;
+    if (incomingRound.meetPlatform)
+      updateOps.$set.meetPlatform = incomingRound.meetPlatform;
 
     const updatedRound = await InterviewRounds.findByIdAndUpdate(
       roundId,
@@ -416,7 +420,6 @@ const updateInterviewRound = async (req, res) => {
     });
   }
 
-
   // === NEW: EARLY SAFE UPDATE PATH ===
   // Safe path only if:
   // - No dangerous fields (interviewers, dateTime, status, etc.)
@@ -425,17 +428,23 @@ const updateInterviewRound = async (req, res) => {
   const incomingKeys = Object.keys(incomingRound);
   const hasOnlySafeChanges =
     incomingKeys.length > 0 &&
-    incomingKeys.every(key => ["instructions", "sequence"].includes(key));
+    incomingKeys.every((key) => ["instructions", "sequence"].includes(key));
 
   const hasOnlyQuestionsChange =
     incomingKeys.length === 0 && hasQuestionsUpdate;
 
-  if ((hasOnlySafeChanges || hasOnlyQuestionsChange) && updateType === "SAFE_UPDATE") {
+  if (
+    (hasOnlySafeChanges || hasOnlyQuestionsChange) &&
+    updateType === "SAFE_UPDATE"
+  ) {
     console.log("Safe update: only instructions, sequence, or questions");
 
     const updateOps = { $set: {}, $push: { history: [] } };
 
-    if (incomingRound.instructions !== undefined && incomingRound.instructions !== existingRound.instructions) {
+    if (
+      incomingRound.instructions !== undefined &&
+      incomingRound.instructions !== existingRound.instructions
+    ) {
       updateOps.$set.instructions = incomingRound.instructions;
       updateOps.$push.history.push({
         action: "Updated",
@@ -445,7 +454,10 @@ const updateInterviewRound = async (req, res) => {
       });
     }
 
-    if (incomingRound.sequence !== undefined && incomingRound.sequence !== existingRound.sequence) {
+    if (
+      incomingRound.sequence !== undefined &&
+      incomingRound.sequence !== existingRound.sequence
+    ) {
       updateOps.$set.sequence = incomingRound.sequence;
       updateOps.$push.history.push({
         action: "Updated",
@@ -511,14 +523,17 @@ const updateInterviewRound = async (req, res) => {
 
   let updatePayload = {
     $set: {},
-    $push: { history: [] }
+    $push: { history: [] },
   };
 
   // Always save interviewers if sent
   if (req.body.round?.interviewerType) {
     updatePayload.$set.interviewerType = req.body.round.interviewerType;
   }
-  if (req.body.round?.interviewers && Array.isArray(req.body.round.interviewers)) {
+  if (
+    req.body.round?.interviewers &&
+    Array.isArray(req.body.round.interviewers)
+  ) {
     updatePayload.$set.interviewers = req.body.round.interviewers;
   }
 
@@ -583,14 +598,16 @@ const updateInterviewRound = async (req, res) => {
       updatePayload.$set.status = "RequestSent";
       shouldcreateRequestFlow = true;
       generateMeetingLink = true;
-      
+
       // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (SELECTION TIME) ========================
       // Fetch the interview document for wallet operations
       const interview = await Interview.findById(interviewId).lean();
       if (!interview) {
-        return res.status(404).json({ message: "Interview not found for wallet hold." });
+        return res
+          .status(404)
+          .json({ message: "Interview not found for wallet hold." });
       }
- 
+
       // Delegate to helper so this controller stays clean and focused.
       const walletHoldResponse =
         await applySelectionTimeWalletHoldForOutsourcedRound({
@@ -600,17 +617,17 @@ const updateInterviewRound = async (req, res) => {
           round: req.body.round,
           savedRound: existingRound,
         });
- 
+
       if (walletHoldResponse) {
         // Helper already sent a response (e.g. error); stop further processing.
         return walletHoldResponse;
       }
-
     }
 
     // 2. RequestSent → Draft (user removing interviewers / cancelling requests)
     else if (
-      existingRound.status === "RequestSent" && updateType === "CLEAR_INTERVIEWERS"
+      existingRound.status === "RequestSent" &&
+      updateType === "CLEAR_INTERVIEWERS"
       //  &&
       // hasselectedInterviewers
     ) {
@@ -630,15 +647,21 @@ const updateInterviewRound = async (req, res) => {
         { status: "withdrawn", respondedAt: new Date() }
       );
       // console.log("withdrawnRequests", withdrawnRequests);
-      
+
       // Refund the selection time hold - full amount + GST (no policy)
       try {
         await processWithdrawnRefund({
           roundId: existingRound._id.toString(),
         });
-        console.log("[saveInterviewRound] Selection hold refunded for withdrawn round:", existingRound._id);
+        console.log(
+          "[saveInterviewRound] Selection hold refunded for withdrawn round:",
+          existingRound._id
+        );
       } catch (refundError) {
-        console.error("[saveInterviewRound] Error refunding selection hold:", refundError);
+        console.error(
+          "[saveInterviewRound] Error refunding selection hold:",
+          refundError
+        );
         // Continue - don't block status update
       }
 
@@ -647,12 +670,13 @@ const updateInterviewRound = async (req, res) => {
 
     // 3. Scheduled → Draft (cancelling after acceptance)
     else if (
-      ["Scheduled", "Rescheduled"].includes(existingRound.status) && updateType === "CLEAR_INTERVIEWERS"
+      ["Scheduled", "Rescheduled"].includes(existingRound.status) &&
+      updateType === "CLEAR_INTERVIEWERS"
       // &&
       // hasselectedInterviewers  // ← cleared (selectedInterviewers empty or not sent)
     ) {
       // PROTECT: Check if accepted (should always be true, but safe)
-      
+
       // Auto reschedule settlement process - pay interviewer based on policy before resetting
       if (hasAccepted) {
         try {
@@ -660,13 +684,19 @@ const updateInterviewRound = async (req, res) => {
             roundId: existingRound._id.toString(),
             action: "Rescheduled",
           });
-          console.log("[saveInterviewRound] Auto-settlement for rescheduled round:", existingRound._id);
+          console.log(
+            "[saveInterviewRound] Auto-settlement for rescheduled round:",
+            existingRound._id
+          );
         } catch (settlementError) {
-          console.error("[saveInterviewRound] Auto-settlement error for rescheduled round:", settlementError);
+          console.error(
+            "[saveInterviewRound] Auto-settlement error for rescheduled round:",
+            settlementError
+          );
           // Continue with reschedule even if settlement fails
         }
       }
-      
+
       if (hasAccepted) {
         // Cancel the accepted request
         await InterviewRequest.updateMany(
@@ -720,7 +750,8 @@ const updateInterviewRound = async (req, res) => {
 
     const willBeScheduled = hasInterviewers && !!req.body.round.dateTime;
 
-    if (existingRound.status === "Draft"
+    if (
+      existingRound.status === "Draft"
       //  && willBeScheduled
     ) {
       // Decide schedule action based on history
@@ -734,7 +765,6 @@ const updateInterviewRound = async (req, res) => {
       shouldSendInternalEmail = true; // First scheduling → send email
       shouldcreateRequestFlow = true;
       generateMeetingLink = true;
-
     }
     //  else if (
     //   wasScheduledBefore &&
@@ -744,7 +774,8 @@ const updateInterviewRound = async (req, res) => {
     //   shouldSendInternalEmail = true; // Rescheduling → send email
     // }
     else if (
-      ["Scheduled", "Rescheduled"].includes(existingRound.status) && updateType === "CLEAR_INTERVIEWERS"
+      ["Scheduled", "Rescheduled"].includes(existingRound.status) &&
+      updateType === "CLEAR_INTERVIEWERS"
       // &&
       // hasInterviewers
     ) {
@@ -824,22 +855,27 @@ const updateInterviewRound = async (req, res) => {
     updatePayload.$set.instructions = req.body.round.instructions;
   }
 
-
   // Handle questions update in main flow (safe path already handles it)
-  if (changes.questionsChanged || (req.body.questions && req.body.questions.length > 0)) {
+  if (
+    changes.questionsChanged ||
+    (req.body.questions && req.body.questions.length > 0)
+  ) {
     await handleInterviewQuestions(interviewId, roundId, req.body.questions);
   }
 
-
   let smartUpdate = null;
 
-  if (updatePayload.$set.status && updatePayload.$set.status !== existingRound.status) {
+  if (
+    updatePayload.$set.status &&
+    updatePayload.$set.status !== existingRound.status
+  ) {
     smartUpdate = buildSmartRoundUpdate({
       existingRound,
       body: {
         selectedInterviewers: req.body.round?.selectedInterviewers || [],
         status: updatePayload.$set.status,
-        interviewerType: req.body.round?.interviewerType || existingRound.interviewerType,
+        interviewerType:
+          req.body.round?.interviewerType || existingRound.interviewerType,
         dateTime: req.body.round?.dateTime,
       },
       actingAsUserId,
@@ -873,8 +909,8 @@ const updateInterviewRound = async (req, res) => {
     finalUpdate = {
       $set: updatePayload.$set,
       $push: {
-        history: [...updatePayload.$push.history, ...smartUpdate.$push.history]
-      }
+        history: [...updatePayload.$push.history, ...smartUpdate.$push.history],
+      },
     };
   }
 
@@ -895,11 +931,10 @@ const updateInterviewRound = async (req, res) => {
   // APPLY UPDATE
   // ==================================================================
 
-  updatedRound = await InterviewRounds.findByIdAndUpdate(
-    roundId,
-    finalUpdate,
-    { new: true, runValidators: true }
-  );
+  updatedRound = await InterviewRounds.findByIdAndUpdate(roundId, finalUpdate, {
+    new: true,
+    runValidators: true,
+  });
 
   // ==================================================================
   // SEND INTERNAL EMAIL ONLY WHEN STATUS BECOMES Scheduled/Rescheduled
@@ -1038,7 +1073,7 @@ const updateInterviewRoundStatus = async (req, res) => {
     const { actingAsUserId } = res.locals.auth;
     const { action, reasonCode, comment, cancellationReason } = req.body; // reasonCode = your selected reason, comment = "Other" text, cancellationReason = specific cancellation reason
 
-    console.log("req.body", req.body);
+    // console.log("req.body", req.body);
 
     if (!roundId || !action) {
       return res.status(400).json({
@@ -1052,21 +1087,37 @@ const updateInterviewRoundStatus = async (req, res) => {
       .populate("interviewers", "firstName lastName email");
 
     if (!existingRound) {
-      return res.status(404).json({ success: false, message: "Round not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Round not found" });
     }
 
     // Map frontend "action" to actual status
     const actionToStatusMap = {
+      // Completed: "Completed",
+      // Selected: "Selected",
+      // Rejected: "Rejected",
+      // NoShow: "NoShow",
+      // Cancelled: "Cancelled",
+
+      RequestSent: "RequestSent",
+      Scheduled: "Scheduled",
+      InProgress: "InProgress",
       Completed: "Completed",
-      Selected: "Selected",
+      InCompleted: "InCompleted",
+      Rescheduled: "Rescheduled",
       Rejected: "Rejected",
-      NoShow: "NoShow",
+      Selected: "Selected",
       Cancelled: "Cancelled",
+      Incomplete: "Incomplete",
+      NoShow: "NoShow",
     };
 
     const newStatus = actionToStatusMap[action];
     if (!newStatus) {
-      return res.status(400).json({ success: false, message: "Invalid action" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid action" });
     }
 
     // Detect changes
@@ -1093,9 +1144,11 @@ const updateInterviewRoundStatus = async (req, res) => {
       existingRound,
       body: smartBody,
       actingAsUserId,
-      changes,
-      statusChanged: changes.statusChanged,
+      // changes,
+      statusChanged: true,
     });
+
+    console.log("smartUpdate", smartUpdate);
 
     // Extra logic ONLY for Cancelled (outside smart update)
     let extraUpdate = { $set: {} };
@@ -1108,9 +1161,15 @@ const updateInterviewRoundStatus = async (req, res) => {
           roundId: existingRound._id.toString(),
           action: "Completed",
         });
-        console.log("[updateInterviewRoundStatus] Auto-settlement completed for round:", existingRound._id);
+        console.log(
+          "[updateInterviewRoundStatus] Auto-settlement completed for round:",
+          existingRound._id
+        );
       } catch (settlementError) {
-        console.error("[updateInterviewRoundStatus] Auto-settlement error:", settlementError);
+        console.error(
+          "[updateInterviewRoundStatus] Auto-settlement error:",
+          settlementError
+        );
         // Continue with status update even if settlement fails
       }
     }
@@ -1123,9 +1182,15 @@ const updateInterviewRoundStatus = async (req, res) => {
           action: "Cancelled",
           cancellationReason: cancellationReason || reasonCode || null,
         });
-        console.log("[updateInterviewRoundStatus] Auto-settlement for cancelled round:", existingRound._id);
+        console.log(
+          "[updateInterviewRoundStatus] Auto-settlement for cancelled round:",
+          existingRound._id
+        );
       } catch (settlementError) {
-        console.error("[updateInterviewRoundStatus] Auto-settlement error for cancelled round:", settlementError);
+        console.error(
+          "[updateInterviewRoundStatus] Auto-settlement error for cancelled round:",
+          settlementError
+        );
         // Continue with status update even if settlement fails
       }
 
@@ -1148,6 +1213,23 @@ const updateInterviewRoundStatus = async (req, res) => {
     }
 
     // Merge smartUpdate (status + history) with extraUpdate (cancel-specific)
+    // function mergeUpdates(a, b) {
+    //   const out = {};
+
+    //   if (a?.$set || b?.$set) {
+    //     out.$set = { ...(a?.$set || {}), ...(b?.$set || {}) };
+    //   }
+
+    //   if (a?.$push?.history || b?.$push?.history) {
+    //     out.$push = {
+    //       history: [...(a?.$push?.history || []), ...(b?.$push?.history || [])],
+    //     };
+    //   }
+
+    //   return out;
+    // }
+
+    // Merge smartUpdate (status + history) with extraUpdate (cancel-specific)
     function mergeUpdates(a, b) {
       const out = {};
 
@@ -1157,10 +1239,7 @@ const updateInterviewRoundStatus = async (req, res) => {
 
       if (a?.$push?.history || b?.$push?.history) {
         out.$push = {
-          history: [
-            ...(a?.$push?.history || []),
-            ...(b?.$push?.history || []),
-          ],
+          history: [...(a?.$push?.history || []), ...(b?.$push?.history || [])],
         };
       }
 
@@ -1169,13 +1248,27 @@ const updateInterviewRoundStatus = async (req, res) => {
 
     let finalUpdate = smartUpdate;
 
+    console.log("finalUpdate", finalUpdate);
+
+    // if (Object.keys(extraUpdate.$set).length > 0) {
+    //   finalUpdate = mergeUpdates(
+    //     smartUpdate || { $set: {}, $push: { history: [] } },
+    //     extraUpdate
+    //   );
+    // }
+
     if (Object.keys(extraUpdate.$set).length > 0) {
-      finalUpdate = mergeUpdates(smartUpdate || { $set: {}, $push: { history: [] } }, extraUpdate);
+      finalUpdate = mergeUpdates(
+        smartUpdate || { $set: {}, $push: { history: [] } },
+        extraUpdate
+      );
     }
 
     // Safety check
     if (!finalUpdate || (!finalUpdate.$set && !finalUpdate.$push)) {
-      return res.status(400).json({ success: false, message: "Nothing to update" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Nothing to update" });
     }
 
     // Apply update
@@ -1198,7 +1291,7 @@ const updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => { } }), locals: {} }
+        { status: () => ({ json: () => {} }), locals: {} }
       );
     }
 
@@ -1207,7 +1300,6 @@ const updateInterviewRoundStatus = async (req, res) => {
       message: "Interview round status updated successfully",
       data: updatedRound,
     });
-
   } catch (error) {
     console.error("updateInterviewRoundStatus error:", error);
     return res.status(500).json({
@@ -1272,6 +1364,7 @@ function buildSmartRoundUpdate({
 
   /* ================= CREATE ================= */
 
+  //  intial create round history
   if (isCreate) {
     update.$set.status = body.status;
     update.$set.currentAction = body.status;
@@ -1286,6 +1379,41 @@ function buildSmartRoundUpdate({
         comment: body.comments,
       });
     }
+
+    return update;
+  }
+
+  // status api history create
+  if (statusChanged) {
+    update.$set.previousAction = existingRound.currentAction || null;
+    update.$set.currentAction = body.status;
+    update.$set.status = body.status;
+    update.$set.currentActionReason =
+      body.currentActionReason ||
+      body.rescheduleReason ||
+      body.cancellationReason ||
+      null;
+
+    //  update.$set.previousAction = existingRound.currentAction || null;
+    // update.$set.currentAction = body.status; // || existingRound.status;
+    // update.$set.currentActionReason = body.rescheduleReason || "time_changed";
+
+    // update.$set.interviewers =
+    //   body.status === "Draft"
+    //     ? []
+    //     : Array.isArray(body.selectedInterviewers)
+    //     ? existingRound.interviewers.map((i) => i.contact?._id || i._id)
+    //     : [];
+    // update.$set.participants = [];
+
+    // /* ---------- adding histotry status changing ---------- */
+
+    addHistory({
+      action: body.status, //existingRound.status,
+      scheduledAt: existingRound.dateTime,
+      reasonCode: body.currentActionReason,
+      comment: body.comments,
+    });
 
     return update;
   }
@@ -1346,38 +1474,6 @@ function buildSmartRoundUpdate({
   //     }
   //   }
   // }
-
-  if (statusChanged) {
-    update.$set.previousAction = existingRound.currentAction || null;
-    update.$set.currentAction = body.status;
-    update.$set.status = body.status;
-    update.$set.currentActionReason =
-      body.currentActionReason ||
-      body.rescheduleReason ||
-      body.cancellationReason ||
-      null;
-
-    //  update.$set.previousAction = existingRound.currentAction || null;
-    // update.$set.currentAction = body.status; // || existingRound.status;
-    // update.$set.currentActionReason = body.rescheduleReason || "time_changed";
-
-    // update.$set.interviewers =
-    //   body.status === "Draft"
-    //     ? []
-    //     : Array.isArray(body.selectedInterviewers)
-    //     ? existingRound.interviewers.map((i) => i.contact?._id || i._id)
-    //     : [];
-    // update.$set.participants = [];
-
-    // /* ---------- adding histotry status changing ---------- */
-
-    addHistory({
-      action: body.status, //existingRound.status,
-      scheduledAt: existingRound.dateTime,
-      reasonCode: body.currentActionReason,
-      comment: body.comments,
-    });
-  }
 
   /* ============= RESCHEDULE WITHOUT STATUS CHANGE ============= */
 
@@ -1506,7 +1602,7 @@ async function handleInterviewerRequestFlow({
           isMockInterview: false,
         },
       },
-      { status: () => ({ json: () => { } }), locals: {} }
+      { status: () => ({ json: () => {} }), locals: {} }
     );
   }
 
@@ -1525,7 +1621,7 @@ async function handleInterviewerRequestFlow({
           type: "interview",
         },
       },
-      { status: () => ({ json: () => { } }), locals: {} }
+      { status: () => ({ json: () => {} }), locals: {} }
     );
     console.log(
       "Outsource interview request emails sent successfully",
@@ -1564,7 +1660,7 @@ async function handleInternalRoundEmails({
       },
     },
     {
-      status: () => ({ json: () => { } }),
+      status: () => ({ json: () => {} }),
       locals: {},
     }
   );

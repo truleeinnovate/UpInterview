@@ -16,6 +16,7 @@ import FeedbackForm from "./FeedbackForm";
 
 import InterviewsMiniTabComponent from "../Dashboard-Part/Tabs/Feedback/MiniTabs/Interviews";
 import InterviewActions from "./InterviewActions";
+import useAutoSaveFeedback from "../../apiHooks/useAutoSaveFeedback";
 
 const InterviewerView = ({
   onBack,
@@ -37,6 +38,13 @@ const InterviewerView = ({
     selectedCandidate,
     isScheduler,
     feedbackData
+  );
+
+  // Inside InterviewerView component, add state to track feedbackId:
+  // Add after other useState declarations (around line 50):
+
+  const [autoSaveFeedbackId, setAutoSaveFeedbackId] = useState(
+    feedbackData?._id || null
   );
 
   // Question Bank State Management
@@ -71,7 +79,8 @@ const InterviewerView = ({
       };
     });
   });
-  console.log("interviewerSectionData", interviewerSectionData);
+
+  // console.log("interviewerSectionData", interviewerSectionData);
 
   // const [interviewerSectionData, setInterviewerSectionData] = useState( [...selectedCandidate.interviewData?.questionFeedback]);
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
@@ -98,7 +107,7 @@ const InterviewerView = ({
     // Combine both for submission purposes
     return [...existingInterviewerQuestions, ...newlyAddedQuestions];
   }, [selectedCandidate, interviewerSectionData]);
-  console.log("mergedQuestions", mergedQuestions);
+  // console.log("mergedQuestions", mergedQuestions);
 
   // // Preselected Questions Responses State Management
   // const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] = useState([]);
@@ -140,6 +149,27 @@ const InterviewerView = ({
       });
     });
 
+  // Add the auto-save hook (around line 200, after state declarations):
+
+  const { saveNow: autoSaveQuestions, isSaving: isAutoSaving } =
+    useAutoSaveFeedback({
+      isAddMode: true,
+      interviewRoundId: decodedData?.interviewRoundId,
+      tenantId: decodedData?.tenantId,
+      interviewerId: decodedData?.interviewerId,
+      interviewerSectionData,
+      preselectedQuestionsResponses,
+      skillRatings: [], // Will be filled in feedback form
+      overallRating: 0,
+      communicationRating: 0,
+      recommendation: "Maybe",
+      comments: "",
+      candidateId: selectedCandidate?.candidate?._id,
+      positionId: selectedCandidate?.position?._id,
+      ownerId: decodedData?.ownerId,
+      feedbackId: autoSaveFeedbackId,
+    });
+
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
@@ -167,6 +197,9 @@ const InterviewerView = ({
           //   clearError('questions');
           // }
 
+          // Trigger auto-save after adding question
+          setTimeout(() => autoSaveQuestions(), 500);
+
           return newList;
         });
       } else {
@@ -175,24 +208,6 @@ const InterviewerView = ({
         );
       }
     }
-    // if (question && question.questionId && question.snapshot) {
-    //   setInterviewerSectionData((prevList) => {
-    //     if (prevList.some((q) => q.questionId === question.questionId)) {
-    //       return prevList;
-    //     }
-    //     return [
-    //       ...prevList,
-    //       {
-    //         ...question,
-    //         mandatory: "false", // Default to false when adding a new question
-    //         snapshot: {
-    //           ...question.snapshot,
-    //           mandatory: "false"
-    //         }
-    //       },
-    //     ]; // Add new question
-    //   });
-    // }
   };
 
   const handleRemoveQuestion = (questionId) => {
@@ -205,6 +220,9 @@ const InterviewerView = ({
 
     // Add to removed question IDs
     setRemovedQuestionIds((prev) => [...prev, questionId]);
+
+    // Trigger auto-save after removing question
+    setTimeout(() => autoSaveQuestions(), 500);
   };
 
   const handleToggleMandatory = (questionId) => {
@@ -231,7 +249,10 @@ const InterviewerView = ({
         }
         return q;
       });
-      console.log("Updated state:", updated);
+      // console.log("Updated state:", updated);
+
+      // Trigger auto-save after toggling mandatory
+      setTimeout(() => autoSaveQuestions(), 500);
       return updated;
     });
   };
@@ -298,6 +319,10 @@ const InterviewerView = ({
         }
 
         console.log("📝 Updated preselectedQuestionsResponses:", newResponses);
+
+        // Trigger auto-save after updating response
+        setTimeout(() => autoSaveQuestions(), 500);
+
         return newResponses;
       });
 
@@ -310,6 +335,7 @@ const InterviewerView = ({
       setPreselectedQuestionsResponses,
       handlePreselectedQuestionResponse,
       feedbackData,
+      autoSaveQuestions,
     ]
   );
 
@@ -438,6 +464,7 @@ const InterviewerView = ({
                     handlePreselectedQuestionResponse
                   }
                   decodedData={decodedData}
+                  autoSaveQuestions={autoSaveQuestions}
                 />
               )}
               {activeTab === "interviewActions" && (
@@ -471,6 +498,15 @@ const InterviewerView = ({
           </div>
         </div>
       </div>
+
+      {isAutoSaving && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span className="text-sm">Auto-saving changes...</span>
+          </div>
+        </div>
+      )}
     </div>
     // v1.0.0 ------------------------------------------------------------------------------>
   );

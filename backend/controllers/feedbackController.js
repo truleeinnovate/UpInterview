@@ -183,16 +183,20 @@ const createFeedback = async (req, res) => {
           interviewerId: interviewerId,
           status: feedbackInstance.status,
           submittedAt: feedbackInstance.createdAt,
-          event: "feedback.created"
+          event: "feedback.created",
         };
-        
-        console.log(`[FEEDBACK WEBHOOK] Triggering creation webhook for feedback ${feedbackInstance._id} with status: ${feedbackInstance.status}`);
+
+        console.log(
+          `[FEEDBACK WEBHOOK] Triggering creation webhook for feedback ${feedbackInstance._id} with status: ${feedbackInstance.status}`
+        );
         await triggerWebhook(
           EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
           webhookPayload,
           tenantId
         );
-        console.log(`[FEEDBACK WEBHOOK] Creation webhook sent successfully for feedback ${feedbackInstance._id}`);
+        console.log(
+          `[FEEDBACK WEBHOOK] Creation webhook sent successfully for feedback ${feedbackInstance._id}`
+        );
       } catch (webhookError) {
         console.error(
           "[FEEDBACK WEBHOOK] Error triggering feedback creation webhook:",
@@ -517,6 +521,8 @@ const getFeedbackByRoundId = async (req, res) => {
         interviewId: interviewRound.interviewId,
         sequence: interviewRound.sequence,
         interviewCode: interviewSection?.interviewCode,
+        tenantId: interviewSection.tenantId,
+        ownerId: interviewSection.ownerId,
         roundTitle: interviewRound.roundTitle,
         interviewMode: interviewRound.interviewMode,
         interviewType: interviewRound.interviewType,
@@ -843,9 +849,9 @@ const updateFeedback = async (req, res) => {
       let resolvedInterviewId = null;
       try {
         if (interviewRoundId) {
-          const roundDoc = await InterviewRounds.findById(interviewRoundId).select(
-            "interviewId"
-          );
+          const roundDoc = await InterviewRounds.findById(
+            interviewRoundId
+          ).select("interviewId");
           resolvedInterviewId = roundDoc?.interviewId || null;
         }
       } catch (e) {
@@ -919,16 +925,20 @@ const updateFeedback = async (req, res) => {
           interviewerId: updatedFeedback.interviewerId,
           status: updatedFeedback.status,
           updatedAt: updatedFeedback.updatedAt,
-          event: "feedback.status.updated"
+          event: "feedback.status.updated",
         };
-        
-        console.log(`[FEEDBACK WEBHOOK] Triggering status update webhook for feedback ${updatedFeedback._id} with status: ${updatedFeedback.status}`);
+
+        console.log(
+          `[FEEDBACK WEBHOOK] Triggering status update webhook for feedback ${updatedFeedback._id} with status: ${updatedFeedback.status}`
+        );
         await triggerWebhook(
           EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
           webhookPayload,
           updatedFeedback.tenantId
         );
-        console.log(`[FEEDBACK WEBHOOK] Status update webhook sent successfully for feedback ${updatedFeedback._id}`);
+        console.log(
+          `[FEEDBACK WEBHOOK] Status update webhook sent successfully for feedback ${updatedFeedback._id}`
+        );
       } catch (webhookError) {
         console.error(
           "[FEEDBACK WEBHOOK] Error triggering feedback status update webhook:",
