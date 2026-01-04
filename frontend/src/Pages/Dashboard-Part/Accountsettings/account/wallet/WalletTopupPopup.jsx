@@ -138,7 +138,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
               onTopup({
                 amount: parseFloat(amount),
                 paymentMethod: "credit_card",
-                type: "credit",
+                type: "credited",
                 transactionId: response.razorpay_payment_id,
                 timestamp: new Date(),
               });
@@ -159,8 +159,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
               // that falls out of the range of 2xx
               console.error("Server error data:", error.response.data);
               setError(
-                `Payment verification failed: ${
-                  error.response.data.error || "Server error"
+                `Payment verification failed: ${error.response.data.error || "Server error"
                 }`
               );
             } else if (error.request) {
@@ -195,7 +194,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
           response?.error?.description || response?.error?.reason;
         setError(
           description ||
-            "Payment failed. Please try again or use a different payment method."
+          "Payment failed. Please try again or use a different payment method."
         );
         setIsProcessing(false);
       });
@@ -226,30 +225,29 @@ export function WalletTopupPopup({ onClose, onTopup }) {
                   key={presetAmount}
                   type="button"
                   onClick={() => setAmount(presetAmount.toString())}
-                  className={`p-4 text-center border rounded-lg hover:border-custom-blue ${
-                    amount === presetAmount.toString()
+                  className={`p-4 text-center border rounded-lg hover:border-custom-blue ${amount === presetAmount.toString()
                       ? "border-custom-blue bg-blue-50"
                       : "border-gray-200"
-                  }`}
+                    }`}
                 >
                   ₹{presetAmount.toLocaleString()}
                 </button>
               ))}
             </div>
             <div className="mt-4">
-                <InputField
-                  label="Custom Amount (INR)"
-                  type="number"
-                  name="customAmount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="Enter amount"
-                  min="1"
-                  step="0.01"
-                  required
-                  className="pl-2"
-                />
-              
+              <InputField
+                label="Custom Amount (INR)"
+                type="number"
+                name="customAmount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Enter amount"
+                min="1"
+                step="0.01"
+                required
+                className="pl-2"
+              />
+
             </div>
           </div>
 
@@ -278,7 +276,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Amount</span>
                 <span className="font-medium">
-                ₹{parseFloat(amount || 0).toLocaleString()}
+                  ₹{parseFloat(amount || 0).toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
