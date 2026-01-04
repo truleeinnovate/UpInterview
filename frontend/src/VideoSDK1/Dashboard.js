@@ -239,7 +239,7 @@ const MeetingApp = () => {
               isCandidate={decodedData?.isCandidate || false}
               isInterviewer={decodedData?.isInterviewer || false}
               isSchedule={decodedData?.isSchedule || false}
-              candidateData={candidateData}
+              data={candidateData || schedulerData}
             />
           </MeetingProvider>
         ) : (

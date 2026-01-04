@@ -28,9 +28,9 @@ const CandidateDetails = ({ candidate, isFullScreen = false }) => {
 
   // Use candidate data directly
   const candidateDetails = {
-    skills: candidate?.skills || [],
-    certificates: candidate?.certificates || [],
-    projects: candidate?.projects || [],
+    skills: candidate?.skills || candidate?.candidate?.skills || [],
+    certificates: candidate?.certificates || candidate?.candidate?.certificates || [],
+    projects: candidate?.projects || candidate?.candidate?.projects || [],
   };
 
   return (
@@ -50,11 +50,11 @@ const CandidateDetails = ({ candidate, isFullScreen = false }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p className="text-sm font-medium text-gray-500">Name</p>
-            <p className="text-sm text-gray-900">{candidate?.FirstName} {" "} {candidate?.LastName}</p>
+            <p className="text-sm text-gray-900">{candidate?.FirstName || candidate?.candidate?.FirstName} {" "} {candidate?.LastName || candidate?.candidate?.LastName}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Experience</p>
-            <p className="text-gray-900">{candidate?.CurrentExperience} {candidate?.CurrentExperience ? 'years' : ''}</p>
+            <p className="text-gray-900">{(candidate?.CurrentExperience || candidate?.candidate?.CurrentExperience) ? `${candidate?.CurrentExperience || candidate?.candidate?.CurrentExperience} years` : ''}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">
