@@ -22,10 +22,6 @@
 
 const API_BASE_URL = "https://api.videosdk.live";
 const REACT_APP_VIDEOSDK_TOKEN = process.env.REACT_APP_VIDEOSDK_TOKEN;
-const REACT_APP_API_URL = process.env.REACT_APP_API_URL;
-
-console.log('REACT_APP_VIDEOSDK_TOKEN', REACT_APP_VIDEOSDK_TOKEN);
-console.log('REACT_APP_API_URL', REACT_APP_API_URL);
 
 export const getToken = async () => {
   if (!REACT_APP_VIDEOSDK_TOKEN) {
@@ -33,7 +29,6 @@ export const getToken = async () => {
     throw new Error("VideoSDK token not found");
   }
 
-  console.log("✅ Using static VideoSDK token from env");
   return REACT_APP_VIDEOSDK_TOKEN;
 };
 
