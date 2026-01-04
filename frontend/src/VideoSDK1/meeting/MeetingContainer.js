@@ -1,6 +1,11 @@
 // MeetingContainer.js (Updated PiP strip: Single-column vertical stack, full-width videos with equal height)
 import React, { useState, useEffect, useRef, createRef, memo } from "react";
-import { Constants, useMeeting, useParticipant, usePubSub } from "@videosdk.live/react-sdk";
+import {
+  Constants,
+  useMeeting,
+  useParticipant,
+  usePubSub,
+} from "@videosdk.live/react-sdk";
 import { BottomBar } from "./components/BottomBar";
 import { SidebarConatiner } from "../components/sidebar/SidebarContainer";
 import { ChatPanel } from "../components/sidebar/ChatPanel";
@@ -14,12 +19,19 @@ import ConfirmBox from "../components/ConfirmBox";
 import useIsMobile from "../hooks/useIsMobile";
 import useIsTab from "../hooks/useIsTab";
 import { useMediaQuery } from "react-responsive";
-import CandidateDetails from "../../Pages/videoCall/CandidateDetails"
+import CandidateDetails from "../../Pages/videoCall/CandidateDetails";
 import FeedbackForm from "../../Pages/videoCall/FeedbackForm";
 import InterviewActions from "../../Pages/videoCall/InterviewActions";
 import { useMeetingAppContext } from "../MeetingAppContextDef";
-import { MessageSquare, Users, User, ClipboardList, ClipboardCheck, BookOpen } from "lucide-react";
-import { openPanelInNewTab } from '../utils/openInNewTab';
+import {
+  MessageSquare,
+  Users,
+  User,
+  ClipboardList,
+  ClipboardCheck,
+  BookOpen,
+} from "lucide-react";
+import { openPanelInNewTab } from "../utils/openInNewTab";
 import QuestionBank from "../../Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank";
 
 export function MeetingContainer({
@@ -28,13 +40,10 @@ export function MeetingContainer({
   isCandidate = false,
   isInterviewer = false,
   isSchedule = false,
-  candidateData
+  candidateData,
 }) {
-  const {
-    setSelectedMic,
-    setSelectedWebcam,
-    setSelectedSpeaker,
-  } = useMeetingAppContext();
+  const { setSelectedMic, setSelectedWebcam, setSelectedSpeaker } =
+    useMeetingAppContext();
 
   const [uniqueParticipants, setUniqueParticipants] = useState(new Set());
 
@@ -50,8 +59,8 @@ export function MeetingContainer({
         const audioElement = new Audio();
         audioElement.srcObject = mediaStream;
         audioElement.muted = isLocal;
-        audioElement.play().catch(error => {
-          console.error('Error playing audio:', error);
+        audioElement.play().catch((error) => {
+          console.error("Error playing audio:", error);
         });
       }
     }, [micStream, participantId, isLocal]);
@@ -64,38 +73,40 @@ export function MeetingContainer({
 
   // State for active sidebar item
   const [activeItem, setActiveItem] = useState(null);
-  const { localScreenShareOn, toggleScreenShare, sideBarMode, setSideBarMode } = useMeetingAppContext();
+  const { localScreenShareOn, toggleScreenShare, sideBarMode, setSideBarMode } =
+    useMeetingAppContext();
   const { participants } = useMeeting();
 
   // Function to get sidebar width based on mode
   const getSidebarWidth = (mode) => {
     switch (mode) {
-      case 'CANDIDATE':
-      case 'FEEDBACK':
-      case 'INTERVIEWACTIONS':
-      case 'QUESTIONBANK':
-        return '50%';
-      case 'CHAT':
-      case 'PARTICIPANTS':
-        return '25%';
+      case "CANDIDATE":
+      case "FEEDBACK":
+      case "INTERVIEWACTIONS":
+      case "QUESTIONBANK":
+        return "50%";
+      case "CHAT":
+      case "PARTICIPANTS":
+        return "25%";
       default:
-        return '25%';
+        return "25%";
     }
   };
 
   // Get the current sidebar width
-  const sidebarWidth = sideBarMode ? getSidebarWidth(sideBarMode) : '0';
-  const mainContentPadding = sideBarMode ? `pr-[${sidebarWidth}]` : '';
+  const sidebarWidth = sideBarMode ? getSidebarWidth(sideBarMode) : "0";
+  const mainContentPadding = sideBarMode ? `pr-[${sidebarWidth}]` : "";
 
   // Handle sidebar item click
   const handleSidebarItemClick = (id) => {
     const upperId = id.toUpperCase();
-    setSideBarMode(prevMode => prevMode === upperId ? null : upperId);
+    setSideBarMode((prevMode) => (prevMode === upperId ? null : upperId));
   };
 
   const [containerHeight, setContainerHeight] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [localParticipantAllowedJoin, setLocalParticipantAllowedJoin] = useState(null);
+  const [localParticipantAllowedJoin, setLocalParticipantAllowedJoin] =
+    useState(null);
   const [meetingErrorVisible, setMeetingErrorVisible] = useState(false);
   const [meetingError, setMeetingError] = useState(false);
 
@@ -117,12 +128,12 @@ export function MeetingContainer({
   const sideBarContainerWidth = isXLDesktop
     ? 400
     : isLGDesktop
-      ? 360
-      : isTab
-        ? 320
-        : isMobile
-          ? 280
-          : 240;
+    ? 360
+    : isTab
+    ? 320
+    : isMobile
+    ? 280
+    : 240;
 
   useEffect(() => {
     containerRef.current?.offsetHeight &&
@@ -176,9 +187,9 @@ export function MeetingContainer({
   }
 
   function onMeetingLeft() {
-    setSelectedMic({ id: null, label: null })
-    setSelectedWebcam({ id: null, label: null })
-    setSelectedSpeaker({ id: null, label: null })
+    setSelectedMic({ id: null, label: null });
+    setSelectedWebcam({ id: null, label: null });
+    setSelectedSpeaker({ id: null, label: null });
     onMeetingLeave();
   }
 
@@ -211,7 +222,7 @@ export function MeetingContainer({
     // Allow screen share audio capture
     captureScreenShare: true,
     // Set preferred codec for better compatibility
-    preferredCodec: 'h264',
+    preferredCodec: "h264",
     onParticipantJoined,
     onEntryResponded,
     onMeetingJoined,
@@ -231,8 +242,10 @@ export function MeetingContainer({
 
     // Only update if there's an actual change in participants
     const currentParticipants = new Set(participantIds);
-    if (currentParticipants.size !== uniqueParticipants.size ||
-      !Array.from(currentParticipants).every(id => uniqueParticipants.has(id))) {
+    if (
+      currentParticipants.size !== uniqueParticipants.size ||
+      !Array.from(currentParticipants).every((id) => uniqueParticipants.has(id))
+    ) {
       setUniqueParticipants(currentParticipants);
     }
   }, [participants, uniqueParticipants]);
@@ -278,7 +291,9 @@ export function MeetingContainer({
 
     return (
       <div className="w-full h-full bg-gray-800 border-l border-gray-600 flex flex-col p-2">
-        <div className="text-xs text-gray-400 mb-2 text-center">Participants</div>
+        <div className="text-xs text-gray-400 mb-2 text-center">
+          Participants
+        </div>
         <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
           {participantIds.map((participantId) => (
             <div
@@ -286,7 +301,7 @@ export function MeetingContainer({
               className="w-full relative flex-shrink-0"
               style={{
                 height: videoHeight,
-                minHeight: '120px' // Minimum for visibility, like laptop preview size
+                minHeight: "120px", // Minimum for visibility, like laptop preview size
               }}
             >
               <ParticipantView participantId={participantId} />
@@ -298,7 +313,6 @@ export function MeetingContainer({
     );
   };
 
-
   // Navigation items configuration
   const getNavigationItems = () => {
     return [
@@ -307,59 +321,59 @@ export function MeetingContainer({
         label: "Chat",
         tooltip: "Chat",
         icon: <MessageSquare className="w-4 h-4" />,
-        show: true
+        show: true,
       },
       {
         id: "participants",
         label: "Participants",
         tooltip: "Participants",
         icon: <Users className="w-4 h-4" />,
-        show: true
+        show: true,
       },
       {
         id: "candidate",
         label: "Candidate Details",
         tooltip: "Candidate Details",
         icon: <User className="w-4 h-4" />,
-        show: isCandidate || isInterviewer
+        show: isCandidate || isInterviewer,
       },
       {
         id: "feedback",
         label: "Feedback Form",
         tooltip: "Feedback Form",
         icon: <ClipboardList className="w-4 h-4" />,
-        show: isCandidate || isInterviewer
+        show: isCandidate || isInterviewer,
       },
       {
         id: "questionbank",
         label: "Question Bank",
         tooltip: "Question Bank",
         icon: <BookOpen className="w-4 h-4" />,
-        show: isCandidate || isInterviewer
+        show: isCandidate || isInterviewer,
       },
       {
         id: "interviewactions",
         label: "Interview Actions",
         tooltip: "Interview Actions",
         icon: <ClipboardCheck className="w-4 h-4" />,
-        show: isCandidate || isInterviewer
-      }
-    ].filter(item => item.show === true);
+        show: isCandidate || isInterviewer,
+      },
+    ].filter((item) => item.show === true);
   };
 
   // Add this useEffect to handle messages from parent window
-useEffect(() => {
-  const handleMessage = (event) => {
-    if (event.origin !== window.location.origin) return;
-    if (event.data?.type === 'PANEL_DATA') {
-      // Handle any initialization if needed
-      console.log('Received panel data:', event.data);
-    }
-  };
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === "PANEL_DATA") {
+        // Handle any initialization if needed
+        console.log("Received panel data:", event.data);
+      }
+    };
 
-  window.addEventListener('message', handleMessage);
-  return () => window.removeEventListener('message', handleMessage);
-}, []);
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -394,10 +408,11 @@ useEffect(() => {
                 <div key={item.id} className="group relative">
                   <button
                     onClick={() => handleSidebarItemClick(item.id)}
-                    className={`p-2.5 rounded-md flex items-center justify-center transition-colors ${sideBarMode === item.id.toUpperCase()
-                      ? "bg-blue-100 text-custom-blue border-2 border-custom-blue"
-                      : "text-custom-blue hover:bg-gray-100 border border-custom-blue hover:border-custom-blue"
-                      }`}
+                    className={`p-2.5 rounded-md flex items-center justify-center transition-colors ${
+                      sideBarMode === item.id.toUpperCase()
+                        ? "bg-blue-100 text-custom-blue border-2 border-custom-blue"
+                        : "text-custom-blue hover:bg-gray-100 border border-custom-blue hover:border-custom-blue"
+                    }`}
                     aria-label={item.label}
                   >
                     {item.icon}
@@ -409,7 +424,6 @@ useEffect(() => {
                 </div>
               ))}
             </div>
-
           </div>
         </div>
       </nav>
@@ -421,7 +435,9 @@ useEffect(() => {
           <div
             className={`flex-1 transition-all duration-300 ${mainContentPadding}`}
             style={{
-              width: sideBarMode ? `calc(100% - ${getSidebarWidth(sideBarMode)})` : '100%'
+              width: sideBarMode
+                ? `calc(100% - ${getSidebarWidth(sideBarMode)})`
+                : "100%",
             }}
             ref={containerRef}
           >
@@ -433,7 +449,9 @@ useEffect(() => {
                       <div className="flex h-full">
                         {/* NEW: Main presentation area - 80% left */}
                         <div className="w-4/5 h-full relative">
-                          <PresenterView height={containerHeight - bottomBarHeight} />
+                          <PresenterView
+                            height={containerHeight - bottomBarHeight}
+                          />
                         </div>
                         {/* UPDATED: PiP Participants - 20% right, vertical stack */}
                         <div className="w-1/5 h-full border-l border-gray-600">
@@ -449,16 +467,16 @@ useEffect(() => {
                         style={{
                           gridTemplateColumns:
                             uniqueParticipants.size === 1
-                              ? '1fr'
+                              ? "1fr"
                               : uniqueParticipants.size === 2
-                                ? '1fr 1fr'
-                                : '1fr 1fr 1fr',
+                              ? "1fr 1fr"
+                              : "1fr 1fr 1fr",
                           gridTemplateRows:
                             uniqueParticipants.size <= 3
-                              ? '1fr'
+                              ? "1fr"
                               : uniqueParticipants.size <= 6
-                                ? '1fr 1fr'
-                                : '1fr 1fr 1fr',
+                              ? "1fr 1fr"
+                              : "1fr 1fr 1fr",
                         }}
                       >
                         {Array.from(uniqueParticipants).map((participantId) => (
@@ -470,7 +488,9 @@ useEffect(() => {
                             }}
                           >
                             <ParticipantView participantId={participantId} />
-                            <ParticipantMicStream participantId={participantId} />
+                            <ParticipantMicStream
+                              participantId={participantId}
+                            />
                           </div>
                         ))}
                       </div>
@@ -494,40 +514,61 @@ useEffect(() => {
               className="bg-white border-l border-gray-200 flex flex-col transition-all duration-300 overflow-y-auto"
               style={{
                 width: getSidebarWidth(sideBarMode),
-                height: '100%',
+                height: "100%",
               }}
             >
-              {['CANDIDATE', 'FEEDBACK', 'INTERVIEWACTIONS'].includes(sideBarMode) ? (
+              {["CANDIDATE", "FEEDBACK", "INTERVIEWACTIONS"].includes(
+                sideBarMode
+              ) ? (
                 <div className="flex flex-col h-full">
                   {/* Sidebar Header for Candidate, Feedback, and Interview Actions */}
                   <div className="flex items-center justify-between p-4 border-b border-gray-200">
                     <div className="flex items-center">
-                      {sideBarMode === 'CANDIDATE' && <User className="h-5 w-5 mr-2" />}
-                      {sideBarMode === 'FEEDBACK' && <ClipboardCheck className="h-5 w-5 mr-2" />}
-                      {sideBarMode === 'INTERVIEWACTIONS' && <ClipboardList className="h-5 w-5 mr-2" />}
+                      {sideBarMode === "CANDIDATE" && (
+                        <User className="h-5 w-5 mr-2" />
+                      )}
+                      {sideBarMode === "FEEDBACK" && (
+                        <ClipboardCheck className="h-5 w-5 mr-2" />
+                      )}
+                      {sideBarMode === "INTERVIEWACTIONS" && (
+                        <ClipboardList className="h-5 w-5 mr-2" />
+                      )}
                       <h3 className="text-lg font-medium">
-                        {sideBarMode === 'CANDIDATE' && 'Candidate Details'}
-                        {sideBarMode === 'FEEDBACK' && 'Interview Feedback'}
-                        {sideBarMode === 'INTERVIEWACTIONS' && 'Interview Actions'}
+                        {sideBarMode === "CANDIDATE" && "Candidate Details"}
+                        {sideBarMode === "FEEDBACK" && "Interview Feedback"}
+                        {sideBarMode === "INTERVIEWACTIONS" &&
+                          "Interview Actions"}
                       </h3>
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
-  className="p-1 rounded-full hover:bg-gray-100"
-  onClick={() => {
-    if (!sideBarMode) return;
-    openPanelInNewTab(sideBarMode, sideBarMode === 'CANDIDATE' ? candidateData : {});
-  }}
->
-  <ExternalLink className="h-4 w-4 text-gray-500" />
-</button>
+                        className="p-1 rounded-full hover:bg-gray-100"
+                        onClick={() => {
+                          if (!sideBarMode) return;
+                          openPanelInNewTab(
+                            sideBarMode,
+                            sideBarMode === "CANDIDATE" ? candidateData : {}
+                          );
+                        }}
+                      >
+                        <ExternalLink className="h-4 w-4 text-gray-500" />
+                      </button>
 
                       <button
                         className="p-1 rounded-full hover:bg-gray-100"
                         onClick={() => setSideBarMode(null)}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-gray-500"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -535,29 +576,27 @@ useEffect(() => {
 
                   {/* Sidebar Content */}
                   <div className="flex-1 overflow-y-auto">
-                    {sideBarMode === 'CANDIDATE' ? (
+                    {sideBarMode === "CANDIDATE" ? (
                       <CandidateDetails candidate={candidateData} />
-                    ) : sideBarMode === 'FEEDBACK' ? (
-                      <FeedbackForm
-                        onClose={() => setSideBarMode(null)}
-                      />
-                    ) : sideBarMode === 'INTERVIEWACTIONS' ? (
+                    ) : sideBarMode === "FEEDBACK" ? (
+                      <FeedbackForm onClose={() => setSideBarMode(null)} />
+                    ) : sideBarMode === "INTERVIEWACTIONS" ? (
                       <div className="p-4">
                         <InterviewActions
                           onClose={() => setSideBarMode(null)}
                           interviewData={{
                             interviewRound: {
                               dateTime: new Date().toLocaleString(),
-                              status: 'Scheduled',
-                              _id: 'mock-id'
-                            }
+                              status: "Scheduled",
+                              _id: "mock-id",
+                            },
                           }}
                           isAddMode={false}
                           decodedData={{}}
-                          onActionComplete={() => { }}
+                          onActionComplete={() => {}}
                         />
                       </div>
-                    ) : sideBarMode === 'QUESTIONBANK' ? (
+                    ) : sideBarMode === "QUESTIONBANK" ? (
                       <div className="h-full flex flex-col bg-white">
                         <div className="flex items-center justify-between p-4 border-b border-gray-200">
                           <h3 className="text-lg font-medium flex items-center">
@@ -569,16 +608,24 @@ useEffect(() => {
                             className="text-gray-500 hover:text-gray-700"
                             aria-label="Close panel"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                           </button>
                         </div>
                         <div className="flex-1 overflow-y-auto">
                           <QuestionBank
                             isEmbedded={true}
-                            onSelectQuestion={(question) => {
-                            }}
+                            onSelectQuestion={(question) => {}}
                           />
                         </div>
                       </div>
