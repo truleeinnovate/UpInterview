@@ -290,6 +290,8 @@ const ScheduleAssessment = () => {
       type: "scheduled",
     });
 
+    
+
   const navigate = useNavigate();
   // <---------------------- v1.0.1
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -297,6 +299,7 @@ const ScheduleAssessment = () => {
   // <---------------------- v1.0.3
   const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  
   const [selectedAction, setSelectedAction] = useState(""); // 'extend', 'cancel', or 'resend'
   // const [selectedAssessmentTemplateId, setSelectedAssessmentTemplateId] =
   //   useState(null);
