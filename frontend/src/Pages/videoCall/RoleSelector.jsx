@@ -1,8 +1,8 @@
 // v1.0.0 - Ashok - Improved responsiveness
 
-import React, { useEffect, useState } from "react";
-import { Users, User, MessageSquare } from "lucide-react";
-import axios from "axios";
+import React, { useEffect, useState, useRef } from "react";
+import { Users, User, MessageSquare, Video, Mic, MicOff, VideoOff } from "lucide-react";
+import { useMediaDevice } from "@videosdk.live/react-sdk";
 import { config } from "../../config";
 import { useInterviews } from "../../apiHooks/useInterviews";
 
@@ -17,6 +17,19 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   const [localInterviewTime, setLocalInterviewTime] = useState("");
   const [localEndTime, setLocalEndTime] = useState("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [micOn, setMicOn] = useState(false);
+  const [webcamOn, setWebcamOn] = useState(false);
+  const [videoTrack, setVideoTrack] = useState(null);
+  const [audioTrack, setAudioTrack] = useState(null);
+  const videoPlayerRef = useRef();
+  const audioPlayerRef = useRef();
+  const videoTrackRef = useRef();
+  const audioTrackRef = useRef();
+  const micStreamRef = useRef();
+  
+  // Get media devices
+  const { getCameras, getMicrophones, getPlaybackDevices } = useMediaDevice();
+  
   console.log("Feedback Data in RoleSelector:", feedbackData);
   // Function to update interview status to "in-progress"
   const updateInterviewStatus = async () => {
@@ -216,13 +229,176 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     roleInfo?.hasRolePreference &&
     (roleInfo?.isCandidate || roleInfo?.isInterviewer);
 
+  // Toggle microphone
+  const toggleMic = async () => {
+    try {
+      if (!audioTrackRef.current) {
+        // If we don't have an audio track yet, create one and turn it on
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioTracks = stream.getAudioTracks();
+        if (audioTracks.length > 0) {
+          audioTrackRef.current = audioTracks[0];
+          // Start with the mic on
+          audioTrackRef.current.enabled = true;
+          setMicOn(true);
+          
+          // Store the stream to clean it up later
+          micStreamRef.current = stream;
+        }
+      } else {
+        // Toggle the existing audio track
+        audioTrackRef.current.enabled = !audioTrackRef.current.enabled;
+        setMicOn(prev => !prev);
+      }
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      setMicOn(false);
+    }
+  };
+
+  // Toggle webcam
+  const toggleWebcam = async () => {
+    if (!videoTrackRef.current && !webcamOn) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const videoTracks = stream.getVideoTracks();
+        if (videoTracks.length > 0) {
+          videoTrackRef.current = videoTracks[0];
+          if (videoPlayerRef.current) {
+            videoPlayerRef.current.srcObject = new MediaStream([videoTracks[0]]);
+          }
+          setWebcamOn(true);
+        }
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+      }
+    } else if (videoTrackRef.current) {
+      videoTrackRef.current.enabled = !videoTrackRef.current.enabled;
+      setWebcamOn(prev => !prev);
+    }
+  };
+
+  // Initialize video preview
+  useEffect(() => {
+    if (feedbackData?.interviewRound?.meetPlatform !== "platform") return;
+
+    let stream = null;
+
+    const initVideoPreview = async () => {
+      try {
+        if (webcamOn) {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          });
+
+          // Get video track
+          const videoTracks = stream.getVideoTracks();
+          if (videoTracks.length > 0) {
+            videoTrackRef.current = videoTracks[0];
+            if (videoPlayerRef.current) {
+              videoPlayerRef.current.srcObject = new MediaStream([videoTracks[0]]);
+            }
+          }
+
+          // Get audio track
+          const audioTracks = stream.getAudioTracks();
+          if (audioTracks.length > 0) {
+            audioTrackRef.current = audioTracks[0];
+            audioTrackRef.current.enabled = micOn;
+          }
+        }
+      } catch (error) {
+        console.error("Error accessing media devices:", error);
+      }
+    };
+
+    initVideoPreview();
+
+    // Cleanup function
+    return () => {
+      // Store refs in variables to avoid issues with the cleanup running after component unmount
+      const videoPlayer = videoPlayerRef.current;
+      const currentVideoTrack = videoTrackRef.current;
+      const currentAudioTrack = audioTrackRef.current;
+      const currentMicStream = micStreamRef.current;
+      
+      // Stop all tracks from the main stream if it exists
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Stop tracks from video player if it exists
+      if (videoPlayer?.srcObject) {
+        videoPlayer.srcObject.getTracks().forEach(track => track.stop());
+        videoPlayer.srcObject = null;
+      }
+      
+      // Stop microphone stream if it exists
+      if (currentMicStream) {
+        currentMicStream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Stop individual tracks if they exist
+      if (currentVideoTrack) {
+        currentVideoTrack.stop();
+      }
+      if (currentAudioTrack) {
+        currentAudioTrack.stop();
+      }
+      
+      // Clear refs
+      videoTrackRef.current = null;
+      audioTrackRef.current = null;
+      micStreamRef.current = null;
+    };
+  }, [webcamOn, micOn, feedbackData?.interviewRound?.meetPlatform]);
+
   return (
-    <div className=" bg-gradient-to-br from-[#217989] to-[#1a616e] flex items-center justify-center p-4">
+    <div className="bg-gradient-to-br from-[#217989] to-[#1a616e] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl py-8 sm:px-4 md:px-4 px-8 w-full max-w-8xl">
         <div className="text-center mb-6">
-          <div className="sm:w-14 sm:h-14 md:w-14 md:h-14 w-16 h-16 bg-[#217989] rounded-full flex items-center justify-center mx-auto mb-4">
-            <Users className="sm:w-6 sm:h-6 md:w-6 md:h-6 w-8 h-8 text-white" />
-          </div>
+          {feedbackData?.interviewRound?.meetPlatform === "platform" ? (
+            <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden mb-8 max-w-2xl mx-auto">
+              <div className="relative aspect-video bg-black">
+                <video
+                  ref={videoPlayerRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {!webcamOn && (
+                    <div className="text-white text-lg bg-black bg-opacity-50 p-4 rounded-full">
+                      Camera is off
+                    </div>
+                  )}
+                </div>
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
+                  <button
+                    onClick={toggleMic}
+                    className={`p-3 rounded-full ${micOn ? 'bg-white text-gray-800' : 'bg-red-600 text-white'}`}
+                    aria-label={micOn ? 'Mute microphone' : 'Unmute microphone'}
+                  >
+                    {micOn ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+                  </button>
+                  <button
+                    onClick={toggleWebcam}
+                    className={`p-3 rounded-full ${webcamOn ? 'bg-white text-gray-800' : 'bg-red-600 text-white'}`}
+                    aria-label={webcamOn ? 'Turn off camera' : 'Turn on camera'}
+                  >
+                    {webcamOn ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+                  </button>
+                </div>
+              </div>
+              <audio ref={audioPlayerRef} autoPlay playsInline className="hidden" />
+            </div>
+          ) : (
+            <div className="sm:w-14 sm:h-14 md:w-14 md:h-14 w-16 h-16 bg-[#217989] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="sm:w-6 sm:h-6 md:w-6 md:h-6 w-8 h-8 text-white" />
+            </div>
+          )}
           <h1 className="sm:text-lg md:text-lg lg:text-lg xl:text-2xl 2xl:text-2xl font-bold text-gray-800">
             Interview Portal
           </h1>
@@ -385,9 +561,22 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
               </div>
 
               <button
-                onClick={() => handleRoleSelect("interviewer")}
-                // onClick={() => onRoleSelect('interviewer')}
-                // disabled={!isButtonEnabled}
+                onClick={() => {
+                  if (feedbackData?.interviewRound?.meetPlatform === "platform") {
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.pathname = "/video-call";
+                    const roleData = {
+                      ...roleInfo,
+                      isInterviewer: true,
+                      isCandidate: false
+                    };
+                    currentUrl.searchParams.set('meetLink', feedbackData?.interviewRound?.meetLink || '');
+                    currentUrl.searchParams.set('meetingData', encodeURIComponent(JSON.stringify(roleData || {})));
+                    window.open(currentUrl.toString(), "_blank");
+                  } else {
+                    handleRoleSelect("interviewer");
+                  }
+                }}
                 className={`w-full sm:text-sm md:text-sm ${
                   isButtonEnabled
                     ? "bg-custom-blue hover:bg-custom-blue/90"
