@@ -67,7 +67,7 @@ const validateFile = async (file, type = "attachment") => {
   return ""; // No error
 };
 
-const SupportForm = ({ onClose, FeedbackIssueType }) => {
+const SupportForm = ({ onClose, FeedbackIssueType, roundId }) => {
   // v1.0.2 <-------------------------------------------------------------------------
   useScrollLock(true); // This will lock the outer scrollbar when the form is open
   // v1.0.2 ------------------------------------------------------------------------->
@@ -319,6 +319,8 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
       issueType: selectedIssue || otherIssue,
       description,
       subject,
+      FeedbackIssueType,
+      roundId,
       ...(editMode
         ? {}
         : {
@@ -336,6 +338,7 @@ const SupportForm = ({ onClose, FeedbackIssueType }) => {
             createdByUserId: ownerId,
           }),
     }),
+
     [
       selectedIssue,
       otherIssue,

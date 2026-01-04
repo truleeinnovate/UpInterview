@@ -137,7 +137,11 @@ const interviewRoundSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "ScheduledAssessment",
     },
-    rejectionReason: String,
+    // rejectionReason: String,
+    // supportTicketID: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "SupportUser",
+    // },
 
     // Settlement tracking
     // These fields are updated by WalletControllers.settleInterviewPayment after

@@ -43,6 +43,7 @@ const InterviewerSectionComponent = ({
   // Interview data from parent
   interviewData,
   decodedData,
+  triggerAutoSave,
 }) => {
   // Get all questions from interviewData and filter for interviewer-added questions
   const location = useLocation();
@@ -361,23 +362,35 @@ const InterviewerSectionComponent = ({
       );
 
       if (questionExists) {
-        return prev.map((q) =>
+        const updated = prev.map((q) =>
           (q.questionId || q.id) === questionId
             ? {
                 ...q,
                 note: notes,
                 notesBool: true,
-                ...(isEditMode && { isEdited: true }), // Mark as edited in edit mode
+                ...(isEditMode && { isEdited: true }),
               }
             : q
         );
+
+        // Debounced auto-save for notes
+        if (triggerAutoSave && isAddMode) {
+          if (noteTimeoutRef.current) {
+            clearTimeout(noteTimeoutRef.current);
+          }
+          noteTimeoutRef.current = setTimeout(() => {
+            triggerAutoSave();
+          }, 2000); // Wait 2 seconds after last keystroke
+        }
+
+        return updated;
       } else {
         const originalQuestion = feedbackData?.questionFeedback?.find(
           (f) => (f.questionId || f._id) === questionId
         );
 
         if (originalQuestion) {
-          return [
+          const newData = [
             ...prev,
             {
               ...originalQuestion,
@@ -388,12 +401,73 @@ const InterviewerSectionComponent = ({
               ...(isEditMode && { isEdited: true }),
             },
           ];
+
+          // Debounced auto-save for notes
+          if (triggerAutoSave && isAddMode) {
+            if (noteTimeoutRef.current) {
+              clearTimeout(noteTimeoutRef.current);
+            }
+            noteTimeoutRef.current = setTimeout(() => {
+              triggerAutoSave();
+            }, 2000);
+          }
+
+          return newData;
         }
 
         return prev;
       }
     });
   };
+
+  useEffect(() => {
+    return () => {
+      if (noteTimeoutRef.current) {
+        clearTimeout(noteTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // const onChangeInterviewQuestionNotes = (questionId, notes) => {
+  //   setInterviewerSectionData((prev) => {
+  //     const questionExists = prev.some(
+  //       (q) => (q.questionId || q.id) === questionId
+  //     );
+
+  //     if (questionExists) {
+  //       return prev.map((q) =>
+  //         (q.questionId || q.id) === questionId
+  //           ? {
+  //               ...q,
+  //               note: notes,
+  //               notesBool: true,
+  //               ...(isEditMode && { isEdited: true }), // Mark as edited in edit mode
+  //             }
+  //           : q
+  //       );
+  //     } else {
+  //       const originalQuestion = feedbackData?.questionFeedback?.find(
+  //         (f) => (f.questionId || f._id) === questionId
+  //       );
+
+  //       if (originalQuestion) {
+  //         return [
+  //           ...prev,
+  //           {
+  //             ...originalQuestion,
+  //             questionId: questionId,
+  //             note: notes,
+  //             notesBool: true,
+  //             addedBy: "interviewer",
+  //             ...(isEditMode && { isEdited: true }),
+  //           },
+  //         ];
+  //       }
+
+  //       return prev;
+  //     }
+  //   });
+  // };
 
   const onClickAddNote = (id) => {
     setInterviewerSectionData((prev) => {
@@ -469,111 +543,55 @@ const InterviewerSectionComponent = ({
     [isQuestionBankOpen]
   );
 
-  // const updateQuestionsInAddedSectionFromQuestionBank = (questions) => {
-  //   console.log("Updating questions from question bank:", questions);
-
-  //   if (questions && questions.length > 0) {
-  //     // Transform questions to match the interviewer section format
-  //     const newQuestions = questions.map((question, index) => ({
-  //       id: Date.now() + index, // Generate unique ID
-  //       question: question.question || question.title || "N/A",
-  //       expectedAnswer: question.expectedAnswer || question.answer || "N/A",
-  //       category: question.category || "N/A",
-  //       difficulty: question.difficulty || "N/A",
-  //       //addedBy: 'interviewer',
-  //       mandatory: question.mandatory || false,
-  //       isAnswered: "Not Answered",
-  //       notesBool: false,
-  //       note: "",
-  //     }));
-
-  //     // Add new questions to the existing interviewer section
-  //     setInterviewerSection((prev) => [...prev, ...newQuestions]);
-
-  //     // Update interviewerSectionData as well
-  //     const newQuestionsData = newQuestions.map((q) => ({
-  //       ...q,
-  //       isAnswered: "Not Answered",
-  //       isLiked: "",
-  //       whyDislike: "",
-  //       notesBool: false,
-  //       note: "",
-  //       //addedBy: 'interviewer',
-  //     }));
-  //     setInterviewerSectionData((prev) => [...prev, ...newQuestionsData]);
-
-  //     // Close the question bank after adding questions
-  //     setIsQuestionBankOpen(false);
-  //   }
-  // };
-
-  // const onClickDeleteNote = (id) => {
-  //   setInterviewerSectionData((prev) =>
-  //     prev.map((question) =>
-  //       (question.questionId || question.id) === id ? { ...question, notesBool: false, note: "" } : question
-  //     )
-  //   );
-  // };
-
-  // Function to handle delete note
-
-  //  const updateQuestionsInAddedSectionFromQuestionBank = (questions) => {
-
-  //   if (questions && questions.length > 0) {
-  //     const newQuestions = questions.map((question, index) => ({
-  //       id: question._id || `qb-${Date.now()}-${index}`, // Use question ID if available
-  //       questionId: question._id, // Store the original question ID
-  //       question: question.question || question.title || "N/A",
-  //       expectedAnswer: question.expectedAnswer || question.answer || "N/A",
-  //       category: question.category || "N/A",
-  //       difficulty: question.difficulty || "N/A",
-  //       mandatory: question.mandatory || false,
-  //       isAnswered: "Not Answered",
-  //       notesBool: false,
-  //       note: "",
-  //       addedBy: 'interviewer',
-  //       // Edit mode specific fields
-  //       ...((isEditMode || isAddMode) && {
-  //         isEdited: true,
-  //         originalData: question,
-  //       }),
-  //     }));
-
-  //     // Update local state
-  //     setInterviewerSection((prev) => {
-  //       const existingIds = new Set(prev.map(q => q.questionId || q.id));
-  //       const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q.questionId || q.id));
-  //       return [...prev, ...uniqueNewQuestions];
-  //     });
-
-  //     // Update parent data - this should trigger the parent to re-render properly
-  //     setInterviewerSectionData((prev) => {
-  //       const existingIds = new Set(prev.map(q => q.questionId || q.id));
-  //       const uniqueNewQuestions = newQuestions.filter(q => !existingIds.has(q.questionId || q.id));
-  //       return [...prev, ...uniqueNewQuestions];
-  //     });
-
-  //     setIsQuestionBankOpen(false);
-  //   }
-  // };
-
-  // const onClickDeleteNote = (id) => {
-  //   setInterviewerSectionData((prev) =>
-  //     prev.map((q) => (q._id === id ? { ...q, notesBool: false, note: "" } : q))
-  //   );
-
-  //   // Update preselected questions responses
-  //   // if (handlePreselectedQuestionResponse) {
-  //   //   const question = schedulerQuestionsData.find(q => q._id === id);
-  //   //   const bankQuestionId = question?.questionId || id;
-  //   //   handlePreselectedQuestionResponse(bankQuestionId, { notesBool: false, note: "" });
-  //   // }
-  // };
-
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");
   const questionRef = useRef(); // For future use, e.g., scrolling to a specific question
 
   // Fixed radio input handler
+  // const onChangeRadioInput = (questionId, value) => {
+  //   setInterviewerSectionData((prev) => {
+  //     const questionExists = prev.some(
+  //       (q) => (q.questionId || q.id) === questionId
+  //     );
+
+  //     if (questionExists) {
+  //       return prev.map((q) =>
+  //         (q.questionId || q.id) === questionId
+  //           ? {
+  //               ...q,
+  //               isAnswered: value,
+  //               ...(isEditMode && { isEdited: true }), // Mark as edited
+  //             }
+  //           : q
+  //       );
+  //     } else {
+  //       // Find the question in original feedback data and create new entry
+  //       const originalQuestion = feedbackData?.questionFeedback?.find(
+  //         (f) => (f.questionId || f._id) === questionId
+  //       );
+
+  //       if (originalQuestion) {
+  //         return [
+  //           ...prev,
+  //           {
+  //             ...originalQuestion,
+  //             questionId: questionId,
+  //             isAnswered: value,
+  //             isLiked: originalQuestion.interviewerFeedback?.liked || "",
+  //             whyDislike:
+  //               originalQuestion.interviewerFeedback?.dislikeReason || "",
+  //             note: originalQuestion.interviewerFeedback?.note || "",
+  //             notesBool: !!originalQuestion.interviewerFeedback?.note,
+  //             addedBy: "interviewer",
+  //             ...(isEditMode && { isEdited: true }),
+  //           },
+  //         ];
+  //       }
+
+  //       return prev;
+  //     }
+  //   });
+  // };
+
   const onChangeRadioInput = (questionId, value) => {
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some(
@@ -581,23 +599,29 @@ const InterviewerSectionComponent = ({
       );
 
       if (questionExists) {
-        return prev.map((q) =>
+        const updated = prev.map((q) =>
           (q.questionId || q.id) === questionId
             ? {
                 ...q,
                 isAnswered: value,
-                ...(isEditMode && { isEdited: true }), // Mark as edited
+                ...(isEditMode && { isEdited: true }),
               }
             : q
         );
+
+        // Trigger auto-save after change
+        if (triggerAutoSave && isAddMode) {
+          setTimeout(() => triggerAutoSave(), 500);
+        }
+
+        return updated;
       } else {
-        // Find the question in original feedback data and create new entry
         const originalQuestion = feedbackData?.questionFeedback?.find(
           (f) => (f.questionId || f._id) === questionId
         );
 
         if (originalQuestion) {
-          return [
+          const newData = [
             ...prev,
             {
               ...originalQuestion,
@@ -612,6 +636,13 @@ const InterviewerSectionComponent = ({
               ...(isEditMode && { isEdited: true }),
             },
           ];
+
+          // Trigger auto-save after change
+          if (triggerAutoSave && isAddMode) {
+            setTimeout(() => triggerAutoSave(), 500);
+          }
+
+          return newData;
         }
 
         return prev;
@@ -620,6 +651,42 @@ const InterviewerSectionComponent = ({
   };
 
   // Fixed dislike radio input handler
+  // const onChangeDislikeRadioInput = (questionId, value) => {
+  //   setInterviewerSectionData((prev) => {
+  //     const questionExists = prev.some(
+  //       (q) => (q.questionId || q.id) === questionId
+  //     );
+
+  //     if (questionExists) {
+  //       return prev.map((q) =>
+  //         (q.questionId || q.id) === questionId
+  //           ? { ...q, whyDislike: value, isLiked: "disliked" }
+  //           : q
+  //       );
+  //     } else {
+  //       const originalQuestion = feedbackData?.questionFeedback?.find(
+  //         (f) => (f.questionId || f._id) === questionId
+  //       );
+
+  //       if (originalQuestion) {
+  //         return [
+  //           ...prev,
+  //           {
+  //             ...originalQuestion,
+  //             questionId: questionId,
+  //             whyDislike: value,
+  //             isLiked: "disliked",
+  //             note: originalQuestion.interviewerFeedback?.note || "",
+  //             notesBool: !!originalQuestion.interviewerFeedback?.note,
+  //           },
+  //         ];
+  //       }
+
+  //       return prev;
+  //     }
+  //   });
+  // };
+
   const onChangeDislikeRadioInput = (questionId, value) => {
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some(
@@ -627,18 +694,25 @@ const InterviewerSectionComponent = ({
       );
 
       if (questionExists) {
-        return prev.map((q) =>
+        const updated = prev.map((q) =>
           (q.questionId || q.id) === questionId
             ? { ...q, whyDislike: value, isLiked: "disliked" }
             : q
         );
+
+        // Trigger auto-save after change
+        if (triggerAutoSave && isAddMode) {
+          setTimeout(() => triggerAutoSave(), 500);
+        }
+
+        return updated;
       } else {
         const originalQuestion = feedbackData?.questionFeedback?.find(
           (f) => (f.questionId || f._id) === questionId
         );
 
         if (originalQuestion) {
-          return [
+          const newData = [
             ...prev,
             {
               ...originalQuestion,
@@ -649,6 +723,13 @@ const InterviewerSectionComponent = ({
               notesBool: !!originalQuestion.interviewerFeedback?.note,
             },
           ];
+
+          // Trigger auto-save after change
+          if (triggerAutoSave && isAddMode) {
+            setTimeout(() => triggerAutoSave(), 500);
+          }
+
+          return newData;
         }
 
         return prev;
@@ -657,6 +738,48 @@ const InterviewerSectionComponent = ({
   };
 
   // Fixed like/dislike toggle handlers
+  // const handleLikeToggle = (id) => {
+  //   if (isViewMode) return;
+
+  //   setInterviewerSectionData((prev) => {
+  //     const questionExists = prev.some((q) => (q.questionId || q.id) === id);
+
+  //     if (questionExists) {
+  //       return prev.map((q) =>
+  //         (q.questionId || q.id) === id
+  //           ? {
+  //               ...q,
+  //               isLiked: q.isLiked === "liked" ? "" : "liked",
+  //               whyDislike: q.isLiked === "liked" ? "" : q.whyDislike, // Clear dislike reason when liking
+  //             }
+  //           : q
+  //       );
+  //     } else {
+  //       const originalQuestion = feedbackData?.questionFeedback?.find(
+  //         (f) => (f.questionId || f._id) === id
+  //       );
+
+  //       if (originalQuestion) {
+  //         return [
+  //           ...prev,
+  //           {
+  //             ...originalQuestion,
+  //             questionId: id,
+  //             isLiked: "liked",
+  //             whyDislike: "", // Clear dislike reason
+  //             note: originalQuestion.interviewerFeedback?.note || "",
+  //             notesBool: !!originalQuestion.interviewerFeedback?.note,
+  //           },
+  //         ];
+  //       }
+
+  //       return prev;
+  //     }
+  //   });
+
+  //   if (dislikeQuestionId === id) setDislikeQuestionId(null);
+  // };
+
   const handleLikeToggle = (id) => {
     if (isViewMode) return;
 
@@ -664,32 +787,46 @@ const InterviewerSectionComponent = ({
       const questionExists = prev.some((q) => (q.questionId || q.id) === id);
 
       if (questionExists) {
-        return prev.map((q) =>
+        const updated = prev.map((q) =>
           (q.questionId || q.id) === id
             ? {
                 ...q,
                 isLiked: q.isLiked === "liked" ? "" : "liked",
-                whyDislike: q.isLiked === "liked" ? "" : q.whyDislike, // Clear dislike reason when liking
+                whyDislike: q.isLiked === "liked" ? "" : q.whyDislike,
               }
             : q
         );
+
+        // Trigger auto-save after change
+        if (triggerAutoSave && isAddMode) {
+          setTimeout(() => triggerAutoSave(), 500);
+        }
+
+        return updated;
       } else {
         const originalQuestion = feedbackData?.questionFeedback?.find(
           (f) => (f.questionId || f._id) === id
         );
 
         if (originalQuestion) {
-          return [
+          const newData = [
             ...prev,
             {
               ...originalQuestion,
               questionId: id,
               isLiked: "liked",
-              whyDislike: "", // Clear dislike reason
+              whyDislike: "",
               note: originalQuestion.interviewerFeedback?.note || "",
               notesBool: !!originalQuestion.interviewerFeedback?.note,
             },
           ];
+
+          // Trigger auto-save after change
+          if (triggerAutoSave && isAddMode) {
+            setTimeout(() => triggerAutoSave(), 500);
+          }
+
+          return newData;
         }
 
         return prev;
@@ -698,6 +835,8 @@ const InterviewerSectionComponent = ({
 
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
   };
+
+  const noteTimeoutRef = useRef(null);
 
   const handleDislikeToggle = (id) => {
     if (isViewMode) return;
@@ -1114,7 +1253,9 @@ const InterviewerSectionComponent = ({
               >
                 <div className="flex items-start justify-between mb-3">
                   <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                    {question.snapshot?.technology[0] || question.snapshot?.category[0] || "N/A"}
+                    {question.snapshot?.technology[0] ||
+                      question.snapshot?.category[0] ||
+                      "N/A"}
                   </span>
                   <span className="text-sm text-gray-500">
                     {question.snapshot?.difficultyLevel ||

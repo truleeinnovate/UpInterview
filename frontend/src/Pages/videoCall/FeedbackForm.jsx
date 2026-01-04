@@ -32,6 +32,7 @@ import DescriptionField from "../../Components/FormFields/DescriptionField.jsx";
 import DropdownSelect from "../../Components/Dropdowns/DropdownSelect.jsx";
 import { notify } from "../../services/toastService.js";
 import { extractUrlData } from "../../apiHooks/useVideoCall.js";
+import useAutoSaveFeedback from "../../apiHooks/useAutoSaveFeedback.js";
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -107,6 +108,8 @@ const FeedbackForm = ({
     !urlData.isCandidate ? urlData.interviewerId : null
   );
 
+  console.log("feedbackDatas", feedbackDatas);
+
   const feedbackData = useMemo(() => {
     return locationFeedback || feedbackDatas || {};
   }, [locationFeedback, feedbackDatas]);
@@ -120,6 +123,8 @@ const FeedbackForm = ({
   const overallImpressionTabData = feedbackData?.overallImpression || {};
 
   const navigate = useNavigate();
+
+  const [autoSaveFeedbackId, setAutoSaveFeedbackId] = useState(feedbackId);
 
   // const [overallRating, setOverallRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.overallRating) || 0);
   // const [communicationRating, setCommunicationRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.communicationRating) || 0);
@@ -581,6 +586,28 @@ const FeedbackForm = ({
     questions: "",
   });
 
+  console.log("feedbackData", feedbackData);
+
+  // Add the auto-save hook after all your useState declarations (around line 350):
+
+  const { saveNow, isSaving } = useAutoSaveFeedback({
+    isAddMode,
+    interviewRoundId: interviewRoundId || decodedData?.interviewRoundId,
+    tenantId: currentTenantId,
+    interviewerId: interviewerId || decodedData?.interviewerId,
+    interviewerSectionData,
+    preselectedQuestionsResponses,
+    skillRatings,
+    overallRating,
+    communicationRating,
+    recommendation,
+    comments,
+    candidateId: candidateId || decodedData?.candidateId,
+    positionId: positionId || decodedData?.positionId,
+    ownerId: feedbackData?.interviewRound?.tenantId,
+    feedbackId: autoSaveFeedbackId,
+  });
+
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
@@ -608,6 +635,11 @@ const FeedbackForm = ({
             clearError("questions");
           }
 
+          // Trigger immediate save after adding question
+          if (isAddMode) {
+            setTimeout(() => saveNow(), 500);
+          }
+
           return newList;
         });
       } else {
@@ -628,6 +660,11 @@ const FeedbackForm = ({
 
     // Add to removed question IDs
     setRemovedQuestionIds((prev) => [...prev, questionId]);
+
+    // Trigger immediate save after removing question
+    if (isAddMode) {
+      setTimeout(() => saveNow(), 500);
+    }
   };
 
   const handleToggleMandatory = (questionId) => {
@@ -1338,7 +1375,7 @@ const FeedbackForm = ({
       //
       // console.log('📤 Sending draft data:', feedbackData);
 
-      if (isEditMode) {
+      if (isEditMode || autoSaveFeedbackId) {
         if (feedbackId) {
           updateFeedback(
             { feedbackId, feedbackData: updatedFeedbackData },
@@ -1366,6 +1403,10 @@ const FeedbackForm = ({
         createFeedback(feedbackData, {
           onSuccess: (data) => {
             if (data.success) {
+              // Store feedback ID for auto-save
+              if (data.data?._id) {
+                setAutoSaveFeedbackId(data.data._id);
+              }
               notify.success("Feedback saved as draft!");
               navigate("/feedback");
             } else {
@@ -1383,15 +1424,18 @@ const FeedbackForm = ({
     }
   };
 
-  console.log("schedulerFeedbackData", schedulerFeedbackData);
+  // console.log("schedulerFeedbackData", schedulerFeedbackData);
   //<---v1.0.2-----Ranjith----solved feedback issues
 
   if (decodedData?.schedule) {
-    console.log("schedulerFeedbackData", schedulerFeedbackData);
+    // console.log("schedulerFeedbackData", schedulerFeedbackData);
     return <SchedulerViewMode feedbackData={schedulerFeedbackData} />;
   }
-  console.log("schedulerFeedbackData", isScheduler, decodedData?.schedule);
+  // console.log("schedulerFeedbackData", isScheduler, decodedData?.schedule);
   //<---v1.0.2-----Ranjith----solved feedback issues
+
+  // Add visual indicator for auto-saving at the bottom of your return statement
+  // Before the closing </div> of your main container (around line 1100):
 
   // Button component for consistency
   const Button = ({
@@ -1439,7 +1483,13 @@ const FeedbackForm = ({
         <div className="right-4 z-40  pb-3 top-5">
           <div className="flex justify-end items-center gap-3">
             <button
-              onClick={() => window.open(decodedData.meetLink, "_blank")}
+              onClick={() =>
+                window.open(
+                  feedbackDatas?.interviewRound?.meetingId,
+                  // decodedData.meetLink,
+                  "_blank"
+                )
+              }
               className="text-sm bg-custom-blue hover:bg-custom-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
             >
               <Video className="w-4 h-4" />
@@ -2016,9 +2066,37 @@ const FeedbackForm = ({
           </div>
         )}
       </div>
+
+      {isAddMode && isSaving && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span className="text-sm">Auto-saving...</span>
+          </div>
+        </div>
+      )}
     </>
     // v1.0.4 ---------------------------------------------------------------------->
   );
 };
 
 export default FeedbackForm;
+
+// // Add CSS for animation (add to your CSS file or styled components):
+// /* Add CSS for animation (add to your CSS file or styled components): */
+
+// /* Add to your main CSS file */
+// @keyframes fade-in {
+//   from {
+//     opacity: 0;
+//     transform: translateY(10px);
+//   }
+//   to {
+//     opacity: 1;
+//     transform: translateY(0);
+//   }
+// }
+
+// .animate-fade-in {
+//   animation: fade-in 0.3s ease-in-out;
+// }
