@@ -123,12 +123,13 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
   const txnStyle = getTransactionStyle(transaction?.type, transaction?.effect);
 
   // Check what details are available
-  const hasAmountBreakdown = transaction?.gstAmount > 0 || transaction?.serviceCharge > 0;
-  // Check for payout breakdown (interviewer payouts have service charge in metadata)
-  const hasPayoutBreakdown = metadata.grossAmount > 0 && metadata.serviceChargeDeducted >= 0;
+  const hasAmountBreakdown = transaction?.gstAmount > 0 || (transaction?.serviceCharge != null && transaction?.serviceCharge > 0);
+  // Check for payout breakdown (interviewer payouts have negative service charge = deduction)
+  const hasPayoutBreakdown = transaction?.serviceCharge != null && transaction?.serviceCharge < 0;
   const hasBalanceImpact = transaction?.balanceBefore !== undefined || transaction?.balanceAfter !== undefined;
   const hasHoldBalanceImpact = transaction?.holdBalanceBefore !== undefined || transaction?.holdBalanceAfter !== undefined;
   const hasInterviewDetails = metadata.interviewId || metadata.roundId || metadata.requestId;
+
 
   return (
     <SidebarPopup
@@ -226,7 +227,7 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
             </div>
           )}
 
-          {/* Payout Breakdown Card (for interviewer payouts with service charge) */}
+          {/* Payout Breakdown Card (for interviewer payouts with service charge deduction) */}
           {hasPayoutBreakdown && (
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border border-green-200 shadow-sm">
               <h3 className="text-base font-semibold text-green-800 mb-4 flex items-center">
@@ -238,7 +239,7 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
                 <div className="flex items-center justify-between py-2 border-b border-green-100">
                   <span className="text-sm text-gray-600">Gross Amount</span>
                   <span className="text-sm font-semibold text-gray-900">
-                    ₹{(metadata.grossAmount || 0).toFixed(2)}
+                    ₹{(transaction?.amount || 0).toFixed(2)}
                   </span>
                 </div>
 
@@ -247,14 +248,14 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
                     Service Charge {metadata.serviceChargePercent ? `(${metadata.serviceChargePercent}%)` : ''}
                   </span>
                   <span className="text-sm font-medium text-red-600">
-                    - ₹{(metadata.serviceChargeDeducted || 0).toFixed(2)}
+                    - ₹{Math.abs(transaction?.serviceCharge || 0).toFixed(2)}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-sm font-semibold text-gray-800">Net Amount Credited</span>
                   <span className="text-base font-bold text-green-600">
-                    + ₹{(metadata.netAmount || transaction?.amount || 0).toFixed(2)}
+                    + ₹{(transaction?.totalAmount || 0).toFixed(2)}
                   </span>
                 </div>
               </div>

@@ -462,15 +462,16 @@ const Wallet = () => {
                           </p>
                         )}
                       </div>
-
                       {/* Bottom Row: Amount Breakdown & Actions */}
                       <div className="flex items-end justify-between">
                         <div className="flex items-center gap-4">
-                          {/* Base Amount */}
+                          {/* Base Amount - For payouts with service charge deduction, show as Gross */}
                           <div>
-                            <p className="text-xs text-gray-500">Amount</p>
+                            <p className="text-xs text-gray-500">
+                              {transaction.serviceCharge != null && transaction.serviceCharge < 0 ? "Gross" : "Amount"}
+                            </p>
                             <p className="text-sm font-semibold text-gray-800">
-                              ₹{transaction.amount ? transaction.amount.toFixed(2) : "0.00"}
+                              ₹{(transaction.amount || 0).toFixed(2)}
                             </p>
                           </div>
                           {/* GST if available */}
@@ -479,6 +480,17 @@ const Wallet = () => {
                               <p className="text-xs text-gray-500">GST</p>
                               <p className="text-sm font-medium text-gray-600">
                                 ₹{transaction.gstAmount.toFixed(2)}
+                              </p>
+                            </div>
+                          )}
+                          {/* Service Charge if available (negative value means deduction) */}
+                          {(transaction.serviceCharge != null && transaction.serviceCharge !== 0) && (
+                            <div>
+                              <p className="text-xs text-gray-500">
+                                Service {transaction.metadata?.serviceChargePercent ? `(${transaction.metadata.serviceChargePercent}%)` : ''}
+                              </p>
+                              <p className="text-sm font-medium text-red-500">
+                                -₹{Math.abs(transaction.serviceCharge).toFixed(2)}
                               </p>
                             </div>
                           )}

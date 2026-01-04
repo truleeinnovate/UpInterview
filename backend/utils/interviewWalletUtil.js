@@ -1090,11 +1090,17 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
     }
 
     // 9. Update organization wallet - settle the hold to debit
+    // Calculate the GST portion for the settled amount (proportional to what's being used)
+    const gstForSettlement = gstFromHold - gstRefundProportion;
+    const totalSettlementAmount = grossSettlementAmount + gstForSettlement;
+
     const orgWalletUpdate = {
       $set: {
         "transactions.$.type": "debited",
         "transactions.$.status": "completed",
         "transactions.$.amount": grossSettlementAmount,
+        "transactions.$.gstAmount": gstForSettlement, // GST portion for settled amount
+        "transactions.$.totalAmount": totalSettlementAmount, // Updated total = amount + gst
         "transactions.$.description": `Settled payment for ${companyName} - ${roundTitle}`,
         "transactions.$.metadata.settledAt": new Date(),
         "transactions.$.metadata.settlementStatus": "completed",
@@ -1106,9 +1112,12 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
         "transactions.$.metadata.settlementGstForPlatform": gstForPlatform,
         "transactions.$.metadata.settlementScenario": settlementScenario,
         "transactions.$.metadata.settlementPolicyName": appliedPolicyName,
+        "transactions.$.metadata.originalHoldAmount": baseAmount,
+        "transactions.$.metadata.originalGstAmount": gstFromHold,
+        "transactions.$.metadata.originalTotalAmount": totalHoldAmount,
       },
       $inc: {
-        holdAmount: -baseAmount,
+        holdAmount: -totalHoldAmount, // Release full hold amount (base + GST)
         balance: refundAmount,
       },
     };
@@ -1125,11 +1134,13 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
     }
 
     // 10. Add refund transaction if applicable using common function
+    // Separate base amount and GST for proper breakdown display
     if (refundAmount > 0) {
       await createWalletTransaction({
         ownerId: orgWallet.ownerId,
         businessType: WALLET_BUSINESS_TYPES.REFUND,
-        amount: refundAmount,
+        amount: unusedBaseAmount, // Base amount being refunded
+        gstAmount: gstRefundProportion, // GST portion being refunded
         description: `Refund for cancelled/partial settlement - ${roundTitle}`,
         relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
         status: "completed",
@@ -1139,6 +1150,9 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
           settlementDate: new Date(),
           originalTransactionId: transactionId,
           interviewId: interview._id?.toString(),
+          // refundBaseAmount: unusedBaseAmount,
+          // refundGstAmount: gstRefundProportion,
+          // refundTotalAmount: refundAmount,
         },
       });
     }
@@ -1207,12 +1221,13 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
       });
 
       // Credit interviewer wallet using common function
-      // Note: serviceCharge is already deducted from settlementAmount, so we don't pass it
-      // as a transaction param (would add to totalAmount). Instead, we store the breakdown in metadata.
+      // Pass gross amount and service charge at transaction level
+      // Service charge is passed as negative (deduction) so totalAmount = gross - serviceCharge = net
       await createWalletTransaction({
         ownerId: interviewerOwnerId,
         businessType: WALLET_BUSINESS_TYPES.TOPUP_CREDIT,
-        amount: settlementAmount, // Net amount after service charge deduction
+        amount: grossSettlementAmount, // Gross amount before service charge deduction
+        serviceCharge: -serviceCharge, // Negative = deducted from gross (totalAmount = gross + (-SC) = net)
         description: `Payment from ${companyName} - ${roundTitle} for ${positionTitle}`,
         relatedInvoiceId: invoiceDoc._id.toString(),
         status: "completed",
@@ -1225,11 +1240,7 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
           companyName: companyName,
           roundTitle: roundTitle,
           positionTitle: positionTitle,
-          // Amount breakdown for UI display
-          grossAmount: grossSettlementAmount, // Amount before service charge deduction
-          serviceChargeDeducted: serviceCharge, // Service charge that was deducted
           serviceChargePercent: scPercent, // Service charge percentage (e.g., 10)
-          netAmount: settlementAmount, // Final amount credited (same as transaction.amount)
         },
       });
     }
