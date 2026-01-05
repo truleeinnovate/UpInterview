@@ -105,8 +105,8 @@ const OutsourcedInterviewerCard = ({
   return (
     <div
       className={`bg-white rounded-lg border ${isSelected
-          ? "border-orange-500 ring-2 ring-orange-200"
-          : "border-gray-200"
+        ? "border-orange-500 ring-2 ring-orange-200"
+        : "border-gray-200"
         } p-4 shadow-sm hover:shadow-md transition-all`}
     >
       <div className="w-full">
@@ -1138,47 +1138,37 @@ function OutsourcedInterviewerModal({
   const handleProceed = () => {
     //<----v1.0.1-----
     //<-----v1.0.4-----Venkatesh---- Updated to calculate required amount based on experience level
+    //<-----v1.0.5-----Fix: Calculate maxHourlyRate from selected interviewers only, not all contacts
 
     // Calculate the required amount based on selected interviewers' rates and experience level
-    let baseRequiredAmount = parseInt(maxHourlyRate); // Default to max rate (base, without GST)
-    console.log("baseRequiredAmount", baseRequiredAmount);
+    let baseRequiredAmount = 0;
+
     if (selectedInterviewersLocal.length > 0) {
-      // If interviewers are selected, calculate based on their actual rates
+      // Calculate rates from ONLY the selected interviewers
       const selectedRates = selectedInterviewersLocal.map((interviewer) => {
         const contact = interviewer?.contact;
         console.log("Contact:", contact?.yearsOfExperience);
         if (!contact?.rates) return 0;
 
         let experienceLevel;
-        // if (isMockInterview) {
-        //   // For mock interviews, use the contact's expertise level
-        //   experienceLevel = contact.expertiseLevel?.toLowerCase() || "mid";
-        //   // const mockExpYears = Number(contact?.yearsOfExperience) || 0;
-        //   // experienceLevel =
-        //   //   mockExpYears <= 3 ? "junior" : mockExpYears <= 7 ? "mid" : "senior";
-        // } else {
         // For regular interviews, map candidate experience to level
         const expYears = Number(candidateExperience) || 0;
         experienceLevel =
           expYears <= 3 ? "junior" : expYears <= 7 ? "mid" : "senior";
-        // }
 
         if (contact.rates[experienceLevel]?.inr > 0) {
           return contact.rates[experienceLevel]?.inr;
         } else {
           return 0;
         }
-
-        // Get the rate for the determined level
-        // return contact.rates[experienceLevel]?.inr || 0;
       });
 
-      // Use the highest rate among selected interviewers, but never below the
-      // global maxHourlyRate. This keeps the frontend check aligned with the
-      // backend, which uses maxHourlyRate for selection-time wallet holds.
-      const maxSelectedRate = Math.max(...selectedRates, 0);
-      baseRequiredAmount = Math.max(baseRequiredAmount, maxSelectedRate);
+      // Use the highest rate among selected interviewers ONLY
+      baseRequiredAmount = Math.max(...selectedRates, 0);
+      console.log("Selected Rates:", selectedRates);
+      console.log("Max Rate from Selected Interviewers:", baseRequiredAmount);
     }
+
     console.log("Base Required Amount (without GST):", baseRequiredAmount);
 
     // Apply GST using same formula as backend helper (computeBaseGstGross)
@@ -1200,8 +1190,8 @@ function OutsourcedInterviewerModal({
     // && grossRequiredAmount !== 0
     if (availableBalance >= grossRequiredAmount && grossRequiredAmount !== 0) {
       // console.log("Selected Interviewers:", selectedInterviewersLocal);
-      // Pass maxHourlyRate up so backend can create a selection-time hold for external interviewers
-      onProceed(selectedInterviewersLocal, parseInt(maxHourlyRate) || 0);
+      // Pass maxHourlyRate (from selected interviewers) up so backend can create a selection-time hold
+      onProceed(selectedInterviewersLocal, baseRequiredAmount || 0);
       onClose();
     } else {
       const required = Number(grossRequiredAmount || 0).toFixed(2);
@@ -1257,8 +1247,8 @@ function OutsourcedInterviewerModal({
             </span>
             <span
               className={`text-sm font-bold ${availableBalance >= maxHourlyRate
-                  ? "text-green-600"
-                  : "text-red-600"
+                ? "text-green-600"
+                : "text-red-600"
                 }`}
             >
               ₹{Number(availableBalance || 0).toFixed(2)}
@@ -1395,8 +1385,8 @@ function OutsourcedInterviewerModal({
           <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
             <div
               className={`grid gap-4 ${isFullscreen
-                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
-                  : "grid-cols-1"
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
+                : "grid-cols-1"
                 }`}
             >
               {filteredInterviewers.map((interviewer) => (

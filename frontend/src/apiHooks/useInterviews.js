@@ -20,15 +20,15 @@ export const useInterviews = (
   const initialLoad = useRef(true);
 
   const params =
-    // useMemo(() => (
-    {
-      ...filters,
+  // useMemo(() => (
+  {
+    ...filters,
 
-      page: page,
-      limit: limit,
-      type: type,
-      upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
-    };
+    page: page,
+    limit: limit,
+    type: type,
+    upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
+  };
   //console.log("params", params);
 
   // ),
@@ -203,6 +203,8 @@ export const useInterviews = (
         "interview-details",
         variables.interviewId,
       ]);
+      // Invalidate wallet query to refresh balance after round is saved (e.g., outsource interviewers)
+      queryClient.invalidateQueries(["wallet"]);
     },
     onError: (error) => {
       console.error("Round save error:", error);
@@ -231,6 +233,8 @@ export const useInterviews = (
         "interview-details",
         variables.interviewId,
       ]);
+      // Invalidate wallet query to refresh balance after round is updated (e.g., outsource interviewers)
+      queryClient.invalidateQueries(["wallet"]);
     },
     onError: (error) => {
       console.error("Round update error:", error);
