@@ -39,6 +39,10 @@ const {
 } = require("../../validations/assessmentValidation.js");
 const Tenant = require("../../models/Tenant");
 
+const {
+  sendAssessmentInvitationEmails,
+} = require("../../utils/assessmentEmailSender");
+
 exports.sendOtp = async (req, res) => {
   try {
     const { scheduledAssessmentId, candidateId, candidateAssessmentId } =
@@ -172,10 +176,274 @@ exports.sendOtp = async (req, res) => {
 };
 
 // <-------------------------------v1.0.3
+// exports.resendAssessmentLink = async (req, res) => {
+//   try {
+//     const {
+//       candidateAssessmentIds,
+//       userId,
+//       organizationId,
+//       assessmentId,
+//       companyName = process.env.COMPANY_NAME,
+//       supportEmail = process.env.SUPPORT_EMAIL,
+//     } = req.body;
+
+//     console.log("req.body", req.body);
+
+//     // Handle both single and multiple candidate assessment IDs
+//     let candidateAssessmentIdArray = [];
+
+//     if (candidateAssessmentIds && Array.isArray(candidateAssessmentIds)) {
+//       // Multiple candidates
+//       candidateAssessmentIdArray = candidateAssessmentIds;
+//     } else if (
+//       candidateAssessmentId &&
+//       mongoose.isValidObjectId(candidateAssessmentId)
+//     ) {
+//       // Single candidate
+//       candidateAssessmentIdArray = [candidateAssessmentId];
+//     } else {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid or missing candidate assessment ID(s)",
+//       });
+//     }
+
+//     if (!userId || !mongoose.isValidObjectId(userId)) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Invalid or missing user ID" });
+//     }
+
+//     if (!organizationId || !mongoose.isValidObjectId(organizationId)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid or missing organization ID",
+//       });
+//     }
+
+//     // Validate all candidate assessment IDs
+//     for (const id of candidateAssessmentIdArray) {
+//       if (!mongoose.isValidObjectId(id)) {
+//         return res.status(400).json({
+//           success: false,
+//           message: `Invalid candidate assessment ID: ${id}`,
+//         });
+//       }
+//     }
+
+//     const assessment = await Assessment.findById(assessmentId);
+//     if (!assessment) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Assessment not found" });
+//     }
+//     const assessmentDuration = assessment.assessmentDuration || 60;
+
+//     const emailTemplate = await emailTemplateModel.findOne({
+//       category: "assessment_invite",
+//       isSystemTemplate: true,
+//       isActive: true,
+//     });
+//     if (!emailTemplate) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Email template not found" });
+//     }
+
+//     const results = [];
+//     let successCount = 0;
+//     let failureCount = 0;
+//     // console.log("candidateAssessmentIdArray", candidateAssessmentIdArray)
+
+//     for (const candidateAssessmentId of candidateAssessmentIdArray) {
+//       // console.log("candidateAssessmentId", candidateAssessmentId)
+//       try {
+//         const candidateAssessment = await CandidateAssessment.findById(
+//           candidateAssessmentId
+//         )
+//           .populate("candidateId")
+//           .populate("scheduledAssessmentId");
+//         // console.log("candidateAssessment", candidateAssessment)
+
+//         if (!candidateAssessment) {
+//           results.push({
+//             candidateAssessmentId,
+//             success: false,
+//             message: "Candidate assessment not found",
+//           });
+//           failureCount++;
+//           continue;
+//         }
+
+//         if (!candidateAssessment.isActive) {
+//           results.push({
+//             candidateAssessmentId,
+//             success: false,
+//             message: "Candidate assessment is not active",
+//           });
+//           failureCount++;
+//           continue;
+//         }
+
+//         if (!candidateAssessment.assessmentLink) {
+//           results.push({
+//             candidateAssessmentId,
+//             success: false,
+//             message: "No assessment link available",
+//           });
+//           failureCount++;
+//           continue;
+//         }
+
+//         const candidate = candidateAssessment.candidateId;
+//         if (!candidate) {
+//           results.push({
+//             candidateAssessmentId,
+//             success: false,
+//             message: "Candidate not found",
+//           });
+//           failureCount++;
+//           continue;
+//         }
+
+//         const emails = Array.isArray(candidate.emails)
+//           ? candidate.emails
+//           : candidate.emails
+//           ? [candidate.emails]
+//           : candidate.Email
+//           ? [candidate.Email]
+//           : [];
+
+//         if (emails.length === 0) {
+//           results.push({
+//             candidateAssessmentId,
+//             success: false,
+//             message: "No valid email address for candidate",
+//           });
+//           failureCount++;
+//           continue;
+//         }
+
+//         const candidateName =
+//           (candidate.FirstName ? candidate.FirstName + " " : "") +
+//           (candidate.LastName || "Candidate");
+//         const formattedExpiryDate = candidateAssessment.expiryAt.toLocaleString(
+//           "en-US",
+//           {
+//             weekday: "long",
+//             year: "numeric",
+//             month: "long",
+//             day: "numeric",
+//             hour: "2-digit",
+//             minute: "2-digit",
+//             timeZoneName: "short",
+//           }
+//         );
+
+//         const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, "");
+//         const emailSubject = emailTemplate.subject.replace(
+//           "{{companyName}}",
+//           companyName
+//         );
+//         const emailBody = cleanedBody
+//           .replace(/{{candidateName}}/g, candidateName)
+//           .replace(/{{companyName}}/g, companyName)
+//           .replace(/{{expiryDate}}/g, formattedExpiryDate)
+//           .replace(/{{assessmentLink}}/g, candidateAssessment.assessmentLink)
+//           .replace(/{{assessmentDuration}}/g, assessmentDuration)
+//           .replace(/{{supportEmail}}/g, supportEmail);
+
+//         const sendEmailResponses = await Promise.all(
+//           emails.map((email) => sendEmail(email, emailSubject, emailBody))
+//         );
+
+//         const emailStatus = sendEmailResponses.every(
+//           (response) => response.success
+//         )
+//           ? "Success"
+//           : "Failed";
+
+//         if (emailStatus === "Success") {
+//           successCount++;
+//         } else {
+//           failureCount++;
+//         }
+
+//         sendEmailResponses.forEach((response, index) => {
+//           if (!response.success) {
+//             console.error(
+//               `Error sending email to ${emails[index]}: ${response.message}`
+//             );
+//           }
+//         });
+
+//         results.push({
+//           candidateAssessmentId,
+//           success: emailStatus === "Success",
+//           message:
+//             emailStatus === "Success"
+//               ? "Assessment link resent successfully"
+//               : "Failed to send email",
+//           candidateName,
+//           emails,
+//         });
+//       } catch (error) {
+//         console.error(
+//           `Error processing candidate assessment ${candidateAssessmentId}:`,
+//           error
+//         );
+//         results.push({
+//           candidateAssessmentId,
+//           success: false,
+//           message: "Internal server error",
+//         });
+//         failureCount++;
+//       }
+//     }
+
+//     // Return appropriate response based on single vs multiple
+//     if (candidateAssessmentIdArray.length === 1) {
+//       // Single candidate response (backward compatible)
+//       const result = results[0];
+//       if (result.success) {
+//         res.status(200).json({
+//           success: true,
+//           message: `Assessment link resent successfully to ${result.candidateName}`,
+//         });
+//       } else {
+//         res.status(400).json({
+//           success: false,
+//           message: result.message,
+//         });
+//       }
+//     } else {
+//       // Multiple candidates response
+//       res.status(200).json({
+//         success: true,
+//         message: `Processed ${candidateAssessmentIdArray.length} candidates. ${successCount} successful, ${failureCount} failed.`,
+//         results,
+//         summary: {
+//           total: candidateAssessmentIdArray.length,
+//           successful: successCount,
+//           failed: failureCount,
+//         },
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Error resending assessment link(s):", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to resend assessment link(s)",
+//       error: error.message,
+//     });
+//   }
+// };
+
 exports.resendAssessmentLink = async (req, res) => {
   try {
     const {
       candidateAssessmentIds,
+      candidateAssessmentId, // for backward compatibility
       userId,
       organizationId,
       assessmentId,
@@ -183,19 +451,14 @@ exports.resendAssessmentLink = async (req, res) => {
       supportEmail = process.env.SUPPORT_EMAIL,
     } = req.body;
 
-    console.log("req.body", req.body);
-
-    // Handle both single and multiple candidate assessment IDs
+    // Normalize to array
     let candidateAssessmentIdArray = [];
-
-    if (candidateAssessmentIds && Array.isArray(candidateAssessmentIds)) {
-      // Multiple candidates
+    if (Array.isArray(candidateAssessmentIds)) {
       candidateAssessmentIdArray = candidateAssessmentIds;
     } else if (
       candidateAssessmentId &&
       mongoose.isValidObjectId(candidateAssessmentId)
     ) {
-      // Single candidate
       candidateAssessmentIdArray = [candidateAssessmentId];
     } else {
       return res.status(400).json({
@@ -204,217 +467,50 @@ exports.resendAssessmentLink = async (req, res) => {
       });
     }
 
-    if (!userId || !mongoose.isValidObjectId(userId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid or missing user ID" });
+    // Basic validations
+    if (!mongoose.isValidObjectId(userId) || !mongoose.isValidObjectId(organizationId) || !mongoose.isValidObjectId(assessmentId)) {
+      return res.status(400).json({ success: false, message: "Invalid ID provided" });
     }
 
-    if (!organizationId || !mongoose.isValidObjectId(organizationId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid or missing organization ID",
-      });
-    }
-
-    // Validate all candidate assessment IDs
     for (const id of candidateAssessmentIdArray) {
       if (!mongoose.isValidObjectId(id)) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid candidate assessment ID: ${id}`,
-        });
+        return res.status(400).json({ success: false, message: `Invalid ID: ${id}` });
       }
     }
 
     const assessment = await Assessment.findById(assessmentId);
     if (!assessment) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Assessment not found" });
+      return res.status(404).json({ success: false, message: "Assessment not found" });
     }
-    const assessmentDuration = assessment.assessmentDuration || 60;
 
-    const emailTemplate = await emailTemplateModel.findOne({
-      category: "assessment_invite",
-      isSystemTemplate: true,
-      isActive: true,
+    // Fetch and populate all candidate assessments
+    const candidateAssessments = await CandidateAssessment.find({
+      _id: { $in: candidateAssessmentIdArray },
+    }).populate("candidateId");
+
+    // Basic existence check
+    if (candidateAssessments.length === 0) {
+      return res.status(404).json({ success: false, message: "No candidate assessments found" });
+    }
+
+    const { results, successCount, failureCount } = await sendAssessmentInvitationEmails({
+      candidateAssessments,
+      assessment,
+      organizationId,
+      companyName,
+      supportEmail,
     });
-    if (!emailTemplate) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Email template not found" });
-    }
 
-    const results = [];
-    let successCount = 0;
-    let failureCount = 0;
-    // console.log("candidateAssessmentIdArray", candidateAssessmentIdArray)
-
-    for (const candidateAssessmentId of candidateAssessmentIdArray) {
-      // console.log("candidateAssessmentId", candidateAssessmentId)
-      try {
-        const candidateAssessment = await CandidateAssessment.findById(
-          candidateAssessmentId
-        )
-          .populate("candidateId")
-          .populate("scheduledAssessmentId");
-        // console.log("candidateAssessment", candidateAssessment)
-
-        if (!candidateAssessment) {
-          results.push({
-            candidateAssessmentId,
-            success: false,
-            message: "Candidate assessment not found",
-          });
-          failureCount++;
-          continue;
-        }
-
-        if (!candidateAssessment.isActive) {
-          results.push({
-            candidateAssessmentId,
-            success: false,
-            message: "Candidate assessment is not active",
-          });
-          failureCount++;
-          continue;
-        }
-
-        if (!candidateAssessment.assessmentLink) {
-          results.push({
-            candidateAssessmentId,
-            success: false,
-            message: "No assessment link available",
-          });
-          failureCount++;
-          continue;
-        }
-
-        const candidate = candidateAssessment.candidateId;
-        if (!candidate) {
-          results.push({
-            candidateAssessmentId,
-            success: false,
-            message: "Candidate not found",
-          });
-          failureCount++;
-          continue;
-        }
-
-        const emails = Array.isArray(candidate.emails)
-          ? candidate.emails
-          : candidate.emails
-          ? [candidate.emails]
-          : candidate.Email
-          ? [candidate.Email]
-          : [];
-
-        if (emails.length === 0) {
-          results.push({
-            candidateAssessmentId,
-            success: false,
-            message: "No valid email address for candidate",
-          });
-          failureCount++;
-          continue;
-        }
-
-        const candidateName =
-          (candidate.FirstName ? candidate.FirstName + " " : "") +
-          (candidate.LastName || "Candidate");
-        const formattedExpiryDate = candidateAssessment.expiryAt.toLocaleString(
-          "en-US",
-          {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZoneName: "short",
-          }
-        );
-
-        const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, "");
-        const emailSubject = emailTemplate.subject.replace(
-          "{{companyName}}",
-          companyName
-        );
-        const emailBody = cleanedBody
-          .replace(/{{candidateName}}/g, candidateName)
-          .replace(/{{companyName}}/g, companyName)
-          .replace(/{{expiryDate}}/g, formattedExpiryDate)
-          .replace(/{{assessmentLink}}/g, candidateAssessment.assessmentLink)
-          .replace(/{{assessmentDuration}}/g, assessmentDuration)
-          .replace(/{{supportEmail}}/g, supportEmail);
-
-        const sendEmailResponses = await Promise.all(
-          emails.map((email) => sendEmail(email, emailSubject, emailBody))
-        );
-
-        const emailStatus = sendEmailResponses.every(
-          (response) => response.success
-        )
-          ? "Success"
-          : "Failed";
-
-        if (emailStatus === "Success") {
-          successCount++;
-        } else {
-          failureCount++;
-        }
-
-        sendEmailResponses.forEach((response, index) => {
-          if (!response.success) {
-            console.error(
-              `Error sending email to ${emails[index]}: ${response.message}`
-            );
-          }
-        });
-
-        results.push({
-          candidateAssessmentId,
-          success: emailStatus === "Success",
-          message:
-            emailStatus === "Success"
-              ? "Assessment link resent successfully"
-              : "Failed to send email",
-          candidateName,
-          emails,
-        });
-      } catch (error) {
-        console.error(
-          `Error processing candidate assessment ${candidateAssessmentId}:`,
-          error
-        );
-        results.push({
-          candidateAssessmentId,
-          success: false,
-          message: "Internal server error",
-        });
-        failureCount++;
-      }
-    }
-
-    // Return appropriate response based on single vs multiple
+    // Response handling
     if (candidateAssessmentIdArray.length === 1) {
-      // Single candidate response (backward compatible)
       const result = results[0];
-      if (result.success) {
-        res.status(200).json({
-          success: true,
-          message: `Assessment link resent successfully to ${result.candidateName}`,
-        });
-      } else {
-        res.status(400).json({
-          success: false,
-          message: result.message,
-        });
-      }
+      return res.status(result.success ? 200 : 400).json({
+        success: result.success,
+        message: result.message,
+        candidateName: result.candidateName,
+      });
     } else {
-      // Multiple candidates response
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: `Processed ${candidateAssessmentIdArray.length} candidates. ${successCount} successful, ${failureCount} failed.`,
         results,
@@ -441,6 +537,477 @@ const {
   handleAssessmentStatusChange,
 } = require("../../services/assessmentUsageService");
 
+// exports.shareAssessment = async (req, res) => {
+//   try {
+//     const {
+//       assessmentId,
+//       selectedCandidates,
+//       organizationId,
+//       userId,
+//       companyName = process.env.COMPANY_NAME,
+//       supportEmail = process.env.SUPPORT_EMAIL,
+//     } = req.body;
+
+//     console.log(" req.body", req.body);
+
+//     // Validate input
+//     if (!assessmentId || !mongoose.isValidObjectId(assessmentId)) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Invalid or missing assessment ID" });
+//     }
+
+//     if (!selectedCandidates || selectedCandidates.length === 0) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "No candidates selected" });
+//     }
+
+//     // Fetch assessment without session for Cosmos DB compatibility
+//     const assessment = await Assessment.findById(assessmentId);
+//     if (!assessment) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Assessment not found" });
+//     }
+
+//     // Enforce assessment usage limits before creating schedules (per-tenant limit)
+//     // Determine tenant and remaining capacity
+//     const tenantId = assessment.tenantId;
+//     const candidatesToShare = Array.isArray(selectedCandidates)
+//       ? selectedCandidates.length
+//       : 0;
+
+//     // Use organizationId for usage limit check since ScheduleAssessment uses organizationId
+//     const limit = await checkAssessmentUsageLimit(organizationId || tenantId);
+//     const entitled = limit.entitled;
+//     const utilized = limit.utilized;
+//     const remaining =
+//       limit.remaining === Infinity
+//         ? Infinity
+//         : Math.max(limit.remaining || 0, 0);
+
+//     // If there is no active usage period at all, block sharing with a clear message
+//     if (!limit.canShare && limit.message === "No active usage period") {
+//       return res.status(400).json({
+//         success: false,
+//         code: "NO_ACTIVE_USAGE_PERIOD",
+//         message:
+//           "You do not have an active assessment usage period. Please start or renew a subscription to share assessments.",
+//       });
+//     }
+
+//     if (entitled !== 0) {
+//       if (
+//         !limit.canShare ||
+//         (remaining !== Infinity && candidatesToShare > remaining)
+//       ) {
+//         const ms = new Date(limit.toDate) - new Date(limit.fromDate);
+//         const days = Math.round(ms / (1000 * 60 * 60 * 24));
+//         const period = days > 330 ? "annual" : "monthly";
+
+//         return res.status(400).json({
+//           success: false,
+//           code: "ASSESSMENT_LIMIT_EXCEEDED",
+//           message: `Your ${period} assessment limit is used. Remaining: ${remaining}. You selected ${candidatesToShare}. Wait for next ${period} cycle or upgrade your plan.`,
+//           details: {
+//             entitled,
+//             utilized,
+//             remaining,
+//             period,
+//             periodFrom: limit.fromDate,
+//             periodTo: limit.toDate,
+//           },
+//         });
+//       }
+//     }
+
+//     // After successful validations and before returning, trigger a usage recalc at the end
+
+//     // Handle link expiry days - ensure it's a valid number
+//     let linkExpiryDays = parseInt(assessment.linkExpiryDays, 10);
+//     if (isNaN(linkExpiryDays) || linkExpiryDays <= 0) {
+//       linkExpiryDays = 3; // Default to 3 days if invalid
+//     }
+
+//     // Calculate expiry date safely
+//     const expiryAt = new Date();
+//     expiryAt.setDate(expiryAt.getDate() + linkExpiryDays);
+
+//     // Verify date is valid
+//     if (isNaN(expiryAt.getTime())) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid expiry date calculation",
+//         details: {
+//           linkExpiryDays: assessment.linkExpiryDays,
+//           calculatedDate: expiryAt.toString(),
+//         },
+//       });
+//     }
+
+//     const assessmentDuration = assessment.assessmentDuration || 60; // Default to 60 minutes if not set
+
+//     // <---------------------- v1.0.0
+
+//     // Generate assessment ID and create schedule assessment without session
+//     // Use a simpler approach that doesn't require sorting by scheduledAssessmentCode
+//     // <---------------------- v1.0.1
+//     const scheduleCount = await ScheduleAssessment.countDocuments({
+//       tenantId: organizationId,
+//       ownerId: userId,
+//       scheduledAssessmentCode: { $exists: true, $ne: null },
+//     });
+
+//     // Generate the new code with 5-digit padding based on count
+//     const nextNumber = scheduleCount + 1;
+//     let scheduledAssessmentCode = `ASMT-${String(nextNumber).padStart(5, "0")}`;
+
+//     // Check if this code already exists (in case of concurrent requests)
+//     const existingCode = await ScheduleAssessment.findOne({
+//       tenantId: organizationId,
+//       ownerId: userId,
+//       scheduledAssessmentCode,
+//     });
+
+//     if (existingCode) {
+//       // If code exists, try with a higher number
+//       const newNextNumber = nextNumber + 1;
+//       scheduledAssessmentCode = `ASMT-${String(newNextNumber).padStart(
+//         5,
+//         "0"
+//       )}`;
+//     }
+//     // <---------------------- v1.0.1
+
+//     // <---------------------- v1.0.0
+
+//     // Validate the scheduled assessment data
+//     const { errors, isValid } = validateScheduledAssessment({
+//       assessmentId,
+//       tenantId: organizationId,
+//       ownerId: userId,
+//       expiryAt,
+//       createdBy: userId,
+//     });
+
+//     let savedScheduleAssessment;
+
+//     if (!isValid) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Validation failed",
+//         errors,
+//       });
+//     } else {
+//       const scheduleAssessment = new ScheduleAssessment({
+//         scheduledAssessmentCode,
+//         assessmentId,
+//         tenantId: organizationId,
+//         ownerId: userId,
+//         status: "scheduled",
+//         proctoringEnabled: true,
+//         createdBy: userId,
+//         order: `Assessment ${nextNumber}`,
+//         expiryAt, // Add the expiry date
+//       });
+//       savedScheduleAssessment = await scheduleAssessment.save();
+
+//       console.log(
+//         `[ASSESSMENT WEBHOOK] New assessment created via share: ${savedScheduleAssessment._id} with status: ${savedScheduleAssessment.status}`
+//       );
+
+//       // Trigger webhook for assessment creation
+//       try {
+//         const webhookPayload = {
+//           scheduledAssessmentId: savedScheduleAssessment._id,
+//           scheduledAssessmentCode:
+//             savedScheduleAssessment.scheduledAssessmentCode,
+//           assessmentId: savedScheduleAssessment.assessmentId,
+//           tenantId: savedScheduleAssessment.tenantId,
+//           ownerId: savedScheduleAssessment.ownerId,
+//           status: savedScheduleAssessment.status,
+//           expiryAt: savedScheduleAssessment.expiryAt,
+//           order: savedScheduleAssessment.order,
+//           proctoringEnabled: savedScheduleAssessment.proctoringEnabled,
+//           createdAt: savedScheduleAssessment.createdAt,
+//           event: "assessment.created",
+//         };
+
+//         console.log(
+//           `[ASSESSMENT WEBHOOK] Triggering creation webhook for event: ${EVENT_TYPES.ASSESSMENT_STATUS_UPDATED}`
+//         );
+//         console.log(`[ASSESSMENT WEBHOOK] Payload:`, {
+//           event: EVENT_TYPES.ASSESSMENT_STATUS_UPDATED,
+//           data: webhookPayload,
+//           tenantId: savedScheduleAssessment.tenantId,
+//         });
+
+//         await triggerWebhook(
+//           EVENT_TYPES.ASSESSMENT_STATUS_UPDATED,
+//           webhookPayload,
+//           savedScheduleAssessment.tenantId
+//         );
+
+//         console.log(
+//           `[ASSESSMENT WEBHOOK] Creation webhook sent successfully for assessment ${savedScheduleAssessment._id}`
+//         );
+//       } catch (webhookError) {
+//         console.error(
+//           "[ASSESSMENT WEBHOOK] Error triggering assessment creation webhook:",
+//           webhookError
+//         );
+//         // Continue execution even if webhook fails
+//       }
+//     }
+
+//     // Create push notification for scheduled assessment
+//     try {
+//       await createAssessmentScheduledNotification(savedScheduleAssessment);
+//     } catch (notificationError) {
+//       console.error(
+//         "[ASSESSMENT] Error creating scheduled notification:",
+//         notificationError
+//       );
+//       // Continue execution even if notification fails
+//     }
+
+//     // Check for existing candidate assessments without session
+//     const existingAssessments = await CandidateAssessment.find({
+//       scheduledAssessmentId: savedScheduleAssessment._id,
+//       candidateId: { $in: selectedCandidates.map((c) => c._id) },
+//     });
+
+//     const existingCandidateIds = existingAssessments.map((a) =>
+//       a.candidateId.toString()
+//     );
+//     const newCandidates = selectedCandidates.filter(
+//       (candidate) => !existingCandidateIds.includes(candidate._id.toString())
+//     );
+
+//     if (newCandidates.length === 0) {
+//       return res.status(200).json({
+//         success: true,
+//         message: "All selected candidates already assigned",
+//         data: { scheduledAssessmentId: savedScheduleAssessment._id },
+//       });
+//     }
+
+//     // Create candidate assessments with validated dates
+//     const candidateAssessments = newCandidates.map((candidate) => ({
+//       scheduledAssessmentId: savedScheduleAssessment._id,
+//       candidateId: candidate._id,
+//       status: "pending",
+//       expiryAt: new Date(expiryAt), // Create new Date instance for each
+//       isActive: true,
+//       assessmentLink: "",
+//     }));
+
+//     // Validate each candidate assessment before inserting
+//     // for (const candidateAssessment of candidateAssessments) {
+//     //   const { errors, isValid } = validateCandidateAssessment(candidateAssessment);
+//     //   if (!isValid) {
+//     //     return res.status(400).json({
+//     //       success: false,
+//     //       message: "Candidate assessment validation failed",
+//     //       errors
+//     //     });
+//     //   }
+//     // }
+
+//     const insertedAssessments = await CandidateAssessment.insertMany(
+//       candidateAssessments
+//     );
+
+//     // Track usage for each newly created candidate assessment
+//     for (const insertedAssessment of insertedAssessments) {
+//       try {
+//         await handleAssessmentStatusChange(
+//           insertedAssessment._id,
+//           null, // Old status (no previous status for new assessments)
+//           "pending", // New status
+//           {
+//             // Use organizationId as tenantId since ScheduleAssessment uses organizationId
+//             // This ensures usage tracking aligns with how we find assessments
+//             tenantId: organizationId || assessment.tenantId,
+//             ownerId: assessment.ownerId || userId,
+//           }
+//         );
+//         // console.log(`[ASSESSMENT_SHARE] Usage tracked for candidate assessment: ${insertedAssessment._id}`);
+//       } catch (usageError) {
+//         console.error(
+//           "[ASSESSMENT_SHARE] Error updating usage for new assessment:",
+//           usageError
+//         );
+//         // Continue even if usage tracking fails - don't block the sharing process
+//       }
+//     }
+
+//     const tenant = await Tenant.findById(organizationId);
+//     const orgCompanyName = tenant.company;
+
+//     const templateCategory =
+//       tenant.type === "individual"
+//         ? "assessment_invite_individual"
+//         : "assessment_invite";
+
+//     // Process emails without session
+//     const emailTemplate = await emailTemplateModel.findOne({
+//       category: templateCategory,
+//       isSystemTemplate: true,
+//       isActive: true,
+//     });
+
+//     if (!emailTemplate) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Email template not found" });
+//     }
+
+//     const notifications = [];
+//     const emailPromises = [];
+
+//     for (const candidate of newCandidates) {
+//       const candidateData = await Candidate.findOne({ _id: candidate._id });
+//       if (!candidateData) {
+//         console.error(`Candidate not found: ${candidate._id}`);
+//         continue;
+//       }
+
+//       const emails = []
+//         .concat(
+//           candidate.emails || [],
+//           candidate.Email ? [candidate.Email] : []
+//         )
+//         .filter(Boolean);
+
+//       if (emails.length === 0) {
+//         console.error(`No email for candidate: ${candidate._id}`);
+//         continue;
+//       }
+
+//       const candidateAssessment = insertedAssessments.find(
+//         (ca) => ca.candidateId.toString() === candidate._id.toString()
+//       );
+//       if (!candidateAssessment) continue;
+
+//       const encryptedId = encrypt(candidateAssessment._id.toString(), "test");
+//       // console.log("encryptedId", encryptedId)
+//       // console.log("config.REACT_APP_API_URL_FRONTEND", config.REACT_APP_API_URL_FRONTEND)
+//       const link = `${config.REACT_APP_API_URL_FRONTEND}/assessmenttest?candidateAssessmentId=${encryptedId}`;
+//       // console.log("link", link)
+//       await CandidateAssessment.findByIdAndUpdate(candidateAssessment._id, {
+//         assessmentLink: link,
+//       });
+
+//       // Format email content
+//       const candidateName =
+//         [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
+//         "Candidate";
+//       const formattedExpiryDate = expiryAt.toLocaleString("en-US", {
+//         weekday: "long",
+//         year: "numeric",
+//         month: "long",
+//         day: "numeric",
+//         hour: "2-digit",
+//         minute: "2-digit",
+//         timeZoneName: "short",
+//       });
+
+//       const emailSubject = emailTemplate.subject.replace(
+//         /{{orgCompanyName}}/g,
+//         orgCompanyName
+//       );
+//       const emailBody = emailTemplate.body
+//         .replace(/{{candidateName}}/g, candidateName)
+//         .replace(/{{companyName}}/g, companyName)
+//         .replace(/{{expiryDate}}/g, formattedExpiryDate)
+//         .replace(/{{assessmentLink}}/g, link)
+//         .replace(/{{assessmentDuration}}/g, assessmentDuration)
+//         .replace(/{{supportEmail}}/g, supportEmail)
+//         .replace(/{{orgCompanyName}}/g, orgCompanyName)
+//         .replace(/{{title}}/g, assessment.AssessmentTitle);
+
+//       // Queue email sends
+//       emailPromises.push(
+//         ...emails.map((email) =>
+//           sendEmail(email, emailSubject, emailBody)
+//             .then((response) => ({ email, success: true }))
+//             .catch((error) => ({ email, success: false, error: error.message }))
+//         )
+//       );
+
+//       notifications.push({
+//         toAddress: emails,
+//         fromAddress: process.env.EMAIL_FROM,
+//         title: emailSubject,
+//         body: emailBody,
+//         notificationType: "email",
+//         object: {
+//           objectName: "assessment",
+//           objectId: assessmentId,
+//         },
+//         status: "Pending",
+//         tenantId: organizationId,
+//         ownerId: userId,
+//         recipientId: candidate._id,
+//         createdBy: userId,
+//         updatedBy: userId,
+//       });
+
+//       // Save notifications without session
+//       // ✅ Save all notifications once at the end
+//       if (notifications.length > 0) {
+//         req.notificationData = notifications;
+//         await notificationMiddleware(req, res, () => {});
+//       }
+//     }
+//     // console.log("notifications", notifications)
+
+//     // Send emails outside transaction
+//     const emailResults = await Promise.all(emailPromises);
+//     const failedEmails = emailResults.filter((r) => !r.success);
+
+//     // if (failedEmails.length > 0) {
+//     //   console.error('Failed emails:', failedEmails);
+//     //   await Notification.updateMany(
+//     //     // { toAddress: { $in: failedEmails.map(f => f.email) } },
+//     //     { $set: { status: 'Failed', body: 'Failed to send email' } }
+//     //   );
+//     // } else {
+//     //   await Notification.updateMany(
+//     //     { _id: { $in: notifications.map(n => n._id) } },
+//     //     { $set: { status: 'Success' } }
+//     //   );
+//     // }
+
+//     // Trigger usage recalculation for accurate utilized count after sharing
+//     try {
+//       // Use organizationId for recalculation as ScheduleAssessment uses organizationId
+//       // In many cases organizationId and tenantId are the same
+//       await require("../../services/assessmentUsageService").recalculateAssessmentUsage(
+//         organizationId || tenantId
+//       );
+//     } catch (e) {
+//       console.error("[ASSESSMENT_USAGE] Recalc after share failed:", e.message);
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Assessment shared successfully",
+//       data: { scheduledAssessmentId: savedScheduleAssessment._id },
+//     });
+//   } catch (error) {
+//     console.error("Error sharing assessment:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to share assessment",
+//       error: error.message,
+//       ...(error.errors ? { details: error.errors } : {}),
+//     });
+//   }
+// };
+
 exports.shareAssessment = async (req, res) => {
   try {
     const {
@@ -452,47 +1019,39 @@ exports.shareAssessment = async (req, res) => {
       supportEmail = process.env.SUPPORT_EMAIL,
     } = req.body;
 
-    console.log(" req.body", req.body);
+    console.log("req.body", req.body);
 
     // Validate input
     if (!assessmentId || !mongoose.isValidObjectId(assessmentId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid or missing assessment ID" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or missing assessment ID",
+      });
     }
 
     if (!selectedCandidates || selectedCandidates.length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No candidates selected" });
+      return res.status(400).json({
+        success: false,
+        message: "No candidates selected",
+      });
     }
 
-    // Fetch assessment without session for Cosmos DB compatibility
     const assessment = await Assessment.findById(assessmentId);
     if (!assessment) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Assessment not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Assessment not found",
+      });
     }
 
-    // Enforce assessment usage limits before creating schedules (per-tenant limit)
-    // Determine tenant and remaining capacity
     const tenantId = assessment.tenantId;
-    const candidatesToShare = Array.isArray(selectedCandidates)
-      ? selectedCandidates.length
-      : 0;
+    const candidatesToShare = selectedCandidates.length;
 
-    // Use organizationId for usage limit check since ScheduleAssessment uses organizationId
+    // Check usage limits
     const limit = await checkAssessmentUsageLimit(organizationId || tenantId);
-    const entitled = limit.entitled;
-    const utilized = limit.utilized;
-    const remaining =
-      limit.remaining === Infinity
-        ? Infinity
-        : Math.max(limit.remaining || 0, 0);
+    const { entitled, utilized, remaining, canShare } = limit;
 
-    // If there is no active usage period at all, block sharing with a clear message
-    if (!limit.canShare && limit.message === "No active usage period") {
+    if (!canShare && limit.message === "No active usage period") {
       return res.status(400).json({
         success: false,
         code: "NO_ACTIVE_USAGE_PERIOD",
@@ -503,71 +1062,49 @@ exports.shareAssessment = async (req, res) => {
 
     if (entitled !== 0) {
       if (
-        !limit.canShare ||
+        !canShare ||
         (remaining !== Infinity && candidatesToShare > remaining)
       ) {
-        const ms = new Date(limit.toDate) - new Date(limit.fromDate);
-        const days = Math.round(ms / (1000 * 60 * 60 * 24));
+        const days = Math.round(
+          (new Date(limit.toDate) - new Date(limit.fromDate)) / (1000 * 60 * 60 * 24)
+        );
         const period = days > 330 ? "annual" : "monthly";
 
         return res.status(400).json({
           success: false,
           code: "ASSESSMENT_LIMIT_EXCEEDED",
           message: `Your ${period} assessment limit is used. Remaining: ${remaining}. You selected ${candidatesToShare}. Wait for next ${period} cycle or upgrade your plan.`,
-          details: {
-            entitled,
-            utilized,
-            remaining,
-            period,
-            periodFrom: limit.fromDate,
-            periodTo: limit.toDate,
-          },
+          details: { entitled, utilized, remaining, period, ...limit },
         });
       }
     }
 
-    // After successful validations and before returning, trigger a usage recalc at the end
-
-    // Handle link expiry days - ensure it's a valid number
+    // Link expiry setup
     let linkExpiryDays = parseInt(assessment.linkExpiryDays, 10);
-    if (isNaN(linkExpiryDays) || linkExpiryDays <= 0) {
-      linkExpiryDays = 3; // Default to 3 days if invalid
-    }
+    if (isNaN(linkExpiryDays) || linkExpiryDays <= 0) linkExpiryDays = 3;
 
-    // Calculate expiry date safely
     const expiryAt = new Date();
     expiryAt.setDate(expiryAt.getDate() + linkExpiryDays);
 
-    // Verify date is valid
     if (isNaN(expiryAt.getTime())) {
       return res.status(400).json({
         success: false,
         message: "Invalid expiry date calculation",
-        details: {
-          linkExpiryDays: assessment.linkExpiryDays,
-          calculatedDate: expiryAt.toString(),
-        },
       });
     }
 
-    const assessmentDuration = assessment.assessmentDuration || 60; // Default to 60 minutes if not set
+    const assessmentDuration = assessment.assessmentDuration || 60;
 
-    // <---------------------- v1.0.0
-
-    // Generate assessment ID and create schedule assessment without session
-    // Use a simpler approach that doesn't require sorting by scheduledAssessmentCode
-    // <---------------------- v1.0.1
+    // Generate scheduled assessment code
     const scheduleCount = await ScheduleAssessment.countDocuments({
       tenantId: organizationId,
       ownerId: userId,
       scheduledAssessmentCode: { $exists: true, $ne: null },
     });
 
-    // Generate the new code with 5-digit padding based on count
-    const nextNumber = scheduleCount + 1;
+    let nextNumber = scheduleCount + 1;
     let scheduledAssessmentCode = `ASMT-${String(nextNumber).padStart(5, "0")}`;
 
-    // Check if this code already exists (in case of concurrent requests)
     const existingCode = await ScheduleAssessment.findOne({
       tenantId: organizationId,
       ownerId: userId,
@@ -575,18 +1112,11 @@ exports.shareAssessment = async (req, res) => {
     });
 
     if (existingCode) {
-      // If code exists, try with a higher number
-      const newNextNumber = nextNumber + 1;
-      scheduledAssessmentCode = `ASMT-${String(newNextNumber).padStart(
-        5,
-        "0"
-      )}`;
+      nextNumber += 1;
+      scheduledAssessmentCode = `ASMT-${String(nextNumber).padStart(5, "0")}`;
     }
-    // <---------------------- v1.0.1
 
-    // <---------------------- v1.0.0
-
-    // Validate the scheduled assessment data
+    // Validate scheduled assessment
     const { errors, isValid } = validateScheduledAssessment({
       assessmentId,
       tenantId: organizationId,
@@ -595,98 +1125,69 @@ exports.shareAssessment = async (req, res) => {
       createdBy: userId,
     });
 
-    let savedScheduleAssessment;
-
     if (!isValid) {
       return res.status(400).json({
         success: false,
         message: "Validation failed",
         errors,
       });
-    } else {
-      const scheduleAssessment = new ScheduleAssessment({
-        scheduledAssessmentCode,
+    }
+
+    // Create ScheduleAssessment
+    const scheduleAssessment = new ScheduleAssessment({
+      scheduledAssessmentCode,
+      assessmentId,
+      tenantId: organizationId,
+      ownerId: userId,
+      status: "scheduled",
+      proctoringEnabled: true,
+      createdBy: userId,
+      order: `Assessment ${nextNumber}`,
+      expiryAt,
+    });
+
+    const savedScheduleAssessment = await scheduleAssessment.save();
+
+    // Webhook & Notification (fire and forget)
+    try {
+      const webhookPayload = {
+        scheduledAssessmentId: savedScheduleAssessment._id,
+        scheduledAssessmentCode: savedScheduleAssessment.scheduledAssessmentCode,
         assessmentId,
         tenantId: organizationId,
         ownerId: userId,
         status: "scheduled",
+        expiryAt,
+        order: scheduleAssessment.order,
         proctoringEnabled: true,
-        createdBy: userId,
-        order: `Assessment ${nextNumber}`,
-        expiryAt, // Add the expiry date
-      });
-      savedScheduleAssessment = await scheduleAssessment.save();
+        createdAt: savedScheduleAssessment.createdAt,
+        event: "assessment.created",
+      };
 
-      console.log(
-        `[ASSESSMENT WEBHOOK] New assessment created via share: ${savedScheduleAssessment._id} with status: ${savedScheduleAssessment.status}`
+      await triggerWebhook(
+        EVENT_TYPES.ASSESSMENT_STATUS_UPDATED,
+        webhookPayload,
+        organizationId
       );
-
-      // Trigger webhook for assessment creation
-      try {
-        const webhookPayload = {
-          scheduledAssessmentId: savedScheduleAssessment._id,
-          scheduledAssessmentCode:
-            savedScheduleAssessment.scheduledAssessmentCode,
-          assessmentId: savedScheduleAssessment.assessmentId,
-          tenantId: savedScheduleAssessment.tenantId,
-          ownerId: savedScheduleAssessment.ownerId,
-          status: savedScheduleAssessment.status,
-          expiryAt: savedScheduleAssessment.expiryAt,
-          order: savedScheduleAssessment.order,
-          proctoringEnabled: savedScheduleAssessment.proctoringEnabled,
-          createdAt: savedScheduleAssessment.createdAt,
-          event: "assessment.created",
-        };
-
-        console.log(
-          `[ASSESSMENT WEBHOOK] Triggering creation webhook for event: ${EVENT_TYPES.ASSESSMENT_STATUS_UPDATED}`
-        );
-        console.log(`[ASSESSMENT WEBHOOK] Payload:`, {
-          event: EVENT_TYPES.ASSESSMENT_STATUS_UPDATED,
-          data: webhookPayload,
-          tenantId: savedScheduleAssessment.tenantId,
-        });
-
-        await triggerWebhook(
-          EVENT_TYPES.ASSESSMENT_STATUS_UPDATED,
-          webhookPayload,
-          savedScheduleAssessment.tenantId
-        );
-
-        console.log(
-          `[ASSESSMENT WEBHOOK] Creation webhook sent successfully for assessment ${savedScheduleAssessment._id}`
-        );
-      } catch (webhookError) {
-        console.error(
-          "[ASSESSMENT WEBHOOK] Error triggering assessment creation webhook:",
-          webhookError
-        );
-        // Continue execution even if webhook fails
-      }
+    } catch (err) {
+      console.error("[WEBHOOK] Failed to trigger assessment creation webhook:", err);
     }
 
-    // Create push notification for scheduled assessment
     try {
       await createAssessmentScheduledNotification(savedScheduleAssessment);
-    } catch (notificationError) {
-      console.error(
-        "[ASSESSMENT] Error creating scheduled notification:",
-        notificationError
-      );
-      // Continue execution even if notification fails
+    } catch (err) {
+      console.error("[NOTIFICATION] Failed to create scheduled notification:", err);
     }
 
-    // Check for existing candidate assessments without session
+    // Avoid duplicates
     const existingAssessments = await CandidateAssessment.find({
       scheduledAssessmentId: savedScheduleAssessment._id,
       candidateId: { $in: selectedCandidates.map((c) => c._id) },
     });
 
-    const existingCandidateIds = existingAssessments.map((a) =>
-      a.candidateId.toString()
-    );
+    const existingCandidateIds = existingAssessments.map((a) => a.candidateId.toString());
     const newCandidates = selectedCandidates.filter(
-      (candidate) => !existingCandidateIds.includes(candidate._id.toString())
+      (c) => !existingCandidateIds.includes(c._id.toString())
     );
 
     if (newCandidates.length === 0) {
@@ -697,203 +1198,94 @@ exports.shareAssessment = async (req, res) => {
       });
     }
 
-    // Create candidate assessments with validated dates
+    // Create new CandidateAssessments
     const candidateAssessments = newCandidates.map((candidate) => ({
       scheduledAssessmentId: savedScheduleAssessment._id,
       candidateId: candidate._id,
       status: "pending",
-      expiryAt: new Date(expiryAt), // Create new Date instance for each
+      expiryAt: new Date(expiryAt),
       isActive: true,
-      assessmentLink: "",
+      assessmentLink: "", // Will be updated next
     }));
 
-    // Validate each candidate assessment before inserting
-    // for (const candidateAssessment of candidateAssessments) {
-    //   const { errors, isValid } = validateCandidateAssessment(candidateAssessment);
-    //   if (!isValid) {
-    //     return res.status(400).json({
-    //       success: false,
-    //       message: "Candidate assessment validation failed",
-    //       errors
-    //     });
-    //   }
-    // }
+    const insertedAssessments = await CandidateAssessment.insertMany(candidateAssessments);
 
-    const insertedAssessments = await CandidateAssessment.insertMany(
-      candidateAssessments
-    );
+    // Generate links
+    for (const ca of insertedAssessments) {
+      const encryptedId = encrypt(ca._id.toString(), "test");
+      const link = `${config.REACT_APP_API_URL_FRONTEND}/assessmenttest?candidateAssessmentId=${encryptedId}`;
 
-    // Track usage for each newly created candidate assessment
-    for (const insertedAssessment of insertedAssessments) {
+      await CandidateAssessment.findByIdAndUpdate(ca._id, { assessmentLink: link });
+    }
+
+    // Track usage
+    for (const ca of insertedAssessments) {
       try {
         await handleAssessmentStatusChange(
-          insertedAssessment._id,
-          null, // Old status (no previous status for new assessments)
-          "pending", // New status
-          {
-            // Use organizationId as tenantId since ScheduleAssessment uses organizationId
-            // This ensures usage tracking aligns with how we find assessments
-            tenantId: organizationId || assessment.tenantId,
-            ownerId: assessment.ownerId || userId,
-          }
+          ca._id,
+          null,
+          "pending",
+          { tenantId: organizationId || tenantId, ownerId: userId }
         );
-        // console.log(`[ASSESSMENT_SHARE] Usage tracked for candidate assessment: ${insertedAssessment._id}`);
-      } catch (usageError) {
-        console.error(
-          "[ASSESSMENT_SHARE] Error updating usage for new assessment:",
-          usageError
-        );
-        // Continue even if usage tracking fails - don't block the sharing process
+      } catch (err) {
+        console.error("[USAGE] Failed to track usage for:", ca._id, err);
       }
     }
 
-    const tenant = await Tenant.findById(organizationId);
-    const orgCompanyName = tenant.company;
-
-    const templateCategory =
-      tenant.type === "individual"
-        ? "assessment_invite_individual"
-        : "assessment_invite";
-
-    // Process emails without session
-    const emailTemplate = await emailTemplateModel.findOne({
-      category: templateCategory,
-      isSystemTemplate: true,
-      isActive: true,
-    });
-
-    if (!emailTemplate) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Email template not found" });
-    }
+    // === EMAIL SENDING USING SHARED UTILITY ===
+    const populatedAssessments = await CandidateAssessment.find({
+      _id: { $in: insertedAssessments.map((ca) => ca._id) },
+    }).populate("candidateId");
 
     const notifications = [];
-    const emailPromises = [];
 
-    for (const candidate of newCandidates) {
-      const candidateData = await Candidate.findOne({ _id: candidate._id });
-      if (!candidateData) {
-        console.error(`Candidate not found: ${candidate._id}`);
-        continue;
-      }
+    if (populatedAssessments.length > 0) {
+      try {
+        const { results: emailResults } = await sendAssessmentInvitationEmails({
+          candidateAssessments: populatedAssessments,
+          assessment,
+          organizationId,
+          companyName,
+          supportEmail,
+        });
 
-      const emails = []
-        .concat(
-          candidate.emails || [],
-          candidate.Email ? [candidate.Email] : []
-        )
-        .filter(Boolean);
-
-      if (emails.length === 0) {
-        console.error(`No email for candidate: ${candidate._id}`);
-        continue;
-      }
-
-      const candidateAssessment = insertedAssessments.find(
-        (ca) => ca.candidateId.toString() === candidate._id.toString()
-      );
-      if (!candidateAssessment) continue;
-
-      const encryptedId = encrypt(candidateAssessment._id.toString(), "test");
-      // console.log("encryptedId", encryptedId)
-      // console.log("config.REACT_APP_API_URL_FRONTEND", config.REACT_APP_API_URL_FRONTEND)
-      const link = `${config.REACT_APP_API_URL_FRONTEND}/assessmenttest?candidateAssessmentId=${encryptedId}`;
-      // console.log("link", link)
-      await CandidateAssessment.findByIdAndUpdate(candidateAssessment._id, {
-        assessmentLink: link,
-      });
-
-      // Format email content
-      const candidateName =
-        [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
-        "Candidate";
-      const formattedExpiryDate = expiryAt.toLocaleString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZoneName: "short",
-      });
-
-      const emailSubject = emailTemplate.subject.replace(
-        /{{orgCompanyName}}/g,
-        orgCompanyName
-      );
-      const emailBody = emailTemplate.body
-        .replace(/{{candidateName}}/g, candidateName)
-        .replace(/{{companyName}}/g, companyName)
-        .replace(/{{expiryDate}}/g, formattedExpiryDate)
-        .replace(/{{assessmentLink}}/g, link)
-        .replace(/{{assessmentDuration}}/g, assessmentDuration)
-        .replace(/{{supportEmail}}/g, supportEmail)
-        .replace(/{{orgCompanyName}}/g, orgCompanyName)
-        .replace(/{{title}}/g, assessment.AssessmentTitle);
-
-      // Queue email sends
-      emailPromises.push(
-        ...emails.map((email) =>
-          sendEmail(email, emailSubject, emailBody)
-            .then((response) => ({ email, success: true }))
-            .catch((error) => ({ email, success: false, error: error.message }))
-        )
-      );
-
-      notifications.push({
-        toAddress: emails,
-        fromAddress: process.env.EMAIL_FROM,
-        title: emailSubject,
-        body: emailBody,
-        notificationType: "email",
-        object: {
-          objectName: "assessment",
-          objectId: assessmentId,
-        },
-        status: "Pending",
-        tenantId: organizationId,
-        ownerId: userId,
-        recipientId: candidate._id,
-        createdBy: userId,
-        updatedBy: userId,
-      });
-
-      // Save notifications without session
-      // ✅ Save all notifications once at the end
-      if (notifications.length > 0) {
-        req.notificationData = notifications;
-        await notificationMiddleware(req, res, () => {});
+        // Build notifications for middleware
+        for (const result of emailResults) {
+          if (result.success && result.emails?.length > 0) {
+            notifications.push({
+              toAddress: result.emails,
+              fromAddress: process.env.EMAIL_FROM,
+              title: `Invitation to Assessment: ${assessment.AssessmentTitle || "Assessment"}`,
+              body: "Assessment invitation sent", // Body already sent via sendEmail
+              notificationType: "email",
+              object: { objectName: "assessment", objectId: assessmentId },
+              status: "Success",
+              tenantId: organizationId,
+              ownerId: userId,
+              recipientId: result.candidateAssessmentId, // or candidate ID if preferred
+              createdBy: userId,
+              updatedBy: userId,
+            });
+          }
+        }
+      } catch (emailError) {
+        console.error("Failed to send invitation emails:", emailError);
+        // Continue — don't fail entire share if emails fail
       }
     }
-    // console.log("notifications", notifications)
 
-    // Send emails outside transaction
-    const emailResults = await Promise.all(emailPromises);
-    const failedEmails = emailResults.filter((r) => !r.success);
+    // Save notifications via middleware
+    if (notifications.length > 0) {
+      req.notificationData = notifications;
+      await notificationMiddleware(req, res, () => {});
+    }
 
-    // if (failedEmails.length > 0) {
-    //   console.error('Failed emails:', failedEmails);
-    //   await Notification.updateMany(
-    //     // { toAddress: { $in: failedEmails.map(f => f.email) } },
-    //     { $set: { status: 'Failed', body: 'Failed to send email' } }
-    //   );
-    // } else {
-    //   await Notification.updateMany(
-    //     { _id: { $in: notifications.map(n => n._id) } },
-    //     { $set: { status: 'Success' } }
-    //   );
-    // }
-
-    // Trigger usage recalculation for accurate utilized count after sharing
+    // Recalculate usage
     try {
-      // Use organizationId for recalculation as ScheduleAssessment uses organizationId
-      // In many cases organizationId and tenantId are the same
-      await require("../../services/assessmentUsageService").recalculateAssessmentUsage(
-        organizationId || tenantId
-      );
-    } catch (e) {
-      console.error("[ASSESSMENT_USAGE] Recalc after share failed:", e.message);
+      const { recalculateAssessmentUsage } = require("../../services/assessmentUsageService");
+      await recalculateAssessmentUsage(organizationId || tenantId);
+    } catch (err) {
+      console.error("[USAGE] Recalculation failed:", err);
     }
 
     return res.status(200).json({
@@ -907,7 +1299,6 @@ exports.shareAssessment = async (req, res) => {
       success: false,
       message: "Failed to share assessment",
       error: error.message,
-      ...(error.errors ? { details: error.errors } : {}),
     });
   }
 };
