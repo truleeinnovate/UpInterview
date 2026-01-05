@@ -23,7 +23,8 @@ const CancellationPolicyWarning = ({ dateTime, roundStatus, interviewerType }) =
       .then((res) => {
         if (res?.success) {
           setPolicyData(res.policy);
-          setHoursBefore(Math.round(res.hoursBefore));
+          setHoursBefore(res.hoursBefore); // Keep full decimal - display logic handles formatting
+          console.log("Cancellation Policy response", res);
         } else {
           setError(true);
         }
@@ -78,7 +79,13 @@ const CancellationPolicyWarning = ({ dateTime, roundStatus, interviewerType }) =
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
         <p className="text-sm font-semibold text-blue-900 mb-1">
           ⏱ Cancelled{" "}
-          {hoursBefore >= 24 ? "more than 24 hours" : `${hoursBefore} hours`}{" "}
+          {hoursBefore >= 24
+            ? "more than 24 hours"
+            : hoursBefore >= 1
+              ? `${Math.round(hoursBefore)} hour${Math.round(hoursBefore) === 1 ? '' : 's'}`
+              : Math.ceil(hoursBefore * 60) <= 0
+                ? "less than a minute"
+                : `${Math.ceil(hoursBefore * 60)} minute${Math.ceil(hoursBefore * 60) === 1 ? '' : 's'}`}{" "}
           before the interview
         </p>
         <p className="text-sm text-blue-800">
@@ -130,6 +137,7 @@ const RoundStatusReasonModal = ({
   // New props for policy display
   roundData = null,
   showPolicyInfo = false,
+  isLoading = false, // Loading state for confirm button
 }) => {
   const [selectedReason, setSelectedReason] = useState("");
   const [otherText, setOtherText] = useState("");
@@ -232,9 +240,16 @@ const RoundStatusReasonModal = ({
           <Button
             variant="destructive"
             onClick={handleConfirm}
-            disabled={!selectedReason || (showOtherField && !otherText.trim())}
+            disabled={!selectedReason || (showOtherField && !otherText.trim()) || isLoading}
           >
-            {confirmLabel}
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Processing...
+              </>
+            ) : (
+              confirmLabel
+            )}
           </Button>
         </div>
       </div>

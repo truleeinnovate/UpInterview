@@ -140,6 +140,7 @@ const RoundCard = ({
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [assessment, setAssessment] = useState(null);
   const [actionInProgress, setActionInProgress] = useState(false);
+  const [isCancellingRound, setIsCancellingRound] = useState(false); // Loading state for cancel operation
 
   useEffect(() => {
     if (isExpanded && round?.assessmentId) {
@@ -304,12 +305,15 @@ const RoundCard = ({
 
   // handling Cancellation functionlity
   const handleCancelWithReason = async ({ reason, comment }) => {
+    setIsCancellingRound(true);
     try {
       await handleStatusChange("Cancelled", reason, comment || null);
       setCancelReasonModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
       setActionInProgress(false);
+    } finally {
+      setIsCancellingRound(false);
     }
   };
 
@@ -1981,6 +1985,7 @@ const RoundCard = ({
         confirmLabel="Confirm Cancel"
         roundData={round}
         showPolicyInfo={true}
+        isLoading={isCancellingRound}
       />
 
       {/* Shared reason modal for No Show */}

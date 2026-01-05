@@ -70,7 +70,11 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm font-semibold text-blue-900 mb-1">
           ⏱ Rescheduled{" "}
-          {hoursBefore >= 24 ? "more than 24 hours" : `${hoursBefore} hours`}{" "}
+          {hoursBefore >= 24
+            ? "more than 24 hours"
+            : hoursBefore >= 1
+              ? `${Math.round(hoursBefore)} hour${Math.round(hoursBefore) === 1 ? '' : 's'}`
+              : `${Math.round(hoursBefore * 60)} minute${Math.round(hoursBefore * 60) === 1 ? '' : 's'}`}{" "}
           before the interview
         </p>
         <p className="text-sm text-blue-800">
