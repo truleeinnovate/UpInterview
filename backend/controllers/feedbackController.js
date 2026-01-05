@@ -538,6 +538,8 @@ const getFeedbackByRoundId = async (req, res) => {
         questions: interviewRound.questions,
         rejectionReason: interviewRound.rejectionReason,
         interviewers: interviewRound.interviewers || [],
+        candidateJoined: interviewRound.candidateJoined || false,
+        interviewerJoined: interviewRound.interviewerJoined || false,
       },
       candidate: candidatePosition?.candidateId || null,
       position: positionData,
