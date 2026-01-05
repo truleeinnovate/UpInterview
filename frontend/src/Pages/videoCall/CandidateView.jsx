@@ -37,7 +37,7 @@ const CandidateView = ({
   const [localInterviewTime, setLocalInterviewTime] = useState("");
   const [localEndTime, setLocalEndTime] = useState("");
   const location = useLocation();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   // Extract URL data once
   const urlData = useMemo(
