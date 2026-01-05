@@ -332,6 +332,9 @@ const getQuestions = async (req, res) => {
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
 
+    // Debug logging
+    // console.log("Search Query Params:", { search, questionType, page, limit });
+
     // Check Question Bank Access usage limits
     let usageLimit = null;
     let canAccessAll = true;
@@ -362,18 +365,18 @@ const getQuestions = async (req, res) => {
       category: Array.isArray(doc.category)
         ? doc.category
         : doc.category
-        ? [doc.category].flat()
-        : [],
+          ? [doc.category].flat()
+          : [],
       technology: Array.isArray(doc.technology)
         ? doc.technology
         : doc.technology
-        ? [doc.technology].flat()
-        : [],
+          ? [doc.technology].flat()
+          : [],
       skill: Array.isArray(doc.skill)
         ? doc.skill
         : doc.skill
-        ? [doc.skill].flat()
-        : [],
+          ? [doc.skill].flat()
+          : [],
       tags: doc.tags ? [doc.tags].flat() : [],
       difficultyLevel: doc.difficultyLevel,
       correctAnswer: doc.correctAnswer,
@@ -426,8 +429,11 @@ const getQuestions = async (req, res) => {
         query.$or = [
           { questionText: searchRegex },
           { tags: searchRegex },
-          { skill: searchRegex },
           { technology: searchRegex },
+          { topic: searchRegex },
+          { category: searchRegex },
+          { subTopic: searchRegex },
+          { area: searchRegex },
         ];
       }
 
@@ -455,7 +461,9 @@ const getQuestions = async (req, res) => {
         };
       }
 
-      return Object.keys(query).length > 0 ? query : {};
+      const result = Object.keys(query).length > 0 ? query : {};
+      // console.log(`Filter Query for ${collectionType}:`, JSON.stringify(result, null, 2));
+      return result;
     };
 
     // Fetch filtered data from both collections
@@ -481,6 +489,13 @@ const getQuestions = async (req, res) => {
         AssessmentQuestion.countDocuments(buildFilterQuery("assessment") || {}),
         InterviewQuestion.countDocuments(buildFilterQuery("interview") || {}),
       ]);
+
+    // console.log("Query Results:", {
+    //   interviewsCount: interviews.length,
+    //   assessmentsCount: assessments.length,
+    //   totalInterviews,
+    //   totalAssessments
+    // });
 
     // Combine and process results based on question type
     let allQuestions = [];
