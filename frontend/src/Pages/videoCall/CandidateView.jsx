@@ -16,24 +16,22 @@ import { useMediaDevice } from "@videosdk.live/react-sdk";
 
 import {
   formatToLocalTime,
-  formatDuration,
-  getTimeUntilInterview,
-  getDateStatus,
+  // formatDuration,
+  // getTimeUntilInterview,
+  // getDateStatus,
 } from "../../utils/timezoneUtils";
 import { useMemo } from "react";
 import {
   extractUrlData,
   useCandidateDetails,
 } from "../../apiHooks/useVideoCall";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const CandidateView = ({
   onBack,
   feedbackData: propFeedbackData,
   decodedData: propDecodedData,
 }) => {
-  // console.log("CandidateView feedbackData", feedbackData);
-  // console.log("CandidateView decodedData", decodedData);
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [localInterviewTime, setLocalInterviewTime] = useState("");
@@ -75,7 +73,7 @@ const CandidateView = ({
 
   const feedbackData = propFeedbackData || candidateData;
 
-  console.log("feedbackData", feedbackData);
+  console.log("feedbackData as candidate data :-------", feedbackData);
 
   // Video preview states
   const [micOn, setMicOn] = useState(false);
@@ -567,16 +565,6 @@ const CandidateView = ({
 
                     // change only the path
                     currentUrl.pathname = "/video-call";
-
-                    // Add meetLink and encoded decodedData to URL
-                    currentUrl.searchParams.set(
-                      "meetLink",
-                      decodedData?.meetLink || ""
-                    );
-                    currentUrl.searchParams.set(
-                      "meetingData",
-                      encodeURIComponent(JSON.stringify(decodedData || {}))
-                    );
 
                     window.open(currentUrl.toString(), "_blank");
                   } else {
