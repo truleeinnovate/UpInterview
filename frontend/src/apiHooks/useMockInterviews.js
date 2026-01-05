@@ -84,156 +84,93 @@ export const useMockInterviews = (params = {}) => {
   const loading = isQueryLoading && responseData?.data === undefined;
 
   // Add/Update mock interview mutation
-  // In useMockInterviews.js - FIXED VERSION
-  const addOrUpdateMockInterview = useMutation({
-    mutationFn: async (params) => {
-      const {
-        formData,
-        id,
-        isEdit,
-        userId,
-        organizationId,
-        resume,
-        isResumeRemoved,
-        round,
-      } = params;
-
-      // ✅ CASE 1: Updating just the round (meeting link update)
-      // if (round && id) {
-      //   // ✅ Normalize id to _id before sending
-      //   const normalizedRound = { ...round };
-      //   if (normalizedRound.id && !normalizedRound._id) {
-      //     normalizedRound._id = normalizedRound.id;
-      //     delete normalizedRound.id;
-      //   }
-
-      //   const payload = { rounds: [normalizedRound] };
-      //   const response = await axios.patch(
-      //     `${config.REACT_APP_API_URL}/updateMockInterview/${id}`,
-      //     payload
-      //   );
-      //   return response.data;
-      // }
-
-      // ✅ CASE 2: Normal full create/update
-      if (!formData) throw new Error("formData is required for create/update");
-
-      // Safely build rounds - FIXED: Handle both array and object formats
-      let rounds = [];
-      if (formData.rounds) {
-        if (Array.isArray(formData.rounds)) {
-          rounds = formData.rounds;
-        } else if (typeof formData.rounds === "object") {
-          rounds = [formData.rounds];
-        }
-      }
-
-      // Set proper status based on interviewers
-      // const status = rounds.length > 0 && rounds[0]?.interviewers?.length > 0 ? "RequestSent" : "Draft";
-
-      // Format skills properly
-      // const skills = formData.entries
-      //   ? formData.entries
-      //       .filter((e) => e.skill || e.experience || e.expertise)
-      //       .map((e) => ({
-      //         skill: e.skill,
-      //         experience: e.experience,
-      //         expertise: e.expertise,
-      //       }))
-      //   : formData.skills || [];
-
-      const skills = Array.isArray(formData.skills) ? formData.skills : [];
-
-      // Build payload - FIXED: Include rounds only if they exist
+  // ====================== MUTATION 1: Save MockInterview (Page 1) ======================
+  const saveMockInterview = useMutation({
+    mutationFn: async ({ formData, id, userId, organizationId, resume, isResumeRemoved }) => {
       const payload = {
-        skills,
-        currentRole: formData.currentRole || "",
+        skills: Array.isArray(formData.skills) ? formData.skills : [],
         candidateName: formData.candidateName || "",
         higherQualification: formData.higherQualification || "",
         currentExperience: formData.currentExperience || "",
-        // technology: formData.technology || "",
+        currentRole: formData.currentRole || "",
         jobDescription: formData.jobDescription || "",
-        createdById: userId,
-        lastModifiedById: userId,
         ownerId: userId,
         tenantId: organizationId,
+        createdById: userId,
+        lastModifiedById: userId,
       };
 
-      // Only include rounds if they exist (for Page 2)
-      if (rounds.length > 0) {
-        payload.rounds = rounds.map((r) => ({
-          ...r,
-          dateTime: formData.combinedDateTime || r.dateTime,
-          // status,
-          interviewers: Array.isArray(r.interviewers) ? r.interviewers : [],
-        }));
-      }
+      const url = id
+        ? `${config.REACT_APP_API_URL}/mockinterview/${id}`
+        : `${config.REACT_APP_API_URL}/mockinterview/create`;
 
-      //"/updateMockInterview/", payload);
-
-      const url = isEdit
-        ? `${config.REACT_APP_API_URL}/updateMockInterview/${id}`
-        : `${config.REACT_APP_API_URL}/mockinterview`;
-
-      const method = isEdit ? "patch" : "post";
+      const method = id ? "patch" : "post";
 
       const response = await axios[method](url, payload);
 
-      // Handle resume upload
-      const mockInterviewId =
-        response.data.data?.mockInterview?._id ||
-        response.data.data?._id ||
-        response.data._id;
-      if (mockInterviewId) {
+      const mockId = response.data.data?.mockInterview?._id || response.data.data?._id || response.data?._id;
+
+      // Resume upload
+      if (mockId) {
         if (isResumeRemoved && !resume) {
-          await uploadFile(null, "resume", "mockInterview", mockInterviewId);
+          await uploadFile(null, "resume", "mockInterview", mockId);
         } else if (resume instanceof File) {
-          await uploadFile(resume, "resume", "mockInterview", mockInterviewId);
+          await uploadFile(resume, "resume", "mockInterview", mockId);
         }
       }
 
-      //console.log("response.data", response);
-
       return response.data;
     },
-    // Change the onSuccess in addOrUpdateMockInterview mutation:
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["mockinterviews"],
-        exact: false,
-      });
-      // Also invalidate specific query if needed
-      queryClient.invalidateQueries({
-        queryKey: ["mockinterviews", params],
-      });
-    },
-
-    // onSuccess: () => {
-    //   queryClient.invalidateQueries(["mockinterviews"]);
-    // },
-    onError: (error) => {
-      console.error("Mock interview error:", error);
+      queryClient.invalidateQueries({ queryKey: ["mockinterviews"] });
     },
   });
 
-  // Calculate loading states
-  const isMutationLoading = addOrUpdateMockInterview.isPending;
+  // ====================== MUTATION 2: Save/Update Round (Page 2) ======================
+  const saveMockRound = useMutation({
+    mutationFn: async ({ mockInterviewId, round, interviewers, roundId }) => {
+      if (!mockInterviewId) throw new Error("Mock Interview ID is required");
+
+    const payload = {
+      round,
+    };
+
+      const url = roundId
+        ? `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}`
+        : `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round`;
+
+      const method = roundId ? "patch" : "post";
+
+      const response = await axios[method](url, payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mockinterviews"] });
+    },
+  });
+
+  // Loading states
+  const isMutationLoading = saveMockInterview.isPending || saveMockRound.isPending;
   const isLoading = isQueryLoading || isMutationLoading;
 
   return {
+    // List data
     mockinterviewData,
     totalCount,
     totalPages,
     isLoading,
     loading,
     isQueryLoading,
-    isMutationLoading,
     isError,
     error,
-    isAddOrUpdateError: addOrUpdateMockInterview.isError,
-    addOrUpdateError: addOrUpdateMockInterview.error,
-    addOrUpdateMockInterview: addOrUpdateMockInterview.mutateAsync,
     refetchMockInterviews,
+
+    // Mutations
+    saveMockInterview: saveMockInterview.mutateAsync,
+    isSavingMock: saveMockInterview.isPending,
+
+    saveMockRound: saveMockRound.mutateAsync,
+    isSavingRound: saveMockRound.isPending,
   };
 };
 
@@ -241,10 +178,14 @@ export const useMockInterviewById = (mockInterviewId) => {
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.MockInterviews?.View;
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["mockinterview", mockInterviewId],
     queryFn: async () => {
-      const authToken = Cookies.get("authToken") ?? "";
+      if (!mockInterviewId) return null;
+
+      const authToken = Cookies.get("authToken");
+      if (!authToken) throw new Error("No auth token");
+
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}`,
         {
@@ -254,14 +195,15 @@ export const useMockInterviewById = (mockInterviewId) => {
           withCredentials: true,
         }
       );
-      return response.data?.data;
+
+      return response.data?.data || null;
     },
     enabled: !!mockInterviewId && !!hasViewPermission,
     retry: 1,
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30,   // 30 minutes cache
     refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    refetchOnReconnect: true,
   });
 
   return {
@@ -269,6 +211,7 @@ export const useMockInterviewById = (mockInterviewId) => {
     isLoading,
     isError,
     error,
+    refetch,
   };
 };
 
