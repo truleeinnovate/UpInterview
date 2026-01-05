@@ -1,7 +1,15 @@
 // v1.0.0 - Ashok - Improved responsiveness
 
 import React, { useEffect, useState, useRef } from "react";
-import { Users, User, MessageSquare, Video, Mic, MicOff, VideoOff } from "lucide-react";
+import {
+  Users,
+  User,
+  MessageSquare,
+  Video,
+  Mic,
+  MicOff,
+  VideoOff,
+} from "lucide-react";
 import { useMediaDevice } from "@videosdk.live/react-sdk";
 import { config } from "../../config";
 import { useInterviews } from "../../apiHooks/useInterviews";
@@ -26,11 +34,18 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   const videoTrackRef = useRef();
   const audioTrackRef = useRef();
   const micStreamRef = useRef();
-  
+
   // Get media devices
   const { getCameras, getMicrophones, getPlaybackDevices } = useMediaDevice();
-  
+
   console.log("Feedback Data in RoleSelector:", feedbackData);
+
+  const currentStatus = feedbackData?.interviewRound?.status;
+
+  const isFinalStatus = ["InProgress", "Scheduled", "Rescheduled"].includes(
+    currentStatus
+  );
+
   // Function to update interview status to "in-progress"
   const updateInterviewStatus = async () => {
     try {
@@ -155,72 +170,6 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     return () => clearInterval(interval);
   }, [feedbackData?.interviewRound?.dateTime]);
 
-  // useEffect(() => {
-  //   if (!feedbackData?.interviewRound?.dateTime) return;
-
-  //   // Parse start and end times from the interview data
-  //   const { start: interviewStart, end: interviewEnd } = parseCustomDateTime(
-  //     feedbackData.interviewRound.dateTime
-  //   );
-  //   if (!interviewStart || !interviewEnd) return;
-
-  //   // Format times for display in user's local timezone
-  //   const formatTime = (date) => {
-  //     return date.toLocaleTimeString(undefined, {
-  //       hour: '2-digit',
-  //       minute: '2-digit',
-  //       hour12: true
-  //     });
-  //   };
-
-  //   setLocalInterviewTime(formatTime(interviewStart));
-  //   setLocalEndTime(formatTime(interviewEnd));
-
-  //   // Update button state and countdown timer
-  //   const updateTimes = () => {
-  //     const now = new Date();
-  //     const startTime = interviewStart.getTime();
-  //     const currentTime = now.getTime();
-  //     const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
-
-  //     // CHANGED: Enable button ONLY if current time is within 15 minutes before start time
-  //     // (Removed the end time check to only enable before interview starts)
-  //     const shouldEnable = (currentTime >= startTime - fifteenMinutes) &&
-  //                        (currentTime < startTime); // Only enable before start time
-  //     setIsButtonEnabled(shouldEnable);
-
-  //     // Calculate time remaining display
-  //     if (currentTime < startTime) {
-  //       const diff = startTime - currentTime;
-  //       const hours = Math.floor(diff / (1000 * 60 * 60));
-  //       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-  //       // CHANGED: Only show countdown when within the 15 minute window
-  //       if (diff <= fifteenMinutes) {
-  //         setTimeLeft(`Starts in ${hours}h ${minutes}m`);
-  //       } else {
-  //         setTimeLeft(`Scheduled for ${formatTime(interviewStart)}`);
-  //       }
-  //     }
-  //     else {
-  //       setTimeLeft('Interview in progress');
-  //     }
-  //     // else if (currentTime < interviewEnd.getTime()) {
-  //     //   setTimeLeft('Interview in progress');
-  //     // }
-  //     // else {
-  //     //   setTimeLeft('Interview completed');
-  //     // }
-  //   };
-
-  //   updateTimes();
-  //   const interval = setInterval(updateTimes, 60000); // Update every minute
-
-  //   return () => clearInterval(interval);
-  // }, [feedbackData?.interviewRound?.dateTime]);
-
-  // Determine which sections to show based on roleInfo
-
   const showCandidateSection =
     !roleInfo?.hasRolePreference || roleInfo?.isCandidate;
   const showInterviewerSection =
@@ -234,21 +183,23 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     try {
       if (!audioTrackRef.current) {
         // If we don't have an audio track yet, create one and turn it on
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
         const audioTracks = stream.getAudioTracks();
         if (audioTracks.length > 0) {
           audioTrackRef.current = audioTracks[0];
           // Start with the mic on
           audioTrackRef.current.enabled = true;
           setMicOn(true);
-          
+
           // Store the stream to clean it up later
           micStreamRef.current = stream;
         }
       } else {
         // Toggle the existing audio track
         audioTrackRef.current.enabled = !audioTrackRef.current.enabled;
-        setMicOn(prev => !prev);
+        setMicOn((prev) => !prev);
       }
     } catch (error) {
       console.error("Error accessing microphone:", error);
@@ -260,12 +211,16 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   const toggleWebcam = async () => {
     if (!videoTrackRef.current && !webcamOn) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
         const videoTracks = stream.getVideoTracks();
         if (videoTracks.length > 0) {
           videoTrackRef.current = videoTracks[0];
           if (videoPlayerRef.current) {
-            videoPlayerRef.current.srcObject = new MediaStream([videoTracks[0]]);
+            videoPlayerRef.current.srcObject = new MediaStream([
+              videoTracks[0],
+            ]);
           }
           setWebcamOn(true);
         }
@@ -274,7 +229,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
       }
     } else if (videoTrackRef.current) {
       videoTrackRef.current.enabled = !videoTrackRef.current.enabled;
-      setWebcamOn(prev => !prev);
+      setWebcamOn((prev) => !prev);
     }
   };
 
@@ -297,7 +252,9 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
           if (videoTracks.length > 0) {
             videoTrackRef.current = videoTracks[0];
             if (videoPlayerRef.current) {
-              videoPlayerRef.current.srcObject = new MediaStream([videoTracks[0]]);
+              videoPlayerRef.current.srcObject = new MediaStream([
+                videoTracks[0],
+              ]);
             }
           }
 
@@ -322,23 +279,23 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
       const currentVideoTrack = videoTrackRef.current;
       const currentAudioTrack = audioTrackRef.current;
       const currentMicStream = micStreamRef.current;
-      
+
       // Stop all tracks from the main stream if it exists
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
-      
+
       // Stop tracks from video player if it exists
       if (videoPlayer?.srcObject) {
-        videoPlayer.srcObject.getTracks().forEach(track => track.stop());
+        videoPlayer.srcObject.getTracks().forEach((track) => track.stop());
         videoPlayer.srcObject = null;
       }
-      
+
       // Stop microphone stream if it exists
       if (currentMicStream) {
-        currentMicStream.getTracks().forEach(track => track.stop());
+        currentMicStream.getTracks().forEach((track) => track.stop());
       }
-      
+
       // Stop individual tracks if they exist
       if (currentVideoTrack) {
         currentVideoTrack.stop();
@@ -346,7 +303,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
       if (currentAudioTrack) {
         currentAudioTrack.stop();
       }
-      
+
       // Clear refs
       videoTrackRef.current = null;
       audioTrackRef.current = null;
@@ -378,21 +335,40 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
                   <button
                     onClick={toggleMic}
-                    className={`p-3 rounded-full ${micOn ? 'bg-white text-gray-800' : 'bg-red-600 text-white'}`}
-                    aria-label={micOn ? 'Mute microphone' : 'Unmute microphone'}
+                    className={`p-3 rounded-full ${
+                      micOn ? "bg-white text-gray-800" : "bg-red-600 text-white"
+                    }`}
+                    aria-label={micOn ? "Mute microphone" : "Unmute microphone"}
                   >
-                    {micOn ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+                    {micOn ? (
+                      <Mic className="w-6 h-6" />
+                    ) : (
+                      <MicOff className="w-6 h-6" />
+                    )}
                   </button>
                   <button
                     onClick={toggleWebcam}
-                    className={`p-3 rounded-full ${webcamOn ? 'bg-white text-gray-800' : 'bg-red-600 text-white'}`}
-                    aria-label={webcamOn ? 'Turn off camera' : 'Turn on camera'}
+                    className={`p-3 rounded-full ${
+                      webcamOn
+                        ? "bg-white text-gray-800"
+                        : "bg-red-600 text-white"
+                    }`}
+                    aria-label={webcamOn ? "Turn off camera" : "Turn on camera"}
                   >
-                    {webcamOn ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+                    {webcamOn ? (
+                      <Video className="w-6 h-6" />
+                    ) : (
+                      <VideoOff className="w-6 h-6" />
+                    )}
                   </button>
                 </div>
               </div>
-              <audio ref={audioPlayerRef} autoPlay playsInline className="hidden" />
+              <audio
+                ref={audioPlayerRef}
+                autoPlay
+                playsInline
+                className="hidden"
+              />
             </div>
           ) : (
             <div className="sm:w-14 sm:h-14 md:w-14 md:h-14 w-16 h-16 bg-[#217989] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -562,30 +538,38 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
               <button
                 onClick={() => {
-                  if (feedbackData?.interviewRound?.meetPlatform === "platform") {
+                  if (
+                    feedbackData?.interviewRound?.meetPlatform === "platform"
+                  ) {
                     const currentUrl = new URL(window.location.href);
                     currentUrl.pathname = "/video-call";
                     const roleData = {
                       ...roleInfo,
                       isInterviewer: true,
-                      isCandidate: false
+                      isCandidate: false,
                     };
-                    currentUrl.searchParams.set('meetLink', feedbackData?.interviewRound?.meetLink || '');
-                    currentUrl.searchParams.set('meetingData', encodeURIComponent(JSON.stringify(roleData || {})));
+                    currentUrl.searchParams.set(
+                      "meetLink",
+                      feedbackData?.interviewRound?.meetLink || ""
+                    );
+                    currentUrl.searchParams.set(
+                      "meetingData",
+                      encodeURIComponent(JSON.stringify(roleData || {}))
+                    );
                     window.open(currentUrl.toString(), "_blank");
                   } else {
                     handleRoleSelect("interviewer");
                   }
                 }}
                 className={`w-full sm:text-sm md:text-sm ${
-                  isButtonEnabled
+                  isButtonEnabled && isFinalStatus
                     ? "bg-custom-blue hover:bg-custom-blue/90"
                     : "bg-gray-400 cursor-not-allowed"
                 } text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3`}
               >
                 <Users className="w-5 h-5" />
                 {/* Join as Interviewer */}
-                {isButtonEnabled
+                {isButtonEnabled && isFinalStatus
                   ? roleInfo?.isInterviewer
                     ? "Start Interview"
                     : "Join as Interviewer"

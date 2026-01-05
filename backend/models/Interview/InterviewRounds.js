@@ -74,7 +74,8 @@ const interviewRoundSchema = new mongoose.Schema(
     interviewerType: String, // Internal or External
     duration: String,
     instructions: String,
-
+    candidateJoined: { type: Boolean, default: false },
+    interviewerJoined: { type: Boolean, default: false },
     // Current scheduled date/time
     // dateTime: { type: Date },
 

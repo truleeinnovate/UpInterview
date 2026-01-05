@@ -1058,8 +1058,8 @@ const FeedbackForm = ({
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
         feedbackCode:
-          feedbackData?.interviewRound?.interviewCode ||
-          "" + "-" + feedbackData?.interviewRound?.sequence ||
+          feedbackDatas?.interviewRound?.interviewCode ||
+          "" + "-" + feedbackDatas?.interviewRound?.sequence ||
           "",
         positionId: positionId || "",
         interviewerId: interviewerId || "",
@@ -1181,8 +1181,8 @@ const FeedbackForm = ({
 
       // console.log('📤 Sending feedback data:', feedbackData);
 
-      if (isEditMode) {
-        if (feedbackId) {
+      if (isEditMode || autoSaveFeedbackId) {
+        if (feedbackId || autoSaveFeedbackId) {
           updateFeedback(
             { feedbackId, feedbackData: updatedFeedbackData },
             {
@@ -1244,8 +1244,8 @@ const FeedbackForm = ({
           note: skill.comments || "",
         })),
         feedbackCode:
-          feedbackData?.interviewRound?.interviewCode ||
-          "" + "-" + feedbackData?.interviewRound?.sequence ||
+          feedbackDatas?.interviewRound?.interviewCode ||
+          "" + "-" + feedbackDatas?.interviewRound?.sequence ||
           "",
         questionFeedback: [
           // Interviewer section questions

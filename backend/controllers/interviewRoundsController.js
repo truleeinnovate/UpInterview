@@ -141,8 +141,6 @@ const saveInterviewRound = async (req, res) => {
       }
     }
 
-
-
     // =================== start == assessment mails sending functionality == start ========================
 
     const candidate = await Candidate.findById(interview.candidateId).lean();
@@ -257,8 +255,6 @@ const saveInterviewRound = async (req, res) => {
         new: true,
       });
     }
-
-
 
     if (
       interview &&
@@ -387,7 +383,6 @@ const updateInterviewRound = async (req, res) => {
   const { interviewId, round, questions } = req.body;
   const { actingAsUserId, actingAsTenantId } = res.locals.auth;
 
-
   let roundIdParam = req.params.roundId;
 
   console.log("req.bodyround", req.body);
@@ -417,7 +412,7 @@ const updateInterviewRound = async (req, res) => {
   console.log("updateType", updateType);
   let updatePayload = {
     $set: {},
-    $push: { history: [] }
+    $push: { history: [] },
   };
 
   // =======================================================
@@ -446,64 +441,62 @@ const updateInterviewRound = async (req, res) => {
     linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
 
-if (
-  existingRound.roundTitle === "Assessment" &&
-  !existingRound.scheduleAssessmentId
-) {
+  if (
+    existingRound.roundTitle === "Assessment" &&
+    !existingRound.scheduleAssessmentId
+  ) {
+    console.log("[ASSESSMENT] Auto scheduling assessment");
 
-  console.log("[ASSESSMENT] Auto scheduling assessment");
+    const interview = await Interview.findById(interviewId).lean();
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
 
-  const interview = await Interview.findById(interviewId).lean();
-  if (!interview) {
-    return res.status(404).json({ message: "Interview not found" });
+    const candidate = await Candidate.findById(interview.candidateId).lean();
+    if (!candidate) {
+      return res.status(404).json({
+        message: "Candidate not found for assessment",
+      });
+    }
+
+    let assessmentResponse = null;
+    let responseStatus = 200;
+
+    const mockRes = {
+      status(code) {
+        responseStatus = code;
+        return this;
+      },
+      json(data) {
+        assessmentResponse = data;
+        return this;
+      },
+    };
+
+    const payload = {
+      assessmentId: existingRound.assessmentId,
+      selectedCandidates: [candidate],
+      organizationId: actingAsTenantId,
+      userId: actingAsUserId,
+    };
+
+    await shareAssessment({ body: payload }, mockRes);
+
+    if (responseStatus !== 200 || !assessmentResponse?.success) {
+      return res.status(400).json({
+        message: "Assessment scheduling failed",
+        status: "error",
+      });
+    }
+
+    updatePayload.$set.scheduleAssessmentId =
+      assessmentResponse.data.scheduledAssessmentId;
+
+    console.log(
+      "[ASSESSMENT] Scheduled assessment created:",
+      updatePayload.$set.scheduleAssessmentId
+    );
   }
-
-  const candidate = await Candidate.findById(interview.candidateId).lean();
-  if (!candidate) {
-    return res.status(404).json({
-      message: "Candidate not found for assessment",
-    });
-  }
-
-  let assessmentResponse = null;
-  let responseStatus = 200;
-
-  const mockRes = {
-    status(code) {
-      responseStatus = code;
-      return this;
-    },
-    json(data) {
-      assessmentResponse = data;
-      return this;
-    },
-  };
-
-  const payload = {
-    assessmentId: existingRound.assessmentId,
-    selectedCandidates: [candidate],
-    organizationId: actingAsTenantId,
-    userId: actingAsUserId,
-  };
-
-  await shareAssessment({ body: payload }, mockRes);
-
-  if (responseStatus !== 200 || !assessmentResponse?.success) {
-    return res.status(400).json({
-      message: "Assessment scheduling failed",
-      status: "error",
-    });
-  }
-
-  updatePayload.$set.scheduleAssessmentId =
-    assessmentResponse.data.scheduledAssessmentId;
-
-  console.log(
-    "[ASSESSMENT] Scheduled assessment created:",
-    updatePayload.$set.scheduleAssessmentId
-  );
-}
-
 
   const incomingRound = round || {};
 
@@ -629,8 +622,6 @@ if (
   let updatedRound = null;
 
   // console.log("updatedRound", updatedRound);
-
-
 
   // Always save interviewers if sent
   if (req.body.round?.interviewerType) {
@@ -1180,7 +1171,7 @@ const updateInterviewRoundStatus = async (req, res) => {
     const { actingAsUserId } = res.locals.auth;
     const { action, reasonCode, comment, cancellationReason } = req.body; // reasonCode = your selected reason, comment = "Other" text, cancellationReason = specific cancellation reason
 
-    // console.log("req.body", req.body);
+    console.log("req.body", req.body);
 
     if (!roundId || !action) {
       return res.status(400).json({
@@ -1227,12 +1218,42 @@ const updateInterviewRoundStatus = async (req, res) => {
         .json({ success: false, message: "Invalid action" });
     }
 
+    if (req.body?.candidateJoined || req.body?.interviewerJoined) {
+      const Updated = { $set: {} };
+
+      if (req.body.candidateJoined === true) {
+        Updated.$set.candidateJoined =
+          req.body.candidateJoined === true ? true : false;
+      } else if (req.body.interviewerJoined === true) {
+        Updated.$set.interviewerJoined =
+          req.body.interviewerJoined === true ? true : false;
+      }
+      // for candidate joined and interviewer joined status update
+      // Updated.$set.candidateJoined =
+      // req.body.candidateJoined === true ? true : false;
+
+      // Updated.$set.interviewerJoined =
+      //   req.body.interviewerJoined === true ? true : false;
+
+      // Apply update
+      const updatedRound = await InterviewRounds.findByIdAndUpdate(
+        roundId,
+        Updated,
+        { new: true, runValidators: true }
+      );
+      return res.status(200).json({
+        success: true,
+        message: "Interview round status updated successfully",
+        data: updatedRound,
+      });
+    }
+
     // Detect changes
-    const changes = {
-      statusChanged: newStatus !== existingRound.status,
-      dateTimeChanged: false, // assuming no datetime change in this endpoint
-      anyChange: true,
-    };
+    // const changes = {
+    //   statusChanged: newStatus !== existingRound.status,
+    //   dateTimeChanged: false, // assuming no datetime change in this endpoint
+    //   anyChange: true,
+    // };
 
     // Build body for buildSmartRoundUpdate — this is key!
     const smartBody = {
@@ -1435,9 +1456,9 @@ function buildSmartRoundUpdate({
   const isInternal = body.interviewerType === "Internal";
   const isExternal = !isInternal;
 
-  console.log("body", body);
-  console.log("changes", changes);
-  console.log("isExternal", isExternal);
+  // console.log("body", body);
+  // console.log("changes", changes);
+  // console.log("isExternal", isExternal);
 
   const now = new Date();
 
