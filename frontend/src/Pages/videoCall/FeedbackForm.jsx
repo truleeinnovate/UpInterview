@@ -1452,7 +1452,7 @@ const FeedbackForm = ({
       {/* v1.0.3 <--------------------------------------------------------- */}
       <div className="bg-white rounded-lg sm:px-3 px-6 py-6 shadow-sm pb-20 mb-8">
         {/* v1.0.3 ---------------------------------------------------------> */}
-        <div className="flex items-center mb-6">
+        {/* <div className="flex items-center mb-6">
           <FileText
             className="h-5 w-5 mr-2"
             style={{ color: "rgb(33, 121, 137)" }}
@@ -1460,7 +1460,7 @@ const FeedbackForm = ({
           <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
             Interview Feedback
           </h3>
-        </div>
+        </div> */}
 
         <div className="space-y-6">
           <div className="flex space-x-10 gap-6">

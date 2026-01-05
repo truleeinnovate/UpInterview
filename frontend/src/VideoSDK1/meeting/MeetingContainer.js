@@ -30,6 +30,7 @@ import {
   ClipboardList,
   ClipboardCheck,
   BookOpen,
+  X,
 } from "lucide-react";
 import { openPanelInNewTab } from "../utils/openInNewTab";
 import QuestionBank from "../../Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank";
@@ -350,6 +351,7 @@ export function MeetingContainer({
         tooltip: "Question Bank",
         icon: <BookOpen className="w-4 h-4" />,
         show: isInterviewer || isSchedule,
+        // show: isCandidate || isInterviewer || isSchedule,
       },
       {
         id: "interviewactions",
@@ -357,6 +359,7 @@ export function MeetingContainer({
         tooltip: "Interview Actions",
         icon: <ClipboardCheck className="w-4 h-4" />,
         show: isInterviewer || isSchedule,
+        // show: isCandidate || isInterviewer || isSchedule,
       },
     ].filter((item) => item.show === true);
   };
@@ -517,11 +520,14 @@ export function MeetingContainer({
                 height: "100%",
               }}
             >
-              {["CANDIDATE", "FEEDBACK", "INTERVIEWACTIONS"].includes(
-                sideBarMode
-              ) ? (
+              {[
+                "CANDIDATE",
+                "FEEDBACK",
+                "INTERVIEWACTIONS",
+                "QUESTIONBANK",
+              ].includes(sideBarMode) ? (
                 <div className="flex flex-col h-full">
-                  {/* Sidebar Header for Candidate, Feedback, and Interview Actions */}
+                  {/* Sidebar Header for all four modes */}
                   <div className="flex items-center justify-between p-4 border-b border-gray-200">
                     <div className="flex items-center">
                       {sideBarMode === "CANDIDATE" && (
@@ -533,11 +539,15 @@ export function MeetingContainer({
                       {sideBarMode === "INTERVIEWACTIONS" && (
                         <ClipboardList className="h-5 w-5 mr-2" />
                       )}
+                      {sideBarMode === "QUESTIONBANK" && (
+                        <BookOpen className="h-5 w-5 mr-2" />
+                      )}
                       <h3 className="text-lg font-medium">
                         {sideBarMode === "CANDIDATE" && "Candidate Details"}
                         {sideBarMode === "FEEDBACK" && "Interview Feedback"}
                         {sideBarMode === "INTERVIEWACTIONS" &&
                           "Interview Actions"}
+                        {sideBarMode === "QUESTIONBANK" && "Question Bank"}
                       </h3>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -597,44 +607,8 @@ export function MeetingContainer({
                         />
                       </div>
                     ) : sideBarMode === "QUESTIONBANK" ? (
-                      <div className="h-full flex flex-col bg-white">
-                        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                          <h3 className="text-lg font-medium flex items-center">
-                            <BookOpen className="w-5 h-5 mr-2" />
-                            Question Bank
-                          </h3>
-                          <button
-                            onClick={() => setSideBarMode(null)}
-                            className="text-gray-500 hover:text-gray-700"
-                            aria-label="Close panel"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto">
-                          <QuestionBank
-                            isEmbedded={true}
-                            onSelectQuestion={(question) => {}}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <SidebarConatiner
-                        height={containerHeight}
-                        sideBarContainerWidth={sideBarContainerWidth}
-                      />
-                    )}
+                      <QuestionBank />
+                    ) : null}
                   </div>
                 </div>
               ) : (

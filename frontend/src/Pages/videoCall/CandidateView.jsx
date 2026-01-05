@@ -2,38 +2,36 @@
 // v2.0.0 - Added video preview and updated layout
 
 import React, { useEffect, useState, useRef } from "react";
-import { Video, LogOut, MessageSquare, Clock, MapPin, Mic, MicOff, VideoOff } from "lucide-react";
+import { Video, MessageSquare, Clock, Mic, MicOff, VideoOff } from "lucide-react";
 import { useMediaDevice } from "@videosdk.live/react-sdk";
 
 import {
   formatToLocalTime,
-  formatDuration,
-  getTimeUntilInterview,
-  getDateStatus,
+  // formatDuration,
+  // getTimeUntilInterview,
+  // getDateStatus,
 } from "../../utils/timezoneUtils";
 import { useMemo } from "react";
 import {
   extractUrlData,
   useCandidateDetails,
 } from "../../apiHooks/useVideoCall";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const CandidateView = ({
   onBack,
   feedbackData: propFeedbackData,
   decodedData: propDecodedData,
 }) => {
-  // console.log("CandidateView feedbackData", feedbackData);
-  // console.log("CandidateView decodedData", decodedData);
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [localInterviewTime, setLocalInterviewTime] = useState("");
   const [localEndTime, setLocalEndTime] = useState("");
   const location = useLocation();
-  const navigate = useNavigate();
-  const [currentRole, setCurrentRole] = useState(null);
+  // const navigate = useNavigate();
+  // const [currentRole, setCurrentRole] = useState(null);
   // const [decodedData, setDecodedData] = useState(null);
-  const [urlRoleInfo, setUrlRoleInfo] = useState(null);
+  // const [urlRoleInfo, setUrlRoleInfo] = useState(null);
 
   // Extract URL data once
   const urlData = useMemo(
@@ -69,7 +67,7 @@ const CandidateView = ({
 
   const feedbackData = propFeedbackData || candidateData;
 
-  console.log("feedbackData", feedbackData);
+  console.log("feedbackData as candidate data :-------", feedbackData);
 
   // Video preview states
   const [micOn, setMicOn] = useState(false);
@@ -533,10 +531,6 @@ const CandidateView = ({
 
                     // change only the path
                     currentUrl.pathname = "/video-call";
-
-                    // Add meetLink and encoded decodedData to URL
-                    currentUrl.searchParams.set('meetLink', decodedData?.meetLink || '');
-                    currentUrl.searchParams.set('meetingData', encodeURIComponent(JSON.stringify(decodedData || {})));
 
                     window.open(currentUrl.toString(), "_blank");
                   } else {

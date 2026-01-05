@@ -14,28 +14,20 @@ import {
   useSchedulerRoundDetails,
 } from "../apiHooks/useVideoCall";
 
-const MeetingApp = () => {
-  // Get meeting ID from URL or use a default one
-  const urlParams = new URLSearchParams(window.location.search);
-  const meetLink = urlParams.get('meetLink');
-  const meetingData = urlParams.get('meetingData');
-
-  // Parse meeting data if available
-  const parsedMeetingData = meetingData ? JSON.parse(decodeURIComponent(meetingData)) : null;
-
+const Dashboard = () => {
   // Set default values
   const [token, setToken] = useState("");
-  const [meetingId, setMeetingId] = useState(meetLink || parsedMeetingData?.meetLink || "");
-  const [micOn, setMicOn] = useState(false); // Start with mic off to avoid permission errors
-  const [webcamOn, setWebcamOn] = useState(false); // Start with webcam off to avoid permission errors
-  const [customAudioStream, setCustomAudioStream] = useState(null);
-  const [customVideoStream, setCustomVideoStream] = useState(null);
+  const [meetingId, setMeetingId] = useState("");
+  const [micOn, setMicOn] = useState(false);
+  const [webcamOn, setWebcamOn] = useState(false);
   const [isMeetingLeft, setIsMeetingLeft] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [deviceError, setDeviceError] = useState(null);
+  const [hasRequestedPermissions, setHasRequestedPermissions] = useState(false);
 
   const isMobile = window.matchMedia("only screen and (max-width: 768px)").matches;
 
+  // 1. Initialize meeting - SIMPLIFIED VERSION
   useEffect(() => {
     const initializeMeeting = async () => {
       try {
@@ -43,37 +35,14 @@ const MeetingApp = () => {
         const authToken = await getToken();
         setToken(authToken);
 
-        // If no meeting ID is provided, create a new meeting
-        if (!meetingId) {
-          const response = await fetch(`${process.env.REACT_APP_API_URL}/create-meeting`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${authToken}`
-            },
-            body: JSON.stringify({ token: authToken })
-          });
-          const data = await response.json();
-          if (data.roomId) {
-            setMeetingId(data.roomId);
-          }
-        }
-
-        // Request device permissions
-        try {
-          await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-          // If we get here, permissions were granted
-          setMicOn(true);
-          setWebcamOn(true);
-        } catch (err) {
-          console.warn('Could not access media devices:', err);
-          setDeviceError('Could not access camera or microphone. Please check your device settings.');
-        }
+        // Set initial media states to false (will be turned on by user)
+        setWebcamOn(false);
+        setMicOn(false);
 
         setIsInitialized(true);
       } catch (error) {
         console.error('Error initializing meeting:', error);
-        setDeviceError('Error initializing meeting. Please try again.');
+        setDeviceError(`Error: ${error.message}`);
       }
     };
 
@@ -85,46 +54,23 @@ const MeetingApp = () => {
 
     initializeMeeting();
 
-    // Cleanup function
     return () => {
-      if (customAudioStream) {
-        customAudioStream.getTracks().forEach(track => track.stop());
-      }
-      if (customVideoStream) {
-        customVideoStream.getTracks().forEach(track => track.stop());
-      }
+      // Cleanup
     };
-  }, [isMobile, meetingId]);
+  }, [isMobile]);
 
-  // usevideocall page fetching aprt ==============================================
-  // Add these state variables at the top of your component with other state declarations
+  // 2. Extract URL data
   const [decodedData, setDecodedData] = useState(null);
-  const [urlRoleInfo, setUrlRoleInfo] = useState(null);
-  console.log("Initial state:", {
-    decodedData,
-    urlRoleInfo,
-    token,
-    meetingId,
-    micOn,
-    webcamOn
-  });
-  // 2. Update the useEffect that extracts URL data
+  
   useEffect(() => {
     console.log("Extracting URL data from:", window.location.search);
     const urlData = extractUrlData(window.location.search);
     console.log("Extracted URL data:", urlData);
     setDecodedData(urlData);
-    const effectiveIsInterviewer = urlData.isInterviewer || urlData.isSchedule;
-    const roleInfo = {
-      isCandidate: urlData.isCandidate,
-      isInterviewer: effectiveIsInterviewer,
-      hasRolePreference: urlData.isCandidate || effectiveIsInterviewer,
-    };
-    console.log("Role information:", roleInfo);
-    setUrlRoleInfo(roleInfo);
   }, []);
-  // 3. Add these hooks with logging
-  const { data: contactData, isLoading: preAuthLoading } = useContactDetails(
+
+  // 3. Data hooks
+  const { data: contactData } = useContactDetails(
     decodedData && !decodedData.isCandidate ? decodedData.interviewerId : null,
     decodedData && !decodedData.isCandidate ? decodedData.interviewRoundId : null
   );
@@ -135,37 +81,94 @@ const MeetingApp = () => {
   const { data: candidateData } = useCandidateDetails(
     decodedData?.isCandidate ? decodedData.interviewRoundId : null
   );
-  // 4. Add a new useEffect to log when data changes
-  useEffect(() => {
-    console.log("Contact Data:", contactData);
-  }, [contactData]);
-  useEffect(() => {
-    console.log("Scheduler Data:", schedulerData);
-  }, [schedulerData]);
-  useEffect(() => {
-    console.log("Candidate Data:", candidateData);
-  }, [candidateData]);
-  // 5. Add a log before the MeetingProvider to see all data before rendering
-  console.log("Rendering MeetingProvider with:", {
-    meetingId,
-    micOn,
-    webcamOn,
-    participantName: candidateData?.LastName || contactData?.name,
-    isInitialized,
-    token,
-    decodedData,
-    urlRoleInfo
-  });
-  // usevideocall page fetching aprt ==============================================
 
+  // 4. Set meetingId from candidateData
   useEffect(() => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const panel = urlParams.get('panel');
-  if (panel) {
-    // Optionally set the active panel based on URL
-    // setActivePanel(panel);
-  }
-}, []);
+    if (candidateData?.round?.meetingId && !meetingId) {
+      console.log("Setting meetingId from candidateData:", candidateData.round.meetingId);
+      setMeetingId(candidateData.round.meetingId);
+    }
+    
+    // Also check if meetingId is in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlMeetingId = urlParams.get('meetingId');
+    if (urlMeetingId && !meetingId) {
+      console.log("Setting meetingId from URL:", urlMeetingId);
+      setMeetingId(urlMeetingId);
+    }
+  }, [candidateData, meetingId]);
+
+  // 5. Debug logs
+  useEffect(() => {
+    console.log("Current state:", {
+      meetingId,
+      token: token ? "Token available" : "No token",
+      isInitialized,
+      micOn,
+      webcamOn,
+      deviceError
+    });
+  }, [meetingId, token, isInitialized, micOn, webcamOn, deviceError]);
+
+  // 6. Request permissions when user wants to enable media
+  const requestPermissions = async () => {
+    try {
+      setHasRequestedPermissions(true);
+      
+      // Request camera permission
+      if (webcamOn) {
+        const videoStream = await navigator.mediaDevices.getUserMedia({ 
+          video: true 
+        });
+        videoStream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Request microphone permission  
+      if (micOn) {
+        const audioStream = await navigator.mediaDevices.getUserMedia({ 
+          audio: true 
+        });
+        audioStream.getTracks().forEach(track => track.stop());
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Permission error:", error);
+      
+      if (error.name === "NotFoundError") {
+        setDeviceError("Camera or microphone not found. Please check your devices.");
+      } else if (error.name === "NotAllowedError") {
+        setDeviceError("Permission denied. Please allow camera/microphone access.");
+      } else {
+        setDeviceError(`Device error: ${error.message}`);
+      }
+      
+      // Turn off media if permission fails
+      setWebcamOn(false);
+      setMicOn(false);
+      return false;
+    }
+  };
+
+  // 7. Join meeting function
+  const joinMeeting = async () => {
+    if (!hasRequestedPermissions && (micOn || webcamOn)) {
+      const hasPermission = await requestPermissions();
+      if (!hasPermission) {
+        return; // Don't join if permissions failed
+      }
+    }
+    
+    // Meeting will join through MeetingProvider
+  };
+
+  // 8. Auto-join when everything is ready
+  useEffect(() => {
+    if (isInitialized && token && meetingId) {
+      console.log("All conditions met for joining meeting");
+      // The meeting will join automatically with joinOnLoad: true
+    }
+  }, [isInitialized, token, meetingId]);
 
   return (
     <div className="h-screen w-full bg-gray-100">
@@ -191,16 +194,30 @@ const MeetingApp = () => {
       <MeetingAppProvider>
         {deviceError ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center p-6 bg-white rounded-lg shadow-lg">
-              <div className="text-red-500 text-2xl mb-4">⚠️</div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">Device Error</h2>
+            <div className="text-center p-6 bg-white rounded-lg shadow-lg max-w-md">
+              <div className="text-red-500 text-3xl mb-4">⚠️</div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Device Issue</h2>
               <p className="text-gray-600 mb-4">{deviceError}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-              >
-                Try Again
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    setDeviceError(null);
+                    // Join without media
+                    setWebcamOn(false);
+                    setMicOn(false);
+                    setHasRequestedPermissions(true);
+                  }}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  Join Without Camera/Mic
+                </button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                >
+                  Refresh Page
+                </button>
+              </div>
             </div>
           </div>
         ) : isMeetingLeft ? (
@@ -208,8 +225,6 @@ const MeetingApp = () => {
             setIsMeetingLeft={setIsMeetingLeft}
             onJoinAgain={() => {
               setIsMeetingLeft(false);
-              setWebcamOn(true);
-              setMicOn(true);
             }}
           />
         ) : isInitialized && token && meetingId ? (
@@ -218,14 +233,13 @@ const MeetingApp = () => {
               meetingId,
               micEnabled: micOn,
               webcamEnabled: webcamOn,
-              name: candidateData?.LastName || contactData?.name,
-              multiStream: false, // Changed from true to false to avoid duplicate streams
-              customCameraVideoTrack: customVideoStream,
-              customMicrophoneAudioTrack: customAudioStream,
+              name: candidateData?.LastName || contactData?.name || "Participant",
+              multiStream: false,
             }}
             token={token}
             reinitialiseMeetingOnConfigChange={true}
-            joinWithoutUserInteraction={true}
+            joinWithoutUserInteraction={true} // Changed back to true for auto-join
+            joinOnLoad={true}
           >
             <MeetingContainer
               onMeetingLeave={() => {
@@ -246,7 +260,15 @@ const MeetingApp = () => {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Initializing meeting room...</p>
+              <p className="mt-4 text-gray-600">Setting up meeting room...</p>
+              <p className="text-sm text-gray-500 mt-2">
+                {!meetingId && "Waiting for meeting ID..."}
+                {!token && "Getting authentication token..."}
+                {meetingId && token && "Joining meeting..."}
+              </p>
+              {meetingId && (
+                <p className="text-xs text-gray-400 mt-1">Meeting ID: {meetingId.substring(0, 20)}...</p>
+              )}
             </div>
           </div>
         )}
@@ -255,4 +277,4 @@ const MeetingApp = () => {
   );
 };
 
-export default MeetingApp;
+export default Dashboard;

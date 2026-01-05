@@ -11,9 +11,9 @@ import {
 } from "lucide-react";
 
 const CandidateDetails = ({ candidate, isFullScreen = false }) => {
-  console.log('candidate in candidate details ', candidate)
-  console.log('candidate.position in candidate details ', candidate?.position)
-    const [expandedSections, setExpandedSections] = useState({
+  console.log("candidate in candidate details ", candidate);
+  console.log("candidate.position in candidate details ", candidate?.position);
+  const [expandedSections, setExpandedSections] = useState({
     skills: true,
     certificates: false,
     projects: false,
@@ -29,7 +29,8 @@ const CandidateDetails = ({ candidate, isFullScreen = false }) => {
   // Use candidate data directly
   const candidateDetails = {
     skills: candidate?.skills || candidate?.candidate?.skills || [],
-    certificates: candidate?.certificates || candidate?.candidate?.certificates || [],
+    certificates:
+      candidate?.certificates || candidate?.candidate?.certificates || [],
     projects: candidate?.projects || candidate?.candidate?.projects || [],
   };
 
@@ -39,22 +40,37 @@ const CandidateDetails = ({ candidate, isFullScreen = false }) => {
       {/* Basic Info */}
       <div className="bg-white rounded-lg p-6 shadow-sm">
         <div className="flex items-center mb-4">
-          <User
-            className="sm:h-4 sm:w-4 md:h-4 md:w-4 h-5 w-5 mr-2"
-            style={{ color: "rgb(33, 121, 137)" }}
-          />
-          <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
-            Candidate Information
-          </h3>
+          {candidate?.candidate?.FirstName && (
+            <>
+              <User
+                className="sm:h-4 sm:w-4 md:h-4 md:w-4 h-5 w-5 mr-2"
+                style={{ color: "rgb(33, 121, 137)" }}
+              />
+              <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
+                Candidate Information
+              </h3>
+            </>
+          )}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p className="text-sm font-medium text-gray-500">Name</p>
-            <p className="text-sm text-gray-900">{candidate?.FirstName || candidate?.candidate?.FirstName} {" "} {candidate?.LastName || candidate?.candidate?.LastName}</p>
+            <p className="text-sm text-gray-900">
+              {candidate?.FirstName || candidate?.candidate?.FirstName}{" "}
+              {candidate?.LastName || candidate?.candidate?.LastName}
+            </p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Experience</p>
-            <p className="text-gray-900">{(candidate?.CurrentExperience || candidate?.candidate?.CurrentExperience) ? `${candidate?.CurrentExperience || candidate?.candidate?.CurrentExperience} years` : ''}</p>
+            <p className="text-gray-900">
+              {candidate?.CurrentExperience ||
+              candidate?.candidate?.CurrentExperience
+                ? `${
+                    candidate?.CurrentExperience ||
+                    candidate?.candidate?.CurrentExperience
+                  } years`
+                : ""}
+            </p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">
@@ -100,21 +116,20 @@ const CandidateDetails = ({ candidate, isFullScreen = false }) => {
               >
                 <div>
                   <p className="font-medium text-gray-900">{skill.skill}</p>
-                  <p className="text-sm text-gray-500">
-                    {skill.experience}
-                  </p>
+                  <p className="text-sm text-gray-500">{skill.experience}</p>
                 </div>
                 <span
-                  className={'px-2 py-1 rounded-full text-xs font-medium'
-                  //    ${
-                  //   skill.expertise === "Expert"
-                  //     ? "bg-green-100 text-green-800"
-                  //     : skill.expertise === "Advanced"
-                  //     ? "bg-blue-100 text-blue-800"
-                  //     : skill.expertise === "Intermediate"
-                  //     ? "bg-yellow-100 text-yellow-800"
-                  //     : "bg-gray-100 text-gray-800"
-                  // }
+                  className={
+                    "px-2 py-1 rounded-full text-xs font-medium"
+                    //    ${
+                    //   skill.expertise === "Expert"
+                    //     ? "bg-green-100 text-green-800"
+                    //     : skill.expertise === "Advanced"
+                    //     ? "bg-blue-100 text-blue-800"
+                    //     : skill.expertise === "Intermediate"
+                    //     ? "bg-yellow-100 text-yellow-800"
+                    //     : "bg-gray-100 text-gray-800"
+                    // }
                   }
                 >
                   {skill.expertise}
