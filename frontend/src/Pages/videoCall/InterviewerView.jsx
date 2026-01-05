@@ -17,6 +17,8 @@ import FeedbackForm from "./FeedbackForm";
 import InterviewsMiniTabComponent from "../Dashboard-Part/Tabs/Feedback/MiniTabs/Interviews";
 import InterviewActions from "./InterviewActions";
 import useAutoSaveFeedback from "../../apiHooks/useAutoSaveFeedback";
+import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
+import Cookies from "js-cookie";
 
 const InterviewerView = ({
   onBack,
@@ -40,11 +42,16 @@ const InterviewerView = ({
     feedbackData
   );
 
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const currentTenantId = tokenPayload?.tenantId;
+  const currentOwnerId = tokenPayload?.userId;
+
   // Inside InterviewerView component, add state to track feedbackId:
   // Add after other useState declarations (around line 50):
 
   const [autoSaveFeedbackId, setAutoSaveFeedbackId] = useState(
-    feedbackData?._id || null
+    feedbackData?.feedbacks?._id || null
   );
 
   // Question Bank State Management
@@ -155,7 +162,7 @@ const InterviewerView = ({
     useAutoSaveFeedback({
       isAddMode: true,
       interviewRoundId: decodedData?.interviewRoundId,
-      tenantId: decodedData?.tenantId,
+      tenantId: currentTenantId,
       interviewerId: decodedData?.interviewerId,
       interviewerSectionData,
       preselectedQuestionsResponses,
@@ -166,7 +173,7 @@ const InterviewerView = ({
       comments: "",
       candidateId: selectedCandidate?.candidate?._id,
       positionId: selectedCandidate?.position?._id,
-      ownerId: decodedData?.ownerId,
+      ownerId: currentOwnerId,
       feedbackId: autoSaveFeedbackId,
     });
 

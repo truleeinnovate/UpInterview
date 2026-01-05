@@ -174,7 +174,7 @@ const SchedulerSectionComponent = ({
     }
 
     // Trigger auto-save after change
-    if (triggerAutoSave && isAddMode) {
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
       triggerAutoSave();
     }
   };
@@ -201,7 +201,7 @@ const SchedulerSectionComponent = ({
     }
 
     // Trigger auto-save after change
-    if (triggerAutoSave && isAddMode) {
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
       triggerAutoSave();
     }
   };
@@ -263,7 +263,7 @@ const SchedulerSectionComponent = ({
     }
 
     // Trigger auto-save after change
-    if (triggerAutoSave && isAddMode) {
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
       triggerAutoSave();
     }
   };
@@ -322,7 +322,7 @@ const SchedulerSectionComponent = ({
     }
 
     // Trigger auto-save after change
-    if (triggerAutoSave && isAddMode) {
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
       triggerAutoSave();
     }
   };
@@ -343,7 +343,7 @@ const SchedulerSectionComponent = ({
       });
     }
     // Trigger auto-save after change
-    if (triggerAutoSave && isAddMode) {
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
       triggerAutoSave();
     }
   };
@@ -395,7 +395,7 @@ const SchedulerSectionComponent = ({
     }
 
     // Debounced auto-save for notes (wait for user to stop typing)
-    if (triggerAutoSave && isAddMode) {
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
       if (noteTimeoutRef.current) {
         clearTimeout(noteTimeoutRef.current);
       }

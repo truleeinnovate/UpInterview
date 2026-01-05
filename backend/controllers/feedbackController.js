@@ -30,29 +30,29 @@ const createFeedback = async (req, res) => {
 
   try {
     // Validate input using Joi schema
-    const {
-      isValid,
-      errors,
-      value: validatedData,
-    } = validateCreateFeedback(req.body);
+    // const {
+    //   isValid,
+    //   errors,
+    //   value: validatedData,
+    // } = validateCreateFeedback(req.body);
 
-    if (!isValid) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors,
-      });
-    }
+    // if (!isValid) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Validation failed",
+    //     errors,
+    //   });
+    // }
 
     // Apply additional business rule validations
-    const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
-    if (businessRuleErrors) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: businessRuleErrors,
-      });
-    }
+    // const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
+    // if (businessRuleErrors) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Validation failed",
+    //     errors: businessRuleErrors,
+    //   });
+    // }
 
     const {
       type, // "submit" | "draft"
@@ -68,7 +68,7 @@ const createFeedback = async (req, res) => {
       overallImpression,
       status,
       feedbackCode,
-    } = validatedData;
+    } = req.body; //validatedData;
 
     // Process questions
     const processedQuestionFeedback = (questionFeedback || []).map(
@@ -760,36 +760,38 @@ const updateFeedback = async (req, res) => {
     }
 
     // Validate input using Joi schema
-    const {
-      isValid,
-      errors,
-      value: validatedData,
-    } = validateUpdateFeedback(req.body);
+    // const {
+    //   isValid,
+    //   errors,
+    //   value: validatedData,
+    // } = validateUpdateFeedback(req.body);
 
-    if (!isValid) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors,
-      });
-    }
+    // if (!isValid) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Validation failed",
+    //     errors,
+    //   });
+    // }
 
     // Apply additional business rule validations if updating to submit
-    if (
-      validatedData.type === "submit" ||
-      validatedData.status === "submitted"
-    ) {
-      const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
-      if (businessRuleErrors) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation failed",
-          errors: businessRuleErrors,
-        });
-      }
-    }
+    // if (
+    //   validatedData.type === "submit" ||
+    //   validatedData.status === "submitted"
+    // ) {
+    //   const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
+    //   if (businessRuleErrors) {
+    //     return res.status(400).json({
+    //       success: false,
+    //       message: "Validation failed",
+    //       errors: businessRuleErrors,
+    //     });
+    //   }
+    // }
 
-    const updateData = validatedData;
+    const updateData = req.body; //validatedData;
+
+    console.log("Update Data Received:", updateData);
 
     // Preserve original questionFeedback from request for interviewer question processing
     const originalQuestionFeedback = Array.isArray(req.body?.questionFeedback)
