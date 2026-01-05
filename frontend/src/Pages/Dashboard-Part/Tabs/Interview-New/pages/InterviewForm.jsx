@@ -668,36 +668,7 @@ const InterviewForm = () => {
                     />
                   </div>
 
-                  {/* External ID Field - Only show for organization users */}
-                  {isOrganization && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-1 relative">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          External ID
-                        </label>
-                        <div className="relative tooltip-container">
-                          <Info
-                            className="w-4 h-4 text-gray-400 cursor-pointer"
-                            onClick={() => setShowTooltip(!showTooltip)}
-                          />
-                          {showTooltip && (
-                            <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
-                              External System Reference Id
-                              <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <input
-                        type="text"
-                        name="externalId"
-                        value={externalId}
-                        onChange={(e) => setExternalId(e.target.value)}
-                        placeholder="External System Reference Id"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  )}
+                 
 
                   <div className="relative">
                     <DropdownWithSearchField
@@ -831,6 +802,37 @@ const InterviewForm = () => {
                           </React.Fragment>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                   {/* External ID Field - Only show for organization users */}
+                  {isOrganization && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-1 relative">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          External ID
+                        </label>
+                        <div className="relative tooltip-container">
+                          <Info
+                            className="w-4 h-4 text-gray-400 cursor-pointer"
+                            onClick={() => setShowTooltip(!showTooltip)}
+                          />
+                          {showTooltip && (
+                            <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
+                              External System Reference Id
+                              <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        name="externalId"
+                        value={externalId}
+                        onChange={(e) => setExternalId(e.target.value)}
+                        placeholder="External System Reference Id"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
                     </div>
                   )}
 
