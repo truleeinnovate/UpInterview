@@ -29,7 +29,9 @@ const {
   processAutoSettlement,
   processWithdrawnRefund,
 } = require("../utils/interviewWalletUtil");
-
+const {
+handleInterviewerRequestFlow
+} = require("../utils/Interviews/handleInterviewerRequestFlow.js");
 //--------------------------------------- Main controllers -------------------------------------------
 
 // post call for interview round creation
@@ -269,7 +271,8 @@ const saveInterviewRound = async (req, res) => {
         interviewId,
         round: savedRound,
         selectedInterviewers: req.body.round?.selectedInterviewers,
-        cancelOldRequests: false, // CREATE
+        isMockInterview: false,
+
       });
       //sending emails for internal interviewers,scheduler,candidate.for external we will send where outsource accept
       if (savedRound.interviewerType === "Internal") {
@@ -1065,7 +1068,8 @@ if (
       interviewId,
       round: existingRound,
       selectedInterviewers: req.body.round?.selectedInterviewers,
-      // cancelOldRequests: true, // PATCH
+      isMockInterview: false,
+
     });
 
     // await InterviewRounds.findByIdAndUpdate(
@@ -1652,86 +1656,86 @@ async function handleInterviewQuestions(interviewId, roundId, questions) {
 }
 
 //this will help to create request for internal or external.if internl default it make accepted.dont send outsource emails to internal.
-async function handleInterviewerRequestFlow({
-  interviewId,
-  round,
-  selectedInterviewers,
-  // cancelOldRequests = false,
-}) {
-  const interview = await Interview.findById(interviewId).lean();
-  if (!interview) return;
+// async function handleInterviewerRequestFlow({
+//   interviewId,
+//   round,
+//   selectedInterviewers,
+//   // cancelOldRequests = false,
+// }) {
+//   const interview = await Interview.findById(interviewId).lean();
+//   if (!interview) return;
 
-  // console.log("body", {
-  //   interviewId,
-  //   round,
-  //   selectedInterviewers,
-  //   cancelOldRequests,
-  // });
+//   // console.log("body", {
+//   //   interviewId,
+//   //   round,
+//   //   selectedInterviewers,
+//   //   cancelOldRequests,
+//   // });
 
-  // 1️⃣ Cancel old requests (PATCH only)
-  // if (cancelOldRequests) {
-  //   await InterviewRequest.updateMany(
-  //     { roundId: round._id, status: "inprogress" },
-  //     { status: "withdrawn", respondedAt: new Date() }
-  //   );
-  // }
+//   // 1️⃣ Cancel old requests (PATCH only)
+//   // if (cancelOldRequests) {
+//   //   await InterviewRequest.updateMany(
+//   //     { roundId: round._id, status: "inprogress" },
+//   //     { status: "withdrawn", respondedAt: new Date() }
+//   //   );
+//   // }
 
-  const resolveInterviewerId = (interviewer) =>
-    interviewer?.contact?._id || interviewer?._id;
+//   const resolveInterviewerId = (interviewer) =>
+//     interviewer?.contact?._id || interviewer?._id;
 
-  // 2️⃣ Create requests (Internal + External)
-  for (const interviewer of selectedInterviewers) {
-    const interviewerId = resolveInterviewerId(interviewer);
+//   // 2️⃣ Create requests (Internal + External)
+//   for (const interviewer of selectedInterviewers) {
+//     const interviewerId = resolveInterviewerId(interviewer);
 
-    if (!mongoose.Types.ObjectId.isValid(interviewerId)) {
-      console.error("Invalid interviewerId", interviewer);
-      continue;
-    }
+//     if (!mongoose.Types.ObjectId.isValid(interviewerId)) {
+//       console.error("Invalid interviewerId", interviewer);
+//       continue;
+//     }
 
-    await createRequest(
-      {
-        body: {
-          tenantId: interview.tenantId,
-          ownerId: interview.ownerId,
-          scheduledInterviewId: interview._id,
-          interviewerType: round.interviewerType, // 🔥 SOURCE OF TRUTH
-          interviewerId,
-          dateTime: round.dateTime,
-          duration: round.duration,
-          candidateId: interview.candidateId,
-          positionId: interview.positionId,
-          roundId: round._id,
-          expiryDateTime: round.expiryDateTime,
-          isMockInterview: false,
-        },
-      },
-      { status: () => ({ json: () => {} }), locals: {} }
-    );
-  }
+//     await createRequest(
+//       {
+//         body: {
+//           tenantId: interview.tenantId,
+//           ownerId: interview.ownerId,
+//           scheduledInterviewId: interview._id,
+//           interviewerType: round.interviewerType, // 🔥 SOURCE OF TRUTH
+//           interviewerId,
+//           dateTime: round.dateTime,
+//           duration: round.duration,
+//           candidateId: interview.candidateId,
+//           positionId: interview.positionId,
+//           roundId: round._id,
+//           expiryDateTime: round.expiryDateTime,
+//           isMockInterview: false,
+//         },
+//       },
+//       { status: () => ({ json: () => {} }), locals: {} }
+//     );
+//   }
 
-  // 3️⃣ Send outsource emails (External ONLY)
-  if (round.interviewerType === "External") {
-    const contactIds = selectedInterviewers.map(
-      (interviewer) =>
-        interviewer.contact._id?.toString() || interviewer.contactId
-    );
-    await sendOutsourceInterviewRequestEmails(
-      {
-        body: {
-          interviewId: interview._id,
-          roundId: round._id,
-          interviewerIds: contactIds, // ← Only Contact _ids
-          type: "interview",
-        },
-      },
-      { status: () => ({ json: () => {} }), locals: {} }
-    );
-    console.log(
-      "Outsource interview request emails sent successfully",
-      selectedInterviewers
-    );
-  }
-}
+//   // 3️⃣ Send outsource emails (External ONLY)
+//   if (round.interviewerType === "External") {
+//     const contactIds = selectedInterviewers.map(
+//       (interviewer) =>
+//         interviewer.contact._id?.toString() || interviewer.contactId
+//     );
+//     await sendOutsourceInterviewRequestEmails(
+//       {
+//         body: {
+//           interviewId: interview._id,
+//           roundId: round._id,
+//           interviewerIds: contactIds, // ← Only Contact _ids
+//           type: "interview",
+//         },
+//       },
+//       { status: () => ({ json: () => {} }), locals: {} }
+//     );
+//     console.log(
+//       "Outsource interview request emails sent successfully",
+//       selectedInterviewers
+//     );
+//   }
+// }
 
 //this will help to send emails when round select internal interviewers then it will send email to scheduler,interviewers,candidate.
 async function handleInternalRoundEmails({
@@ -2126,100 +2130,100 @@ async function processInterviewers(interviewers) {
   return processedInterviewers;
 }
 
-createRequest = async (req, res) => {
-  // Mark that logging will be handled by this controller
-  res.locals.loggedByController = true;
-  res.locals.processName = "Create Interview Request";
+// createRequest = async (req, res) => {
+//   // Mark that logging will be handled by this controller
+//   res.locals.loggedByController = true;
+//   res.locals.processName = "Create Interview Request";
 
-  try {
-    const {
-      tenantId,
-      ownerId,
-      scheduledInterviewId,
-      interviewerType,
-      dateTime,
-      duration,
-      interviewerId,
-      candidateId,
-      positionId,
-      // status,
-      roundId,
-      requestMessage,
-      expiryDateTime,
-      isMockInterview,
-      contactId,
-    } = req.body;
-    const isInternal = interviewerType === "Internal";
+//   try {
+//     const {
+//       tenantId,
+//       ownerId,
+//       scheduledInterviewId,
+//       interviewerType,
+//       dateTime,
+//       duration,
+//       interviewerId,
+//       candidateId,
+//       positionId,
+//       // status,
+//       roundId,
+//       requestMessage,
+//       expiryDateTime,
+//       isMockInterview,
+//       contactId,
+//     } = req.body;
+//     const isInternal = interviewerType === "Internal";
 
-    // Generate custom request ID using centralized service with tenant ID
-    const customRequestId = await generateUniqueId(
-      "INT-RQST",
-      InterviewRequest,
-      "customRequestId",
-      tenantId
-    );
+//     // Generate custom request ID using centralized service with tenant ID
+//     const customRequestId = await generateUniqueId(
+//       "INT-RQST",
+//       InterviewRequest,
+//       "customRequestId",
+//       tenantId
+//     );
 
-    const newRequest = new InterviewRequest({
-      interviewRequestCode: customRequestId,
-      tenantId: new mongoose.Types.ObjectId(tenantId),
-      ownerId,
-      scheduledInterviewId: isMockInterview
-        ? undefined
-        : new mongoose.Types.ObjectId(scheduledInterviewId),
-      interviewerType,
-      contactId: new mongoose.Types.ObjectId(contactId),
-      interviewerId: new mongoose.Types.ObjectId(interviewerId), // Save interviewerId instead of an array
-      dateTime,
-      duration,
-      candidateId: isMockInterview
-        ? undefined
-        : new mongoose.Types.ObjectId(candidateId),
-      positionId: isMockInterview
-        ? undefined
-        : new mongoose.Types.ObjectId(positionId),
-      status: isInternal ? "accepted" : "inprogress",
-      roundId: new mongoose.Types.ObjectId(roundId),
-      requestMessage: isInternal
-        ? "Internal interview request"
-        : "Outsource interview request",
-      expiryDateTime,
-      isMockInterview,
-    });
+//     const newRequest = new InterviewRequest({
+//       interviewRequestCode: customRequestId,
+//       tenantId: new mongoose.Types.ObjectId(tenantId),
+//       ownerId,
+//       scheduledInterviewId: isMockInterview
+//         ? undefined
+//         : new mongoose.Types.ObjectId(scheduledInterviewId),
+//       interviewerType,
+//       contactId: new mongoose.Types.ObjectId(contactId),
+//       interviewerId: new mongoose.Types.ObjectId(interviewerId), // Save interviewerId instead of an array
+//       dateTime,
+//       duration,
+//       candidateId: isMockInterview
+//         ? undefined
+//         : new mongoose.Types.ObjectId(candidateId),
+//       positionId: isMockInterview
+//         ? undefined
+//         : new mongoose.Types.ObjectId(positionId),
+//       status: isInternal ? "accepted" : "inprogress",
+//       roundId: new mongoose.Types.ObjectId(roundId),
+//       requestMessage: isInternal
+//         ? "Internal interview request"
+//         : "Outsource interview request",
+//       expiryDateTime,
+//       isMockInterview,
+//     });
 
-    await newRequest.save();
+//     await newRequest.save();
 
-    // Structured internal log for successful interview request creation
-    res.locals.logData = {
-      tenantId: tenantId || "",
-      ownerId: ownerId || "",
-      processName: "Create Interview Request",
-      requestBody: req.body,
-      status: "success",
-      message: "Interview request created successfully",
-      responseBody: newRequest,
-    };
+//     // Structured internal log for successful interview request creation
+//     res.locals.logData = {
+//       tenantId: tenantId || "",
+//       ownerId: ownerId || "",
+//       processName: "Create Interview Request",
+//       requestBody: req.body,
+//       status: "success",
+//       message: "Interview request created successfully",
+//       responseBody: newRequest,
+//     };
 
-    res.status(201).json({
-      message: "Interview request created successfully",
-      data: newRequest,
-    });
-  } catch (error) {
-    console.error("Error creating interview request:", error);
-    // Structured internal log for error case
-    res.locals.logData = {
-      tenantId: req.body?.tenantId || "",
-      ownerId: req.body?.ownerId || "",
-      processName: "Create Interview Request",
-      requestBody: req.body,
-      status: "error",
-      message: error.message,
-    };
+//     res.status(201).json({
+//       message: "Interview request created successfully",
+//       data: newRequest,
+//     });
+//   } catch (error) {
+//     console.error("Error creating interview request:", error);
+//     // Structured internal log for error case
+//     res.locals.logData = {
+//       tenantId: req.body?.tenantId || "",
+//       ownerId: req.body?.ownerId || "",
+//       processName: "Create Interview Request",
+//       requestBody: req.body,
+//       status: "error",
+//       message: error.message,
+//     };
 
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
-  }
-};
+//     res
+//       .status(500)
+//       .json({ message: "Internal server error", error: error.message });
+//   }
+// };
 
 const triggerInterviewRoundStatusUpdated = async (
   round,

@@ -6,13 +6,13 @@ const loggingService = require("../middleware/loggingService");
 
 // GET: Single mock interview with rounds by id
 router.get(
-  "/mockinterview/:id",
+  "/:id",
   mockInterviewController.getMockInterviewDetails
 );
 
 // POST: Create mock interview
 router.post(
-  "/mockinterview",
+  "/create",
   loggingService.internalLoggingMiddleware,
   loggingService.FeedsMiddleware,
   mockInterviewController.createMockInterview
@@ -25,6 +25,15 @@ router.patch(
   loggingService.FeedsMiddleware,
   mockInterviewController.updateMockInterview
 );
+//create and update round
+router.post("/:mockInterviewId/round", loggingService.internalLoggingMiddleware,
+  loggingService.FeedsMiddleware,
+  mockInterviewController.createMockInterviewRound);   // Create round
+router.patch("/:mockInterviewId/round/:roundId", loggingService.internalLoggingMiddleware,
+  loggingService.FeedsMiddleware,
+  mockInterviewController.updateMockInterviewRound); // Update round
+
+
 
 // POST: Validate mock interview data (for frontend validation)
 router.post(

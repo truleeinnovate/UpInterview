@@ -1209,7 +1209,7 @@ app.put("/users/:id", async (req, res) => {
 
 // mock interview
 const mockInterviewRoutes = require("./routes/mockinterviewRoutes.js");
-app.use("/", mockInterviewRoutes);
+app.use("/mockinterview", mockInterviewRoutes);
 
 const groupsRoutes = require("./routes/interviewerGroupRoutes");
 app.use("/groups", groupsRoutes);
