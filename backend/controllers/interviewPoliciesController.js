@@ -112,25 +112,35 @@ const getSettlementPolicy = async (req, res) => {
         if (ampm === "PM" && hours !== 12) hours += 12;
         if (ampm === "AM" && hours === 12) hours = 0;
 
-        const scheduledTime = new Date(
+        // IST offset is +5:30 (330 minutes or 5.5 hours)
+        // Create date in UTC by subtracting IST offset from the local time components
+        // This ensures consistent behavior regardless of server timezone
+        const IST_OFFSET_MINUTES = 330; // +5:30 = 330 minutes
+
+        // Create UTC date by treating the input as IST
+        // First create the date as if it were UTC, then adjust for IST offset
+        const scheduledTimeUTC = new Date(Date.UTC(
           parseInt(year, 10),
           parseInt(month, 10) - 1,
           parseInt(day, 10),
           hours,
           parseInt(minute, 10)
-        );
+        ));
 
-        // Use current server time as the action time (when cancel/reschedule happens)
-        const actionTime = new Date();
+        // Subtract IST offset to convert IST to UTC
+        scheduledTimeUTC.setMinutes(scheduledTimeUTC.getMinutes() - IST_OFFSET_MINUTES);
+
+        // Get current time in UTC
+        const actionTimeUTC = new Date();
 
         if (
-          scheduledTime &&
-          !isNaN(scheduledTime.getTime()) &&
-          actionTime &&
-          !isNaN(actionTime.getTime())
+          scheduledTimeUTC &&
+          !isNaN(scheduledTimeUTC.getTime()) &&
+          actionTimeUTC &&
+          !isNaN(actionTimeUTC.getTime())
         ) {
           let diffHours =
-            (scheduledTime.getTime() - actionTime.getTime()) / (1000 * 60 * 60);
+            (scheduledTimeUTC.getTime() - actionTimeUTC.getTime()) / (1000 * 60 * 60);
 
           if (!isNaN(diffHours) && diffHours < 0) {
             diffHours = 0;

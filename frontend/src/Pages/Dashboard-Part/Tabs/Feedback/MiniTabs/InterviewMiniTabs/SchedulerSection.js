@@ -7,6 +7,7 @@ import React, { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import Popup from "reactjs-popup";
 import { ThumbsUp, ThumbsDown, XCircle } from "lucide-react";
+import { useEffect } from "react";
 
 // Define dislike options
 const dislikeOptions = [
@@ -27,6 +28,7 @@ const SchedulerSectionComponent = ({
   preselectedQuestionsResponses,
   setPreselectedQuestionsResponses,
   handlePreselectedQuestionResponse,
+  triggerAutoSave,
 }) => {
   const location = useLocation();
   const feedbackData = location.state?.feedback || {};
@@ -75,11 +77,13 @@ const SchedulerSectionComponent = ({
 
   // Initialize state variables
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");
-  
+  const noteTimeoutRef = useRef(null);
+
   // Helper to map backend/stored answerType to UI label
   const mapAnswerTypeToLabel = (type) => {
     if (!type) return "Not Answered";
-    if (type === "correct" || type === "Fully Answered") return "Fully Answered";
+    if (type === "correct" || type === "Fully Answered")
+      return "Fully Answered";
     if (type === "partial" || type === "Partially Answered")
       return "Partially Answered";
     if (
@@ -104,18 +108,16 @@ const SchedulerSectionComponent = ({
 
       if (feedback) {
         const backendAnswerType =
-          feedback.candidateAnswer?.answerType ||
-          q.candidateAnswer?.answerType;
+          feedback.candidateAnswer?.answerType || q.candidateAnswer?.answerType;
         return {
           ...q,
           candidateAnswer:
             feedback.candidateAnswer || q.candidateAnswer || null,
           interviewerFeedback:
             feedback.interviewerFeedback || q.interviewerFeedback || null,
-          isAnswered:
-            backendAnswerType
-              ? mapAnswerTypeToLabel(backendAnswerType)
-              : preselectedResponse?.isAnswered || "Not Answered",
+          isAnswered: backendAnswerType
+            ? mapAnswerTypeToLabel(backendAnswerType)
+            : preselectedResponse?.isAnswered || "Not Answered",
           isLiked:
             feedback.interviewerFeedback?.liked ||
             preselectedResponse?.isLiked ||
@@ -170,6 +172,11 @@ const SchedulerSectionComponent = ({
       const bankQuestionId = q?.questionId || id;
       handlePreselectedQuestionResponse(bankQuestionId, { isAnswered: value });
     }
+
+    // Trigger auto-save after change
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
+      triggerAutoSave();
+    }
   };
 
   // Function to handle dislike radio input changes
@@ -191,6 +198,11 @@ const SchedulerSectionComponent = ({
         whyDislike: value,
         isLiked: "disliked",
       });
+    }
+
+    // Trigger auto-save after change
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
+      triggerAutoSave();
     }
   };
 
@@ -249,6 +261,11 @@ const SchedulerSectionComponent = ({
         whyDislike: newIsLiked === "disliked" ? question.whyDislike : "",
       });
     }
+
+    // Trigger auto-save after change
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
+      triggerAutoSave();
+    }
   };
 
   // Function to handle like toggle
@@ -303,6 +320,11 @@ const SchedulerSectionComponent = ({
         whyDislike: newIsLiked === "liked" ? "" : question.whyDislike,
       });
     }
+
+    // Trigger auto-save after change
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
+      triggerAutoSave();
+    }
   };
 
   // Function to handle add note
@@ -319,6 +341,10 @@ const SchedulerSectionComponent = ({
       handlePreselectedQuestionResponse(bankQuestionId, {
         notesBool: newNotesBool,
       });
+    }
+    // Trigger auto-save after change
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
+      triggerAutoSave();
     }
   };
 
@@ -367,7 +393,28 @@ const SchedulerSectionComponent = ({
       const bankQuestionId = q?.questionId || questionId;
       handlePreselectedQuestionResponse(bankQuestionId, { note: notes });
     }
+
+    // Debounced auto-save for notes (wait for user to stop typing)
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
+      if (noteTimeoutRef.current) {
+        clearTimeout(noteTimeoutRef.current);
+      }
+      noteTimeoutRef.current = setTimeout(() => {
+        triggerAutoSave();
+      }, 2000); // Wait 2 seconds after last keystroke
+    }
   };
+
+  // Add cleanup for timeout:
+  // Add useEffect for cleanup (add after other hooks):
+
+  useEffect(() => {
+    return () => {
+      if (noteTimeoutRef.current) {
+        clearTimeout(noteTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Define DisLikeSection component
   // v1.0.2 <---------------------------------------------------------------

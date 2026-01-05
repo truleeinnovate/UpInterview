@@ -29,8 +29,8 @@ const buildToastFromAxiosError = (err) => {
           const path = Array.isArray(e.path)
             ? e.path.join('.')
             : typeof e.path === 'string'
-            ? e.path
-            : undefined;
+              ? e.path
+              : undefined;
           if (path && e.message) details.push(`${path}: ${e.message}`);
           else if (e.message) details.push(e.message);
           else {
@@ -67,7 +67,7 @@ export const useQuestions = (filters = {}) => {
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
 
-  
+
 
   const {
     data: myQuestionsList = {},
@@ -125,7 +125,7 @@ export const useQuestions = (filters = {}) => {
     refetchOnReconnect: false,
   });
 
-   // Build query parameters for backend
+  // Build query parameters for backend
   const buildQueryParams = (filters) => {
     const params = {
       tenantId,
@@ -156,7 +156,7 @@ export const useQuestions = (filters = {}) => {
   } = useQuery({
     queryKey: ['suggestedQuestions', filters, tenantId, ownerId],
     queryFn: async () => {
-       const params = buildQueryParams(filters);
+      const params = buildQueryParams(filters);
       // const params = {
       //   tenantId,
       //   ownerId
@@ -164,6 +164,7 @@ export const useQuestions = (filters = {}) => {
       if (filters?.questionType) {
         params.questionType = filters.questionType;
       }
+      // console.log('useQuestions API params:', params);
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/suggested-questions/questions`,
         { params }
@@ -172,13 +173,13 @@ export const useQuestions = (filters = {}) => {
         return {
           questions: response.data.questions.map((q) => ({ ...q, isAdded: false })),
           usageLimit: response.data.usageLimit,
-           pagination: response.data.pagination || { // Ensure pagination object
-          currentPage: filters?.page || 1,
-          totalPages: 1,
-          totalQuestions: response.data.questions?.length || 0,
-          hasNext: false,
-          hasPrev: false
-        },
+          pagination: response.data.pagination || { // Ensure pagination object
+            currentPage: filters?.page || 1,
+            totalPages: 1,
+            totalQuestions: response.data.questions?.length || 0,
+            hasNext: false,
+            hasPrev: false
+          },
           totalQuestions: response.data.totalQuestions,
           accessibleQuestions: response.data.accessibleQuestions,
           lockedQuestions: response.data.lockedQuestions,
@@ -195,7 +196,7 @@ export const useQuestions = (filters = {}) => {
     refetchOnMount: false,
     refetchOnReconnect: false,
   });
-  
+
   const suggestedQuestions = suggestedQuestionsData.questions || [];
   const questionBankUsageLimit = suggestedQuestionsData.usageLimit;
   const totalQuestions = suggestedQuestionsData.totalQuestions;
@@ -248,7 +249,7 @@ export const useQuestions = (filters = {}) => {
         payload.suggestedQuestionId = questionData.suggestedQuestionId;
       }
 
-  
+
 
       const url = isEdit
         ? `${config.REACT_APP_API_URL}/newquestion/${questionId}`
@@ -260,16 +261,16 @@ export const useQuestions = (filters = {}) => {
       return response.data;
     },
     onSuccess: (data, variables) => {
-    
+
       // Optimistically update the cache
       queryClient.setQueryData(['questions', filters], (oldData) => {
         if (!oldData) return oldData;
-        
+
         if (variables.isEdit) {
           // Update existing question
           return Object.keys(oldData).reduce((acc, key) => {
-            acc[key] = oldData[key].map(question => 
-              question._id === variables.questionId 
+            acc[key] = oldData[key].map(question =>
+              question._id === variables.questionId
                 ? { ...question, ...data.data }
                 : question
             );
@@ -284,7 +285,7 @@ export const useQuestions = (filters = {}) => {
           };
         }
       });
-      
+
       queryClient.invalidateQueries(['questions']);//<-----v1.0.0----
     },
     onError: (error) => {
@@ -320,18 +321,18 @@ export const useQuestions = (filters = {}) => {
       // Optimistically update the cache
       queryClient.setQueryData(['createdLists', userId, tenantId, organization, filters], (oldData) => {
         if (!oldData) return oldData;
-        
+
         if (variables.isEditing) {
           // Update existing list
-          return oldData.map(list => 
-            list._id === variables.editingSectionId 
-              ? { 
-                  ...list, 
-                  label: variables.newListName, 
-                  name: variables.newListNameForName,
-                  ...(typeof variables.type !== 'undefined' ? { type: variables.type } : {})
-                }
-                //----v1.0.0---->
+          return oldData.map(list =>
+            list._id === variables.editingSectionId
+              ? {
+                ...list,
+                label: variables.newListName,
+                name: variables.newListNameForName,
+                ...(typeof variables.type !== 'undefined' ? { type: variables.type } : {})
+              }
+              //----v1.0.0---->
               : list
           );
         } else {
@@ -339,7 +340,7 @@ export const useQuestions = (filters = {}) => {
           return [data, ...oldData];
         }
       });
-      
+
       queryClient.invalidateQueries(['createdLists']);
     },
     onError: (error) => {
@@ -355,8 +356,8 @@ export const useQuestions = (filters = {}) => {
       // Sanitize listIds: ensure non-empty strings
       const cleanListIds = Array.isArray(listIds)
         ? listIds
-            .map((id) => (id != null ? String(id).trim() : ''))
-            .filter((id) => id.length > 0)
+          .map((id) => (id != null ? String(id).trim() : ''))
+          .filter((id) => id.length > 0)
         : [];
 
       if (!suggestedQuestionId || !cleanListIds.length) {
@@ -427,8 +428,8 @@ export const useQuestions = (filters = {}) => {
       // Sanitize listIdsToRemove: ensure non-empty strings
       const cleanRemoveIds = Array.isArray(listIdsToRemove)
         ? listIdsToRemove
-            .map((id) => (id != null ? String(id).trim() : ''))
-            .filter((id) => id.length > 0)
+          .map((id) => (id != null ? String(id).trim() : ''))
+          .filter((id) => id.length > 0)
         : [];
 
       if (!suggestedQuestionId || !cleanRemoveIds.length) {
@@ -472,10 +473,10 @@ export const useQuestions = (filters = {}) => {
   });
 
   // Calculate loading states
-  const isMutationLoading = saveOrUpdateQuestionMutation.isPending || 
-                           saveOrUpdateListMutation.isPending || 
-                           addQuestionToListMutation.isPending || 
-                           removeQuestionFromListMutation.isPending;
+  const isMutationLoading = saveOrUpdateQuestionMutation.isPending ||
+    saveOrUpdateListMutation.isPending ||
+    addQuestionToListMutation.isPending ||
+    removeQuestionFromListMutation.isPending;
 
   const isLoading = isMyQuestionsLoading || isListsLoading || isSuggestedQuestionsLoading || isMutationLoading;
 

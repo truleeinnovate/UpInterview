@@ -30,29 +30,29 @@ const createFeedback = async (req, res) => {
 
   try {
     // Validate input using Joi schema
-    const {
-      isValid,
-      errors,
-      value: validatedData,
-    } = validateCreateFeedback(req.body);
+    // const {
+    //   isValid,
+    //   errors,
+    //   value: validatedData,
+    // } = validateCreateFeedback(req.body);
 
-    if (!isValid) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors,
-      });
-    }
+    // if (!isValid) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Validation failed",
+    //     errors,
+    //   });
+    // }
 
     // Apply additional business rule validations
-    const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
-    if (businessRuleErrors) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: businessRuleErrors,
-      });
-    }
+    // const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
+    // if (businessRuleErrors) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Validation failed",
+    //     errors: businessRuleErrors,
+    //   });
+    // }
 
     const {
       type, // "submit" | "draft"
@@ -68,7 +68,7 @@ const createFeedback = async (req, res) => {
       overallImpression,
       status,
       feedbackCode,
-    } = validatedData;
+    } = req.body; //validatedData;
 
     // Process questions
     const processedQuestionFeedback = (questionFeedback || []).map(
@@ -183,16 +183,20 @@ const createFeedback = async (req, res) => {
           interviewerId: interviewerId,
           status: feedbackInstance.status,
           submittedAt: feedbackInstance.createdAt,
-          event: "feedback.created"
+          event: "feedback.created",
         };
-        
-        console.log(`[FEEDBACK WEBHOOK] Triggering creation webhook for feedback ${feedbackInstance._id} with status: ${feedbackInstance.status}`);
+
+        console.log(
+          `[FEEDBACK WEBHOOK] Triggering creation webhook for feedback ${feedbackInstance._id} with status: ${feedbackInstance.status}`
+        );
         await triggerWebhook(
           EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
           webhookPayload,
           tenantId
         );
-        console.log(`[FEEDBACK WEBHOOK] Creation webhook sent successfully for feedback ${feedbackInstance._id}`);
+        console.log(
+          `[FEEDBACK WEBHOOK] Creation webhook sent successfully for feedback ${feedbackInstance._id}`
+        );
       } catch (webhookError) {
         console.error(
           "[FEEDBACK WEBHOOK] Error triggering feedback creation webhook:",
@@ -517,6 +521,8 @@ const getFeedbackByRoundId = async (req, res) => {
         interviewId: interviewRound.interviewId,
         sequence: interviewRound.sequence,
         interviewCode: interviewSection?.interviewCode,
+        tenantId: interviewSection.tenantId,
+        ownerId: interviewSection.ownerId,
         roundTitle: interviewRound.roundTitle,
         interviewMode: interviewRound.interviewMode,
         interviewType: interviewRound.interviewType,
@@ -532,6 +538,8 @@ const getFeedbackByRoundId = async (req, res) => {
         questions: interviewRound.questions,
         rejectionReason: interviewRound.rejectionReason,
         interviewers: interviewRound.interviewers || [],
+        candidateJoined: interviewRound.candidateJoined || false,
+        interviewerJoined: interviewRound.interviewerJoined || false,
       },
       candidate: candidatePosition?.candidateId || null,
       position: positionData,
@@ -754,36 +762,38 @@ const updateFeedback = async (req, res) => {
     }
 
     // Validate input using Joi schema
-    const {
-      isValid,
-      errors,
-      value: validatedData,
-    } = validateUpdateFeedback(req.body);
+    // const {
+    //   isValid,
+    //   errors,
+    //   value: validatedData,
+    // } = validateUpdateFeedback(req.body);
 
-    if (!isValid) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors,
-      });
-    }
+    // if (!isValid) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Validation failed",
+    //     errors,
+    //   });
+    // }
 
     // Apply additional business rule validations if updating to submit
-    if (
-      validatedData.type === "submit" ||
-      validatedData.status === "submitted"
-    ) {
-      const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
-      if (businessRuleErrors) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation failed",
-          errors: businessRuleErrors,
-        });
-      }
-    }
+    // if (
+    //   validatedData.type === "submit" ||
+    //   validatedData.status === "submitted"
+    // ) {
+    //   const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
+    //   if (businessRuleErrors) {
+    //     return res.status(400).json({
+    //       success: false,
+    //       message: "Validation failed",
+    //       errors: businessRuleErrors,
+    //     });
+    //   }
+    // }
 
-    const updateData = validatedData;
+    const updateData = req.body; //validatedData;
+
+    console.log("Update Data Received:", updateData);
 
     // Preserve original questionFeedback from request for interviewer question processing
     const originalQuestionFeedback = Array.isArray(req.body?.questionFeedback)
@@ -844,9 +854,9 @@ const updateFeedback = async (req, res) => {
       let resolvedInterviewId = null;
       try {
         if (interviewRoundId) {
-          const roundDoc = await InterviewRounds.findById(interviewRoundId).select(
-            "interviewId"
-          );
+          const roundDoc = await InterviewRounds.findById(
+            interviewRoundId
+          ).select("interviewId");
           resolvedInterviewId = roundDoc?.interviewId || null;
         }
       } catch (e) {
@@ -920,16 +930,20 @@ const updateFeedback = async (req, res) => {
           interviewerId: updatedFeedback.interviewerId,
           status: updatedFeedback.status,
           updatedAt: updatedFeedback.updatedAt,
-          event: "feedback.status.updated"
+          event: "feedback.status.updated",
         };
-        
-        console.log(`[FEEDBACK WEBHOOK] Triggering status update webhook for feedback ${updatedFeedback._id} with status: ${updatedFeedback.status}`);
+
+        console.log(
+          `[FEEDBACK WEBHOOK] Triggering status update webhook for feedback ${updatedFeedback._id} with status: ${updatedFeedback.status}`
+        );
         await triggerWebhook(
           EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
           webhookPayload,
           updatedFeedback.tenantId
         );
-        console.log(`[FEEDBACK WEBHOOK] Status update webhook sent successfully for feedback ${updatedFeedback._id}`);
+        console.log(
+          `[FEEDBACK WEBHOOK] Status update webhook sent successfully for feedback ${updatedFeedback._id}`
+        );
       } catch (webhookError) {
         console.error(
           "[FEEDBACK WEBHOOK] Error triggering feedback status update webhook:",

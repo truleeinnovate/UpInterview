@@ -32,6 +32,7 @@ import DescriptionField from "../../Components/FormFields/DescriptionField.jsx";
 import DropdownSelect from "../../Components/Dropdowns/DropdownSelect.jsx";
 import { notify } from "../../services/toastService.js";
 import { extractUrlData } from "../../apiHooks/useVideoCall.js";
+import useAutoSaveFeedback from "../../apiHooks/useAutoSaveFeedback.js";
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -86,7 +87,7 @@ const FeedbackForm = ({
   isScheduler,
   schedulerFeedbackData,
 }) => {
-  console.log("feedbackCandidate", isEditMode, isViewMode, isAddMode);
+  // console.log("feedbackCandidate", isEditMode, isViewMode, isAddMode);
   useScrollLock(true);
   const location = useLocation();
   const locationFeedback = location.state?.feedback;
@@ -107,20 +108,29 @@ const FeedbackForm = ({
     !urlData.isCandidate ? urlData.interviewerId : null
   );
 
+  // console.log("feedbackDatas", feedbackDatas);
+
   const feedbackData = useMemo(() => {
     return locationFeedback || feedbackDatas || {};
   }, [locationFeedback, feedbackDatas]);
 
+  // console.log("feedbackData", feedbackDatas);
+
   // const feedbackData = React.useMemo(() => locationFeedback || {}, [locationFeedback]);
-  const feedbackId = feedbackData._id || null;
+  const feedbackId =
+    feedbackData._id || feedbackData?.feedbacks[0]?._id || null;
 
   const skillsData = feedbackData.skills || [];
+
+  // console.log("feedbackId", feedbackId);
 
   // Fixed: Properly initialize overall impression data with fallback
   const overallImpressionTabData = feedbackData?.overallImpression || {};
 
   const navigate = useNavigate();
 
+  const [autoSaveFeedbackId, setAutoSaveFeedbackId] = useState(feedbackId);
+  // console.log("autoSaveFeedbackId", autoSaveFeedbackId);
   // const [overallRating, setOverallRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.overallRating) || 0);
   // const [communicationRating, setCommunicationRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.communicationRating) || 0);
   // const [skillRatings, setSkillRatings] = useState(((isEditMode || isViewMode) && skillsData.map(skill => ({ skill: skill.skillName, rating: skill.rating, comments: skill.note }))) || [{ skill: '', rating: 0, comments: '' }]);
@@ -213,75 +223,6 @@ const FeedbackForm = ({
       : [];
   }, [isEditMode, isViewMode, isAddMode, feedbackData, interviewerSectionData]);
   // console.log("filteredInterviewerQuestions",filteredInterviewerQuestions)
-
-  // const questionsWithFeedback = React.useMemo(() => {
-
-  //   const existingQuestions  = [
-  //     ...(filteredInterviewerQuestions || []),
-  //     ...(interviewerSectionData || [])
-  //   ];
-  //   // filteredInterviewerQuestions || [];
-  //   // console.log("existingQuestions",existingQuestions);
-
-  //   // Get newly added questions from interviewerSectionData that are not in existing questions
-  //   const newlyAddedQuestions = (interviewerSectionData || []).filter(newQ => {
-  //     const newId = newQ.questionId || newQ._id || newQ.id;
-  //     return !existingQuestions.some(existingQ => {
-  //       const existingId = existingQ.questionId || existingQ._id || existingQ.id;
-  //       return existingId === newId;
-  //     });
-  //   });
-
-  //   // Combine both arrays
-  //   const allCombinedQuestions = [...existingQuestions, ...newlyAddedQuestions];
-  //   // console.log("feedbackData",feedbackData);
-
-  //     const shouldApplyFeedback = (isEditMode || isViewMode || isAddMode) && feedbackData && Array.isArray(feedbackData.questionFeedback) && feedbackData.questionFeedback.length > 0;
-  //     console.log("shouldApplyFeedback",shouldApplyFeedback,isAddMode);
-
-  //     if (!shouldApplyFeedback) return allCombinedQuestions;
-  //     console.log("allCombinedQuestions",allCombinedQuestions);
-
-  //     const feedbackMap = feedbackData.questionFeedback.reduce((acc, f) => {
-  //       const k = f.questionId || f._id;
-  //       if (!k) return acc;
-  //       acc[k] = f;
-  //       return acc;
-  //     }, {});
-  //     const mapAnswerType = (type) => {
-  //       if (!type) return undefined;
-  //       if (type === "correct" || type === "Fully Answered") return "Fully Answered";
-  //       if (type === "partial" || type === "Partially Answered") return "Partially Answered";
-  //       if (type === "incorrect" || type === "Not Answered" || type === "not answered" || type === "wrong") return "Not Answered";
-  //       return undefined;
-  //     };
-  //     return allCombinedQuestions.map((item) => {
-  //      console.log("item",item);
-  //       const id = item.questionId ||  item._id;
-  //       const f = id ? feedbackMap[id] : null;
-  //       if (!f) return item;
-  //       const merged = { ...item };
-  //       const submittedAns = f.candidateAnswer?.submittedAnswer || item.candidateAnswer?.submittedAnswer || "";
-  //       const answerType = f.candidateAnswer?.answerType || item.candidateAnswer?.answerType || "";
-  //       const derivedIsAnswered = mapAnswerType(answerType);
-  //       if (!merged.answer && submittedAns) merged.answer = submittedAns;
-  //       if (!merged.isAnswered || merged.isAnswered === "Not Answered") {
-  //         if (derivedIsAnswered) merged.isAnswered = derivedIsAnswered;
-  //       }
-  //       const liked = f.interviewerFeedback?.liked;
-  //       const dislikeReason = f.interviewerFeedback?.dislikeReason;
-  //       const note = f.interviewerFeedback?.note;
-  //       if ((!merged.isLiked || merged.isLiked === "") && liked) merged.isLiked = liked;
-  //       if (!merged.whyDislike && dislikeReason) merged.whyDislike = dislikeReason;
-  //       if ((!merged.note || merged.note === "") && note) {
-  //         merged.note = note;
-  //         merged.notesBool = true;
-  //       }
-  //       console.log("merged",merged);
-
-  //       return merged;
-  //     });
-  //   }, [isEditMode, isViewMode, feedbackData, interviewerSectionData, filteredInterviewerQuestions]);
 
   const questionsWithFeedback = React.useMemo(() => {
     // Start with interviewer-added questions from preselected/merged data
@@ -581,6 +522,36 @@ const FeedbackForm = ({
     questions: "",
   });
 
+  // console.log("feedbackData", feedbackData);
+
+  // Add the auto-save hook after all your useState declarations (around line 350):
+
+  const { saveNow, isSaving } = useAutoSaveFeedback({
+    isAddMode,
+    interviewRoundId: interviewRoundId || decodedData?.interviewRoundId,
+    tenantId: currentTenantId,
+    interviewerId: interviewerId || decodedData?.interviewerId,
+    interviewerSectionData,
+    preselectedQuestionsResponses,
+    skillRatings,
+    overallRating,
+    communicationRating,
+    recommendation,
+    comments,
+    candidateId: candidateId || decodedData?.candidateId,
+    positionId: positionId || decodedData?.positionId,
+    ownerId: currentOwnerId,
+    feedbackId: autoSaveFeedbackId,
+  });
+
+  // Helper Function (Outside the component or inside FeedbackForm)
+  const triggerAutoSave = () => {
+    if (isAddMode || isEditMode) {
+      setAutoSaveFeedbackId((prev) => prev); // Trigger useEffect in the hook
+      setTimeout(() => saveNow(), 500);
+    }
+  };
+
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
@@ -608,6 +579,11 @@ const FeedbackForm = ({
             clearError("questions");
           }
 
+          // Trigger immediate save after adding question
+          if (isAddMode) {
+            setTimeout(() => saveNow(), 500);
+          }
+
           return newList;
         });
       } else {
@@ -628,6 +604,9 @@ const FeedbackForm = ({
 
     // Add to removed question IDs
     setRemovedQuestionIds((prev) => [...prev, questionId]);
+
+    // Trigger auto-save
+    triggerAutoSave();
   };
 
   const handleToggleMandatory = (questionId) => {
@@ -693,6 +672,9 @@ const FeedbackForm = ({
       // add minimal overlay so UI updates immediately
       return [...prev, { questionId, note: notes, notesBool: true }];
     });
+
+    // to auto save comments change
+    triggerAutoSave();
     //---v1.0.0----->
   };
 
@@ -750,6 +732,7 @@ const FeedbackForm = ({
       }
       return [...prev, { questionId, whyDislike: value, isLiked: "disliked" }];
     });
+
     //---v1.0.0----->
   };
 
@@ -763,12 +746,23 @@ const FeedbackForm = ({
       if (exists) {
         return prev.map((q) =>
           (q.questionId || q.id) === id
-            ? { ...q, isLiked: q.isLiked === "disliked" ? "" : "disliked" }
+            ? {
+                ...q,
+                isLiked: q.isLiked === "disliked" ? "" : "disliked",
+                // Clear dislike reason when toggling off dislike
+                whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike,
+              }
             : q
         );
       }
-      return [...prev, { questionId: id, isLiked: "disliked" }];
+      return [...prev, { questionId: id, isLiked: "disliked", whyDislike: "" }];
     });
+
+    // Toggle dislike popup
+    setDislikeQuestionId((prev) => (prev === id ? null : id));
+
+    // Trigger auto-save
+    triggerAutoSave();
     //---v1.0.0----->
   };
 
@@ -780,14 +774,23 @@ const FeedbackForm = ({
       if (exists) {
         return prev.map((q) =>
           (q.questionId || q.id) === id
-            ? { ...q, isLiked: q.isLiked === "liked" ? "" : "liked" }
+            ? {
+                ...q,
+                isLiked: q.isLiked === "liked" ? "" : "liked",
+                whyDislike: "", // Clear dislike reason when liking
+              }
             : q
         );
       }
-      return [...prev, { questionId: id, isLiked: "liked" }];
+
+      return [...prev, { questionId: id, isLiked: "liked", whyDislike: "" }];
     });
+
     //---v1.0.0----->
     if (dislikeQuestionId === id) setDislikeQuestionId(null);
+
+    // Trigger auto-save
+    triggerAutoSave();
   };
 
   const openQuestionBank = () => {
@@ -815,12 +818,12 @@ const FeedbackForm = ({
                     name={`dislike-${each.questionId || each.id}`}
                     value={option.value}
                     checked={each.whyDislike === option.value}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       onChangeDislikeRadioInput(
                         each.questionId || each.id,
                         e.target.value
-                      )
-                    }
+                      );
+                    }}
                   />
                   <label
                     htmlFor={`dislike-${each.questionId || each.id}-${
@@ -911,7 +914,10 @@ const FeedbackForm = ({
           <button
             key={star}
             type="button"
-            onClick={() => setRating(star)}
+            onClick={() => {
+              setRating(star);
+              triggerAutoSave();
+            }}
             disabled={isViewMode}
             className={`w-6 h-6 ${
               star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
@@ -926,6 +932,7 @@ const FeedbackForm = ({
 
   const handleAddSkill = () => {
     setSkillRatings([...skillRatings, { skill: "", rating: 0, comments: "" }]);
+    triggerAutoSave();
   };
 
   const handleRemoveSkill = (index) => {
@@ -1009,6 +1016,9 @@ const FeedbackForm = ({
     if (e.target.value.trim()) {
       clearError("comments");
     }
+
+    // to auto save comments change
+    triggerAutoSave();
   };
 
   // Handle skill change with validation
@@ -1023,6 +1033,7 @@ const FeedbackForm = ({
     ) {
       clearError("skills");
     }
+    triggerAutoSave();
   };
 
   const submitFeedback = async () => {
@@ -1043,12 +1054,12 @@ const FeedbackForm = ({
       const feedbackData = {
         type: "submit",
         tenantId: currentTenantId || "",
-        ownerId: decodedData?.ownerId || currentOwnerId || "",
+        ownerId: currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
         feedbackCode:
-          feedbackData?.interviewRound?.interviewCode ||
-          "" + "-" + feedbackData?.interviewRound?.sequence ||
+          feedbackDatas?.interviewRound?.interviewCode ||
+          "" + "-" + feedbackDatas?.interviewRound?.sequence ||
           "",
         positionId: positionId || "",
         interviewerId: interviewerId || "",
@@ -1170,8 +1181,8 @@ const FeedbackForm = ({
 
       // console.log('📤 Sending feedback data:', feedbackData);
 
-      if (isEditMode) {
-        if (feedbackId) {
+      if (isEditMode || autoSaveFeedbackId) {
+        if (feedbackId || autoSaveFeedbackId) {
           updateFeedback(
             { feedbackId, feedbackData: updatedFeedbackData },
             {
@@ -1222,7 +1233,7 @@ const FeedbackForm = ({
       const feedbackData = {
         type: "draft",
         tenantId: currentTenantId || "",
-        ownerId: decodedData?.ownerId || currentOwnerId || "",
+        ownerId: currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
         candidateId: candidateId || "",
         positionId: positionId || "",
@@ -1233,8 +1244,8 @@ const FeedbackForm = ({
           note: skill.comments || "",
         })),
         feedbackCode:
-          feedbackData?.interviewRound?.interviewCode ||
-          "" + "-" + feedbackData?.interviewRound?.sequence ||
+          feedbackDatas?.interviewRound?.interviewCode ||
+          "" + "-" + feedbackDatas?.interviewRound?.sequence ||
           "",
         questionFeedback: [
           // Interviewer section questions
@@ -1334,11 +1345,7 @@ const FeedbackForm = ({
         status: "draft", // Mark as draft
       };
 
-      // console.log('📤 Update payload (draft):', updatedFeedbackData);
-      //
-      // console.log('📤 Sending draft data:', feedbackData);
-
-      if (isEditMode) {
+      if (isEditMode || autoSaveFeedbackId) {
         if (feedbackId) {
           updateFeedback(
             { feedbackId, feedbackData: updatedFeedbackData },
@@ -1366,6 +1373,10 @@ const FeedbackForm = ({
         createFeedback(feedbackData, {
           onSuccess: (data) => {
             if (data.success) {
+              // Store feedback ID for auto-save
+              if (data.data?._id) {
+                setAutoSaveFeedbackId(data.data._id);
+              }
               notify.success("Feedback saved as draft!");
               navigate("/feedback");
             } else {
@@ -1383,15 +1394,16 @@ const FeedbackForm = ({
     }
   };
 
-  console.log("schedulerFeedbackData", schedulerFeedbackData);
   //<---v1.0.2-----Ranjith----solved feedback issues
 
   if (decodedData?.schedule) {
-    console.log("schedulerFeedbackData", schedulerFeedbackData);
     return <SchedulerViewMode feedbackData={schedulerFeedbackData} />;
   }
-  console.log("schedulerFeedbackData", isScheduler, decodedData?.schedule);
+
   //<---v1.0.2-----Ranjith----solved feedback issues
+
+  // Add visual indicator for auto-saving at the bottom of your return statement
+  // Before the closing </div> of your main container (around line 1100):
 
   // Button component for consistency
   const Button = ({
@@ -1439,7 +1451,13 @@ const FeedbackForm = ({
         <div className="right-4 z-40  pb-3 top-5">
           <div className="flex justify-end items-center gap-3">
             <button
-              onClick={() => window.open(decodedData.meetLink, "_blank")}
+              onClick={() =>
+                window.open(
+                  feedbackDatas?.interviewRound?.meetingId,
+                  // decodedData.meetLink,
+                  "_blank"
+                )
+              }
               className="text-sm bg-custom-blue hover:bg-custom-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
             >
               <Video className="w-4 h-4" />
@@ -1686,7 +1704,9 @@ const FeedbackForm = ({
                             question.isLiked === "liked" ? "text-green-700" : ""
                           }`}
                           onClick={() =>
-                            handleLikeToggle(question.questionId || question.id)
+                            handleLikeToggle(
+                              question.questionId || question.id || question._id
+                            )
                           }
                           disabled={!isViewMode}
                         >
@@ -1701,7 +1721,7 @@ const FeedbackForm = ({
                           style={{ cursor: "pointer" }}
                           onClick={() =>
                             handleDislikeToggle(
-                              question.questionId || question.id
+                              question.questionId || question.id || question._id
                             )
                           }
                           disabled={!isViewMode}
@@ -1711,7 +1731,9 @@ const FeedbackForm = ({
                       </div>
                       <div>
                         {(dislikeQuestionId ===
-                          (question.questionId || question._id) ||
+                          (question.questionId ||
+                            question.id ||
+                            question._id) ||
                           !!question.whyDislike) && (
                           <DisLikeSection each={question} />
                         )}
@@ -1740,7 +1762,6 @@ const FeedbackForm = ({
           ) : (
             <div className="space-y-4">
               {questionsToRender.map((question) => {
-                // console.log("questionsToRender", question);
                 return (
                   <div
                     key={question.questionId || question.id}
@@ -1879,7 +1900,7 @@ const FeedbackForm = ({
                     )}
 
                     {(dislikeQuestionId ===
-                      (question.questionId || question._id) ||
+                      (question.questionId || question.id || question._id) ||
                       !!question.whyDislike) &&
                       question.isLiked === "disliked" && (
                         <DisLikeSection each={question} />
@@ -1946,7 +1967,11 @@ const FeedbackForm = ({
                     { value: "No", label: "No" },
                   ].find((opt) => opt.value === recommendation) || null
                 }
-                onChange={(opt) => setRecommendation(opt?.value || "")}
+                onChange={(opt) => {
+                  setRecommendation(opt?.value || "");
+                  // to auto save comments change
+                  triggerAutoSave();
+                }}
                 placeholder="Select Recommendation"
               />
             )}
@@ -2016,9 +2041,37 @@ const FeedbackForm = ({
           </div>
         )}
       </div>
+
+      {isAddMode && isSaving && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span className="text-sm">Auto-saving...</span>
+          </div>
+        </div>
+      )}
     </>
     // v1.0.4 ---------------------------------------------------------------------->
   );
 };
 
 export default FeedbackForm;
+
+// // Add CSS for animation (add to your CSS file or styled components):
+// /* Add CSS for animation (add to your CSS file or styled components): */
+
+// /* Add to your main CSS file */
+// @keyframes fade-in {
+//   from {
+//     opacity: 0;
+//     transform: translateY(10px);
+//   }
+//   to {
+//     opacity: 1;
+//     transform: translateY(0);
+//   }
+// }
+
+// .animate-fade-in {
+//   animation: fade-in 0.3s ease-in-out;
+// }

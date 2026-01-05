@@ -74,7 +74,8 @@ const interviewRoundSchema = new mongoose.Schema(
     interviewerType: String, // Internal or External
     duration: String,
     instructions: String,
-
+    candidateJoined: { type: Boolean, default: false },
+    interviewerJoined: { type: Boolean, default: false },
     // Current scheduled date/time
     // dateTime: { type: Date },
 
@@ -137,7 +138,11 @@ const interviewRoundSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "ScheduledAssessment",
     },
-    rejectionReason: String,
+    // rejectionReason: String,
+    // supportTicketID: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "SupportUser",
+    // },
 
     // Settlement tracking
     // These fields are updated by WalletControllers.settleInterviewPayment after

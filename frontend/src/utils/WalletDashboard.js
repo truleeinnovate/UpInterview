@@ -67,7 +67,7 @@ export const generateHistoricalData = (type, transactions) => {
     if (!groupedData[dateKey]) {
       groupedData[dateKey] = 0;
     }
-    groupedData[dateKey] += tx.type === 'credit' ? tx.amount : -tx.amount;
+    groupedData[dateKey] += tx.type === 'credited' ? tx.amount : -tx.amount;
   });
 
   return Object.entries(groupedData).map(([date, amount]) => ({

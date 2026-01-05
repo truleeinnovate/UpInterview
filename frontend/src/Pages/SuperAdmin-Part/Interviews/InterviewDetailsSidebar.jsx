@@ -686,8 +686,8 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                 <button
                   onClick={() => setActiveTab('round')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'round'
-                      ? 'border-custom-blue text-custom-blue'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-custom-blue text-custom-blue'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                 >
                   Round Information
@@ -695,8 +695,8 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                 <button
                   onClick={() => setActiveTab('history')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'history'
-                      ? 'border-custom-blue text-custom-blue'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-custom-blue text-custom-blue'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                 >
                   Round History
@@ -704,8 +704,8 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                 <button
                   onClick={() => setActiveTab('transactions')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'transactions'
-                      ? 'border-custom-blue text-custom-blue'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-custom-blue text-custom-blue'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                 >
                   Payment Transactions
@@ -1070,8 +1070,8 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                                         >
                                           <Circle
                                             className={`w-2 h-2 ${participant?.status === 'Joined'
-                                                ? 'text-green-500'
-                                                : 'text-gray-400'
+                                              ? 'text-green-500'
+                                              : 'text-gray-400'
                                               }`}
                                           />
                                           <span className="text-gray-700">{participant?.role}</span>
@@ -1131,10 +1131,10 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                               </h4>
                             </div>
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${tx.status === 'completed'
-                                ? 'bg-green-100 text-green-800'
-                                : tx.status === 'pending'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-gray-100 text-gray-800'
+                              ? 'bg-green-100 text-green-800'
+                              : tx.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-gray-100 text-gray-800'
                               }`}>
                               {tx.status.toUpperCase()}
                             </span>
@@ -1341,10 +1341,10 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                               <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-3">
                                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${entry.action === 'Scheduled' ? 'bg-blue-500' :
-                                      entry.action === 'Rescheduled' ? 'bg-orange-500' :
-                                        entry.action === 'Cancelled' ? 'bg-red-500' :
-                                          entry.action === 'Completed' ? 'bg-green-500' :
-                                            'bg-gray-500'
+                                    entry.action === 'Rescheduled' ? 'bg-orange-500' :
+                                      entry.action === 'Cancelled' ? 'bg-red-500' :
+                                        entry.action === 'Completed' ? 'bg-green-500' :
+                                          'bg-gray-500'
                                     }`}>
                                     {index + 1}
                                   </div>
@@ -1439,8 +1439,8 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                             <div className="flex justify-between items-center">
                               <div className="flex items-center gap-3">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${tx.type === 'hold' ? 'bg-yellow-500' :
-                                    tx.type === 'debit' ? 'bg-red-500' :
-                                      'bg-green-500'
+                                  tx.type === 'debited' ? 'bg-red-500' :
+                                    'bg-green-500'
                                   }`}>
                                   {tx.type.charAt(0).toUpperCase()}
                                 </div>
@@ -1453,7 +1453,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                               </div>
                               <div className="text-right">
                                 <p className="font-semibold">
-                                  {tx.type === 'credit' ? '+' : ''}₹{formatAmount(tx.amount)}
+                                  {tx.type === 'credited' ? '+' : ''}₹{formatAmount(tx.amount)}
                                 </p>
                                 <p className="text-xs text-gray-500 capitalize">{tx.status}</p>
                               </div>

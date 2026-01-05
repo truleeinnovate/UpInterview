@@ -2,7 +2,16 @@
 // v2.0.0 - Added video preview and updated layout
 
 import React, { useEffect, useState, useRef } from "react";
-import { Video, MessageSquare, Clock, Mic, MicOff, VideoOff } from "lucide-react";
+import {
+  Video,
+  LogOut,
+  MessageSquare,
+  Clock,
+  MapPin,
+  Mic,
+  MicOff,
+  VideoOff,
+} from "lucide-react";
 import { useMediaDevice } from "@videosdk.live/react-sdk";
 
 import {
@@ -28,10 +37,7 @@ const CandidateView = ({
   const [localInterviewTime, setLocalInterviewTime] = useState("");
   const [localEndTime, setLocalEndTime] = useState("");
   const location = useLocation();
-  // const navigate = useNavigate();
-  // const [currentRole, setCurrentRole] = useState(null);
-  // const [decodedData, setDecodedData] = useState(null);
-  // const [urlRoleInfo, setUrlRoleInfo] = useState(null);
+  const navigate = useNavigate();
 
   // Extract URL data once
   const urlData = useMemo(
@@ -175,7 +181,7 @@ const CandidateView = ({
   // Initialize video preview
   useEffect(() => {
     if (feedbackData?.round?.meetPlatform !== "platform") return;
-    
+
     let stream = null;
 
     const initVideoPreview = async () => {
@@ -183,7 +189,7 @@ const CandidateView = ({
         if (webcamOn) {
           stream = await navigator.mediaDevices.getUserMedia({
             video: true,
-            audio: true
+            audio: true,
           });
 
           if (videoPlayerRef.current) {
@@ -217,18 +223,18 @@ const CandidateView = ({
       const currentVideoTrack = videoTrackRef.current;
       const currentAudioTrack = audioTrackRef.current;
       const currentMicStream = micStreamRef.current;
-      
+
       // Clean up video player
       if (videoPlayer?.srcObject) {
-        videoPlayer.srcObject.getTracks().forEach(track => track.stop());
+        videoPlayer.srcObject.getTracks().forEach((track) => track.stop());
         videoPlayer.srcObject = null;
       }
-      
+
       // Clean up mic stream
       if (currentMicStream) {
-        currentMicStream.getTracks().forEach(track => track.stop());
+        currentMicStream.getTracks().forEach((track) => track.stop());
       }
-      
+
       // Stop individual tracks if they exist
       if (currentVideoTrack) {
         currentVideoTrack.stop();
@@ -236,7 +242,7 @@ const CandidateView = ({
       if (currentAudioTrack) {
         currentAudioTrack.stop();
       }
-      
+
       // Clear refs
       videoTrackRef.current = null;
       audioTrackRef.current = null;
@@ -249,21 +255,23 @@ const CandidateView = ({
     try {
       if (!audioTrackRef.current) {
         // If we don't have an audio track yet, create one and turn it on
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
         const audioTracks = stream.getAudioTracks();
         if (audioTracks.length > 0) {
           audioTrackRef.current = audioTracks[0];
           // Start with the mic on
           audioTrackRef.current.enabled = true;
           setMicOn(true);
-          
+
           // Store the stream to clean it up later
           micStreamRef.current = stream;
         }
       } else {
         // Toggle the existing audio track
         audioTrackRef.current.enabled = !audioTrackRef.current.enabled;
-        setMicOn(prev => !prev);
+        setMicOn((prev) => !prev);
       }
     } catch (error) {
       console.error("Error accessing microphone:", error);
@@ -276,22 +284,24 @@ const CandidateView = ({
     try {
       if (!videoTrackRef.current) {
         // Initialize webcam if not already done
-        const stream = await navigator.mediaDevices.getUserMedia({ 
+        const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: false  // We handle audio separately
+          audio: false, // We handle audio separately
         });
         const videoTracks = stream.getVideoTracks();
         if (videoTracks.length > 0) {
           videoTrackRef.current = videoTracks[0];
           if (videoPlayerRef.current) {
-            videoPlayerRef.current.srcObject = new MediaStream([videoTracks[0]]);
+            videoPlayerRef.current.srcObject = new MediaStream([
+              videoTracks[0],
+            ]);
           }
           setWebcamOn(true);
         }
       } else {
         // Toggle existing webcam
         videoTrackRef.current.enabled = !videoTrackRef.current.enabled;
-        setWebcamOn(prev => !prev);
+        setWebcamOn((prev) => !prev);
       }
     } catch (error) {
       console.error("Error accessing webcam:", error);
@@ -317,9 +327,8 @@ const CandidateView = ({
             {/* Welcome Card */}
             <div className="bg-white rounded-2xl shadow-2xl sm:p-4 md:p-4 p-8 text-center">
               <div className="mb-8">
-
                 {/* Video Preview Section */}
-                {console.log('sfsd', feedbackData?.round?.meetPlatform)}
+                {console.log("sfsd", feedbackData?.round?.meetPlatform)}
                 {feedbackData?.round?.meetPlatform === "platform" && (
                   <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden mb-8">
                     <div className="relative aspect-video bg-black">
@@ -340,23 +349,48 @@ const CandidateView = ({
                       <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
                         <button
                           onClick={toggleMic}
-                          className={`p-3 rounded-full ${micOn ? 'bg-white text-gray-800' : 'bg-red-600 text-white'}`}
-                          aria-label={micOn ? 'Mute microphone' : 'Unmute microphone'}
+                          className={`p-3 rounded-full ${
+                            micOn
+                              ? "bg-white text-gray-800"
+                              : "bg-red-600 text-white"
+                          }`}
+                          aria-label={
+                            micOn ? "Mute microphone" : "Unmute microphone"
+                          }
                         >
-                          {micOn ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+                          {micOn ? (
+                            <Mic className="w-6 h-6" />
+                          ) : (
+                            <MicOff className="w-6 h-6" />
+                          )}
                         </button>
 
                         <button
                           onClick={toggleWebcam}
-                          className={`p-3 rounded-full ${webcamOn ? 'bg-white text-gray-800' : 'bg-red-600 text-white'}`}
-                          aria-label={webcamOn ? 'Turn off camera' : 'Turn on camera'}
+                          className={`p-3 rounded-full ${
+                            webcamOn
+                              ? "bg-white text-gray-800"
+                              : "bg-red-600 text-white"
+                          }`}
+                          aria-label={
+                            webcamOn ? "Turn off camera" : "Turn on camera"
+                          }
                         >
-                          {webcamOn ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+                          {webcamOn ? (
+                            <Video className="w-6 h-6" />
+                          ) : (
+                            <VideoOff className="w-6 h-6" />
+                          )}
                         </button>
                       </div>
                     </div>
 
-                    <audio ref={audioPlayerRef} autoPlay playsInline className="hidden" />
+                    <audio
+                      ref={audioPlayerRef}
+                      autoPlay
+                      playsInline
+                      className="hidden"
+                    />
                   </div>
                 )}
 
@@ -537,12 +571,12 @@ const CandidateView = ({
                     window.open(decodedData?.meetLink, "_blank");
                   }
                 }}
-
                 // disabled={!isButtonEnabled}
-                className={`w-full md:text-sm ${isButtonEnabled
-                  ? "bg-[#217989] hover:bg-[#1a616e] hover:scale-105"
-                  : "bg-gray-400 cursor-not-allowed sm:text-sm"
-                  } text-white font-bold sm:py-3 md:py-3 py-4 sm:px-4 md:px-4 lg:px-4 xl:px-8 2xl:px-8 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg mb-4`}
+                className={`w-full md:text-sm ${
+                  isButtonEnabled
+                    ? "bg-[#217989] hover:bg-[#1a616e] hover:scale-105"
+                    : "bg-gray-400 cursor-not-allowed sm:text-sm"
+                } text-white font-bold sm:py-3 md:py-3 py-4 sm:px-4 md:px-4 lg:px-4 xl:px-8 2xl:px-8 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg mb-4`}
               >
                 <Video className="w-6 h-6" />
                 {isButtonEnabled

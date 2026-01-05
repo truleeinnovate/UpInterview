@@ -130,21 +130,21 @@ export function VideoCallingSettings() {
         "Advanced Security Features",
       ],
     },
-    {
-      id: "google-meet",
-      name: "Google Meet",
-      description:
-        "Integrate with Google Meet for video interviews (Note: Only if the scheduler joins, the candidate can join.)",
-      icon: VideoCameraIcon,
-      specifications: [
-        "Google Workspace Integration",
-        "Calendar Sync",
-        "Cloud Recording",
-        "Live Captions & Transcription",
-        "Up to 250 Participants",
-        "Mobile App Support",
-      ],
-    },
+    // {
+    //   id: "google-meet",
+    //   name: "Google Meet",
+    //   description:
+    //     "Integrate with Google Meet for video interviews (Note: Only if the scheduler joins, the candidate can join.)",
+    //   icon: VideoCameraIcon,
+    //   specifications: [
+    //     "Google Workspace Integration",
+    //     "Calendar Sync",
+    //     "Cloud Recording",
+    //     "Live Captions & Transcription",
+    //     "Up to 250 Participants",
+    //     "Mobile App Support",
+    //   ],
+    // },
   ];
 
   // v1.0.1 <---------------------------------------------------------------------------
@@ -442,29 +442,29 @@ export function VideoCallingSettings() {
     );
 
     const providerConfig = {
-      "google-meet": {
-        fields: [
-          {
-            key: "clientId",
-            label: "Client ID",
-            type: "text",
-            placeholder: "Google OAuth Client ID",
-          },
-          {
-            key: "clientSecret",
-            label: "Client Secret",
-            type: "password",
-            placeholder: "Google OAuth Client Secret",
-          },
-          {
-            key: "refreshToken",
-            label: "Refresh Token",
-            type: "password",
-            placeholder: "OAuth Refresh Token",
-          },
-        ],
-        docs: "https://developers.google.com/meet/api",
-      },
+      // "google-meet": {
+      //   fields: [
+      //     {
+      //       key: "clientId",
+      //       label: "Client ID",
+      //       type: "text",
+      //       placeholder: "Google OAuth Client ID",
+      //     },
+      //     {
+      //       key: "clientSecret",
+      //       label: "Client Secret",
+      //       type: "password",
+      //       placeholder: "Google OAuth Client Secret",
+      //     },
+      //     {
+      //       key: "refreshToken",
+      //       label: "Refresh Token",
+      //       type: "password",
+      //       placeholder: "OAuth Refresh Token",
+      //     },
+      //   ],
+      //   docs: "https://developers.google.com/meet/api",
+      // },
       zoom: {
         fields: [
           {
@@ -886,10 +886,10 @@ export function VideoCallingSettings() {
                 Perfect for enterprise environments
               </p>
             </div>
-            <div>
+            {/* <div>
               <span className="font-medium text-[#217989]">Google Meet:</span>
               <p className="text-gray-600">Ideal for Google Workspace users</p>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

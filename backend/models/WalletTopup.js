@@ -13,7 +13,7 @@ const VALID_TRANSACTION_TYPES = [
   // Legacy directional types kept for backward compatibility
   "credit",
   "credited",
-  "debit",
+  "debited",
 ];
 
 const validateTransactionType = function (value) {
@@ -53,7 +53,7 @@ const WalletSchema = new mongoose.Schema(
         },
         effect: {
           type: String,
-          enum: ["CREDIT", "DEBIT", "NONE"],
+          enum: ["CREDITED", "DEBITED", "NONE"],
         },
         walletId: { type: String },
         // interviewId: { type: String },

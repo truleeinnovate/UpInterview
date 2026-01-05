@@ -7,17 +7,10 @@ import {
   XCircle,
   AlertTriangle,
   Ban,
-  Clock,
   AlertCircle,
-  Calendar,
-  User,
-  MessageSquare,
-  X,
 } from "lucide-react";
-import axios from "axios";
 import SupportForm from "../Dashboard-Part/Tabs/SupportDesk/SupportForm";
-// import { toast } from "react-toastify";
-import { config } from "../../config";
+
 import { useInterviews } from "../../apiHooks/useInterviews";
 import { notify } from "../../services/toastService";
 import RoundStatusReasonModal from "../Dashboard-Part/Tabs/CommonCode-AllTabs/RoundStatusReasonModal";
@@ -28,6 +21,9 @@ import {
 } from "../../utils/roundHistoryOptions";
 import { createPortal } from "react-dom";
 import { Button } from "../../../src/Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
+import { useMemo } from "react";
+import { extractUrlData } from "../../apiHooks/useVideoCall";
+import { useLocation } from "react-router-dom";
 const InterviewActions = ({
   interviewData,
   isAddMode,
@@ -36,18 +32,36 @@ const InterviewActions = ({
 }) => {
   const { updateRoundStatus } = useInterviews();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [modal, setModal] = useState(null);
-  const [formData, setFormData] = useState({ reason: "", comments: "" });
+  // const [formData, setFormData] = useState({ reason: "", comments: "" });
 
   const [noShowReasonModalOpen, setNoShowReasonModalOpen] = useState(false);
   // const [rejectReasonModalOpen, setRejectReasonModalOpen] = useState(false);
   const [completedReasonModalOpen, setCompletedReasonModalOpen] =
     useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
-  const [confirmAction, setConfirmAction] = useState(null);
+  // const [confirmAction, setConfirmAction] = useState(null);
   const [cancelReasonModalOpen, setCancelReasonModalOpen] = useState(false);
   // console.log("interviewData InterviewActions ", interviewData);
   const [markIncompleteModalOpen, setMarkIncompleteModalOpen] = useState(false);
+  const [candidateJoinedReasonModalOpen, setCandidateJoinedReasonModalOpen] =
+    useState(false);
+  const [
+    reportTechnicalIssueReasonModalOpen,
+    setReportTechnicalIssueReasonModalOpen,
+  ] = useState(false);
+  const [
+    interviewerJoinedReasonModalOpen,
+    setInterviewerJoinedReasonModalOpen,
+  ] = useState(false);
+
+  const location = useLocation();
+
+  // Extract URL data once
+  const urlData = useMemo(
+    () => extractUrlData(location.search),
+    [location.search]
+  );
+
   // Mock interview times for demonstration
   // Replace the mock start/end time with real ones
   const parseInterviewTimes = (interviewData) => {
@@ -99,107 +113,22 @@ const InterviewActions = ({
   // const canCancel = currentTime <= endTime;
   const canRaiseIssue = startTime;
 
-  // Handlers
-  // const handleConfirm = (type, extra = {}) => {
-  //   onActionComplete({ type, timestamp: new Date(), ...extra });
-  //   setModal(null);
-  //   setFormData({ reason: "", comments: "" });
-  // };
+  const currentStatus = interviewData?.interviewRound?.status;
 
-  // const handleConfirm = async (type, extra = {}) => {
-  //   try {
-  //     if (type === "completion" || type === "noShow" || type === "cancel") {
-  //       // Determine the new status based on the action type
-  //       let newStatus;
-  //       let rejectionReason = null;
-  //       let event = null;
-  //       let eventReason = null;
+  const isFinalStatus = [
+    "Completed",
+    "InCompleted",
+    "NoShow",
+    "Cancelled",
+  ].includes(currentStatus);
 
-  //       if (type === "completion") {
-  //         newStatus =
-  //           extra.status === "completed" ? "Completed" : "InCompleted";
-  //         rejectionReason = extra.comments || null;
-  //       } else if (type === "noShow") {
-  //         newStatus = "NoShow";
-  //         event = "Candidate_NoShow";
-  //         eventReason = extra.comments;
-  //       } else if (type === "cancel") {
-  //         newStatus = "Cancelled";
-  //         rejectionReason = extra.reason || null;
-  //       }
-
-  //       // Prepare the round data for API call
-  //       const roundData = {
-  //         status: newStatus,
-  //         completedDate: newStatus === "Completed" ? new Date() : null,
-  //         rejectionReason: rejectionReason,
-  //         // NEW: Add event and eventReason for Candidate No-Show
-  //         ...(event && { event }),
-  //         ...(eventReason && { eventReason }),
-  //       };
-
-  //       const payload = {
-  //         interviewId: interviewData?.interviewRound?.interviewId,
-  //         // round: { ...roundData },
-  //         roundId: interviewData?.interviewRound?._id,
-  //         // isEditing: true,
-  //         cancellationReason: rejectionReason,
-  //         action: newStatus,
-  //       };
-
-  //       try {
-  //         // const response = await axios.post(
-  //         //   `${config.REACT_APP_API_URL}/interview/save-round`,
-  //         //   payload
-  //         // );
-  //         const response = await updateRoundStatus(payload);
-
-  //         console.log("Status updated:", response.data);
-
-  //         // Show success toast based on action type
-  //         if (type === "completion") {
-  //           notify.success(`Interview marked as ${newStatus}`, {});
-  //         } else if (type === "noShow") {
-  //           notify.success("Candidate marked as no-show", {});
-  //         } else if (type === "cancel") {
-  //           notify.success("Interview cancelled successfully", {});
-  //         }
-
-  //         // Show success toast based on action type
-  //         // if (type === "completion") {
-  //         //   toast.success(`Interview marked as ${newStatus}`, {});
-  //         // } else if (type === "noShow") {
-  //         //   toast.success("Candidate marked as no-show", {});
-  //         // }
-
-  //         // Update local state after success
-  //         // onActionComplete({ type, timestamp: new Date(), ...extra });
-
-  //         // Update local state after success - ADD SAFETY CHECK
-  //         if (typeof onActionComplete === "function") {
-  //           onActionComplete({ type, timestamp: new Date(), ...extra });
-  //         }
-  //       } catch (error) {
-  //         console.error("Error updating status:", error);
-  //         toast.error("Failed to update status");
-  //       }
-  //     } else {
-  //       // For other actions (techIssue, cancel), just complete without API call
-  //       onActionComplete({ type, timestamp: new Date(), ...extra });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating interview:", error);
-  //     toast.error("An error occurred");
-  //   } finally {
-  //     setModal(null);
-  //     setFormData({ reason: "", comments: "" });
-  //   }
-  // };
+  const isCompleted = currentStatus === "Completed"; // Keep if needed elsewhere
 
   const handleStatusChange = async (
     newStatus,
     reasonValue = null,
-    comment = null
+    comment = null,
+    type = null
   ) => {
     // const roundData = {
     //   status: newStatus,
@@ -241,12 +170,21 @@ const InterviewActions = ({
         action: newStatus,
       };
 
+      if (type === "CandidateJoined") {
+        payload.candidateJoined = type === "CandidateJoined" ? true : false;
+      } else if (type === "InterviewerJoined") {
+        payload.interviewerJoined = type === "InterviewerJoined" ? true : false;
+      }
+
       // Add cancellation / NoShow reason if provided
       if (
-        (newStatus === "Cancelled" || newStatus === "NoShow") &&
-        reasonValue
+        ((newStatus === "Cancelled" ||
+          newStatus === "NoShow" ||
+          newStatus === "InCompleted") &&
+          reasonValue) ||
+        null
       ) {
-        payload.cancellationReason = reasonValue;
+        payload.reasonCode = reasonValue || null;
         payload.comment = comment || null;
       }
 
@@ -291,7 +229,7 @@ const InterviewActions = ({
 
   const handleMarkAsIncompleteWithReason = async ({ reason, comment }) => {
     try {
-      await handleStatusChange("MarkedIncomplete", reason, comment || null);
+      await handleStatusChange("InCompleted", reason, comment || null);
       setMarkIncompleteModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
@@ -305,8 +243,10 @@ const InterviewActions = ({
   // };
 
   const closeModal = () => {
-    setModal(null);
-    setFormData({ reason: "", comments: "" });
+    // setModal(null);
+    setInterviewerJoinedReasonModalOpen(false);
+
+    // setFormData({ reason: "", comments: "" });
   };
 
   const handleConfirmStatusChange = async ({
@@ -320,26 +260,42 @@ const InterviewActions = ({
         await handleStatusChange("Completed", reason, comment || null);
         setCompletedReasonModalOpen(false);
         setActionInProgress(false);
+      } else if (interviewerJoinedReasonModalOpen && change) {
+        await handleStatusChange(
+          interviewData?.interviewRound?.status,
+          reason,
+          comment || null,
+          "InterviewerJoined"
+        );
+
+        setInterviewerJoinedReasonModalOpen(false);
+        setActionInProgress(false);
       }
       // selectedReasonModalOpen status handling
-      // else if (selectedReasonModalOpen && change) {
-      //   await handleStatusChange("Selected", reason, comment || null);
-      //   setSelectedReasonModalOpen(false);
-      //   setActionInProgress(false);
-      // }
+      else if (candidateJoinedReasonModalOpen && change) {
+        await handleStatusChange(
+          interviewData?.interviewRound?.status,
+          reason,
+          comment || null,
+          "CandidateJoined"
+        );
+
+        setCandidateJoinedReasonModalOpen(false);
+        setActionInProgress(false);
+      }
     } catch (error) {
       setActionInProgress(false);
     }
   };
 
-  const getTimeUntilEnabled = (targetTime) => {
-    const diff = targetTime - currentTime;
-    if (diff <= 0) return null;
-    const minutes = Math.ceil(diff / (1000 * 60));
-    return `${minutes} min`;
-  };
+  // const getTimeUntilEnabled = (targetTime) => {
+  //   const diff = targetTime - currentTime;
+  //   if (diff <= 0) return null;
+  //   const minutes = Math.ceil(diff / (1000 * 60));
+  //   return `${minutes} min`;
+  // };
 
-  const isCompleted = interviewData?.interviewRound?.status === "completed";
+  // const isCompleted = interviewData?.interviewRound?.status === "Completed";
   // v1.0.1 <------------------------------------------------
   const ActionCard = ({
     icon: Icon,
@@ -418,27 +374,6 @@ const InterviewActions = ({
   };
   // v1.0.1 ------------------------------------------------>
 
-  const Modal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X size={20} />
-            </button>
-          </div>
-          <div className="p-6">{children}</div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     // v1.0.1 <----------------------------------------------------------------------------
     <div className="mb-10">
@@ -485,13 +420,43 @@ const InterviewActions = ({
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+          {/* Interviewer Participation */}
+          {urlData?.isSchedule && (
+            <ActionCard
+              icon={CheckCircle}
+              title="Interviewer Joined"
+              description="Confirm that the interviewer has successfully joined the interview"
+              // onClick={() => handleConfirm("interviewerJoined")}
+              onClick={() => {
+                // openModal("noShow");
+                // setActionInProgress(true);
+                setInterviewerJoinedReasonModalOpen(true);
+              }}
+              disabled={
+                isCompleted ||
+                // !interviewerActionEnabled ||
+                interviewData?.interviewRound?.interviewerJoined
+              }
+              variant="success"
+            />
+          )}
+
           {/* Candidate Participation */}
           <ActionCard
             icon={CheckCircle}
             title="Candidate Joined"
             description="Confirm that the candidate has successfully joined the interview"
             // onClick={() => handleConfirm("candidateJoined")}
-            disabled={isCompleted || !candidateActionEnabled}
+            onClick={() => {
+              // openModal("noShow");
+              setActionInProgress(true);
+              setCandidateJoinedReasonModalOpen(true);
+            }}
+            disabled={
+              isCompleted ||
+              !candidateActionEnabled ||
+              interviewData?.interviewRound?.candidateJoined
+            }
             variant="success"
             // timeUntil={!candidateActionEnabled ? getTimeUntilEnabled(new Date(startTime.getTime() + 15 * 60000)) : null}
             ready={candidateActionEnabled}
@@ -506,7 +471,7 @@ const InterviewActions = ({
               setActionInProgress(true);
               setNoShowReasonModalOpen(true);
             }}
-            disabled={isCompleted || !candidateActionEnabled}
+            disabled={isCompleted || !candidateActionEnabled || isFinalStatus}
             variant="danger"
             // timeUntil={!candidateActionEnabled ? getTimeUntilEnabled(new Date(startTime.getTime() + 15 * 60000)) : null}
           />
@@ -522,7 +487,7 @@ const InterviewActions = ({
               setCompletedReasonModalOpen(true);
               // setConfirmAction("Selected");
             }}
-            disabled={isCompleted || !completionActionEnabled}
+            disabled={isCompleted || !completionActionEnabled || isFinalStatus}
             variant="success"
             // timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
             ready={completionActionEnabled}
@@ -538,7 +503,7 @@ const InterviewActions = ({
               setMarkIncompleteModalOpen(true);
               // setConfirmAction("Selected");
             }}
-            disabled={isCompleted || !completionActionEnabled}
+            disabled={isCompleted || !completionActionEnabled || isFinalStatus}
             variant="warning"
             // timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
           />
@@ -549,6 +514,13 @@ const InterviewActions = ({
             title="Report Technical Issue"
             description="Report any technical problems during the interview"
             // onClick={() => openModal("techIssue")}
+            onClick={() => {
+              setActionInProgress(true);
+              setReportTechnicalIssueReasonModalOpen(true);
+
+              // setConfirmAction("Cancelled");
+              // setShowConfirmModal(true);
+            }}
             disabled={isCompleted || !canRaiseIssue}
             variant="warning"
             ready={canRaiseIssue}
@@ -567,7 +539,7 @@ const InterviewActions = ({
               // setConfirmAction("Cancelled");
               // setShowConfirmModal(true);
             }}
-            disabled={isCompleted || !canCancel}
+            disabled={isCompleted || isFinalStatus}
             variant="danger"
             // ready={canCancel}
           />
@@ -588,95 +560,27 @@ const InterviewActions = ({
         confirmLabel="Confirm No Show"
       />
 
-      <Modal
-        isOpen={modal?.type === "completion"}
-        onClose={closeModal}
-        title={
-          modal?.status === "completed"
-            ? "Confirm Interview Completion"
-            : "Mark Interview Incomplete"
-        }
-      >
-        <div className="space-y-4">
-          <div
-            className={`border rounded-lg p-4 ${
-              modal?.status === "completed"
-                ? "bg-green-50 border-green-200"
-                : "bg-yellow-50 border-yellow-200"
-            }`}
-          >
-            <div
-              className={`flex items-center gap-2 ${
-                modal?.status === "completed"
-                  ? "text-green-800"
-                  : "text-yellow-800"
-              }`}
-            >
-              {modal?.status === "completed" ? (
-                <CheckCircle size={16} />
-              ) : (
-                <AlertTriangle size={16} />
-              )}
-              <span className="font-medium">
-                {modal?.status === "completed"
-                  ? "Interview Completed"
-                  : "Interview Incomplete"}
-              </span>
-            </div>
-            <p
-              className={`text-sm mt-2 ${
-                modal?.status === "completed"
-                  ? "text-green-700"
-                  : "text-yellow-700"
-              }`}
-            >
-              {modal?.status === "completed"
-                ? "This will mark the interview as successfully completed."
-                : "This will mark the interview as incomplete due to issues."}
-            </p>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={closeModal}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              // onClick={() =>
-              //   handleConfirm("completion", {
-              //     status: modal.status,
-              //     ...formData,
-              //   })
-              // }
-              className={`px-4 py-2 rounded-lg text-white transition-colors ${
-                modal?.status === "completed"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-yellow-600 hover:bg-yellow-700"
-              }`}
-            >
-              Confirm{" "}
-              {modal?.status === "completed" ? "Completion" : "Incomplete"}
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {completedReasonModalOpen &&
+      {(completedReasonModalOpen ||
+        candidateJoinedReasonModalOpen ||
+        interviewerJoinedReasonModalOpen) &&
         createPortal(
           // v1.0.5 <--------------------------------------------------------------------------------
           <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
             <div className="bg-white p-5 rounded-lg shadow-md">
               <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-3">
-                Are you sure you want to{" "}
-                {completedReasonModalOpen ? "Complete" : "Reject"} this round?
+                {completedReasonModalOpen
+                  ? "Are you sure you want to Complete this round?"
+                  : interviewerJoinedReasonModalOpen
+                  ? "Are you sure Interviewer Joined?"
+                  : "Are you sure Candidate Joined?"}
               </h3>
               <div className="flex justify-end space-x-3">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setCompletedReasonModalOpen(false);
+                    setCandidateJoinedReasonModalOpen(false);
+                    setInterviewerJoinedReasonModalOpen(false);
                     // setSelectedReasonModalOpen(false);
                     setActionInProgress(false);
                   }}
@@ -684,10 +588,10 @@ const InterviewActions = ({
                   No, Cancel
                 </Button>
                 <Button
-                  className={`${
-                    confirmAction === "Cancelled" &&
-                    "bg-red-600 hover:bg-red-700"
-                  }`}
+                  // className={`${
+                  //   confirmAction === "Cancelled" &&
+                  //   "bg-red-600 hover:bg-red-700"
+                  // }`}
                   variant="success"
                   onClick={() => handleConfirmStatusChange({ change: true })}
                   // onClick={handleConfirmStatusChange({ change: true })}
@@ -713,6 +617,8 @@ const InterviewActions = ({
         }}
         onConfirm={handleCancelWithReason}
         confirmLabel="Confirm Cancel"
+        roundData={interviewData?.interviewRound}
+        showPolicyInfo={true}
       />
 
       {/* Shared reason modal for No Show */}
@@ -729,125 +635,27 @@ const InterviewActions = ({
         confirmLabel="Confirm No Show"
       />
 
-      {modal?.type === "techIssue" && (
+      {/* Shared reason modal for No Show */}
+      {/* <RoundStatusReasonModal
+        isOpen={markCompletedModalOpen}
+        title="Mark as Completed"
+        label="Reason for Mark Completed"
+        // options={INTERVIEW_COMPLETED_REASONS}
+        onClose={() => {
+          setMarkCompletedModalOpen(false);
+          setActionInProgress(false);
+        }}
+        onConfirm={handleMarkAsCompletedWithReason}
+        confirmLabel="Confirm Completed"
+      /> */}
+
+      {reportTechnicalIssueReasonModalOpen && (
         <SupportForm
           onClose={closeModal}
           FeedbackIssueType="FeedbackInterviewTechIssue"
+          roundId={interviewData?.interviewRound?._id}
         />
       )}
-
-      {/* <Modal
-        isOpen={modal?.type === "techIssue"}
-        onClose={closeModal}
-        title="Report Technical Issue"
-      >
-        <div className="space-y-4">
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-orange-800">
-              <AlertCircle size={16} />
-              <span className="font-medium">Technical Issue Report</span>
-            </div>
-            <p className="text-orange-700 text-sm mt-2">
-              This will log the technical issue for support team review.
-            </p>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Issue Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              className="w-full border border-gray-300 rounded-lg p-3 text-sm"
-              value={formData.reason}
-              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-              required
-            >
-              <option value="">Select issue type</option>
-              <option value="connectivity-candidate">Internet Connectivity (Candidate)</option>
-              <option value="connectivity-interviewer">Internet Connectivity (Interviewer)</option>
-              <option value="audio-video">Audio/Video Problem</option>
-              <option value="platform-issue">Platform Issue</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              className="w-full border border-gray-300 rounded-lg p-3 text-sm"
-              placeholder="Describe the technical issue in detail..."
-              value={formData.comments}
-              onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
-              rows={4}
-            />
-          </div>
-          
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={closeModal}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => handleConfirm("techIssue", formData)}
-              disabled={!formData.reason}
-              className="px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Report Issue
-            </button>
-          </div>
-        </div>
-      </Modal> */}
-
-      {/* // cancellation modal */}
-
-      {/* SupportForm */}
-      {/* {
-    modal?.type === "cancel" && (
-      <SupportForm  
-      onClose={closeModal}
-      FeedbackIssueType="FeedbackInterviewCancel"
-      />
-    )
-   } */}
-
-      {/* <Modal
-        isOpen={modal?.type === "cancel"}
-        onClose={closeModal}
-        title="Cancel Interview"
-      >
-        <div className="space-y-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-red-800">
-              <Ban size={16} />
-              <span className="font-medium">Cancel Interview</span>
-            </div>
-            <p className="text-red-700 text-sm mt-2">
-              This will cancel the interview and notify all parties. This action
-              cannot be undone.
-            </p>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={closeModal}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Keep Interview
-            </button>
-            <button
-              onClick={() => handleConfirm("cancel", formData)}
-              // disabled={!formData.reason}
-              className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel Interview
-            </button>
-          </div>
-        </div>
-      </Modal> */}
     </div>
     // v1.0.1 ---------------------------------------------------------------------------->
   );
