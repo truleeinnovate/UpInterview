@@ -861,7 +861,7 @@ const RoundCard = ({
     setSelectedSchedule(round.scheduledAssessment);
     setSelectedAction(action); // "extend" | "cancel"
     setIsActionPopupOpen(true);
-    
+
   };
 
 
@@ -1980,6 +1980,8 @@ const RoundCard = ({
         }}
         onConfirm={handleCancelWithReason}
         confirmLabel="Confirm Cancel"
+        roundData={round}
+        showPolicyInfo={true}
       />
 
       {/* Shared reason modal for No Show */}
