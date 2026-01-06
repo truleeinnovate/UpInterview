@@ -53,7 +53,6 @@ import { ROUND_TITLES } from "../../CommonCode-AllTabs/roundTitlesConfig.js";
 import { useVideoSettingsQuery } from "../../../../../apiHooks/VideoDetail.js";
 import { useGroupsQuery } from "../../../../../apiHooks/useInterviewerGroups.js";
 import DateChangeConfirmationModal from "../components/DateChangeConfirmationModal.jsx";
-
 const {
   calculateExpiryDate,
 } = require("../../../../../utils/calculateExpiryDateForInterviewRequests.js");
@@ -2267,9 +2266,19 @@ const RoundFormInterviews = () => {
   };
 
   const handleAssessmentSelect = (assessment) => {
+    console.log(
+      "SELECTED ASSESSMENT ==================================> ",
+      assessment
+    );
     const assessmentData = {
       assessmentId: assessment._id,
       assessmentName: assessment.AssessmentTitle,
+      // Store additional details for display
+      expiryDate: assessment?.ExpiryDate,
+      totalScore: assessment?.totalScore,
+      passScore: assessment?.passScore,
+      linkExpiryDays: assessment?.linkExpiryDays,
+      passScoreType: assessment?.passScoreType,
     };
     setAssessmentTemplate(assessmentData);
     setSelectedAssessmentData(assessment);
@@ -2609,6 +2618,56 @@ const RoundFormInterviews = () => {
                             }}
                             error={errors.assessmentTemplate}
                           />
+
+                          {/* Assessment Metadata Summary */}
+                          {selectedAssessmentData && (
+                            <div className="col-span-2 mt-6 grid grid-cols-3 gap-4 p-3 bg-blue-50/30 border border-blue-100 rounded-lg">
+                              <div className="flex flex-col">
+                                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
+                                  Total Score
+                                </span>
+                                <span className="text-sm font-semibold text-gray-900">
+                                  {selectedAssessmentData?.totalScore} Points
+                                </span>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
+                                  Pass Criteria
+                                </span>
+                                <span className="text-sm font-semibold text-gray-900">
+                                  {selectedAssessmentData?.passScore}
+                                  {selectedAssessmentData?.passScoreType ===
+                                  "Percentage"
+                                    ? "%"
+                                    : " Points"}
+                                </span>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+                                  Link Valid For
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <span>
+                                    {selectedAssessmentData?.linkExpiryDays ||
+                                      3}
+                                  </span>
+                                  <span className="text-sm font-semibold text-custom-blue">
+                                    Days
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
+                                  Expiry Date
+                                </span>
+                                <span className="text-sm font-semibold text-orange-600">
+                                  {formatDateTime(
+                                    selectedAssessmentData?.ExpiryDate
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* assessment questions */}
