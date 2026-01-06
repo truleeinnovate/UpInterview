@@ -562,20 +562,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                 onClick={() => {
                   if (interviewRoundData?.meetPlatform === "platform") {
                     const currentUrl = new URL(window.location.href);
+
+                    // change only the path
                     currentUrl.pathname = "/video-call";
-                    const roleData = {
-                      ...roleInfo,
-                      isInterviewer: true,
-                      isCandidate: false,
-                    };
-                    currentUrl.searchParams.set(
-                      "meetLink",
-                      interviewRoundData?.meetingId || ""
-                    );
-                    currentUrl.searchParams.set(
-                      "meetingData",
-                      encodeURIComponent(JSON.stringify(roleData || {}))
-                    );
+
                     window.open(currentUrl.toString(), "_blank");
                   } else {
                     handleRoleSelect("interviewer");
