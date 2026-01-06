@@ -117,8 +117,8 @@ const FeedbackForm = ({
   // console.log("feedbackData", feedbackDatas);
 
   // const feedbackData = React.useMemo(() => locationFeedback || {}, [locationFeedback]);
-  const feedbackId =
-    feedbackData._id || feedbackData?.feedbacks[0]?._id || null;
+  const feedbackId = feedbackData?._id || 
+    (Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0 ? feedbackData.feedbacks[0]?._id : null);
 
   const skillsData = feedbackData.skills || [];
 

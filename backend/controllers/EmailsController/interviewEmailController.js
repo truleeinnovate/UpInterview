@@ -40,6 +40,17 @@ const encryptData = (data) => {
   }
 };
 
+// Helper to extract only start time from "start - end" format
+const formatStartDateTime = (dateTimeString) => {
+  if (!dateTimeString) return "To be scheduled";
+
+  // Split by " - " and take the first part (start time)
+  const startPart = dateTimeString.split(" - ")[0].trim();
+
+  // Optional: You can further format it if needed
+  return startPart;
+};
+
 //this helps us to send emails to scheduler,interviwer,candidate if round scheduled.it has different emails for face to face and virtual because face to face has physical interview.-Ashraf
 exports.sendInterviewRoundEmails = async (req, res = null) => {
   try {
@@ -179,7 +190,10 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     // Common email data
     const roundTitle = round.roundTitle || "Interview Round";
     const interviewMode = round.interviewMode || "Online";
-    const dateTime = round.dateTime || "To be scheduled";
+    // const dateTime = round.dateTime || "To be scheduled";
+    const startDateTime = round.dateTime
+      ? formatStartDateTime(round.dateTime)
+      : "To be scheduled";
     const duration = round.duration || "60 minutes";
     const instructions = round.instructions || "Please arrive on time.";
     // const position = round.positionId.title || 'No Position';
@@ -214,7 +228,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{recipientName}}/g, candidateName)
           .replace(/{{companyName}}/g, companyName)
           .replace(/{{roundTitle}}/g, roundTitle)
-          .replace(/{{dateTime}}/g, dateTime)
+          .replace(/{{dateTime}}/g, startDateTime)
           .replace(/{{duration}}/g, duration)
           .replace(/{{address}}/g, address)
           .replace(/{{instructions}}/g, instructions)
@@ -269,7 +283,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             .replace(/{{recipientName}}/g, interviewerName)
             .replace(/{{companyName}}/g, companyName)
             .replace(/{{roundTitle}}/g, roundTitle)
-            .replace(/{{dateTime}}/g, dateTime)
+            .replace(/{{dateTime}}/g, startDateTime)
             .replace(/{{duration}}/g, duration)
             .replace(/{{address}}/g, address)
             .replace(/{{instructions}}/g, instructions)
@@ -324,7 +338,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{recipientName}}/g, schedulerName)
           .replace(/{{companyName}}/g, companyName)
           .replace(/{{roundTitle}}/g, roundTitle)
-          .replace(/{{dateTime}}/g, dateTime)
+          .replace(/{{dateTime}}/g, startDateTime)
           .replace(/{{duration}}/g, duration)
           .replace(/{{address}}/g, address)
           .replace(/{{instructions}}/g, instructions)
@@ -417,7 +431,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{companyName}}/g, companyName)
           .replace(/{{roundTitle}}/g, roundTitle)
           .replace(/{{interviewMode}}/g, interviewMode)
-          .replace(/{{dateTime}}/g, dateTime)
+          .replace(/{{dateTime}}/g, startDateTime)
           .replace(/{{duration}}/g, duration)
           .replace(/{{instructions}}/g, instructions)
           .replace(/{{supportEmail}}/g, supportEmail)
@@ -480,7 +494,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             .replace(/{{companyName}}/g, companyName)
             .replace(/{{roundTitle}}/g, roundTitle)
             .replace(/{{interviewMode}}/g, interviewMode)
-            .replace(/{{dateTime}}/g, dateTime)
+            .replace(/{{dateTime}}/g, startDateTime)
             .replace(/{{duration}}/g, duration)
             .replace(/{{instructions}}/g, instructions)
             .replace(/{{supportEmail}}/g, supportEmail)
@@ -559,7 +573,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{roundTitle}}/g, roundTitle)
           .replace(/{{candidateName}}/g, candidateName)
           .replace(/{{interviewMode}}/g, interviewMode)
-          .replace(/{{dateTime}}/g, dateTime)
+          .replace(/{{dateTime}}/g, startDateTime)
           .replace(/{{duration}}/g, duration)
           .replace(/{{instructions}}/g, instructions)
           .replace(/{{supportEmail}}/g, supportEmail)
@@ -860,7 +874,10 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
           .join(" ") || "Interviewer";
       const roundTitleText = round.roundTitle || "Interview Round";
       const interviewMode = round.interviewMode || "Online"; // Default for outsource interviews
-      const dateTimeText = round.dateTime || "To be scheduled";
+      // const dateTimeText = round.dateTime || "To be scheduled";
+      const startDateTime = round.dateTime
+        ? formatStartDateTime(round.dateTime)
+        : "To be scheduled";
       const durationText = round.duration || "60 minutes";
       const instructions =
         round.instructions ||
@@ -877,7 +894,7 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
         .replace(/{{candidateName}}/g, candidateName)
         .replace(/{{interviewerName}}/g, interviewerName)
         .replace(/{{interviewMode}}/g, interviewMode)
-        .replace(/{{dateTime}}/g, dateTimeText)
+        .replace(/{{dateTime}}/g, startDateTime)
         .replace(/{{duration}}/g, durationText)
         .replace(/{{instructions}}/g, instructions)
         .replace(/{{supportEmail}}/g, supportEmail)
@@ -1061,7 +1078,10 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
     const roundTitle = round.roundTitle || "Interview Round";
     const interviewMode =
       round.interviewMode === "Face to Face" ? "Face to Face" : "Online";
-    const dateTime = round.dateTime || "To be scheduled";
+    // const dateTime = round.dateTime || "To be scheduled";
+    const startDateTime = round.dateTime
+      ? formatStartDateTime(round.dateTime)
+      : "To be scheduled";
     const duration = round.duration || "60";
 
     // Load unified template
@@ -1094,7 +1114,7 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
         companyName: companyName,
         roundTitle,
         interviewMode,
-        dateTime,
+        dateTime: startDateTime,
         duration,
         supportEmail,
         position,
@@ -1331,7 +1351,10 @@ exports.sendInterviewerCancelledEmails = async (req, res = null) => {
     if (!round) return returnError("Round not found");
 
     const roundTitle = round.roundTitle || "Interview Round";
-    const dateTime = round.dateTime || "To be rescheduled";
+    // const dateTime = round.dateTime || "To be rescheduled";
+    const startDateTime = round.dateTime
+      ? formatStartDateTime(round.dateTime)
+      : "To be scheduled";
     const duration = round.duration || "60 minutes";
     const interviewMode = round.interviewMode || "Online";
     const position = interview.positionId?.title || "Not specified";
@@ -1369,7 +1392,7 @@ exports.sendInterviewerCancelledEmails = async (req, res = null) => {
       companyName,
       orgCompanyName,
       roundTitle,
-      dateTime,
+      dateTime: startDateTime,
       duration,
       interviewMode,
       position,

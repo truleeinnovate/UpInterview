@@ -288,6 +288,8 @@ const verifyAnswer = (question, selectedAnswer) => {
 
   const handleStartReview = () => {
     setIsReviewing(true);
+    setCurrentQuestionIndex(0); // Reset to first question when starting review
+    setCurrentSection(0); // Also reset section to first section
     setShowConfirmSubmit(false);
   };
 

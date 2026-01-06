@@ -495,9 +495,7 @@ const RoundCard = ({
         // Check if this is a multi-candidate response (has summary)
         if (data.summary) {
           const { successful, total } = data.summary;
-          notify.success(
-            `Resent links to ${successful} out of ${total} candidates`
-          );
+          notify.success(`Resent links to ${successful} out of ${total} candidates`);
         } else {
           // Single candidate response — use message or generic success
           notify.success("Assessment link resent successfully");
@@ -1137,6 +1135,8 @@ const RoundCard = ({
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
                     Schedule
                   </h4>
+
+                  
                   {/* <div className="flex items-center text-sm text-gray-500 mb-1">
                     <Calendar className="h-4 w-4 mr-1" />
                     <span>Scheduled: {formatDate(round.scheduledDate)}</span>
@@ -1161,6 +1161,8 @@ const RoundCard = ({
                       </span>
                     </div>
                   )}
+
+                  
                   {round.completedDate && (
                     <div className="flex items-center text-sm text-gray-500">
                       <Clock className="h-4 w-4 mr-1" />
@@ -1751,10 +1753,12 @@ const RoundCard = ({
                     </button>
                   )}
                   {/* Reschedule */}
+                  {/* Reschedule */}
                   {permissions.canReschedule &&
                     !isInterviewCompleted &&
-                    round?.roundTitle !== "Assessment" &&
-                    round.interviewType !== "instant" && (
+                    round?.roundTitle !== "Assessment" && (
+                      round.status === "Cancelled" || round.interviewType !== "instant"
+                    ) && (
                       <button
                         onClick={() => onEdit(round, { isReschedule: true })}
                         className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
