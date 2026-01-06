@@ -58,7 +58,11 @@ function validateBasicDetails(payload = {}) {
       }),
 
     // Optional fields for Basic Details
-    Position: Joi.string().trim().allow("", null).optional(),
+    Position: Joi.string()
+      .pattern(/^[0-9a-fA-F]{24}$/)
+      .allow(null, "")
+      .optional(),
+
     Duration: Joi.string().trim().allow("", null).optional(),
     ExpiryDate: Joi.date().iso().allow("", null).optional(),
     linkExpiryDays: Joi.number()
