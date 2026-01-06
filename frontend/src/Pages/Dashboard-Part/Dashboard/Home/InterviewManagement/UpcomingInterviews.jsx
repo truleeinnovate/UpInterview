@@ -3,6 +3,7 @@
 // v1.0.2 - Ashok - Fixed responsiveness issues
 // v1.0.3 - Ashok - Added meeting platform icons and styles
 // v1.0.4 - Ashok - Changed react icons to svg for better customization
+// v1.0.5 - Ashok - Changed video platform name from Custom to Platform
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { parse, isValid, isAfter, isToday, startOfDay } from "date-fns";
 import { useInterviews } from "../../../../../apiHooks/useInterviews";
+import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge";
 
 const InterviewerSchedule = () => {
   const navigate = useNavigate();
@@ -233,7 +235,7 @@ const InterviewerSchedule = () => {
                         </span>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 py-1 px-2.5 text-xs">
+                    {/* <span className="inline-flex items-center gap-1.5 py-1 px-2.5 text-xs">
                       {round?.meetPlatform === "googlemeet" ? (
                         <div className="flex items-center gap-2 bg-green-50 text-gray-600 px-2 py-1 rounded-md">
                           <svg
@@ -242,7 +244,6 @@ const InterviewerSchedule = () => {
                             className="h-6 w-6"
                           >
                             <g fill="none" fill-rule="evenodd">
-                              {/* <!-- Top face (yellow) - taller --> */}
                               <rect
                                 x="8"
                                 y="12"
@@ -253,7 +254,6 @@ const InterviewerSchedule = () => {
                                 fill="#ffe70b"
                               />
 
-                              {/* <!-- Bottom face (green) --> */}
                               <rect
                                 x="8"
                                 y="24"
@@ -264,7 +264,6 @@ const InterviewerSchedule = () => {
                                 fill="#34A853"
                               />
 
-                              {/* <!-- Left side (blue) --> */}
                               <rect
                                 x="8"
                                 y="12"
@@ -275,7 +274,6 @@ const InterviewerSchedule = () => {
                                 fill="#4285F4"
                               />
 
-                              {/* <!-- Right side (green same as head) --> */}
                               <rect
                                 x="36"
                                 y="12"
@@ -286,7 +284,6 @@ const InterviewerSchedule = () => {
                                 fill="#34A853"
                               />
 
-                              {/* <!-- Camera lens / inner rectangle (white) --> */}
                               <rect
                                 x="12"
                                 y="16"
@@ -297,7 +294,6 @@ const InterviewerSchedule = () => {
                                 fill="#ffffff"
                               />
 
-                              {/* <!-- Triangle / camera play icon (wider & taller) --> */}
                               <path fill="#00f829" d="M36 20l14-4v18l-14-4z" />
                             </g>
                           </svg>
@@ -334,10 +330,11 @@ const InterviewerSchedule = () => {
                             <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z" />
                           </svg>
 
-                          <strong>Custom</strong>
+                          <strong>Platform</strong>
                         </div>
                       )}
-                    </span>
+                    </span> */}
+                    <MeetPlatformBadge platform={round?.meetPlatform} />
                   </div>
                   <div className="grid grid-cols-1 items-center gap-2">
                     {/* candidate name and email */}

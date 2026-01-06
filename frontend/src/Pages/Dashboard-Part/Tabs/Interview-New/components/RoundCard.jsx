@@ -58,8 +58,8 @@ import {
   REJECT_OPTIONS,
 } from "../../../../../utils/roundHistoryOptions";
 import RoundActivityModal from "./RoundActivityModal";
-
 import AssessmentActionPopup from "../../Assessment-Tab/AssessmentViewDetails/AssessmentActionPopup.jsx";
+import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
 
 const RoundCard = ({
   round,
@@ -1132,11 +1132,31 @@ const RoundCard = ({
             <>
               <div className="mt-4 grid grid-cols-2 md:grid-cols-2 gap-4 sm:grid-cols-1">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    Schedule
-                  </h4>
-
-                  
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="text-sm font-medium text-gray-700">
+                      Schedule
+                    </h4>
+                    {/* <div>
+                      {round?.meetPlatform &&
+                        round?.roundTitle !== "Assessment" && (
+                          <div>
+                            {round.meetPlatform === "googlemeet" ? (
+                              <div>Google Meet</div>
+                            ) : round.meetPlatform === "zoom" ? (
+                              <div>Zoom</div>
+                            ) : (
+                              <div>Custom Link</div>
+                            )}
+                          </div>
+                        )}
+                    </div> */}
+                    <div>
+                      {round?.meetPlatform &&
+                        round?.roundTitle !== "Assessment" && (
+                          <MeetPlatformBadge platform={round?.meetPlatform} />
+                        )}
+                    </div>
+                  </div>
                   {/* <div className="flex items-center text-sm text-gray-500 mb-1">
                     <Calendar className="h-4 w-4 mr-1" />
                     <span>Scheduled: {formatDate(round.scheduledDate)}</span>

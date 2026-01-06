@@ -17,6 +17,11 @@ const VerticalRoundsView = ({
   onEditRound,
   onInitiateAction,
 }) => {
+  console.log(
+    "VERTICAL ROUND CARDS =======================================> ",
+    rounds
+  );
+
   // const { useScheduledAssessments } = useScheduleAssessments();
   // const { scheduleData } = useScheduleAssessments();
   // Sort rounds by sequence
