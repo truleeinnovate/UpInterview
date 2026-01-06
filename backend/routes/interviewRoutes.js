@@ -22,18 +22,10 @@ const {
 const loggingService = require("../middleware/loggingService");
 
 // post call interview create routes
-router.post(
-  "/",
-  loggingService.internalLoggingMiddleware,
-  createInterview
-);
+router.post("/", loggingService.internalLoggingMiddleware, createInterview);
 
 // patch call for interview update routes
-router.patch(
-  "/:id",
-  loggingService.internalLoggingMiddleware,
-  updateInterview
-);
+router.patch("/:id", loggingService.internalLoggingMiddleware, updateInterview);
 
 // Interview Status Update
 router.patch(
@@ -66,7 +58,8 @@ router.delete("/delete-round/:id", deleteRound);
 router.get("/dashboard-stats", getDashboardStats);
 
 // to get indidual interveiw & interview rounds data for org
-router.get("/interview-details/:interviewId", getInterviewDataforOrg);
+router.get("/interview-details", getInterviewDataforOrg);
+// /:interviewId
 
 // Check internal interview usage
 router.get("/check-usage", checkInternalInterviewUsage);

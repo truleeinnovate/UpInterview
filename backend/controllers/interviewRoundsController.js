@@ -1419,7 +1419,7 @@ const updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => {} }), locals: {} }
+        { status: () => ({ json: () => { } }), locals: {} }
       );
     }
 
@@ -1730,7 +1730,7 @@ async function handleInterviewerRequestFlow({
           isMockInterview: false,
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} }
+      { status: () => ({ json: () => { } }), locals: {} }
     );
   }
 
@@ -1749,7 +1749,7 @@ async function handleInterviewerRequestFlow({
           type: "interview",
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} }
+      { status: () => ({ json: () => { } }), locals: {} }
     );
     console.log(
       "Outsource interview request emails sent successfully",
@@ -1788,7 +1788,7 @@ async function handleInternalRoundEmails({
       },
     },
     {
-      status: () => ({ json: () => {} }),
+      status: () => ({ json: () => { } }),
       locals: {},
     }
   );
@@ -2151,100 +2151,100 @@ async function processInterviewers(interviewers) {
   return processedInterviewers;
 }
 
-// createRequest = async (req, res) => {
-//   // Mark that logging will be handled by this controller
-//   res.locals.loggedByController = true;
-//   res.locals.processName = "Create Interview Request";
+createRequest = async (req, res) => {
+  // Mark that logging will be handled by this controller
+  res.locals.loggedByController = true;
+  res.locals.processName = "Create Interview Request";
 
-//   try {
-//     const {
-//       tenantId,
-//       ownerId,
-//       scheduledInterviewId,
-//       interviewerType,
-//       dateTime,
-//       duration,
-//       interviewerId,
-//       candidateId,
-//       positionId,
-//       // status,
-//       roundId,
-//       requestMessage,
-//       expiryDateTime,
-//       isMockInterview,
-//       contactId,
-//     } = req.body;
-//     const isInternal = interviewerType === "Internal";
+  try {
+    const {
+      tenantId,
+      ownerId,
+      scheduledInterviewId,
+      interviewerType,
+      dateTime,
+      duration,
+      interviewerId,
+      candidateId,
+      positionId,
+      // status,
+      roundId,
+      requestMessage,
+      expiryDateTime,
+      isMockInterview,
+      contactId,
+    } = req.body;
+    const isInternal = interviewerType === "Internal";
 
-//     // Generate custom request ID using centralized service with tenant ID
-//     const customRequestId = await generateUniqueId(
-//       "INT-RQST",
-//       InterviewRequest,
-//       "customRequestId",
-//       tenantId
-//     );
+    // Generate custom request ID using centralized service with tenant ID
+    const customRequestId = await generateUniqueId(
+      "INT-RQST",
+      InterviewRequest,
+      "customRequestId",
+      tenantId
+    );
 
-//     const newRequest = new InterviewRequest({
-//       interviewRequestCode: customRequestId,
-//       tenantId: new mongoose.Types.ObjectId(tenantId),
-//       ownerId,
-//       scheduledInterviewId: isMockInterview
-//         ? undefined
-//         : new mongoose.Types.ObjectId(scheduledInterviewId),
-//       interviewerType,
-//       contactId: new mongoose.Types.ObjectId(contactId),
-//       interviewerId: new mongoose.Types.ObjectId(interviewerId), // Save interviewerId instead of an array
-//       dateTime,
-//       duration,
-//       candidateId: isMockInterview
-//         ? undefined
-//         : new mongoose.Types.ObjectId(candidateId),
-//       positionId: isMockInterview
-//         ? undefined
-//         : new mongoose.Types.ObjectId(positionId),
-//       status: isInternal ? "accepted" : "inprogress",
-//       roundId: new mongoose.Types.ObjectId(roundId),
-//       requestMessage: isInternal
-//         ? "Internal interview request"
-//         : "Outsource interview request",
-//       expiryDateTime,
-//       isMockInterview,
-//     });
+    const newRequest = new InterviewRequest({
+      interviewRequestCode: customRequestId,
+      tenantId: new mongoose.Types.ObjectId(tenantId),
+      ownerId,
+      scheduledInterviewId: isMockInterview
+        ? undefined
+        : new mongoose.Types.ObjectId(scheduledInterviewId),
+      interviewerType,
+      contactId: new mongoose.Types.ObjectId(contactId),
+      interviewerId: new mongoose.Types.ObjectId(interviewerId), // Save interviewerId instead of an array
+      dateTime,
+      duration,
+      candidateId: isMockInterview
+        ? undefined
+        : new mongoose.Types.ObjectId(candidateId),
+      positionId: isMockInterview
+        ? undefined
+        : new mongoose.Types.ObjectId(positionId),
+      status: isInternal ? "accepted" : "inprogress",
+      roundId: new mongoose.Types.ObjectId(roundId),
+      requestMessage: isInternal
+        ? "Internal interview request"
+        : "Outsource interview request",
+      expiryDateTime,
+      isMockInterview,
+    });
 
-//     await newRequest.save();
+    await newRequest.save();
 
-//     // Structured internal log for successful interview request creation
-//     res.locals.logData = {
-//       tenantId: tenantId || "",
-//       ownerId: ownerId || "",
-//       processName: "Create Interview Request",
-//       requestBody: req.body,
-//       status: "success",
-//       message: "Interview request created successfully",
-//       responseBody: newRequest,
-//     };
+    // Structured internal log for successful interview request creation
+    res.locals.logData = {
+      tenantId: tenantId || "",
+      ownerId: ownerId || "",
+      processName: "Create Interview Request",
+      requestBody: req.body,
+      status: "success",
+      message: "Interview request created successfully",
+      responseBody: newRequest,
+    };
 
-//     res.status(201).json({
-//       message: "Interview request created successfully",
-//       data: newRequest,
-//     });
-//   } catch (error) {
-//     console.error("Error creating interview request:", error);
-//     // Structured internal log for error case
-//     res.locals.logData = {
-//       tenantId: req.body?.tenantId || "",
-//       ownerId: req.body?.ownerId || "",
-//       processName: "Create Interview Request",
-//       requestBody: req.body,
-//       status: "error",
-//       message: error.message,
-//     };
+    res.status(201).json({
+      message: "Interview request created successfully",
+      data: newRequest,
+    });
+  } catch (error) {
+    console.error("Error creating interview request:", error);
+    // Structured internal log for error case
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Create Interview Request",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
 
-//     res
-//       .status(500)
-//       .json({ message: "Internal server error", error: error.message });
-//   }
-// };
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
 
 const triggerInterviewRoundStatusUpdated = async (
   round,

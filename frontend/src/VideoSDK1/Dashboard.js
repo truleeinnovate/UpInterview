@@ -13,6 +13,7 @@ import {
   useContactDetails,
   useSchedulerRoundDetails,
 } from "../apiHooks/useVideoCall";
+import { useInterviews } from "../apiHooks/useInterviews";
 import { JoiningScreen } from "./components/screens/JoiningScreen";
 
 const Dashboard = () => {
@@ -28,6 +29,8 @@ const Dashboard = () => {
   const [customVideoStream, setCustomVideoStream] = useState(null);
   const [customAudioStream, setCustomAudioStream] = useState(null);
   const [isMeetingStarted, setMeetingStarted] = useState(false);
+
+  const { useInterviewDetails } = useInterviews();
 
   const isMobile = window.matchMedia(
     "only screen and (max-width: 768px)"
@@ -105,9 +108,19 @@ const Dashboard = () => {
     decodedData?.interviewRoundId,
     decodedData?.isSchedule
   );
-  const { data: candidateData } = useCandidateDetails(
-    decodedData?.isCandidate ? decodedData.interviewRoundId : null
+  // const { data: candidateData } = useCandidateDetails(
+  //   decodedData?.isCandidate ? decodedData.interviewRoundId : null
+  // );
+
+  const { data, isLoading } = useInterviewDetails(
+    decodedData.isCandidate
+      ? { interviewRoundId: decodedData.interviewRoundId }
+      : {}
   );
+
+  const candidateData = data;
+
+  console.log("candidateData", candidateData);
 
   // 4. Set meetingId from candidateData
   useEffect(() => {
@@ -232,7 +245,9 @@ const Dashboard = () => {
           <div className="flex items-center justify-center h-full">
             <div className="text-center p-6 bg-white rounded-lg shadow-lg max-w-md">
               <div className="text-red-500 text-3xl mb-4">⚠️</div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">Device Issue</h2>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">
+                Device Issue
+              </h2>
               <p className="text-gray-600 mb-4">{deviceError}</p>
               <div className="space-y-2">
                 <button
@@ -303,7 +318,9 @@ const Dashboard = () => {
                 {meetingId && token && "Joining meeting..."}
               </p>
               {meetingId && (
-                <p className="text-xs text-gray-400 mt-1">Meeting ID: {meetingId.substring(0, 20)}...</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Meeting ID: {meetingId.substring(0, 20)}...
+                </p>
               )}
             </div>
           </div>

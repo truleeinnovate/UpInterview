@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashok   -  Improved responsiveness added common popup
 // v1.0.2  -  Ashok   -  fixed z-index and alignment issues
 // v1.0.3  -  Ashok   -  fixed responsiveness style issues in form
+// v1.0.4  -  Ashok   -  fixed alignment issues
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Search, X, ChevronDown, ChevronUp } from "lucide-react";
@@ -10,6 +11,8 @@ import useInterviewers from "../../../../../../hooks/useInterviewers";
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 import { useGroupsQuery } from "../../../../../../apiHooks/useInterviewerGroups.js";
 // v1.0.1 ------------------------------------------------------------>
+import { capitalizeFirstLetter } from "../../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import { useScrollLock } from "../../../../../../apiHooks/scrollHook/useScrollLock.js";
 
 const InternalInterviews = ({
   onClose,
@@ -27,6 +30,9 @@ const InternalInterviews = ({
   const [filteredData, setFilteredData] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const modalRef = useRef(null);
+
+  useScrollLock(true);
+
   // const [viewType, setViewType] = useState(defaultViewType);
   // const [viewType, setViewType] = useState(defaultViewType);
   // CHANGED: Auto-detect view type based on groupName or groupId
@@ -50,6 +56,12 @@ const InternalInterviews = ({
     { value: "Recruiter", label: "Recruiter" },
     { value: "Internal_Interviewer", label: "Internal Interviewer" },
   ];
+
+  const getRoleLabel = (roleName) => {
+    console.log("ROLE NAME ==================> ", roleName);
+    const role = roles.find((r) => r.value === roleName);
+    return role ? role.label : "No role";
+  };
 
   const [selectedInterviewers, setSelectedInterviewers] = useState(() => {
     // CHANGED: Enhanced group detection logic
@@ -117,7 +129,11 @@ const InternalInterviews = ({
     if (viewType === "individuals") {
       const interviewersArray = Array.isArray(interviewers) ? interviewers : [];
       return interviewersArray
-        .filter((interviewer) => {
+        ?.filter((interviewer) => {
+          console.log(
+            "INTERVIEWER |||||||||||||||||||||||||||||||||||||||||: ",
+            interviewer
+          );
           // <------------------------------- v1.0.0
           // Filter by internal type
           if (interviewer.type !== "internal") {
@@ -125,17 +141,27 @@ const InternalInterviews = ({
           }
 
           // Filter by selected role
-          if (selectedRole !== "all" && interviewer.roleName !== selectedRole) {
+          if (
+            selectedRole !== "all" &&
+            interviewer?.roleName !== selectedRole
+          ) {
             return false;
           }
 
           // Filter by search query
           const contact = interviewer.contact || {};
+
+          // Filter by fullname
+          const fullName = `${contact?.firstName || ""} ${
+            contact?.lastName || ""
+          }`.trim();
+
           const matchesSearch = [
-            contact.firstName,
-            contact.lastName,
-            contact.email,
-            contact.phone,
+            contact?.firstName,
+            contact?.lastName,
+            fullName,
+            contact?.email,
+            contact?.phone,
           ].some(
             (field) =>
               field &&
@@ -144,33 +170,40 @@ const InternalInterviews = ({
           return matchesSearch;
         })
         .map((interviewer) => ({
-          _id: interviewer._id,
-          ...interviewer.contact,
-          contactId: interviewer.contact?._id || null,
-          type: interviewer.type,
-          roleName: interviewer.roleName,
-          availability: interviewer.availability,
-          name: interviewer.firstName + interviewer.lastName,
+          _id: interviewer?._id,
+          ...interviewer?.contact,
+
+          /* System role (permission role) */
+          roleName: interviewer?.roleName,
+          roleLabel: getRoleLabel(interviewer?.roleLabel),
+          profilePic: interviewer?.contact?.imageData?.path,
+
+          /* Current role (designation) */
+          currentRole: interviewer?.contact?.currentRole || "Not specified",
+
+          /* Skills */
+          skills: interviewer?.skills || [],
         }));
     } else {
       // Groups filtering remains unchanged
       return Array.isArray(groups)
         ? groups.filter((group) => {
-          // Filter by search query
-          const matchesSearch = [group.name, group.description].some(
-            (field) =>
-              field && field.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-
-          // For editing - check if this group matches the selected group name
-          const isSelectedGroup = selectedGroupName
-            ? group.name === selectedGroupName
-            : selectedInterviewersProp.some(
-              (selected) => selected._id === group._id
+            // Filter by search query
+            const matchesSearch = [group?.name, group?.description]?.some(
+              (field) =>
+                field &&
+                field?.toLowerCase()?.includes(searchQuery?.toLowerCase())
             );
 
-          return matchesSearch || isSelectedGroup;
-        })
+            // For editing - check if this group matches the selected group name
+            const isSelectedGroup = selectedGroupName
+              ? group.name === selectedGroupName
+              : selectedInterviewersProp?.some(
+                  (selected) => selected?._id === group?._id
+                );
+
+            return matchesSearch || isSelectedGroup;
+          })
         : [];
     }
   }, [
@@ -273,15 +306,18 @@ const InternalInterviews = ({
     onSelectCandidates([], type, "");
   };
 
+  console.log("FILTERED DATA ===========================> ", filteredData);
+
   return (
     // v1.0.3 <----------------------------------------------------------------------------------
     <SidebarPopup
-      title={`Select Internal ${viewType === "individuals" ? "Individuals" : "Groups"
-        }`}
+      title={`Select Internal ${
+        viewType === "individuals" ? "Individuals" : "Groups"
+      }`}
       onClose={onClose}
       // v1.0.2 <--------------------------------
       setIsFullscreen={setIsFullscreen}
-    // v1.0.2 -------------------------------->
+      // v1.0.2 -------------------------------->
     >
       <div className="flex flex-col h-full">
         {/* <------------------------------- v1.0.0  */}
@@ -289,9 +325,9 @@ const InternalInterviews = ({
           {/* ------------------------------ v1.0.0 > */}
           <div>
             <p className="text-sm text-gray-500">
-              {selectedInterviewers.length}{" "}
+              {selectedInterviewers?.length}{" "}
               {viewType === "individuals" ? "Individual" : "group"}
-              {selectedInterviewers.length !== 1 ? "s" : ""} selected
+              {selectedInterviewers?.length !== 1 ? "s" : ""} selected
             </p>
           </div>
         </div>
@@ -305,9 +341,33 @@ const InternalInterviews = ({
           <div className="bg-white">
             {/* ------------------------------ v1.0.0 > */}
             {/* <div className="flex gap-x-4 md:flex-row md:items-end md:space-x-4 md:space-y-0 justify-between my-5"> */}
-            <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-3 my-5">
+            {/* <div className="w-full grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-3 my-5"> */}
+            <div
+              className={`w-full grid gap-3 my-5 sm:grid-cols-1 md:grid-cols-1 
+              ${
+                viewType === "individuals"
+                  ? "lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
+                  : "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+              }`}
+            >
+              {/* Search Bar */}
+              {/* <div className="flex-1"> */}
+              <div className="flex-1 w-full">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={`Search ${
+                      viewType === "individuals" ? "interviewers" : "groups"
+                    }...`}
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                    className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
               {/* View Type Dropdown */}
-              <div className="flex-1 relative" ref={dropdownRef}>
+              <div className="flex-1 w-full relative" ref={dropdownRef}>
                 <button
                   onClick={toggleDropdown}
                   className="w-full flex justify-between items-center border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -341,8 +401,9 @@ const InternalInterviews = ({
 
               {/* Role Filter Dropdown */}
               <div
-                className={`flex-1 relative ${viewType === "groups" && "hidden"
-                  }`}
+                className={`flex-1 w-full relative ${
+                  viewType === "groups" && "hidden"
+                }`}
                 ref={roleDropdownRef}
               >
                 <button
@@ -373,43 +434,31 @@ const InternalInterviews = ({
                   </div>
                 )}
               </div>
-
-              {/* Search Bar */}
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder={`Search ${viewType === "individuals" ? "interviewers" : "groups"
-                      }...`}
-                    value={searchQuery}
-                    onChange={handleSearchInputChange}
-                    className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
             </div>
           </div>
           {/* v1.0.2 <-------------------------------------------------------------------------- */}
           <div
             className={`grid gap-3 sm:grid-cols-1 md:grid-cols-2 
-            ${isFullscreen
+            ${
+              isFullscreen
                 ? "lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
                 : "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-              }
+            }
           `}
           >
             {/* v1.0.2 --------------------------------------------------------------------------> */}
             {filteredData?.map((item) => (
               <div
                 key={item._id}
-                className={`flex items-center justify-between p-3 rounded-md ${navigatedfrom !== "dashboard"
-                  ? "cursor-pointer"
-                  : "cursor-default"
-                  } ${navigatedfrom !== "dashboard" && isInterviewerSelected(item)
+                className={`flex items-center justify-between p-3 rounded-md ${
+                  navigatedfrom !== "dashboard"
+                    ? "cursor-pointer"
+                    : "cursor-default"
+                } ${
+                  navigatedfrom !== "dashboard" && isInterviewerSelected(item)
                     ? "bg-custom-bg border border-custom-blue"
                     : "hover:bg-gray-50 border border-gray-200"
-                  }`}
+                }`}
                 onClick={() =>
                   navigatedfrom !== "dashboard" && handleSelectClick(item)
                 }
@@ -417,31 +466,56 @@ const InternalInterviews = ({
                 <div className="flex items-center">
                   {viewType === "individuals" ? (
                     <>
-                      {item.imageUrl ? (
+                      {item?.imageData ? (
                         <img
-                          src={item.imageUrl}
-                          alt={`${item.firstName} ${item.lastName}`}
+                          src={item?.imageData?.path}
+                          alt={`${item?.firstName} ${item?.lastName}`}
                           className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200"
                         />
                       ) : (
                         <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
                           <span className="text-white font-semibold text-md -mt-[4px]">
-                            {(item.firstName || "?")[0].toUpperCase()}
+                            {(item?.firstName || "?")[0]?.toUpperCase()}
                           </span>
                         </div>
                       )}
-                      <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">
-                          {item.firstName || item.lastName
-                            ? `${item.firstName || ""} ${item.lastName || ""}`
-                            : "no name available"}
+                      <div className="ml-3 flex flex-col gap-0.5">
+                        {/* Name */}
+                        <p className="text-sm font-semibold text-gray-900 leading-tight">
+                          {item?.firstName || item?.lastName
+                            ? `${
+                                capitalizeFirstLetter(item?.firstName) || ""
+                              } ${capitalizeFirstLetter(item?.lastName) || ""}`
+                            : "No name available"}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          {item?.currentRole || "No role available"}
-                          {/* {Array.isArray(item.technologies) &&
-                          item.currentSkill.length > 0
-                            ? item.technologies.join(", ")
-                            : "no technology available"} */}
+
+                        {/* System Role (Permission Role) */}
+                        <span
+                          className="inline-block w-fit text-[13px] rounded-full 
+                          text-custom-blue font-semibold"
+                        >
+                          {item?.roleLabel}
+                        </span>
+
+                        {/* Current Role (Designation) */}
+                        <p className="text-xs text-gray-600 leading-tight italic">
+                          {item?.currentRole}
+                        </p>
+
+                        {/* Skills */}
+                        <p
+                          className="text-xs text-gray-500 leading-snug mt-2"
+                          title={item?.skills?.join(", ")}
+                        >
+                          {item?.skills?.length > 0
+                            ? item?.skills?.slice(0, 3)?.join(", ")
+                            : "No skills available"}
+                          {item?.skills?.length > 3 && (
+                            <span className="text-gray-400">
+                              {" "}
+                              +{item?.skills?.length - 3} more
+                            </span>
+                          )}
                         </p>
                       </div>
                     </>
@@ -468,7 +542,7 @@ const InternalInterviews = ({
                         </p>
                         <p className="text-xs text-gray-500">
                           {Array.isArray(item.usersNames) &&
-                            item.usersNames.length > 0
+                          item.usersNames.length > 0
                             ? item.usersNames.join(", ")
                             : "No users available"}
                         </p>
@@ -499,7 +573,7 @@ const InternalInterviews = ({
             ))}
           </div>
           {/* v1.0.2 <------------------------------------------------------------------ */}
-          {filteredData.length === 0 && (
+          {filteredData?.length === 0 && (
             <div className="text-gray-500 flex items-center justify-center h-full mb-8">
               <p>
                 No {viewType === "individuals" ? "interviewers" : "groups"}{" "}

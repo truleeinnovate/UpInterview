@@ -17,7 +17,7 @@ import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock"
 import { useMemo } from "react";
 import {
   extractUrlData,
-  useCandidateDetails,
+  // useCandidateDetails,
 } from "../../../../../apiHooks/useVideoCall";
 import { useEffect } from "react";
 import { useFeedbackData } from "../../../../../apiHooks/useFeedbacks";

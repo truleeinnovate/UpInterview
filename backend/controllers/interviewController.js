@@ -2229,26 +2229,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-        from: "mockinterviews",
-        localField: "mockInterviewId",
-        foreignField: "_id",
-        as: "mainInterview",
-      }
+          from: "mockinterviews",
+          localField: "mockInterviewId",
+          foreignField: "_id",
+          as: "mainInterview",
+        }
       : {
-        from: "interviews",
-        localField: "interviewId",
-        foreignField: "_id",
-        as: "mainInterview",
-      };
+          from: "interviews",
+          localField: "interviewId",
+          foreignField: "_id",
+          as: "mainInterview",
+        };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2270,23 +2270,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-          {
-            $addFields: {
-              mainTenantIdNormalized: {
-                $cond: [
-                  {
-                    $and: [
-                      { $ne: ["$mainInterview.tenantId", null] },
-                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                    ],
-                  },
-                  { $toObjectId: "$mainInterview.tenantId" },
-                  null,
-                ],
+            {
+              $addFields: {
+                mainTenantIdNormalized: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $ne: ["$mainInterview.tenantId", null] },
+                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                      ],
+                    },
+                    { $toObjectId: "$mainInterview.tenantId" },
+                    null,
+                  ],
+                },
               },
             },
-          },
-        ]
+          ]
         : []),
       // Lookup tenant for organization info
       {
@@ -2820,10 +2820,40 @@ const getInterviewRoundTransaction = async (req, res) => {
 
 const getInterviewDataforOrg = async (req, res) => {
   try {
-    const { interviewId } = req.params;
+    // const { interviewId } = req.params;
+
+    const { interviewId, roundId } = req.query;
+
+    // ❌ Both not allowed (extra safety)
+    if (interviewId && roundId) {
+      return res.status(400).json({
+        message: "Send only interviewId or roundId, not both",
+      });
+    }
+
+    let finalInterviewId;
+
+    // 1️⃣ Resolve interviewId
+    if (interviewId) {
+      finalInterviewId = interviewId;
+    } else if (roundId) {
+      const round = await InterviewRounds.findById(roundId)
+        .select("interviewId")
+        .lean();
+
+      if (!round) {
+        return res.status(404).json({ message: "Round not found" });
+      }
+
+      finalInterviewId = round.interviewId;
+    } else {
+      return res.status(400).json({
+        message: "interviewId or roundId is required",
+      });
+    }
 
     // 1️⃣ Fetch interview
-    const interview = await Interview.findById(interviewId)
+    const interview = await Interview.findById(finalInterviewId)
       .populate({
         path: "candidateId",
         select:
@@ -2841,14 +2871,21 @@ const getInterviewDataforOrg = async (req, res) => {
     }
 
     // 2️⃣ Fetch rounds with accepted interviewers populated
-    const rounds = await InterviewRounds.find({ interviewId })
+    const rounds = await InterviewRounds.find({ interviewId: finalInterviewId })
       .populate({
         path: "interviewers",
         select: "firstName lastName email",
       })
       .lean();
 
-    const roundIds = rounds.map((r) => r._id);
+    // const roundIds = rounds.map((r) => r._id);
+
+    // added for feedback form fetch specific round
+    const filteredRounds = roundId
+      ? rounds.filter((r) => String(r._id) === String(roundId))
+      : rounds;
+
+    const roundIds = filteredRounds.map((r) => r._id);
 
     // 3️⃣ Fetch questions
     const questions = await interviewQuestions
@@ -2890,9 +2927,7 @@ const getInterviewDataforOrg = async (req, res) => {
 
     // Collect scheduleAssessmentIds ONLY for Assessment rounds
     const assessmentScheduleIds = rounds
-      .filter(
-        (r) => r.roundTitle === "Assessment" && r.scheduleAssessmentId
-      )
+      .filter((r) => r.roundTitle === "Assessment" && r.scheduleAssessmentId)
       .map((r) => r.scheduleAssessmentId);
 
     let scheduledAssessmentMap = {};
@@ -2903,9 +2938,7 @@ const getInterviewDataforOrg = async (req, res) => {
         _id: { $in: assessmentScheduleIds },
         isActive: true,
       })
-        .select(
-          "scheduledAssessmentCode expiryAt status order createdAt"
-        )
+        .select("scheduledAssessmentCode expiryAt status order createdAt")
         .lean();
 
       // 5.2 Fetch Candidate Assessments
@@ -2942,21 +2975,18 @@ const getInterviewDataforOrg = async (req, res) => {
     // ============================================================
     // 6️⃣ Build final rounds
     // ============================================================
-    const fullRounds = rounds.map((round) => {
+    const fullRounds = filteredRounds.map((round) => {
       const isAssessment = round.roundTitle === "Assessment";
 
       return {
         ...round,
         interviewers: round.interviewers || [],
         questions: questionMap[String(round._id)] || [],
-        pendingOutsourceRequests:
-          pendingRequestMap[String(round._id)] || [],
+        pendingOutsourceRequests: pendingRequestMap[String(round._id)] || [],
 
         // 🔥 ONLY for Assessment rounds
         scheduledAssessment: isAssessment
-          ? scheduledAssessmentMap[
-              String(round.scheduleAssessmentId)
-            ] || null
+          ? scheduledAssessmentMap[String(round.scheduleAssessmentId)] || null
           : undefined,
       };
     });

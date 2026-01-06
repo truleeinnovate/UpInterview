@@ -457,7 +457,7 @@ const BasicDetailsTab = ({
                   label="Link Expiry (Days)"
                   required
                   name="linkExpiry"
-                  value={linkExpiryDays || 3}
+                  value={linkExpiryDays}
                   options={Array.from({ length: 10 }, (_, index) => ({
                     value: index + 1,
                     label: `${index + 1}`,
