@@ -162,7 +162,7 @@ const NewAssessment = () => {
   const [isPassScoreSubmitted, setIsPassScoreSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     AssessmentTitle: "",
-    Position: "",
+    Position: null,
     Duration: "60 Minutes",
     DifficultyLevel: "",
     NumberOfQuestions: "",
@@ -171,7 +171,7 @@ const NewAssessment = () => {
     passScoreType: "",
     passScoreBy: "",
     passScore: "",
-    linkExpiryDays: "",
+    linkExpiryDays: 3,
     categoryOrTechnology: "",
     externalId: "",
   });
@@ -180,7 +180,7 @@ const NewAssessment = () => {
   const assessment = isEditing
     ? assessmentById
     : // assessmentData.find((assessment) => assessment._id === id)
-      null;
+    null;
 
   const selectedPositionId =
     (formData.Position && formData.Position) ||
@@ -204,8 +204,8 @@ const NewAssessment = () => {
 
   const positionsForDropdown =
     selectedPosition &&
-    selectedPosition._id &&
-    !filteredPositionData.some((p) => p._id === selectedPosition._id)
+      selectedPosition._id &&
+      !filteredPositionData.some((p) => p._id === selectedPosition._id)
       ? [selectedPosition, ...filteredPositionData]
       : filteredPositionData;
 
@@ -709,8 +709,8 @@ const NewAssessment = () => {
       const assessmentId = isEditing
         ? id
         : hasExistingAssessment
-        ? tabsSubmitStatus.responseId
-        : null;
+          ? tabsSubmitStatus.responseId
+          : null;
 
       // Validate that we have a valid ID when editing from URL
       if (isEditing && !id) {
@@ -827,7 +827,11 @@ const NewAssessment = () => {
           AssessmentTitle: formData.AssessmentTitle,
         }),
         // ...(formData.Position && { Position: formData.Position }),
-        Position: typeof formData.Position === 'object' ? formData.Position._id : formData.Position,
+        Position:
+          typeof formData.Position === "object"
+            ? formData.Position?._id || null
+            : formData.Position || null,
+
         ...(formData.Duration && { Duration: formData.Duration }),
         ...(formData.DifficultyLevel && {
           DifficultyLevel: formData.DifficultyLevel,
@@ -847,12 +851,12 @@ const NewAssessment = () => {
         // Only include passScoreType and passScoreBy if they have values
         ...(formData.passScoreType &&
           formData.passScoreType.trim() !== "" && {
-            passScoreType: formData.passScoreType,
-          }),
+          passScoreType: formData.passScoreType,
+        }),
         ...(formData.passScoreBy &&
           formData.passScoreBy.trim() !== "" && {
-            passScoreBy: formData.passScoreBy,
-          }),
+          passScoreBy: formData.passScoreBy,
+        }),
         ...(formData.passScoreBy === "Overall" && { totalScore: totalScore }),
         ...(formData.passScoreBy === "Overall" &&
           formData.passScore && { passScore: formData.passScore }),
@@ -874,11 +878,11 @@ const NewAssessment = () => {
         ...assessmentData,
         ...(includePosition || includePhone
           ? {
-              CandidateDetails: {
-                ...(includePosition ? { includePosition } : {}),
-                ...(includePhone ? { includePhone } : {}),
-              },
-            }
+            CandidateDetails: {
+              ...(includePosition ? { includePosition } : {}),
+              ...(includePhone ? { includePhone } : {}),
+            },
+          }
           : {}),
         ...(instructions ? { Instructions: instructions } : {}),
         ...(additionalNotes ? { AdditionalNotes: additionalNotes } : {}),
@@ -1375,8 +1379,8 @@ const NewAssessment = () => {
   const toggleAction = (sectionName, questionIndex) => {
     setActionViewMore((prev) =>
       prev &&
-      prev.sectionName === sectionName &&
-      prev.questionIndex === questionIndex
+        prev.sectionName === sectionName &&
+        prev.questionIndex === questionIndex
         ? null
         : { sectionName, questionIndex }
     );
@@ -1939,15 +1943,15 @@ const NewAssessment = () => {
                     deleteConfirmation.type === "section"
                       ? "Delete Section?"
                       : deleteConfirmation.type === "bulk"
-                      ? "Delete Selected Questions?"
-                      : "Delete Question?"
+                        ? "Delete Selected Questions?"
+                        : "Delete Question?"
                   }
                   message={
                     deleteConfirmation.type === "section"
                       ? "Are you sure you want to delete this section and all its questions?"
                       : deleteConfirmation.type === "bulk"
-                      ? `Are you sure you want to delete ${getSelectedQuestionsCount()} selected questions?`
-                      : "Are you sure you want to delete this question?"
+                        ? `Are you sure you want to delete ${getSelectedQuestionsCount()} selected questions?`
+                        : "Are you sure you want to delete this question?"
                   }
                   onConfirm={confirmDelete}
                   onCancel={cancelDelete}
