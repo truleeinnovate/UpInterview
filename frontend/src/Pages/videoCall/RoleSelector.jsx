@@ -543,19 +543,19 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                   ) {
                     const currentUrl = new URL(window.location.href);
                     currentUrl.pathname = "/video-call";
-                    const roleData = {
-                      ...roleInfo,
-                      isInterviewer: true,
-                      isCandidate: false,
-                    };
-                    currentUrl.searchParams.set(
-                      "meetLink",
-                      feedbackData?.interviewRound?.meetLink || ""
-                    );
-                    currentUrl.searchParams.set(
-                      "meetingData",
-                      encodeURIComponent(JSON.stringify(roleData || {}))
-                    );
+                    // const roleData = {
+                    //   ...roleInfo,
+                    //   isInterviewer: true,
+                    //   isCandidate: false,
+                    // };
+                    // currentUrl.searchParams.set(
+                    //   "meetLink",
+                    //   feedbackData?.interviewRound?.meetLink || ""
+                    // );
+                    // currentUrl.searchParams.set(
+                    //   "meetingData",
+                    //   encodeURIComponent(JSON.stringify(roleData || {}))
+                    // );
                     window.open(currentUrl.toString(), "_blank");
                   } else {
                     handleRoleSelect("interviewer");

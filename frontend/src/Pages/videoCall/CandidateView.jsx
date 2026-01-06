@@ -26,6 +26,7 @@ import {
   useCandidateDetails,
 } from "../../apiHooks/useVideoCall";
 import { useLocation } from "react-router-dom";
+import { config } from "../../config";
 
 const CandidateView = ({
   onBack,
@@ -792,8 +793,8 @@ const CandidateView = ({
               </h3>
               <div className="space-y-2 text-sm text-red-700">
                 <p>Technical issues during the interview?</p>
-                <p className="font-semibold">Call: +1 (555) 123-HELP</p>
-                <p className="font-semibold">Email: support@company.com</p>
+                <p className="font-semibold">Call: {config.REACT_APP_SUPPORT_PHONE_NUMBER}-HELP</p>
+                <p className="font-semibold">Email: support@upinterview.io</p>
               </div>
             </div>
           </div>
