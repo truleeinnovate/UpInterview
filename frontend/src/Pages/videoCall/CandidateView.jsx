@@ -24,6 +24,7 @@ import { useMemo } from "react";
 import { extractUrlData } from "../../apiHooks/useVideoCall";
 import { useLocation } from "react-router-dom";
 import { useInterviews } from "../../apiHooks/useInterviews";
+import { config } from "../../config";
 
 const CandidateView = () =>
   // {
@@ -774,16 +775,29 @@ const CandidateView = () =>
                 </div>
               </div>
 
-              {/* Emergency Contact */}
-              <div className="bg-red-50 rounded-2xl shadow-xl p-6 border border-red-200">
-                <h3 className="text-lg font-semibold text-red-800 mb-4">
-                  🆘 Need Help?
-                </h3>
-                <div className="space-y-2 text-sm text-red-700">
-                  <p>Technical issues during the interview?</p>
-                  <p className="font-semibold">Call: +1 (555) 123-HELP</p>
-                  <p className="font-semibold">Email: support@company.com</p>
-                </div>
+            {/* Quick Tips */}
+            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl shadow-xl p-6 border border-yellow-200">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                💡 Quick Tips
+              </h3>
+              <div className="space-y-3 text-sm text-gray-700">
+                <p>• Have a glass of water nearby</p>
+                <p>• Keep your phone on silent</p>
+                <p>• Prepare questions about the role</p>
+                <p>• Practice your elevator pitch</p>
+                <p>• Research the company beforehand</p>
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div className="bg-red-50 rounded-2xl shadow-xl p-6 border border-red-200">
+              <h3 className="text-lg font-semibold text-red-800 mb-4">
+                🆘 Need Help?
+              </h3>
+              <div className="space-y-2 text-sm text-red-700">
+                <p>Technical issues during the interview?</p>
+                <p className="font-semibold">Call: {config.REACT_APP_SUPPORT_PHONE_NUMBER}-HELP</p>
+                <p className="font-semibold">Email: support@upinterview.io</p>
               </div>
             </div>
           </div>

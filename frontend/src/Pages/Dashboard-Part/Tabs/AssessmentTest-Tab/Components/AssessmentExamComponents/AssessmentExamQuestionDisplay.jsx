@@ -275,13 +275,13 @@ function QuestionDisplay({ question, answers, handleAnswer, isReviewing }) {
         {question?.snapshot?.hints?.length > 0 && (
           // v1.0.0 <----------------------------------------------------------------
           // v1.0.1 <----------------------------------------------------------------
-          <div className="bg-blue-50 border-l-4 border-blue-400 sm:p-2 p-3 mb-6">
+          <div className="bg-custom-blue/5 border-l-4 border-custom-blue/70 sm:p-2 p-3 mb-6">
             {/* v1.0.1 ----------------------------------------------------------------> */}
             {/* v1.0.0 ----------------------------------------------------------------> */}
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-5 w-5 text-blue-400"
+                  className="h-5 w-5 text-custom-blue"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -294,7 +294,7 @@ function QuestionDisplay({ question, answers, handleAnswer, isReviewing }) {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-blue-700">
+                <p className="text-sm text-custom-blue">
                   <span className="font-medium">Hint:</span>{" "}
                   {question?.snapshot?.hints?.[0]}
                 </p>

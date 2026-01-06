@@ -14,6 +14,7 @@ import {
   useSchedulerRoundDetails,
 } from "../apiHooks/useVideoCall";
 import { useInterviews } from "../apiHooks/useInterviews";
+import { JoiningScreen } from "./components/screens/JoiningScreen";
 
 const Dashboard = () => {
   // Set default values
@@ -25,6 +26,9 @@ const Dashboard = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [deviceError, setDeviceError] = useState(null);
   const [hasRequestedPermissions, setHasRequestedPermissions] = useState(false);
+  const [customVideoStream, setCustomVideoStream] = useState(null);
+  const [customAudioStream, setCustomAudioStream] = useState(null);
+  const [isMeetingStarted, setMeetingStarted] = useState(false);
 
   const { useInterviewDetails } = useInterviews();
 
@@ -34,15 +38,29 @@ const Dashboard = () => {
 
   // 1. Initialize meeting - SIMPLIFIED VERSION
   useEffect(() => {
+    // In your Dashboard component, update the initializeMeeting function:
     const initializeMeeting = async () => {
       try {
         // Get token from API
         const authToken = await getToken();
         setToken(authToken);
 
-        // Set initial media states to false (will be turned on by user)
-        setWebcamOn(false);
-        setMicOn(false);
+        // First, just check permissions without accessing devices
+        try {
+          const permissionResult = await navigator.permissions.query({
+            name: "camera",
+            name: "microphone",
+          });
+
+          // Set default states to false
+          setWebcamOn(false);
+          setMicOn(false);
+        } catch (error) {
+          console.warn("Permission check failed:", error);
+          // Continue without media
+          setWebcamOn(false);
+          setMicOn(false);
+        }
 
         setIsInitialized(true);
       } catch (error) {
@@ -60,7 +78,12 @@ const Dashboard = () => {
     initializeMeeting();
 
     return () => {
-      // Cleanup
+      if (customAudioStream) {
+        customAudioStream.getTracks().forEach((track) => track.stop());
+      }
+      if (customVideoStream) {
+        customVideoStream.getTracks().forEach((track) => track.stop());
+      }
     };
   }, [isMobile]);
 
@@ -191,11 +214,13 @@ const Dashboard = () => {
     if (isInitialized && token && meetingId) {
       console.log("All conditions met for joining meeting");
       // The meeting will join automatically with joinOnLoad: true
+      setMeetingStarted(true);
     }
   }, [isInitialized, token, meetingId]);
 
   return (
-    <div className="h-screen w-full bg-gray-100">
+    <>
+      {/* <div className="h-screen w-full bg-gray-100">
       <ToastContainer
         toastClassName={(context) =>
           `${context?.defaultClassName} relative flex py-4 px-3 rounded overflow-hidden cursor-pointer bg-white shadow-lg`
@@ -259,8 +284,7 @@ const Dashboard = () => {
               meetingId,
               micEnabled: micOn,
               webcamEnabled: webcamOn,
-              name:
-                candidateData?.LastName || contactData?.name || "Participant",
+              name: candidateData?.LastName || contactData?.name,
               multiStream: false,
             }}
             token={token}
@@ -302,7 +326,104 @@ const Dashboard = () => {
           </div>
         )}
       </MeetingAppProvider>
-    </div>
+    </div> */}
+
+      <div className="h-screen w-full bg-gray-100">
+        <ToastContainer
+          toastClassName={(context) =>
+            `${context?.defaultClassName} relative flex py-4 px-3 rounded overflow-hidden cursor-pointer bg-white shadow-lg`
+          }
+          bodyClassName={(context) =>
+            `${context?.defaultClassName} text-[#000] text-base font-bold`
+          }
+          position="bottom-left"
+          autoClose={4000}
+          hideProgressBar={true}
+          newestOnTop={false}
+          closeButton={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+        <MeetingAppProvider>
+          {isMeetingStarted ? (
+            <>
+              <MeetingProvider
+                config={{
+                  meetingId,
+                  micEnabled: false, // Start with mic off
+                  webcamEnabled: false, // Start with webcam off
+                  name:
+                    candidateData?.LastName ||
+                    contactData?.name ||
+                    "Participant",
+                  multiStream: true,
+                  defaultAudioDevice: {
+                    deviceId: "default",
+                    label: "Default Audio Device",
+                  },
+                  defaultVideoDevice: {
+                    deviceId: "default",
+                    label: "Default Video Device",
+                  },
+                }}
+                token={token}
+                reinitialiseMeetingOnConfigChange={true}
+                joinWithoutUserInteraction={true}
+              >
+                <MeetingContainer
+                  onMeetingLeave={() => {
+                    setToken("");
+                    setMeetingId("");
+                    setWebcamOn(false);
+                    setMicOn(false);
+                    setMeetingStarted(false);
+                  }}
+                  setIsMeetingLeft={setIsMeetingLeft}
+                  isCandidate={decodedData?.isCandidate || false}
+                  isInterviewer={decodedData?.isInterviewer || false}
+                  isSchedule={decodedData?.isSchedule || false}
+                  data={candidateData || schedulerData}
+                />
+              </MeetingProvider>
+            </>
+          ) : isMeetingLeft ? (
+            <>
+              <LeaveScreen
+                setIsMeetingLeft={setIsMeetingLeft}
+                onJoinAgain={() => {
+                  setIsMeetingLeft(false);
+                  setMeetingStarted(true);
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <JoiningScreen
+              // participantName={candidateData?.LastName || contactData?.name}
+              // setParticipantName={setParticipantName}
+              // setMeetingId={setMeetingId}
+              // setToken={setToken}
+              // micOn={micOn}
+              // setMicOn={setMicOn}
+              // webcamOn={webcamOn}
+              // setWebcamOn={setWebcamOn}
+              // customAudioStream={customAudioStream}
+              // setCustomAudioStream={setCustomAudioStream}
+              // customVideoStream={customVideoStream}
+              // setCustomVideoStream={setCustomVideoStream}
+              // onClickStartMeeting={() => setMeetingStarted(true)}
+              // startMeeting={isMeetingStarted}
+              // setIsMeetingLeft={setIsMeetingLeft}
+              />
+            </>
+          )}
+        </MeetingAppProvider>
+      </div>
+    </>
   );
 };
 
