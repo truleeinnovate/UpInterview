@@ -528,6 +528,7 @@ const FeedbackForm = ({
 
   const { saveNow, isSaving } = useAutoSaveFeedback({
     isAddMode,
+    isEditMode,
     interviewRoundId: interviewRoundId || decodedData?.interviewRoundId,
     tenantId: currentTenantId,
     interviewerId: interviewerId || decodedData?.interviewerId,
@@ -548,7 +549,8 @@ const FeedbackForm = ({
   const triggerAutoSave = () => {
     if (isAddMode || isEditMode) {
       setAutoSaveFeedbackId((prev) => prev); // Trigger useEffect in the hook
-      setTimeout(() => saveNow(), 500);
+      // setTimeout(() => saveNow(), 500);
+      saveNow();
     }
   };
 
@@ -580,9 +582,7 @@ const FeedbackForm = ({
           }
 
           // Trigger immediate save after adding question
-          if (isAddMode) {
-            setTimeout(() => saveNow(), 500);
-          }
+          triggerAutoSave();
 
           return newList;
         });
@@ -678,29 +678,54 @@ const FeedbackForm = ({
     //---v1.0.0----->
   };
 
+  // const onClickAddNote = (id) => {
+  //   //<---v1.0.0-----
+  //   setInterviewerSectionData((prev) => {
+  //     const exists = prev.some((q) => (q.questionId || q.id) === id);
+  //     if (exists) {
+  //       return prev.map((q) =>
+  //         (q.questionId || q.id) === id ? { ...q, notesBool: !q.notesBool } : q
+  //       );
+  //     }
+  //     return [...prev, { questionId: id, notesBool: true }];
+  //   });
+  //   // to auto save comments change
+  //   triggerAutoSave();
+  //   //---v1.0.0----->
+  // };
+
   const onClickAddNote = (id) => {
     //<---v1.0.0-----
     setInterviewerSectionData((prev) => {
       const exists = prev.some((q) => (q.questionId || q.id) === id);
       if (exists) {
         return prev.map((q) =>
-          (q.questionId || q.id) === id ? { ...q, notesBool: !q.notesBool } : q
+          (q.questionId || q.id) === id
+            ? {
+                ...q,
+                notesBool: !q.notesBool,
+                // Clear note when toggling off
+                note: !q.notesBool ? q.note : "",
+              }
+            : q
         );
       }
       return [...prev, { questionId: id, notesBool: true }];
     });
+    // to auto save comments change
+    triggerAutoSave();
     //---v1.0.0----->
   };
 
-  const onClickDeleteNote = (id) => {
-    setInterviewerSectionData((prev) =>
-      prev.map((question) =>
-        (question.questionId || question.id) === id
-          ? { ...question, notesBool: false, note: "" }
-          : question
-      )
-    );
-  };
+  // const onClickDeleteNote = (id) => {
+  //   setInterviewerSectionData((prev) =>
+  //     prev.map((question) =>
+  //       (question.questionId || question.id) === id
+  //         ? { ...question, notesBool: false, note: "" }
+  //         : question
+  //     )
+  //   );
+  // };
 
   const onChangeRadioInput = (questionId, value) => {
     //<---v1.0.0-----
@@ -737,33 +762,41 @@ const FeedbackForm = ({
   };
 
   const handleDislikeToggle = (id) => {
-    if (isViewMode) return; //<---v1.0.1-----
-    if (dislikeQuestionId === id) setDislikeQuestionId(null);
-    else setDislikeQuestionId(id);
-    //<---v1.0.0-----
+    if (isViewMode) return;
+
+    // Toggle dislikeQuestionId
+    setDislikeQuestionId((prev) => (prev === id ? null : id));
+
     setInterviewerSectionData((prev) => {
       const exists = prev.some((q) => (q.questionId || q.id) === id);
+
       if (exists) {
-        return prev.map((q) =>
-          (q.questionId || q.id) === id
-            ? {
+        return prev.map((q) => {
+          if ((q.questionId || q.id) === id) {
+            // If already disliked, clear it
+            if (q.isLiked === "disliked") {
+              return {
                 ...q,
-                isLiked: q.isLiked === "disliked" ? "" : "disliked",
-                // Clear dislike reason when toggling off dislike
-                whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike,
-              }
-            : q
-        );
+                isLiked: "",
+                whyDislike: "",
+              };
+            }
+            // Otherwise, set to disliked
+            return {
+              ...q,
+              isLiked: "disliked",
+              whyDislike: q.whyDislike || "",
+            };
+          }
+          return q;
+        });
       }
+
+      // If question doesn't exist in state, add it
       return [...prev, { questionId: id, isLiked: "disliked", whyDislike: "" }];
     });
 
-    // Toggle dislike popup
-    setDislikeQuestionId((prev) => (prev === id ? null : id));
-
-    // Trigger auto-save
     triggerAutoSave();
-    //---v1.0.0----->
   };
 
   const handleLikeToggle = (id) => {
@@ -1730,11 +1763,19 @@ const FeedbackForm = ({
                         </span>
                       </div>
                       <div>
-                        {(dislikeQuestionId ===
+                        {/* {(dislikeQuestionId ===
                           (question.questionId ||
                             question.id ||
                             question._id) ||
                           !!question.whyDislike) && (
+                          <DisLikeSection each={question} />
+                        )} */}
+                        {(dislikeQuestionId ===
+                          (question.questionId ||
+                            question.id ||
+                            question._id) ||
+                          (!!question.whyDislike &&
+                            question.isLiked === "disliked")) && (
                           <DisLikeSection each={question} />
                         )}
                       </div>
@@ -1816,7 +1857,9 @@ const FeedbackForm = ({
                         <button
                           className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
                           onClick={() =>
-                            onClickAddNote(question.questionId || question.id)
+                            onClickAddNote(
+                              question.questionId || question.id || question._id
+                            )
                           }
                         >
                           {question.notesBool ? "Delete Note" : "Add a Note"}
@@ -1980,25 +2023,29 @@ const FeedbackForm = ({
             <div></div>
           ) : (
             <div className="flex justify-end gap-3 mt-4">
-              <Button
-                onClick={saveFeedback}
-                variant="outline"
-                // disabled={decodedData.schedule}
-                style={{
-                  borderColor: "rgb(33, 121, 137)",
-                  color: "rgb(33, 121, 137)",
-                }}
-                className="hover:bg-gray-50"
-              >
-                Save Draft
-              </Button>
-              <Button
-                onClick={submitFeedback}
-                className="text-sm bg-custom-blue text-white hover:bg-custom-blue/90"
-                // disabled={decodedData.schedule}
-              >
-                Submit Feedback
-              </Button>
+              {!urlData?.isSchedule && (
+                <>
+                  <Button
+                    onClick={saveFeedback}
+                    variant="outline"
+                    // disabled={decodedData.schedule}
+                    style={{
+                      borderColor: "rgb(33, 121, 137)",
+                      color: "rgb(33, 121, 137)",
+                    }}
+                    className="hover:bg-gray-50"
+                  >
+                    Save Draft
+                  </Button>
+                  <Button
+                    onClick={submitFeedback}
+                    className="text-sm bg-custom-blue text-white hover:bg-custom-blue/90"
+                    // disabled={decodedData.schedule}
+                  >
+                    Submit Feedback
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>

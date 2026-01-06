@@ -268,7 +268,6 @@ const saveInterviewRound = async (req, res) => {
         round: savedRound,
         selectedInterviewers: req.body.round?.selectedInterviewers,
         isMockInterview: false,
-
       });
       //sending emails for internal interviewers,scheduler,candidate.for external we will send where outsource accept
       if (savedRound.interviewerType === "Internal") {
@@ -440,10 +439,16 @@ const updateInterviewRound = async (req, res) => {
     const diffTime = expiryDate.getTime() - today.getTime();
     linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
-
+  console.log(
+    "[ASSESSMENT] linkExpiryDays",
+    existingRound.scheduleAssessmentId
+  );
+  console.log("[ASSESSMENT] existingRound", existingRound.roundTitle);
+  console.log("[ASSESSMENT] req.body.round", req.body.round);
   if (
     existingRound.roundTitle === "Assessment" &&
-    !existingRound.scheduleAssessmentId
+    !existingRound.scheduleAssessmentId &&
+    updateType === "AssessmentChange"
   ) {
     console.log("[ASSESSMENT] Auto scheduling assessment");
 
@@ -489,8 +494,18 @@ const updateInterviewRound = async (req, res) => {
       });
     }
 
+    console.log(
+      "[ASSESSMENT] Assessment scheduled successfully",
+      assessmentResponse
+    );
+
     updatePayload.$set.scheduleAssessmentId =
-      assessmentResponse.data.scheduledAssessmentId;
+      assessmentResponse.data?.scheduledAssessmentId;
+    updatePayload.$set.assessmentId = req.body.round?.assessmentId;
+    updatePayload.$set.status = req.body.round?.status;
+    updatePayload.$set.dateTime = req.body.round?.dateTime;
+    updatePayload.$set.instructions = req.body.round?.instructions;
+    updatePayload.$set.sequence = req.body.round?.sequence;
 
     console.log(
       "[ASSESSMENT] Scheduled assessment created:",
@@ -763,6 +778,8 @@ const updateInterviewRound = async (req, res) => {
       }
 
       updatePayload.$set.status = "Draft";
+      updatePayload.$set.meetingId = ""; // Clear assigned meetingId
+      updatePayload.$set.meetPlatform = ""; // Clear assigned meetPlatform
     }
 
     // 3. Scheduled → Draft (cancelling after acceptance)
@@ -804,6 +821,8 @@ const updateInterviewRound = async (req, res) => {
 
       updatePayload.$set.status = "Draft";
       updatePayload.$set.interviewers = []; // Clear assigned interviewer
+      updatePayload.$set.meetingId = ""; // Clear assigned meetingId
+      updatePayload.$set.meetPlatform = ""; // Clear assigned meetPlatform
 
       // === SEND CANCELLATION EMAILS ===
       // Only if there was an accepted interviewer (we know who was cancelled)
@@ -879,6 +898,8 @@ const updateInterviewRound = async (req, res) => {
       // User cleared interviewers → cancel
       updatePayload.$set.status = "Draft";
       updatePayload.$set.interviewers = []; // making accepted interviwers clear
+      updatePayload.$set.meetingId = ""; // Clear assigned meetingId
+      updatePayload.$set.meetPlatform = ""; // Clear assigned meetPlatform
       await InterviewRequest.updateMany(
         { roundId: existingRound._id, status: "accepted" },
         { status: "cancelled", respondedAt: new Date() }
@@ -1060,7 +1081,6 @@ const updateInterviewRound = async (req, res) => {
       round: existingRound,
       selectedInterviewers: req.body.round?.selectedInterviewers,
       isMockInterview: false,
-
     });
 
     // await InterviewRounds.findByIdAndUpdate(
@@ -1171,7 +1191,7 @@ const updateInterviewRoundStatus = async (req, res) => {
     const { actingAsUserId } = res.locals.auth;
     const { action, reasonCode, comment, cancellationReason } = req.body; // reasonCode = your selected reason, comment = "Other" text, cancellationReason = specific cancellation reason
 
-    console.log("req.body", req.body);
+    // console.log("req.body", req.body);
 
     if (!roundId || !action) {
       return res.status(400).json({
@@ -1282,7 +1302,10 @@ const updateInterviewRoundStatus = async (req, res) => {
     let extraUpdate = { $set: {} };
     let shouldSendCancellationEmail = false;
 
-    if (action === "Completed") {
+    if (
+      action === "Completed" &&
+      existingRound.interviewerType === "External"
+    ) {
       // Auto-settlement for completed interviews
       try {
         await processAutoSettlement({
@@ -1302,7 +1325,10 @@ const updateInterviewRoundStatus = async (req, res) => {
       }
     }
 
-    if (action === "Cancelled") {
+    if (
+      action === "Cancelled" &&
+      existingRound.interviewerType === "External"
+    ) {
       // Auto-settlement for cancelled interviews
       try {
         await processAutoSettlement({
@@ -1419,7 +1445,7 @@ const updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => { } }), locals: {} }
+        { status: () => ({ json: () => {} }), locals: {} }
       );
     }
 
@@ -1730,7 +1756,7 @@ async function handleInterviewerRequestFlow({
           isMockInterview: false,
         },
       },
-      { status: () => ({ json: () => { } }), locals: {} }
+      { status: () => ({ json: () => {} }), locals: {} }
     );
   }
 
@@ -1749,7 +1775,7 @@ async function handleInterviewerRequestFlow({
           type: "interview",
         },
       },
-      { status: () => ({ json: () => { } }), locals: {} }
+      { status: () => ({ json: () => {} }), locals: {} }
     );
     console.log(
       "Outsource interview request emails sent successfully",
@@ -1788,7 +1814,7 @@ async function handleInternalRoundEmails({
       },
     },
     {
-      status: () => ({ json: () => { } }),
+      status: () => ({ json: () => {} }),
       locals: {},
     }
   );
