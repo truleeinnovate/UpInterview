@@ -475,52 +475,52 @@ const RoundCard = ({
 
   const candidateAssessment = round?.scheduledAssessment?.candidates?.[0];
   //  Resend Mail for assessment by Ranjith
- const handleResendClick = async (round) => {
-  if (!round?.assessmentId) {
-    notify.error("Missing assessment ID");
-    return;
-  }
-
-  if (!candidateAssessment?._id) {
-    notify.error("Candidate assessment ID is missing. Cannot resend link.");
-    console.error("candidateAssessment:", candidateAssessment);
-    return;
-  }
-
-  try {
-    const response = await axios.post(
-      `${config.REACT_APP_API_URL}/emails/resend-link`,
-      {
-        candidateAssessmentIds: [candidateAssessment._id], // Safe: already checked above
-        userId,
-        organizationId: tenantId,
-        assessmentId: round.assessmentId,
-      }
-    );
-
-    const data = response.data;
-
-    if (data.success) {
-      // Check if this is a multi-candidate response (has summary)
-      if (data.summary) {
-        const { successful, total } = data.summary;
-        notify.success(`Resent links to ${successful} out of ${total} candidates`);
-      } else {
-        // Single candidate response — use message or generic success
-        notify.success("Assessment link resent successfully");
-      }
-    } else {
-      notify.error(data.message || "Failed to resend link");
+  const handleResendClick = async (round) => {
+    if (!round?.assessmentId) {
+      notify.error("Missing assessment ID");
+      return;
     }
-  } catch (error) {
-    console.error("Resend link error:", error);
-    const msg =
-      error.response?.data?.message ||
-      error.message ||
-      "Failed to resend assessment link";
-    notify.error(msg);
-  }
-};
+
+    if (!candidateAssessment?._id) {
+      notify.error("Candidate assessment ID is missing. Cannot resend link.");
+      console.error("candidateAssessment:", candidateAssessment);
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/emails/resend-link`,
+        {
+          candidateAssessmentIds: [candidateAssessment._id], // Safe: already checked above
+          userId,
+          organizationId: tenantId,
+          assessmentId: round.assessmentId,
+        }
+      );
+
+      const data = response.data;
+
+      if (data.success) {
+        // Check if this is a multi-candidate response (has summary)
+        if (data.summary) {
+          const { successful, total } = data.summary;
+          notify.success(`Resent links to ${successful} out of ${total} candidates`);
+        } else {
+          // Single candidate response — use message or generic success
+          notify.success("Assessment link resent successfully");
+        }
+      } else {
+        notify.error(data.message || "Failed to resend link");
+      }
+    } catch (error) {
+      console.error("Resend link error:", error);
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to resend assessment link";
+      notify.error(msg);
+    }
+  };
 
   //  Share Mail for assessment by Ranjith
   // Share Mail for assessment by Ranjith - UPDATED VERSION
@@ -1144,6 +1144,8 @@ const RoundCard = ({
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
                     Schedule
                   </h4>
+
+                  
                   {/* <div className="flex items-center text-sm text-gray-500 mb-1">
                     <Calendar className="h-4 w-4 mr-1" />
                     <span>Scheduled: {formatDate(round.scheduledDate)}</span>
@@ -1168,6 +1170,8 @@ const RoundCard = ({
                       </span>
                     </div>
                   )}
+
+                  
                   {round.completedDate && (
                     <div className="flex items-center text-sm text-gray-500">
                       <Clock className="h-4 w-4 mr-1" />
@@ -1755,10 +1759,12 @@ const RoundCard = ({
                     </button>
                   )}
                   {/* Reschedule */}
+                  {/* Reschedule */}
                   {permissions.canReschedule &&
                     !isInterviewCompleted &&
-                    round?.roundTitle !== "Assessment" &&
-                    round.interviewType !== "instant" && (
+                    round?.roundTitle !== "Assessment" && (
+                      round.status === "Cancelled" || round.interviewType !== "instant"
+                    ) && (
                       <button
                         onClick={() => onEdit(round, { isReschedule: true })}
                         className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
