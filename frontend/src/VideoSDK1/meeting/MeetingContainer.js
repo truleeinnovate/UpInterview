@@ -41,7 +41,8 @@ export function MeetingContainer({
   isCandidate = false,
   isInterviewer = false,
   isSchedule = false,
-  data,
+  candidateData,
+  positionData,
 }) {
   const { setSelectedMic, setSelectedWebcam, setSelectedSpeaker } =
     useMeetingAppContext();
@@ -336,32 +337,32 @@ export function MeetingContainer({
         label: "Candidate Details",
         tooltip: "Candidate Details",
         icon: <User className="w-4 h-4" />,
-        show: isInterviewer || isSchedule,
-        // show: isCandidate || isInterviewer || isSchedule,
+        // show: isInterviewer || isSchedule,
+        show: isCandidate || isInterviewer || isSchedule,
       },
       {
         id: "feedback",
         label: "Feedback Form",
         tooltip: "Feedback Form",
         icon: <ClipboardList className="w-4 h-4" />,
-        show: isInterviewer || isSchedule,
-        // show: isCandidate || isInterviewer || isSchedule,
+        // show: isInterviewer || isSchedule,
+        show: isCandidate || isInterviewer || isSchedule,
       },
       {
         id: "questionbank",
         label: "Question Bank",
         tooltip: "Question Bank",
         icon: <BookOpen className="w-4 h-4" />,
-        show: isInterviewer || isSchedule,
-        // show: isCandidate || isInterviewer || isSchedule,
+        // show: isInterviewer || isSchedule,
+        show: isCandidate || isInterviewer || isSchedule,
       },
       {
         id: "interviewactions",
         label: "Interview Actions",
         tooltip: "Interview Actions",
         icon: <ClipboardCheck className="w-4 h-4" />,
-        show: isInterviewer || isSchedule,
-        // show: isCandidate || isInterviewer || isSchedule,
+        // show: isInterviewer || isSchedule,
+        show: isCandidate || isInterviewer || isSchedule,
       },
     ].filter((item) => item.show === true);
   };
@@ -589,7 +590,7 @@ export function MeetingContainer({
                   {/* Sidebar Content */}
                   <div className="flex-1 overflow-y-auto">
                     {sideBarMode === "CANDIDATE" ? (
-                      <CandidateDetails candidate={data} />
+                      <CandidateDetails candidateData={candidateData} positionData={positionData} />
                     ) : sideBarMode === "FEEDBACK" ? (
                       <FeedbackForm onClose={() => setSideBarMode(null)} />
                     ) : sideBarMode === "INTERVIEWACTIONS" ? (

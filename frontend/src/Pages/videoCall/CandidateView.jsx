@@ -71,7 +71,9 @@ const CandidateView = () =>
   const positionData = data?.positionId || {};
   const interviewRoundData = data?.rounds[0] || {};
 
-  // console.log("propFeedbackData", propFeedbackData);
+  console.log("candidateData", candidateData);
+  console.log("positionData", positionData);
+  console.log("interviewRoundData", interviewRoundData);
 
   // const feedbackData = propFeedbackData || candidateData;
 

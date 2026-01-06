@@ -21,7 +21,7 @@ export const extractUrlData = (search) => {
   const isSchedule = params.get("scheduler") === "true";
   const isCandidate = params.get("candidate") === "true";
   const isInterviewer = params.get("interviewer") === "true";
-  const meetLink = decryptParam(params.get("meeting"));
+  // const meetLink = decryptParam(params.get("meeting"));
   const roundData = decryptParam(params.get("round"));
   const token = params.get("interviewertoken") || params.get("schedulertoken");
   const interviewerId = decryptParam(token);
@@ -30,7 +30,7 @@ export const extractUrlData = (search) => {
     isSchedule,
     isCandidate,
     isInterviewer,
-    meetLink,
+    // meetLink,
     roundData,
     interviewRoundId: roundData || "",
     interviewerId: interviewerId || "",

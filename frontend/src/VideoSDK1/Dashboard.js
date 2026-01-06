@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { MeetingProvider } from "@videosdk.live/react-sdk";
+import { useLocation } from "react-router-dom";
 import { MeetingAppProvider } from "./MeetingAppContextDef";
 import { MeetingContainer } from "./meeting/MeetingContainer";
 import { LeaveScreen } from "./components/screens/LeaveScreen";
@@ -9,12 +10,16 @@ import "react-toastify/dist/ReactToastify.css";
 import {
   decryptParam,
   extractUrlData,
-  useCandidateDetails,
-  useContactDetails,
-  useSchedulerRoundDetails,
+  // useCandidateDetails,
+  // useContactDetails,
+  // useSchedulerRoundDetails,
 } from "../apiHooks/useVideoCall";
-import { useInterviews } from "../apiHooks/useInterviews";
+// import { useInterviews } from "../apiHooks/useInterviews";
 import { JoiningScreen } from "./components/screens/JoiningScreen";
+
+
+import { useInterviews } from "../apiHooks/useInterviews";
+// import { extractUrlData } from "../apiHooks/useVideoCall";
 
 const Dashboard = () => {
   // Set default values
@@ -25,16 +30,71 @@ const Dashboard = () => {
   const [isMeetingLeft, setIsMeetingLeft] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [deviceError, setDeviceError] = useState(null);
-  const [hasRequestedPermissions, setHasRequestedPermissions] = useState(false);
+  // const [hasRequestedPermissions, setHasRequestedPermissions] = useState(false);
   const [customVideoStream, setCustomVideoStream] = useState(null);
   const [customAudioStream, setCustomAudioStream] = useState(null);
   const [isMeetingStarted, setMeetingStarted] = useState(false);
 
-  const { useInterviewDetails } = useInterviews();
+  // const { useInterviewDetails } = useInterviews();
 
   const isMobile = window.matchMedia(
     "only screen and (max-width: 768px)"
   ).matches;
+
+  const { useInterviewDetails } = useInterviews();
+
+  const location = useLocation();
+  const urlData = useMemo(
+    () => extractUrlData(location.search),
+    [location.search]
+  );
+
+  const { data, isLoading } = useInterviewDetails(
+    urlData.isCandidate ? { roundId: urlData.roundData } : {}
+  );
+
+  const [decodedData, setDecodedData] = useState(null);
+  const [urlRoleInfo, setUrlRoleInfo] = useState(null);
+  const [currentRole, setCurrentRole] = useState(null);
+
+  console.log("location.search", urlData);
+
+  useEffect(() => {
+    setDecodedData(urlData);
+
+    const effectiveIsInterviewer = urlData.isInterviewer || urlData.isSchedule;
+    const roleInfo = {
+      isCandidate: urlData.isCandidate,
+      isInterviewer: effectiveIsInterviewer,
+      hasRolePreference: urlData.isCandidate || effectiveIsInterviewer,
+    };
+    setUrlRoleInfo(roleInfo);
+
+    if (urlData.isCandidate) {
+      setCurrentRole("candidate");
+    }
+  }, [urlData]);
+
+console.log('urlData int he dashboard:', urlData)
+
+  const candidateData = data?.candidateId || {};
+  const positionData = data?.positionId || {};
+  const interviewRoundData = data?.rounds[0] || {};
+
+  console.log("data", data);
+  console.log("candidateData1", candidateData);
+  console.log("positionData1", positionData);
+  console.log("interviewRoundData1", interviewRoundData);
+
+  useEffect(() => {
+    if (interviewRoundData?.meetPlatform && !meetingId) {
+      console.log(
+        "Setting meetingId from candidateData:",
+        interviewRoundData.meetingId
+      );
+      setMeetingId(interviewRoundData.meetingId);
+    }
+  }, [interviewRoundData?.meetPlatform, interviewRoundData?.meetingId, meetingId])
 
   // 1. Initialize meeting - SIMPLIFIED VERSION
   useEffect(() => {
@@ -88,126 +148,126 @@ const Dashboard = () => {
   }, [isMobile]);
 
   // 2. Extract URL data
-  const [decodedData, setDecodedData] = useState(null);
+  // const [decodedData, setDecodedData] = useState(null);
 
-  useEffect(() => {
-    console.log("Extracting URL data from:", window.location.search);
-    const urlData = extractUrlData(window.location.search);
-    console.log("Extracted URL data:", urlData);
-    setDecodedData(urlData);
-  }, []);
+  // useEffect(() => {
+  //   console.log("Extracting URL data from:", window.location.search);
+  //   const urlData = extractUrlData(window.location.search);
+  //   console.log("Extracted URL data:", urlData);
+  //   setDecodedData(urlData);
+  // }, []);
 
   // 3. Data hooks
-  const { data: contactData } = useContactDetails(
-    decodedData && !decodedData.isCandidate ? decodedData.interviewerId : null,
-    decodedData && !decodedData.isCandidate
-      ? decodedData.interviewRoundId
-      : null
-  );
-  const { data: schedulerData } = useSchedulerRoundDetails(
-    decodedData?.interviewRoundId,
-    decodedData?.isSchedule
-  );
+  // const { data: contactData } = useContactDetails(
+  //   decodedData && !decodedData.isCandidate ? decodedData.interviewerId : null,
+  //   decodedData && !decodedData.isCandidate
+  //     ? decodedData.interviewRoundId
+  //     : null
+  // );
+  // const { data: schedulerData } = useSchedulerRoundDetails(
+  //   decodedData?.interviewRoundId,
+  //   decodedData?.isSchedule
+  // );
   // const { data: candidateData } = useCandidateDetails(
   //   decodedData?.isCandidate ? decodedData.interviewRoundId : null
   // );
 
-  const { data, isLoading } = useInterviewDetails(
-    decodedData.isCandidate
-      ? { interviewRoundId: decodedData.interviewRoundId }
-      : {}
-  );
+  // const { data, isLoading } = useInterviewDetails(
+  //   decodedData.isCandidate
+  //     ? { interviewRoundId: decodedData.interviewRoundId }
+  //     : {}
+  // );
 
-  const candidateData = data;
+  // const candidateData = data;
 
-  console.log("candidateData", candidateData);
+  // console.log("candidateData", candidateData);
 
   // 4. Set meetingId from candidateData
-  useEffect(() => {
-    if (candidateData?.round?.meetingId && !meetingId) {
-      console.log(
-        "Setting meetingId from candidateData:",
-        candidateData.round.meetingId
-      );
-      setMeetingId(candidateData.round.meetingId);
-    }
+  // useEffect(() => {
+  // if (candidateData?.round?.meetingId && !meetingId) {
+  //   console.log(
+  //     "Setting meetingId from candidateData:",
+  //     candidateData.round.meetingId
+  //   );
+  //   setMeetingId(candidateData.round.meetingId);
+  // }
 
-    // Also check if meetingId is in URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlMeetingId = urlParams.get("meetingId");
-    if (urlMeetingId && !meetingId) {
-      console.log("Setting meetingId from URL:", urlMeetingId);
-      setMeetingId(urlMeetingId);
-    }
-  }, [candidateData, meetingId]);
+  //   // Also check if meetingId is in URL
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   const urlMeetingId = urlParams.get("meetingId");
+  //   if (urlMeetingId && !meetingId) {
+  //     console.log("Setting meetingId from URL:", urlMeetingId);
+  //     setMeetingId(urlMeetingId);
+  //   }
+  // }, [candidateData, meetingId]);
 
   // 5. Debug logs
-  useEffect(() => {
-    console.log("Current state:", {
-      meetingId,
-      token: token ? "Token available" : "No token",
-      isInitialized,
-      micOn,
-      webcamOn,
-      deviceError,
-    });
-  }, [meetingId, token, isInitialized, micOn, webcamOn, deviceError]);
+  // useEffect(() => {
+  //   console.log("Current state:", {
+  //     meetingId,
+  //     token: token ? "Token available" : "No token",
+  //     isInitialized,
+  //     micOn,
+  //     webcamOn,
+  //     deviceError,
+  //   });
+  // }, [meetingId, token, isInitialized, micOn, webcamOn, deviceError]);
 
   // 6. Request permissions when user wants to enable media
-  const requestPermissions = async () => {
-    try {
-      setHasRequestedPermissions(true);
+  // const requestPermissions = async () => {
+  //   try {
+  //     setHasRequestedPermissions(true);
 
-      // Request camera permission
-      if (webcamOn) {
-        const videoStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-        });
-        videoStream.getTracks().forEach((track) => track.stop());
-      }
+  //     // Request camera permission
+  //     if (webcamOn) {
+  //       const videoStream = await navigator.mediaDevices.getUserMedia({
+  //         video: true,
+  //       });
+  //       videoStream.getTracks().forEach((track) => track.stop());
+  //     }
 
-      // Request microphone permission
-      if (micOn) {
-        const audioStream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-        audioStream.getTracks().forEach((track) => track.stop());
-      }
+  //     // Request microphone permission
+  //     if (micOn) {
+  //       const audioStream = await navigator.mediaDevices.getUserMedia({
+  //         audio: true,
+  //       });
+  //       audioStream.getTracks().forEach((track) => track.stop());
+  //     }
 
-      return true;
-    } catch (error) {
-      console.error("Permission error:", error);
+  //     return true;
+  //   } catch (error) {
+  //     console.error("Permission error:", error);
 
-      if (error.name === "NotFoundError") {
-        setDeviceError(
-          "Camera or microphone not found. Please check your devices."
-        );
-      } else if (error.name === "NotAllowedError") {
-        setDeviceError(
-          "Permission denied. Please allow camera/microphone access."
-        );
-      } else {
-        setDeviceError(`Device error: ${error.message}`);
-      }
+  //     if (error.name === "NotFoundError") {
+  //       setDeviceError(
+  //         "Camera or microphone not found. Please check your devices."
+  //       );
+  //     } else if (error.name === "NotAllowedError") {
+  //       setDeviceError(
+  //         "Permission denied. Please allow camera/microphone access."
+  //       );
+  //     } else {
+  //       setDeviceError(`Device error: ${error.message}`);
+  //     }
 
-      // Turn off media if permission fails
-      setWebcamOn(false);
-      setMicOn(false);
-      return false;
-    }
-  };
+  //     // Turn off media if permission fails
+  //     setWebcamOn(false);
+  //     setMicOn(false);
+  //     return false;
+  //   }
+  // };
 
   // 7. Join meeting function
-  const joinMeeting = async () => {
-    if (!hasRequestedPermissions && (micOn || webcamOn)) {
-      const hasPermission = await requestPermissions();
-      if (!hasPermission) {
-        return; // Don't join if permissions failed
-      }
-    }
+  // const joinMeeting = async () => {
+  //   if (!hasRequestedPermissions && (micOn || webcamOn)) {
+  //     const hasPermission = await requestPermissions();
+  //     if (!hasPermission) {
+  //       return; // Don't join if permissions failed
+  //     }
+  //   }
 
-    // Meeting will join through MeetingProvider
-  };
+  //   // Meeting will join through MeetingProvider
+  // };
 
   // 8. Auto-join when everything is ready
   useEffect(() => {
@@ -356,10 +416,8 @@ const Dashboard = () => {
                   meetingId,
                   micEnabled: false, // Start with mic off
                   webcamEnabled: false, // Start with webcam off
-                  name:
-                    candidateData?.LastName ||
-                    contactData?.name ||
-                    "Participant",
+                  // name: candidateData?.LastName || contactData?.name,
+                  name: candidateData?.LastName,
                   multiStream: true,
                   defaultAudioDevice: {
                     deviceId: "default",
@@ -383,10 +441,11 @@ const Dashboard = () => {
                     setMeetingStarted(false);
                   }}
                   setIsMeetingLeft={setIsMeetingLeft}
-                  isCandidate={decodedData?.isCandidate || false}
-                  isInterviewer={decodedData?.isInterviewer || false}
-                  isSchedule={decodedData?.isSchedule || false}
-                  data={candidateData || schedulerData}
+                isCandidate={urlData?.isCandidate || false}
+                isInterviewer={urlData?.isInterviewer || false}
+                isSchedule={urlData?.isSchedule || false}
+                candidateData={candidateData}
+                positionData={positionData}
                 />
               </MeetingProvider>
             </>
