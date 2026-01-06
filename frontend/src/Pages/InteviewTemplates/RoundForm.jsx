@@ -1084,8 +1084,8 @@ function RoundFormTemplates() {
                     name="interviewMode"
                     value={formData.interviewMode}
                     options={[
-                      { value: "Face to Face", label: "Face to Face" },
                       { value: "Virtual", label: "Virtual" },
+                      { value: "Face to Face", label: "Face to Face" },
                     ]}
                     onChange={(e) => {
                       const value = e.target.value;
