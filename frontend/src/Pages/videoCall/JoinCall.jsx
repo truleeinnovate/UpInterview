@@ -15,14 +15,16 @@ import { useFeedbackData } from "../../apiHooks/useFeedbacks";
 import {
   decryptParam,
   extractUrlData,
-  useCandidateDetails,
+  // useCandidateDetails,
   useContactDetails,
   useSchedulerRoundDetails,
 } from "../../apiHooks/useVideoCall";
+import { useInterviews } from "../../apiHooks/useInterviews";
 
 function JoinMeeting() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { useInterviewDetails } = useInterviews();
   const [currentRole, setCurrentRole] = useState(null);
   const [decodedData, setDecodedData] = useState(null);
   const [urlRoleInfo, setUrlRoleInfo] = useState(null);
@@ -31,11 +33,15 @@ function JoinMeeting() {
   const [authError, setAuthError] = useState(null);
   const [authType, setAuthType] = useState(null);
 
+  console.log("JoinMeeting rendered", authType);
+
   // Extract URL data once
   const urlData = useMemo(
     () => extractUrlData(location.search),
     [location.search]
   );
+
+  console.log("location.search", urlData);
 
   useEffect(() => {
     setDecodedData(urlData);
@@ -59,22 +65,36 @@ function JoinMeeting() {
     isLoading: preAuthLoading,
     isError: preAuthError,
   } = useContactDetails(
-    !urlData.isCandidate ? urlData.interviewerId : null,
-    !urlData.isCandidate ? urlData.interviewRoundId : null
+    !urlData.isCandidate ? urlData?.interviewerId : null,
+    !urlData.isCandidate ? urlData?.interviewRoundId : null
   );
+
+  console.log("contactData", contactData);
 
   // Scheduler query
   const { data: schedulerData, isLoading: schedulerLoading } =
     useSchedulerRoundDetails(urlData.interviewRoundId, urlData.isSchedule);
 
   // Candidate query
-  const {
-    data: candidateData,
-    isLoading: candidateLoading,
-    isError: candidateError,
-  } = useCandidateDetails(
-    urlData.isCandidate ? urlData.interviewRoundId : null
+  // const {
+  //   data: candidateData,
+  //   isLoading: candidateLoading,
+  //   isError: candidateError,
+  // } = useCandidateDetails(
+  //   urlData.isCandidate ? urlData.interviewRoundId : null
+  // );
+
+  // useInterviews
+
+  const { data, isLoading } = useInterviewDetails(
+    urlData.isCandidate ? { interviewRoundId: urlData.interviewRoundId } : {}
   );
+
+  const candidateData = data;
+
+  // setAuthType(contactData.tenant?.type || "organization");
+
+  console.log("candidateData", candidateData?.tenant);
 
   // Feedback query (existing)
   const {
@@ -86,36 +106,52 @@ function JoinMeeting() {
     !isAuthChecking && !urlData.isCandidate ? urlData.interviewerId : null
   );
 
+  // === 1. Better handling of contactData (including API-level errors) ===
   useEffect(() => {
     if (preAuthError) {
-      setAuthError("Failed to check meeting details");
+      setAuthError("Failed to validate meeting access");
       setIsAuthChecking(false);
       return;
     }
 
     if (contactData) {
-      setAuthType(contactData.tenant?.type);
-      if (contactData.error === "Owner mismatch between contact and tenant") {
-        redirectToLogin(contactData.tenant?.type === "individual");
+      // If backend returns { error: "..." } inside data
+      if (contactData.error) {
+        setAuthError(contactData.error);
+
+        if (contactData.error.includes("Owner mismatch")) {
+          redirectToLogin(contactData.tenant?.type === "individual");
+        } else {
+          setIsAuthChecking(false);
+        }
+        return;
       }
+
+      // Success case - valid contact
+      setAuthType(contactData.tenant?.type || "organization");
+      // Do NOT set isAuthChecking false here - wait for actual auth check
     }
   }, [contactData, preAuthError]);
 
+  // === 2. Trigger authentication ONLY after pre-auth succeeds ===
   useEffect(() => {
-    if (
-      !preAuthLoading &&
-      !preAuthError &&
-      !urlData.isCandidate &&
-      (urlData.isSchedule || urlData.isInterviewer)
-    ) {
+    // Candidate links skip all auth
+    if (urlData.isCandidate) {
+      setIsAuthChecking(false);
+      return;
+    }
+
+    // For interviewer/scheduler: wait for pre-auth to finish successfully
+    if (!preAuthLoading && !preAuthError && contactData && !contactData.error) {
       const authenticated = checkAuthentication();
       if (authenticated) {
         setIsAuthChecking(false);
       }
-    } else if (urlData.isCandidate) {
-      setIsAuthChecking(false);
+      // If not authenticated - checkAuthentication() already handles redirect/error
     }
-  }, [preAuthLoading, preAuthError, urlData]);
+
+    // If pre-auth failed or loading - do nothing (loading spinner will show)
+  }, [preAuthLoading, preAuthError, contactData, urlData]);
 
   useEffect(() => {
     if (!feedbackLoading && feedbackData) {
@@ -200,10 +236,10 @@ function JoinMeeting() {
   const isAnyLoading =
     preAuthLoading ||
     isAuthChecking ||
-    candidateLoading ||
+    isLoading ||
     feedbackLoading ||
     schedulerLoading;
-  const anyError = authError || candidateError || feedbackError || preAuthError;
+  const anyError = authError || isLoading || feedbackError || preAuthError;
 
   if (isAnyLoading) {
     return (
@@ -235,25 +271,18 @@ function JoinMeeting() {
     );
   }
 
+  // candidate view page  path
   if (currentRole === "candidate" || urlRoleInfo?.isCandidate) {
-    return (
-      <CandidateView
-      // decodedData={decodedData}
-      // feedbackData={candidateData}
-      // feedbackLoading={candidateLoading}
-      // feedbackError={
-      //   candidateError ? "Failed to fetch candidate details" : null
-      // }
-      />
-    );
+    return <CandidateView />;
   }
 
+  // interviewer view page path
   if (!currentRole && urlRoleInfo?.isInterviewer) {
     return (
       <RoleSelector
         onRoleSelect={setCurrentRole}
         roleInfo={urlRoleInfo}
-        feedbackData={feedbackDatas}
+        // feedbackData={feedbackDatas}
       />
     );
   }

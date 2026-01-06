@@ -13,6 +13,7 @@ import {
   useContactDetails,
   useSchedulerRoundDetails,
 } from "../apiHooks/useVideoCall";
+import { useInterviews } from "../apiHooks/useInterviews";
 
 const Dashboard = () => {
   // Set default values
@@ -25,7 +26,11 @@ const Dashboard = () => {
   const [deviceError, setDeviceError] = useState(null);
   const [hasRequestedPermissions, setHasRequestedPermissions] = useState(false);
 
-  const isMobile = window.matchMedia("only screen and (max-width: 768px)").matches;
+  const { useInterviewDetails } = useInterviews();
+
+  const isMobile = window.matchMedia(
+    "only screen and (max-width: 768px)"
+  ).matches;
 
   // 1. Initialize meeting - SIMPLIFIED VERSION
   useEffect(() => {
@@ -41,7 +46,7 @@ const Dashboard = () => {
 
         setIsInitialized(true);
       } catch (error) {
-        console.error('Error initializing meeting:', error);
+        console.error("Error initializing meeting:", error);
         setDeviceError(`Error: ${error.message}`);
       }
     };
@@ -61,7 +66,7 @@ const Dashboard = () => {
 
   // 2. Extract URL data
   const [decodedData, setDecodedData] = useState(null);
-  
+
   useEffect(() => {
     console.log("Extracting URL data from:", window.location.search);
     const urlData = extractUrlData(window.location.search);
@@ -72,26 +77,41 @@ const Dashboard = () => {
   // 3. Data hooks
   const { data: contactData } = useContactDetails(
     decodedData && !decodedData.isCandidate ? decodedData.interviewerId : null,
-    decodedData && !decodedData.isCandidate ? decodedData.interviewRoundId : null
+    decodedData && !decodedData.isCandidate
+      ? decodedData.interviewRoundId
+      : null
   );
   const { data: schedulerData } = useSchedulerRoundDetails(
     decodedData?.interviewRoundId,
     decodedData?.isSchedule
   );
-  const { data: candidateData } = useCandidateDetails(
-    decodedData?.isCandidate ? decodedData.interviewRoundId : null
+  // const { data: candidateData } = useCandidateDetails(
+  //   decodedData?.isCandidate ? decodedData.interviewRoundId : null
+  // );
+
+  const { data, isLoading } = useInterviewDetails(
+    decodedData.isCandidate
+      ? { interviewRoundId: decodedData.interviewRoundId }
+      : {}
   );
+
+  const candidateData = data;
+
+  console.log("candidateData", candidateData);
 
   // 4. Set meetingId from candidateData
   useEffect(() => {
     if (candidateData?.round?.meetingId && !meetingId) {
-      console.log("Setting meetingId from candidateData:", candidateData.round.meetingId);
+      console.log(
+        "Setting meetingId from candidateData:",
+        candidateData.round.meetingId
+      );
       setMeetingId(candidateData.round.meetingId);
     }
-    
+
     // Also check if meetingId is in URL
     const urlParams = new URLSearchParams(window.location.search);
-    const urlMeetingId = urlParams.get('meetingId');
+    const urlMeetingId = urlParams.get("meetingId");
     if (urlMeetingId && !meetingId) {
       console.log("Setting meetingId from URL:", urlMeetingId);
       setMeetingId(urlMeetingId);
@@ -106,7 +126,7 @@ const Dashboard = () => {
       isInitialized,
       micOn,
       webcamOn,
-      deviceError
+      deviceError,
     });
   }, [meetingId, token, isInitialized, micOn, webcamOn, deviceError]);
 
@@ -114,35 +134,39 @@ const Dashboard = () => {
   const requestPermissions = async () => {
     try {
       setHasRequestedPermissions(true);
-      
+
       // Request camera permission
       if (webcamOn) {
-        const videoStream = await navigator.mediaDevices.getUserMedia({ 
-          video: true 
+        const videoStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
         });
-        videoStream.getTracks().forEach(track => track.stop());
+        videoStream.getTracks().forEach((track) => track.stop());
       }
-      
-      // Request microphone permission  
+
+      // Request microphone permission
       if (micOn) {
-        const audioStream = await navigator.mediaDevices.getUserMedia({ 
-          audio: true 
+        const audioStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
         });
-        audioStream.getTracks().forEach(track => track.stop());
+        audioStream.getTracks().forEach((track) => track.stop());
       }
-      
+
       return true;
     } catch (error) {
       console.error("Permission error:", error);
-      
+
       if (error.name === "NotFoundError") {
-        setDeviceError("Camera or microphone not found. Please check your devices.");
+        setDeviceError(
+          "Camera or microphone not found. Please check your devices."
+        );
       } else if (error.name === "NotAllowedError") {
-        setDeviceError("Permission denied. Please allow camera/microphone access.");
+        setDeviceError(
+          "Permission denied. Please allow camera/microphone access."
+        );
       } else {
         setDeviceError(`Device error: ${error.message}`);
       }
-      
+
       // Turn off media if permission fails
       setWebcamOn(false);
       setMicOn(false);
@@ -158,7 +182,7 @@ const Dashboard = () => {
         return; // Don't join if permissions failed
       }
     }
-    
+
     // Meeting will join through MeetingProvider
   };
 
@@ -196,7 +220,9 @@ const Dashboard = () => {
           <div className="flex items-center justify-center h-full">
             <div className="text-center p-6 bg-white rounded-lg shadow-lg max-w-md">
               <div className="text-red-500 text-3xl mb-4">⚠️</div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">Device Issue</h2>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">
+                Device Issue
+              </h2>
               <p className="text-gray-600 mb-4">{deviceError}</p>
               <div className="space-y-2">
                 <button
@@ -233,7 +259,8 @@ const Dashboard = () => {
               meetingId,
               micEnabled: micOn,
               webcamEnabled: webcamOn,
-              name: candidateData?.LastName || contactData?.name || "Participant",
+              name:
+                candidateData?.LastName || contactData?.name || "Participant",
               multiStream: false,
             }}
             token={token}
@@ -267,7 +294,9 @@ const Dashboard = () => {
                 {meetingId && token && "Joining meeting..."}
               </p>
               {meetingId && (
-                <p className="text-xs text-gray-400 mt-1">Meeting ID: {meetingId.substring(0, 20)}...</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Meeting ID: {meetingId.substring(0, 20)}...
+                </p>
               )}
             </div>
           </div>

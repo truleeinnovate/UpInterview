@@ -38,32 +38,32 @@ export const extractUrlData = (search) => {
 };
 
 // Custom hook for candidate details (replaces fetchCandidateDetails)
-export const useCandidateDetails = (roundId) => {
-  return useQuery({
-    queryKey: ["candidateDetails", roundId],
-    queryFn: async () => {
-      if (!roundId) throw new Error("Round ID is required");
-      const res = await axios.get(
-        `${config.REACT_APP_API_URL}/feedback/candidate-details`,
-        {
-          params: { roundId },
-          headers: { Accept: "application/json" },
-        }
-      );
-      if (!res.data?.success || !res.data.candidate) {
-        throw new Error(res.data?.message || "Candidate data not found");
-      }
-      return {
-        ...res.data.candidate,
-        position: res.data.position,
-        round: res.data.round,
-      };
-    },
-    enabled: !!roundId,
-    retry: 2, // Matches original retry attempts
-    retryDelay: (attempt) => attempt * 1000,
-  });
-};
+// export const useCandidateDetails = (roundId) => {
+//   return useQuery({
+//     queryKey: ["candidateDetails", roundId],
+//     queryFn: async () => {
+//       if (!roundId) throw new Error("Round ID is required");
+//       const res = await axios.get(
+//         `${config.REACT_APP_API_URL}/feedback/candidate-details`,
+//         {
+//           params: { roundId },
+//           headers: { Accept: "application/json" },
+//         }
+//       );
+//       if (!res.data?.success || !res.data.candidate) {
+//         throw new Error(res.data?.message || "Candidate data not found");
+//       }
+//       return {
+//         ...res.data.candidate,
+//         position: res.data.position,
+//         round: res.data.round,
+//       };
+//     },
+//     enabled: !!roundId,
+//     retry: 2, // Matches original retry attempts
+//     retryDelay: (attempt) => attempt * 1000,
+//   });
+// };
 
 // Custom hook for pre-auth contact details
 export const useContactDetails = (contactId, roundId) => {

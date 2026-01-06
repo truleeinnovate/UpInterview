@@ -244,7 +244,8 @@ const InterviewForm = () => {
   const isEditing = !!id;
 
   const { data: interview, isLoading: interviewLoading } = useInterviewDetails(
-    isEditing ? id : null
+    // isEditing ? id : null
+    isEditing ? { roundId: id } : {}
   );
 
   // v1.0.7  -  Your Name  -  Fixed template dropdown not showing selected value in edit mode
@@ -668,8 +669,6 @@ const InterviewForm = () => {
                     />
                   </div>
 
-                 
-
                   <div className="relative">
                     <DropdownWithSearchField
                       key={`template-${templateId}-${positionId}`}
@@ -805,7 +804,7 @@ const InterviewForm = () => {
                     </div>
                   )}
 
-                   {/* External ID Field - Only show for organization users */}
+                  {/* External ID Field - Only show for organization users */}
                   {isOrganization && (
                     <div>
                       <div className="flex items-center gap-2 mb-1 relative">
