@@ -21,59 +21,23 @@ import {
   // getDateStatus,
 } from "../../utils/timezoneUtils";
 import { useMemo } from "react";
-import {
-  extractUrlData,
-  useCandidateDetails,
-} from "../../apiHooks/useVideoCall";
+import { extractUrlData } from "../../apiHooks/useVideoCall";
 import { useLocation } from "react-router-dom";
+import { useInterviews } from "../../apiHooks/useInterviews";
+import { config } from "../../config";
 
-const CandidateView = ({
-  onBack,
-  feedbackData: propFeedbackData,
-  decodedData: propDecodedData,
-}) => {
+const CandidateView = () =>
+// {
+// onBack,
+// feedbackData: propFeedbackData,
+// decodedData: propDecodedData,
+// }
+{
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [localInterviewTime, setLocalInterviewTime] = useState("");
   const [localEndTime, setLocalEndTime] = useState("");
   const location = useLocation();
-  // const navigate = useNavigate();
-
-  // Extract URL data once
-  const urlData = useMemo(
-    () => extractUrlData(location.search),
-    [location.search]
-  );
-
-  const decodedData = propDecodedData || urlData;
-
-  useEffect(() => {
-    if (!decodedData) return;
-
-    const effectiveIsInterviewer =
-      decodedData.isInterviewer || decodedData.isSchedule;
-    const roleInfo = {
-      isCandidate: decodedData.isCandidate,
-      isInterviewer: effectiveIsInterviewer,
-      hasRolePreference: decodedData.isCandidate || effectiveIsInterviewer,
-    };
-    // setUrlRoleInfo(roleInfo);
-  }, [decodedData]);
-
-  // Candidate query
-  const {
-    data: candidateData,
-    isLoading: candidateLoading,
-    isError: candidateError,
-  } = useCandidateDetails(
-    urlData.isCandidate ? urlData.interviewRoundId : null
-  );
-
-  console.log("propFeedbackData", propFeedbackData);
-
-  const feedbackData = propFeedbackData || candidateData;
-
-  console.log("feedbackData as candidate data :-------", feedbackData);
 
   // Video preview states
   const [micOn, setMicOn] = useState(false);
@@ -88,6 +52,32 @@ const CandidateView = ({
 
   // Get media devices
   const { getCameras, getMicrophones, getPlaybackDevices } = useMediaDevice();
+
+  // const navigate = useNavigate();
+
+  const { useInterviewDetails } = useInterviews();
+
+  // Extract URL data once
+  const urlData = useMemo(
+    () => extractUrlData(location.search),
+    [location.search]
+  );
+
+  const { data, isLoading } = useInterviewDetails(
+    urlData.isCandidate ? { roundId: urlData.roundData } : {}
+  );
+
+  const candidateData = data?.candidateId || {};
+  const positionData = data?.positionId || {};
+  const interviewRoundData = data?.rounds[0] || {};
+
+  console.log("candidateData", candidateData);
+  console.log("positionData", positionData);
+  console.log("interviewRoundData", interviewRoundData);
+
+  // const feedbackData = propFeedbackData || candidateData;
+
+  // console.log("feedbackData as candidate data :-------", feedbackData);
 
   // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
   const parseCustomDateTime = (dateTimeStr) => {
@@ -115,11 +105,11 @@ const CandidateView = ({
   };
 
   useEffect(() => {
-    if (!feedbackData?.round?.dateTime) return;
+    if (!interviewRoundData?.dateTime) return;
 
     // Parse start and end times
     const { start: interviewStart, end: interviewEnd } = parseCustomDateTime(
-      feedbackData.round.dateTime
+      interviewRoundData.dateTime
     );
     if (!interviewStart || !interviewEnd) return;
 
@@ -171,7 +161,7 @@ const CandidateView = ({
     const interval = setInterval(updateTimes, 60000); // Update every minute
 
     return () => clearInterval(interval);
-  }, [feedbackData?.round?.dateTime]);
+  }, [interviewRoundData?.dateTime]);
 
   // console.log(
   //   "  {feedbackData?.round?.duration}",
@@ -180,7 +170,7 @@ const CandidateView = ({
 
   // Initialize video preview
   useEffect(() => {
-    if (feedbackData?.round?.meetPlatform !== "platform") return;
+    if (interviewRoundData?.meetPlatform !== "platform") return;
 
     let stream = null;
 
@@ -248,7 +238,7 @@ const CandidateView = ({
       audioTrackRef.current = null;
       micStreamRef.current = null;
     };
-  }, [webcamOn, micOn, feedbackData?.round?.meetPlatform]);
+  }, [webcamOn, micOn, interviewRoundData?.meetPlatform]);
 
   // Toggle microphone
   const toggleMic = async () => {
@@ -310,7 +300,6 @@ const CandidateView = ({
   };
 
   return (
-    // v1.0.0 <-----------------------------------------------------------------------------
     <div className="min-h-screen bg-gradient-to-br from-[#217989] to-[#1a616e] p-4">
       <div className="max-w-8xl mx-auto">
         {/* <button
@@ -328,8 +317,8 @@ const CandidateView = ({
             <div className="bg-white rounded-2xl shadow-2xl sm:p-4 md:p-4 p-8 text-center">
               <div className="mb-8">
                 {/* Video Preview Section */}
-                {console.log("sfsd", feedbackData?.round?.meetPlatform)}
-                {feedbackData?.round?.meetPlatform === "platform" && (
+                {/* {console.log("sfsd", interviewRoundData?.meetPlatform)} */}
+                {interviewRoundData?.meetPlatform === "platform" && (
                   <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden mb-8">
                     <div className="relative aspect-video bg-black">
                       <video
@@ -349,11 +338,10 @@ const CandidateView = ({
                       <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
                         <button
                           onClick={toggleMic}
-                          className={`p-3 rounded-full ${
-                            micOn
-                              ? "bg-white text-gray-800"
-                              : "bg-red-600 text-white"
-                          }`}
+                          className={`p-3 rounded-full ${micOn
+                            ? "bg-white text-gray-800"
+                            : "bg-red-600 text-white"
+                            }`}
                           aria-label={
                             micOn ? "Mute microphone" : "Unmute microphone"
                           }
@@ -367,11 +355,10 @@ const CandidateView = ({
 
                         <button
                           onClick={toggleWebcam}
-                          className={`p-3 rounded-full ${
-                            webcamOn
-                              ? "bg-white text-gray-800"
-                              : "bg-red-600 text-white"
-                          }`}
+                          className={`p-3 rounded-full ${webcamOn
+                            ? "bg-white text-gray-800"
+                            : "bg-red-600 text-white"
+                            }`}
                           aria-label={
                             webcamOn ? "Turn off camera" : "Turn on camera"
                           }
@@ -394,15 +381,15 @@ const CandidateView = ({
                   </div>
                 )}
 
-                {feedbackData?.round?.meetPlatform !== "platform" && (
+                {interviewRoundData?.meetPlatform !== "platform" && (
                   <div className="sm:w-16 sm:h-16 md:w-16 md:h-16 w-20 h-20 bg-[#217989] rounded-full flex items-center justify-center mx-auto mb-6">
                     <Video className="sm:w-8 sm:h-8 md:h-8 md:w-8 w-10 h-10 text-white" />
                   </div>
                 )}
                 <h1 className="sm:text-lg md:text-lg lg:text-lg xl:text-xl 2xl:text-2xl font-bold text-gray-800 mb-2">
                   Welcome,{" "}
-                  {feedbackData?.FirstName || feedbackData?.LastName
-                    ? feedbackData?.FirstName + " " + feedbackData?.LastName
+                  {candidateData?.FirstName || candidateData?.LastName
+                    ? candidateData?.FirstName + " " + candidateData?.LastName
                     : "Not Available"}
                   !
                 </h1>
@@ -410,11 +397,11 @@ const CandidateView = ({
                   Ready to join your interview?
                 </p>
 
-                {feedbackData?.round?.dateTime && (
+                {interviewRoundData?.dateTime && (
                   <div className="mt-3">
                     {(() => {
                       const { start, end } = parseCustomDateTime(
-                        feedbackData?.round?.dateTime
+                        interviewRoundData?.dateTime
                       );
                       const now = new Date();
                       const diffMs = start - now;
@@ -442,7 +429,9 @@ const CandidateView = ({
                         color = "text-green-600 bg-green-100";
                       } else if (now >= start && now <= end) {
                         // During interview
-                        const minsLeft = Math.floor((end - now) / (1000 * 60));
+                        const minsLeft = Math.floor(
+                          (end - now) / (1000 * 60)
+                        );
                         text = `Interview in progress (ends in ${minsLeft}m)`;
                         color = "text-green-600 bg-green-100";
                       } else if (now > end) {
@@ -498,7 +487,7 @@ const CandidateView = ({
                         Position
                       </p>
                       <p className="sm:text-sm md:text-sm text-base font-semibold text-gray-900">
-                        {feedbackData?.position?.title || "Not Available"}
+                        {positionData?.title || "Not Available"}
                       </p>
                     </div>
                     <div>
@@ -506,7 +495,7 @@ const CandidateView = ({
                         Company
                       </p>
                       <p className="sm:text-sm md:text-sm text-base font-semibold text-gray-900">
-                        {feedbackData?.position?.companyname || "Not Available"}
+                        {positionData?.companyname || "Not Available"}
                       </p>
                     </div>
                   </div>
@@ -520,7 +509,7 @@ const CandidateView = ({
                         {/* {localInterviewTime || 'Calculating...'} */}
                         <p className="sm:text-sm md:text-sm text-base font-semibold text-gray-900">
                           {formatToLocalTime(
-                            feedbackData?.round?.dateTime,
+                            interviewRoundData?.dateTime,
                             "start-only"
                           )}
                           {/* {getTimeUntilInterview(feedbackData?.round?.dateTime)} */}
@@ -537,8 +526,8 @@ const CandidateView = ({
                         Duration
                       </p>
                       <p className="sm:text-sm md:text-sm text-base font-semibold text-gray-900">
-                        {feedbackData?.round?.duration
-                          ? `${feedbackData?.round?.duration} Min`
+                        {interviewRoundData?.duration
+                          ? `${interviewRoundData?.duration} Min`
                           : "Not Available"}
                       </p>
                     </div>
@@ -560,7 +549,7 @@ const CandidateView = ({
                 // onClick={() => window.open(decodedData?.meetLink, "_blank")}
 
                 onClick={() => {
-                  if (feedbackData?.round?.meetPlatform === "platform") {
+                  if (interviewRoundData?.meetPlatform === "platform") {
                     const currentUrl = new URL(window.location.href);
 
                     // change only the path
@@ -568,15 +557,14 @@ const CandidateView = ({
 
                     window.open(currentUrl.toString(), "_blank");
                   } else {
-                    window.open(decodedData?.meetLink, "_blank");
+                    window.open(interviewRoundData?.meetingId, "_blank");
                   }
                 }}
                 // disabled={!isButtonEnabled}
-                className={`w-full md:text-sm ${
-                  isButtonEnabled
-                    ? "bg-[#217989] hover:bg-[#1a616e] hover:scale-105"
-                    : "bg-gray-400 cursor-not-allowed sm:text-sm"
-                } text-white font-bold sm:py-3 md:py-3 py-4 sm:px-4 md:px-4 lg:px-4 xl:px-8 2xl:px-8 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg mb-4`}
+                className={`w-full md:text-sm ${isButtonEnabled
+                  ? "bg-[#217989] hover:bg-[#1a616e] hover:scale-105"
+                  : "bg-gray-400 cursor-not-allowed sm:text-sm"
+                  } text-white font-bold sm:py-3 md:py-3 py-4 sm:px-4 md:px-4 lg:px-4 xl:px-8 2xl:px-8 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg mb-4`}
               >
                 <Video className="w-6 h-6" />
                 {isButtonEnabled
@@ -785,6 +773,20 @@ const CandidateView = ({
               </div>
             </div>
 
+            {/* Quick Tips */}
+            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl shadow-xl p-6 border border-yellow-200">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                💡 Quick Tips
+              </h3>
+              <div className="space-y-3 text-sm text-gray-700">
+                <p>• Have a glass of water nearby</p>
+                <p>• Keep your phone on silent</p>
+                <p>• Prepare questions about the role</p>
+                <p>• Practice your elevator pitch</p>
+                <p>• Research the company beforehand</p>
+              </div>
+            </div>
+
             {/* Emergency Contact */}
             <div className="bg-red-50 rounded-2xl shadow-xl p-6 border border-red-200">
               <h3 className="text-lg font-semibold text-red-800 mb-4">
@@ -792,16 +794,15 @@ const CandidateView = ({
               </h3>
               <div className="space-y-2 text-sm text-red-700">
                 <p>Technical issues during the interview?</p>
-                <p className="font-semibold">Call: +1 (555) 123-HELP</p>
-                <p className="font-semibold">Email: support@company.com</p>
+                <p className="font-semibold">Call: {config.REACT_APP_SUPPORT_PHONE_NUMBER}-HELP</p>
+                <p className="font-semibold">Email: support@upinterview.io</p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    // v1.0.0 ----------------------------------------------------------------------------->
-  );
+  )
 };
 
 export default CandidateView;

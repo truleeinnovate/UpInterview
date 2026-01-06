@@ -480,21 +480,15 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
         if (localScreenShareOn) {
           await toggleScreenShare();
           setLocalScreenShareStream(null);
-          // if (screenShareStreamRef.current) {
-          //   screenShareStreamRef.current.getTracks().forEach(track => track.stop());
-          //   screenShareStreamRef.current = null;
-          // }
           return;
         }
         
-        console.log('Starting screen share...', {
-          isLocalPresenting: mMeeting?.localParticipant?.id === presenterId,
-          presenterId,
-          localScreenShareOn,
-          meetingState: mMeeting
-        });
+        console.log('Starting screen share...');
         
-        // Request screen share with system audio if available
+        // Get the current tab's URL to exclude it from sharing
+        const currentUrl = window.location.href;
+        
+        // Request screen share with more specific constraints
         const stream = await navigator.mediaDevices.getDisplayMedia({
           video: {
             frameRate: { ideal: 30, max: 30 },
@@ -506,44 +500,65 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
             noiseSuppression: true,
             suppressLocalAudioPlayback: true,
           },
-          surfaceSwitching: 'include',
+          // Prevent sharing the current tab
+          preferCurrentTab: false,
+          // More specific constraints to avoid the current tab
           selfBrowserSurface: 'exclude',
-          systemAudio: 'include',
-          preferCurrentTab: false
+          systemAudio: 'exclude',
+          surfaceSwitching: 'exclude',
+          // Add a prompt to guide the user
+          displaySurface: 'browser',
+          // This helps prevent the current tab from being shared
+          logicalSurface: true
         }).catch(err => {
           console.error('Screen share error:', err);
-          throw err;
+          throw new Error('Screen sharing failed or was cancelled');
         });
         
-        console.log('Screen share stream obtained:', stream);
+        // Additional check to prevent sharing the current tab
+        const track = stream.getVideoTracks()[0];
+        const settings = track.getSettings();
+        
+        if (settings.displaySurface === 'browser' && 
+            settings.logicalSurface === false) {
+          // This is likely the current tab, stop the track and show an error
+          stream.getTracks().forEach(t => t.stop());
+          throw new Error('Please select a different window or screen to share');
+        }
+        
+        console.log('Screen share stream obtained with settings:', settings);
+        
+        // Store the stream reference for cleanup
+        screenShareStreamRef.current = stream;
         setLocalScreenShareStream(stream);
-        // screenShareStreamRef.current = stream;
         
         // Handle stream ended (user stops sharing)
-        stream.getVideoTracks().forEach(track => {
-          track.onended = () => {
-            console.log('Screen share track ended:', track.kind);
-            if (localScreenShareOn) {
-              toggleScreenShare();
-            }
-            setLocalScreenShareStream(null);
-            // if (screenShareStreamRef.current) {
-            //   screenShareStreamRef.current.getTracks().forEach(t => t.stop());
-            //   screenShareStreamRef.current = null;
-            // }
-          };
-        });
+        track.onended = () => {
+          console.log('Screen share track ended');
+          if (localScreenShareOn) {
+            toggleScreenShare().catch(console.error);
+          }
+          setLocalScreenShareStream(null);
+          if (screenShareStreamRef.current) {
+            screenShareStreamRef.current.getTracks().forEach(t => t.stop());
+            screenShareStreamRef.current = null;
+          }
+        };
         
         // Start screen share through VideoSDK
         await toggleScreenShare(stream);
         
       } catch (error) {
         console.error('Screen share failed:', error);
+        // Show error to user
+        alert(error.message || 'Failed to start screen sharing. Please try again.');
+        
+        // Clean up any partial streams
+        if (screenShareStreamRef.current) {
+          screenShareStreamRef.current.getTracks().forEach(track => track.stop());
+          screenShareStreamRef.current = null;
+        }
         setLocalScreenShareStream(null);
-        // if (screenShareStreamRef.current) {
-        //   screenShareStreamRef.current.getTracks().forEach(track => track.stop());
-        //   screenShareStreamRef.current = null;
-        // }
       } finally {
         setIsProcessing(false);
       }

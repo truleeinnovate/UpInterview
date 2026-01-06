@@ -10,9 +10,9 @@ import {
   ChevronDown,
 } from "lucide-react";
 
-const CandidateDetails = ({ candidate, isFullScreen = false }) => {
-  console.log("candidate in candidate details ", candidate);
-  console.log("candidate.position in candidate details ", candidate?.position);
+const CandidateDetails = ({ candidateData, positionData, isFullScreen = false }) => {
+  console.log("candidate in candidate details ", candidateData);
+  console.log("positionData in candidate details ", positionData);
   const [expandedSections, setExpandedSections] = useState({
     skills: true,
     certificates: false,
@@ -28,10 +28,10 @@ const CandidateDetails = ({ candidate, isFullScreen = false }) => {
 
   // Use candidate data directly
   const candidateDetails = {
-    skills: candidate?.skills || candidate?.candidate?.skills || [],
+    skills: candidateData?.skills || candidateData?.candidate?.skills || [],
     certificates:
-      candidate?.certificates || candidate?.candidate?.certificates || [],
-    projects: candidate?.projects || candidate?.candidate?.projects || [],
+      candidateData?.certificates || candidateData?.candidate?.certificates || [],
+    projects: candidateData?.projects || candidateData?.candidate?.projects || [],
   };
 
   return (
@@ -40,7 +40,7 @@ const CandidateDetails = ({ candidate, isFullScreen = false }) => {
       {/* Basic Info */}
       <div className="bg-white rounded-lg p-6 shadow-sm">
         <div className="flex items-center mb-4">
-          {candidate?.candidate?.FirstName && (
+          {candidateData?.candidate?.FirstName && (
             <>
               <User
                 className="sm:h-4 sm:w-4 md:h-4 md:w-4 h-5 w-5 mr-2"
@@ -56,18 +56,18 @@ const CandidateDetails = ({ candidate, isFullScreen = false }) => {
           <div>
             <p className="text-sm font-medium text-gray-500">Name</p>
             <p className="text-sm text-gray-900">
-              {candidate?.FirstName || candidate?.candidate?.FirstName}{" "}
-              {candidate?.LastName || candidate?.candidate?.LastName}
+              {candidateData?.FirstName || candidateData?.candidate?.FirstName}{" "}
+              {candidateData?.LastName || candidateData?.candidate?.LastName}
             </p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Experience</p>
             <p className="text-gray-900">
-              {candidate?.CurrentExperience ||
-              candidate?.candidate?.CurrentExperience
+              {candidateData?.CurrentExperience ||
+              candidateData?.candidate?.CurrentExperience
                 ? `${
-                    candidate?.CurrentExperience ||
-                    candidate?.candidate?.CurrentExperience
+                    candidateData?.CurrentExperience ||
+                    candidateData?.candidate?.CurrentExperience
                   } years`
                 : ""}
             </p>
@@ -76,11 +76,11 @@ const CandidateDetails = ({ candidate, isFullScreen = false }) => {
             <p className="text-sm font-medium text-gray-500">
               Position Applied
             </p>
-            <p className="text-gray-900">{candidate?.position.title}</p>
+            <p className="text-gray-900">{positionData?.title}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Company Name</p>
-            <p className="text-gray-900">{candidate?.position?.companyname}</p>
+            <p className="text-gray-900">{positionData?.companyname}</p>
           </div>
         </div>
       </div>

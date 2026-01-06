@@ -389,7 +389,7 @@ function AssessmentResultView({
                                     <p className="text-xs text-gray-500">
                                       Marks
                                     </p>
-                                    <p className="font-medium">{marks}</p>
+                                    <p className="font-medium">{question.score || 0}</p>
                                   </div>
                                   <div>
                                     <p className="text-xs text-gray-500">

@@ -1,20 +1,45 @@
+// export const NO_SHOW_OPTIONS = [
+//   { label: "Did not join on time", value: "did_not_join_on_time" },
+//   { label: "No response from user", value: "no_response" },
+//   { label: "Wrong meeting link", value: "wrong_meeting_link" },
+//   { label: "Technical issue", value: "technical_issue" },
+//   { label: "Other", value: "other" },
+// ];
+
+// export const CANCEL_OPTIONS = [
+//   { label: "Candidate unavailable", value: "candidate_unavailable" },
+//   { label: "Interviewer unavailable", value: "interviewer_unavailable" },
+//   { label: "Technical issues", value: "technical_issues" },
+//   { label: "Position on hold", value: "position_on_hold" },
+//   {
+//     label: "Candidate withdrew application",
+//     value: "candidate_withdrew_application",
+//   },
+//   { label: "Other", value: "other" },
+// ];
+
 export const NO_SHOW_OPTIONS = [
-  { label: "Did not join on time", value: "did_not_join_on_time" },
-  { label: "No response from user", value: "no_response" },
-  { label: "Wrong meeting link", value: "wrong_meeting_link" },
-  { label: "Technical issue", value: "technical_issue" },
+  { label: "Candidate No-Show", value: "candidate_no_show" },
+  { label: "Interviewer No-Show", value: "interviewer_no_show" },
+  { label: "Both No-Show", value: "both_no_show" },
   { label: "Other", value: "other" },
 ];
 
 export const CANCEL_OPTIONS = [
-  { label: "Candidate unavailable", value: "candidate_unavailable" },
-  { label: "Interviewer unavailable", value: "interviewer_unavailable" },
-  { label: "Technical issues", value: "technical_issues" },
-  { label: "Position on hold", value: "position_on_hold" },
+  { label: "Position put on hold", value: "position_put_on_hold" },
+  { label: "Position closed", value: "position_closed" },
+  { label: "Budget constraints", value: "budget_constraints" },
+  { label: "Internal approval delay", value: "internal_approval_delay" },
+  { label: "Candidate profile mismatch", value: "candidate_profile_mismatch" },
   {
     label: "Candidate withdrew application",
     value: "candidate_withdrew_application",
   },
+  { label: "Duplicate interview", value: "duplicate_interview" },
+  { label: "Candidate unavailable", value: "candidate_unavailable" },
+  { label: "Interviewer unavailable", value: "interviewer_unavailable" },
+  { label: "Scheduling conflict", value: "scheduling_conflict" },
+  { label: "Technical issue", value: "technical_issue" },
   { label: "Other", value: "other" },
 ];
 

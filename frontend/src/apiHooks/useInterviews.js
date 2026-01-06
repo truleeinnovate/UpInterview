@@ -20,15 +20,15 @@ export const useInterviews = (
   const initialLoad = useRef(true);
 
   const params =
-  // useMemo(() => (
-  {
-    ...filters,
+    // useMemo(() => (
+    {
+      ...filters,
 
-    page: page,
-    limit: limit,
-    type: type,
-    upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
-  };
+      page: page,
+      limit: limit,
+      type: type,
+      upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
+    };
   //console.log("params", params);
 
   // ),
@@ -87,16 +87,22 @@ export const useInterviews = (
   const responseDashBoard = responseData?.data || {};
 
   // Child hook returned from useInterviews
-  const useInterviewDetails = (interviewId) => {
+  const useInterviewDetails = ({ interviewId, roundId }) => {
     return useQuery({
-      queryKey: ["interview-details", interviewId],
+      queryKey: ["interview-details", interviewId, roundId],
       queryFn: async () => {
+        console.log("interviewId", interviewId);
+        console.log("roundId", roundId);
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/interview/interview-details/${interviewId}`
+          `${config.REACT_APP_API_URL}/interview/interview-details`,
+          {
+            params: interviewId ? { interviewId } : { roundId },
+          }
+          // /${interviewId}`
         );
         return response.data.data;
       },
-      enabled: !!interviewId,
+      enabled: !!interviewId || !!roundId,
       retry: 1,
       staleTime: 1000 * 60 * 10,
       cacheTime: 1000 * 60 * 30,

@@ -1187,8 +1187,8 @@ function RoundFormPosition() {
                           name="interviewMode"
                           value={formData.interviewMode}
                           options={[
-                            { value: "Face to Face", label: "Face to Face" },
                             { value: "Virtual", label: "Virtual" },
+                            { value: "Face to Face", label: "Face to Face" },
                           ]}
                           onChange={(e) => {
                             setFormData((prev) => ({

@@ -210,7 +210,10 @@ const RoundFormInterviews = () => {
   // v1.0.2 <-----------------------------------------
 
   const { interviewId, roundId } = useParams();
-  const { data: interviewDetails } = useInterviewDetails(interviewId);
+
+  const { data: interviewDetails } = useInterviewDetails({
+    interviewId: interviewId,
+  });
   // const stateisReschedule = useLocation().state;
 
   const authToken = Cookies.get("authToken");
@@ -294,6 +297,8 @@ const RoundFormInterviews = () => {
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
   const location = useLocation();
   const isReschedule = location.state?.isReschedule || false;
+
+  console.log("Round Edit Data:", roundEditData);
 
   const handleAssessmentMenuScrollToBottom = () => {
     if (isAssessmentQueryLoading) return;
@@ -906,7 +911,13 @@ const RoundFormInterviews = () => {
     // Basic fields
     setRoundTitle(roundEditData.roundTitle || "");
     setInterviewType(roundEditData.interviewType || "instant");
-    setInterviewMode(roundEditData.interviewMode || "");
+    // setInterviewMode(roundEditData.interviewMode || "");
+    // Capitalize first letter to match dropdown options
+    const normalizedMode = roundEditData.interviewMode
+      ? roundEditData.interviewMode.charAt(0).toUpperCase() +
+        roundEditData.interviewMode.slice(1)
+      : "";
+    setInterviewMode(normalizedMode);
     setSelectedInterviewType(roundEditData.interviewerType || null);
     setInterviewQuestionsList(roundEditData.questions || []);
     if (status !== roundEditData.status) setStatus(roundEditData.status);
@@ -1072,6 +1083,7 @@ const RoundFormInterviews = () => {
     groups,
     hasManuallyClearedInterviewers,
     editingAssessment,
+    assessmentData,
   ]);
 
   // SUPER SIMPLE: Just check if field should be disabled
@@ -1748,7 +1760,8 @@ const RoundFormInterviews = () => {
               (roundEditData?.pendingOutsourceRequests || [])
                 .map((req) => req.interviewerId?._id || req.interviewerId?.id)
                 .sort()
-            );
+            ) &&
+          roundEditData?.roundTitle !== "Assessment"; // Exclude Assessment rounds from safe update
 
         // Check if only safe fields changed
         const safeFieldsChanged =
@@ -1756,6 +1769,9 @@ const RoundFormInterviews = () => {
           sequence !== originalSequence ||
           JSON.stringify(interviewQuestionsList) !==
             JSON.stringify(originalQuestions);
+
+        console.log("criticalFieldsUnchanged:", criticalFieldsUnchanged);
+        console.log("safeFieldsChanged:", safeFieldsChanged);
 
         if (criticalFieldsUnchanged && safeFieldsChanged) {
           console.log(
@@ -1833,6 +1849,8 @@ const RoundFormInterviews = () => {
         updatedRescheduleCount = roundEditData?.rescheduleCount || 0;
       }
 
+      console.log("assessmentTemplate", assessmentTemplate);
+
       const interviewDateTime = new Date(combinedDateTime);
       const expiryDateTime = calculateExpiryDate(interviewDateTime);
 
@@ -1903,6 +1921,11 @@ const RoundFormInterviews = () => {
       }
 
       console.log("roundData", roundData);
+
+      // ✅ CLEAR INTERVIEWERS (popup confirmed)
+      if (roundTitle === "Assessment") {
+        updateType = "AssessmentChange";
+      }
 
       // ✅ CLEAR INTERVIEWERS (popup confirmed)
       if (type === "confirmClearinterviwers") {
@@ -2495,8 +2518,8 @@ const RoundFormInterviews = () => {
                           name="interviewMode"
                           value={interviewMode}
                           options={[
-                            { value: "Face to Face", label: "Face to Face" },
                             { value: "Virtual", label: "Virtual" },
+                            { value: "Face to Face", label: "Face to Face" },
                           ]}
                           // onChange={(e) => {
                           //   setInterviewMode(e.target.value);
