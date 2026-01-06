@@ -2482,8 +2482,8 @@ const RoundFormInterviews = () => {
                           name="interviewMode"
                           value={interviewMode}
                           options={[
-                            { value: "Face to Face", label: "Face to Face" },
                             { value: "Virtual", label: "Virtual" },
+                            { value: "Face to Face", label: "Face to Face" },
                           ]}
                           // onChange={(e) => {
                           //   setInterviewMode(e.target.value);
