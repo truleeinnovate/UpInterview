@@ -209,7 +209,10 @@ const RoundFormInterviews = () => {
   // v1.0.2 <-----------------------------------------
 
   const { interviewId, roundId } = useParams();
-  const { data: interviewDetails } = useInterviewDetails(interviewId);
+
+  const { data: interviewDetails } = useInterviewDetails({
+    interviewId: interviewId,
+  });
   // const stateisReschedule = useLocation().state;
 
   const authToken = Cookies.get("authToken");

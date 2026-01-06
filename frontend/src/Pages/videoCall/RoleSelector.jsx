@@ -1,9 +1,8 @@
 // v1.0.0 - Ashok - Improved responsiveness
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   Users,
-  User,
   MessageSquare,
   Video,
   Mic,
@@ -11,15 +10,19 @@ import {
   VideoOff,
 } from "lucide-react";
 import { useMediaDevice } from "@videosdk.live/react-sdk";
-import { config } from "../../config";
 import { useInterviews } from "../../apiHooks/useInterviews";
+import { extractUrlData } from "../../apiHooks/useVideoCall";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // Determine which sections to show based on roleInfo
   // const showCandidateSection = !roleInfo?.hasRolePreference || roleInfo?.isCandidate;
   // const showInterviewerSection = !roleInfo?.hasRolePreference || roleInfo?.isInterviewer;
   // const isSingleRole = roleInfo?.hasRolePreference && (roleInfo?.isCandidate || roleInfo?.isInterviewer);
-  const { updateRoundStatus } = useInterviews();
+  const { updateRoundStatus, useInterviewDetails } = useInterviews();
+
+  const location = useLocation();
+
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [localInterviewTime, setLocalInterviewTime] = useState("");
@@ -34,13 +37,32 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   const videoTrackRef = useRef();
   const audioTrackRef = useRef();
   const micStreamRef = useRef();
-
   // Get media devices
   const { getCameras, getMicrophones, getPlaybackDevices } = useMediaDevice();
 
-  console.log("Feedback Data in RoleSelector:", feedbackData);
+  // Extract URL data once
+  const urlData = useMemo(
+    () => extractUrlData(location.search),
+    [location.search]
+  );
 
-  const currentStatus = feedbackData?.interviewRound?.status;
+  // console.log("urlData in RoleSelector:", urlData);
+
+  const { data, isLoading } = useInterviewDetails(
+    urlData.isCandidate ? { interviewRoundId: urlData.interviewRoundId } : {}
+  );
+
+  // const candidateData = data;
+
+  // const candidateData = data?.candidateId || {};
+  // const positionData = data?.positionId || {};
+  const interviewRoundData = data?.rounds[0] || {};
+
+  // console.log("candidateData", candidateData);
+
+  // console.log("Feedback Data in RoleSelector:", feedbackData);
+
+  const currentStatus = interviewRoundData?.status;
 
   const isFinalStatus = ["InProgress", "Scheduled", "Rescheduled"].includes(
     currentStatus
@@ -52,26 +74,26 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
       setIsUpdatingStatus(true);
 
       // Prepare the payload to update status to "in-progress"
-      const payload = {
-        interviewId: feedbackData?.interviewRound?.interviewId,
-        round: {
-          status: "InProgress",
-          startedAt: new Date(), // Add timestamp when interview started
-        },
-        roundId: feedbackData?.interviewRound?._id,
-        isEditing: true,
-      };
+      // const payload = {
+      //   interviewId: feedbackData?.interviewRound?.interviewId,
+      //   round: {
+      //     status: "InProgress",
+      //     startedAt: new Date(), // Add timestamp when interview started
+      //   },
+      //   roundId: feedbackData?.interviewRound?._id,
+      //   isEditing: true,
+      // };
 
       // const response = await axios.post(
       //   `${config.REACT_APP_API_URL}/interview/save-round`,
       //   payload
       // );
       const response = await updateRoundStatus({
-        roundId: feedbackData?.interviewRound?._id,
-        interviewId: feedbackData?.interviewRound?.interviewId,
+        roundId: interviewRoundData?._id,
+        interviewId: interviewRoundData?.interviewId,
         status: "InProgress",
       });
-      console.log("Status update response:", response);
+      // console.log("Status update response:", response);
 
       // toast.success("Interview marked as in progress", {});
     } catch (error) {
@@ -117,11 +139,11 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   };
 
   useEffect(() => {
-    if (!feedbackData?.interviewRound?.dateTime) return;
+    if (!interviewRoundData?.dateTime) return;
 
     // Parse start and end times from the interview data
     const { start: interviewStart, end: interviewEnd } = parseCustomDateTime(
-      feedbackData.interviewRound.dateTime
+      interviewRoundData?.dateTime
     );
     if (!interviewStart || !interviewEnd) return;
 
@@ -168,7 +190,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     const interval = setInterval(updateTimes, 60000); // Update every minute
 
     return () => clearInterval(interval);
-  }, [feedbackData?.interviewRound?.dateTime]);
+  }, [interviewRoundData?.dateTime]);
 
   const showCandidateSection =
     !roleInfo?.hasRolePreference || roleInfo?.isCandidate;
@@ -235,7 +257,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
   // Initialize video preview
   useEffect(() => {
-    if (feedbackData?.interviewRound?.meetPlatform !== "platform") return;
+    if (interviewRoundData?.meetPlatform !== "platform") return;
 
     let stream = null;
 
@@ -309,13 +331,13 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
       audioTrackRef.current = null;
       micStreamRef.current = null;
     };
-  }, [webcamOn, micOn, feedbackData?.interviewRound?.meetPlatform]);
+  }, [webcamOn, micOn, interviewRoundData?.meetPlatform]);
 
   return (
     <div className="bg-gradient-to-br from-[#217989] to-[#1a616e] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl py-8 sm:px-4 md:px-4 px-8 w-full max-w-8xl">
         <div className="text-center mb-6">
-          {feedbackData?.interviewRound?.meetPlatform === "platform" ? (
+          {interviewRoundData?.meetPlatform === "platform" ? (
             <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden mb-8 max-w-2xl mx-auto">
               <div className="relative aspect-video bg-black">
                 <video
@@ -378,7 +400,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
           <h1 className="sm:text-lg md:text-lg lg:text-lg xl:text-2xl 2xl:text-2xl font-bold text-gray-800">
             Interview Portal
           </h1>
-          {feedbackData?.interviewRound?.dateTime && (
+          {interviewRoundData?.dateTime && (
             <div className="mt-4 flex flex-col items-center">
               <div className="flex items-center justify-center gap-4 mb-2">
                 {/* Calendar Icon */}
@@ -423,7 +445,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                 {/* Date */}
                 <div className="sm:text-sm md:text-sm text-gray-600 font-medium mt-1">
                   {new Date(
-                    feedbackData.interviewRound.dateTime
+                    interviewRoundData?.dateTime
                       .split(" ")[0]
                       .split("-")
                       .reverse()
@@ -538,9 +560,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
               <button
                 onClick={() => {
-                  if (
-                    feedbackData?.interviewRound?.meetPlatform === "platform"
-                  ) {
+                  if (interviewRoundData?.meetPlatform === "platform") {
                     const currentUrl = new URL(window.location.href);
                     currentUrl.pathname = "/video-call";
                     const roleData = {
@@ -550,7 +570,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                     };
                     currentUrl.searchParams.set(
                       "meetLink",
-                      feedbackData?.interviewRound?.meetLink || ""
+                      interviewRoundData?.meetingId || ""
                     );
                     currentUrl.searchParams.set(
                       "meetingData",

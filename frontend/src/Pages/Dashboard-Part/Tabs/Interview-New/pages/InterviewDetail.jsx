@@ -62,8 +62,7 @@ const InterviewDetail = () => {
     error,
   } = useInterviews(id);
 
-  const { data, isLoading } = useInterviewDetails(id);
-
+  const { data, isLoading } = useInterviewDetails({ interviewId: id });
   // const interview = data || {};
   const interview = useMemo(() => data ?? null, [data]);
 
@@ -186,8 +185,9 @@ const InterviewDetail = () => {
 
       setStatusModal({
         isOpen: true,
-        title: `Cannot ${action.charAt(0).toUpperCase() + action.slice(1)
-          } Interview`,
+        title: `Cannot ${
+          action.charAt(0).toUpperCase() + action.slice(1)
+        } Interview`,
         message: `The following rounds are not in a completed state:<ul class="list-disc pl-5 mt-2 mb-3">${roundItems}</ul>Please update all rounds to a completed state (Completed, Cancelled, Selected, or Rejected) before ${action.toLowerCase()} the interview.`,
         isHTML: true,
       });
@@ -427,7 +427,8 @@ const InterviewDetail = () => {
     } catch (error) {
       console.error("Error updating interview status:", error);
       notify.error(
-        `Failed to update status: ${error.response?.data?.message || error.message
+        `Failed to update status: ${
+          error.response?.data?.message || error.message
         }`
       );
       return false;
@@ -620,7 +621,7 @@ const InterviewDetail = () => {
                         <div className="font-medium">
                           {candidate?.LastName
                             ? candidate.LastName.charAt(0).toUpperCase() +
-                            candidate.LastName.slice(1)
+                              candidate.LastName.slice(1)
                             : "Unknown"}
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
@@ -665,7 +666,7 @@ const InterviewDetail = () => {
                     <div className="font-medium">
                       {position?.title
                         ? position.title.charAt(0).toUpperCase() +
-                        position.title.slice(1)
+                          position.title.slice(1)
                         : "Unknown"}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
@@ -704,8 +705,8 @@ const InterviewDetail = () => {
                       {position?.roundsModified
                         ? "Selected Custom round"
                         : template?.title
-                          ? capitalizeFirstLetter(template?.title)
-                          : //  template.templateName.charAt(0).toUpperCase() +
+                        ? capitalizeFirstLetter(template?.title)
+                        : //  template.templateName.charAt(0).toUpperCase() +
                           //   template.templateName.slice(1)
                           "Not selected any template"}
                     </div>
