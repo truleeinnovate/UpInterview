@@ -82,7 +82,7 @@ const MockSchedulelater = () => {
     loadCurrentRoles,
     isCurrentRolesFetching,
   } = useMasterData({}, pageType);
-  const { addOrUpdateMockInterview, isMutationLoading } = useMockInterviews();
+  const { saveMockInterview, saveMockRound, isMutationLoading } = useMockInterviews();
   const { id } = useParams();
   const navigate = useNavigate();
   const { mockInterview } = useMockInterviewById(id);
@@ -116,9 +116,11 @@ const MockSchedulelater = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMeetingPlatform, setSelectedMeetingPlatform] =
-    useState("zoom"); // Default to Google Meet googlemeet
+    useState("platform"); // Default to Google Meet googlemeet
   // const [meetingCreationProgress, setMeetingCreationProgress] = useState("");
-
+  const [meetingCreationProgress, setMeetingCreationProgress] = useState("");
+  const [isMeetingCreationLoading, setIsMeetingCreationLoading] =
+    useState(false);
   const [interviewType, setInterviewType] = useState("scheduled");
   const [combinedDateTime, setCombinedDateTime] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
@@ -213,9 +215,8 @@ const MockSchedulelater = () => {
       const contact = singleContact;
       setFormData((prev) => ({
         ...prev,
-        candidateName: `${contact.firstName || ""} ${
-          contact.lastName || ""
-        }`.trim(),
+        candidateName: `${contact.firstName || ""} ${contact.lastName || ""
+          }`.trim(),
         higherQualification: contact.HigherQualification || "",
         currentExperience: contact.yearsOfExperience || "",
         // technology: contact.technologies?.[0] || "",
@@ -236,15 +237,23 @@ const MockSchedulelater = () => {
         // console.log("MockEditData", MockEditData);
 
         // Map interviewers to externalInterviewers format
-        const formattedInterviewers =
-          MockEditData.rounds?.[0]?.interviewers?.map((interviewer) => ({
-            _id: interviewer._id,
-            name:
-              interviewer.contact?.Name ||
-              `${interviewer?.firstName || ""} ${
-                interviewer?.lastName || ""
-              }`.trim(),
-          })) || [];
+        // === THIS IS THE ONLY PART YOU NEED TO CHANGE ===
+        const formattedInterviewers = MockEditData.rounds?.[0]?.interviewers?.map((interviewer) => {
+          // Handle both cases: with .contact or direct fields
+          const contact = interviewer.contact || interviewer;
+
+          return {
+            _id: interviewer._id || interviewer.id,
+            name: contact.Name ||
+              `${contact.firstName || ""} ${contact.lastName || ""}`.trim() ||
+              "Unknown Interviewer",
+            // Optional: keep full data if you need it later
+            contact: contact,
+            firstName: contact.firstName || "",
+            lastName: contact.lastName || "",
+            email: contact.email || "",
+          };
+        }) || [];
 
         setExternalInterviewers(formattedInterviewers);
         // setSelectedInterviewType(formattedInterviewers.length > 0 ? "external" : "scheduled");
@@ -445,112 +454,522 @@ const MockSchedulelater = () => {
   const [createdMockInterviewId, setCreatedMockInterviewId] = useState(null);
 
   // 1. Fix handleNext function
+  // const handleNext = async () => {
+  //   setShowSkillValidation(true);
+
+  //   const { formIsValid, newErrors } = validatePage1(formData);
+  //   setErrors(newErrors);
+  //   scrollToFirstError(newErrors, fieldRefs);
+
+  //   if (!formIsValid) {
+  //     return;
+  //   }
+
+  //   // Prevent multiple clicks
+  //   if (isSubmitting) return;
+  //   setIsSubmitting(true);
+
+  //   try {
+  //     // ✅ FIX: Prepare Page 1 data WITHOUT rounds
+  //     const page1Data = {
+  //       // skills: entries,
+  //       skills: formData.skills,
+  //       candidateName: formData.candidateName,
+  //       higherQualification: formData.higherQualification,
+  //       currentExperience: formData.currentExperience,
+  //       // technology: formData.technology,
+  //       jobDescription: formData.jobDescription,
+  //       currentRole: formData.currentRole,
+  //       ownerId: userId,
+  //       tenantId: organizationId,
+  //       createdById: userId,
+  //       lastModifiedById: userId,
+  //       // ✅ Don't include rounds for Page 1
+  //     };
+
+  //     // If editing existing mock interview, use that ID
+  //     const mockIdToUse = mockEdit ? id : createdMockInterviewId;
+
+  //     // Call API to save/update Page 1 data
+  //     const response = await addOrUpdateMockInterview({
+  //       formData: page1Data,
+  //       id: mockIdToUse,
+  //       isEdit: mockEdit || !!createdMockInterviewId,
+  //       userId,
+  //       organizationId,
+  //       resume,
+  //       isResumeRemoved,
+  //     });
+
+  //     // Extract the mock interview ID from response
+  //     const savedMockId =
+  //       response?.data?.mockInterview?._id ||
+  //       response?._id ||
+  //       response?.data?._id;
+
+  //     if (!savedMockId) {
+  //       notify.error("Failed to save mock interview data");
+  //       setIsSubmitting(false);
+  //       return;
+  //     }
+
+  //     if (response?.data?.mockInterview) {
+  //       const savedData = response.data.mockInterview;
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         // Preserve all current form data and update with any changes from server
+  //         higherQualification:
+  //           savedData.higherQualification || prev.higherQualification,
+  //         // technology: savedData.technology || prev.technology,
+  //         currentRole: savedData.currentRole || prev.currentRole,
+  //         // Keep other fields as they are
+  //       }));
+  //     }
+
+  //     // Store the created ID for use in Page 2
+  //     if (!mockEdit && !createdMockInterviewId) {
+  //       setCreatedMockInterviewId(savedMockId);
+  //     }
+
+  //     //   notify.success("Candidate details saved successfully");
+  //     setCurrentPage(2);
+  //     setIsSubmitting(false);
+
+  //     // Scroll to top when moving to page 2
+  //     setTimeout(() => {
+  //       window.scrollTo({ top: 0, behavior: "smooth" });
+  //     }, 100);
+  //     setIsSubmitting(false);
+  //     // setIsSubmitting(false);
+  //   } catch (error) {
+  //     notify.error("Failed to save candidate details");
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  const selectedInterviewers = externalInterviewers;
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   // Show skills validation when submit is attempted
+  //   setShowSkillValidation(true);
+
+  //   const { formIsValid, newErrors } = validatemockForm(
+  //     formData,
+  //     formData.skills,
+  //     errors
+  //   );
+  //   setErrors(newErrors);
+
+  //   if (!formIsValid) {
+  //     scrollToFirstError(newErrors, fieldRefs);
+  //     notify.error("Please fix the form errors before submitting");
+  //     return;
+  //   }
+
+  //   const interviewerIds = externalInterviewers
+  //     .filter((interviewer) => interviewer && interviewer._id)
+  //     .map((interviewer) => interviewer?._id);
+
+  //   if (selectedInterviewType === "external" && interviewerIds.length === 0) {
+  //     setErrors((prev) => ({
+  //       ...prev,
+  //       interviewers: "At least one interviewer must be selected",
+  //     }));
+
+  //     notify.error("At least one interviewer must be selected");
+  //     return;
+  //   }
+  //   // Set loading state
+  //   setIsSubmitting(true);
+  //   // Use the ID from Page 1 save, or edit ID, or create new
+  //   const mockIdToUse = mockEdit ? id : createdMockInterviewId;
+
+  //   // ✅ FIX: Properly structure the rounds data for Page 2
+  //   const updatedFormData = {
+  //     ...formData,
+  //     skills: formData.skills, // Ensure skills from formData are included
+  //     rounds: [
+  //       {
+  //         ...formData.rounds,
+  //         sequence: 1, // Always set sequence for new rounds
+  //         status: selectedInterviewers.length > 0 ? "RequestSent" : "Draft",
+  //         // interviewers: interviewerIds,
+  //         interviewType: interviewType,
+  //         dateTime: combinedDateTime,
+  //         interviewerType: "external",
+  //       },
+  //     ],
+  //     ownerId: userId,
+  //     tenantId: organizationId,
+  //     createdById: userId,
+  //     lastModifiedById: userId,
+  //   };
+
+  //   try {
+  //     // 🔹 STEP 1: Save the mock interview with rounds
+  //     let mockInterviewResponse = await addOrUpdateMockInterview({
+  //       formData: updatedFormData,
+  //       id: mockIdToUse,
+  //       isEdit: mockEdit || !!createdMockInterviewId,
+  //       userId,
+  //       organizationId,
+  //       resume,
+  //       isResumeRemoved,
+  //     });
+
+  //     // Check if the response indicates success
+  //     if (
+  //       !mockInterviewResponse ||
+  //       (!mockInterviewResponse.success &&
+  //         !mockInterviewResponse.data &&
+  //         !mockInterviewResponse._id)
+  //     ) {
+  //       notify.error("Failed to save interview details");
+  //       setIsSubmitting(false);
+
+  //       return;
+  //     }
+
+  //     // 🔹 STEP 2: Get the created mock interview ID and round data
+  //     const mockInterviewId =
+  //       mockInterviewResponse?.data?.mockInterview?._id ||
+  //       mockInterviewResponse?._id ||
+  //       mockInterviewResponse?.data?._id ||
+  //       mockIdToUse;
+
+  //     const roundData =
+  //       mockInterviewResponse?.data?.rounds?.[0] ||
+  //       mockInterviewResponse?.rounds?.[0];
+
+  //     if (!mockInterviewId) {
+  //       notify.error("Failed to get interview details after saving");
+  //       setIsSubmitting(false);
+  //       return;
+  //     }
+
+  //     // 🔹 STEP 3: Handle outsource requests if interviewers selected
+  //     if (
+  //       selectedInterviewers &&
+  //       selectedInterviewers.length > 0 &&
+  //       roundData
+  //     ) {
+  //       try {
+  //         for (const interviewer of selectedInterviewers) {
+  //           const outsourceRequestData = {
+  //             roundId: roundData._id, // Use the actual round ID from response
+  //             tenantId: organizationId,
+  //             ownerId: userId,
+  //             interviewerType: "external",
+  //             interviewerId: interviewer.contact?._id || interviewer._id,
+  //             status: "RequestSent",
+  //             dateTime: combinedDateTime,
+  //             duration: formData.rounds.duration,
+  //             contactId: singleContact?.contactId,
+  //             isMockInterview: true,
+  //             requestMessage: "Outsource interview request",
+  //             expiryDateTime: new Date(
+  //               Date.now() + 24 * 60 * 60 * 1000
+  //             ).toISOString(),
+  //           };
+
+  //           await axios.post(
+  //             `${config.REACT_APP_API_URL}/interviewrequest`,
+  //             outsourceRequestData,
+  //             {
+  //               headers: {
+  //                 "Content-Type": "application/json",
+  //                 Authorization: `Bearer ${Cookies.get("authToken")}`,
+  //               },
+  //             }
+  //           );
+  //         }
+
+  //         // Send outsource interview request emails
+  //         if (selectedInterviewers.length > 0) {
+  //           try {
+  //             const interviewerIds = selectedInterviewers.map(
+  //               (interviewer) => interviewer.contact?._id || interviewer._id
+  //             );
+
+  //             const emailResponse = await axios.post(
+  //               `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
+  //               {
+  //                 interviewId: mockInterviewId,
+  //                 roundId: roundData._id,
+  //                 interviewerIds: interviewerIds,
+  //                 type: "mockinterview",
+  //               },
+  //               {
+  //                 headers: {
+  //                   "Content-Type": "application/json",
+  //                   Authorization: `Bearer ${Cookies.get("authToken")}`,
+  //                 },
+  //               }
+  //             );
+
+  //             if (emailResponse.data.success) {
+  //               if (emailResponse.data.data.failedEmails > 0) {
+  //                 console.warn(
+  //                   `${emailResponse.data.data.failedEmails} emails failed to send`
+  //                 );
+  //               }
+  //             } else {
+  //               console.error(
+  //                 "Failed to send outsource interview request emails"
+  //               );
+  //             }
+  //           } catch (emailError) {
+  //             console.error(
+  //               "Error sending outsource interview request emails:",
+  //               emailError
+  //             );
+  //           }
+  //         }
+  //       } catch (outsourceError) {
+  //         // console.error("Error in outsource requests:", outsourceError);
+  //         notify.error("Failed to send interview requests");
+  //         setIsSubmitting(false);
+  //         return;
+  //       }
+  //     }
+
+  //     // 🔹 STEP 4: Create meeting if needed
+  //     const shouldCreateMeeting =
+  //       !mockEdit &&
+  //       formData.rounds.interviewMode === "Virtual" &&
+  //       externalInterviewers.length > 0;
+
+  //     if (shouldCreateMeeting && roundData) {
+  //       let meetingLink;
+  //       try {
+  //         if (selectedMeetingPlatform === "google-meet") {
+  //           meetingLink = await createMeeting(
+  //             "googlemeet",
+  //             {
+  //               roundTitle: roundData.roundTitle,
+  //               instructions: roundData.instructions,
+  //               combinedDateTime: roundData.dateTime,
+  //               duration: roundData.duration,
+  //               selectedInterviewers: roundData.interviewers,
+  //             }
+  //             // (progress) => {
+  //             //   setMeetingCreationProgress(progress);
+  //             // }
+  //           );
+  //         } else if (selectedMeetingPlatform === "zoom") {
+  //           // Zoom meeting creation logic...
+  //           function formatStartTimeToUTC(startTimeStr) {
+  //             if (!startTimeStr) return undefined;
+  //             try {
+  //               const parsed = new Date(startTimeStr);
+  //               if (isNaN(parsed.getTime())) throw new Error("Invalid date");
+
+  //               const year = parsed.getUTCFullYear();
+  //               const month = String(parsed.getUTCMonth() + 1).padStart(2, "0");
+  //               const day = String(parsed.getUTCDate()).padStart(2, "0");
+  //               const hours = String(parsed.getUTCHours()).padStart(2, "0");
+  //               const minutes = String(parsed.getUTCMinutes()).padStart(2, "0");
+  //               const seconds = String(parsed.getUTCSeconds()).padStart(2, "0");
+
+  //               return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  //             } catch (error) {
+  //               // console.error("Error parsing date:", error);
+  //               return undefined;
+  //             }
+  //           }
+
+  //           const [startStr] = roundData.dateTime?.split(" - ") || [];
+  //           const formattedStartTime = formatStartTimeToUTC(
+  //             parseCustomDateTime(startStr)
+  //           );
+
+  //           const payloads = {
+  //             topic: roundData.roundTitle,
+  //             duration: Number(roundData.duration),
+  //             userId: undefined,
+  //             ...(formattedStartTime && {
+  //               start_time: formattedStartTime,
+  //               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  //             }),
+  //             settings: {
+  //               join_before_host: true,
+  //               host_video: false,
+  //               participant_video: false,
+  //             },
+  //           };
+
+  //           meetingLink = await createMeeting(
+  //             "zoommeet",
+  //             { payload: payloads }
+  //             // (progress) => {
+  //             //   setMeetingCreationProgress(progress);
+  //             // }
+  //           );
+  //         }
+
+  //         // Update the round with meeting link
+  //         if (meetingLink) {
+  //           const updateRoundData = {
+  //             _id: roundData._id, // Include round ID for update
+  //             sequence: roundData.sequence,
+  //             roundTitle: roundData.roundTitle,
+  //             interviewMode: roundData.interviewMode,
+  //             interviewType: roundData.interviewType,
+  //             interviewerType: roundData.interviewerType,
+  //             duration: roundData.duration,
+  //             instructions: roundData.instructions,
+  //             dateTime: roundData.dateTime,
+  //             status: roundData.status,
+  //             interviewers: roundData.interviewers,
+  //             meetingId:
+  //               meetingLink.join_url || meetingLink.hangoutLink || meetingLink,
+  //           };
+
+  //           // Use the mutation to update just the round
+  //           await addOrUpdateMockInterview({
+  //             formData: {
+  //               ...mockInterviewResponse?.data?.mockInterview,
+  //               rounds: [updateRoundData],
+  //               isEdit: true,
+  //             },
+  //             //   round: updateRoundData,
+  //             id: mockInterviewId,
+  //             isEdit: true,
+  //             userId,
+  //             organizationId,
+  //           });
+  //         }
+  //       } catch (meetingError) {
+  //         console.error("Error creating meeting:", meetingError);
+  //         // console.warn(
+  //         //   "Meeting creation failed, but continuing with interview creation"
+  //         // );
+  //       }
+  //     }
+
+  //     // Clear all form data
+  //     setFormData({
+  //       skills: [],
+  //       candidateName: "",
+  //       higherQualification: "",
+  //       currentExperience: "",
+  //       // technology: "",
+  //       jobDescription: "",
+  //       currentRole: "",
+  //       rounds: {
+  //         roundTitle: "",
+  //         interviewMode: "",
+  //         duration: "",
+  //         instructions: "",
+  //         interviewType: "",
+  //         interviewers: [],
+  //         status: "",
+  //         dateTime: "",
+  //       },
+  //     });
+  //     setExternalInterviewers([]);
+  //     setSelectedInterviewType(null);
+  //     setShowSkillValidation(false);
+  //     setEntries([]);
+  //     setCreatedMockInterviewId(null);
+  //     setCurrentPage(1);
+  //     setScheduledDate("");
+  //     setCombinedDateTime("");
+  //     setResume(null);
+  //     setFileName("");
+  //     setIsResumeRemoved(false);
+
+  //     // Navigate and show success message
+  //     navigate("/mock-interview");
+  //     setTimeout(() => {
+  //       notify.success(
+  //         mockEdit
+  //           ? "Mock interview updated successfully!"
+  //           : "Mock interview created successfully!"
+  //       );
+  //       setIsSubmitting(false);
+  //       // setMeetingCreationProgress("");
+  //     }, 100);
+  //   } catch (error) {
+  //     setIsSubmitting(false);
+  //     // setMeetingCreationProgress("");
+  //     let errorMessage = "Failed to save interview. Please try again.";
+
+  //     if (error.response?.status === 500) {
+  //       errorMessage =
+  //         "Server error. Please try again later or contact support.";
+  //     } else if (error.response?.status === 400) {
+  //       errorMessage = "Invalid data. Please check your input and try again.";
+  //     }
+
+  //     setErrors((prev) => ({
+  //       ...prev,
+  //       submit: errorMessage,
+  //     }));
+  //     notify.error(errorMessage);
+  //   }
+  // };
+
+
+  // Page 1: Save only candidate/mock details
   const handleNext = async () => {
     setShowSkillValidation(true);
-
     const { formIsValid, newErrors } = validatePage1(formData);
     setErrors(newErrors);
     scrollToFirstError(newErrors, fieldRefs);
 
-    if (!formIsValid) {
-      return;
-    }
+    if (!formIsValid) return;
 
-    // Prevent multiple clicks
-    if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
-      // ✅ FIX: Prepare Page 1 data WITHOUT rounds
-      const page1Data = {
-        // skills: entries,
-        skills: formData.skills,
-        candidateName: formData.candidateName,
-        higherQualification: formData.higherQualification,
-        currentExperience: formData.currentExperience,
-        // technology: formData.technology,
-        jobDescription: formData.jobDescription,
-        currentRole: formData.currentRole,
-        ownerId: userId,
-        tenantId: organizationId,
-        createdById: userId,
-        lastModifiedById: userId,
-        // ✅ Don't include rounds for Page 1
-      };
-
-      // If editing existing mock interview, use that ID
-      const mockIdToUse = mockEdit ? id : createdMockInterviewId;
-
-      // Call API to save/update Page 1 data
-      const response = await addOrUpdateMockInterview({
-        formData: page1Data,
-        id: mockIdToUse,
-        isEdit: mockEdit || !!createdMockInterviewId,
+      const response = await saveMockInterview({
+        formData: {
+          skills: formData.skills,
+          candidateName: formData.candidateName,
+          higherQualification: formData.higherQualification,
+          currentExperience: formData.currentExperience,
+          currentRole: formData.currentRole,
+          jobDescription: formData.jobDescription,
+        },
+        id: mockEdit ? id : null,
         userId,
         organizationId,
         resume,
         isResumeRemoved,
       });
 
-      // Extract the mock interview ID from response
+      // FIX: Correct path to _id
       const savedMockId =
         response?.data?.mockInterview?._id ||
-        response?._id ||
-        response?.data?._id;
+        response?.data?._id ||
+        response?._id;
 
       if (!savedMockId) {
-        notify.error("Failed to save mock interview data");
-        setIsSubmitting(false);
-        return;
+        throw new Error("Failed to get mock interview ID from response");
       }
 
-      if (response?.data?.mockInterview) {
-        const savedData = response.data.mockInterview;
-        setFormData((prev) => ({
-          ...prev,
-          // Preserve all current form data and update with any changes from server
-          higherQualification:
-            savedData.higherQualification || prev.higherQualification,
-          // technology: savedData.technology || prev.technology,
-          currentRole: savedData.currentRole || prev.currentRole,
-          // Keep other fields as they are
-        }));
-      }
-
-      // Store the created ID for use in Page 2
-      if (!mockEdit && !createdMockInterviewId) {
+      if (!mockEdit) {
         setCreatedMockInterviewId(savedMockId);
+        console.log("Created Mock ID saved:", savedMockId); // Debug log
       }
 
-      //   notify.success("Candidate details saved successfully");
       setCurrentPage(2);
-      setIsSubmitting(false);
-
-      // Scroll to top when moving to page 2
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }, 100);
-      setIsSubmitting(false);
-      // setIsSubmitting(false);
     } catch (error) {
       notify.error("Failed to save candidate details");
+    } finally {
       setIsSubmitting(false);
     }
   };
 
-  const selectedInterviewers = externalInterviewers;
-
+  // Page 2: Save round + create meeting
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Show skills validation when submit is attempted
     setShowSkillValidation(true);
-
-    const { formIsValid, newErrors } = validatemockForm(
-      formData,
-      formData.skills,
-      errors
-    );
+    const { formIsValid, newErrors } = validatemockForm(formData, formData.skills, errors);
     setErrors(newErrors);
 
     if (!formIsValid) {
@@ -559,349 +978,112 @@ const MockSchedulelater = () => {
       return;
     }
 
-    const interviewerIds = externalInterviewers
-      .filter((interviewer) => interviewer && interviewer._id)
-      .map((interviewer) => interviewer?._id);
-
-    if (selectedInterviewType === "external" && interviewerIds.length === 0) {
-      setErrors((prev) => ({
-        ...prev,
-        interviewers: "At least one interviewer must be selected",
-      }));
-
+    if (externalInterviewers.length === 0) {
       notify.error("At least one interviewer must be selected");
       return;
     }
-    // Set loading state
-    setIsSubmitting(true);
-    // Use the ID from Page 1 save, or edit ID, or create new
-    const mockIdToUse = mockEdit ? id : createdMockInterviewId;
 
-    // ✅ FIX: Properly structure the rounds data for Page 2
-    const updatedFormData = {
-      ...formData,
-      skills: formData.skills, // Ensure skills from formData are included
-      rounds: [
-        {
-          ...formData.rounds,
-          sequence: 1, // Always set sequence for new rounds
-          status: selectedInterviewers.length > 0 ? "RequestSent" : "Draft",
-          // interviewers: interviewerIds,
-          interviewType: interviewType,
-          dateTime: combinedDateTime,
-          interviewerType: "external",
-        },
-      ],
-      ownerId: userId,
-      tenantId: organizationId,
-      createdById: userId,
-      lastModifiedById: userId,
-    };
+    setIsSubmitting(true);
+
+    const mockId = mockEdit ? id : createdMockInterviewId;
+    if (!mockId) {
+      notify.error("Please save candidate details first");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const existingRoundId = mockEdit ? formData.rounds.id : null;
 
     try {
-      // 🔹 STEP 1: Save the mock interview with rounds
-      let mockInterviewResponse = await addOrUpdateMockInterview({
-        formData: updatedFormData,
-        id: mockIdToUse,
-        isEdit: mockEdit || !!createdMockInterviewId,
-        userId,
-        organizationId,
-        resume,
-        isResumeRemoved,
+      // Step 1: Save/Update Round
+      const roundResponse = await saveMockRound({
+        mockInterviewId: mockId,
+        round: {
+          roundTitle: formData.rounds.roundTitle || "Technical Round",
+          interviewMode: formData.rounds.interviewMode || "Virtual",
+          interviewType: interviewType,
+          duration: formData.rounds.duration || "60",
+          instructions: formData.rounds.instructions || "",
+          dateTime: combinedDateTime,
+          selectedInterviewers: externalInterviewers,
+        },
+        roundId: existingRoundId,
       });
 
-      // Check if the response indicates success
-      if (
-        !mockInterviewResponse ||
-        (!mockInterviewResponse.success &&
-          !mockInterviewResponse.data &&
-          !mockInterviewResponse._id)
-      ) {
-        notify.error("Failed to save interview details");
-        setIsSubmitting(false);
+      const savedRound = roundResponse.data?.round;
+      const generateMeetingLink = roundResponse.generateMeetingLink === true;
 
-        return;
-      }
+      // Step 2: Create Meeting if required
+      if (generateMeetingLink && formData.rounds.interviewMode === "Virtual") {
+        let meetingLink = null;
 
-      // 🔹 STEP 2: Get the created mock interview ID and round data
-      const mockInterviewId =
-        mockInterviewResponse?.data?.mockInterview?._id ||
-        mockInterviewResponse?._id ||
-        mockInterviewResponse?.data?._id ||
-        mockIdToUse;
-
-      const roundData =
-        mockInterviewResponse?.data?.rounds?.[0] ||
-        mockInterviewResponse?.rounds?.[0];
-
-      if (!mockInterviewId) {
-        notify.error("Failed to get interview details after saving");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // 🔹 STEP 3: Handle outsource requests if interviewers selected
-      if (
-        selectedInterviewers &&
-        selectedInterviewers.length > 0 &&
-        roundData
-      ) {
         try {
-          for (const interviewer of selectedInterviewers) {
-            const outsourceRequestData = {
-              roundId: roundData._id, // Use the actual round ID from response
-              tenantId: organizationId,
-              ownerId: userId,
-              interviewerType: "external",
-              interviewerId: interviewer.contact?._id || interviewer._id,
-              status: "RequestSent",
-              dateTime: combinedDateTime,
-              duration: formData.rounds.duration,
-              contactId: singleContact?.contactId,
-              isMockInterview: true,
-              requestMessage: "Outsource interview request",
-              expiryDateTime: new Date(
-                Date.now() + 24 * 60 * 60 * 1000
-              ).toISOString(),
-            };
+          const { createMeeting } = await import("../../../../utils/meetingPlatforms.js");
 
-            await axios.post(
-              `${config.REACT_APP_API_URL}/interviewrequest`,
-              outsourceRequestData,
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${Cookies.get("authToken")}`,
-                },
-              }
-            );
-          }
-
-          // Send outsource interview request emails
-          if (selectedInterviewers.length > 0) {
-            try {
-              const interviewerIds = selectedInterviewers.map(
-                (interviewer) => interviewer.contact?._id || interviewer._id
-              );
-
-              const emailResponse = await axios.post(
-                `${config.REACT_APP_API_URL}/emails/interview/outsource-request-emails`,
-                {
-                  interviewId: mockInterviewId,
-                  roundId: roundData._id,
-                  interviewerIds: interviewerIds,
-                  type: "mockinterview",
-                },
-                {
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${Cookies.get("authToken")}`,
-                  },
-                }
-              );
-
-              if (emailResponse.data.success) {
-                if (emailResponse.data.data.failedEmails > 0) {
-                  console.warn(
-                    `${emailResponse.data.data.failedEmails} emails failed to send`
-                  );
-                }
-              } else {
-                console.error(
-                  "Failed to send outsource interview request emails"
-                );
-              }
-            } catch (emailError) {
-              console.error(
-                "Error sending outsource interview request emails:",
-                emailError
-              );
-            }
-          }
-        } catch (outsourceError) {
-          // console.error("Error in outsource requests:", outsourceError);
-          notify.error("Failed to send interview requests");
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
-      // 🔹 STEP 4: Create meeting if needed
-      const shouldCreateMeeting =
-        !mockEdit &&
-        formData.rounds.interviewMode === "Virtual" &&
-        externalInterviewers.length > 0;
-
-      if (shouldCreateMeeting && roundData) {
-        let meetingLink;
-        try {
           if (selectedMeetingPlatform === "google-meet") {
-            meetingLink = await createMeeting(
-              "googlemeet",
-              {
-                roundTitle: roundData.roundTitle,
-                instructions: roundData.instructions,
-                combinedDateTime: roundData.dateTime,
-                duration: roundData.duration,
-                selectedInterviewers: roundData.interviewers,
-              }
-              // (progress) => {
-              //   setMeetingCreationProgress(progress);
-              // }
-            );
+            meetingLink = await createMeeting("googlemeet", {
+              roundTitle: savedRound.roundTitle,
+              instructions: savedRound.instructions,
+              combinedDateTime: savedRound.dateTime,
+              duration: savedRound.duration,
+              selectedInterviewers: savedRound.interviewers,
+            });
           } else if (selectedMeetingPlatform === "zoom") {
-            // Zoom meeting creation logic...
-            function formatStartTimeToUTC(startTimeStr) {
-              if (!startTimeStr) return undefined;
-              try {
-                const parsed = new Date(startTimeStr);
-                if (isNaN(parsed.getTime())) throw new Error("Invalid date");
+            const formatStartTimeForZoom = (str) => {
+              if (!str) return null;
+              const [datePart, timePart, meridiem] = str.split(" ");
+              const [day, month, year] = datePart.split("-").map(Number);
+              let [hours, minutes] = timePart.split(":").map(Number);
+              if (meridiem === "PM" && hours !== 12) hours += 12;
+              if (meridiem === "AM" && hours === 12) hours = 0;
 
-                const year = parsed.getUTCFullYear();
-                const month = String(parsed.getUTCMonth() + 1).padStart(2, "0");
-                const day = String(parsed.getUTCDate()).padStart(2, "0");
-                const hours = String(parsed.getUTCHours()).padStart(2, "0");
-                const minutes = String(parsed.getUTCMinutes()).padStart(2, "0");
-                const seconds = String(parsed.getUTCSeconds()).padStart(2, "0");
-
-                return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-              } catch (error) {
-                // console.error("Error parsing date:", error);
-                return undefined;
-              }
-            }
-
-            const [startStr] = roundData.dateTime?.split(" - ") || [];
-            const formattedStartTime = formatStartTimeToUTC(
-              parseCustomDateTime(startStr)
-            );
-
-            const payloads = {
-              topic: roundData.roundTitle,
-              duration: Number(roundData.duration),
-              userId: undefined,
-              ...(formattedStartTime && {
-                start_time: formattedStartTime,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-              }),
-              settings: {
-                join_before_host: true,
-                host_video: false,
-                participant_video: false,
-              },
+              const date = new Date(year, month - 1, day, hours, minutes);
+              const minFuture = new Date(Date.now() + 15 * 60 * 1000);
+              return (date < minFuture ? minFuture : date).toISOString().slice(0, 19);
             };
 
-            meetingLink = await createMeeting(
-              "zoommeet",
-              { payload: payloads }
-              // (progress) => {
-              //   setMeetingCreationProgress(progress);
-              // }
-            );
+            const startTime = formatStartTimeForZoom(combinedDateTime);
+            const payload = {
+              topic: savedRound.roundTitle,
+              duration: Number(savedRound.duration),
+              type: 2,
+              ...(startTime && { start_time: startTime }),
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              settings: { join_before_host: true, host_video: false, participant_video: false },
+            };
+
+            meetingLink = await createMeeting("zoommeet", { payload });
           }
 
-          // Update the round with meeting link
           if (meetingLink) {
-            const updateRoundData = {
-              _id: roundData._id, // Include round ID for update
-              sequence: roundData.sequence,
-              roundTitle: roundData.roundTitle,
-              interviewMode: roundData.interviewMode,
-              interviewType: roundData.interviewType,
-              interviewerType: roundData.interviewerType,
-              duration: roundData.duration,
-              instructions: roundData.instructions,
-              dateTime: roundData.dateTime,
-              status: roundData.status,
-              interviewers: roundData.interviewers,
-              meetingId:
-                meetingLink.join_url || meetingLink.hangoutLink || meetingLink,
-            };
-
-            // Use the mutation to update just the round
-            await addOrUpdateMockInterview({
-              formData: {
-                ...mockInterviewResponse?.data?.mockInterview,
-                rounds: [updateRoundData],
-                isEdit: true,
+            await saveMockRound({
+              mockInterviewId: mockId,
+              round: {
+                meetingId: meetingLink.join_url || meetingLink.start_url || meetingLink.hangoutLink || meetingLink,
+                meetPlatform: selectedMeetingPlatform,
               },
-              //   round: updateRoundData,
-              id: mockInterviewId,
-              isEdit: true,
-              userId,
-              organizationId,
+              interviewers: [],
+              roundId: savedRound._id,
             });
           }
-        } catch (meetingError) {
-          console.error("Error creating meeting:", meetingError);
-          // console.warn(
-          //   "Meeting creation failed, but continuing with interview creation"
-          // );
+        } catch (err) {
+          console.error("Meeting creation failed:", err);
+          notify.warn("Saved successfully, but meeting link could not be created.");
         }
       }
 
-      // Clear all form data
-      setFormData({
-        skills: [],
-        candidateName: "",
-        higherQualification: "",
-        currentExperience: "",
-        // technology: "",
-        jobDescription: "",
-        currentRole: "",
-        rounds: {
-          roundTitle: "",
-          interviewMode: "",
-          duration: "",
-          instructions: "",
-          interviewType: "",
-          interviewers: [],
-          status: "",
-          dateTime: "",
-        },
-      });
-      setExternalInterviewers([]);
-      setSelectedInterviewType(null);
-      setShowSkillValidation(false);
-      setEntries([]);
-      setCreatedMockInterviewId(null);
-      setCurrentPage(1);
-      setScheduledDate("");
-      setCombinedDateTime("");
-      setResume(null);
-      setFileName("");
-      setIsResumeRemoved(false);
-
-      // Navigate and show success message
+      notify.success(mockEdit ? "Mock interview updated!" : "Mock interview scheduled!");
       navigate("/mock-interview");
-      setTimeout(() => {
-        notify.success(
-          mockEdit
-            ? "Mock interview updated successfully!"
-            : "Mock interview created successfully!"
-        );
-        setIsSubmitting(false);
-        // setMeetingCreationProgress("");
-      }, 100);
+
+      // Reset form...
     } catch (error) {
+      console.error("Error:", error);
+      notify.error(error.response?.data?.message || "Failed to save mock interview");
+    } finally {
       setIsSubmitting(false);
-      // setMeetingCreationProgress("");
-      let errorMessage = "Failed to save interview. Please try again.";
-
-      if (error.response?.status === 500) {
-        errorMessage =
-          "Server error. Please try again later or contact support.";
-      } else if (error.response?.status === 400) {
-        errorMessage = "Invalid data. Please check your input and try again.";
-      }
-
-      setErrors((prev) => ({
-        ...prev,
-        submit: errorMessage,
-      }));
-      notify.error(errorMessage);
     }
   };
+
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
@@ -1333,9 +1515,8 @@ const MockSchedulelater = () => {
       _id: interviewer?.contact?._id,
       name:
         interviewer?.contact?.Name ||
-        `${interviewer?.contact?.firstName || ""} ${
-          interviewer?.contact?.lastName || ""
-        }`.trim(),
+        `${interviewer?.contact?.firstName || ""} ${interviewer?.contact?.lastName || ""
+          }`.trim(),
     }));
 
     // Merge new interviewers with existing ones, avoiding duplicates
@@ -1678,100 +1859,6 @@ const MockSchedulelater = () => {
                         )}
                       </div>
                     </div>
-
-                    {/* v1.0.0 <---------------------------------------------------------------- */}
-                    {/* <SkillsField
-                                                ref={fieldRefs.skills}
-                                                entries={entries}
-                                                errors={errors}
-                                                showValidation={showSkillValidation}
-                                                onSkillsValidChange={(hasValidSkills) => {
-                                                    // Clear the skills error if at least one complete row exists
-                                                    if (hasValidSkills && errors.skills) {
-                                                        setErrors((prevErrors) => {
-                                                            const newErrors = { ...prevErrors };
-                                                            delete newErrors.skills;
-                                                            return newErrors;
-                                                        });
-                                                    }
-                                                }}
-                                                onAddSkill={(setEditingIndexCallback) => {
-                                                    setEntries((prevEntries) => {
-                                                        const newEntries = [
-                                                            ...prevEntries,
-                                                            { skill: "", experience: "", expertise: "" },
-                                                        ];
-                                                        // Only set editing index if callback is provided
-                                                        if (
-                                                            setEditingIndexCallback &&
-                                                            typeof setEditingIndexCallback === "function"
-                                                        ) {
-                                                            setEditingIndexCallback(newEntries.length - 1);
-                                                        }
-                                                        return newEntries;
-                                                    });
-                                                    setSelectedSkill("");
-                                                    setSelectedExp("");
-                                                    setSelectedLevel("");
-                                                }}
-                                                onEditSkill={(index) => {
-                                                    const entry = entries[index];
-                                                    setSelectedSkill(entry.skill || "");
-                                                    setSelectedExp(entry.experience);
-                                                    setSelectedLevel(entry.expertise);
-                                                }}
-                                                onDeleteSkill={(index) => {
-                                                    const entry = entries[index];
-                                                    setAllSelectedSkills(
-                                                        allSelectedSkills.filter(
-                                                            (skill) => skill !== entry.skill
-                                                        )
-                                                    );
-                                                    setEntries(entries.filter((_, i) => i !== index));
-                                                }}
-                                                onUpdateEntry={(index, updatedEntry) => {
-                                                    const newEntries = [...entries];
-                                                    const oldSkill = newEntries[index]?.skill;
-                                                    newEntries[index] = updatedEntry;
-                                                    setEntries(newEntries);
-
-                                                    // Update allSelectedSkills if skill changed
-                                                    if (oldSkill !== updatedEntry.skill) {
-                                                        const newSelectedSkills = newEntries
-                                                            .map((e) => e.skill)
-                                                            .filter(Boolean);
-                                                        setAllSelectedSkills(newSelectedSkills);
-                                                    }
-
-                                                    // Update formData
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        skills: newEntries,
-                                                    }));
-                                                }}
-                                                setIsModalOpen={setIsModalOpen}
-                                                setEditingIndex={setEditingIndex}
-                                                isModalOpen={isModalOpen}
-                                                currentStep={currentStep}
-                                                setCurrentStep={setCurrentStep}
-                                                searchTerm={searchTerm}
-                                                setSearchTerm={setSearchTerm}
-                                                selectedSkill={selectedSkill}
-                                                setSelectedSkill={setSelectedSkill}
-                                                allSelectedSkills={allSelectedSkills}
-                                                selectedExp={selectedExp}
-                                                setSelectedExp={setSelectedExp}
-                                                selectedLevel={selectedLevel}
-                                                setSelectedLevel={setSelectedLevel}
-                                                skills={skills}
-                                                isNextEnabled={isNextEnabled}
-                                                handleAddEntry={handleAddEntry}
-                                                skillpopupcancelbutton={skillpopupcancelbutton}
-                                                editingIndex={editingIndex}
-                                                onOpenSkills={loadSkills}
-                                            /> */}
-                    {/* v1.0.0 -------------------------------------------------------------------> */}
-                    {/* </div> */}
                     <DescriptionField
                       inputRef={fieldRefs.jobDescription}
                       value={formData.jobDescription}
@@ -2225,25 +2312,22 @@ const MockSchedulelater = () => {
                                 },
                               }));
                             }}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
-                              interviewType === "instant"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${
-                                interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-6 w-6 ${interviewType === "instant"
+                                ? "text-custom-blue"
+                                : "text-gray-400"
+                                }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${
-                                interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
-                              }`}
+                              className={`mt-2 font-medium ${interviewType === "instant"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                                }`}
                             >
                               Instant Interview
                             </span>
@@ -2279,25 +2363,22 @@ const MockSchedulelater = () => {
                                 },
                               }));
                             }}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
-                              interviewType === "scheduled"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${
-                                interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-6 w-6 ${interviewType === "scheduled"
+                                ? "text-custom-blue"
+                                : "text-gray-400"
+                                }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${
-                                interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
-                              }`}
+                              className={`mt-2 font-medium ${interviewType === "scheduled"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                                }`}
                             >
                               Schedule for Later
                             </span>
@@ -2628,7 +2709,7 @@ const MockSchedulelater = () => {
           candidateExperience={formData?.currentExperience}
           previousSelectedInterviewers={externalInterviewers}
 
-          // isMockInterview={true} // Correctly passes true for mock interviews
+        // isMockInterview={true} // Correctly passes true for mock interviews
         />
       )}
 

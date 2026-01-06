@@ -105,6 +105,7 @@ function AssessmentsTab({ assessment }) {
 
   const handleResendLink = async (candidateAssessmentId) => {
     try {
+      console.log("candidateAssessmentId", candidateAssessmentId);
       if (!candidateAssessmentId) {
         console.error("Missing candidateAssessmentId:", candidateAssessmentId);
         toast.error("Invalid candidate assessment ID");

@@ -1209,7 +1209,7 @@ app.put("/users/:id", async (req, res) => {
 
 // mock interview
 const mockInterviewRoutes = require("./routes/mockinterviewRoutes.js");
-app.use("/", mockInterviewRoutes);
+app.use("/mockinterview", mockInterviewRoutes);
 
 const groupsRoutes = require("./routes/interviewerGroupRoutes");
 app.use("/groups", groupsRoutes);
@@ -1712,31 +1712,123 @@ async function getS2SToken() {
 }
 
 // Create meeting endpoint Zoom meet Links
+// app.post("/api/create-meeting", async (req, res) => {
+//   try {
+//     const { topic, start_time, duration, timezone, userId, settings } =
+//       req.body;
+//     const token = await getS2SToken();
+
+//     console.log("Received start_time:", req.body);
+
+//     // Validate start_time
+//     if (start_time && timezone) {
+//       const now = new Date();
+
+//       // Treat start_time as timezone-based, NOT UTC
+//       const startWithTZ = new Date(
+//         `${start_time}${start_time.includes("Z") ? "" : ""}`
+//       );
+
+//       // Allow 2-minute buffer (network + Zoom strictness)
+//       const minFuture = new Date(now.getTime() + 2 * 60 * 1000);
+
+//       if (startWithTZ <= minFuture) {
+//         return res.status(400).json({
+//           error: "start_time must be at least 2 minutes in the future",
+//         });
+//       }
+//     }
+
+//     const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
+//     const type = start_time ? 2 : 1;
+
+//     const body = {
+//       topic: topic || "Interview Meeting",
+//       type,
+//       ...(start_time && { start_time }),
+//       duration: duration || 60,
+//       timezone: timezone || "Asia/Kolkata",
+//       settings: settings || {
+//         join_before_host: true,
+//         host_video: false,
+//         participant_video: false,
+//       },
+//     };
+
+//     const create = await axios.post(
+//       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
+//       body,
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+
+//     console.log("Zoom meeting created:", create);
+
+//     // ✅ Return only what frontend needs
+//     return res.json({
+//       meetingId: create.data.id,
+//       password: create.data.password,
+//       hostId: create.data.host_id,
+//       hostEmail: create.data.host_email,
+//       start_url: create.data.start_url, // host link
+//       join_url: create.data.join_url, // attendee link
+//     });
+//   } catch (err) {
+//     console.error("Zoom API Error:", err.response?.data || err.message);
+//     return res.status(err.response?.status || 500).json({
+//       error: err.response?.data?.message || err.message,
+//     });
+//   }
+// });
+
 app.post("/api/create-meeting", async (req, res) => {
   try {
     const { topic, start_time, duration, timezone, userId, settings } =
       req.body;
+
+    console.log("📥 Received request body:", JSON.stringify(req.body, null, 2));
+
     const token = await getS2SToken();
 
     // Validate start_time
     if (start_time && timezone) {
       const now = new Date();
+      console.log("⏰ Server current time:", now.toISOString());
+      console.log("⏰ Received start_time:", start_time);
 
-      // Treat start_time as timezone-based, NOT UTC
-      const startWithTZ = new Date(
-        `${start_time}${start_time.includes("Z") ? "" : ""}`
-      );
+      // Parse the incoming start_time (format: YYYY-MM-DDTHH:mm:ss)
+      const startDate = new Date(start_time);
+      console.log("⏰ Parsed start_time:", startDate.toISOString());
 
-      // Allow 2-minute buffer (network + Zoom strictness)
-      const minFuture = new Date(now.getTime() + 2 * 60 * 1000);
-
-      if (startWithTZ <= minFuture) {
+      if (isNaN(startDate.getTime())) {
+        console.error("❌ Invalid start_time format");
         return res.status(400).json({
-          error: "start_time must be at least 2 minutes in the future",
+          error: "Invalid start_time format. Expected: YYYY-MM-DDTHH:mm:ss",
         });
       }
-    }
 
+      // Require 2 minutes in the future minimum
+      // const minFuture = new Date(now.getTime() + 2 * 60 * 1000);
+      // console.log("⏰ Minimum future time:", minFuture.toISOString());
+
+      // const timeDiffMinutes = (startDate - now) / (1000 * 60);
+      // console.log("⏰ Time difference (minutes):", timeDiffMinutes.toFixed(2));
+
+      // if (startDate <= minFuture) {
+      //   console.error("❌ start_time is too close or in the past");
+      //   return res.status(400).json({
+      //     error: `start_time must be at least 2 minutes in the future. Current time: ${now.toISOString()}, Provided time: ${startDate.toISOString()}, Difference: ${timeDiffMinutes.toFixed(
+      //       2
+      //     )} minutes`,
+      //   });
+      // }
+
+      console.log("✅ start_time validation passed");
+    }
 
     const hostUser = userId || process.env.ZOOM_HOST_EMAIL;
     const type = start_time ? 2 : 1;
@@ -1754,6 +1846,8 @@ app.post("/api/create-meeting", async (req, res) => {
       },
     };
 
+    console.log("📤 Sending to Zoom API:", JSON.stringify(body, null, 2));
+
     const create = await axios.post(
       `https://api.zoom.us/v2/users/${encodeURIComponent(hostUser)}/meetings`,
       body,
@@ -1765,19 +1859,30 @@ app.post("/api/create-meeting", async (req, res) => {
       }
     );
 
-    // ✅ Return only what frontend needs
+    console.log("✅ Zoom meeting created successfully:", {
+      id: create.data.id,
+      start_url: create.data.start_url?.substring(0, 50) + "...",
+    });
+
     return res.json({
       meetingId: create.data.id,
       password: create.data.password,
       hostId: create.data.host_id,
       hostEmail: create.data.host_email,
-      start_url: create.data.start_url, // host link
-      join_url: create.data.join_url, // attendee link
+      start_url: create.data.start_url,
+      join_url: create.data.join_url,
     });
   } catch (err) {
-    console.error("Zoom API Error:", err.response?.data || err.message);
+    console.error("❌ Zoom API Error:", {
+      status: err.response?.status,
+      statusText: err.response?.statusText,
+      data: err.response?.data,
+      message: err.message,
+    });
+
     return res.status(err.response?.status || 500).json({
       error: err.response?.data?.message || err.message,
+      details: err.response?.data,
     });
   }
 });

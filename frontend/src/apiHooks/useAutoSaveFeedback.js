@@ -49,11 +49,13 @@ const useAutoSaveFeedback = ({
       candidateId: candidateId || "",
       positionId: positionId || "",
       interviewerId: interviewerId || "",
-      skills: skillRatings.map((skill) => ({
-        skillName: skill.skill,
-        rating: skill.rating,
-        note: skill.comments || "",
-      })),
+      skills:
+        skillRatings.length > 0 &&
+        skillRatings.map((skill) => ({
+          skillName: skill.skill,
+          rating: skill.rating,
+          note: skill.comments || "",
+        })),
       questionFeedback: [
         // Interviewer section questions
         ...(interviewerSectionData || []).map((question) => ({
@@ -112,6 +114,7 @@ const useAutoSaveFeedback = ({
     overallRating,
     communicationRating,
     recommendation,
+    // feedbackId,
   ]);
 
   // Check if data has changed
@@ -132,6 +135,7 @@ const useAutoSaveFeedback = ({
       //   const authToken = Cookies.get("authToken");
       const payload = prepareFeedbackPayload();
 
+      console.log("🔄 Auto-saving feedback...", feedbackId);
       console.log("🔄 Auto-saving feedback...", payload);
 
       let response;
@@ -163,6 +167,8 @@ const useAutoSaveFeedback = ({
         //   }
         // );
       }
+
+      console.log("✅ Auto-save response:", response);
 
       if (response.data.success) {
         lastSavedDataRef.current = JSON.stringify(payload);

@@ -90,6 +90,71 @@ const formatDateTime = (date, showDate = true) => {
   return showDate ? `${formattedDate} ${formattedTime}` : formattedTime;
 };
 
+// Add this helper function near the top of RoundForm.jsx, after imports
+// Add this helper function near the top of RoundForm.jsx, after imports
+function formatStartTimeForZoom(combinedDateTime) {
+  if (!combinedDateTime) return null;
+
+  try {
+    console.log("🔵 Formatting for Zoom - Input:", combinedDateTime);
+
+    // Parse "05-01-2026 08:10 PM - 09:10 PM" format
+    const [dateTimePart] = combinedDateTime.split(" - ");
+    const parts = dateTimePart.trim().split(" ");
+
+    if (parts.length < 3) {
+      throw new Error("Invalid datetime format");
+    }
+
+    const datePart = parts[0]; // "05-01-2026"
+    const timePart = parts[1]; // "08:10"
+    const meridiem = parts[2]; // "PM"
+
+    const [day, month, year] = datePart.split("-").map(Number);
+    let [hours, minutes] = timePart.split(":").map(Number);
+
+    console.log("🔵 Parsed:", { day, month, year, hours, minutes, meridiem });
+
+    // Convert to 24-hour format
+    if (meridiem === "PM" && hours !== 12) hours += 12;
+    if (meridiem === "AM" && hours === 12) hours = 0;
+
+    // Create date in LOCAL timezone (not UTC)
+    const localDate = new Date(year, month - 1, day, hours, minutes, 0);
+
+    console.log("🔵 Local date created:", localDate.toString());
+
+    // Ensure it's at least 5 minutes in the future
+    const now = new Date();
+    const minFuture = new Date(now.getTime() + 5 * 60 * 1000);
+
+    console.log("🔵 Current time:", now.toString());
+    console.log("🔵 Min future time:", minFuture.toString());
+
+    if (localDate < minFuture) {
+      console.warn(
+        "⚠️ Scheduled time is in the past, adjusting to 5 minutes from now"
+      );
+      const adjustedDate = new Date(now.getTime() + 5 * 60 * 1000);
+      const formatted = adjustedDate
+        .toISOString()
+        .replace("Z", "")
+        .slice(0, 19);
+      console.log("🔵 Adjusted formatted time:", formatted);
+      return formatted;
+    }
+
+    // Format for Zoom API: YYYY-MM-DDTHH:mm:ss (NO 'Z' suffix)
+    const formatted = localDate.toISOString().replace("Z", "").slice(0, 19);
+    console.log("🔵 Final formatted time:", formatted);
+
+    return formatted;
+  } catch (error) {
+    console.error("❌ Error formatting start time for Zoom:", error);
+    return null;
+  }
+}
+
 const RoundFormInterviews = () => {
   // Add useScrollLock hook at the beginning
   const {
@@ -588,7 +653,6 @@ const RoundFormInterviews = () => {
                 }}
               >
                 <span>{titleLabel}</span>
-
                 {typeLabel && (
                   <span
                     className={
@@ -1948,50 +2012,62 @@ const RoundFormInterviews = () => {
                 (progress) => setMeetingCreationProgress(progress)
               );
             } else if (selectedMeetingPlatform === "zoom") {
-              function formatStartTimeForZoom(combinedDateTime) {
-                if (!combinedDateTime) return null;
+              // function formatStartTimeForZoom(combinedDateTime) {
+              //   if (!combinedDateTime) return null;
 
-                // Parse using dayjs or native Date safely
-                const [datePart, timePart, meridiem] =
-                  combinedDateTime.split(" ");
-                const [day, month, year] = datePart.split("-").map(Number);
-                let [hours, minutes] = timePart.split(":").map(Number);
+              //   // Parse using dayjs or native Date safely
+              //   const [datePart, timePart, meridiem] =
+              //     combinedDateTime.split(" ");
+              //   const [day, month, year] = datePart.split("-").map(Number);
+              //   let [hours, minutes] = timePart.split(":").map(Number);
 
-                if (meridiem === "PM" && hours !== 12) hours += 12;
-                if (meridiem === "AM" && hours === 12) hours = 0;
+              //   if (meridiem === "PM" && hours !== 12) hours += 12;
+              //   if (meridiem === "AM" && hours === 12) hours = 0;
 
-                // Create LOCAL date
-                const localDate = new Date(
-                  year,
-                  month - 1,
-                  day,
-                  hours,
-                  minutes,
-                  0
-                );
+              //   // Create LOCAL date
+              //   const localDate = new Date(
+              //     year,
+              //     month - 1,
+              //     day,
+              //     hours,
+              //     minutes,
+              //     0
+              //   );
 
-                // Enforce 15 minutes from NOW (FINAL safety)
-                const minFuture = new Date();
-                minFuture.setMinutes(minFuture.getMinutes() + 15);
+              //   // Enforce 15 minutes from NOW (FINAL safety)
+              //   const minFuture = new Date();
+              //   minFuture.setMinutes(minFuture.getMinutes() + 15);
 
-                const safeDate = localDate < minFuture ? minFuture : localDate;
+              //   const safeDate = localDate < minFuture ? minFuture : localDate;
 
-                // Zoom expects: YYYY-MM-DDTHH:mm:ss (NO Z)
-                return safeDate.toISOString().replace("Z", "").slice(0, 19);
+              //   // Zoom expects: YYYY-MM-DDTHH:mm:ss (NO Z)
+              //   return safeDate.toISOString().replace("Z", "").slice(0, 19);
+              // }
+
+              // const formattedStartTime =
+              //   formatStartTimeForZoom(combinedDateTime);
+              // if (!formattedStartTime) throw new Error("Invalid start time");
+
+              console.log("🟣 Creating Zoom meeting...");
+              console.log("🟣 combinedDateTime:", effectiveCombinedDateTime);
+              console.log("🟣 interviewType:", effectiveInterviewType);
+
+              const formattedStartTime = formatStartTimeForZoom(
+                effectiveCombinedDateTime
+              );
+
+              if (!formattedStartTime) {
+                throw new Error("Invalid start time for Zoom meeting");
               }
-
-              const formattedStartTime =
-                formatStartTimeForZoom(combinedDateTime);
-              if (!formattedStartTime) throw new Error("Invalid start time");
 
               const zoomPayload = {
                 topic: roundTitle,
                 duration: Number(duration),
-                ...(effectiveInterviewType === "scheduled" &&
-                  formattedStartTime && {
-                    start_time: formattedStartTime,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  }),
+                // ...(effectiveInterviewType === "scheduled" &&
+                ...(formattedStartTime && {
+                  start_time: formattedStartTime,
+                  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                }),
                 type: 2, // scheduled
                 settings: {
                   join_before_host: true,

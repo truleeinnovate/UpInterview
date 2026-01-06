@@ -55,6 +55,7 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
     firstRescheduleFree,
     interviewerPayoutPercentage,
     platformFeePercentage = 5,
+    gstIncluded = true,
   } = policyData;
 
   const isFree = firstRescheduleFree || feePercentage === 0;
@@ -69,7 +70,11 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm font-semibold text-blue-900 mb-1">
           ⏱ Rescheduled{" "}
-          {hoursBefore >= 24 ? "more than 24 hours" : `${hoursBefore} hours`}{" "}
+          {hoursBefore >= 24
+            ? "more than 24 hours"
+            : hoursBefore >= 1
+              ? `${Math.round(hoursBefore)} hour${Math.round(hoursBefore) === 1 ? '' : 's'}`
+              : `${Math.round(hoursBefore * 60)} minute${Math.round(hoursBefore * 60) === 1 ? '' : 's'}`}{" "}
           before the interview
         </p>
         <p className="text-sm text-blue-800">
@@ -96,7 +101,7 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
           </p>
           <div className="text-sm text-orange-800 space-y-1">
             <p>• Interviewer will receive: {interviewerPayoutPercentage}%</p>
-            <p>• GST: {interviewerPayoutPercentage}%</p>
+            {gstIncluded && <p>• GST: Included in the above amounts</p>}
             <p>
               • You will be refunded: <strong>{100 - feePercentage}%</strong>
             </p>

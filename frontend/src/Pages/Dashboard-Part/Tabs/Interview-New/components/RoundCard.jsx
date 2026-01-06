@@ -136,10 +136,11 @@ const RoundCard = ({
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
-  const orgId = tokenPayload?.tenantId;
+  const tenantId = tokenPayload?.tenantId;
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [assessment, setAssessment] = useState(null);
   const [actionInProgress, setActionInProgress] = useState(false);
+  const [isCancellingRound, setIsCancellingRound] = useState(false); // Loading state for cancel operation
 
   useEffect(() => {
     if (isExpanded && round?.assessmentId) {
@@ -216,11 +217,9 @@ const RoundCard = ({
 
   const interview = interviewData;
 
-  console.log("interview", interview);
   const isInterviewCompleted =
     interview?.status === "Completed" || interview?.status === "Cancelled";
 
-  console.log("isInterviewCompleted", isInterviewCompleted);
 
 
   const formatDate = (dateString) => {
@@ -265,7 +264,6 @@ const RoundCard = ({
       }
       return;
     }
-    // console.log("status reason", newStatus, reasonValue);
 
     try {
       // const response = await axios.post(
@@ -290,8 +288,6 @@ const RoundCard = ({
         payload.comment = comment || null;
       }
 
-      console.log("payload payload", payload);
-
       await updateRoundStatus(payload);
 
       // await updateRoundStatus({
@@ -309,12 +305,15 @@ const RoundCard = ({
 
   // handling Cancellation functionlity
   const handleCancelWithReason = async ({ reason, comment }) => {
+    setIsCancellingRound(true);
     try {
       await handleStatusChange("Cancelled", reason, comment || null);
       setCancelReasonModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
       setActionInProgress(false);
+    } finally {
+      setIsCancellingRound(false);
     }
   };
 
@@ -428,9 +427,8 @@ const RoundCard = ({
   // };
 
   // New state for candidate assessment data
-  let [candidateAssessment, setCandidateAssessment] = useState(null);
-  let [currentScheduledAssessment, setCurrentScheduledAssessment] =
-    useState(null);
+  // let [candidateAssessment, setCandidateAssessment] = useState(null);
+  // console.log("candidateAssessment", candidateAssessment);
 
   // Always call hooks unconditionally at the top level
   // For non-assessment rounds, pass null so the hook disables the API call
@@ -444,80 +442,85 @@ const RoundCard = ({
   );
 
   // Filter scheduled assessments for Assessment rounds
-  useEffect(() => {
-    if (
-      round.roundTitle === "Assessment" &&
-      round.scheduleAssessmentId &&
-      scheduleData.length > 0
-    ) {
-      // Find the specific scheduled assessment
-      let filteredAssessment = scheduleData.find(
-        (assessment) => assessment._id === round.scheduleAssessmentId
-      );
+  // useEffect(() => {
+  //   if (
+  //     round.roundTitle === "Assessment" &&
+  //     round.scheduleAssessmentId &&
+  //     scheduleData.length > 0
+  //   ) {
+  //     // Find the specific scheduled assessment
+  //     let filteredAssessment = scheduleData.find(
+  //       (assessment) => assessment._id === round.scheduleAssessmentId
+  //     );
 
-      // Find the candidate-specific data
-      let candidateData = filteredAssessment?.candidates?.find(
-        (candidate) =>
-          candidate.candidateId?._id === interviewData?.candidateId?._id
-      );
+  //     // Find the candidate-specific data
+  //     let candidateData = filteredAssessment?.candidates?.find(
+  //       (candidate) =>
+  //         candidate.candidateId?._id === interviewData?.candidateId?._id
+  //     );
+  //     console.log("candidateData", candidateData);
 
-      if (filteredAssessment) {
-        setCurrentScheduledAssessment(filteredAssessment);
-      }
-      if (candidateData) {
-        setCandidateAssessment(candidateData);
-      }
-    }
-  }, [scheduleData, round, interviewData, round?.assessmentId]);
+  //     // Transform the");
 
+
+  //     if (filteredAssessment) {
+  //       setCurrentScheduledAssessment(filteredAssessment);
+  //     }
+  //     if (candidateData) {
+  //       setCandidateAssessment(candidateData);
+  //     }
+  //   }
+  // }, [scheduleData, round, interviewData, round?.assessmentId]);
+
+
+  const candidateAssessment = round?.scheduledAssessment?.candidates?.[0];
   //  Resend Mail for assessment by Ranjith
-  const handleResendClick = async (round) => {
-    if (!round?.assessmentId) {
-      throw new Error("Unable to determine assessment ID for resend operation");
-    }
+ const handleResendClick = async (round) => {
+  if (!round?.assessmentId) {
+    notify.error("Missing assessment ID");
+    return;
+  }
 
-    // Use the same API endpoint for both single and multiple candidates
-    let response = await axios.post(
+  if (!candidateAssessment?._id) {
+    notify.error("Candidate assessment ID is missing. Cannot resend link.");
+    console.error("candidateAssessment:", candidateAssessment);
+    return;
+  }
+
+  try {
+    const response = await axios.post(
       `${config.REACT_APP_API_URL}/emails/resend-link`,
       {
-        // candidateAssessmentIds: selectedCandidates,
-        // userId,
-        // organizationId,
-        // assessmentId,
-
-        // candidateAssessmentId: interviewData?.candidateId,
-        candidateAssessmentIds: [candidateAssessment?._id],
+        candidateAssessmentIds: [candidateAssessment._id], // Safe: already checked above
         userId,
-        organizationId: orgId,
-        assessmentId: round?.assessmentId,
+        organizationId: tenantId,
+        assessmentId: round.assessmentId,
       }
     );
 
-    if (response?.data?.success) {
-      let roundData = {
-        ...round,
-        scheduleAssessmentId: response?.data?.scheduledAssessmentId,
-      };
+    const data = response.data;
 
-      let payload = {
-        interviewId: interview._id,
-        round: { ...roundData },
-        roundId: round._id,
-        isEditing: true,
-      };
-
-      // React Query will handle data refresh automatically
-      // No need to manually fetch data
-
-      response = await updateInterviewRound(payload);
-      if (response.status === "ok") {
-        notify.success("Assessment link resend successfully");
+    if (data.success) {
+      // Check if this is a multi-candidate response (has summary)
+      if (data.summary) {
+        const { successful, total } = data.summary;
+        notify.success(`Resent links to ${successful} out of ${total} candidates`);
+      } else {
+        // Single candidate response — use message or generic success
+        notify.success("Assessment link resent successfully");
       }
     } else {
-      notify.error(response?.message || "Failed to schedule assessment");
+      notify.error(data.message || "Failed to resend link");
     }
-    // setIsLoading(false);
-  };
+  } catch (error) {
+    console.error("Resend link error:", error);
+    const msg =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to resend assessment link";
+    notify.error(msg);
+  }
+};
 
   //  Share Mail for assessment by Ranjith
   // Share Mail for assessment by Ranjith - UPDATED VERSION
@@ -541,7 +544,7 @@ const RoundCard = ({
         assessmentId: round?.assessmentId,
         selectedCandidates: [interviewData?.candidateId],
         linkExpiryDays,
-        organizationId: orgId,
+        organizationId: tenantId,
         queryClient,
       });
 
@@ -861,7 +864,7 @@ const RoundCard = ({
     setSelectedSchedule(round.scheduledAssessment);
     setSelectedAction(action); // "extend" | "cancel"
     setIsActionPopupOpen(true);
-    
+
   };
 
 
@@ -1027,76 +1030,76 @@ const RoundCard = ({
 
   // v1.0.4 -------------------------->
 
-  const handleCreateAssessmentClick = async (round) => {
-    if (round?.roundTitle === "Assessment") {
-      // Calculate link expiry days
-      let linkExpiryDays = null;
-      if (sectionQuestions?.ExpiryDate) {
-        const expiryDate = new Date(sectionQuestions?.ExpiryDate);
-        const today = new Date();
-        const diffTime = expiryDate.getTime() - today.getTime();
-        linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
-      }
+  // const handleCreateAssessmentClick = async (round) => {
+  //   if (round?.roundTitle === "Assessment") {
+  //     // Calculate link expiry days
+  //     let linkExpiryDays = null;
+  //     if (sectionQuestions?.ExpiryDate) {
+  //       const expiryDate = new Date(sectionQuestions?.ExpiryDate);
+  //       const today = new Date();
+  //       const diffTime = expiryDate.getTime() - today.getTime();
+  //       linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // difference in days
+  //     }
 
-      // setIsLoading(true);
-      const result = await shareAssessmentAPI({
-        assessmentId: round?.assessmentId,
-        selectedCandidates: [interviewData?.candidateId],
-        linkExpiryDays,
-        // userId: userId,
-        organizationId: orgId,
-        // setErrors,
-        queryClient,
+  //     // setIsLoading(true);
+  //     const result = await shareAssessmentAPI({
+  //       assessmentId: round?.assessmentId,
+  //       selectedCandidates: [interviewData?.candidateId],
+  //       linkExpiryDays,
+  //       // userId: userId,
+  //       organizationId: tenantId,
+  //       // setErrors,
+  //       queryClient,
 
-        // onClose: onCloseshare,
-        // setErrors,
-        // setIsLoading,
-        // organizationId,
-        // userId,
-      });
+  //       // onClose: onCloseshare,
+  //       // setErrors,
+  //       // setIsLoading,
+  //       // organizationId,
+  //       // userId,
+  //     });
 
-      if (result.success) {
-        let isEditing = true;
-        // const payload = isEditing
-        // && {
-        //   interviewId,
-        //   round: roundData,
-        //   roundId,
-        //   questions: interviewQuestionsList,
-        // }
+  //     if (result.success) {
+  //       let isEditing = true;
+  //       // const payload = isEditing
+  //       // && {
+  //       //   interviewId,
+  //       //   round: roundData,
+  //       //   roundId,
+  //       //   questions: interviewQuestionsList,
+  //       // }
 
-        const roundData = {
-          ...round,
-          status: "scheduled", // or whatever status you want to set
-          completedDate: null,
-          rejectionReason: null,
-        };
+  //       const roundData = {
+  //         ...round,
+  //         status: "scheduled", // or whatever status you want to set
+  //         completedDate: null,
+  //         rejectionReason: null,
+  //       };
 
-        const payload = isEditing && {
-          interviewId: interview._id,
-          round: { ...roundData },
-          roundId: round._id,
-          isEditing: true,
-        };
-        // Use saveInterviewRound mutation from useInterviews hook
-        const response = await updateInterviewRound(payload);
+  //       const payload = isEditing && {
+  //         interviewId: interview._id,
+  //         round: { ...roundData },
+  //         roundId: round._id,
+  //         isEditing: true,
+  //       };
+  //       // Use saveInterviewRound mutation from useInterviews hook
+  //       const response = await updateInterviewRound(payload);
 
-        // navigate(`/interviews/${interviewId}`);
-        if (response?.status === "ok") {
-          notify.success("Round Status updated successfully!");
-        }
-      } else {
-        notify.error(result.message || "Failed to schedule assessment");
-      }
-    }
+  //       // navigate(`/interviews/${interviewId}`);
+  //       if (response?.status === "ok") {
+  //         notify.success("Round Status updated successfully!");
+  //       }
+  //     } else {
+  //       notify.error(result.message || "Failed to schedule assessment");
+  //     }
+  //   }
 
-    // if (result.success) {
-    //   // React Query will handle data refresh automatically
-    //   // No need to manually fetch data
-    // } else {
-    //   toast.error(result.message || "Failed to schedule assessment");
-    // }
-  };
+  //   // if (result.success) {
+  //   //   // React Query will handle data refresh automatically
+  //   //   // No need to manually fetch data
+  //   // } else {
+  //   //   toast.error(result.message || "Failed to schedule assessment");
+  //   // }
+  // };
 
   // 5. Cancel/NoShow reasons handled via shared modal
   console.log("round", round);
@@ -1980,6 +1983,9 @@ const RoundCard = ({
         }}
         onConfirm={handleCancelWithReason}
         confirmLabel="Confirm Cancel"
+        roundData={round}
+        showPolicyInfo={true}
+        isLoading={isCancellingRound}
       />
 
       {/* Shared reason modal for No Show */}

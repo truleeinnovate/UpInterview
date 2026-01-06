@@ -21,14 +21,25 @@ const participantSchema = new mongoose.Schema(
 // Only schedule / reschedule / cancel info
 const roundScheduleSchema = new mongoose.Schema(
   {
-    scheduledAt: { type: Date, required: true },
-    action: { type: String, enum: ["Scheduled", "Rescheduled", "Cancelled"], required: true },
-    reason: { type: String },
-    participants: [participantSchema],
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    updatedAt: { type: Date, default: Date.now },
+    // scheduledAt: { type: Date, required: true },
+    scheduledAt: { type: String },
+    action: {
+      type: String,
+      //   enum: ["Scheduled", "Rescheduled", "Cancelled"],
+      //   required: true,
+    },
+    // reason: { type: String },
+    reasonCode: { type: String }, // e.g. "candidate_requested"
+    comment: { type: String }, // only when reasonCode === "other"
+    participants: [participantSchema], //this will track participants joined or not in video call or interview
+    interviewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }], //when user select outsource or internal this will track
+
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+    // updatedAt: { type: Date, default: Date.now },
   },
-  { _id: false }
+  {
+    timestamps: { createdAt: true, updatedAt: false },
+  }
 );
 
 // Main Interview Round Schema
@@ -38,7 +49,7 @@ const MockInterviewRoundSchema = new mongoose.Schema({
   roundTitle: String,
   interviewMode: String,
   interviewType: String, // instant or schedule later
-  interviewerType: String, // internal or external
+  interviewerType: String, // Internal or External
   duration: String,
   instructions: String,
 
@@ -63,50 +74,31 @@ const MockInterviewRoundSchema = new mongoose.Schema({
       "Selected",
       "Cancelled",
       "Incomplete",
-      "NoShow"
+      "MarkedIncomplete",
+      "NoShow",
     ],
     default: "Draft",
   },
 
-// Track last and current actions + reasons
-currentAction: {
-    type: String,
-    enum: [
-      "Candidate_NoShow",
-      "Interviewer_NoShow",
-      "Technical_Issue"
-    ],
-    default: null,
-  },
+  // Track last and current actions + reasons
+  /* ------------------------------------
+   * Current Action Tracking
+   * ---------------------------------- */
+  currentAction: { type: String }, // e.g. Rescheduled
   previousAction: {
     type: String,
-    enum: [
-      "Candidate_NoShow",
-      "Interviewer_NoShow",
-      "Technical_Issue"
-    ],
-    default: null,
   },
-  currentActionReason: { type: String },
-  previousActionReason: { type: String },
-  supportTickets: [{ type: mongoose.Schema.Types.ObjectId, ref: "SupportUser" }],
+  currentActionReason: { type: String }, // reasonCode
+  comments: { type: String }, // only for "other"
 
   // Full history of all scheduling attempts
   history: [roundScheduleSchema],
 
   // Extra
   meetingId: String,
-  rejectionReason: String,
-  
-  // Settlement tracking
-  settlementStatus: { 
-    type: String, 
-    enum: ['pending', 'completed', 'failed'],
-    default: 'pending'
-  },
-  settlementDate: { type: Date },
+  meetPlatform: String,
 
-},{ timestamps: true });
+}, { timestamps: true });
 
 // Check if model is already defined to avoid overwriting
 const MockInterviewRound =
