@@ -141,6 +141,7 @@ const InterviewForm = () => {
   const [positionId, setPositionId] = useState("");
   const [templateId, setTemplateId] = useState("");
   const [externalId, setExternalId] = useState("");
+  const [allowParallelScheduling, setAllowParallelScheduling] = useState(false);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [candidateError, setCandidateError] = useState("");
@@ -245,7 +246,7 @@ const InterviewForm = () => {
 
   const { data: interview, isLoading: interviewLoading } = useInterviewDetails(
     // isEditing ? id : null
-    isEditing ? { roundId: id } : {}
+    isEditing ? { interviewId: id } : {}
   );
 
   // v1.0.7  -  Your Name  -  Fixed template dropdown not showing selected value in edit mode
@@ -255,6 +256,7 @@ const InterviewForm = () => {
       setCandidateId(interview.candidateId?._id || "");
       setPositionId(interview.positionId?._id || "");
       setExternalId(interview.externalId || "");
+      setAllowParallelScheduling(interview.allowParallelScheduling || false);
 
       // Fix for template - handle the nested object structure
       if (interview.templateId) {
@@ -454,6 +456,7 @@ const InterviewForm = () => {
         userId,
         templateId,
         externalId,
+        allowParallelScheduling,
         id, // interviewId
       });
 
@@ -495,13 +498,13 @@ const InterviewForm = () => {
               { label: "Interviews", path: "/interviews" },
               ...(isEditing && interview
                 ? [
-                    {
-                      label: interview?.candidateId?.LastName || "Interview",
-                      path: `/interviews/${id}`,
-                      status: interview.status,
-                    },
-                    { label: "Edit Interview", path: "" },
-                  ]
+                  {
+                    label: interview?.candidateId?.LastName || "Interview",
+                    path: `/interviews/${id}`,
+                    status: interview.status,
+                  },
+                  { label: "Edit Interview", path: "" },
+                ]
                 : [{ label: "New Interview", path: "" }]),
             ]}
           />
@@ -595,9 +598,8 @@ const InterviewForm = () => {
                       options={[
                         ...(candidateData?.map((candidate) => ({
                           value: candidate._id,
-                          label: `${candidate.FirstName || ""} ${
-                            candidate.LastName || ""
-                          } (${candidate.Email || ""})`,
+                          label: `${candidate.FirstName || ""} ${candidate.LastName || ""
+                            } (${candidate.Email || ""})`,
                         })) || []),
                         {
                           value: "add_new",
@@ -704,8 +706,8 @@ const InterviewForm = () => {
                           .map((template) => {
                             const titleLabel = capitalizeFirstLetter(
                               template.title ||
-                                template.type ||
-                                "Unnamed Template"
+                              template.type ||
+                              "Unnamed Template"
                             );
 
                             return {
@@ -782,7 +784,7 @@ const InterviewForm = () => {
                             <div
                               className={`flex items-center px-4 py-2 border rounded-lg shadow-sm min-w-[200px]  `}
 
-                              // ${index === rounds.length - 1 ? "bg-blue-50 border-blue-400" : "bg-white border-gray-200"}
+                            // ${index === rounds.length - 1 ? "bg-blue-50 border-blue-400" : "bg-white border-gray-200"}
                             >
                               {/* Step number circle */}
                               <div className="flex items-center justify-center w-6 h-6 rounded-full border border-gray-400 text-xs font-medium text-gray-600 mr-3">
@@ -803,6 +805,34 @@ const InterviewForm = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Allow Parallel Scheduling Toggle */}
+                  <div className="flex items-center justify-between border p-3 rounded-md bg-white mb-4">
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-900">
+                        Allow Parallel Scheduling
+                      </label>
+                      <span className="text-xs text-gray-500">
+                        Enable scheduling multiple rounds simultaneously
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAllowParallelScheduling(!allowParallelScheduling)
+                      }
+                      className={`${allowParallelScheduling ? "bg-teal-600" : "bg-gray-200"
+                        } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`${allowParallelScheduling
+                          ? "translate-x-5"
+                          : "translate-x-0"
+                          } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                      />
+                    </button>
+                  </div>
 
                   {/* External ID Field - Only show for organization users */}
                   {isOrganization && (

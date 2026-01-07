@@ -185,9 +185,8 @@ const InterviewDetail = () => {
 
       setStatusModal({
         isOpen: true,
-        title: `Cannot ${
-          action.charAt(0).toUpperCase() + action.slice(1)
-        } Interview`,
+        title: `Cannot ${action.charAt(0).toUpperCase() + action.slice(1)
+          } Interview`,
         message: `The following rounds are not in a completed state:<ul class="list-disc pl-5 mt-2 mb-3">${roundItems}</ul>Please update all rounds to a completed state (Completed, Cancelled, Selected, or Rejected) before ${action.toLowerCase()} the interview.`,
         isHTML: true,
       });
@@ -427,8 +426,7 @@ const InterviewDetail = () => {
     } catch (error) {
       console.error("Error updating interview status:", error);
       notify.error(
-        `Failed to update status: ${
-          error.response?.data?.message || error.message
+        `Failed to update status: ${error.response?.data?.message || error.message
         }`
       );
       return false;
@@ -621,7 +619,7 @@ const InterviewDetail = () => {
                         <div className="font-medium">
                           {candidate?.LastName
                             ? candidate.LastName.charAt(0).toUpperCase() +
-                              candidate.LastName.slice(1)
+                            candidate.LastName.slice(1)
                             : "Unknown"}
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
@@ -666,7 +664,7 @@ const InterviewDetail = () => {
                     <div className="font-medium">
                       {position?.title
                         ? position.title.charAt(0).toUpperCase() +
-                          position.title.slice(1)
+                        position.title.slice(1)
                         : "Unknown"}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
@@ -697,6 +695,38 @@ const InterviewDetail = () => {
 
                 <div className="sm:col-span-1">
                   <dt className="text-sm font-medium text-gray-500 flex items-center">
+                    <LayoutList className="h-5 w-5 mr-1" />
+                    Parallel Scheduling
+                  </dt>
+                  <dd className="mt-1 text-sm text-gray-900">
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        disabled
+                        className={`${interview?.allowParallelScheduling
+                            ? "bg-teal-600"
+                            : "bg-gray-200"
+                          } relative inline-flex h-6 w-11 flex-shrink-0 cursor-not-allowed rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`${interview?.allowParallelScheduling
+                              ? "translate-x-5"
+                              : "translate-x-0"
+                            } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                        />
+                      </button>
+                      <span className="ml-3 text-sm font-medium">
+                        {interview?.allowParallelScheduling
+                          ? "Enabled"
+                          : "Disabled"}
+                      </span>
+                    </div>
+                  </dd>
+                </div>
+
+                <div className="sm:col-span-1">
+                  <dt className="text-sm font-medium text-gray-500 flex items-center">
                     <Calendar className="h-5 w-5 mr-1" />
                     Template
                   </dt>
@@ -705,8 +735,8 @@ const InterviewDetail = () => {
                       {position?.roundsModified
                         ? "Selected Custom round"
                         : template?.title
-                        ? capitalizeFirstLetter(template?.title)
-                        : //  template.templateName.charAt(0).toUpperCase() +
+                          ? capitalizeFirstLetter(template?.title)
+                          : //  template.templateName.charAt(0).toUpperCase() +
                           //   template.templateName.slice(1)
                           "Not selected any template"}
                     </div>

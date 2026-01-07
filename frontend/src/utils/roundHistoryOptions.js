@@ -36,12 +36,6 @@ export const CANCEL_OPTIONS = [
   { label: "Other", value: "other" },
 ];
 
-export const SKIPPED_OPTIONS = [
-  { label: "Not Required", value: "not_required" },
-  { label: "Candidate Fast-Tracked", value: "candidate_fast_tracked" },
-  { label: "Merged with another round", value: "merged_with_another_round" },
-  { label: "Other", value: "other" },
-];
 
 // Add this alongside NO_SHOW_OPTIONS, CANCEL_OPTIONS
 export const REJECT_OPTIONS = [
@@ -60,6 +54,13 @@ export const REJECT_OPTIONS = [
   },
   { label: "Better candidate selected", value: "better_candidate_selected" },
   { label: "Communication issues", value: "communication_issues" },
+  { label: "Other", value: "other" },
+];
+
+export const EVALUATED_OPTIONS = [
+  { label: "Passed", value: "passed" },
+  { label: "Failed", value: "failed" },
+  { label: "Feedback Submitted", value: "feedback_submitted" },
   { label: "Other", value: "other" },
 ];
 
