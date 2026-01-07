@@ -6,125 +6,130 @@ import { useInterviewPolicies } from "../../../../apiHooks/useInterviewPolicies"
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
 
 // Policy warning component for cancellation (similar to SettlementPolicyWarning in DateChangeConfirmationModal)
-const CancellationPolicyWarning = ({ dateTime, roundStatus, interviewerType }) => {
-  const { getSettlementPolicy, isLoading } = useInterviewPolicies();
-  const [policyData, setPolicyData] = useState(null);
-  const [hoursBefore, setHoursBefore] = useState(null);
-  const [error, setError] = useState(false);
+// const CancellationPolicyWarning = ({ dateTime, roundStatus, interviewerType }) => {
+//   const { getSettlementPolicy, isLoading } = useInterviewPolicies();
+//   const [policyData, setPolicyData] = useState(null);
+//   const [hoursBefore, setHoursBefore] = useState(null);
+//   const [error, setError] = useState(false);
 
-  useEffect(() => {
-    if (!dateTime || !roundStatus) return;
+//   // Only show for External interviews - return early for Internal
+//   console.log("interviewerType", interviewerType);
+//   const isExternal = interviewerType === "External";
 
-    getSettlementPolicy({
-      isMockInterview: false,
-      roundStatus: "Cancelled", // Always use Cancelled for cancellation policy
-      dateTime,
-    })
-      .then((res) => {
-        if (res?.success) {
-          setPolicyData(res.policy);
-          setHoursBefore(res.hoursBefore); // Keep full decimal - display logic handles formatting
-          console.log("Cancellation Policy response", res);
-        } else {
-          setError(true);
-        }
-      })
-      .catch(() => setError(true));
-  }, [dateTime, roundStatus, getSettlementPolicy]);
+//   useEffect(() => {
+//     // Skip API call for Internal interviewers
+//     if (!isExternal || !dateTime || !roundStatus) return;
 
-  // Only show for External interviews
-  if (interviewerType !== "External") {
-    return null;
-  }
+//     getSettlementPolicy({
+//       isMockInterview: false,
+//       roundStatus: "Cancelled", // Always use Cancelled for cancellation policy
+//       dateTime,
+//     })
+//       .then((res) => {
+//         if (res?.success) {
+//           setPolicyData(res.policy);
+//           setHoursBefore(res.hoursBefore); // Keep full decimal - display logic handles formatting
+//           console.log("Cancellation Policy response", res);
+//         } else {
+//           setError(true);
+//         }
+//       })
+//       .catch(() => setError(true));
+//   }, [dateTime, roundStatus, getSettlementPolicy, isExternal]);
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-4">
-        <Loader2 className="w-5 h-5 animate-spin text-blue-600 mb-2" />
-        <p className="text-sm text-gray-600">Calculating cancellation policy…</p>
-      </div>
-    );
-  }
+//   // Don't render anything for Internal interviewers
+//   if (!isExternal) {
+//     return null;
+//   }
 
-  if (error || !policyData) {
-    return (
-      <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 p-3 rounded-lg mb-4">
-        <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-        <p className="text-sm text-amber-800">
-          Unable to determine the cancellation policy at this time. Proceeding may
-          result in applicable charges.
-        </p>
-      </div>
-    );
-  }
+//   if (isLoading) {
+//     return (
+//       <div className="flex flex-col items-center justify-center py-4">
+//         <Loader2 className="w-5 h-5 animate-spin text-blue-600 mb-2" />
+//         <p className="text-sm text-gray-600">Calculating cancellation policy…</p>
+//       </div>
+//     );
+//   }
 
-  const {
-    policyName,
-    feePercentage = 0,
-    interviewerPayoutPercentage = 0,
-    platformFeePercentage = 0,
-    gstIncluded = true,
-  } = policyData;
+//   if (error || !policyData) {
+//     return (
+//       <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 p-3 rounded-lg mb-4">
+//         <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+//         <p className="text-sm text-amber-800">
+//           Unable to determine the cancellation policy at this time. Proceeding may
+//           result in applicable charges.
+//         </p>
+//       </div>
+//     );
+//   }
 
-  const isFullRefund = feePercentage === 0;
-  const refundPercentage = 100 - feePercentage;
+//   const {
+//     policyName,
+//     feePercentage = 0,
+//     interviewerPayoutPercentage = 0,
+//     platformFeePercentage = 0,
+//     gstIncluded = true,
+//   } = policyData;
 
-  return (
-    <div className="space-y-3 mb-4">
-      <p className="text-gray-700 text-sm">
-        You are about to <strong>cancel</strong> a confirmed{" "}
-        <strong>external interview</strong>.
-      </p>
+//   const isFullRefund = feePercentage === 0;
+//   const refundPercentage = 100 - feePercentage;
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <p className="text-sm font-semibold text-blue-900 mb-1">
-          ⏱ Cancelled{" "}
-          {hoursBefore >= 24
-            ? "more than 24 hours"
-            : hoursBefore >= 1
-              ? `${Math.round(hoursBefore)} hour${Math.round(hoursBefore) === 1 ? '' : 's'}`
-              : Math.ceil(hoursBefore * 60) <= 0
-                ? "less than a minute"
-                : `${Math.ceil(hoursBefore * 60)} minute${Math.ceil(hoursBefore * 60) === 1 ? '' : 's'}`}{" "}
-          before the interview
-        </p>
-        <p className="text-sm text-blue-800">
-          Policy applied:{" "}
-          <span className="font-medium capitalize">
-            {policyName?.replace(/_/g, " ")}
-          </span>
-        </p>
-      </div>
+//   return (
+//     <div className="space-y-3 mb-4">
+//       <p className="text-gray-700 text-sm">
+//         You are about to <strong>cancel</strong> a confirmed{" "}
+//         <strong>external interview</strong>.
+//       </p>
 
-      {isFullRefund ? (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-          <p className="text-green-800 font-semibold">No Charges Applied</p>
-          <p className="text-sm text-green-700 mt-1">
-            As per the policy, the full amount will be refunded to you.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-orange-50 border border-orange-300 rounded-lg p-3 space-y-2">
-          <p className="font-semibold text-orange-900">
-            Deduction: {feePercentage}% of the total paid amount
-          </p>
-          <div className="text-sm text-orange-800 space-y-1">
-            <p>• Interviewer will receive: <strong>{interviewerPayoutPercentage}%</strong></p>
-            {/* <p>• Platform fee: <strong>{platformFeePercentage}%</strong></p> */}
-            {gstIncluded && <p>• GST: Included in the above amounts</p>}
-            <p className="pt-1 border-t border-orange-200 mt-1">
-              • You will be refunded: <strong>{refundPercentage}%</strong>
-            </p>
-          </div>
-        </div>
-      )}
+//       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+//         <p className="text-sm font-semibold text-blue-900 mb-1">
+//           ⏱ Cancelled{" "}
+//           {hoursBefore >= 24
+//             ? "more than 24 hours"
+//             : hoursBefore >= 1
+//               ? `${Math.round(hoursBefore)} hour${Math.round(hoursBefore) === 1 ? '' : 's'}`
+//               : Math.ceil(hoursBefore * 60) <= 0
+//                 ? "less than a minute"
+//                 : `${Math.ceil(hoursBefore * 60)} minute${Math.ceil(hoursBefore * 60) === 1 ? '' : 's'}`}{" "}
+//           before the interview
+//         </p>
+//         <p className="text-sm text-blue-800">
+//           Policy applied:{" "}
+//           <span className="font-medium capitalize">
+//             {policyName?.replace(/_/g, " ")}
+//           </span>
+//         </p>
+//       </div>
 
-      <p className="text-xs text-gray-500 italic">
-        Proceeding will cancel the interview and apply the policy immediately.
-      </p>
-    </div>
-  );
-};
+//       {isFullRefund ? (
+//         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+//           <p className="text-green-800 font-semibold">No Charges Applied</p>
+//           <p className="text-sm text-green-700 mt-1">
+//             As per the policy, the full amount will be refunded to you.
+//           </p>
+//         </div>
+//       ) : (
+//         <div className="bg-orange-50 border border-orange-300 rounded-lg p-3 space-y-2">
+//           <p className="font-semibold text-orange-900">
+//             Deduction: {feePercentage}% of the total paid amount
+//           </p>
+//           <div className="text-sm text-orange-800 space-y-1">
+//             <p>• Interviewer will receive: <strong>{interviewerPayoutPercentage}%</strong></p>
+//             {/* <p>• Platform fee: <strong>{platformFeePercentage}%</strong></p> */}
+//             {gstIncluded && <p>• GST: Included in the above amounts</p>}
+//             <p className="pt-1 border-t border-orange-200 mt-1">
+//               • You will be refunded: <strong>{refundPercentage}%</strong>
+//             </p>
+//           </div>
+//         </div>
+//       )}
+
+//       <p className="text-xs text-gray-500 italic">
+//         Proceeding will cancel the interview and apply the policy immediately.
+//       </p>
+//     </div>
+//   );
+// };
 
 const RoundStatusReasonModal = ({
   isOpen,
@@ -196,13 +201,13 @@ const RoundStatusReasonModal = ({
         <h3 className="text-lg font-semibold mb-3">{title}</h3>
 
         {/* Policy Info Section for Cancellation */}
-        {showPolicyInfo && roundData && (
+        {/* {showPolicyInfo && roundData && (
           <CancellationPolicyWarning
             dateTime={getDateTimeFromRound()}
             roundStatus={roundData.status}
             interviewerType={roundData.interviewerType}
           />
-        )}
+        )} */}
 
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">

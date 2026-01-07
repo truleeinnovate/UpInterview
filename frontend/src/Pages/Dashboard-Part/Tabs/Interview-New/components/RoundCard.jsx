@@ -51,7 +51,7 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { notify } from "../../../../../services/toastService";
 import ScheduledAssessmentResultView from "../../Assessment-Tab/AssessmentViewDetails/ScheduledAssessmentResultView";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
-import RoundStatusReasonModal from "../../CommonCode-AllTabs/RoundStatusReasonModal";
+import DateChangeConfirmationModal from "./DateChangeConfirmationModal";
 import {
   NO_SHOW_OPTIONS,
   CANCEL_OPTIONS,
@@ -136,6 +136,7 @@ const RoundCard = ({
   const [assessment, setAssessment] = useState(null);
   const [actionInProgress, setActionInProgress] = useState(false);
   const [isCancellingRound, setIsCancellingRound] = useState(false); // Loading state for cancel operation
+  const [isNoShowingRound, setIsNoShowingRound] = useState(false); // Loading state for no-show operation
 
   useEffect(() => {
     if (isExpanded && round?.assessmentId) {
@@ -312,12 +313,15 @@ const RoundCard = ({
 
   // handling No show functionlity
   const handleNoShowWithReason = async ({ reason, comment }) => {
+    setIsNoShowingRound(true);
     try {
       await handleStatusChange("NoShow", reason, comment || null);
       setNoShowReasonModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
       setActionInProgress(false);
+    } finally {
+      setIsNoShowingRound(false);
     }
   };
 
@@ -388,10 +392,10 @@ const RoundCard = ({
       ? Array.isArray(round?.interviewers) && round.interviewers.length > 0
         ? round.interviewers
         : Array.isArray(round?.pendingOutsourceRequests)
-        ? round.pendingOutsourceRequests
+          ? round.pendingOutsourceRequests
             .map((req) => req.interviewerId)
             .filter(Boolean)
-        : []
+          : []
       : [];
 
   // Get questions
@@ -428,9 +432,9 @@ const RoundCard = ({
   let { scheduleData, isLoading } = useScheduleAssessments(
     round.roundTitle === "Assessment"
       ? {
-          assessmentId: round?.assessmentId,
-          type: "scheduled",
-        }
+        assessmentId: round?.assessmentId,
+        type: "scheduled",
+      }
       : null
   );
 
@@ -761,9 +765,8 @@ const RoundCard = ({
           // Transform the data
           candidateResultData = {
             id: candidateAssessment?._id,
-            name: `${candidateAssessment?.candidateId?.FirstName || ""} ${
-              candidateAssessment?.candidateId?.LastName || ""
-            }`.trim(),
+            name: `${candidateAssessment?.candidateId?.FirstName || ""} ${candidateAssessment?.candidateId?.LastName || ""
+              }`.trim(),
             email: candidateAssessment?.candidateId?.Email,
             answeredQuestions: candidateAssessment?.answeredQuestions || 0,
             totalScore: candidateAssessment?.totalScore || 0,
@@ -1095,9 +1098,8 @@ const RoundCard = ({
   return (
     <>
       <div
-        className={`bg-white rounded-lg ${
-          !hideHeader && "shadow-md"
-        } overflow-hidden ${isActive ? "ring-2 ring-custom-blue p-2" : ""}`}
+        className={`bg-white rounded-lg ${!hideHeader && "shadow-md"
+          } overflow-hidden ${isActive ? "ring-2 ring-custom-blue p-2" : ""}`}
       >
         <div className="p-5">
           {/* Tabs */}
@@ -1106,21 +1108,19 @@ const RoundCard = ({
               <nav className="-mb-px flex space-x-4">
                 <button
                   onClick={() => setActiveTab("details")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === "details"
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "details"
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
                 >
                   Round Details
                 </button>
                 <button
                   onClick={() => setActiveTab("feedback")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === "feedback"
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "feedback"
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
                 >
                   Feedback
                 </button>
@@ -1182,7 +1182,7 @@ const RoundCard = ({
                     </div>
                   )}
 
-                  
+
                   {round.completedDate && (
                     <div className="flex items-center text-sm text-gray-500">
                       <Clock className="h-4 w-4 mr-1" />
@@ -1460,26 +1460,25 @@ const RoundCard = ({
                                         {/* v1.0.5 --------------------------------> */}
                                         {sectionData?.sectionName
                                           ? sectionData?.sectionName
-                                              .charAt(0)
-                                              .toUpperCase() +
-                                            sectionData?.sectionName.slice(1)
+                                            .charAt(0)
+                                            .toUpperCase() +
+                                          sectionData?.sectionName.slice(1)
                                           : "Unnamed Section"}
                                       </span>
                                       <ChevronUp
                                         // v1.0.5 <----------------------------------------------
-                                        className={`h-4 w-4 transform transition-transform ${
-                                          expandedSections[sectionId]
-                                            ? ""
-                                            : "rotate-180"
-                                        }`}
-                                        // v1.0.5 ---------------------------------------------->
+                                        className={`h-4 w-4 transform transition-transform ${expandedSections[sectionId]
+                                          ? ""
+                                          : "rotate-180"
+                                          }`}
+                                      // v1.0.5 ---------------------------------------------->
                                       />
                                     </button>
 
                                     {expandedSections[sectionId] && (
                                       <div className="mt-4 space-y-3">
                                         {Array.isArray(sectionData.questions) &&
-                                        sectionData.questions.length > 0 ? (
+                                          sectionData.questions.length > 0 ? (
                                           sectionData.questions.map(
                                             (question, idx) => (
                                               <div
@@ -1509,86 +1508,84 @@ const RoundCard = ({
                                                     </p>
                                                   </div>
                                                   <ChevronDown
-                                                    className={`w-5 h-5 text-gray-400 transition-transform ${
-                                                      expandedQuestions[
-                                                        question._id
-                                                      ]
-                                                        ? "transform rotate-180"
-                                                        : ""
-                                                    }`}
+                                                    className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
+                                                      question._id
+                                                    ]
+                                                      ? "transform rotate-180"
+                                                      : ""
+                                                      }`}
                                                   />
                                                 </div>
 
                                                 {expandedQuestions[
                                                   question._id
                                                 ] && (
-                                                  <div className="px-4 py-3">
-                                                    <div className="flex justify-between mb-2">
-                                                      <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-medium text-gray-500">
-                                                          Type:
-                                                        </span>
-                                                        <span className="text-sm text-gray-700">
-                                                          {question.snapshot
-                                                            ?.questionType ||
-                                                            "Not specified"}
-                                                        </span>
-                                                      </div>
-                                                      <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-medium text-gray-500">
-                                                          Score:
-                                                        </span>
-                                                        <span className="text-sm text-gray-700">
-                                                          {question.snapshot
-                                                            ?.score || "0"}
-                                                        </span>
-                                                      </div>
-                                                    </div>
-
-                                                    {/* Display question options if MCQ */}
-                                                    {question.snapshot
-                                                      ?.questionType ===
-                                                      "MCQ" && (
-                                                      <div className="mt-2">
-                                                        <span className="text-sm font-medium text-gray-500">
-                                                          Options:
-                                                        </span>
-                                                        <div className="grid grid-cols-2 gap-2 mt-1">
-                                                          {question.snapshot?.options?.map(
-                                                            (
-                                                              option,
-                                                              optIdx
-                                                            ) => (
-                                                              <div
-                                                                key={optIdx}
-                                                                //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                className={`text-sm p-2 rounded border ${
-                                                                  option ===
-                                                                  question
-                                                                    .snapshot
-                                                                    .correctAnswer
-                                                                    ? "bg-green-50 border-green-200 text-green-800"
-                                                                    : "bg-gray-50 border-gray-200"
-                                                                }`}
-                                                              >
-                                                                {option}
-                                                                {option ===
-                                                                  question
-                                                                    .snapshot
-                                                                    .correctAnswer && (
-                                                                  <span className="ml-2 text-green-600">
-                                                                    ✓
-                                                                  </span>
-                                                                )}
-                                                              </div>
-                                                            )
-                                                          )}
+                                                    <div className="px-4 py-3">
+                                                      <div className="flex justify-between mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                          <span className="text-sm font-medium text-gray-500">
+                                                            Type:
+                                                          </span>
+                                                          <span className="text-sm text-gray-700">
+                                                            {question.snapshot
+                                                              ?.questionType ||
+                                                              "Not specified"}
+                                                          </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                          <span className="text-sm font-medium text-gray-500">
+                                                            Score:
+                                                          </span>
+                                                          <span className="text-sm text-gray-700">
+                                                            {question.snapshot
+                                                              ?.score || "0"}
+                                                          </span>
                                                         </div>
                                                       </div>
-                                                    )}
 
-                                                    {/* Display correct answer */}
-                                                    {/* <div className="mt-2">
+                                                      {/* Display question options if MCQ */}
+                                                      {question.snapshot
+                                                        ?.questionType ===
+                                                        "MCQ" && (
+                                                          <div className="mt-2">
+                                                            <span className="text-sm font-medium text-gray-500">
+                                                              Options:
+                                                            </span>
+                                                            <div className="grid grid-cols-2 gap-2 mt-1">
+                                                              {question.snapshot?.options?.map(
+                                                                (
+                                                                  option,
+                                                                  optIdx
+                                                                ) => (
+                                                                  <div
+                                                                    key={optIdx}
+                                                                    //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                    className={`text-sm p-2 rounded border ${option ===
+                                                                      question
+                                                                        .snapshot
+                                                                        .correctAnswer
+                                                                      ? "bg-green-50 border-green-200 text-green-800"
+                                                                      : "bg-gray-50 border-gray-200"
+                                                                      }`}
+                                                                  >
+                                                                    {option}
+                                                                    {option ===
+                                                                      question
+                                                                        .snapshot
+                                                                        .correctAnswer && (
+                                                                        <span className="ml-2 text-green-600">
+                                                                          ✓
+                                                                        </span>
+                                                                      )}
+                                                                  </div>
+                                                                )
+                                                              )}
+                                                            </div>
+                                                          </div>
+                                                        )}
+
+                                                      {/* Display correct answer */}
+                                                      {/* <div className="mt-2">
                                                                                    <span className="text-sm font-medium text-gray-500">
                                                                                      Correct Answer:
                                                                                    </span>
@@ -1597,31 +1594,31 @@ const RoundCard = ({
                                                                                    </div>
                                                                                  </div> */}
 
-                                                    {/* Additional question metadata */}
-                                                    <div className="grid grid-cols-2 gap-4 mt-3">
-                                                      <div>
-                                                        <span className="text-xs font-medium text-gray-500">
-                                                          Difficulty:
-                                                        </span>
-                                                        <span className="text-xs text-gray-700 ml-1">
-                                                          {question.snapshot
-                                                            ?.difficultyLevel ||
-                                                            "Not specified"}
-                                                        </span>
-                                                      </div>
-                                                      <div>
-                                                        <span className="text-xs font-medium text-gray-500">
-                                                          Skills:
-                                                        </span>
-                                                        <span className="text-xs text-gray-700 ml-1">
-                                                          {question.snapshot?.skill?.join(
-                                                            ", "
-                                                          ) || "None"}
-                                                        </span>
+                                                      {/* Additional question metadata */}
+                                                      <div className="grid grid-cols-2 gap-4 mt-3">
+                                                        <div>
+                                                          <span className="text-xs font-medium text-gray-500">
+                                                            Difficulty:
+                                                          </span>
+                                                          <span className="text-xs text-gray-700 ml-1">
+                                                            {question.snapshot
+                                                              ?.difficultyLevel ||
+                                                              "Not specified"}
+                                                          </span>
+                                                        </div>
+                                                        <div>
+                                                          <span className="text-xs font-medium text-gray-500">
+                                                            Skills:
+                                                          </span>
+                                                          <span className="text-xs text-gray-700 ml-1">
+                                                            {question.snapshot?.skill?.join(
+                                                              ", "
+                                                            ) || "None"}
+                                                          </span>
+                                                        </div>
                                                       </div>
                                                     </div>
-                                                  </div>
-                                                )}
+                                                  )}
                                               </div>
                                             )
                                           )
@@ -1989,50 +1986,49 @@ const RoundCard = ({
         interviewData={interviewData}
       />
 
-      {/* Shared reason modal for Cancel */}
-      <RoundStatusReasonModal
+      {/* Modal for Cancel using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
         isOpen={cancelReasonModalOpen}
-        title="Cancel Round"
-        label="Reason for Cancellation"
-        options={CANCEL_OPTIONS}
         onClose={() => {
           setCancelReasonModalOpen(false);
           setActionInProgress(false);
         }}
         onConfirm={handleCancelWithReason}
-        confirmLabel="Confirm Cancel"
-        roundData={round}
-        showPolicyInfo={true}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Cancel"
         isLoading={isCancellingRound}
       />
 
-      {/* Shared reason modal for No Show */}
-      <RoundStatusReasonModal
+      {/* Modal for No Show using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
         isOpen={noShowReasonModalOpen}
-        title="Mark as No Show"
-        label="Reason for No Show"
-        options={NO_SHOW_OPTIONS}
         onClose={() => {
           setNoShowReasonModalOpen(false);
           setActionInProgress(false);
         }}
         onConfirm={handleNoShowWithReason}
-        confirmLabel="Confirm No Show"
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="NoShow"
+        isLoading={isNoShowingRound}
       />
 
-      {/* Shared reason modal for Reject */}
-      <RoundStatusReasonModal
+      {/* Modal for Reject using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
         isOpen={rejectReasonModalOpen}
-        title="Reject Candidate"
-        label="Reason for Rejection"
-        options={REJECT_OPTIONS}
         onClose={() => {
           setRejectReasonModalOpen(false);
           setActionInProgress(false);
         }}
         onConfirm={handleRejectWithReason}
-        confirmLabel="Confirm Reject"
-        confirmButtonVariant="destructive" // optional: makes button red
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Reject"
+        isLoading={false}
       />
 
       {(completedReasonModalOpen || selectedReasonModalOpen) &&
@@ -2056,13 +2052,12 @@ const RoundCard = ({
                   No, Cancel
                 </Button>
                 <Button
-                  className={`${
-                    confirmAction === "Cancelled" &&
+                  className={`${confirmAction === "Cancelled" &&
                     "bg-red-600 hover:bg-red-700"
-                  }`}
+                    }`}
                   variant="success"
                   onClick={() => handleConfirmStatusChange({ change: true })}
-                  // onClick={handleConfirmStatusChange({ change: true })}
+                // onClick={handleConfirmStatusChange({ change: true })}
                 >
                   Yes, Confirm
                 </Button>
