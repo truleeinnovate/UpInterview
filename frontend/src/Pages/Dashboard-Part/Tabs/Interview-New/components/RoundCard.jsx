@@ -103,7 +103,7 @@ const RoundCard = ({
   const [noShowReasonModalOpen, setNoShowReasonModalOpen] = useState(false);
   const [rejectReasonModalOpen, setRejectReasonModalOpen] = useState(false);
   const [completeReasonModalOpen, setCompleteReasonModalOpen] = useState(false);
-  const [skippedReasonModalOpen, setSkippedReasonModalOpen] = useState(false);
+  const [evaluatedReasonModalOpen, setEvaluatedReasonModalOpen] = useState(false);
   const [completedReasonModalOpen, setCompletedReasonModalOpen] =
     useState(false);
   const [selectedReasonModalOpen, setSelectedReasonModalOpen] = useState(false);
@@ -342,11 +342,11 @@ const RoundCard = ({
     }
   };
 
-  // handling Skipped functionlity
-  const handleSkippedWithReason = async ({ reason, comment }) => {
+  // handling Evaluated functionlity
+  const handleEvaluatedWithReason = async ({ reason, comment }) => {
     try {
-      await handleStatusChange("Skipped", reason, comment || null);
-      setSkippedReasonModalOpen(false);
+      await handleStatusChange("Evaluated", reason, comment || null);
+      setEvaluatedReasonModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
       setActionInProgress(false);
@@ -868,8 +868,8 @@ const RoundCard = ({
 
   const handleActionClick = (action) => {
     setActionInProgress(true);
-    if (action === "Skipped") {
-      setSkippedReasonModalOpen(true);
+    if (action === "Evaluated") {
+      setEvaluatedReasonModalOpen(true);
       setActionInProgress(true);
       return;
     }
@@ -877,11 +877,12 @@ const RoundCard = ({
     if (
       action === "Completed" ||
       // action === "Cancelled" ||
+      // action === "NoShow" ||
       action === "Rejected" ||
       action === "Selected" ||
       action === "Scheduled" || // <-- add this line
-      // action === "Skipped" || // Handled by separate modal
-      action === "Evaluated" ||
+      action === "Skipped" ||
+      // action === "Evaluated" ||
       action === "FeedbackPending"
     ) {
       setConfirmAction(action);
@@ -2167,18 +2168,18 @@ const RoundCard = ({
         isLoading={false}
       />
 
-      {/* Modal for Skipped using DateChangeConfirmationModal */}
+      {/* Modal for Evaluated using DateChangeConfirmationModal */}
       <DateChangeConfirmationModal
-        isOpen={skippedReasonModalOpen}
+        isOpen={evaluatedReasonModalOpen}
         onClose={() => {
-          setSkippedReasonModalOpen(false);
+          setEvaluatedReasonModalOpen(false);
           setActionInProgress(false);
         }}
-        onConfirm={handleSkippedWithReason}
+        onConfirm={handleEvaluatedWithReason}
         selectedInterviewType={round?.interviewerType}
         status={round?.roundStatus}
         combinedDateTime={round?.dateTime}
-        actionType="Skipped"
+        actionType="Evaluated"
         isLoading={false}
       />
 
@@ -2193,15 +2194,13 @@ const RoundCard = ({
                   ? "Complete"
                   : selectedReasonModalOpen
                     ? "Select"
-                    : confirmAction === "Evaluated"
-                      ? "mark as Evaluated"
+                    : confirmAction === "Skipped"
+                      ? "mark as Skipped"
                       : confirmAction === "FeedbackPending"
                         ? "mark as Feedback Pending"
-                        : confirmAction === "Skipped"
-                          ? "Skip"
-                          : confirmAction === "Scheduled"
-                            ? "mark as Scheduled"
-                            : "Reject"}{" "}
+                        : confirmAction === "Scheduled"
+                          ? "mark as Scheduled"
+                          : "Reject"}{" "}
                 this round?
               </h3>
               <div className="flex justify-end space-x-3">

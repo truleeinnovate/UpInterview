@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { useInterviewPolicies } from "../../../../../apiHooks/useInterviewPolicies";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect";
-import { CANCEL_OPTIONS, NO_SHOW_OPTIONS, REJECT_OPTIONS, SKIPPED_OPTIONS } from "../../../../../utils/roundHistoryOptions";
+import { CANCEL_OPTIONS, NO_SHOW_OPTIONS, REJECT_OPTIONS, SKIPPED_OPTIONS, EVALUATED_OPTIONS } from "../../../../../utils/roundHistoryOptions";
 
 // Policy warning component - only for External interviews
 const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
@@ -167,12 +167,12 @@ const DateChangeConfirmationModal = ({
   const isRequestSent = status === "RequestSent";
   const isScheduledOrReschedule = ["Scheduled", "Rescheduled"].includes(status);
 
-  // Check if this is a Cancel, NoShow, or Reject action
+  // Check if this is a Cancel, NoShow, Reject, or Evaluated action
   const isCancelAction = actionType === "Cancel";
   const isNoShowAction = actionType === "NoShow";
   const isRejectAction = actionType === "Reject";
-  const isSkippedAction = actionType === "Skipped";
-  const requiresReason = isCancelAction || isNoShowAction || isRejectAction || isSkippedAction;
+  const isEvaluatedAction = actionType === "Evaluated";
+  const requiresReason = isCancelAction || isNoShowAction || isRejectAction || isEvaluatedAction;
 
   // Get the appropriate options for the dropdown
   const reasonOptions = isCancelAction
@@ -181,8 +181,8 @@ const DateChangeConfirmationModal = ({
       ? NO_SHOW_OPTIONS
       : isRejectAction
         ? REJECT_OPTIONS
-        : isSkippedAction
-          ? SKIPPED_OPTIONS
+        : isEvaluatedAction
+          ? EVALUATED_OPTIONS
           : [];
 
   const dropdownOptions = reasonOptions.map((opt) => ({
@@ -214,7 +214,7 @@ const DateChangeConfirmationModal = ({
     if (isCancelAction) return "Cancel Round";
     if (isNoShowAction) return "Mark as No Show";
     if (isRejectAction) return "Reject Candidate";
-    if (isSkippedAction) return "Mark as Skipped";
+    if (isEvaluatedAction) return "Mark as Evaluated";
     return "Confirm Interview Change";
   };
 
@@ -224,7 +224,7 @@ const DateChangeConfirmationModal = ({
     if (isCancelAction) return "Confirm Cancel";
     if (isNoShowAction) return "Confirm No Show";
     if (isRejectAction) return "Confirm Reject";
-    if (isSkippedAction) return "Confirm Skip";
+    if (isEvaluatedAction) return "Confirm Evaluation";
     if (isExternal && isRequestSent) return "Proceed & Cancel Invitations";
     if (isExternal && isScheduledOrReschedule) return "Proceed & Apply Policy";
     return "Proceed & Clear Interviewers";
@@ -245,8 +245,8 @@ const DateChangeConfirmationModal = ({
 
         {/* Body */}
         <div className="px-6 py-6 max-h-[60vh] overflow-y-auto space-y-4">
-          {/* Cancel/NoShow/Reject/Skipped Actions */}
-          {(isCancelAction || isNoShowAction || isRejectAction || isSkippedAction) && (
+          {/* Cancel/NoShow/Reject/Evaluated Actions */}
+          {(isCancelAction || isNoShowAction || isRejectAction || isEvaluatedAction) && (
             <>
               {/* Show policy warning ONLY for External Cancel action */}
               {isExternal && isCancelAction && (
@@ -257,11 +257,11 @@ const DateChangeConfirmationModal = ({
                 />
               )}
 
-              {/* For Internal, NoShow, Reject, or Skipped show simple message */}
-              {(isInternal || isRejectAction || isNoShowAction || isSkippedAction) && (
+              {/* For Internal, NoShow, Reject, or Evaluated show simple message */}
+              {(isInternal || isRejectAction || isNoShowAction || isEvaluatedAction) && (
                 <div className="text-sm text-gray-700 leading-relaxed">
                   <p>
-                    You are about to <strong>{isCancelAction ? "cancel" : isNoShowAction ? "mark as no show" : isRejectAction ? "reject" : "mark as skipped"}</strong> this {isRejectAction ? "candidate" : "round"}.
+                    You are about to <strong>{isCancelAction ? "cancel" : isNoShowAction ? "mark as no show" : isRejectAction ? "reject" : "mark as evaluated"}</strong> this {isRejectAction ? "candidate" : "round"}.
                   </p>
                 </div>
               )}
@@ -269,7 +269,7 @@ const DateChangeConfirmationModal = ({
               {/* Reason Dropdown - Always show for these actions */}
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for {isCancelAction ? "Cancellation" : isNoShowAction ? "No Show" : isRejectAction ? "Rejection" : "Skipping"}
+                  Reason for {isCancelAction ? "Cancellation" : isNoShowAction ? "No Show" : isRejectAction ? "Rejection" : "Evaluation"}
                 </label>
                 <DropdownSelect
                   options={dropdownOptions}
@@ -365,7 +365,7 @@ const DateChangeConfirmationModal = ({
           <button
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
-            className={`px-6 py-2.5 rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isCancelAction || isNoShowAction || isSkippedAction
+            className={`px-6 py-2.5 rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isCancelAction || isNoShowAction || isEvaluatedAction
               ? "bg-red-600 text-white hover:bg-red-700"
               : "bg-red-600 text-white hover:bg-red-700"
               }`}

@@ -15,12 +15,13 @@ const interviewSchema = new mongoose.Schema({
     },
 
     scheduleType: String,
-    ownerId:   mongoose.Schema.Types.ObjectId,
+    ownerId: mongoose.Schema.Types.ObjectId,
     tenantId: mongoose.Schema.Types.ObjectId,
     allowParallelScheduling: { type: Boolean, default: false },
     //   ownerId:   {type: mongoose.Schema.Types.ObjectId, ref: 'Users'},
     // tenantId: {type: mongoose.Schema.Types.ObjectId, ref: 'tenant'},
     completionReason: String,
+    allowParallelScheduling: { type: Boolean, default: false },
     // <------------------------------- v1.0.0
     interviewCode: { type: String, unique: true, sparse: true }, // <-- it will store INT-00001, INT-00002 with unique constraint -->
     // ------------------------------ v1.0.0 >
