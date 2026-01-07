@@ -30,15 +30,15 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [webcamOn, setWebcamOn] = useState(false);
-  const [videoTrack, setVideoTrack] = useState(null);
-  const [audioTrack, setAudioTrack] = useState(null);
+  // const [videoTrack, setVideoTrack] = useState(null);
+  // const [audioTrack, setAudioTrack] = useState(null);
   const videoPlayerRef = useRef();
   const audioPlayerRef = useRef();
   const videoTrackRef = useRef();
   const audioTrackRef = useRef();
   const micStreamRef = useRef();
   // Get media devices
-  const { getCameras, getMicrophones, getPlaybackDevices } = useMediaDevice();
+  // const { getCameras, getMicrophones, getPlaybackDevices } = useMediaDevice();
 
   // Extract URL data once
   const urlData = useMemo(
@@ -46,7 +46,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     [location.search]
   );
 
-  // console.log("urlData in RoleSelector:", urlData);
+  console.log("urlData in RoleSelector:", urlData);
 
   const { data, isLoading } = useInterviewDetails(
     urlData.roundData ? { roundId: urlData.roundData } : {}
@@ -69,6 +69,8 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   const isFinalStatus = ["InProgress", "Scheduled", "Rescheduled"].includes(
     currentStatus
   );
+
+  console.log("Current Status:", interviewRoundData);
 
   // Function to update interview status to "in-progress"
   const updateInterviewStatus = async () => {
@@ -93,8 +95,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
       const response = await updateRoundStatus({
         roundId: interviewRoundData?._id,
         interviewId: interviewRoundData?.interviewId,
-        status: "InProgress",
+        action: "InProgress",
       });
+
+      return response;
       // console.log("Status update response:", response);
 
       // toast.success("Interview marked as in progress", {});
@@ -109,10 +113,27 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // Handle role selection
   const handleRoleSelect = async (role) => {
     if (role === "interviewer") {
-      // Update status to "in-progress" before proceeding
-      await updateInterviewStatus();
+      try {
+        // Wait for the API call to succeed
+        await updateInterviewStatus();
+
+        // Only proceed if API call was successful
+        onRoleSelect(role);
+      } catch (error) {
+        // Handle the error - don't call onRoleSelect
+        console.error("Failed to update interview status:", error);
+        // You could show a toast message here
+        // toast.error("Failed to start interview. Please try again.");
+      }
+    } else {
+      // For candidate role, proceed directly
+      onRoleSelect(role);
     }
-    onRoleSelect(role);
+    // if (role === "interviewer") {
+    //   // Update status to "in-progress" before proceeding
+    //   await updateInterviewStatus();
+    // }
+    // onRoleSelect(role);
   };
 
   // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"

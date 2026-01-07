@@ -521,7 +521,6 @@ function RoundFormPosition() {
           roundEditData.roundTitle === "Assessment" &&
           roundEditData.assessmentId
         ) {
-          
           // setAssessmentTemplate(assessmentDataForTemplate);
           // fetchQuestionsForAssessment(roundEditData.assessmentId);
           if (roundEditData?.assessmentId) {
@@ -533,10 +532,7 @@ function RoundFormPosition() {
                   setSectionQuestions(data?.sections);
                 } else {
                   setAssessmentQuestionsLoading(false);
-                  console.error(
-                    "Error fetching assessment questions:",
-                    error
-                  );
+                  console.error("Error fetching assessment questions:", error);
                 }
               }
             );
@@ -1022,6 +1018,12 @@ function RoundFormPosition() {
     const assessmentData = {
       assessmentId: assessment._id,
       assessmentName: assessment.AssessmentTitle,
+      // Capture these fields for the UI display
+      totalScore: assessment?.totalScore,
+      passScore: assessment?.passScore,
+      passScoreType: assessment?.passScoreType,
+      linkExpiryDays: assessment?.linkExpiryDays || 3,
+      expiryDate: assessment?.ExpiryDate,
     };
     // setAssessmentTemplate(assessmentData); // Update state directly
 
@@ -1185,8 +1187,8 @@ function RoundFormPosition() {
                           name="interviewMode"
                           value={formData.interviewMode}
                           options={[
-                            { value: "Face to Face", label: "Face to Face" },
                             { value: "Virtual", label: "Virtual" },
+                            { value: "Face to Face", label: "Face to Face" },
                           ]}
                           onChange={(e) => {
                             setFormData((prev) => ({
@@ -1268,7 +1270,9 @@ function RoundFormPosition() {
                                 setAssessmentSearch(inputValue || "");
                               }
                             }}
-                            onMenuScrollToBottom={handleAssessmentMenuScrollToBottom}
+                            onMenuScrollToBottom={
+                              handleAssessmentMenuScrollToBottom
+                            }
                             onChange={(e) => {
                               const selected = (assessmentData || []).find(
                                 (a) => a._id === e.target.value
@@ -1291,6 +1295,59 @@ function RoundFormPosition() {
                             }}
                             error={errors.assessmentTemplate}
                           />
+
+                          {/* Assessment Metadata Summary */}
+                          {formData.assessmentTemplate.assessmentId && (
+                            <div className="col-span-2 mt-6 mb-4 grid grid-cols-4 gap-4 p-3 bg-blue-50/40 border border-blue-100 rounded-lg">
+                              <div className="flex flex-col">
+                                <span className="text-sm text-gray-800 font-semibold mb-2">
+                                  Total Score
+                                </span>
+                                <span className="text-xs font-semibold text-gray-500">
+                                  {formData?.assessmentTemplate?.totalScore}{" "}
+                                  Points
+                                </span>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-sm text-gray-800 font-semibold mb-2">
+                                  Pass Criteria
+                                </span>
+                                <span className="text-xs font-semibold text-gray-500">
+                                  {formData?.assessmentTemplate?.passScore}
+                                  {formData?.assessmentTemplate
+                                    ?.passScoreType === "Percentage"
+                                    ? "%"
+                                    : " Points"}
+                                </span>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-sm text-gray-800 font-semibold mb-2">
+                                  Link Valid For
+                                </span>
+                                <div className="flex text-xs items-center gap-1 text-gray-500">
+                                  <span>
+                                    {formData?.assessmentTemplate
+                                      ?.linkExpiryDays || 3}
+                                  </span>
+                                  <span className="font-semibold text-xs">
+                                    Days
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-sm text-gray-800 font-semibold mb-2">
+                                  Expiry Date
+                                </span>
+                                <span className="text-xs font-medium text-red-500">
+                                  {formData.assessmentTemplate?.expiryDate
+                                    ? new Date(
+                                        formData.assessmentTemplate.expiryDate
+                                      ).toLocaleDateString()
+                                    : "N/A"}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </>
                     )}

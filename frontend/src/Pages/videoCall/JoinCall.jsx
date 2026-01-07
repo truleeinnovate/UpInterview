@@ -33,7 +33,7 @@ function JoinMeeting() {
   const [authError, setAuthError] = useState(null);
   const [authType, setAuthType] = useState(null);
 
-  console.log("JoinMeeting rendered", authType);
+  // console.log("JoinMeeting rendered", authType);
 
   // Extract URL data once
   const urlData = useMemo(
@@ -41,7 +41,7 @@ function JoinMeeting() {
     [location.search]
   );
 
-  console.log("location.search", urlData);
+  // console.log("location.search", urlData);
 
   useEffect(() => {
     setDecodedData(urlData);
@@ -69,7 +69,7 @@ function JoinMeeting() {
     !urlData.isCandidate ? urlData?.interviewRoundId : null
   );
 
-  console.log("contactData", contactData);
+  // console.log("contactData", contactData);
 
   // Scheduler query
   const { data: schedulerData, isLoading: schedulerLoading } =

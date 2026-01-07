@@ -53,6 +53,7 @@ import { ROUND_TITLES } from "../../CommonCode-AllTabs/roundTitlesConfig.js";
 import { useVideoSettingsQuery } from "../../../../../apiHooks/VideoDetail.js";
 import { useGroupsQuery } from "../../../../../apiHooks/useInterviewerGroups.js";
 import DateChangeConfirmationModal from "../components/DateChangeConfirmationModal.jsx";
+import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
 const {
   calculateExpiryDate,
 } = require("../../../../../utils/calculateExpiryDateForInterviewRequests.js");
@@ -297,6 +298,8 @@ const RoundFormInterviews = () => {
   const location = useLocation();
   const isReschedule = location.state?.isReschedule || false;
 
+  console.log("Round Edit Data:", roundEditData);
+
   const handleAssessmentMenuScrollToBottom = () => {
     if (isAssessmentQueryLoading) return;
     if (!totalAssessments || assessmentLimit >= totalAssessments) return;
@@ -354,6 +357,15 @@ const RoundFormInterviews = () => {
     const hh = pad(date.getHours());
     const mm = pad(date.getMinutes());
     return `${y}-${m}-${d}T${hh}:${mm}`;
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
 
   // Helper: minimum selectable scheduled time = now + 2 hours (local time)
@@ -899,7 +911,13 @@ const RoundFormInterviews = () => {
     // Basic fields
     setRoundTitle(roundEditData.roundTitle || "");
     setInterviewType(roundEditData.interviewType || "instant");
-    setInterviewMode(roundEditData.interviewMode || "");
+    // setInterviewMode(roundEditData.interviewMode || "");
+    // Capitalize first letter to match dropdown options
+    const normalizedMode = roundEditData.interviewMode
+      ? roundEditData.interviewMode.charAt(0).toUpperCase() +
+        roundEditData.interviewMode.slice(1)
+      : "";
+    setInterviewMode(normalizedMode);
     setSelectedInterviewType(roundEditData.interviewerType || null);
     setInterviewQuestionsList(roundEditData.questions || []);
     if (status !== roundEditData.status) setStatus(roundEditData.status);
@@ -1065,6 +1083,7 @@ const RoundFormInterviews = () => {
     groups,
     hasManuallyClearedInterviewers,
     editingAssessment,
+    assessmentData,
   ]);
 
   // SUPER SIMPLE: Just check if field should be disabled
@@ -1741,7 +1760,8 @@ const RoundFormInterviews = () => {
               (roundEditData?.pendingOutsourceRequests || [])
                 .map((req) => req.interviewerId?._id || req.interviewerId?.id)
                 .sort()
-            );
+            ) &&
+          roundEditData?.roundTitle !== "Assessment"; // Exclude Assessment rounds from safe update
 
         // Check if only safe fields changed
         const safeFieldsChanged =
@@ -1749,6 +1769,9 @@ const RoundFormInterviews = () => {
           sequence !== originalSequence ||
           JSON.stringify(interviewQuestionsList) !==
             JSON.stringify(originalQuestions);
+
+        console.log("criticalFieldsUnchanged:", criticalFieldsUnchanged);
+        console.log("safeFieldsChanged:", safeFieldsChanged);
 
         if (criticalFieldsUnchanged && safeFieldsChanged) {
           console.log(
@@ -1826,6 +1849,8 @@ const RoundFormInterviews = () => {
         updatedRescheduleCount = roundEditData?.rescheduleCount || 0;
       }
 
+      console.log("assessmentTemplate", assessmentTemplate);
+
       const interviewDateTime = new Date(combinedDateTime);
       const expiryDateTime = calculateExpiryDate(interviewDateTime);
 
@@ -1896,6 +1921,11 @@ const RoundFormInterviews = () => {
       }
 
       console.log("roundData", roundData);
+
+      // ✅ CLEAR INTERVIEWERS (popup confirmed)
+      if (roundTitle === "Assessment") {
+        updateType = "AssessmentChange";
+      }
 
       // ✅ CLEAR INTERVIEWERS (popup confirmed)
       if (type === "confirmClearinterviwers") {
@@ -2269,10 +2299,6 @@ const RoundFormInterviews = () => {
   };
 
   const handleAssessmentSelect = (assessment) => {
-    console.log(
-      "SELECTED ASSESSMENT ==================================> ",
-      assessment
-    );
     const assessmentData = {
       assessmentId: assessment._id,
       assessmentName: assessment.AssessmentTitle,
@@ -2413,15 +2439,25 @@ const RoundFormInterviews = () => {
           />
 
           <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                {isEditing ? "Edit Interview Round" : "Add New Interview Round"}
-              </h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                {isEditing
-                  ? "Update the round details below"
-                  : "Fill in the details to add a new interview round"}
-              </p>
+            <div className="flex items-center justify-between">
+              <div className="px-4 py-5">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  {isEditing
+                    ? "Edit Interview Round"
+                    : "Add New Interview Round"}
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {isEditing
+                    ? "Update the round details below"
+                    : "Fill in the details to add a new interview round"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-5">
+                <span className="text-gray-600 text-sm font-semibold">
+                  Active Service:
+                </span>
+                <MeetPlatformBadge platform={selectedMeetingPlatform} />
+              </div>
             </div>
             {/* v1.0.5 <------------------------------------------------ */}
             <div className="border-t border-gray-200 px-4 py-5">
@@ -2482,8 +2518,8 @@ const RoundFormInterviews = () => {
                           name="interviewMode"
                           value={interviewMode}
                           options={[
-                            { value: "Face to Face", label: "Face to Face" },
                             { value: "Virtual", label: "Virtual" },
+                            { value: "Face to Face", label: "Face to Face" },
                           ]}
                           // onChange={(e) => {
                           //   setInterviewMode(e.target.value);
@@ -2624,20 +2660,20 @@ const RoundFormInterviews = () => {
 
                           {/* Assessment Metadata Summary */}
                           {selectedAssessmentData && (
-                            <div className="col-span-2 mt-6 grid grid-cols-3 gap-4 p-3 bg-blue-50/30 border border-blue-100 rounded-lg">
+                            <div className="col-span-2 mt-6 grid grid-cols-4 gap-4 p-3 bg-blue-50/30 border border-blue-100 rounded-lg">
                               <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
+                                <span className="text-sm tracking-wider text-gray-900 font-bold">
                                   Total Score
                                 </span>
-                                <span className="text-sm font-semibold text-gray-900">
+                                <span className="text-xs font-semibold text-gray-400">
                                   {selectedAssessmentData?.totalScore} Points
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
+                                <span className="text-sm tracking-wider text-gray-900 font-bold">
                                   Pass Criteria
                                 </span>
-                                <span className="text-sm font-semibold text-gray-900">
+                                <span className="text- font-semibold text-gray-400">
                                   {selectedAssessmentData?.passScore}
                                   {selectedAssessmentData?.passScoreType ===
                                   "Percentage"
@@ -2646,25 +2682,23 @@ const RoundFormInterviews = () => {
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+                                <span className="text-[10px] tracking-wider text-gray-900 font-bold">
                                   Link Valid For
                                 </span>
-                                <div className="flex items-center gap-1">
+                                <div className="flex text-xs items-center gap-1 text-gray-400">
                                   <span>
                                     {selectedAssessmentData?.linkExpiryDays ||
                                       3}
                                   </span>
-                                  <span className="text-sm font-semibold text-custom-blue">
-                                    Days
-                                  </span>
+                                  <span className="font-semibold">Days</span>
                                 </div>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
+                                <span className="text-sm tracking-wider text-gray-400 font-bold">
                                   Expiry Date
                                 </span>
-                                <span className="text-sm font-semibold text-orange-600">
-                                  {formatDateTime(
+                                <span className="text-xs font-semibold text-orange-600">
+                                  {formatDate(
                                     selectedAssessmentData?.ExpiryDate
                                   )}
                                 </span>

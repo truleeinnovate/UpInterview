@@ -13,6 +13,7 @@ const SingleRoundView = ({
   onEditRound,
   onChangeRound,
 }) => {
+  console.log("SINGLE ROUND CARDS =======================================> ", rounds);
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
 
