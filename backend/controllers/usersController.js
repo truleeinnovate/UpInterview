@@ -303,7 +303,7 @@ const getInterviewers = async (req, res) => {
       tenantId,
       // ------------------------------ v1.0.0 >
     })
-      .populate({ path: "roleId", select: "label" })
+      .populate({ path: "roleId", select: "label roleName" })
       .lean();
     // console.log('✅ [getInterviewers] Internal users fetched:', internalUsers.length); //internal
 
@@ -336,6 +336,9 @@ const getInterviewers = async (req, res) => {
             },
 
             roleLabel: user?.roleId?.label || "",
+            roleName: user?.roleId?.roleName || "",
+
+
             type: "internal",
 
             days: [],
