@@ -65,7 +65,7 @@ const RoundActivityModal = ({ isOpen, onClose, round, interviewData }) => {
       />
       <div className="w-full max-w-xl h-full bg-white shadow-xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-5 py-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Round Activity</h3>
             <p className="text-sm text-gray-500 mt-0.5">
@@ -129,10 +129,10 @@ const RoundActivityModal = ({ isOpen, onClose, round, interviewData }) => {
                     className="rounded-lg bg-white shadow-sm p-4"
                   >
                     {/* Title Row with Status Badge */}
-                    <div className="flex justify-between items-center gap-2 mb-2">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-blue-900">
+                    <div className="flex justify-end items-center gap-2 mb-2">
+                      {/* <div className="flex items-center gap-2 text-sm font-semibold text-blue-900">
                         <Activity className="h-4 w-4" />
-                      </div>
+                      </div> */}
 
                       {entry?.action && (
                         <span
