@@ -86,8 +86,8 @@ function JoinMeeting() {
 
   // useInterviews
 
-  const { data, isLoading } = useInterviewDetails(
-    urlData.interviewRoundId ? { roundId: urlData.interviewRoundId } : {}
+ const { data, isLoading } = useInterviewDetails(
+    {roundId: urlData.interviewRoundId}
   );
 
   console.log('data11', data);
