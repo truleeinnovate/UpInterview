@@ -48,8 +48,8 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
   console.log("urlData in RoleSelector:", urlData);
 
-  const { data, isLoading } = useInterviewDetails(
-    urlData.interviewRoundId ? { roundId: urlData.interviewRoundId } : {}
+ const { data, isLoading } = useInterviewDetails(
+    {roundId: urlData.interviewRoundId}
   );
 
   console.log('data 22 from roleselector', data);
