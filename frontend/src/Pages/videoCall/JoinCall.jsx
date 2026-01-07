@@ -90,11 +90,13 @@ function JoinMeeting() {
     urlData.isCandidate ? { interviewRoundId: urlData.interviewRoundId } : {}
   );
 
+  console.log('data11', data);
+
   const candidateData = data;
 
   // setAuthType(contactData.tenant?.type || "organization");
 
-  console.log("candidateData", candidateData?.tenant);
+  console.log("candidateData11", candidateData?.tenant);
 
   // Feedback query (existing)
   const {

@@ -67,6 +67,8 @@ const CandidateView = () =>
     urlData.isCandidate ? { roundId: urlData.roundData } : {}
   );
 
+  console.log('data11 from candidate view' , data);
+
   const candidateData = data?.candidateId || {};
   const positionData = data?.positionId || {};
   const interviewRoundData = data?.rounds[0] || {};
