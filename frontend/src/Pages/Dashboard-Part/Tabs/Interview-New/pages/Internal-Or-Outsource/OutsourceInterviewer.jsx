@@ -44,12 +44,17 @@ const OutsourcedInterviewerCard = ({
   candidateExperience,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const fullName =
-    interviewer?.contact?.firstName || interviewer?.contact?.Name || "Unnamed";
+  const firstName = interviewer?.contact?.firstName ?? "";
+  const lastName = interviewer?.contact?.lastName ?? "";
+
+  const fullName = `${firstName} ${lastName}`.trim() || "Unnamed";
+
   const professionalTitle =
-    interviewer?.contact?.professionalTitle ||
-    interviewer?.contact?.CurrentRole ||
-    "Interviewer";
+    interviewer?.contact?.professionalTitle;
+  //  ||
+  // interviewer?.contact?.CurrentRole ||
+  // "Interviewer";
+  const CurrentRole = interviewer?.contact?.currentRole;
   const company = interviewer?.contact?.industry || "Freelancer";
 
   // ✅ New logic: get rate based on candidate experience
@@ -119,12 +124,15 @@ const OutsourcedInterviewerCard = ({
               <h3 className="text-base font-medium text-gray-900">
                 {fullName}
               </h3>
+              {CurrentRole && (
+                <p className="text-xs text-gray-500">{CurrentRole}</p>
+              )}
               <p
                 className="text-sm text-gray-500 truncate max-w-[200px]"
                 title={professionalTitle}
               >
-                {professionalTitle.length > 15
-                  ? `${professionalTitle.substring(0, 15)}...`
+                {professionalTitle?.length > 70
+                  ? `${professionalTitle.substring(0, 70)}...`
                   : professionalTitle}
               </p>
               <p className="text-xs text-orange-600">{company}</p>
@@ -145,7 +153,7 @@ const OutsourcedInterviewerCard = ({
       </div>
       {/* v1.0.3 -----------------------------------------------------------------------> */}
 
-      <div className="mt-3 w-40">
+      <div className="mt-3 w-60">
         <div
           className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${isExpanded ? "line-clamp-none" : "line-clamp-2"
             }`}
@@ -1024,8 +1032,11 @@ function OutsourcedInterviewerModal({
     };
 
     const filtered = baseInterviewers.filter((interviewer) => {
-      const fullName =
-        interviewer?.contact?.firstName || interviewer?.contact?.Name || "";
+      const firstName = interviewer?.contact?.firstName ?? "";
+      const lastName = interviewer?.contact?.lastName ?? "";
+
+      const fullName = `${firstName} ${lastName}`.trim() || "Unnamed";
+
       const professionalTitle =
         interviewer?.contact?.professionalTitle ||
         interviewer?.contact?.CurrentRole ||
