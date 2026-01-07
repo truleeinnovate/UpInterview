@@ -142,8 +142,8 @@ const InternalInterviews = ({
           // Filter by selected role
           if (
             selectedRole !== "all" &&
-            // interviewer?.roleName !== selectedRole
-            interviewer?.roleLabel !== selectedRole
+            interviewer?.roleName !== selectedRole
+            // interviewer?.roleLabel !== selectedRole
           ) {
             return false;
           }
@@ -175,7 +175,7 @@ const InternalInterviews = ({
 
           /* System role (permission role) */
           roleName: interviewer?.roleName,
-          roleLabel: getRoleLabel(interviewer?.roleLabel),
+          roleLabel: getRoleLabel(interviewer?.roleName),
           profilePic: interviewer?.contact?.imageData?.path,
 
           /* Current role (designation) */
