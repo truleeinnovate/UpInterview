@@ -88,101 +88,101 @@ function AssessmentTest({
   };
 
 
-// Enhanced verifyAnswer function with comprehensive trimming and type handling
-const verifyAnswer = (question, selectedAnswer) => {
-  const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
-  const questionType = question.snapshot?.questionType || question.questionType;
-  
-  // Helper function to clean and normalize answers with proper trimming
-  const normalizeAnswer = (answer, preserveFormatting = false) => {
-    if (answer === null || answer === undefined || answer === '') return '';
-    
-    let processedAnswer = answer.toString();
-    
-    if (!preserveFormatting) {
-      // For most answer types, trim and normalize
-      processedAnswer = processedAnswer.trim();
-    }
-    
-    return processedAnswer;
-  };
-  
-  // Enhanced MCQ cleaning function
-  const cleanMCQAnswer = (answer) => {
-    const normalized = normalizeAnswer(answer);
-    if (!normalized) return '';
-    
-    // Remove patterns like "A) ", "B) ", "C) " etc. from the beginning
-    // Also handles "A. ", "1) ", "1. " etc.
-    const cleaned = normalized
-      .replace(/^[A-Z][).]\s*/, '')  // Remove "A) ", "B) ", "A. ", "B. "
-      .replace(/^\d+[).]\s*/, '')    // Remove "1) ", "2) ", "1. ", "2. "
-      .trim();
-    
-    return cleaned.toLowerCase();
-  };
-  
-  // Enhanced boolean normalization
-  const normalizeBoolean = (value) => {
-    const normalized = normalizeAnswer(value);
-    if (!normalized) return '';
-    
-    const trueValues = ['true', 't', 'yes', 'y', '1', 'correct', 'right'];
-    const falseValues = ['false', 'f', 'no', 'n', '0', 'incorrect', 'wrong'];
-    
-    if (trueValues.includes(normalized.toLowerCase())) return 'true';
-    if (falseValues.includes(normalized.toLowerCase())) return 'false';
-    
-    return normalized.toLowerCase(); // Return as-is for strict comparison
-  };
+  // Enhanced verifyAnswer function with comprehensive trimming and type handling
+  const verifyAnswer = (question, selectedAnswer) => {
+    const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
+    const questionType = question.snapshot?.questionType || question.questionType;
 
-  switch (questionType) {
-    case 'MCQ':
-    case 'Multiple Choice':
-      // For MCQ, clean both answers before comparison
-      const cleanedSelected = cleanMCQAnswer(selectedAnswer);
-      const cleanedCorrect = cleanMCQAnswer(correctAnswer);
-      return cleanedSelected === cleanedCorrect;
-    
-    case 'Short Answer':
-      // For short answers, trim and compare case-insensitively
-      const shortSelected = normalizeAnswer(selectedAnswer);
-      const shortCorrect = normalizeAnswer(correctAnswer);
-      return shortSelected.toLowerCase() === shortCorrect.toLowerCase();
-    
-    case 'Long Answer':
-      // For long answers, trim and compare case-insensitively
-      const longSelected = normalizeAnswer(selectedAnswer);
-      const longCorrect = normalizeAnswer(correctAnswer);
-      return longSelected.toLowerCase() === longCorrect.toLowerCase();
-    
-    case 'Number':
-    case 'Numeric':
-      // For numbers, compare numerically after trimming
-      const numSelected = normalizeAnswer(selectedAnswer);
-      const numCorrect = normalizeAnswer(correctAnswer);
-      return parseFloat(numSelected) === parseFloat(numCorrect);
-    
-    case 'Boolean':
-      // For boolean, normalize both values and compare
-      const boolSelected = normalizeBoolean(selectedAnswer);
-      const boolCorrect = normalizeBoolean(correctAnswer);
-      return boolSelected === boolCorrect;
-    
-    case 'Programming':
-    case 'Code':
-      // For programming questions, preserve formatting but trim outer whitespace
-      const codeSelected = normalizeAnswer(selectedAnswer, true); // Preserve internal formatting
-      const codeCorrect = normalizeAnswer(correctAnswer, true);
-      return codeSelected === codeCorrect;
-    
-    default:
-      // Default comparison with trimming
-      const defaultSelected = normalizeAnswer(selectedAnswer);
-      const defaultCorrect = normalizeAnswer(correctAnswer);
-      return defaultSelected === defaultCorrect;
-  }
-};
+    // Helper function to clean and normalize answers with proper trimming
+    const normalizeAnswer = (answer, preserveFormatting = false) => {
+      if (answer === null || answer === undefined || answer === '') return '';
+
+      let processedAnswer = answer.toString();
+
+      if (!preserveFormatting) {
+        // For most answer types, trim and normalize
+        processedAnswer = processedAnswer.trim();
+      }
+
+      return processedAnswer;
+    };
+
+    // Enhanced MCQ cleaning function
+    const cleanMCQAnswer = (answer) => {
+      const normalized = normalizeAnswer(answer);
+      if (!normalized) return '';
+
+      // Remove patterns like "A) ", "B) ", "C) " etc. from the beginning
+      // Also handles "A. ", "1) ", "1. " etc.
+      const cleaned = normalized
+        .replace(/^[A-Z][).]\s*/, '')  // Remove "A) ", "B) ", "A. ", "B. "
+        .replace(/^\d+[).]\s*/, '')    // Remove "1) ", "2) ", "1. ", "2. "
+        .trim();
+
+      return cleaned.toLowerCase();
+    };
+
+    // Enhanced boolean normalization
+    const normalizeBoolean = (value) => {
+      const normalized = normalizeAnswer(value);
+      if (!normalized) return '';
+
+      const trueValues = ['true', 't', 'yes', 'y', '1', 'correct', 'right'];
+      const falseValues = ['false', 'f', 'no', 'n', '0', 'incorrect', 'wrong'];
+
+      if (trueValues.includes(normalized.toLowerCase())) return 'true';
+      if (falseValues.includes(normalized.toLowerCase())) return 'false';
+
+      return normalized.toLowerCase(); // Return as-is for strict comparison
+    };
+
+    switch (questionType) {
+      case 'MCQ':
+      case 'Multiple Choice':
+        // For MCQ, clean both answers before comparison
+        const cleanedSelected = cleanMCQAnswer(selectedAnswer);
+        const cleanedCorrect = cleanMCQAnswer(correctAnswer);
+        return cleanedSelected === cleanedCorrect;
+
+      case 'Short Answer':
+        // For short answers, trim and compare case-insensitively
+        const shortSelected = normalizeAnswer(selectedAnswer);
+        const shortCorrect = normalizeAnswer(correctAnswer);
+        return shortSelected.toLowerCase() === shortCorrect.toLowerCase();
+
+      case 'Long Answer':
+        // For long answers, trim and compare case-insensitively
+        const longSelected = normalizeAnswer(selectedAnswer);
+        const longCorrect = normalizeAnswer(correctAnswer);
+        return longSelected.toLowerCase() === longCorrect.toLowerCase();
+
+      case 'Number':
+      case 'Numeric':
+        // For numbers, compare numerically after trimming
+        const numSelected = normalizeAnswer(selectedAnswer);
+        const numCorrect = normalizeAnswer(correctAnswer);
+        return parseFloat(numSelected) === parseFloat(numCorrect);
+
+      case 'Boolean':
+        // For boolean, normalize both values and compare
+        const boolSelected = normalizeBoolean(selectedAnswer);
+        const boolCorrect = normalizeBoolean(correctAnswer);
+        return boolSelected === boolCorrect;
+
+      case 'Programming':
+      case 'Code':
+        // For programming questions, preserve formatting but trim outer whitespace
+        const codeSelected = normalizeAnswer(selectedAnswer, true); // Preserve internal formatting
+        const codeCorrect = normalizeAnswer(correctAnswer, true);
+        return codeSelected === codeCorrect;
+
+      default:
+        // Default comparison with trimming
+        const defaultSelected = normalizeAnswer(selectedAnswer);
+        const defaultCorrect = normalizeAnswer(correctAnswer);
+        return defaultSelected === defaultCorrect;
+    }
+  };
 
   const handleConfirmSubmit = async () => {
     try {
@@ -198,10 +198,10 @@ const verifyAnswer = (question, selectedAnswer) => {
             // console.log("Question ID:", question._id);
             const correctAnswer =
               question.snapshot?.correctAnswer || question.correctAnswer;
-          const selectedAnswer = answers[question._id];
-          const isCorrect = verifyAnswer(question, selectedAnswer);
-          const score = isCorrect ? question.score ?? 0 : 0;
-              // const selectedAnswer = answers[question._id];
+            const selectedAnswer = answers[question._id];
+            const isCorrect = verifyAnswer(question, selectedAnswer);  // Consistent logic
+            const score = isCorrect ? (question.score ?? 0) : 0;
+            // const selectedAnswer = answers[question._id];
             // const isCorrect = correctAnswer === selectedAnswer;
             // const score = isCorrect ? question.score ?? 0 : 0;
             // console.log("Correct Answer:", correctAnswer);
@@ -354,7 +354,7 @@ const verifyAnswer = (question, selectedAnswer) => {
           />
           <div className="flex-1">
             <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg">
-            {/* v1.0.1 <----------------------------------------------------------------------------------------------- */}
+              {/* v1.0.1 <----------------------------------------------------------------------------------------------- */}
               <div className="sm:p-4 md:px-4 p-8">
                 <div className="flex sm:flex-col sm:items-start items-center sm:justify-start sm:gap-4 justify-between mb-6">
                   <div className="flex sm:justify-between items-center space-x-4 sm:w-full">
@@ -377,11 +377,10 @@ const verifyAnswer = (question, selectedAnswer) => {
                       </button>
                     ) : (
                       <div
-                        className={`flex items-center px-4 py-2 rounded-lg ${
-                          timeLeft < 300
-                            ? "bg-red-100 text-red-800"
-                            : "bg-blue-100 text-custom-blue"
-                        }`}
+                        className={`flex items-center px-4 py-2 rounded-lg ${timeLeft < 300
+                          ? "bg-red-100 text-red-800"
+                          : "bg-blue-100 text-custom-blue"
+                          }`}
                       >
                         <ClockIcon className="sm:h-4 sm:w-4 h-5 w-5 mr-3" />
                         <span className="sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm font-mono font-semibold">
@@ -402,7 +401,7 @@ const verifyAnswer = (question, selectedAnswer) => {
                   {currentQuestion?.snapshot?.questionText}
                 </h3>
               </div>
-            {/* v1.0.1 -----------------------------------------------------------------------------------------------> */}
+              {/* v1.0.1 -----------------------------------------------------------------------------------------------> */}
               <QuestionDisplay
                 question={currentQuestion}
                 answers={answers}
