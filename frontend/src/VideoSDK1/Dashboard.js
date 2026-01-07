@@ -44,38 +44,17 @@ const Dashboard = () => {
   const { useInterviewDetails } = useInterviews();
 
   const location = useLocation();
+
   const urlData = useMemo(
     () => extractUrlData(location.search),
     [location.search]
   );
 
   const { data, isLoading } = useInterviewDetails(
-    urlData.isCandidate ? { roundId: urlData.roundData } : {}
+    urlData.isCandidate ? { roundId: urlData.interviewRoundId } : {}
   );
 
-  const [decodedData, setDecodedData] = useState(null);
-  const [urlRoleInfo, setUrlRoleInfo] = useState(null);
-  const [currentRole, setCurrentRole] = useState(null);
-
-  console.log("location.search", urlData);
-
-  useEffect(() => {
-    setDecodedData(urlData);
-
-    const effectiveIsInterviewer = urlData.isInterviewer || urlData.isSchedule;
-    const roleInfo = {
-      isCandidate: urlData.isCandidate,
-      isInterviewer: effectiveIsInterviewer,
-      hasRolePreference: urlData.isCandidate || effectiveIsInterviewer,
-    };
-    setUrlRoleInfo(roleInfo);
-
-    if (urlData.isCandidate) {
-      setCurrentRole("candidate");
-    }
-  }, [urlData]);
-
-console.log('urlData int he dashboard:', urlData)
+  console.log("location.search from dashboard main url", urlData);
 
   const candidateData = data?.candidateId || {};
   const positionData = data?.positionId || {};

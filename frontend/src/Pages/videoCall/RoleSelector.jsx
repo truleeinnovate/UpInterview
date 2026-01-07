@@ -49,7 +49,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   console.log("urlData in RoleSelector:", urlData);
 
   const { data, isLoading } = useInterviewDetails(
-    urlData.roundData ? { roundId: urlData.roundData } : {}
+    urlData.interviewRoundId ? { roundId: urlData.interviewRoundId } : {}
   );
 
   console.log('data 22 from roleselector', data);
@@ -112,7 +112,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
   // Handle role selection
   const handleRoleSelect = async (role) => {
-    if (role === "interviewer") {
+    // if (role === "interviewer") {
       try {
         // Wait for the API call to succeed
         await updateInterviewStatus();
@@ -125,10 +125,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
         // You could show a toast message here
         // toast.error("Failed to start interview. Please try again.");
       }
-    } else {
-      // For candidate role, proceed directly
-      onRoleSelect(role);
-    }
+    // } else {
+    //   // For candidate role, proceed directly
+    //   onRoleSelect(role);
+    // }
     // if (role === "interviewer") {
     //   // Update status to "in-progress" before proceeding
     //   await updateInterviewStatus();

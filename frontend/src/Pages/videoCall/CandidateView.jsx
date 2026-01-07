@@ -63,8 +63,10 @@ const CandidateView = () =>
     [location.search]
   );
 
+  console.log('urlData11', urlData);
+
   const { data, isLoading } = useInterviewDetails(
-    urlData.isCandidate ? { roundId: urlData.roundData } : {}
+    urlData.isCandidate ? { roundId: urlData.interviewRoundId } : {}
   );
 
   console.log('data11 from candidate view' , data);
