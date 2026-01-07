@@ -87,7 +87,7 @@ function JoinMeeting() {
   // useInterviews
 
   const { data, isLoading } = useInterviewDetails(
-    urlData.isCandidate ? { interviewRoundId: urlData.interviewRoundId } : {}
+    urlData.interviewRoundId ? { roundId: urlData.interviewRoundId } : {}
   );
 
   console.log('data11', data);
@@ -238,7 +238,7 @@ function JoinMeeting() {
   const isAnyLoading =
     preAuthLoading ||
     isAuthChecking ||
-    isLoading ||
+    // isLoading ||
     feedbackLoading ||
     schedulerLoading;
   const anyError = authError || isLoading || feedbackError || preAuthError;
