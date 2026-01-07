@@ -26,6 +26,10 @@ import {
   Share2,
   BarChart3,
   Activity,
+  UserX,
+  SkipForward,
+  ClipboardList,
+  Hourglass,
 } from "lucide-react";
 
 // import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
@@ -98,6 +102,8 @@ const RoundCard = ({
   const [cancelReasonModalOpen, setCancelReasonModalOpen] = useState(false);
   const [noShowReasonModalOpen, setNoShowReasonModalOpen] = useState(false);
   const [rejectReasonModalOpen, setRejectReasonModalOpen] = useState(false);
+  const [completeReasonModalOpen, setCompleteReasonModalOpen] = useState(false);
+  const [skippedReasonModalOpen, setSkippedReasonModalOpen] = useState(false);
   const [completedReasonModalOpen, setCompletedReasonModalOpen] =
     useState(false);
   const [selectedReasonModalOpen, setSelectedReasonModalOpen] = useState(false);
@@ -275,7 +281,7 @@ const RoundCard = ({
 
       // Add cancellation / NoShow reason if provided
       if (
-        (newStatus === "Cancelled" || newStatus === "NoShow") &&
+        (newStatus === "Cancelled" || newStatus === "NoShow" || newStatus === "Skipped") &&
         reasonValue
       ) {
         payload.cancellationReason = reasonValue;
@@ -326,6 +332,28 @@ const RoundCard = ({
   };
 
   // handling Rejection functionlity
+  const handleCompleteWithReason = async ({ reason, comment }) => {
+    try {
+      await handleStatusChange("Completed", reason, comment || null);
+      setCompleteReasonModalOpen(false);
+      setActionInProgress(false);
+    } catch (error) {
+      setActionInProgress(false);
+    }
+  };
+
+  // handling Skipped functionlity
+  const handleSkippedWithReason = async ({ reason, comment }) => {
+    try {
+      await handleStatusChange("Skipped", reason, comment || null);
+      setSkippedReasonModalOpen(false);
+      setActionInProgress(false);
+    } catch (error) {
+      setActionInProgress(false);
+    }
+  };
+
+  // handling Rejection functionlity
   const handleRejectWithReason = async ({ reason, comment }) => {
     try {
       await handleStatusChange("Rejected", reason, comment || null);
@@ -355,6 +383,11 @@ const RoundCard = ({
       else if (selectedReasonModalOpen && change) {
         await handleStatusChange("Selected", reason, comment || null);
         setSelectedReasonModalOpen(false);
+        setActionInProgress(false);
+      } else if (confirmAction && change) {
+        // Generic handle for other actions like Evaluated, FeedbackPending
+        await handleStatusChange(confirmAction, reason, comment || null);
+        setShowConfirmModal(false);
         setActionInProgress(false);
       }
     } catch (error) {
@@ -835,15 +868,25 @@ const RoundCard = ({
 
   const handleActionClick = (action) => {
     setActionInProgress(true);
+    if (action === "Skipped") {
+      setSkippedReasonModalOpen(true);
+      setActionInProgress(true);
+      return;
+    }
+
     if (
       action === "Completed" ||
       // action === "Cancelled" ||
       action === "Rejected" ||
       action === "Selected" ||
-      action === "Scheduled" // <-- add this line
+      action === "Scheduled" || // <-- add this line
+      // action === "Skipped" || // Handled by separate modal
+      action === "Evaluated" ||
+      action === "FeedbackPending"
     ) {
       setConfirmAction(action);
       setShowConfirmModal(true);
+      setActionInProgress(true);
     }
   };
 
@@ -880,11 +923,10 @@ const RoundCard = ({
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: true,
+      canNoShow: false,
     },
     RequestSent: {
       canEdit: true,
@@ -893,11 +935,10 @@ const RoundCard = ({
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: false,
     },
     Scheduled: {
       canEdit: false,
@@ -906,14 +947,16 @@ const RoundCard = ({
       canReschedule: true,
       canCancel: true,
       canComplete: true,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canShareLink: false,
       canResendLink: true,
       //only for if round title assessment
       canExtendAssessment: true,
       canCancelAssessment: true,
+      canNoShow: true,
+      canSkipped: true,
+      canEvaluated: true,
+      canFeedbackPending: true,
     },
     Rescheduled: {
       canEdit: false,
@@ -922,11 +965,13 @@ const RoundCard = ({
       canReschedule: true,
       canCancel: true,
       canComplete: true,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: true,
+      canSkipped: true,
+      canEvaluated: true,
+      canFeedbackPending: true,
     },
     Completed: {
       canEdit: false,
@@ -935,16 +980,16 @@ const RoundCard = ({
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      canReject: true,
-      canSelect: true,
       canFeedback: true,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: false,
     },
     //  added by ranjith new status validation
     InProgress: {
       canEdit: false,
       canDelete: false,
+      canNoShow: true,
     },
     Cancelled: {
       canEdit: false,
@@ -953,38 +998,38 @@ const RoundCard = ({
       canReschedule: true,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: false,
     },
-    Rejected: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
-      canReschedule: false,
-      canCancel: false,
-      canComplete: false,
-      canReject: false,
-      canSelect: false,
-      canFeedback: true,
-      canResendLink: false,
-      canShareLink: false,
-    },
-    Selected: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
-      canReschedule: false,
-      canCancel: false,
-      canComplete: false,
-      canReject: false,
-      canSelect: false,
-      canFeedback: true,
-      canResendLink: false,
-      canShareLink: false,
-    },
+    // Rejected: {
+    //   canEdit: false,
+    //   canDelete: false,
+    //   canMarkScheduled: false,
+    //   canReschedule: false,
+    //   canCancel: false,
+    //   canComplete: false,
+    //   canReject: false,
+    //   canSelect: false,
+    //   canFeedback: true,
+    //   canResendLink: false,
+    //   canShareLink: false,
+    // },
+    // Selected: {
+    //   canEdit: false,
+    //   canDelete: false,
+    //   canMarkScheduled: false,
+    //   canReschedule: false,
+    //   canCancel: false,
+    //   canComplete: false,
+    //   canReject: false,
+    //   canSelect: false,
+    //   canFeedback: true,
+    //   canResendLink: false,
+    //   canShareLink: false,
+    //   canNoShow: false,
+    // },
     InComplete: {
       canEdit: false,
       canDelete: false,
@@ -992,11 +1037,10 @@ const RoundCard = ({
       canReschedule: true,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: false,
     },
     NoShow: {
       canEdit: false,
@@ -1005,11 +1049,55 @@ const RoundCard = ({
       canReschedule: true,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: false,
+    },
+    Skipped: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
+    },
+    Evaluated: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: true,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
+    },
+    FeedbackPending: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: true,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: true,
+      canFeedbackPending: false,
     },
   };
 
@@ -1019,7 +1107,7 @@ const RoundCard = ({
 
   const permissions = getRoundPermissions(round.status);
 
-  // v1.0.4 -------------------------->
+  // v1.0.4 ---------------------------->
 
   // const handleCreateAssessmentClick = async (round) => {
   //   if (round?.roundTitle === "Assessment") {
@@ -1334,7 +1422,7 @@ const RoundCard = ({
               {/* {questions?.length > 0 && (
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-sm font-medium text-gray-700">Questions</h4>
+                    <h4 className="text-sm font-medium text-gray-700}>Questions</h4>
                     <button
                       onClick={() => setShowQuestions(!showQuestions)}
                       className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
@@ -1774,7 +1862,7 @@ const RoundCard = ({
                   {permissions.canReschedule &&
                     !isInterviewCompleted &&
                     round?.roundTitle !== "Assessment" && (
-                      round.status === "Cancelled" || round.interviewType !== "instant"
+                      (round.status === "Cancelled" || round.interviewType !== "instant")
                     ) && (
                       <button
                         onClick={() => onEdit(round, { isReschedule: true })}
@@ -1785,16 +1873,49 @@ const RoundCard = ({
                     )}
 
                   {/* No Show */}
-                  {permissions.canCancel &&
+                  {permissions.canNoShow &&
                     round.roundTitle !== "Assessment" && (
                       <button
                         onClick={() => {
                           setActionInProgress(true);
                           setNoShowReasonModalOpen(true);
                         }}
-                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100"
                       >
-                        <XCircle className="h-4 w-4 mr-1" /> No Show
+                        <UserX className="h-4 w-4 mr-1" /> No Show
+                      </button>
+                    )}
+
+                  {/* Skipped */}
+                  {permissions.canSkipped &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => handleActionClick("Skipped")}
+                        className="inline-flex items-center px-3 py-2 border border-orange-300 text-sm rounded-md text-orange-700 bg-orange-50 hover:bg-orange-100"
+                      >
+                        <SkipForward className="h-4 w-4 mr-1" /> Skipped
+                      </button>
+                    )}
+
+                  {/* Evaluated */}
+                  {permissions.canEvaluated &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => handleActionClick("Evaluated")}
+                        className="inline-flex items-center px-3 py-2 border border-teal-300 text-sm rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100"
+                      >
+                        <ClipboardList className="h-4 w-4 mr-1" /> Evaluated
+                      </button>
+                    )}
+
+                  {/* Feedback Pending */}
+                  {permissions.canFeedbackPending &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => handleActionClick("FeedbackPending")}
+                        className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                      >
+                        <Hourglass className="h-4 w-4 mr-1" /> Feedback Pending
                       </button>
                     )}
 
@@ -1862,7 +1983,7 @@ const RoundCard = ({
                       </button>
                     )}
                   {/* Select */}
-                  {permissions.canSelect && (
+                  {/* {permissions.canSelect && (
                     <button
                       // onClick={handleSelect}
                       onClick={() => {
@@ -1874,9 +1995,9 @@ const RoundCard = ({
                     >
                       <CheckCircle className="h-4 w-4 mr-1" /> Select
                     </button>
-                  )}
+                  )} */}
                   {/* Reject */}
-                  {permissions.canReject && (
+                  {/* {permissions.canReject && (
                     <button
                       onClick={() => {
                         setActionInProgress(true);
@@ -1889,7 +2010,7 @@ const RoundCard = ({
                     >
                       <ThumbsDown className="h-4 w-4 mr-1" /> Reject
                     </button>
-                  )}
+                  )} */}
                   {/* Feedback */}
                   {permissions.canFeedback && (
                     <button
@@ -2031,14 +2152,57 @@ const RoundCard = ({
         isLoading={false}
       />
 
-      {(completedReasonModalOpen || selectedReasonModalOpen) &&
+      {/* Modal for Complete using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
+        isOpen={completeReasonModalOpen}
+        onClose={() => {
+          setCompleteReasonModalOpen(false);
+          setActionInProgress(false);
+        }}
+        onConfirm={handleCompleteWithReason}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Complete"
+        isLoading={false}
+      />
+
+      {/* Modal for Skipped using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
+        isOpen={skippedReasonModalOpen}
+        onClose={() => {
+          setSkippedReasonModalOpen(false);
+          setActionInProgress(false);
+        }}
+        onConfirm={handleSkippedWithReason}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Skipped"
+        isLoading={false}
+      />
+
+      {(completedReasonModalOpen || selectedReasonModalOpen || showConfirmModal) &&
         createPortal(
           // v1.0.5 <--------------------------------------------------------------------------------
           <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
             <div className="bg-white p-5 rounded-lg shadow-md">
               <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-3">
                 Are you sure you want to{" "}
-                {completedReasonModalOpen ? "Complete" : "Reject"} this round?
+                {completedReasonModalOpen
+                  ? "Complete"
+                  : selectedReasonModalOpen
+                    ? "Select"
+                    : confirmAction === "Evaluated"
+                      ? "mark as Evaluated"
+                      : confirmAction === "FeedbackPending"
+                        ? "mark as Feedback Pending"
+                        : confirmAction === "Skipped"
+                          ? "Skip"
+                          : confirmAction === "Scheduled"
+                            ? "mark as Scheduled"
+                            : "Reject"}{" "}
+                this round?
               </h3>
               <div className="flex justify-end space-x-3">
                 <Button
@@ -2046,6 +2210,7 @@ const RoundCard = ({
                   onClick={() => {
                     setCompletedReasonModalOpen(false);
                     setSelectedReasonModalOpen(false);
+                    setShowConfirmModal(false);
                     setActionInProgress(false);
                   }}
                 >

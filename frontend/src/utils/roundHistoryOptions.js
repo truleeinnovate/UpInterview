@@ -29,17 +29,17 @@ export const CANCEL_OPTIONS = [
   { label: "Position put on hold", value: "position_put_on_hold" },
   { label: "Position closed", value: "position_closed" },
   { label: "Budget constraints", value: "budget_constraints" },
-  { label: "Internal approval delay", value: "internal_approval_delay" },
-  { label: "Candidate profile mismatch", value: "candidate_profile_mismatch" },
-  {
-    label: "Candidate withdrew application",
-    value: "candidate_withdrew_application",
-  },
-  { label: "Duplicate interview", value: "duplicate_interview" },
-  { label: "Candidate unavailable", value: "candidate_unavailable" },
-  { label: "Interviewer unavailable", value: "interviewer_unavailable" },
-  { label: "Scheduling conflict", value: "scheduling_conflict" },
-  { label: "Technical issue", value: "technical_issue" },
+  { label: "Candidate Withdrew", value: "candidate_withdrew" },
+  { label: "Position Filled", value: "position_filled" },
+  { label: "Scheduling Conflict", value: "scheduling_conflict" },
+  { label: "Technical Issues", value: "technical_issues" },
+  { label: "Other", value: "other" },
+];
+
+export const SKIPPED_OPTIONS = [
+  { label: "Not Required", value: "not_required" },
+  { label: "Candidate Fast-Tracked", value: "candidate_fast_tracked" },
+  { label: "Merged with another round", value: "merged_with_another_round" },
   { label: "Other", value: "other" },
 ];
 
