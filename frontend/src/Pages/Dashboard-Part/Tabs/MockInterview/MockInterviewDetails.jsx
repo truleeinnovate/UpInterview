@@ -265,10 +265,6 @@ const MockInterviewDetails = () => {
     : [];
 
   console.log(mockinterview);
-  console.log(
-    "ROUNDS ||||||||| ============= ||||||||||| ============> ",
-    rounds
-  );
 
   return (
     <>
@@ -405,7 +401,7 @@ const MockInterviewDetails = () => {
                           {candidate?.skills?.map((skill, index) => (
                             <span
                               key={index}
-                              className="px-3 py-1 text-sm bg-custom-blue/10 text-custom-blue border border-custom-blue/60 font-medium rounded-full"
+                              className="px-3 py-1.5 text-sm bg-gray-100 text-custom-blue border border-gray-200 font-medium rounded-full"
                             >
                               {skill}
                             </span>
