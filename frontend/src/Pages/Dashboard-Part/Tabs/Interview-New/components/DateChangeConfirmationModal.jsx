@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { useInterviewPolicies } from "../../../../../apiHooks/useInterviewPolicies";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect";
-import { CANCEL_OPTIONS, NO_SHOW_OPTIONS, REJECT_OPTIONS, EVALUATED_OPTIONS, ROUND_OUTCOME_OPTIONS } from "../../../../../utils/roundHistoryOptions";
+import {
+  CANCEL_OPTIONS,
+  NO_SHOW_OPTIONS,
+  REJECT_OPTIONS,
+  EVALUATED_OPTIONS,
+  ROUND_OUTCOME_OPTIONS,
+} from "../../../../../utils/roundHistoryOptions";
 
 // Policy warning component - only for External interviews
 const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
@@ -14,16 +20,18 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
   const [error, setError] = useState(false);
 
   // Determine the round status to use for policy lookup
-  const policyRoundStatus = actionType === "Cancel"
-    ? "Cancelled"
-    : actionType === "NoShow"
+  const policyRoundStatus =
+    actionType === "Cancel"
+      ? "Cancelled"
+      : actionType === "NoShow"
       ? "NoShow"
       : roundStatus;
 
   // Action label for display
-  const actionLabel = actionType === "Cancel"
-    ? "Cancelled"
-    : actionType === "NoShow"
+  const actionLabel =
+    actionType === "Cancel"
+      ? "Cancelled"
+      : actionType === "NoShow"
       ? "Marked as No Show"
       : "Rescheduled";
 
@@ -82,17 +90,25 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
   // Format hours display
   const formatTimeBefore = (hours) => {
     if (hours >= 24) return "more than 24 hours";
-    if (hours >= 1) return `${Math.round(hours)} hour${Math.round(hours) === 1 ? '' : 's'} `;
+    if (hours >= 1)
+      return `${Math.round(hours)} hour${Math.round(hours) === 1 ? "" : "s"} `;
     const minutes = Math.ceil(hours * 60);
     if (minutes <= 0) return "less than a minute";
-    return `${minutes} minute${minutes === 1 ? '' : 's'} `;
+    return `${minutes} minute${minutes === 1 ? "" : "s"} `;
   };
 
   return (
     <div className="space-y-4">
       <p className="text-gray-700 text-sm">
-        You are about to <strong>{actionType === "Cancel" ? "cancel" : actionType === "NoShow" ? "mark as no show" : "reschedule"}</strong> a confirmed{" "}
-        <strong>external interview</strong>.
+        You are about to{" "}
+        <strong>
+          {actionType === "Cancel"
+            ? "cancel"
+            : actionType === "NoShow"
+            ? "mark as no show"
+            : "reschedule"}
+        </strong>{" "}
+        a confirmed <strong>external interview</strong>.
       </p>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -153,8 +169,6 @@ const DateChangeConfirmationModal = ({
   const [otherText, setOtherText] = useState("");
   const [roundOutcome, setRoundOutcome] = useState("");
 
-
-
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -176,25 +190,29 @@ const DateChangeConfirmationModal = ({
   const isNoShowAction = actionType === "NoShow";
   const isRejectAction = actionType === "Reject";
   const isEvaluatedAction = actionType === "Evaluated";
-  const requiresReason = isCancelAction || isNoShowAction || isRejectAction || isEvaluatedAction;
+  const requiresReason =
+    isCancelAction || isNoShowAction || isRejectAction || isEvaluatedAction;
 
   // Get the appropriate options for the dropdown
   const reasonOptions = isCancelAction
     ? CANCEL_OPTIONS
     : isNoShowAction
-      ? NO_SHOW_OPTIONS
-      : isRejectAction
-        ? REJECT_OPTIONS
-        : isEvaluatedAction
-          ? EVALUATED_OPTIONS
-          : [];
+    ? NO_SHOW_OPTIONS
+    : isRejectAction
+    ? REJECT_OPTIONS
+    : isEvaluatedAction
+    ? EVALUATED_OPTIONS
+    : [];
 
   const dropdownOptions = reasonOptions.map((opt) => ({
     value: opt.value,
     label: opt.label,
   }));
 
-  const showOtherField = selectedReason === "other" || selectedReason === "Other" || selectedReason === "__other__";
+  const showOtherField =
+    selectedReason === "other" ||
+    selectedReason === "Other" ||
+    selectedReason === "__other__";
 
   const handleClose = () => {
     setSelectedReason("");
@@ -210,10 +228,10 @@ const DateChangeConfirmationModal = ({
 
     const payload = requiresReason
       ? {
-        reason: selectedReason,
-        comment: showOtherField ? otherText.trim() : undefined,
-        ...(isEvaluatedAction && { roundOutcome })
-      }
+          reason: selectedReason,
+          comment: showOtherField ? otherText.trim() : undefined,
+          ...(isEvaluatedAction && { roundOutcome }),
+        }
       : {};
 
     if (onConfirm) onConfirm(payload);
@@ -241,22 +259,27 @@ const DateChangeConfirmationModal = ({
   };
 
   // Check if confirm should be disabled
-  const isConfirmDisabled = isLoading || (requiresReason && !selectedReason) || (showOtherField && !otherText.trim()) || (isEvaluatedAction && !roundOutcome);
+  const isConfirmDisabled =
+    isLoading ||
+    (requiresReason && !selectedReason) ||
+    (showOtherField && !otherText.trim()) ||
+    (isEvaluatedAction && !roundOutcome);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
       <div className="bg-white w-full max-w-xl rounded-xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-xl font-semibold text-gray-900">
-            {getTitle()}
-          </h3>
+          <h3 className="text-xl font-semibold text-gray-900">{getTitle()}</h3>
         </div>
 
         {/* Body */}
         <div className="px-6 py-6 max-h-[60vh] overflow-y-auto space-y-4">
           {/* Cancel/NoShow/Reject/Evaluated Actions */}
-          {(isCancelAction || isNoShowAction || isRejectAction || isEvaluatedAction) && (
+          {(isCancelAction ||
+            isNoShowAction ||
+            isRejectAction ||
+            isEvaluatedAction) && (
             <>
               {/* Show policy warning ONLY for External Cancel action */}
               {isExternal && isCancelAction && (
@@ -268,10 +291,23 @@ const DateChangeConfirmationModal = ({
               )}
 
               {/* For Internal, NoShow, Reject, or Evaluated show simple message */}
-              {(isInternal || isRejectAction || isNoShowAction || isEvaluatedAction) && (
+              {(isInternal ||
+                isRejectAction ||
+                isNoShowAction ||
+                isEvaluatedAction) && (
                 <div className="text-sm text-gray-700 leading-relaxed">
                   <p>
-                    You are about to <strong>{isCancelAction ? "cancel" : isNoShowAction ? "mark as no show" : isRejectAction ? "reject" : "mark as evaluated"}</strong> this {isRejectAction ? "candidate" : "round"}.
+                    You are about to{" "}
+                    <strong>
+                      {isCancelAction
+                        ? "cancel"
+                        : isNoShowAction
+                        ? "mark as no show"
+                        : isRejectAction
+                        ? "reject"
+                        : "mark as evaluated"}
+                    </strong>{" "}
+                    this {isRejectAction ? "candidate" : "round"}.
                   </p>
                 </div>
               )}
@@ -279,11 +315,22 @@ const DateChangeConfirmationModal = ({
               {/* Reason Dropdown - Always show for these actions */}
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for {isCancelAction ? "Cancellation" : isNoShowAction ? "No Show" : isRejectAction ? "Rejection" : "Evaluation"}
+                  Reason for{" "}
+                  {isCancelAction
+                    ? "Cancellation"
+                    : isNoShowAction
+                    ? "No Show"
+                    : isRejectAction
+                    ? "Rejection"
+                    : "Evaluation"}
                 </label>
                 <DropdownSelect
                   options={dropdownOptions}
-                  value={dropdownOptions.find((opt) => opt.value === selectedReason) || null}
+                  value={
+                    dropdownOptions.find(
+                      (opt) => opt.value === selectedReason
+                    ) || null
+                  }
                   onChange={(selectedOption) => {
                     setSelectedReason(selectedOption?.value || "");
                   }}
@@ -320,7 +367,11 @@ const DateChangeConfirmationModal = ({
                   </label>
                   <DropdownSelect
                     options={ROUND_OUTCOME_OPTIONS}
-                    value={ROUND_OUTCOME_OPTIONS.find((opt) => opt.value === roundOutcome) || null}
+                    value={
+                      ROUND_OUTCOME_OPTIONS.find(
+                        (opt) => opt.value === roundOutcome
+                      ) || null
+                    }
                     onChange={(selectedOption) => {
                       setRoundOutcome(selectedOption?.value || "");
                     }}
@@ -343,18 +394,21 @@ const DateChangeConfirmationModal = ({
               {isExternal && isRequestSent && (
                 <div className="text-sm text-gray-700 leading-relaxed space-y-4">
                   <p>
-                    Interview invitations have already been successfully sent to the
-                    selected interviewers.
+                    Interview invitations have already been successfully sent to
+                    the selected interviewers.
                   </p>
                   <p>
                     Modifying the date, time, or interview type will{" "}
-                    <strong>automatically cancel</strong> all existing invitations.
+                    <strong>automatically cancel</strong> all existing
+                    invitations.
                   </p>
                   <p>
                     You will need to select new interviewers and send fresh
                     invitations afterward.
                   </p>
-                  <p className="font-medium">Are you sure you wish to proceed?</p>
+                  <p className="font-medium">
+                    Are you sure you wish to proceed?
+                  </p>
                 </div>
               )}
 
@@ -375,7 +429,8 @@ const DateChangeConfirmationModal = ({
                     currently assigned interviewers.
                   </p>
                   <p>
-                    You will need to reselect interviewers to continue scheduling.
+                    You will need to reselect interviewers to continue
+                    scheduling.
                   </p>
                   <p className="font-medium">Do you wish to proceed?</p>
                 </div>
@@ -397,10 +452,11 @@ const DateChangeConfirmationModal = ({
           <button
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
-            className={`px-6 py-2.5 rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isCancelAction || isNoShowAction || isEvaluatedAction
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-red-600 text-white hover:bg-red-700"
-              }`}
+            className={`px-6 py-2.5 rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+              isCancelAction || isNoShowAction || isEvaluatedAction
+                ? "bg-red-600 text-white hover:bg-red-700"
+                : "bg-red-600 text-white hover:bg-red-700"
+            }`}
           >
             {isLoading ? (
               <>

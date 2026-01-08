@@ -716,7 +716,11 @@ const updateInterviewRound = async (req, res) => {
   // ==================================================================
   if (isOutsource) {
     // 1. Draft → RequestSent (sending new requests)
-    if (existingRound.status === "Draft" && hasselectedInterviewers) {
+    if (
+      (existingRound.status === "Draft" ||
+        existingRound.status === "Cancelled") &&
+      hasselectedInterviewers
+    ) {
       updatePayload.$set.status = "RequestSent";
       shouldcreateRequestFlow = true;
       generateMeetingLink = true;
@@ -877,7 +881,8 @@ const updateInterviewRound = async (req, res) => {
     const willBeScheduled = hasInterviewers && !!req.body.round.dateTime;
 
     if (
-      existingRound.status === "Draft"
+      existingRound.status === "Draft" ||
+      existingRound.status === "Cancelled"
       //  && willBeScheduled
     ) {
       // Decide schedule action based on history
@@ -1199,7 +1204,14 @@ const updateInterviewRoundStatus = async (req, res) => {
   try {
     const { roundId } = req.params;
     const { actingAsUserId } = res.locals.auth;
-    const { action, reasonCode, comment, cancellationReason, roundOutcome, reason } = req.body; // reasonCode = your selected reason, comment = "Other" text, cancellationReason = specific cancellation reason
+    const {
+      action,
+      reasonCode,
+      comment,
+      cancellationReason,
+      roundOutcome,
+      reason,
+    } = req.body; // reasonCode = your selected reason, comment = "Other" text, cancellationReason = specific cancellation reason
 
     // console.log("req.body", req.body);
 
@@ -1350,30 +1362,28 @@ const updateInterviewRoundStatus = async (req, res) => {
       }
     }
 
-    if (
-      action === "Cancelled" &&
-      existingRound.interviewerType === "External"
-    ) {
-      // Auto-settlement for cancelled interviews
-      try {
-        await processAutoSettlement({
-          roundId: existingRound._id.toString(),
-          action: "Cancelled",
-          reasonCode: cancellationReason || reasonCode || null,
-        });
-        console.log(
-          "[updateInterviewRoundStatus] Auto-settlement for cancelled round:",
-          existingRound._id
-        );
-      } catch (settlementError) {
-        console.error(
-          "[updateInterviewRoundStatus] Auto-settlement error for cancelled round:",
-          settlementError
-        );
+    if (action === "Cancelled") {
+      if (existingRound.interviewerType === "External") {
+        // Auto-settlement for cancelled interviews
+        try {
+          await processAutoSettlement({
+            roundId: existingRound._id.toString(),
+            action: "Cancelled",
+            reasonCode: cancellationReason || reasonCode || null,
+          });
+
+          console.log(
+            "[updateInterviewRoundStatus] Auto-settlement for cancelled round:",
+            existingRound._id
+          );
+        } catch (settlementError) {
+          console.error(
+            "[updateInterviewRoundStatus] Auto-settlement error for cancelled round:",
+            settlementError
+          );
+        }
         // Continue with status update even if settlement fails
       }
-
-      extraUpdate.$set.interviewers = []; // Clear interviewers
 
       // Cancel accepted interview requests
       const hasAccepted = await InterviewRequest.countDocuments({
@@ -1389,12 +1399,17 @@ const updateInterviewRoundStatus = async (req, res) => {
       }
 
       shouldSendCancellationEmail = true;
+
+      extraUpdate.$set.interviewers = []; // Clear interviewers
+      extraUpdate.$set.meetingId = "";
+      extraUpdate.$set.meetPlatform = "";
     }
 
     // Handle Evaluated action - save roundOutcome and evaluation reason
     if (action === "Evaluated") {
       if (roundOutcome) {
         extraUpdate.$set.roundOutcome = roundOutcome;
+        extraUpdate.$set.roundScore = getRoundScoreFromOutcome(roundOutcome);
       }
       if (reason) {
         extraUpdate.$set.currentActionReason = reason;
@@ -1463,6 +1478,11 @@ const updateInterviewRoundStatus = async (req, res) => {
         .json({ success: false, message: "Nothing to update" });
     }
 
+    if (req.body?.roundOutcome) {
+      // const Updated = { $set: {} };
+      finalUpdate.$set.roundOutcome = req.body.roundOutcome;
+    }
+
     // Apply update
     const updatedRound = await InterviewRounds.findByIdAndUpdate(
       roundId,
@@ -1483,7 +1503,7 @@ const updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => { } }), locals: {} }
+        { status: () => ({ json: () => {} }), locals: {} }
       );
     }
 
@@ -1499,6 +1519,18 @@ const updateInterviewRoundStatus = async (req, res) => {
       message: "Internal server error",
     });
   }
+};
+
+const getRoundScoreFromOutcome = (roundOutcome) => {
+  const outcomeScoreMap = {
+    STRONG_YES: 5,
+    YES: 4,
+    NEUTRAL: 3,
+    NO: 2,
+    STRONG_NO: 1,
+  };
+
+  return outcomeScoreMap[roundOutcome] || null;
 };
 
 /**
@@ -1794,7 +1826,7 @@ async function handleInterviewerRequestFlow({
           isMockInterview: false,
         },
       },
-      { status: () => ({ json: () => { } }), locals: {} }
+      { status: () => ({ json: () => {} }), locals: {} }
     );
   }
 
@@ -1813,7 +1845,7 @@ async function handleInterviewerRequestFlow({
           type: "interview",
         },
       },
-      { status: () => ({ json: () => { } }), locals: {} }
+      { status: () => ({ json: () => {} }), locals: {} }
     );
     console.log(
       "Outsource interview request emails sent successfully",
@@ -1852,7 +1884,7 @@ async function handleInternalRoundEmails({
       },
     },
     {
-      status: () => ({ json: () => { } }),
+      status: () => ({ json: () => {} }),
       locals: {},
     }
   );
