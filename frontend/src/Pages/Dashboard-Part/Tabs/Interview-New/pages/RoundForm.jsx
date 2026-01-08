@@ -222,7 +222,6 @@ const RoundFormInterviews = () => {
   const orgId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
   const [errors, setErrors] = useState({});
-
   const interview = interviewDetails;
   // ||
   // interviewData?.find((interview) => interview._id === interviewId);
@@ -230,20 +229,15 @@ const RoundFormInterviews = () => {
     assessmentId: "",
     assessmentName: "",
   });
-
   const [candidate, setCandidate] = useState(null);
   const [position, setPosition] = useState(null);
   const [rounds, setRounds] = useState(null);
-
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
   const [isInternalInterviews, setInternalInterviews] = useState(false);
-  // const [template, setTemplate] = useState(null);
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
-
   const [ownerData, setOwnerData] = useState(null);
   const [selectedAssessmentData, setSelectedAssessmentData] = useState(null);
-
   const navigate = useNavigate();
   const [roundTitle, setRoundTitle] = useState("");
   const [customRoundTitle, setCustomRoundTitle] = useState("");
@@ -256,7 +250,6 @@ const RoundFormInterviews = () => {
   // const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [interviewQuestionsList, setInterviewQuestionsList] = useState([]);
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
-
   const [interviewType, setInterviewType] = useState("instant"); // "instant" or "scheduled"
   const [scheduledDate, setScheduledDate] = useState(""); // Start Date & Time
   const [duration, setDuration] = useState(60); // Duration in minutes
@@ -271,14 +264,17 @@ const RoundFormInterviews = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [internalInterviewers, setInternalInterviewers] = useState([]);
-
   const [externalInterviewers, setExternalInterviewers] = useState([]);
+
+  // Add this helper function at the top with other state declarations
+  const [isScheduleOrRescheduleInHistory, setIsScheduleOrRescheduleInHistory] =
+    useState(false);
+
   // Max hourly rate across all outsourced interviewers (used only for external rounds)
   const [externalMaxHourlyRate, setExternalMaxHourlyRate] = useState(0);
   const [showDateChangeConfirmation, setShowDateChangeConfirmation] =
     useState(false);
   const [pendingDateChange, setPendingDateChange] = useState(null); // { type: 'interviewType' | 'scheduledDate' | 'duration', value: any }
-
   const [originalInstructions, setOriginalInstructions] = useState("");
   const [originalSequence, setOriginalSequence] = useState(1);
   const [originalQuestions, setOriginalQuestions] = useState([]);
@@ -286,7 +282,6 @@ const RoundFormInterviews = () => {
     useState(scheduledDate);
   const [originalInterviewType, setOriginalInterviewType] =
     useState(interviewType);
-
   // Add this state near your other state declarations
   const [hasManuallyClearedInterviewers, setHasManuallyClearedInterviewers] =
     useState(false);
@@ -296,7 +291,15 @@ const RoundFormInterviews = () => {
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
   const location = useLocation();
-  const isReschedule = location.state?.isReschedule || false;
+  // const isReschedule = location.state?.isReschedule || false;
+  const {
+    isReschedule = false,
+    isEdit = false,
+    mode, // optional if you switch to mode-based approach
+  } = location.state || {};
+
+  console.log("isReschedule:", isReschedule);
+  console.log("isEdit:", isEdit);
 
   console.log("Round Edit Data:", roundEditData);
 
@@ -557,21 +560,6 @@ const RoundFormInterviews = () => {
     );
   };
 
-  // const handleRemoveQuestion = (questionId, e) => {
-  //   e?.preventDefault(); // Prevent default behavior if event is provided
-  //   e?.stopPropagation(); // Stop event bubbling if event is provided
-
-  //   console.log("Removing question with ID:", questionId);
-
-  //   setInterviewQuestionsList((prev) =>
-  //     prev.filter(
-  //       (question) =>
-  //         question.questionId || question._id || question.id !== questionId
-  //     )
-  //   );
-  //   setRemovedQuestionIds((prev) => [...prev, questionId]);
-  // };
-
   const handleRemoveQuestion = (questionId, e) => {
     e?.preventDefault();
     e?.stopPropagation();
@@ -756,121 +744,6 @@ const RoundFormInterviews = () => {
     };
   }, [roundId]);
 
-  // Add this useEffect to reset the flag when roundId changes
-  // useEffect(() => {
-  //   setHasManuallyClearedInterviewers(false);
-  // }, [roundId]);
-
-  // UPDATED: Modified - Only clear external interviewers on date/time changes AFTER initial load
-  // useEffect(() => {
-  //   // NEW: Skip clearing during initial load
-  //   if (isInitialLoad) {
-  //     return;
-  //   }
-
-  //   // NEW: Skip if we're in edit mode and haven't manually changed anything yet
-  //   if (isEditing && !hasManuallyClearedInterviewers && roundEditData) {
-  //     return;
-  //   }
-
-  //   // Clear external interviewers when date/time changes (but not on initial load)
-  //   if (
-  //     externalInterviewers.length > 0 &&
-  //     (scheduledDate || interviewType === "instant")
-  //   ) {
-  //     console.log("🔄 Clearing external interviewers due to date/time change");
-  //     setExternalInterviewers([]);
-  //     setHasManuallyClearedInterviewers(true);
-
-  //     // If only external interviewers were selected, reset the interview type
-  //     if (
-  //       selectedInterviewType === "External" &&
-  //       internalInterviewers.length === 0
-  //     ) {
-  //       setSelectedInterviewType(null);
-  //     }
-
-  //     // Reset status if it was RequestSent
-  //     if (status === "RequestSent") {
-  //       setStatus("Draft");
-  //     }
-  //   }
-  // }, [scheduledDate, interviewType]); // Keep dependencies but use guards above
-
-  // UPDATED: Modified - Handle combinedDateTime changes
-  // useEffect(() => {
-  //   // NEW: Skip during initial load
-  //   if (isInitialLoad) {
-  //     return;
-  //   }
-
-  //   // NEW: Skip if we're in edit mode and haven't manually changed anything yet
-  //   if (isEditing && !hasManuallyClearedInterviewers && roundEditData) {
-  //     return;
-  //   }
-
-  //   if (
-  //     interviewType === "scheduled" &&
-  //     combinedDateTime &&
-  //     externalInterviewers.length > 0
-  //   ) {
-  //     console.log(
-  //       "🔄 Clearing external interviewers due to combinedDateTime change"
-  //     );
-  //     setExternalInterviewers([]);
-  //     setHasManuallyClearedInterviewers(true);
-
-  //     if (
-  //       selectedInterviewType === "External" &&
-  //       internalInterviewers.length === 0
-  //     ) {
-  //       setSelectedInterviewType(null);
-  //     }
-
-  //     // Reset status if it was RequestSent
-  //     if (status === "RequestSent") {
-  //       setStatus("Draft");
-  //     }
-  //   }
-  // }, [combinedDateTime]);
-
-  // UPDATED: Fix the status setting logic
-  // useEffect(() => {
-  //   // NEW: Skip status updates during initial load in edit mode
-  //   if (isEditing && isInitialLoad) {
-  //     return;
-  //   }
-
-  //   if (
-  //     selectedInterviewType === "External" &&
-  //     externalInterviewers.length > 0
-  //   ) {
-  //     setStatus("RequestSent");
-  //   } else if (selectedInterviewType === "Internal") {
-  //     // NEW: Better logic for internal interviewers
-  //     if (internalInterviewers.length > 0) {
-  //       // Only set to Scheduled if we have date/time configured
-  //       const hasDateTimeConfigured =
-  //         interviewType === "instant" ||
-  //         (interviewType === "scheduled" && scheduledDate);
-
-  //       setStatus(hasDateTimeConfigured ? "Scheduled" : "Draft");
-  //     } else {
-  //       setStatus("Draft");
-  //     }
-  //   } else {
-  //     setStatus("Draft");
-  //   }
-  // }, [
-  //   selectedInterviewType,
-  //   externalInterviewers,
-  //   internalInterviewers,
-  //   interviewType,
-  //   scheduledDate,
-  //   isEditing,
-  //   isInitialLoad,
-  // ]);
-
   useEffect(() => {
     if (!isEditing) {
       // For new rounds: set default sequence
@@ -935,6 +808,18 @@ const RoundFormInterviews = () => {
     setOriginalInstructions(roundEditData.instructions || "");
     setOriginalSequence(roundEditData.sequence || 1);
     setOriginalQuestions(roundEditData.questions || []);
+
+    // history check for schedule/reschedule action
+    if (roundEditData?.history) {
+      const hasScheduleOrReschedule = roundEditData.history.some(
+        (h) =>
+          h.action === "Scheduled" ||
+          h.action === "Rescheduled" ||
+          h.action === "RequestSent"
+      );
+      // console.log("roundEditData for interviewers", hasScheduleOrReschedule);
+      setIsScheduleOrRescheduleInHistory(hasScheduleOrReschedule);
+    }
 
     // === Load Interviewers Safely ===
     // if (roundEditData.interviewers && roundEditData.interviewers.length > 0) {
@@ -1087,8 +972,133 @@ const RoundFormInterviews = () => {
   ]);
 
   // SUPER SIMPLE: Just check if field should be disabled
+  // const shouldDisable = (fieldName) => {
+  //   // Fields that should be disabled in these statuses
+  //   const disabledInStatus = {
+  //     interviewMode: ["RequestSent", "Scheduled", "Rescheduled"],
+  //     duration: ["RequestSent", "Scheduled", "Rescheduled"],
+  //     interviewType: ["RequestSent", "Scheduled", "Rescheduled"],
+  //     scheduledDate: ["RequestSent", "Scheduled", "Rescheduled"],
+  //     internalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+  //     externalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+  //     removeInterviewerBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+  //     clearInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+  //     dateChangeConfirmation: ["RequestSent", "Scheduled", "Rescheduled"],
+  //   };
+
+  //   const statusList = disabledInStatus[fieldName] || [];
+  //   return statusList.includes(status);
+  // };
+
+  // Simplified shouldDisable function with all conditions
   const shouldDisable = (fieldName) => {
-    // Fields that should be disabled in these statuses
+    // Map field names to categories
+    const fieldCategories = {
+      // Basic fields
+      roundTitle: "roundTitle",
+      interviewMode: "interviewMode",
+
+      // Date/time fields
+      duration: "duration",
+      interviewType: "interviewType",
+      scheduledDate: "datetime",
+
+      // Interviewer fields
+      internalInterviewersBtn: "interviewers",
+      externalInterviewersBtn: "interviewers",
+      removeInterviewerBtn: "interviewers",
+      clearInterviewersBtn: "interviewers",
+
+      // Editable in edit mode
+      sequence: "sequence",
+      instructions: "instructions",
+      questions: "questions",
+    };
+
+    console.log("Evaluating shouldDisable for:", fieldName);
+    // console.log("fieldCategories[fieldName]:", fieldCategories[fieldName]);
+
+    // const category = fieldCategories[fieldName] || fieldName;
+    console.log(
+      "isScheduleOrRescheduleInHistory:",
+      isScheduleOrRescheduleInHistory,
+      status
+    );
+    // CASE 1: Draft status and no schedule/reschedule in history → ALL editable
+    if (
+      (status === "Draft" && !isScheduleOrRescheduleInHistory) ||
+      (status === "Cancelled" &&
+        isReschedule &&
+        isScheduleOrRescheduleInHistory)
+    ) {
+      return false; // Nothing is disabled
+    }
+
+    // case 4
+
+    if (status === "Draft" && isScheduleOrRescheduleInHistory) {
+      if (
+        fieldName === "interviewType" ||
+        fieldName === "datetime" ||
+        fieldName === "instructions" ||
+        fieldName === "sequence" ||
+        fieldName === "questions" ||
+        fieldName === "internalInterviewersBtn" ||
+        fieldName === "externalInterviewersBtn" ||
+        fieldName === "clearInterviewersBtn" ||
+        fieldName === "removeInterviewerBtn"
+      ) {
+        return false;
+      }
+      return true;
+    }
+
+    // CASE 2: Edit mode with Scheduled/Rescheduled status
+    if (
+      isEdit &&
+      (status === "Scheduled" ||
+        status === "Rescheduled" ||
+        status === "RequestSent")
+      //  && isScheduleOrRescheduleInHistory
+    ) {
+      // Only instructions, sequence, questions are editable
+      if (
+        fieldName === "instructions" ||
+        fieldName === "sequence" ||
+        fieldName === "questions"
+      ) {
+        return false; // These are editable
+      }
+      return true; // Everything else is disabled
+    }
+
+    // console.log("isReschedule:", isReschedule);
+    // console.log("status:", status);
+
+    // CASE 3: Reschedule mode with Scheduled/Rescheduled status
+    if (
+      isReschedule &&
+      (status === "Scheduled" ||
+        status === "Rescheduled" ||
+        status === "RequestSent")
+      //  ||
+      // (status === "Draft" && isScheduleOrRescheduleInHistory)
+    ) {
+      // Only datetime and interviewers are editable
+      if (
+        fieldName === "datetime" ||
+        fieldName === "interviewType"
+        // ||
+        // category === "interviewers"
+      ) {
+        // console.log("Editable field in reschedule:", fieldName, category);
+        // console.log("Editable field in reschedule:", category);
+        return false; // These are editable
+      }
+      return true; // Everything else is disabled
+    }
+
+    // Original logic for other cases (RequestSent, etc.)
     const disabledInStatus = {
       interviewMode: ["RequestSent", "Scheduled", "Rescheduled"],
       duration: ["RequestSent", "Scheduled", "Rescheduled"],
@@ -1923,9 +1933,9 @@ const RoundFormInterviews = () => {
       console.log("roundData", roundData);
 
       // ✅ CLEAR INTERVIEWERS (popup confirmed)
-      if (roundTitle === "Assessment") {
-        updateType = "AssessmentChange";
-      }
+      // if (roundTitle === "Assessment") {
+      //   updateType = "AssessmentChange";
+      // }
 
       // ✅ CLEAR INTERVIEWERS (popup confirmed)
       if (type === "confirmClearinterviwers") {
@@ -2478,7 +2488,11 @@ const RoundFormInterviews = () => {
                         value={
                           isCustomRoundTitle ? customRoundTitle : roundTitle
                         }
-                        disabled={isEditing || isReschedule}
+                        disabled={
+                          // isEditing ||
+                          // isReschedule ||
+                          shouldDisable("roundTitle")
+                        }
                         options={ROUND_TITLES}
                         // options={[
                         //   { value: "Assessment", label: "Assessment" },
@@ -2509,8 +2523,9 @@ const RoundFormInterviews = () => {
                           required
                           disabled={
                             roundTitle === "Assessment" ||
-                            isEditing ||
-                            isReschedule
+                            // isEditing ||
+                            // isReschedule ||
+                            shouldDisable("interviewMode")
                           }
                           name="interviewMode"
                           value={interviewMode}
@@ -2562,6 +2577,9 @@ const RoundFormInterviews = () => {
                         min={1}
                         inputRef={fieldRefs.sequence}
                         value={sequence}
+                        // Sequence - should be editable in edit mode with scheduled status
+                        // Sequence - should be enabled in CASE 2, disabled in CASE 3
+                        disabled={shouldDisable("sequence")}
                         onChange={(e) => {
                           setSequence(parseInt(e.target.value));
                           setErrors({ ...errors, sequence: "" }); // Clear error on change
@@ -2594,8 +2612,9 @@ const RoundFormInterviews = () => {
                         ]}
                         disabled={
                           roundTitle === "Assessment" ||
-                          isEditing ||
-                          isReschedule
+                          // isEditing ||
+                          // isReschedule ||
+                          shouldDisable("duration")
                         }
                         onChange={(e) => {
                           setDuration(parseInt(e.target.value));
@@ -3046,6 +3065,8 @@ const RoundFormInterviews = () => {
                                 : "border-gray-300 hover:border-gray-400"
                             }`}
                             key="instant-btn"
+                            // Interview Type buttons - disabled in CASE 2, enabled in CASE 3
+                            disabled={shouldDisable("interviewType")}
                             // disabled={status === "RequestSent"}
                           >
                             <Clock
@@ -3080,6 +3101,8 @@ const RoundFormInterviews = () => {
                                 ? "border-custom-blue bg-blue-50"
                                 : "border-gray-300 hover:border-gray-400"
                             }`}
+                            // Interview Type buttons - disabled in CASE 2, enabled in CASE 3
+                            disabled={shouldDisable("interviewType")}
                             // disabled={status === "RequestSent"}
                             key="scheduled-btn"
                           >
@@ -3125,6 +3148,8 @@ const RoundFormInterviews = () => {
                                     ? scheduledDate
                                     : ""
                                 }
+                                // Scheduled Date - disabled in CASE 2, enabled in CASE 3
+                                disabled={shouldDisable("datetime")}
                                 // disabled={status === "RequestSent"}
                                 onChange={handleScheduledDateChange} // Use the new handler
                                 //<-----v1.0.4----
@@ -3249,19 +3274,19 @@ const RoundFormInterviews = () => {
                                 // Disable if:
                                 // - Editing/rescheduling and original type was External
                                 // - Or currently External is selected (in create mode)
-                                (isEditing || isReschedule) &&
+                                // (isEditing || isReschedule) &&
                                 roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
                               }
+                              // ((isEditing || isReschedule) &&
                               disabled={
-                                ((isEditing || isReschedule) &&
-                                  roundEditData?.interviewerType ===
-                                    "External") ||
+                                roundEditData?.interviewerType === "External" ||
                                 isExternalSelected ||
-                                status === "RequestSent"
+                                // status === "RequestSent" ||
+                                shouldDisable("internalInterviewersBtn")
                               }
                               // disabled={
                               //   ((isEditing || isReschedule) &&
@@ -3269,8 +3294,8 @@ const RoundFormInterviews = () => {
                               //       "External") ||
                               //   isExternalSelected
                               // }
+                              // (isEditing || isReschedule) &&
                               title={
-                                (isEditing || isReschedule) &&
                                 roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
                                   : isExternalSelected
@@ -3291,7 +3316,7 @@ const RoundFormInterviews = () => {
                               variant="outline"
                               size="sm"
                               className={
-                                (isEditing || isReschedule) &&
+                                shouldDisable("externalInterviewersBtn") &&
                                 roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
@@ -3299,10 +3324,10 @@ const RoundFormInterviews = () => {
                                   : ""
                               }
                               disabled={
-                                ((isEditing || isReschedule) &&
-                                  roundEditData?.interviewerType ===
-                                    "External") ||
-                                isInternalSelected ||
+                                // ((isEditing || isReschedule) &&
+                                roundEditData?.interviewerType === "External" ||
+                                //  ||
+                                // isInternalSelected ||
                                 // interviewMode === "Face to Face" ||
                                 // status === "RequestSent" ||
                                 // status === "Scheduled" ||
@@ -3316,7 +3341,7 @@ const RoundFormInterviews = () => {
                               //   isExternalSelected
                               // }
                               title={
-                                (isEditing || isReschedule) &&
+                                shouldDisable("internalInterviewersBtn") &&
                                 roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
                                   : isExternalSelected
@@ -3339,7 +3364,7 @@ const RoundFormInterviews = () => {
                             variant="outline"
                             size="sm"
                             className={
-                              (isEditing || isReschedule) &&
+                              shouldDisable("externalInterviewersBtn") &&
                               roundEditData?.interviewerType === "Internal"
                                 ? "opacity-50 cursor-not-allowed"
                                 : isInternalSelected ||
@@ -3348,9 +3373,8 @@ const RoundFormInterviews = () => {
                                 : ""
                             }
                             disabled={
-                              ((isEditing || isReschedule) &&
-                                roundEditData?.interviewerType ===
-                                  "Internal") ||
+                              // ((isEditing || isReschedule) &&
+                              roundEditData?.interviewerType === "Internal" ||
                               isInternalSelected ||
                               interviewMode === "Face to Face" ||
                               shouldDisable("externalInterviewersBtn")
@@ -3361,7 +3385,7 @@ const RoundFormInterviews = () => {
                               // && internalInterviewers.length > 0)
                             }
                             title={
-                              (isEditing || isReschedule) &&
+                              shouldDisable("externalInterviewersBtn") &&
                               roundEditData?.interviewerType === "Internal"
                                 ? "Cannot change from Internal to Outsourced interviewers in edit/reschedule"
                                 : isInternalSelected
@@ -3448,6 +3472,7 @@ const RoundFormInterviews = () => {
                                   onClick={handleClearAllInterviewers}
                                   disabled={
                                     shouldDisable("clearInterviewersBtn")
+
                                     // status === "RequestSent" ||
                                     // status === "Scheduled" ||
                                     // status === "ReScheduled"
@@ -3504,6 +3529,14 @@ const RoundFormInterviews = () => {
                                           </span>
                                         </div>
                                         <button
+                                          disabled={
+                                            shouldDisable(
+                                              "clearInterviewersBtn"
+                                            )
+                                            // status === "RequestSent" ||
+                                            // status === "Scheduled" ||
+                                            // status === "ReScheduled"
+                                          }
                                           onClick={handleClearAllInterviewers}
                                           className="text-red-400 rounded-full p-1 hover:bg-blue-100 transition"
                                         >
@@ -3713,6 +3746,7 @@ const RoundFormInterviews = () => {
                             <button
                               className="text-custom-blue font-semibold hover:underline"
                               onClick={handlePopupToggle}
+                              disabled={shouldDisable("questions")}
                               type="button"
                             >
                               + Add Question
@@ -3750,6 +3784,7 @@ const RoundFormInterviews = () => {
                                               e
                                             )
                                           }
+                                          disabled={shouldDisable("questions")}
                                         >
                                           <span className="text-red-500 text-xl font-bold">
                                             &times;
@@ -3826,7 +3861,10 @@ const RoundFormInterviews = () => {
                       maxLength={1000}
                       placeholder="Provide detailed instructions for interviewers including evaluation criteria, scoring guidelines (e.g., 1-10 scale), key focus areas, time allocation, and specific protocols to follow during the interview session."
                       value={instructions}
-                      readOnly={roundTitle === "Assessment"}
+                      readOnly={
+                        roundTitle === "Assessment" ||
+                        shouldDisable("instructions")
+                      }
                       onChange={(e) => setInstructions(e.target.value)}
                     />
                     <p className="text-sm text-gray-500">
@@ -3911,20 +3949,19 @@ const RoundFormInterviews = () => {
         />
       )}
 
-      {showDateChangeConfirmation &&
-        shouldDisable("dateChangeConfirmation") && (
-          <DateChangeConfirmationModal
-            isOpen={showDateChangeConfirmation}
-            onClose={() => {
-              setShowDateChangeConfirmation(false);
-              setPendingDateChange(null);
-            }}
-            onConfirm={handleConfirmDateChange}
-            selectedInterviewType={selectedInterviewType}
-            status={status}
-            combinedDateTime={combinedDateTime} // your formatted date string
-          />
-        )}
+      {showDateChangeConfirmation && shouldDisable("scheduledDate") && (
+        <DateChangeConfirmationModal
+          isOpen={showDateChangeConfirmation}
+          onClose={() => {
+            setShowDateChangeConfirmation(false);
+            setPendingDateChange(null);
+          }}
+          onConfirm={handleConfirmDateChange}
+          selectedInterviewType={selectedInterviewType}
+          status={status}
+          combinedDateTime={combinedDateTime} // your formatted date string
+        />
+      )}
     </div>
   );
 };

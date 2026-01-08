@@ -532,7 +532,9 @@ const RoundCard = ({
         // Check if this is a multi-candidate response (has summary)
         if (data.summary) {
           const { successful, total } = data.summary;
-          notify.success(`Resent links to ${successful} out of ${total} candidates`);
+          notify.success(
+            `Resent links to ${successful} out of ${total} candidates`
+          );
         } else {
           // Single candidate response — use message or generic success
           notify.success("Assessment link resent successfully");
@@ -942,7 +944,7 @@ const RoundCard = ({
       canNoShow: false,
     },
     Scheduled: {
-      canEdit: false,
+      canEdit: true,
       canDelete: false,
       canMarkScheduled: false,
       canReschedule: true,
@@ -960,7 +962,7 @@ const RoundCard = ({
       canFeedbackPending: true,
     },
     Rescheduled: {
-      canEdit: false,
+      canEdit: true,
       canDelete: false,
       canMarkScheduled: false,
       canReschedule: true,
@@ -1270,7 +1272,6 @@ const RoundCard = ({
                       </span>
                     </div>
                   )}
-
 
                   {round.completedDate && (
                     <div className="flex items-center text-sm text-gray-500">
@@ -1943,7 +1944,7 @@ const RoundCard = ({
                       round?.interviewType.toLowerCase() === "instant") ||
                       round?.interviewType.toLowerCase() !== "instant") && (
                       <button
-                        onClick={() => onEdit(round)}
+                        onClick={() => onEdit(round, { isEdit: true })}
                         className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
                       >
                         <Edit className="h-4 w-4 mr-1" /> Edit Round
