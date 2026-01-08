@@ -11,6 +11,13 @@ import {
   XCircle,
   // User,
   MessageSquare,
+  UserX,
+  SkipForward,
+  ClipboardList,
+  Hourglass,
+  Edit,
+  CheckCircle,
+  Share2,
   // ThumbsDown,
   // CheckCircle,
   // Edit,
@@ -435,8 +442,9 @@ const MoockRoundCard = ({
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <div className="mt-6 w-full flex gap-2 whitespace-nowrap sm:justify-start md:justify-start justify-end">
+            <div className="w-full overflow-x-auto">
+              {/* <div className="mt-6 w-full flex gap-2 whitespace-nowrap sm:justify-start md:justify-start justify-end overflow-x-auto"> */}
+              <div className="mt-6 flex gap-3 whitespace-nowrap min-w-max">
                 {/* Reschedule */}
                 {permissions.canReschedule &&
                   round.interviewerType === "external" &&
@@ -460,6 +468,83 @@ const MoockRoundCard = ({
                       <Calendar className="h-4 w-4 mr-1" /> Reschedule
                     </button>
                   )}
+                {/* No Show */}
+                {permissions && (
+                  <button className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100">
+                    <UserX className="h-4 w-4 mr-1" /> No Show
+                  </button>
+                )}
+
+                {/* Skipped */}
+                {permissions && (
+                  <button className="inline-flex items-center px-3 py-2 border border-orange-300 text-sm rounded-md text-orange-700 bg-orange-50 hover:bg-orange-100">
+                    <SkipForward className="h-4 w-4 mr-1" /> Skipped
+                  </button>
+                )}
+
+                {/* Evaluated */}
+                {permissions && (
+                  <button className="inline-flex items-center px-3 py-2 border border-teal-300 text-sm rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100">
+                    <ClipboardList className="h-4 w-4 mr-1" /> Evaluated
+                  </button>
+                )}
+
+                {/* Feedback Pending */}
+                {permissions && (
+                  <button className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100">
+                    <Hourglass className="h-4 w-4 mr-1" /> Feedback Pending
+                  </button>
+                )}
+
+                {/* Edit */}
+                {permissions && (
+                  <button className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100">
+                    <Edit className="h-4 w-4 mr-1" /> Edit Round
+                  </button>
+                )}
+
+                {/* Delete */}
+                {permissions && (
+                  <button className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100">
+                    <XCircle className="h-4 w-4 mr-1" /> Delete Round
+                  </button>
+                )}
+                {/* Mark Scheduled */}
+                {permissions && (
+                  <button className="inline-flex items-center px-3 py-2 border border-indigo-300 text-sm rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100">
+                    <Clock className="h-4 w-4 mr-1" /> Mark Scheduled
+                  </button>
+                )}
+                {/* Complete */}
+                {permissions && (
+                  <button className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100">
+                    <CheckCircle className="h-4 w-4 mr-1" /> Complete
+                  </button>
+                )}
+
+                {/* Feedback */}
+                {permissions && (
+                  <button className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100">
+                    <MessageSquare className="h-4 w-4 mr-1" /> Feedback
+                  </button>
+                )}
+
+                {/* Share (always for Assessment) */}
+                {permissions && (
+                  <button className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100">
+                    <Share2 className="h-4 w-4 mr-1" />
+                    Resend Link
+                  </button>
+                )}
+
+                {/* Share (always for Assessment) */}
+                {permissions && (
+                  <button className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100">
+                    <Share2 className="h-4 w-4 mr-1" />
+                    Share
+                  </button>
+                )}
+
                 {/* Cancel */}
                 {permissions.canCancel &&
                   round?.interviewType.toLowerCase() !== "instant" && (

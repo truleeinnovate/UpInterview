@@ -1932,7 +1932,6 @@ const RoundCard = ({
                     )}
 
                   {/* Cancel */}
-
                   {permissions.canCancel &&
                     round.roundTitle !== "Assessment" && (
                       <button
