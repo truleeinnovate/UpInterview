@@ -3,64 +3,66 @@ const { InterviewRounds } = require('../models/Interview/InterviewRounds');
 const { createInterviewStatusUpdateNotification } = require('../controllers/PushNotificationControllers/pushNotificationInterviewController');
 const cron = require('node-cron');
 
-const TERMINAL_ROUND_STATUSES = ["Completed", "Selected", "Cancelled", "Rejected"];
+/**
+ * Round statuses that mean interview has started
+ */
+const ROUND_PROGRESS_STATUSES = [
+  "InProgress",
+  "Scheduled",
+  "Rescheduled",
+  "Completed"
+];
+
 
 /**
- * Determine new interview status based on its rounds
+ * Determine if interview should move to InProgress
+ * ONLY returns "InProgress" or null
  */
 const determineInterviewStatusFromRounds = (rounds) => {
   if (!rounds || rounds.length === 0) return null;
 
-  const allDraft = rounds.every(r => r.status === "Draft");
-  if (allDraft) return null; // no change
-
-  const allCancelled = rounds.every(r => r.status === "Cancelled");
-  if (allCancelled) return "Cancelled";
-
-  const allTerminal = rounds.every(r => TERMINAL_ROUND_STATUSES.includes(r.status));
-  if (allTerminal) return "Completed";
-
-  const hasActive = rounds.some(r =>
-    ["InProgress", "Scheduled", "RequestSent", "Rescheduled"].includes(r.status)
+  const hasProgressRound = rounds.some(round =>
+    ROUND_PROGRESS_STATUSES.includes(round.status)
   );
-  if (hasActive) return "InProgress";
 
-  // If some are mixed terminal/non-terminal → treat as In Progress
-  const hasAnyTerminal = rounds.some(r => TERMINAL_ROUND_STATUSES.includes(r.status));
-  if (hasAnyTerminal) return "InProgress";
-
-  return null;
+  return hasProgressRound ? "InProgress" : null;
 };
 
 /**
- * Update a single interview’s status based on rounds
+ * Update a single interview (Draft → InProgress ONLY)
  */
 const updateInterviewStatusCore = async (interviewId) => {
   try {
     const interview = await Interview.findById(interviewId);
     if (!interview) return null;
 
-    // Skip completed interviews
-    if (interview.status === "Completed" || interview.status === "Cancelled") return null;
+    // 🔒 Only Draft interviews are auto-updated
+    if (interview.status !== "Draft") return null;
 
     const rounds = await InterviewRounds.find({ interviewId });
     if (!rounds || rounds.length === 0) return null;
 
     const newStatus = determineInterviewStatusFromRounds(rounds);
-    if (!newStatus) return null; // No change needed
+    if (newStatus !== "InProgress") return null;
 
-    if (newStatus !== interview.status) {
-      const oldStatus = interview.status;
-      interview.status = newStatus;
-      await interview.save();
+    interview.status = "InProgress";
+    await interview.save();
 
-      console.log(`[CRON] Interview ${interviewId} status changed: ${oldStatus} → ${newStatus}`);
+    console.log(
+      `[CRON] Interview ${interviewId} status changed: Draft → InProgress`
+    );
 
-      try {
-        await createInterviewStatusUpdateNotification(interview, oldStatus, newStatus);
-      } catch (notifErr) {
-        console.error(`[CRON] Notification error for interview ${interviewId}:`, notifErr);
-      }
+    try {
+      await createInterviewStatusUpdateNotification(
+        interview,
+        "Draft",
+        "InProgress"
+      );
+    } catch (notifErr) {
+      console.error(
+        `[CRON] Notification error for interview ${interviewId}:`,
+        notifErr
+      );
     }
 
     return interview;
@@ -71,39 +73,43 @@ const updateInterviewStatusCore = async (interviewId) => {
 };
 
 /**
- * Process all interviews periodically
+ * Process all Draft interviews
  */
 const processAllInterviews = async () => {
   try {
-    console.log(`[CRON] Checking interviews at ${new Date().toLocaleTimeString()}`);
+    console.log(`[CRON] Checking Draft interviews at ${new Date().toLocaleTimeString()}`);
 
-    const interviews = await Interview.find({
-      status: { $in: ["Draft", "InProgress", "Cancelled", "Rejected", "Selected"] }
-    });
+    const interviews = await Interview.find({ status: "Draft" });
 
-    console.log(`[CRON] Found ${interviews.length} interviews to verify`);
+    console.log(`[CRON] Found ${interviews.length} Draft interviews`);
 
     for (const interview of interviews) {
       await updateInterviewStatusCore(interview._id);
     }
 
-    console.log(`[CRON] Interview status verification completed`);
+    console.log(`[CRON] Draft → InProgress verification completed`);
   } catch (error) {
     console.error(`[CRON] Error in processAllInterviews:`, error);
   }
 };
 
 /**
- * Setup cron job to run every minute
+ * Setup cron job (every 5 minutes)
  */
 const setupInterviewStatusCronJob = () => {
-  cron.schedule('*/5 * * * *', async () => {
-    await processAllInterviews();
-  }, {
-    timezone: 'Asia/Kolkata'
-  });
+  cron.schedule(
+    '*/5 * * * *',
+    async () => {
+      await processAllInterviews();
+    },
+    {
+      timezone: 'Asia/Kolkata'
+    }
+  );
 
-  console.log('[CRON] Interview status checker running every 5 minutes (Asia/Kolkata)');
+  console.log(
+    '[CRON] Interview Draft → InProgress checker running every 5 minutes (Asia/Kolkata)'
+  );
 };
 
 module.exports = {

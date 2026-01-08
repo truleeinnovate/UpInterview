@@ -940,6 +940,7 @@ const RoundCard = ({
       canResendLink: false,
       canShareLink: true,
       canNoShow: false,
+      canSkipped: true,
     },
     RequestSent: {
       canEdit: true,
@@ -969,7 +970,7 @@ const RoundCard = ({
       canNoShow: true,
       canSkipped: true,
       canEvaluated: true,
-      canFeedbackPending: true,
+      canFeedbackPending: false,
     },
     Rescheduled: {
       canEdit: true,
@@ -982,9 +983,9 @@ const RoundCard = ({
       canResendLink: false,
       canShareLink: false,
       canNoShow: true,
-      canSkipped: true,
-      canEvaluated: true,
-      canFeedbackPending: true,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
     },
     Completed: {
       canEdit: false,
@@ -997,6 +998,7 @@ const RoundCard = ({
       canResendLink: false,
       canShareLink: false,
       canNoShow: false,
+      canEvaluated : true,
     },
     //  added by ranjith new status validation
     InProgress: {
@@ -1074,7 +1076,7 @@ const RoundCard = ({
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      canFeedback: true,
+      canFeedback: false,
       canResendLink: false,
       canShareLink: false,
       canNoShow: false,
@@ -1103,8 +1105,8 @@ const RoundCard = ({
       canMarkScheduled: false,
       canReschedule: false,
       canCancel: false,
-      canComplete: true,
-      canFeedback: true,
+      canComplete: false,
+      canFeedback: false,
       canResendLink: false,
       canShareLink: false,
       canNoShow: false,
@@ -1921,7 +1923,7 @@ const RoundCard = ({
                     )}
 
                   {/* Feedback Pending */}
-                  {permissions.canFeedbackPending &&
+                  {/* {permissions.canFeedbackPending &&
                     round.roundTitle !== "Assessment" && (
                       <button
                         onClick={() => handleActionClick("FeedbackPending")}
@@ -1929,7 +1931,7 @@ const RoundCard = ({
                       >
                         <Hourglass className="h-4 w-4 mr-1" /> Feedback Pending
                       </button>
-                    )}
+                    )} */}
 
                   {/* Cancel */}
                   {permissions.canCancel &&
