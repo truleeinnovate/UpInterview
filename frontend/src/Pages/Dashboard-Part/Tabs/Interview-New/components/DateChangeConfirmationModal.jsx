@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { useInterviewPolicies } from "../../../../../apiHooks/useInterviewPolicies";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect";
-import { CANCEL_OPTIONS, NO_SHOW_OPTIONS, REJECT_OPTIONS, SKIPPED_OPTIONS, EVALUATED_OPTIONS } from "../../../../../utils/roundHistoryOptions";
+import { CANCEL_OPTIONS, NO_SHOW_OPTIONS, REJECT_OPTIONS, EVALUATED_OPTIONS, ROUND_OUTCOME_OPTIONS } from "../../../../../utils/roundHistoryOptions";
 
 // Policy warning component - only for External interviews
 const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
@@ -151,12 +151,16 @@ const DateChangeConfirmationModal = ({
 }) => {
   const [selectedReason, setSelectedReason] = useState("");
   const [otherText, setOtherText] = useState("");
+  const [roundOutcome, setRoundOutcome] = useState("");
+
+
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedReason("");
       setOtherText("");
+      setRoundOutcome("");
     }
   }, [isOpen]);
 
@@ -195,15 +199,21 @@ const DateChangeConfirmationModal = ({
   const handleClose = () => {
     setSelectedReason("");
     setOtherText("");
+    setRoundOutcome("");
     if (onClose) onClose();
   };
 
   const handleConfirm = () => {
     if (requiresReason && !selectedReason) return;
     if (showOtherField && !otherText.trim()) return;
+    if (isEvaluatedAction && !roundOutcome) return;
 
     const payload = requiresReason
-      ? { reason: selectedReason, comment: showOtherField ? otherText.trim() : undefined }
+      ? {
+        reason: selectedReason,
+        comment: showOtherField ? otherText.trim() : undefined,
+        ...(isEvaluatedAction && { roundOutcome })
+      }
       : {};
 
     if (onConfirm) onConfirm(payload);
@@ -231,7 +241,7 @@ const DateChangeConfirmationModal = ({
   };
 
   // Check if confirm should be disabled
-  const isConfirmDisabled = isLoading || (requiresReason && !selectedReason) || (showOtherField && !otherText.trim());
+  const isConfirmDisabled = isLoading || (requiresReason && !selectedReason) || (showOtherField && !otherText.trim()) || (isEvaluatedAction && !roundOutcome);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
@@ -298,6 +308,28 @@ const DateChangeConfirmationModal = ({
                     onChange={(e) => setOtherText(e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="Enter reason..."
+                  />
+                </div>
+              )}
+
+              {/* Round Outcome Dropdown - Only for Evaluated action */}
+              {isEvaluatedAction && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Round Outcome <span className="text-red-500">*</span>
+                  </label>
+                  <DropdownSelect
+                    options={ROUND_OUTCOME_OPTIONS}
+                    value={ROUND_OUTCOME_OPTIONS.find((opt) => opt.value === roundOutcome) || null}
+                    onChange={(selectedOption) => {
+                      setRoundOutcome(selectedOption?.value || "");
+                    }}
+                    placeholder="Select outcome"
+                    isClearable
+                    menuPortalTarget={document.body}
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    }}
                   />
                 </div>
               )}

@@ -18,6 +18,15 @@
 //   { label: "Other", value: "other" },
 // ];
 
+// Round outcome options for Evaluated action
+export const ROUND_OUTCOME_OPTIONS = [
+  { value: "STRONG_YES", label: "Strong Yes" },
+  { value: "YES", label: "Yes" },
+  { value: "NEUTRAL", label: "Neutral" },
+  { value: "NO", label: "No" },
+  { value: "STRONG_NO", label: "Strong No" },
+];
+
 export const NO_SHOW_OPTIONS = [
   { label: "Candidate No-Show", value: "candidate_no_show" },
   { label: "Interviewer No-Show", value: "interviewer_no_show" },

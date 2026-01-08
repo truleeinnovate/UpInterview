@@ -238,7 +238,8 @@ const RoundCard = ({
   const handleStatusChange = async (
     newStatus,
     reasonValue = null,
-    comment = null
+    comment = null,
+    roundOutcome = null
   ) => {
     // const roundData = {
     //   status: newStatus,
@@ -286,6 +287,15 @@ const RoundCard = ({
       ) {
         payload.cancellationReason = reasonValue;
         payload.comment = comment || null;
+      }
+
+      // Add evaluation data if Evaluated status
+      if (newStatus === "Evaluated") {
+        payload.reason = reasonValue;
+        payload.comment = comment || null;
+        if (roundOutcome) {
+          payload.roundOutcome = roundOutcome;
+        }
       }
 
       await updateRoundStatus(payload);
@@ -343,9 +353,9 @@ const RoundCard = ({
   };
 
   // handling Evaluated functionlity
-  const handleEvaluatedWithReason = async ({ reason, comment }) => {
+  const handleEvaluatedWithReason = async ({ reason, comment, roundOutcome }) => {
     try {
-      await handleStatusChange("Evaluated", reason, comment || null);
+      await handleStatusChange("Evaluated", reason, comment || null, roundOutcome);
       setEvaluatedReasonModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
@@ -1239,12 +1249,12 @@ const RoundCard = ({
                           </div>
                         )}
                     </div> */}
-                    <div>
+                    {/* <div>
                       {round?.meetPlatform &&
                         round?.roundTitle !== "Assessment" && (
                           <MeetPlatformBadge platform={round?.meetPlatform} />
                         )}
-                    </div>
+                    </div> */}
                   </div>
                   {/* <div className="flex items-center text-sm text-gray-500 mb-1">
                     <Calendar className="h-4 w-4 mr-1" />

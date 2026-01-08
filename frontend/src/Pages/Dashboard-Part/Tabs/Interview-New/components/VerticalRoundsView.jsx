@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 
 import RoundCard from "./RoundCard";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
 
 // import { useAssessments } from "../../../../../apiHooks/useAssessments";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
@@ -188,6 +189,9 @@ const VerticalRoundsView = ({
                     <span className="mx-2">
                       {capitalizeFirstLetter(round?.interviewMode)}
                     </span>
+                    {round?.meetPlatform && round?.roundTitle !== "Assessment" && (
+                      <MeetPlatformBadge platform={round?.meetPlatform} />
+                    )}
                   </div>
                 </div>
               </div>
