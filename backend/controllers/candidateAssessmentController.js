@@ -1,4 +1,3 @@
-// v1.0.0  -  Ashraf  -  fixed name  scheduleassessment to assessment schema,added extend,cancel,schedule status api code based on policy
 const {
   CandidateAssessment,
 } = require("../models/Assessment/candidateAssessment");
@@ -7,156 +6,15 @@ const { generateOTP } = require("../utils/generateOtp");
 const Otp = require("../models/Otp");
 const mongoose = require("mongoose");
 const cron = require("node-cron");
-// <-------------------------------v1.0.0
 const ScheduleAssessment = require("../models/Assessment/assessmentsSchema");
-// ------------------------------v1.0.0 >
-
-// Import push notification functions
 const {
   createAssessmentSubmissionNotification,
   createAssessmentStatusUpdateNotification,
 } = require("./PushNotificationControllers/pushNotificationAssessmentController");
 
-// Import assessment usage service
 const {
   handleAssessmentStatusChange,
 } = require("../services/assessmentUsageService");
-
-// exports.updateCandidateAssessment = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     // Find and update the document, or return 404 if not found
-//     const updateResult = await CandidateAssessment.findOneAndUpdate(
-//       { _id: id },
-//       req.body,
-//       { new: true } // This returns the updated document
-//     );
-
-//     // If no document was found, return a 404
-//     if (!updateResult) {
-//       return res.status(404).send({
-//         success: false,
-//         message: "Candidate assessment not found",
-//       });
-//     }
-
-//     res.status(200).send({
-//       message: "Candidate assessment updated successfully",
-//       success: true,
-//       updatedAssessment: updateResult, // Send only the updated document
-//     });
-//   } catch (error) {
-//     return res.status(500).send({
-//       success: false,
-//       message: "Failed to update candidate assessment status",
-//       error: error.message,
-//     });
-//   }
-// }
-
-// exports.updateAnswersToDb = async (req, res) => {
-//   try {
-//     const { candidateAssessmentId, sectionIndex, questionId } = req.params;
-//     const { SectionName, Answers, passScore, sectionResult, assessmentTotalScore, totalScore, sectionTotalScore } = req.body;
-//     const { answer, isCorrect, score, isAnswerLater } = Answers;
-
-//     // Check if the CandidateAssessment exists
-//     let candidateAssessment = await CandidateAssessment.findById(candidateAssessmentId);
-
-//     if (!candidateAssessment) {
-//       return res.status(404).json({ message: 'Candidate assessment not found' });
-//     }
-
-//     // Check if the section exists
-//     const section = candidateAssessment.sections[sectionIndex];
-
-//     if (!section) {
-//       // Add a new section if it doesn't exist
-//       candidateAssessment.sections.push({
-//         SectionName,
-//         Answers: [
-//           {
-//             questionId,
-//             answer,
-//             isCorrect,
-//             score,
-//             isAnswerLater,
-//             submittedAt: new Date(),
-//           },
-//         ],
-//         totalScore: sectionTotalScore,
-//         passScore,
-//         sectionResult,
-//       });
-//     } else {
-
-//       // Check if the answer already exists in the section
-//       const answerIndex = section.Answers.findIndex(
-//         (ans) => ans.questionId.toString() === questionId
-//       );
-
-//       if (answerIndex === -1) {
-//         // If the answer doesn't exist, add a new one
-//         section.Answers.push({
-//           questionId,
-//           answer,
-//           isCorrect,
-//           score,
-//           isAnswerLater,
-//           submittedAt: new Date(),
-//         });
-//       } else {
-//         // If the answer exists, update the existing one
-//         section.Answers[answerIndex].answer = answer;
-//         section.Answers[answerIndex].isCorrect = isCorrect;
-//         section.Answers[answerIndex].score = score;
-//         section.Answers[answerIndex].isAnswerLater = isAnswerLater;
-//         section.Answers[answerIndex].submittedAt = new Date();
-//       }
-
-//       // Update section-level fields
-//       section.totalScore = sectionTotalScore;
-//       section.passScore = passScore;
-//       section.sectionResult = sectionResult;
-//     }
-
-//     candidateAssessment.totalScore = assessmentTotalScore
-//     // Save the updated CandidateAssessment document
-//     const updatedAssessment = await candidateAssessment.save();
-
-//     // Send the updated document back to the client
-//     res.json(updatedAssessment);
-//   } catch (error) {
-//     console.error('Error updating assessment:', error);
-//     res.status(500).json({ message: 'Internal Server Error', error });
-//   }
-// }
-
-// exports.autoSaveAnswers = async (req, res) => {
-//   try {
-//     const { candidateAssessmentId } = req.params;
-//     const { remainingTime, lastSelectedSection } = req.body;
-
-//     // Update the CandidateAssessment with the current progress
-//     const updatedAssessment = await CandidateAssessment.findByIdAndUpdate(
-//       candidateAssessmentId,
-//       {
-//         $set: req.body
-//       },
-//       { new: true } // Return the updated document
-//     );
-
-//     if (!updatedAssessment) {
-//       return res.status(404).json({ message: 'Candidate assessment not found' });
-//     }
-
-//     res.json({ message: 'Progress saved successfully', updatedAssessment });
-//   } catch (error) {
-//     console.error('Error saving progress:', error);
-//     res.status(500).json({ message: 'Internal Server Error', error });
-//   }
-// }
 
 exports.getCandidateAssessmentBasedOnId = async (req, res) => {
   try {
@@ -186,9 +44,6 @@ exports.getCandidateAssessmentBasedOnId = async (req, res) => {
   }
 };
 
-// Public endpoint used by the Assessment Test page to fetch minimal
-// candidate details (name, email, phone, image) by candidateAssessmentId
-// for public assessment links, without requiring authenticated access
 exports.getPublicCandidateDetailsByAssessmentId = async (req, res) => {
   try {
     const { candidateAssessmentId } = req.params;
@@ -384,59 +239,60 @@ exports.submitCandidateAssessment = async (req, res) => {
       });
     }
 
-const processedSections = await Promise.all(
-  sections.map(async (section, sectionIndex) => {
+    const processedSections = await Promise.all(
+      sections.map(async (section, sectionIndex) => {
 
-    const processedAnswers = await Promise.all(
-      section.questions.map(async (question) => {
-      
-        const isCorrect = question.isCorrect;
-        const score = question.score || 0;
+        const processedAnswers = await Promise.all(
+          section.questions.map(async (question) => {
+
+            const isCorrect = question.isCorrect;
+            const score = question.score || 0;
+
+            return {
+              questionId: question.questionId,
+              userAnswer: question.userAnswer,
+              correctAnswer: question.correctAnswer, // Store the correct answer
+              isCorrect,
+              score,
+              isAnswerLater: question.isAnswerLater || false,
+              submittedAt: new Date(question.submittedAt || Date.now())
+            };
+          })
+        );
+
+        const sectionScore = processedAnswers.reduce((sum, answer) => sum + (answer.score || 0), 0);
+        const sectionPassScore = Number(section.passScore) || 0;
+        const sectionResult = sectionScore >= sectionPassScore ? "pass" : "fail";
 
         return {
-          questionId: question.questionId,
-          answer: question.answer,
-          isCorrect,
-          score,
-          isAnswerLater: question.isAnswerLater || false,
-          submittedAt: new Date(question.submittedAt || Date.now())
+          sectionId: section.sectionId,
+          sectionName: section.sectionName,
+          totalScore: sectionScore,
+          passScore: sectionPassScore,
+          sectionResult,
+          sectionPassed: sectionResult === "pass",
+          Answers: processedAnswers  // FIX: Only Answers (removed questions)
         };
       })
     );
 
-    const sectionScore = processedAnswers.reduce((sum, answer) => sum + (answer.score || 0), 0);
-    const sectionPassScore = Number(section.passScore) || 0;
-    const sectionResult = sectionScore >= sectionPassScore ? "pass" : "fail";
-
-    return {
-      sectionId: section.sectionId,
-      sectionName: section.sectionName,
-      totalScore: sectionScore,
-      passScore: sectionPassScore,
-      sectionResult,
-      sectionPassed: sectionResult === "pass",
-      Answers: processedAnswers  // FIX: Only Answers (removed questions)
-    };
-  })
-);
-
     // Calculate overall assessment result
-const totalScore = processedSections.reduce((total, section) => total + section.totalScore, 0);
-const allSectionsPassed = processedSections.every(section => section.sectionResult === 'pass');
-const overallResult = allSectionsPassed ? 'pass' : 'fail';
-const remainingTime = req.body.remainingTime || null;
+    const totalScore = processedSections.reduce((total, section) => total + section.totalScore, 0);
+    const allSectionsPassed = processedSections.every(section => section.sectionResult === 'pass');
+    const overallResult = allSectionsPassed ? 'pass' : 'fail';
+    const remainingTime = req.body.remainingTime || null;
     // Update candidate assessment
     const oldStatus = candidateAssessment.status;
     const updateData = {
-  status: overallResult, // Set status to 'pass' or 'fail' instead of 'completed'
-  sections: processedSections,
-  totalScore,
-  submittedAt: new Date(submittedAt),
-  endedAt: new Date(),
-  remainingTime,
-  overallResult,
-  updatedAt: new Date()
-};
+      status: overallResult, // Set status to 'pass' or 'fail' instead of 'completed'
+      sections: processedSections,
+      totalScore,
+      submittedAt: new Date(submittedAt),
+      endedAt: new Date(),
+      remainingTime,
+      overallResult,
+      updatedAt: new Date()
+    };
 
     const updatedAssessment = await CandidateAssessment.findByIdAndUpdate(
       candidateAssessmentId,
