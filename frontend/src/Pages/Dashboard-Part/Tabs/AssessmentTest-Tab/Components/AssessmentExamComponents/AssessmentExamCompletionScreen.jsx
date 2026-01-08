@@ -32,10 +32,10 @@ function CompletionScreen() {
               <p className="text-gray-600 text-sm">
                 Need help or have questions? Reach out to us at{" "}
                 <a
-                  href="mailto:Upinterview@gmail.com"
+                  href="mailto:support@upinterview.io"
                   className="font-medium text-custom-blue hover:text-custom-blue/80 transition-colors"
                 >
-                  Upinterview@gmail.com
+                  support@upinterview.io
                 </a>
               </p>
             </div>

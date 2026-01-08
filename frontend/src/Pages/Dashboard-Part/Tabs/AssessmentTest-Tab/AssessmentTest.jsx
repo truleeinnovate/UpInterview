@@ -310,7 +310,7 @@ const AssessmentTest = () => {
         <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-indigo-50 to-white">
           {renderHeader()}
           <div className="max-w-2xl mx-auto mt-16 p-8 text-center">
-            <h1 className="sm:text-md md:text-md lg:text-xl xl:text-2xl 2xl:text-2xl font-bold text-blue-600">
+            <h1 className="sm:text-md md:text-md lg:text-xl xl:text-2xl 2xl:text-2xl font-bold text-custom-blue">
               Assessment Completed
             </h1>
             <p className="mt-4 text-gray-600">
