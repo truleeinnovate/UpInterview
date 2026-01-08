@@ -1219,7 +1219,7 @@ const RoundCard = ({
 
           {activeTab === "details" ? (
             <>
-              <div className="mt-4 grid grid-cols-2 md:grid-cols-2 gap-4 sm:grid-cols-1">
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-4 sm:grid-cols-1">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <h4 className="text-sm font-medium text-gray-700">
