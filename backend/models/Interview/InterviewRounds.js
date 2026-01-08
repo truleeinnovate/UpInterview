@@ -112,6 +112,7 @@ const interviewRoundSchema = new mongoose.Schema(
         "Skipped",
         "Evaluated",
         "FeedbackPending",
+        "FeedbackSubmitted"
       ],
       default: "Draft",
     },
@@ -142,25 +143,9 @@ const interviewRoundSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "ScheduledAssessment",
     },
-    // rejectionReason: String,
-    // supportTicketID: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "SupportUser",
-    // },
 
-    // Settlement tracking
-    // These fields are updated by WalletControllers.settleInterviewPayment after
-    // interview policy has been applied. Super Admin UI (table + sidebar) reads
-    // settlementStatus/settlementDate to display whether payout was settled.
-    // These fields are set by WalletControllers.settleInterviewPayment to reflect
-    // the final outcome of policy-based settlement for this round. They are also
-    // surfaced in Super Admin UI (table + sidebar) to show per-round settlement status.
-    // settlementStatus: {
-    //   type: String,
-    //   enum: ["pending", "completed", "failed"],
-    //   default: "pending",
-    // },
-    // settlementDate: { type: Date },
+    roundOutcome: String,//STRONG_YES | YES | NEUTRAL | NO | STRONG_NO
+    roundScore: Number,//1–5
 
     // External system identifier
     externalId: { type: String, sparse: true, index: true }, // External system identifier
