@@ -295,11 +295,13 @@ const RoundFormInterviews = () => {
   const {
     isReschedule = false,
     isEdit = false,
+    isRequestSent = false,
     mode, // optional if you switch to mode-based approach
   } = location.state || {};
 
   console.log("isReschedule:", isReschedule);
   console.log("isEdit:", isEdit);
+  console.log("isRequestSent:", isRequestSent);
 
   console.log("Round Edit Data:", roundEditData);
 
@@ -993,37 +995,37 @@ const RoundFormInterviews = () => {
   // Simplified shouldDisable function with all conditions
   const shouldDisable = (fieldName) => {
     // Map field names to categories
-    const fieldCategories = {
-      // Basic fields
-      roundTitle: "roundTitle",
-      interviewMode: "interviewMode",
+    // const fieldCategories = {
+    //   // Basic fields
+    //   roundTitle: "roundTitle",
+    //   interviewMode: "interviewMode",
 
-      // Date/time fields
-      duration: "duration",
-      interviewType: "interviewType",
-      scheduledDate: "datetime",
+    //   // Date/time fields
+    //   duration: "duration",
+    //   interviewType: "interviewType",
+    //   scheduledDate: "datetime",
 
-      // Interviewer fields
-      internalInterviewersBtn: "interviewers",
-      externalInterviewersBtn: "interviewers",
-      removeInterviewerBtn: "interviewers",
-      clearInterviewersBtn: "interviewers",
+    //   // Interviewer fields
+    //   internalInterviewersBtn: "interviewers",
+    //   externalInterviewersBtn: "interviewers",
+    //   removeInterviewerBtn: "interviewers",
+    //   clearInterviewersBtn: "interviewers",
 
-      // Editable in edit mode
-      sequence: "sequence",
-      instructions: "instructions",
-      questions: "questions",
-    };
+    //   // Editable in edit mode
+    //   sequence: "sequence",
+    //   instructions: "instructions",
+    //   questions: "questions",
+    // };
 
-    console.log("Evaluating shouldDisable for:", fieldName);
+    // console.log("Evaluating shouldDisable for:", fieldName);
     // console.log("fieldCategories[fieldName]:", fieldCategories[fieldName]);
 
     // const category = fieldCategories[fieldName] || fieldName;
-    console.log(
-      "isScheduleOrRescheduleInHistory:",
-      isScheduleOrRescheduleInHistory,
-      status
-    );
+    // console.log(
+    //   "isScheduleOrRescheduleInHistory:",
+    //   isScheduleOrRescheduleInHistory,
+    //   status
+    // );
     // CASE 1: Draft status and no schedule/reschedule in history → ALL editable
     if (
       (status === "Draft" && !isScheduleOrRescheduleInHistory) ||
@@ -1039,7 +1041,7 @@ const RoundFormInterviews = () => {
     if (status === "Draft" && isScheduleOrRescheduleInHistory) {
       if (
         fieldName === "interviewType" ||
-        fieldName === "datetime" ||
+        fieldName === "scheduledDate" ||
         fieldName === "instructions" ||
         fieldName === "sequence" ||
         fieldName === "questions" ||
@@ -1048,6 +1050,7 @@ const RoundFormInterviews = () => {
         fieldName === "clearInterviewersBtn" ||
         fieldName === "removeInterviewerBtn"
       ) {
+        console.log("Editable field in edit mode: Draft", fieldName);
         return false;
       }
       return true;
@@ -1067,6 +1070,7 @@ const RoundFormInterviews = () => {
         fieldName === "sequence" ||
         fieldName === "questions"
       ) {
+        console.log("Editable field in edit mode: 2", fieldName);
         return false; // These are editable
       }
       return true; // Everything else is disabled
@@ -1077,7 +1081,7 @@ const RoundFormInterviews = () => {
 
     // CASE 3: Reschedule mode with Scheduled/Rescheduled status
     if (
-      isReschedule &&
+      (isReschedule || isRequestSent) &&
       (status === "Scheduled" ||
         status === "Rescheduled" ||
         status === "RequestSent")
@@ -1086,11 +1090,12 @@ const RoundFormInterviews = () => {
     ) {
       // Only datetime and interviewers are editable
       if (
-        fieldName === "datetime" ||
+        fieldName === "scheduledDate" ||
         fieldName === "interviewType"
         // ||
         // category === "interviewers"
       ) {
+        console.log("Editable field in edit mode: datetime", fieldName);
         // console.log("Editable field in reschedule:", fieldName, category);
         // console.log("Editable field in reschedule:", category);
         return false; // These are editable
@@ -1112,6 +1117,8 @@ const RoundFormInterviews = () => {
     };
 
     const statusList = disabledInStatus[fieldName] || [];
+
+    console.log("statusList", statusList);
     return statusList.includes(status);
   };
 
@@ -1120,21 +1127,6 @@ const RoundFormInterviews = () => {
   const handleScheduledDateChange = (e) => {
     const val = e.target.value;
 
-    // If external interviewers exist and date is actually changing → clear them
-    // if (externalInterviewers.length > 0 && val !== scheduledDate) {
-    //   setExternalInterviewers([]);
-    //   setHasManuallyClearedInterviewers(true);
-
-    //   // Reset status if it was RequestSent
-    //   if (status === "RequestSent") {
-    //     setStatus("Draft");
-    //   }
-
-    //   if (selectedInterviewType === "External") {
-    //     setSelectedInterviewType(null);
-    //   }
-    // }
-
     // Check if external interviewers exist and date is actually changing
     if (externalInterviewers.length > 0 && val !== scheduledDate) {
       // Set pending change and show confirmation popup
@@ -1142,7 +1134,8 @@ const RoundFormInterviews = () => {
         type: "scheduledDate",
         value: val,
       });
-      setShowDateChangeConfirmation(true);
+      setTimeout(() => setShowDateChangeConfirmation(true), 1500);
+      // setShowDateChangeConfirmation(true);
       return; // Don't proceed until user confirms
     }
 
@@ -1153,6 +1146,7 @@ const RoundFormInterviews = () => {
     // Clear external interviewers when date changes
     if (newScheduledDate !== scheduledDate && externalInterviewers.length > 0) {
       setExternalInterviewers([]);
+
       setHasManuallyClearedInterviewers(true); // Add this
       if (
         selectedInterviewType === "External" &&
@@ -3149,9 +3143,25 @@ const RoundFormInterviews = () => {
                                     : ""
                                 }
                                 // Scheduled Date - disabled in CASE 2, enabled in CASE 3
-                                disabled={shouldDisable("datetime")}
+                                disabled={shouldDisable("scheduledDate")}
                                 // disabled={status === "RequestSent"}
-                                onChange={handleScheduledDateChange} // Use the new handler
+                                // onChange={handleScheduledDateChange} // Use the new handler
+
+                                onChange={(e) => {
+                                  handleScheduledDateChange(e);
+                                  // Also trigger blur to close the picker
+                                  setTimeout(() => e.target.blur(), 1000);
+                                  //  e.target.blur();
+                                }}
+                                onBlur={() => {
+                                  // Force update times when input loses focus (popup closes)
+                                  if (scheduledDate) {
+                                    setTimeout(
+                                      () => updateTimes(duration),
+                                      1000
+                                    );
+                                  }
+                                }}
                                 //<-----v1.0.4----
                                 // onChange={(e) => {
                                 //   const val = e.target.value;
@@ -3949,18 +3959,21 @@ const RoundFormInterviews = () => {
         />
       )}
 
-      {showDateChangeConfirmation && shouldDisable("scheduledDate") && (
-        <DateChangeConfirmationModal
-          isOpen={showDateChangeConfirmation}
-          onClose={() => {
-            setShowDateChangeConfirmation(false);
-            setPendingDateChange(null);
-          }}
-          onConfirm={handleConfirmDateChange}
-          selectedInterviewType={selectedInterviewType}
-          status={status}
-          combinedDateTime={combinedDateTime} // your formatted date string
-        />
+      {showDateChangeConfirmation && (
+        // shouldDisable("scheduledDate") &&
+        <div className="fixed inset-0 z-[9999]">
+          <DateChangeConfirmationModal
+            isOpen={showDateChangeConfirmation}
+            onClose={() => {
+              setShowDateChangeConfirmation(false);
+              setPendingDateChange(null);
+            }}
+            onConfirm={handleConfirmDateChange}
+            selectedInterviewType={selectedInterviewType}
+            status={status}
+            combinedDateTime={combinedDateTime} // your formatted date string
+          />
+        </div>
       )}
     </div>
   );
