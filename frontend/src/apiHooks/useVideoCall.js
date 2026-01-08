@@ -31,7 +31,7 @@ export const extractUrlData = (search) => {
     isCandidate,
     isInterviewer,
     // meetLink,
-    roundData,
+    // roundData,
     interviewRoundId: roundData || "",
     interviewerId: interviewerId || "",
   };

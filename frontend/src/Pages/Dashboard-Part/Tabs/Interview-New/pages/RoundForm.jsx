@@ -2463,9 +2463,6 @@ const RoundFormInterviews = () => {
                 </p>
               </div>
               <div className="flex items-center gap-2 px-4 py-5">
-                <span className="text-gray-600 text-sm font-semibold">
-                  Active Service:
-                </span>
                 <MeetPlatformBadge platform={selectedMeetingPlatform} />
               </div>
             </div>
@@ -2679,20 +2676,64 @@ const RoundFormInterviews = () => {
 
                           {/* Assessment Metadata Summary */}
                           {selectedAssessmentData && (
-                            <div className="col-span-2 mt-6 grid grid-cols-4 gap-4 p-3 bg-blue-50/30 border border-blue-100 rounded-lg">
+                            // <div className="col-span-2 mt-6 grid grid-cols-4 gap-4 p-3 bg-blue-50/30 border border-blue-100 rounded-lg">
+                            //   <div className="flex flex-col">
+                            //     <span className="text-sm tracking-wider text-gray-900 font-bold">
+                            //       Total Score
+                            //     </span>
+                            //     <span className="text-xs font-semibold text-gray-400">
+                            //       {selectedAssessmentData?.totalScore} Points
+                            //     </span>
+                            //   </div>
+                            //   <div className="flex flex-col">
+                            //     <span className="text-sm tracking-wider text-gray-900 font-bold">
+                            //       Pass Criteria
+                            //     </span>
+                            //     <span className="text- font-semibold text-gray-400">
+                            //       {selectedAssessmentData?.passScore}
+                            //       {selectedAssessmentData?.passScoreType ===
+                            //       "Percentage"
+                            //         ? "%"
+                            //         : " Points"}
+                            //     </span>
+                            //   </div>
+                            //   <div className="flex flex-col">
+                            //     <span className="text-[10px] tracking-wider text-gray-900 font-bold">
+                            //       Link Valid For
+                            //     </span>
+                            //     <div className="flex text-xs items-center gap-1 text-gray-400">
+                            //       <span>
+                            //         {selectedAssessmentData?.linkExpiryDays ||
+                            //           3}
+                            //       </span>
+                            //       <span className="font-semibold">Days</span>
+                            //     </div>
+                            //   </div>
+                            //   <div className="flex flex-col">
+                            //     <span className="text-sm tracking-wider text-gray-400 font-bold">
+                            //       Expiry Date
+                            //     </span>
+                            //     <span className="text-xs font-semibold text-orange-600">
+                            // {formatDate(
+                            //   selectedAssessmentData?.ExpiryDate
+                            // )}
+                            //     </span>
+                            //   </div>
+                            // </div>
+                            <div className="col-span-2 mt-6 mb-4 grid grid-cols-4 gap-4 p-3 bg-blue-50/40 border border-blue-100 rounded-lg">
                               <div className="flex flex-col">
-                                <span className="text-sm tracking-wider text-gray-900 font-bold">
+                                <span className="text-sm text-gray-800 font-semibold mb-2">
                                   Total Score
                                 </span>
-                                <span className="text-xs font-semibold text-gray-400">
+                                <span className="text-xs font-semibold text-gray-500">
                                   {selectedAssessmentData?.totalScore} Points
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-sm tracking-wider text-gray-900 font-bold">
+                                <span className="text-sm text-gray-800 font-semibold mb-2">
                                   Pass Criteria
                                 </span>
-                                <span className="text- font-semibold text-gray-400">
+                                <span className="text-xs font-semibold text-gray-500">
                                   {selectedAssessmentData?.passScore}
                                   {selectedAssessmentData?.passScoreType ===
                                   "Percentage"
@@ -2701,22 +2742,24 @@ const RoundFormInterviews = () => {
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-[10px] tracking-wider text-gray-900 font-bold">
+                                <span className="text-sm text-gray-800 font-semibold mb-2">
                                   Link Valid For
                                 </span>
-                                <div className="flex text-xs items-center gap-1 text-gray-400">
+                                <div className="flex text-xs items-center gap-1 text-gray-500">
                                   <span>
                                     {selectedAssessmentData?.linkExpiryDays ||
                                       3}
                                   </span>
-                                  <span className="font-semibold">Days</span>
+                                  <span className="font-semibold text-xs">
+                                    Days
+                                  </span>
                                 </div>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-sm tracking-wider text-gray-400 font-bold">
+                                <span className="text-sm text-gray-800 font-semibold mb-2">
                                   Expiry Date
                                 </span>
-                                <span className="text-xs font-semibold text-orange-600">
+                                <span className="text-xs font-medium text-red-500">
                                   {formatDate(
                                     selectedAssessmentData?.ExpiryDate
                                   )}

@@ -63,9 +63,13 @@ const CandidateView = () =>
     [location.search]
   );
 
-  const { data, isLoading } = useInterviewDetails(
-    urlData.isCandidate ? { roundId: urlData.roundData } : {}
+  console.log('urlData11', urlData);
+
+ const { data, isLoading } = useInterviewDetails(
+    {roundId: urlData.interviewRoundId}
   );
+
+  console.log('data11 from candidate view' , data);
 
   const candidateData = data?.candidateId || {};
   const positionData = data?.positionId || {};
@@ -319,7 +323,7 @@ const CandidateView = () =>
                 {/* Video Preview Section */}
                 {/* {console.log("sfsd", interviewRoundData?.meetPlatform)} */}
                 {interviewRoundData?.meetPlatform === "platform" && (
-                  <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden mb-8">
+                  <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden mb-8 mx-8 mt-4">
                     <div className="relative aspect-video bg-black">
                       <video
                         ref={videoPlayerRef}
@@ -794,7 +798,7 @@ const CandidateView = () =>
               </h3>
               <div className="space-y-2 text-sm text-red-700">
                 <p>Technical issues during the interview?</p>
-                <p className="font-semibold">Call: {config.REACT_APP_SUPPORT_PHONE_NUMBER}-HELP</p>
+                <p className="font-semibold">Call: {config.REACT_APP_SUPPORT_PHONE_NUMBER}</p>
                 <p className="font-semibold">Email: support@upinterview.io</p>
               </div>
             </div>

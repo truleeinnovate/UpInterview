@@ -303,9 +303,56 @@ exports.verifyOtp = async (req, res) => {
   }
 };
 
+function verifyAnswer(question, selectedAnswer) {
+  if (!question) {
+    console.error("Question is undefined in verifyAnswer");
+    return false;
+  }
+  const correctAnswer = question.correctAnswer;
+  const questionType = question.questionType;
+  if (selectedAnswer === undefined || selectedAnswer === null) {
+    return false;
+  }
+  const normalizeAnswer = (answer) => {
+    if (answer === null || answer === undefined) return '';
+    return String(answer).trim().toLowerCase();
+  };
+  const normalizedSelected = normalizeAnswer(selectedAnswer);
+  const normalizedCorrect = normalizeAnswer(correctAnswer);
+  let isCorrect = false;
+
+  switch (questionType) {
+    case 'MCQ':
+    case 'Multiple Choice':
+      isCorrect = normalizedSelected === normalizedCorrect;
+      break;
+
+    case 'Short Answer':
+    case 'Long Answer':
+      isCorrect = normalizedSelected === normalizedCorrect;
+      break;
+
+    case 'Number':
+    case 'Numeric':
+      isCorrect = parseFloat(normalizedSelected) === parseFloat(normalizedCorrect);
+      break;
+
+    case 'Boolean':
+      isCorrect = Boolean(normalizedSelected) === Boolean(normalizedCorrect);
+      break;
+
+    default:
+      isCorrect = normalizedSelected === normalizedCorrect;
+  }
+  return isCorrect;
+}
 exports.submitCandidateAssessment = async (req, res) => {
+
   res.locals.loggedByController = true;
   res.locals.processName = "Submit Candidate Assessment";
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
     const {
@@ -314,27 +361,21 @@ exports.submitCandidateAssessment = async (req, res) => {
       candidateId,
       status,
       sections,
-      totalScore,
-      submittedAt,
+      submittedAt
     } = req.body;
 
-    // Validate required fields (allow 0 for totalScore)
-    if (
-      !candidateAssessmentId ||
-      !sections ||
-      totalScore === undefined ||
-      !submittedAt
-    ) {
+    // Input validation
+    if (!candidateAssessmentId || !sections || !submittedAt) {
+      console.error("Missing required fields in request");
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
       });
     }
 
-    // Find the existing candidate assessment by candidateAssessmentId
     let candidateAssessment = await CandidateAssessment.findById(
       new mongoose.Types.ObjectId(candidateAssessmentId)
-    );
+    ).session(session).populate('scheduledAssessmentId');
 
     if (!candidateAssessment) {
       return res.status(404).json({
@@ -343,113 +384,107 @@ exports.submitCandidateAssessment = async (req, res) => {
       });
     }
 
-    // Process sections and calculate results
-    let hasFailedSection = false;
-    const processedSections = sections.map((section) => {
-      // Calculate section score based on answers
-      const sectionScore = section.Answers.reduce((total, answer) => {
-        // For interview questions, we might not have a correct answer to check against
-        // So we'll just sum up the scores from the answers
-        return total + (answer.score || 0);
-      }, 0);
+const processedSections = await Promise.all(
+  sections.map(async (section, sectionIndex) => {
 
-      // Determine section result
-      const sectionResult =
-        sectionScore >= (section.passScore || 0) ? "pass" : "fail";
+    const processedAnswers = await Promise.all(
+      section.questions.map(async (question) => {
+      
+        const isCorrect = question.isCorrect;
+        const score = question.score || 0;
 
-      // Update overall result if any section fails
-      if (sectionResult === "fail") {
-        hasFailedSection = true;
-      }
+        return {
+          questionId: question.questionId,
+          answer: question.answer,
+          isCorrect,
+          score,
+          isAnswerLater: question.isAnswerLater || false,
+          submittedAt: new Date(question.submittedAt || Date.now())
+        };
+      })
+    );
 
-      return {
-        ...section,
-        totalScore: sectionScore,
-        sectionResult,
-      };
-    });
+    const sectionScore = processedAnswers.reduce((sum, answer) => sum + (answer.score || 0), 0);
+    const sectionPassScore = Number(section.passScore) || 0;
+    const sectionResult = sectionScore >= sectionPassScore ? "pass" : "fail";
 
-    // Update the candidate assessment with processed data
+    return {
+      sectionId: section.sectionId,
+      sectionName: section.sectionName,
+      totalScore: sectionScore,
+      passScore: sectionPassScore,
+      sectionResult,
+      sectionPassed: sectionResult === "pass",
+      Answers: processedAnswers  // FIX: Only Answers (removed questions)
+    };
+  })
+);
+
+    // Calculate overall assessment result
+const totalScore = processedSections.reduce((total, section) => total + section.totalScore, 0);
+const allSectionsPassed = processedSections.every(section => section.sectionResult === 'pass');
+const overallResult = allSectionsPassed ? 'pass' : 'fail';
+const remainingTime = req.body.remainingTime || null;
+    // Update candidate assessment
     const oldStatus = candidateAssessment.status;
-    candidateAssessment.status = status || "completed";
-    candidateAssessment.sections = processedSections;
-    candidateAssessment.totalScore = totalScore;
-    candidateAssessment.submittedAt = submittedAt;
-    candidateAssessment.endedAt = new Date();
-    candidateAssessment.overallResult = hasFailedSection ? "fail" : "pass";
+    const updateData = {
+  status: overallResult, // Set status to 'pass' or 'fail' instead of 'completed'
+  sections: processedSections,
+  totalScore,
+  submittedAt: new Date(submittedAt),
+  endedAt: new Date(),
+  remainingTime,
+  overallResult,
+  updatedAt: new Date()
+};
 
-    // Save the updated assessment
-    const updatedAssessment = await candidateAssessment.save();
+    const updatedAssessment = await CandidateAssessment.findByIdAndUpdate(
+      candidateAssessmentId,
+      { $set: updateData },
+      { new: true, session }
+    ).populate('scheduledAssessmentId');
 
-    // Create notification if status changed
-    if (oldStatus !== candidateAssessment.status) {
+    if (!updatedAssessment) {
+      throw new Error("Failed to update candidate assessment");
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    if (oldStatus !== updatedAssessment.status) {
       try {
         await createAssessmentStatusUpdateNotification(
           updatedAssessment,
           oldStatus,
-          candidateAssessment.status
+          updatedAssessment.status
         );
-      } catch (notificationError) {
-        console.error(
-          "[ASSESSMENT] Error creating status update notification:",
-          notificationError
-        );
-        // Continue execution even if notification fails
-      }
 
-      // Update assessment usage when status changes
-      try {
         await handleAssessmentStatusChange(
-          candidateAssessmentId,
+          updatedAssessment._id,
           oldStatus,
-          candidateAssessment.status
+          updatedAssessment.status
         );
-      } catch (usageError) {
-        console.error(
-          "[ASSESSMENT] Error updating assessment usage:",
-          usageError
-        );
-        // Continue execution even if usage update fails
+
+        await createAssessmentSubmissionNotification(updatedAssessment);
+      } catch (notificationError) {
+        console.error("Error in notification handling:", notificationError);
       }
     }
-
-    // Create push notification for assessment submission
-    try {
-      await createAssessmentSubmissionNotification(updatedAssessment);
-    } catch (notificationError) {
-      console.error(
-        "[ASSESSMENT] Error creating submission notification:",
-        notificationError
-      );
-      // Continue execution even if notification fails
-    }
-
-    res.locals.logData = {
-      tenantId: "",
-      ownerId: "",
-      processName: "Submit Candidate Assessment",
-      requestBody: req.body,
-      status: "success",
-      message: "Assessment submitted successfully",
-      responseBody: updatedAssessment,
-    };
 
     return res.status(200).json({
       success: true,
       message: "Assessment submitted successfully",
       data: updatedAssessment,
     });
-  } catch (error) {
-    console.error("Error submitting candidate assessment:", error);
 
-    res.locals.logData = {
-      tenantId: "",
-      ownerId: "",
-      processName: "Submit Candidate Assessment",
-      requestBody: req.body,
-      status: "error",
-      message: error.message,
-    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+
+    console.error("Error in submitCandidateAssessment:", {
+      error: error.message,
+      stack: error.stack
+    });
 
     return res.status(500).json({
       success: false,
@@ -972,9 +1007,8 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
 
         updatedAssessments.push({
           id: assessment._id,
-          candidateName: `${assessment.candidateId?.FirstName || ""} ${
-            assessment.candidateId?.LastName || ""
-          }`.trim(),
+          candidateName: `${assessment.candidateId?.FirstName || ""} ${assessment.candidateId?.LastName || ""
+            }`.trim(),
           email: assessment.candidateId?.Email || "N/A",
           expiredAt: assessment.expiryAt,
         });
@@ -1166,7 +1200,6 @@ exports.runScheduleAssessmentStatusUpdateJob = async () => {
     }
 
     if (results.length > 0) {
-      console.log("Updated schedule assessments:", results);
     }
 
     if (errors.length > 0) {

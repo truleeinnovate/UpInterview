@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { MeetingProvider } from "@videosdk.live/react-sdk";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { MeetingAppProvider } from "./MeetingAppContextDef";
 import { MeetingContainer } from "./meeting/MeetingContainer";
 import { LeaveScreen } from "./components/screens/LeaveScreen";
@@ -10,6 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import {
   decryptParam,
   extractUrlData,
+  useContactDetails,
   // useCandidateDetails,
   // useContactDetails,
   // useSchedulerRoundDetails,
@@ -19,6 +20,7 @@ import { JoiningScreen } from "./components/screens/JoiningScreen";
 
 
 import { useInterviews } from "../apiHooks/useInterviews";
+import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
 // import { extractUrlData } from "../apiHooks/useVideoCall";
 
 const Dashboard = () => {
@@ -44,38 +46,20 @@ const Dashboard = () => {
   const { useInterviewDetails } = useInterviews();
 
   const location = useLocation();
+
+  console.log('location.search:', location.search)
+
   const urlData = useMemo(
     () => extractUrlData(location.search),
     [location.search]
   );
 
+  // urlData.isCandidate ? { roundId: urlData.interviewRoundId } : {}
   const { data, isLoading } = useInterviewDetails(
-    urlData.isCandidate ? { roundId: urlData.roundData } : {}
+    { roundId: urlData.interviewRoundId }
   );
 
-  const [decodedData, setDecodedData] = useState(null);
-  const [urlRoleInfo, setUrlRoleInfo] = useState(null);
-  const [currentRole, setCurrentRole] = useState(null);
-
-  console.log("location.search", urlData);
-
-  useEffect(() => {
-    setDecodedData(urlData);
-
-    const effectiveIsInterviewer = urlData.isInterviewer || urlData.isSchedule;
-    const roleInfo = {
-      isCandidate: urlData.isCandidate,
-      isInterviewer: effectiveIsInterviewer,
-      hasRolePreference: urlData.isCandidate || effectiveIsInterviewer,
-    };
-    setUrlRoleInfo(roleInfo);
-
-    if (urlData.isCandidate) {
-      setCurrentRole("candidate");
-    }
-  }, [urlData]);
-
-console.log('urlData int he dashboard:', urlData)
+  console.log("location.search from dashboard main url", urlData);
 
   const candidateData = data?.candidateId || {};
   const positionData = data?.positionId || {};
@@ -86,7 +70,75 @@ console.log('urlData int he dashboard:', urlData)
   console.log("positionData1", positionData);
   console.log("interviewRoundData1", interviewRoundData);
 
+  const navigate = useNavigate();
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [authError, setAuthError] = useState(null);
+  const [authType, setAuthType] = useState(null);
+
+  // Pre-auth query
+  const {
+    data: contactData,
+    isLoading: preAuthLoading,
+    isError: preAuthError,
+  } = useContactDetails(
+    !urlData.isCandidate ? urlData?.interviewerId : null,
+    !urlData.isCandidate ? urlData?.interviewRoundId : null
+  );
+
+  // === 1. Better handling of contactData (including API-level errors) ===
   useEffect(() => {
+    if (preAuthError) {
+      setAuthError("Failed to validate meeting access");
+      setIsAuthChecking(false);
+      return;
+    }
+
+    if (contactData) {
+      // If backend returns { error: "..." } inside data
+      if (contactData.error) {
+        setAuthError(contactData.error);
+
+        if (contactData.error.includes("Owner mismatch")) {
+          redirectToLogin(contactData.tenant?.type === "individual");
+        } else {
+          setIsAuthChecking(false);
+        }
+        return;
+      }
+
+      // Success case - valid contact
+      setAuthType(contactData.tenant?.type || "organization");
+      // Do NOT set isAuthChecking false here - wait for actual auth check
+    }
+  }, [contactData, preAuthError]);
+
+  // === 2. Trigger authentication ONLY after pre-auth succeeds ===
+  useEffect(() => {
+    // Candidate links skip all auth
+    if (urlData.isCandidate) {
+      setIsAuthChecking(false);
+      return;
+    }
+
+    // For interviewer/scheduler: wait for pre-auth to finish successfully
+    if (!preAuthLoading && !preAuthError && contactData && !contactData.error) {
+      const authenticated = checkAuthentication();
+      if (authenticated) {
+        setIsAuthChecking(false);
+      }
+      // If not authenticated - checkAuthentication() already handles redirect/error
+    }
+
+    // If pre-auth failed or loading - do nothing (loading spinner will show)
+  }, [preAuthLoading, preAuthError, contactData, urlData]);
+
+  useEffect(() => {
+    if (candidateData && urlData.meetLink) {
+      candidateData.meetingLink = urlData.meetLink;
+    }
+  }, [candidateData, urlData.meetLink]);
+
+   useEffect(() => {
     if (interviewRoundData?.meetPlatform && !meetingId) {
       console.log(
         "Setting meetingId from candidateData:",
@@ -146,6 +198,106 @@ console.log('urlData int he dashboard:', urlData)
       }
     };
   }, [isMobile]);
+
+    // 8. Auto-join when everything is ready
+  useEffect(() => {
+    if (isInitialized && token && meetingId) {
+      console.log("All conditions met for joining meeting");
+      // The meeting will join automatically with joinOnLoad: true
+      setMeetingStarted(true);
+    }
+  }, [isInitialized, token, meetingId]);
+
+  const redirectToLogin = (isIndividual) => {
+    const returnUrl = encodeURIComponent(window.location.href);
+    const loginPath = isIndividual
+      ? "/individual-login"
+      : "/organization-login";
+    navigate(`${loginPath}?returnUrl=${returnUrl}`);
+  };
+
+  const checkAuthentication = () => {
+    try {
+      if (!AuthCookieManager.isAuthenticated()) {
+        redirectToLogin(authType === "individual");
+        return false;
+      }
+
+      const currentUserData = AuthCookieManager.getActiveUserData();
+      if (!currentUserData) {
+        redirectToLogin(authType === "individual");
+        return false;
+      }
+
+      const params = new URLSearchParams(location.search);
+      const encryptedOwnerId = params.get("owner");
+
+      if (!encryptedOwnerId) {
+        setAuthError("Invalid meeting link: missing owner information");
+        setIsAuthChecking(false);
+        return false;
+      }
+
+      const decryptedOwnerId = decryptParam(encryptedOwnerId);
+      if (!decryptedOwnerId) {
+        setAuthError(
+          "Invalid meeting link: unable to decrypt owner information"
+        );
+        setIsAuthChecking(false);
+        return false;
+      }
+
+      const currentUserOwnerId = currentUserData.userId || currentUserData.id;
+      if (currentUserOwnerId !== decryptedOwnerId) {
+        redirectToLogin(authType === "individual");
+        return false;
+      }
+
+      setIsAuthChecking(false);
+      return true;
+    } catch (error) {
+      setAuthError("Authentication error occurred");
+      setIsAuthChecking(false);
+      return false;
+    }
+  };
+
+  const isAnyLoading =
+    preAuthLoading ||
+    isAuthChecking;
+  const anyError = authError;
+
+  if (isAnyLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading meeting details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (anyError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-600 text-xl mb-4">⚠️</div>
+          <p className="text-gray-800 mb-4">
+            {authError || "An error occurred"}
+          </p>
+          <button
+            onClick={() => redirectToLogin(authType === "individual")}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+ 
 
   // 2. Extract URL data
   // const [decodedData, setDecodedData] = useState(null);
@@ -269,14 +421,7 @@ console.log('urlData int he dashboard:', urlData)
   //   // Meeting will join through MeetingProvider
   // };
 
-  // 8. Auto-join when everything is ready
-  useEffect(() => {
-    if (isInitialized && token && meetingId) {
-      console.log("All conditions met for joining meeting");
-      // The meeting will join automatically with joinOnLoad: true
-      setMeetingStarted(true);
-    }
-  }, [isInitialized, token, meetingId]);
+
 
   return (
     <>
@@ -441,11 +586,11 @@ console.log('urlData int he dashboard:', urlData)
                     setMeetingStarted(false);
                   }}
                   setIsMeetingLeft={setIsMeetingLeft}
-                isCandidate={urlData?.isCandidate || false}
-                isInterviewer={urlData?.isInterviewer || false}
-                isSchedule={urlData?.isSchedule || false}
-                candidateData={candidateData}
-                positionData={positionData}
+                  isCandidate={urlData?.isCandidate || false}
+                  isInterviewer={urlData?.isInterviewer || false}
+                  isSchedule={urlData?.isSchedule || false}
+                  candidateData={candidateData}
+                  positionData={positionData}
                 />
               </MeetingProvider>
             </>

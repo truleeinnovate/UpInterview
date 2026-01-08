@@ -4,6 +4,7 @@ const { Interview } = require("../models/Interview/Interview.js");
 const InterviewRequest = require("../models/InterviewRequest.js");
 const Wallet = require("../models/WalletTopup");
 const { Candidate } = require("../models/candidate.js");
+const FeedbackModel = require("../models/feedback.js");
 const {
   shareAssessment,
 } = require("./EmailsController/assessmentEmailController.js");
@@ -1305,7 +1306,7 @@ const updateInterviewRoundStatus = async (req, res) => {
       statusChanged: true,
     });
 
-    console.log("smartUpdate", smartUpdate);
+    // console.log("smartUpdate", smartUpdate);
 
     // Extra logic ONLY for Cancelled (outside smart update)
     let extraUpdate = { $set: {} };
@@ -1315,22 +1316,35 @@ const updateInterviewRoundStatus = async (req, res) => {
       action === "Completed" &&
       existingRound.interviewerType === "External"
     ) {
-      // Auto-settlement for completed interviews
-      try {
-        await processAutoSettlement({
-          roundId: existingRound._id.toString(),
-          action: "Completed",
-        });
+      // Check for submitted feedback
+      const feedback = await FeedbackModel.findOne({
+        interviewRoundId: existingRound._id,
+      });
+
+      // Auto-settlement for completed interviews ONLY if feedback is submitted
+      if (feedback && feedback.status === "submitted") {
+        try {
+          await processAutoSettlement({
+            roundId: existingRound._id.toString(),
+            action: "Completed",
+            //reasonCode: reasonCode || comment || null,
+          });
+          console.log(
+            "[updateInterviewRoundStatus] Auto-settlement completed for round:",
+            existingRound._id
+          );
+        } catch (settlementError) {
+          console.error(
+            "[updateInterviewRoundStatus] Auto-settlement error:",
+            settlementError
+          );
+          // Continue with status update even if settlement fails
+        }
+      } else {
         console.log(
-          "[updateInterviewRoundStatus] Auto-settlement completed for round:",
+          "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
           existingRound._id
         );
-      } catch (settlementError) {
-        console.error(
-          "[updateInterviewRoundStatus] Auto-settlement error:",
-          settlementError
-        );
-        // Continue with status update even if settlement fails
       }
     }
 
@@ -1343,7 +1357,7 @@ const updateInterviewRoundStatus = async (req, res) => {
         await processAutoSettlement({
           roundId: existingRound._id.toString(),
           action: "Cancelled",
-          cancellationReason: cancellationReason || reasonCode || null,
+          reasonCode: cancellationReason || reasonCode || null,
         });
         console.log(
           "[updateInterviewRoundStatus] Auto-settlement for cancelled round:",
@@ -1454,7 +1468,7 @@ const updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => {} }), locals: {} }
+        { status: () => ({ json: () => { } }), locals: {} }
       );
     }
 
@@ -1765,7 +1779,7 @@ async function handleInterviewerRequestFlow({
           isMockInterview: false,
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} }
+      { status: () => ({ json: () => { } }), locals: {} }
     );
   }
 
@@ -1784,7 +1798,7 @@ async function handleInterviewerRequestFlow({
           type: "interview",
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} }
+      { status: () => ({ json: () => { } }), locals: {} }
     );
     console.log(
       "Outsource interview request emails sent successfully",
@@ -1823,7 +1837,7 @@ async function handleInternalRoundEmails({
       },
     },
     {
-      status: () => ({ json: () => {} }),
+      status: () => ({ json: () => { } }),
       locals: {},
     }
   );

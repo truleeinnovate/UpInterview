@@ -1,32 +1,51 @@
 // DateChangeConfirmationModal.jsx
+// v1.1.0 - Added support for Cancel/NoShow actions with reason dropdown, policy only for External
 import { useEffect, useState } from "react";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { useInterviewPolicies } from "../../../../../apiHooks/useInterviewPolicies";
+import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect";
+import { CANCEL_OPTIONS, NO_SHOW_OPTIONS, REJECT_OPTIONS, SKIPPED_OPTIONS, EVALUATED_OPTIONS } from "../../../../../utils/roundHistoryOptions";
 
-const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
+// Policy warning component - only for External interviews
+const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
   const { getSettlementPolicy, isLoading } = useInterviewPolicies();
   const [policyData, setPolicyData] = useState(null);
   const [hoursBefore, setHoursBefore] = useState(null);
   const [error, setError] = useState(false);
 
+  // Determine the round status to use for policy lookup
+  const policyRoundStatus = actionType === "Cancel"
+    ? "Cancelled"
+    : actionType === "NoShow"
+      ? "NoShow"
+      : roundStatus;
+
+  // Action label for display
+  const actionLabel = actionType === "Cancel"
+    ? "Cancelled"
+    : actionType === "NoShow"
+      ? "Marked as No Show"
+      : "Rescheduled";
+
   useEffect(() => {
-    if (!dateTime || !roundStatus) return;
+    if (!dateTime || !policyRoundStatus) return;
 
     getSettlementPolicy({
       isMockInterview: false,
-      roundStatus,
+      roundStatus: policyRoundStatus,
       dateTime,
     })
       .then((res) => {
         if (res?.success) {
           setPolicyData(res.policy);
-          setHoursBefore(Math.round(res.hoursBefore));
+          setHoursBefore(res.hoursBefore); // Keep full decimal for accurate display
+          console.log("Settlement Policy response", res);
         } else {
           setError(true);
         }
       })
       .catch(() => setError(true));
-  }, [dateTime, roundStatus, getSettlementPolicy]);
+  }, [dateTime, policyRoundStatus, getSettlementPolicy]);
 
   if (isLoading) {
     return (
@@ -60,27 +79,30 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
 
   const isFree = firstRescheduleFree || feePercentage === 0;
 
+  // Format hours display
+  const formatTimeBefore = (hours) => {
+    if (hours >= 24) return "more than 24 hours";
+    if (hours >= 1) return `${Math.round(hours)} hour${Math.round(hours) === 1 ? '' : 's'} `;
+    const minutes = Math.ceil(hours * 60);
+    if (minutes <= 0) return "less than a minute";
+    return `${minutes} minute${minutes === 1 ? '' : 's'} `;
+  };
+
   return (
     <div className="space-y-4">
       <p className="text-gray-700 text-sm">
-        You are about to <strong>reschedule</strong> a confirmed{" "}
+        You are about to <strong>{actionType === "Cancel" ? "cancel" : actionType === "NoShow" ? "mark as no show" : "reschedule"}</strong> a confirmed{" "}
         <strong>external interview</strong>.
       </p>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm font-semibold text-blue-900 mb-1">
-          ⏱ Rescheduled{" "}
-          {hoursBefore >= 24
-            ? "more than 24 hours"
-            : hoursBefore >= 1
-              ? `${Math.round(hoursBefore)} hour${Math.round(hoursBefore) === 1 ? '' : 's'}`
-              : `${Math.round(hoursBefore * 60)} minute${Math.round(hoursBefore * 60) === 1 ? '' : 's'}`}{" "}
-          before the interview
+          ⏱ {actionLabel} {formatTimeBefore(hoursBefore)} before the interview
         </p>
         <p className="text-sm text-blue-800">
           Policy applied:{" "}
           <span className="font-medium capitalize">
-            {policyName.replace(/_/g, " ")}
+            {policyName?.replace(/_/g, " ")}
           </span>
         </p>
       </div>
@@ -90,7 +112,7 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
           <p className="text-green-800 font-semibold">No Charges Applied</p>
           <p className="text-sm text-green-700 mt-1">
             {firstRescheduleFree
-              ? "This is your first reschedule — no fees will be deducted."
+              ? "This is your first action — no fees will be deducted."
               : "As per the policy, the full amount will be refunded to you."}
           </p>
         </div>
@@ -110,8 +132,7 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus }) => {
       )}
 
       <p className="text-xs text-gray-500 italic">
-        Proceeding will clear current interviewers and apply the policy
-        immediately.
+        Proceeding will apply the policy immediately.
       </p>
     </div>
   );
@@ -124,7 +145,21 @@ const DateChangeConfirmationModal = ({
   selectedInterviewType,
   status,
   combinedDateTime,
+  // New props for Cancel/NoShow/Reject actions
+  actionType = null, // "Cancel" | "NoShow" | "Reject" | null (for reschedule)
+  isLoading = false, // Loading state for confirm button
 }) => {
+  const [selectedReason, setSelectedReason] = useState("");
+  const [otherText, setOtherText] = useState("");
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedReason("");
+      setOtherText("");
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const isExternal = selectedInterviewType === "External";
@@ -132,78 +167,217 @@ const DateChangeConfirmationModal = ({
   const isRequestSent = status === "RequestSent";
   const isScheduledOrReschedule = ["Scheduled", "Rescheduled"].includes(status);
 
+  // Check if this is a Cancel, NoShow, Reject, or Evaluated action
+  const isCancelAction = actionType === "Cancel";
+  const isNoShowAction = actionType === "NoShow";
+  const isRejectAction = actionType === "Reject";
+  const isEvaluatedAction = actionType === "Evaluated";
+  const requiresReason = isCancelAction || isNoShowAction || isRejectAction || isEvaluatedAction;
+
+  // Get the appropriate options for the dropdown
+  const reasonOptions = isCancelAction
+    ? CANCEL_OPTIONS
+    : isNoShowAction
+      ? NO_SHOW_OPTIONS
+      : isRejectAction
+        ? REJECT_OPTIONS
+        : isEvaluatedAction
+          ? EVALUATED_OPTIONS
+          : [];
+
+  const dropdownOptions = reasonOptions.map((opt) => ({
+    value: opt.value,
+    label: opt.label,
+  }));
+
+  const showOtherField = selectedReason === "other" || selectedReason === "Other" || selectedReason === "__other__";
+
+  const handleClose = () => {
+    setSelectedReason("");
+    setOtherText("");
+    if (onClose) onClose();
+  };
+
+  const handleConfirm = () => {
+    if (requiresReason && !selectedReason) return;
+    if (showOtherField && !otherText.trim()) return;
+
+    const payload = requiresReason
+      ? { reason: selectedReason, comment: showOtherField ? otherText.trim() : undefined }
+      : {};
+
+    if (onConfirm) onConfirm(payload);
+  };
+
+  // Determine title based on action type
+  const getTitle = () => {
+    if (isCancelAction) return "Cancel Round";
+    if (isNoShowAction) return "Mark as No Show";
+    if (isRejectAction) return "Reject Candidate";
+    if (isEvaluatedAction) return "Mark as Evaluated";
+    return "Confirm Interview Change";
+  };
+
+  // Determine confirm button text
+  const getConfirmButtonText = () => {
+    if (isLoading) return null; // Will show loader
+    if (isCancelAction) return "Confirm Cancel";
+    if (isNoShowAction) return "Confirm No Show";
+    if (isRejectAction) return "Confirm Reject";
+    if (isEvaluatedAction) return "Confirm Evaluation";
+    if (isExternal && isRequestSent) return "Proceed & Cancel Invitations";
+    if (isExternal && isScheduledOrReschedule) return "Proceed & Apply Policy";
+    return "Proceed & Clear Interviewers";
+  };
+
+  // Check if confirm should be disabled
+  const isConfirmDisabled = isLoading || (requiresReason && !selectedReason) || (showOtherField && !otherText.trim());
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
       <div className="bg-white w-full max-w-xl rounded-xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-xl font-semibold text-gray-900">
-            Confirm Interview Change
+            {getTitle()}
           </h3>
         </div>
 
         {/* Body */}
-        <div className="px-6 py-6 max-h-[60vh] overflow-y-auto">
-          {/* Case 1: External + RequestSent */}
-          {isExternal && isRequestSent && (
-            <div className="text-sm text-gray-700 leading-relaxed space-y-4">
-              <p>
-                Interview invitations have already been successfully sent to the
-                selected interviewers.
-              </p>
-              <p>
-                Modifying the date, time, or interview type will{" "}
-                <strong>automatically cancel</strong> all existing invitations.
-              </p>
-              <p>
-                You will need to select new interviewers and send fresh
-                invitations afterward.
-              </p>
-              <p className="font-medium">Are you sure you wish to proceed?</p>
-            </div>
+        <div className="px-6 py-6 max-h-[60vh] overflow-y-auto space-y-4">
+          {/* Cancel/NoShow/Reject/Evaluated Actions */}
+          {(isCancelAction || isNoShowAction || isRejectAction || isEvaluatedAction) && (
+            <>
+              {/* Show policy warning ONLY for External Cancel action */}
+              {isExternal && isCancelAction && (
+                <SettlementPolicyWarning
+                  dateTime={combinedDateTime}
+                  roundStatus={status}
+                  actionType={actionType}
+                />
+              )}
+
+              {/* For Internal, NoShow, Reject, or Evaluated show simple message */}
+              {(isInternal || isRejectAction || isNoShowAction || isEvaluatedAction) && (
+                <div className="text-sm text-gray-700 leading-relaxed">
+                  <p>
+                    You are about to <strong>{isCancelAction ? "cancel" : isNoShowAction ? "mark as no show" : isRejectAction ? "reject" : "mark as evaluated"}</strong> this {isRejectAction ? "candidate" : "round"}.
+                  </p>
+                </div>
+              )}
+
+              {/* Reason Dropdown - Always show for these actions */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason for {isCancelAction ? "Cancellation" : isNoShowAction ? "No Show" : isRejectAction ? "Rejection" : "Evaluation"}
+                </label>
+                <DropdownSelect
+                  options={dropdownOptions}
+                  value={dropdownOptions.find((opt) => opt.value === selectedReason) || null}
+                  onChange={(selectedOption) => {
+                    setSelectedReason(selectedOption?.value || "");
+                  }}
+                  placeholder="Select a reason"
+                  isClearable
+                  menuPortalTarget={document.body}
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
+                />
+              </div>
+
+              {/* Other reason text field */}
+              {showOtherField && (
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Specify other reason
+                  </label>
+                  <input
+                    type="text"
+                    value={otherText}
+                    onChange={(e) => setOtherText(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Enter reason..."
+                  />
+                </div>
+              )}
+            </>
           )}
 
-          {/* Case 2: External + Scheduled/Reschedule → Show Policy */}
-          {isExternal && isScheduledOrReschedule && (
-            <SettlementPolicyWarning
-              dateTime={combinedDateTime}
-              roundStatus={status}
-            />
-          )}
+          {/* Reschedule/Date Change Actions (original behavior) */}
+          {!requiresReason && (
+            <>
+              {/* Case 1: External + RequestSent */}
+              {isExternal && isRequestSent && (
+                <div className="text-sm text-gray-700 leading-relaxed space-y-4">
+                  <p>
+                    Interview invitations have already been successfully sent to the
+                    selected interviewers.
+                  </p>
+                  <p>
+                    Modifying the date, time, or interview type will{" "}
+                    <strong>automatically cancel</strong> all existing invitations.
+                  </p>
+                  <p>
+                    You will need to select new interviewers and send fresh
+                    invitations afterward.
+                  </p>
+                  <p className="font-medium">Are you sure you wish to proceed?</p>
+                </div>
+              )}
 
-          {/* Case 3: Internal Interview */}
-          {isInternal && (
-            <div className="text-sm text-gray-700 leading-relaxed space-y-4">
-              <p>
-                Changing the interview date, time, or type will remove the
-                currently assigned interviewers.
-              </p>
-              <p>
-                You will need to reselect interviewers to continue scheduling.
-              </p>
-              <p className="font-medium">Do you wish to proceed?</p>
-            </div>
+              {/* Case 2: External + Scheduled/Reschedule → Show Policy */}
+              {isExternal && isScheduledOrReschedule && (
+                <SettlementPolicyWarning
+                  dateTime={combinedDateTime}
+                  roundStatus={status}
+                  actionType={null}
+                />
+              )}
+
+              {/* Case 3: Internal Interview */}
+              {isInternal && (
+                <div className="text-sm text-gray-700 leading-relaxed space-y-4">
+                  <p>
+                    Changing the interview date, time, or type will remove the
+                    currently assigned interviewers.
+                  </p>
+                  <p>
+                    You will need to reselect interviewers to continue scheduling.
+                  </p>
+                  <p className="font-medium">Do you wish to proceed?</p>
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
           <button
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+            onClick={handleClose}
+            disabled={isLoading}
+            className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
           >
             Cancel
           </button>
 
           <button
-            onClick={onConfirm}
-            className="px-6 py-2.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition"
+            onClick={handleConfirm}
+            disabled={isConfirmDisabled}
+            className={`px-6 py-2.5 rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isCancelAction || isNoShowAction || isEvaluatedAction
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "bg-red-600 text-white hover:bg-red-700"
+              }`}
           >
-            {isExternal && isRequestSent
-              ? "Proceed & Cancel Invitations"
-              : isExternal && isScheduledOrReschedule
-                ? "Proceed & Apply Policy"
-                : "Proceed & Clear Interviewers"}
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              getConfirmButtonText()
+            )}
           </button>
         </div>
       </div>

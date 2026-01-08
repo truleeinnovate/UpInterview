@@ -48,9 +48,11 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
   console.log("urlData in RoleSelector:", urlData);
 
-  const { data, isLoading } = useInterviewDetails(
-    !urlData.isCandidate ? { roundId: urlData?.interviewRoundId } : {}
+ const { data, isLoading } = useInterviewDetails(
+    {roundId: urlData.interviewRoundId}
   );
+
+  console.log('data 22 from roleselector', data);
 
   // const candidateData = data;
 
@@ -58,7 +60,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // const positionData = data?.positionId || {};
   const interviewRoundData = data?.rounds[0] || {};
 
-  // console.log("candidateData", candidateData);
+  console.log("interviewRoundData", interviewRoundData);
 
   // console.log("Feedback Data in RoleSelector:", feedbackData);
 
@@ -110,7 +112,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
   // Handle role selection
   const handleRoleSelect = async (role) => {
-    if (role === "interviewer") {
+    // if (role === "interviewer") {
       try {
         // Wait for the API call to succeed
         await updateInterviewStatus();
@@ -123,10 +125,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
         // You could show a toast message here
         // toast.error("Failed to start interview. Please try again.");
       }
-    } else {
-      // For candidate role, proceed directly
-      onRoleSelect(role);
-    }
+    // } else {
+    //   // For candidate role, proceed directly
+    //   onRoleSelect(role);
+    // }
     // if (role === "interviewer") {
     //   // Update status to "in-progress" before proceeding
     //   await updateInterviewStatus();
@@ -358,6 +360,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     <div className="bg-gradient-to-br from-[#217989] to-[#1a616e] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl py-8 sm:px-4 md:px-4 px-8 w-full max-w-8xl">
         <div className="text-center mb-6">
+          {console.log('interviewRoundData?.meetPlatform near video preview ', interviewRoundData?.meetPlatform)}
           {interviewRoundData?.meetPlatform === "platform" ? (
             <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden mb-8 max-w-2xl mx-auto">
               <div className="relative aspect-video bg-black">
@@ -583,20 +586,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                 onClick={() => {
                   if (interviewRoundData?.meetPlatform === "platform") {
                     const currentUrl = new URL(window.location.href);
+
+                    // change only the path
                     currentUrl.pathname = "/video-call";
-                    const roleData = {
-                      ...roleInfo,
-                      isInterviewer: true,
-                      isCandidate: false,
-                    };
-                    currentUrl.searchParams.set(
-                      "meetLink",
-                      interviewRoundData?.meetingId || ""
-                    );
-                    currentUrl.searchParams.set(
-                      "meetingData",
-                      encodeURIComponent(JSON.stringify(roleData || {}))
-                    );
+
                     window.open(currentUrl.toString(), "_blank");
                   } else {
                     handleRoleSelect("interviewer");

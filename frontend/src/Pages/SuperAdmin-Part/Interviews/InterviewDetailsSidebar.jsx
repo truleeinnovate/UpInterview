@@ -1191,7 +1191,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                           )}
 
                           {/* Settlement Button if applicable */}
-                          {tx.type === 'hold' && tx.status !== 'completed' && (
+                          {['InCompleted', 'Incomplete', 'Completed', 'Cancelled', 'NoShow', 'Rejected'].includes(interviewData.status) && tx.type === 'hold' && (tx.status !== 'completed') && (
                             <div className="mt-4 flex justify-end">
                               <button
                                 onClick={() => handleSettlementPreview(tx._id)}
@@ -1456,6 +1456,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                                   {tx.type === 'credited' ? '+' : ''}₹{formatAmount(tx.amount)}
                                 </p>
                                 <p className="text-xs text-gray-500 capitalize">{tx.status}</p>
+
                               </div>
                             </div>
                           </div>

@@ -26,6 +26,10 @@ import {
   Share2,
   BarChart3,
   Activity,
+  UserX,
+  SkipForward,
+  ClipboardList,
+  Hourglass,
 } from "lucide-react";
 
 // import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
@@ -51,7 +55,7 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { notify } from "../../../../../services/toastService";
 import ScheduledAssessmentResultView from "../../Assessment-Tab/AssessmentViewDetails/ScheduledAssessmentResultView";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
-import RoundStatusReasonModal from "../../CommonCode-AllTabs/RoundStatusReasonModal";
+import DateChangeConfirmationModal from "./DateChangeConfirmationModal";
 import {
   NO_SHOW_OPTIONS,
   CANCEL_OPTIONS,
@@ -98,6 +102,8 @@ const RoundCard = ({
   const [cancelReasonModalOpen, setCancelReasonModalOpen] = useState(false);
   const [noShowReasonModalOpen, setNoShowReasonModalOpen] = useState(false);
   const [rejectReasonModalOpen, setRejectReasonModalOpen] = useState(false);
+  const [completeReasonModalOpen, setCompleteReasonModalOpen] = useState(false);
+  const [evaluatedReasonModalOpen, setEvaluatedReasonModalOpen] = useState(false);
   const [completedReasonModalOpen, setCompletedReasonModalOpen] =
     useState(false);
   const [selectedReasonModalOpen, setSelectedReasonModalOpen] = useState(false);
@@ -136,6 +142,7 @@ const RoundCard = ({
   const [assessment, setAssessment] = useState(null);
   const [actionInProgress, setActionInProgress] = useState(false);
   const [isCancellingRound, setIsCancellingRound] = useState(false); // Loading state for cancel operation
+  const [isNoShowingRound, setIsNoShowingRound] = useState(false); // Loading state for no-show operation
 
   useEffect(() => {
     if (isExpanded && round?.assessmentId) {
@@ -274,7 +281,7 @@ const RoundCard = ({
 
       // Add cancellation / NoShow reason if provided
       if (
-        (newStatus === "Cancelled" || newStatus === "NoShow") &&
+        (newStatus === "Cancelled" || newStatus === "NoShow" || newStatus === "Skipped") &&
         reasonValue
       ) {
         payload.cancellationReason = reasonValue;
@@ -312,9 +319,34 @@ const RoundCard = ({
 
   // handling No show functionlity
   const handleNoShowWithReason = async ({ reason, comment }) => {
+    setIsNoShowingRound(true);
     try {
       await handleStatusChange("NoShow", reason, comment || null);
       setNoShowReasonModalOpen(false);
+      setActionInProgress(false);
+    } catch (error) {
+      setActionInProgress(false);
+    } finally {
+      setIsNoShowingRound(false);
+    }
+  };
+
+  // handling Rejection functionlity
+  const handleCompleteWithReason = async ({ reason, comment }) => {
+    try {
+      await handleStatusChange("Completed", reason, comment || null);
+      setCompleteReasonModalOpen(false);
+      setActionInProgress(false);
+    } catch (error) {
+      setActionInProgress(false);
+    }
+  };
+
+  // handling Evaluated functionlity
+  const handleEvaluatedWithReason = async ({ reason, comment }) => {
+    try {
+      await handleStatusChange("Evaluated", reason, comment || null);
+      setEvaluatedReasonModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
       setActionInProgress(false);
@@ -352,6 +384,11 @@ const RoundCard = ({
         await handleStatusChange("Selected", reason, comment || null);
         setSelectedReasonModalOpen(false);
         setActionInProgress(false);
+      } else if (confirmAction && change) {
+        // Generic handle for other actions like Evaluated, FeedbackPending
+        await handleStatusChange(confirmAction, reason, comment || null);
+        setShowConfirmModal(false);
+        setActionInProgress(false);
       }
     } catch (error) {
       setActionInProgress(false);
@@ -388,10 +425,10 @@ const RoundCard = ({
       ? Array.isArray(round?.interviewers) && round.interviewers.length > 0
         ? round.interviewers
         : Array.isArray(round?.pendingOutsourceRequests)
-        ? round.pendingOutsourceRequests
+          ? round.pendingOutsourceRequests
             .map((req) => req.interviewerId)
             .filter(Boolean)
-        : []
+          : []
       : [];
 
   // Get questions
@@ -428,9 +465,9 @@ const RoundCard = ({
   let { scheduleData, isLoading } = useScheduleAssessments(
     round.roundTitle === "Assessment"
       ? {
-          assessmentId: round?.assessmentId,
-          type: "scheduled",
-        }
+        assessmentId: round?.assessmentId,
+        type: "scheduled",
+      }
       : null
   );
 
@@ -763,9 +800,8 @@ const RoundCard = ({
           // Transform the data
           candidateResultData = {
             id: candidateAssessment?._id,
-            name: `${candidateAssessment?.candidateId?.FirstName || ""} ${
-              candidateAssessment?.candidateId?.LastName || ""
-            }`.trim(),
+            name: `${candidateAssessment?.candidateId?.FirstName || ""} ${candidateAssessment?.candidateId?.LastName || ""
+              }`.trim(),
             email: candidateAssessment?.candidateId?.Email,
             answeredQuestions: candidateAssessment?.answeredQuestions || 0,
             totalScore: candidateAssessment?.totalScore || 0,
@@ -834,15 +870,26 @@ const RoundCard = ({
 
   const handleActionClick = (action) => {
     setActionInProgress(true);
+    if (action === "Evaluated") {
+      setEvaluatedReasonModalOpen(true);
+      setActionInProgress(true);
+      return;
+    }
+
     if (
       action === "Completed" ||
       // action === "Cancelled" ||
+      // action === "NoShow" ||
       action === "Rejected" ||
       action === "Selected" ||
-      action === "Scheduled" // <-- add this line
+      action === "Scheduled" || // <-- add this line
+      action === "Skipped" ||
+      // action === "Evaluated" ||
+      action === "FeedbackPending"
     ) {
       setConfirmAction(action);
       setShowConfirmModal(true);
+      setActionInProgress(true);
     }
   };
 
@@ -879,11 +926,10 @@ const RoundCard = ({
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: true,
+      canNoShow: false,
     },
     RequestSent: {
       canEdit: true,
@@ -892,11 +938,10 @@ const RoundCard = ({
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: false,
     },
     Scheduled: {
       canEdit: true,
@@ -905,14 +950,16 @@ const RoundCard = ({
       canReschedule: true,
       canCancel: true,
       canComplete: true,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canShareLink: false,
       canResendLink: true,
       //only for if round title assessment
       canExtendAssessment: true,
       canCancelAssessment: true,
+      canNoShow: true,
+      canSkipped: true,
+      canEvaluated: true,
+      canFeedbackPending: true,
     },
     Rescheduled: {
       canEdit: true,
@@ -921,11 +968,13 @@ const RoundCard = ({
       canReschedule: true,
       canCancel: true,
       canComplete: true,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: true,
+      canSkipped: true,
+      canEvaluated: true,
+      canFeedbackPending: true,
     },
     Completed: {
       canEdit: false,
@@ -934,16 +983,16 @@ const RoundCard = ({
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      canReject: true,
-      canSelect: true,
       canFeedback: true,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: false,
     },
     //  added by ranjith new status validation
     InProgress: {
       canEdit: false,
       canDelete: false,
+      canNoShow: true,
     },
     Cancelled: {
       canEdit: false,
@@ -952,38 +1001,38 @@ const RoundCard = ({
       canReschedule: true,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: false,
     },
-    Rejected: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
-      canReschedule: false,
-      canCancel: false,
-      canComplete: false,
-      canReject: false,
-      canSelect: false,
-      canFeedback: true,
-      canResendLink: false,
-      canShareLink: false,
-    },
-    Selected: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
-      canReschedule: false,
-      canCancel: false,
-      canComplete: false,
-      canReject: false,
-      canSelect: false,
-      canFeedback: true,
-      canResendLink: false,
-      canShareLink: false,
-    },
+    // Rejected: {
+    //   canEdit: false,
+    //   canDelete: false,
+    //   canMarkScheduled: false,
+    //   canReschedule: false,
+    //   canCancel: false,
+    //   canComplete: false,
+    //   canReject: false,
+    //   canSelect: false,
+    //   canFeedback: true,
+    //   canResendLink: false,
+    //   canShareLink: false,
+    // },
+    // Selected: {
+    //   canEdit: false,
+    //   canDelete: false,
+    //   canMarkScheduled: false,
+    //   canReschedule: false,
+    //   canCancel: false,
+    //   canComplete: false,
+    //   canReject: false,
+    //   canSelect: false,
+    //   canFeedback: true,
+    //   canResendLink: false,
+    //   canShareLink: false,
+    //   canNoShow: false,
+    // },
     InComplete: {
       canEdit: false,
       canDelete: false,
@@ -991,11 +1040,10 @@ const RoundCard = ({
       canReschedule: true,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: false,
     },
     NoShow: {
       canEdit: false,
@@ -1004,11 +1052,55 @@ const RoundCard = ({
       canReschedule: true,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
       canFeedback: false,
       canResendLink: false,
       canShareLink: false,
+      canNoShow: false,
+    },
+    Skipped: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
+    },
+    Evaluated: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: true,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
+    },
+    FeedbackPending: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: true,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: true,
+      canFeedbackPending: false,
     },
   };
 
@@ -1018,7 +1110,7 @@ const RoundCard = ({
 
   const permissions = getRoundPermissions(round.status);
 
-  // v1.0.4 -------------------------->
+  // v1.0.4 ---------------------------->
 
   // const handleCreateAssessmentClick = async (round) => {
   //   if (round?.roundTitle === "Assessment") {
@@ -1097,9 +1189,8 @@ const RoundCard = ({
   return (
     <>
       <div
-        className={`bg-white rounded-lg ${
-          !hideHeader && "shadow-md"
-        } overflow-hidden ${isActive ? "ring-2 ring-custom-blue p-2" : ""}`}
+        className={`bg-white rounded-lg ${!hideHeader && "shadow-md"
+          } overflow-hidden ${isActive ? "ring-2 ring-custom-blue p-2" : ""}`}
       >
         <div className="p-5">
           {/* Tabs */}
@@ -1108,21 +1199,19 @@ const RoundCard = ({
               <nav className="-mb-px flex space-x-4">
                 <button
                   onClick={() => setActiveTab("details")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === "details"
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "details"
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
                 >
                   Round Details
                 </button>
                 <button
                   onClick={() => setActiveTab("feedback")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === "feedback"
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === "feedback"
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
                 >
                   Feedback
                 </button>
@@ -1132,7 +1221,7 @@ const RoundCard = ({
 
           {activeTab === "details" ? (
             <>
-              <div className="mt-4 grid grid-cols-2 md:grid-cols-2 gap-4 sm:grid-cols-1">
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-4 sm:grid-cols-1">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <h4 className="text-sm font-medium text-gray-700">
@@ -1335,7 +1424,7 @@ const RoundCard = ({
               {/* {questions?.length > 0 && (
                 <div className="mt-4">
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-sm font-medium text-gray-700">Questions</h4>
+                    <h4 className="text-sm font-medium text-gray-700}>Questions</h4>
                     <button
                       onClick={() => setShowQuestions(!showQuestions)}
                       className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
@@ -1461,26 +1550,25 @@ const RoundCard = ({
                                         {/* v1.0.5 --------------------------------> */}
                                         {sectionData?.sectionName
                                           ? sectionData?.sectionName
-                                              .charAt(0)
-                                              .toUpperCase() +
-                                            sectionData?.sectionName.slice(1)
+                                            .charAt(0)
+                                            .toUpperCase() +
+                                          sectionData?.sectionName.slice(1)
                                           : "Unnamed Section"}
                                       </span>
                                       <ChevronUp
                                         // v1.0.5 <----------------------------------------------
-                                        className={`h-4 w-4 transform transition-transform ${
-                                          expandedSections[sectionId]
-                                            ? ""
-                                            : "rotate-180"
-                                        }`}
-                                        // v1.0.5 ---------------------------------------------->
+                                        className={`h-4 w-4 transform transition-transform ${expandedSections[sectionId]
+                                          ? ""
+                                          : "rotate-180"
+                                          }`}
+                                      // v1.0.5 ---------------------------------------------->
                                       />
                                     </button>
 
                                     {expandedSections[sectionId] && (
                                       <div className="mt-4 space-y-3">
                                         {Array.isArray(sectionData.questions) &&
-                                        sectionData.questions.length > 0 ? (
+                                          sectionData.questions.length > 0 ? (
                                           sectionData.questions.map(
                                             (question, idx) => (
                                               <div
@@ -1510,86 +1598,84 @@ const RoundCard = ({
                                                     </p>
                                                   </div>
                                                   <ChevronDown
-                                                    className={`w-5 h-5 text-gray-400 transition-transform ${
-                                                      expandedQuestions[
-                                                        question._id
-                                                      ]
-                                                        ? "transform rotate-180"
-                                                        : ""
-                                                    }`}
+                                                    className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
+                                                      question._id
+                                                    ]
+                                                      ? "transform rotate-180"
+                                                      : ""
+                                                      }`}
                                                   />
                                                 </div>
 
                                                 {expandedQuestions[
                                                   question._id
                                                 ] && (
-                                                  <div className="px-4 py-3">
-                                                    <div className="flex justify-between mb-2">
-                                                      <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-medium text-gray-500">
-                                                          Type:
-                                                        </span>
-                                                        <span className="text-sm text-gray-700">
-                                                          {question.snapshot
-                                                            ?.questionType ||
-                                                            "Not specified"}
-                                                        </span>
-                                                      </div>
-                                                      <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-medium text-gray-500">
-                                                          Score:
-                                                        </span>
-                                                        <span className="text-sm text-gray-700">
-                                                          {question.snapshot
-                                                            ?.score || "0"}
-                                                        </span>
-                                                      </div>
-                                                    </div>
-
-                                                    {/* Display question options if MCQ */}
-                                                    {question.snapshot
-                                                      ?.questionType ===
-                                                      "MCQ" && (
-                                                      <div className="mt-2">
-                                                        <span className="text-sm font-medium text-gray-500">
-                                                          Options:
-                                                        </span>
-                                                        <div className="grid grid-cols-2 gap-2 mt-1">
-                                                          {question.snapshot?.options?.map(
-                                                            (
-                                                              option,
-                                                              optIdx
-                                                            ) => (
-                                                              <div
-                                                                key={optIdx}
-                                                                //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                className={`text-sm p-2 rounded border ${
-                                                                  option ===
-                                                                  question
-                                                                    .snapshot
-                                                                    .correctAnswer
-                                                                    ? "bg-green-50 border-green-200 text-green-800"
-                                                                    : "bg-gray-50 border-gray-200"
-                                                                }`}
-                                                              >
-                                                                {option}
-                                                                {option ===
-                                                                  question
-                                                                    .snapshot
-                                                                    .correctAnswer && (
-                                                                  <span className="ml-2 text-green-600">
-                                                                    ✓
-                                                                  </span>
-                                                                )}
-                                                              </div>
-                                                            )
-                                                          )}
+                                                    <div className="px-4 py-3">
+                                                      <div className="flex justify-between mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                          <span className="text-sm font-medium text-gray-500">
+                                                            Type:
+                                                          </span>
+                                                          <span className="text-sm text-gray-700">
+                                                            {question.snapshot
+                                                              ?.questionType ||
+                                                              "Not specified"}
+                                                          </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                          <span className="text-sm font-medium text-gray-500">
+                                                            Score:
+                                                          </span>
+                                                          <span className="text-sm text-gray-700">
+                                                            {question.snapshot
+                                                              ?.score || "0"}
+                                                          </span>
                                                         </div>
                                                       </div>
-                                                    )}
 
-                                                    {/* Display correct answer */}
-                                                    {/* <div className="mt-2">
+                                                      {/* Display question options if MCQ */}
+                                                      {question.snapshot
+                                                        ?.questionType ===
+                                                        "MCQ" && (
+                                                          <div className="mt-2">
+                                                            <span className="text-sm font-medium text-gray-500">
+                                                              Options:
+                                                            </span>
+                                                            <div className="grid grid-cols-2 gap-2 mt-1">
+                                                              {question.snapshot?.options?.map(
+                                                                (
+                                                                  option,
+                                                                  optIdx
+                                                                ) => (
+                                                                  <div
+                                                                    key={optIdx}
+                                                                    //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                    className={`text-sm p-2 rounded border ${option ===
+                                                                      question
+                                                                        .snapshot
+                                                                        .correctAnswer
+                                                                      ? "bg-green-50 border-green-200 text-green-800"
+                                                                      : "bg-gray-50 border-gray-200"
+                                                                      }`}
+                                                                  >
+                                                                    {option}
+                                                                    {option ===
+                                                                      question
+                                                                        .snapshot
+                                                                        .correctAnswer && (
+                                                                        <span className="ml-2 text-green-600">
+                                                                          ✓
+                                                                        </span>
+                                                                      )}
+                                                                  </div>
+                                                                )
+                                                              )}
+                                                            </div>
+                                                          </div>
+                                                        )}
+
+                                                      {/* Display correct answer */}
+                                                      {/* <div className="mt-2">
                                                                                    <span className="text-sm font-medium text-gray-500">
                                                                                      Correct Answer:
                                                                                    </span>
@@ -1598,31 +1684,31 @@ const RoundCard = ({
                                                                                    </div>
                                                                                  </div> */}
 
-                                                    {/* Additional question metadata */}
-                                                    <div className="grid grid-cols-2 gap-4 mt-3">
-                                                      <div>
-                                                        <span className="text-xs font-medium text-gray-500">
-                                                          Difficulty:
-                                                        </span>
-                                                        <span className="text-xs text-gray-700 ml-1">
-                                                          {question.snapshot
-                                                            ?.difficultyLevel ||
-                                                            "Not specified"}
-                                                        </span>
-                                                      </div>
-                                                      <div>
-                                                        <span className="text-xs font-medium text-gray-500">
-                                                          Skills:
-                                                        </span>
-                                                        <span className="text-xs text-gray-700 ml-1">
-                                                          {question.snapshot?.skill?.join(
-                                                            ", "
-                                                          ) || "None"}
-                                                        </span>
+                                                      {/* Additional question metadata */}
+                                                      <div className="grid grid-cols-2 gap-4 mt-3">
+                                                        <div>
+                                                          <span className="text-xs font-medium text-gray-500">
+                                                            Difficulty:
+                                                          </span>
+                                                          <span className="text-xs text-gray-700 ml-1">
+                                                            {question.snapshot
+                                                              ?.difficultyLevel ||
+                                                              "Not specified"}
+                                                          </span>
+                                                        </div>
+                                                        <div>
+                                                          <span className="text-xs font-medium text-gray-500">
+                                                            Skills:
+                                                          </span>
+                                                          <span className="text-xs text-gray-700 ml-1">
+                                                            {question.snapshot?.skill?.join(
+                                                              ", "
+                                                            ) || "None"}
+                                                          </span>
+                                                        </div>
                                                       </div>
                                                     </div>
-                                                  </div>
-                                                )}
+                                                  )}
                                               </div>
                                             )
                                           )
@@ -1777,9 +1863,9 @@ const RoundCard = ({
                   {/* Reschedule */}
                   {permissions.canReschedule &&
                     !isInterviewCompleted &&
-                    round?.roundTitle !== "Assessment" &&
-                    (round.status === "Cancelled" ||
-                      round.interviewType !== "instant") && (
+                    round?.roundTitle !== "Assessment" && (
+                      (round.status === "Cancelled" || round.interviewType !== "instant")
+                    ) && (
                       <button
                         onClick={() => onEdit(round, { isReschedule: true })}
                         className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
@@ -1789,16 +1875,49 @@ const RoundCard = ({
                     )}
 
                   {/* No Show */}
-                  {permissions.canCancel &&
+                  {permissions.canNoShow &&
                     round.roundTitle !== "Assessment" && (
                       <button
                         onClick={() => {
                           setActionInProgress(true);
                           setNoShowReasonModalOpen(true);
                         }}
-                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100"
                       >
-                        <XCircle className="h-4 w-4 mr-1" /> No Show
+                        <UserX className="h-4 w-4 mr-1" /> No Show
+                      </button>
+                    )}
+
+                  {/* Skipped */}
+                  {permissions.canSkipped &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => handleActionClick("Skipped")}
+                        className="inline-flex items-center px-3 py-2 border border-orange-300 text-sm rounded-md text-orange-700 bg-orange-50 hover:bg-orange-100"
+                      >
+                        <SkipForward className="h-4 w-4 mr-1" /> Skipped
+                      </button>
+                    )}
+
+                  {/* Evaluated */}
+                  {permissions.canEvaluated &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => handleActionClick("Evaluated")}
+                        className="inline-flex items-center px-3 py-2 border border-teal-300 text-sm rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100"
+                      >
+                        <ClipboardList className="h-4 w-4 mr-1" /> Evaluated
+                      </button>
+                    )}
+
+                  {/* Feedback Pending */}
+                  {permissions.canFeedbackPending &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => handleActionClick("FeedbackPending")}
+                        className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                      >
+                        <Hourglass className="h-4 w-4 mr-1" /> Feedback Pending
                       </button>
                     )}
 
@@ -1866,7 +1985,7 @@ const RoundCard = ({
                       </button>
                     )}
                   {/* Select */}
-                  {permissions.canSelect && (
+                  {/* {permissions.canSelect && (
                     <button
                       // onClick={handleSelect}
                       onClick={() => {
@@ -1878,9 +1997,9 @@ const RoundCard = ({
                     >
                       <CheckCircle className="h-4 w-4 mr-1" /> Select
                     </button>
-                  )}
+                  )} */}
                   {/* Reject */}
-                  {permissions.canReject && (
+                  {/* {permissions.canReject && (
                     <button
                       onClick={() => {
                         setActionInProgress(true);
@@ -1893,7 +2012,7 @@ const RoundCard = ({
                     >
                       <ThumbsDown className="h-4 w-4 mr-1" /> Reject
                     </button>
-                  )}
+                  )} */}
                   {/* Feedback */}
                   {permissions.canFeedback && (
                     <button
@@ -1990,60 +2109,100 @@ const RoundCard = ({
         interviewData={interviewData}
       />
 
-      {/* Shared reason modal for Cancel */}
-      <RoundStatusReasonModal
+      {/* Modal for Cancel using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
         isOpen={cancelReasonModalOpen}
-        title="Cancel Round"
-        label="Reason for Cancellation"
-        options={CANCEL_OPTIONS}
         onClose={() => {
           setCancelReasonModalOpen(false);
           setActionInProgress(false);
         }}
         onConfirm={handleCancelWithReason}
-        confirmLabel="Confirm Cancel"
-        roundData={round}
-        showPolicyInfo={true}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Cancel"
         isLoading={isCancellingRound}
       />
 
-      {/* Shared reason modal for No Show */}
-      <RoundStatusReasonModal
+      {/* Modal for No Show using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
         isOpen={noShowReasonModalOpen}
-        title="Mark as No Show"
-        label="Reason for No Show"
-        options={NO_SHOW_OPTIONS}
         onClose={() => {
           setNoShowReasonModalOpen(false);
           setActionInProgress(false);
         }}
         onConfirm={handleNoShowWithReason}
-        confirmLabel="Confirm No Show"
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="NoShow"
+        isLoading={isNoShowingRound}
       />
 
-      {/* Shared reason modal for Reject */}
-      <RoundStatusReasonModal
+      {/* Modal for Reject using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
         isOpen={rejectReasonModalOpen}
-        title="Reject Candidate"
-        label="Reason for Rejection"
-        options={REJECT_OPTIONS}
         onClose={() => {
           setRejectReasonModalOpen(false);
           setActionInProgress(false);
         }}
         onConfirm={handleRejectWithReason}
-        confirmLabel="Confirm Reject"
-        confirmButtonVariant="destructive" // optional: makes button red
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Reject"
+        isLoading={false}
       />
 
-      {(completedReasonModalOpen || selectedReasonModalOpen) &&
+      {/* Modal for Complete using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
+        isOpen={completeReasonModalOpen}
+        onClose={() => {
+          setCompleteReasonModalOpen(false);
+          setActionInProgress(false);
+        }}
+        onConfirm={handleCompleteWithReason}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Complete"
+        isLoading={false}
+      />
+
+      {/* Modal for Evaluated using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
+        isOpen={evaluatedReasonModalOpen}
+        onClose={() => {
+          setEvaluatedReasonModalOpen(false);
+          setActionInProgress(false);
+        }}
+        onConfirm={handleEvaluatedWithReason}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Evaluated"
+        isLoading={false}
+      />
+
+      {(completedReasonModalOpen || selectedReasonModalOpen || showConfirmModal) &&
         createPortal(
           // v1.0.5 <--------------------------------------------------------------------------------
           <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
             <div className="bg-white p-5 rounded-lg shadow-md">
               <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-3">
                 Are you sure you want to{" "}
-                {completedReasonModalOpen ? "Complete" : "Reject"} this round?
+                {completedReasonModalOpen
+                  ? "Complete"
+                  : selectedReasonModalOpen
+                    ? "Select"
+                    : confirmAction === "Skipped"
+                      ? "mark as Skipped"
+                      : confirmAction === "FeedbackPending"
+                        ? "mark as Feedback Pending"
+                        : confirmAction === "Scheduled"
+                          ? "mark as Scheduled"
+                          : "Reject"}{" "}
+                this round?
               </h3>
               <div className="flex justify-end space-x-3">
                 <Button
@@ -2051,19 +2210,19 @@ const RoundCard = ({
                   onClick={() => {
                     setCompletedReasonModalOpen(false);
                     setSelectedReasonModalOpen(false);
+                    setShowConfirmModal(false);
                     setActionInProgress(false);
                   }}
                 >
                   No, Cancel
                 </Button>
                 <Button
-                  className={`${
-                    confirmAction === "Cancelled" &&
+                  className={`${confirmAction === "Cancelled" &&
                     "bg-red-600 hover:bg-red-700"
-                  }`}
+                    }`}
                   variant="success"
                   onClick={() => handleConfirmStatusChange({ change: true })}
-                  // onClick={handleConfirmStatusChange({ change: true })}
+                // onClick={handleConfirmStatusChange({ change: true })}
                 >
                   Yes, Confirm
                 </Button>
