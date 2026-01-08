@@ -13,6 +13,7 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
+  ExternalLink,
 } from "lucide-react";
 // import axios from "axios";
 import StatusBadge from "../CommonCode-AllTabs/StatusBadge.jsx";
@@ -20,6 +21,8 @@ import Breadcrumb from "../CommonCode-AllTabs/Breadcrumb.jsx";
 import MoockRoundCard from "./MockInterviewRoundCard.jsx";
 import MockCandidateDetails from "./MockinterviewCandidate.jsx";
 import { useMockInterviewById } from "../../../../apiHooks/useMockInterviews.js";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import MeetPlatformBadge from "../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
@@ -262,11 +265,10 @@ const MockInterviewDetails = () => {
     : [];
 
   console.log(mockinterview);
-
-  const capitalizeFirstLetter = (str) => {
-    if (!str) return "";
-    return str?.charAt(0)?.toUpperCase() + str?.slice(1);
-  };
+  console.log(
+    "ROUNDS ||||||||| ============= ||||||||||| ============> ",
+    rounds
+  );
 
   return (
     <>
@@ -348,18 +350,18 @@ const MockInterviewDetails = () => {
               {/* v1.0.1 <------------------------------------------------------ */}
               <div className="border-t border-gray-200 px-4 py-5">
                 {/* v1.0.1 ------------------------------------------------------> */}
-                <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-1">
+                <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-1">
                   <div className="sm:col-span-1">
                     {/* <dt className="text-sm font-medium text-gray-500 flex items-center">
                       <User className="h-5 w-5 mr-1" />
                       Candidate
                     </dt> */}
                     <dd className="mt-1 text-sm text-gray-900">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center">
+                      <div className="flex items-center gap-2 mb-6">
                         <div className="mr-0 mb-3 sm:mb-0 sm:mr-3">
-                          {candidate?.imageUrl ? (
+                          {candidate?.imageData ? (
                             <img
-                              src={candidate.imageUrl}
+                              src={candidate.imageData?.path}
                               alt={candidate?.candidateName}
                               className="h-12 w-12 rounded-full object-cover"
                             />
@@ -370,54 +372,69 @@ const MockInterviewDetails = () => {
                           )}
                         </div>
                         <div>
-                          <div className="font-medium">
+                          <div className="flex items-center gap-6 font-medium">
                             {candidate?.candidateName || "Unknown"}
+                            <div>
+                              {candidate && (
+                                <>
+                                  <button
+                                    title="View Details"
+                                    // onClick={() => handleViewEntityDetails(candidate, 'candidate', 'sidebar')}
+                                    onClick={() => handleView(candidate)}
+                                    className="inline-flex items-center outline-none"
+                                  >
+                                    <ExternalLink className="h-4 w-4 text-custom-blue" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
-                            Role: {candidate?.Role}
+                            Role: {candidate?.currentRole}
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
-                            Experience: {candidate?.currentExperience} years
+                            Experience: {candidate?.currentExperience} Years
                           </div>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {candidate && (
-                              <>
-                                <button
-                                  // onClick={() => handleViewEntityDetails(candidate, 'candidate', 'sidebar')}
-                                  onClick={() => handleView(candidate)}
-                                  className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-custom-blue bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                >
-                                  View Details
-                                </button>
-                              </>
-                            )}
-                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">
+                          Skills
+                        </span>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {candidate?.skills?.map((skill, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 text-sm bg-custom-blue/10 text-custom-blue border border-custom-blue/60 font-medium rounded-full"
+                            >
+                              {skill}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     </dd>
                   </div>
-
-                  <div className="sm:col-span-1 mt-10">
-                    <dt className="text-sm font-medium text-gray-500">
-                      Progress
-                    </dt>
-                    <dd className="mt-1">
-                      <div className="flex items-center">
-                        <span className="text-sm text-gray-900 mr-2">
-                          {completedRounds} of {totalRounds} rounds completed
-                        </span>
-                        <span className="text-sm font-medium text-custom-blue">
-                          {progressPercentage.toFixed(0)}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                        <div
-                          className="bg-custom-blue h-2.5 rounded-full"
-                          style={{ width: `${progressPercentage}%` }}
-                        ></div>
-                      </div>
-                    </dd>
-                  </div>
+                </div>
+                <div className="mt-10">
+                  <dt className="text-sm font-medium text-gray-500">
+                    Progress
+                  </dt>
+                  <dd className="mt-1">
+                    <div className="flex items-center">
+                      <span className="text-sm text-gray-900 mr-2">
+                        {completedRounds} of {totalRounds} rounds completed
+                      </span>
+                      <span className="text-sm font-medium text-custom-blue">
+                        {progressPercentage.toFixed(0)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                      <div
+                        className="bg-custom-blue h-2.5 rounded-full"
+                        style={{ width: `${progressPercentage}%` }}
+                      ></div>
+                    </div>
+                  </dd>
                 </div>
 
                 {/* Interviewers summary */}
@@ -501,6 +518,10 @@ const MockInterviewDetails = () => {
                                         round?.interviewMode
                                       )}
                                     </span>
+                                    <span>•</span>
+                                    <MeetPlatformBadge
+                                      platform={round?.meetPlatform}
+                                    />
                                   </div>
                                   {/* v1.0.0 <-------------------------------------------------------------------------- */}
                                 </div>

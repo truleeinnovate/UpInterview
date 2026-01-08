@@ -34,6 +34,7 @@ import { notify } from "../../../../../../services/toastService.js";
 import useInterviewers from "../../../../../../hooks/useInterviewers.js";
 import { useIndividualLogin } from "../../../../../../apiHooks/useIndividualLogin.js";
 import { useTenantTaxConfig } from "../../../../../../apiHooks/useTenantTaxConfig";
+import { capitalizeFirstLetter } from "../../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 
 const OutsourcedInterviewerCard = ({
   interviewer,
@@ -49,13 +50,20 @@ const OutsourcedInterviewerCard = ({
 
   const fullName = `${firstName} ${lastName}`.trim() || "Unnamed";
 
-  const professionalTitle =
-    interviewer?.contact?.professionalTitle;
+  const professionalTitle = interviewer?.contact?.professionalTitle;
   //  ||
   // interviewer?.contact?.CurrentRole ||
   // "Interviewer";
   const CurrentRole = interviewer?.contact?.currentRole;
   const company = interviewer?.contact?.industry || "Freelancer";
+  console.log(
+    "CURRENT ROLE ==========================================> ",
+    CurrentRole
+  );
+  console.log(
+    "INTERVIEWS ============================================>",
+    interviewer
+  );
 
   // ✅ New logic: get rate based on candidate experience
   const getExperienceBasedRate = () => {
@@ -109,10 +117,11 @@ const OutsourcedInterviewerCard = ({
 
   return (
     <div
-      className={`bg-white rounded-lg border ${isSelected
-        ? "border-orange-500 ring-2 ring-orange-200"
-        : "border-gray-200"
-        } p-4 shadow-sm hover:shadow-md transition-all`}
+      className={`bg-white rounded-lg border ${
+        isSelected
+          ? "border-orange-500 ring-2 ring-orange-200"
+          : "border-gray-200"
+      } p-4 shadow-sm hover:shadow-md transition-all`}
     >
       <div className="w-full">
         <div className="flex items-center gap-3 w-full">
@@ -121,30 +130,32 @@ const OutsourcedInterviewerCard = ({
           </div>
           <div className="flex sm:flex-col items-start sm:justify-start justify-between w-full">
             <div className="sm:ml-0 ml-3">
-              <h3 className="text-base font-medium text-gray-900">
-                {fullName}
+              <h3 className="text-base font-medium truncate sm:max-w-[200px] md:max-w-[220px] lg:max-w-[280px] xl:max-w-[340px] 2xl:max-w-[360px] text-gray-900">
+                {capitalizeFirstLetter(fullName)}
               </h3>
               {CurrentRole && (
-                <p className="text-xs text-gray-500">{CurrentRole}</p>
+                <p className="text-xs text-gray-500">
+                  {capitalizeFirstLetter(CurrentRole)}
+                </p>
               )}
               <p
-                className="text-sm text-gray-500 truncate max-w-[200px]"
-                title={professionalTitle}
+                className="text-sm text-gray-500 truncate sm:max-w-[200px] md:max-w-[260px] lg:max-w-[300px] xl:max-w-[360px] 2xl:max-w-[400px] cursor-default"
+                title={capitalizeFirstLetter(professionalTitle)}
               >
-                {professionalTitle?.length > 70
-                  ? `${professionalTitle.substring(0, 70)}...`
-                  : professionalTitle}
+                {capitalizeFirstLetter(professionalTitle)}
               </p>
-              <p className="text-xs text-orange-600">{company}</p>
+              <p className="text-xs text-orange-600">
+                {capitalizeFirstLetter(company)}
+              </p>
             </div>
             <div className="flex items-center space-x-2 gap-2">
               <div className="flex items-center">
                 <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                <span className="ml-1 text-sm font-medium text-gray-700">
+                <span className="ml-1 text-xs font-medium text-gray-700">
                   {rating}
                 </span>
               </div>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-xs font-medium text-gray-700">
                 {hourlyRate}
               </span>
             </div>
@@ -153,12 +164,13 @@ const OutsourcedInterviewerCard = ({
       </div>
       {/* v1.0.3 -----------------------------------------------------------------------> */}
 
-      <div className="mt-3 w-60">
+      <div className="mt-3">
         <div
-          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${isExpanded ? "line-clamp-none" : "line-clamp-2"
-            }`}
+          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${
+            isExpanded ? "line-clamp-none" : "line-clamp-2"
+          }`}
         >
-          {introduction}
+          {capitalizeFirstLetter(introduction)}
         </div>
 
         <button
@@ -176,7 +188,6 @@ const OutsourcedInterviewerCard = ({
           )}
         </button>
       </div>
-
 
       <div className="mt-3">
         <div className="flex flex-wrap gap-1">
@@ -286,7 +297,8 @@ function OutsourcedInterviewerModal({
 
   // Fetch tenant tax configuration (GST, service charge, etc.)
   const { data: tenantTaxConfig } = useTenantTaxConfig();
-  const gstRate = typeof tenantTaxConfig?.gstRate === "number" ? tenantTaxConfig.gstRate : 0;
+  const gstRate =
+    typeof tenantTaxConfig?.gstRate === "number" ? tenantTaxConfig.gstRate : 0;
 
   //<----v1.0.1-----
   //<-----v1.0.4-----Venkatesh---- Updated to compute the highest rate from all contacts and all levels (junior/mid/senior)
@@ -656,9 +668,10 @@ function OutsourcedInterviewerModal({
               (interviewer) => {
                 const interviewerSkills = interviewer.contact?.skills || [];
                 console.log(
-                  `👤 Checking interviewer: ${interviewer.contact?.firstName ||
-                  interviewer.contact?.UserName ||
-                  "Unknown"
+                  `👤 Checking interviewer: ${
+                    interviewer.contact?.firstName ||
+                    interviewer.contact?.UserName ||
+                    "Unknown"
                   }`
                 );
                 console.log("📝 Interviewer's Skills:", interviewerSkills);
@@ -705,7 +718,8 @@ function OutsourcedInterviewerModal({
                 });
 
                 console.log(
-                  `🎯 ${interviewer.contact?.firstName || "Unknown"
+                  `🎯 ${
+                    interviewer.contact?.firstName || "Unknown"
                   } Skill Match Status: ${hasMatchingSkill}`
                 );
                 return hasMatchingSkill;
@@ -1006,7 +1020,15 @@ function OutsourcedInterviewerModal({
     // );
     fetchInterviewers(skills, candidateExperience, currentRole);
     requestSentRef.current = true;
-  }, [skills, dateTime, currentRole, navigatedfrom, interviewers, candidateExperience, userId]);
+  }, [
+    skills,
+    dateTime,
+    currentRole,
+    navigatedfrom,
+    interviewers,
+    candidateExperience,
+    userId,
+  ]);
 
   // Filter interviewers based on search term and applied rate range
   useEffect(() => {
@@ -1144,7 +1166,7 @@ function OutsourcedInterviewerModal({
   // Compute available balance (balance - holdAmount) for gating outsourced selections
   const walletRawBalance = Number(walletBalance?.balance || 0);
   const walletHoldAmount = Number(walletBalance?.holdAmount || 0);
-  const availableBalance = walletRawBalance
+  const availableBalance = walletRawBalance;
 
   const handleProceed = () => {
     //<----v1.0.1-----
@@ -1196,7 +1218,13 @@ function OutsourcedInterviewerModal({
       grossRequiredAmount = Math.round((base + gstAmount) * 100) / 100;
     }
 
-    console.log("Required Amount with GST:", grossRequiredAmount, "(GST rate:", gstRate, ")");
+    console.log(
+      "Required Amount with GST:",
+      grossRequiredAmount,
+      "(GST rate:",
+      gstRate,
+      ")"
+    );
 
     // && grossRequiredAmount !== 0
     if (availableBalance >= grossRequiredAmount && grossRequiredAmount !== 0) {
@@ -1257,10 +1285,11 @@ function OutsourcedInterviewerModal({
               Available Balance:
             </span>
             <span
-              className={`text-sm font-bold ${availableBalance >= maxHourlyRate
-                ? "text-green-600"
-                : "text-red-600"
-                }`}
+              className={`text-sm font-bold ${
+                availableBalance >= maxHourlyRate
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
             >
               ₹{Number(availableBalance || 0).toFixed(2)}
             </span>
@@ -1395,10 +1424,11 @@ function OutsourcedInterviewerModal({
           {/* v1.0.3 <--------------------------------------------------------------------- */}
           <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
             <div
-              className={`grid gap-4 ${isFullscreen
-                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
-                : "grid-cols-1"
-                }`}
+              className={`grid gap-4 ${
+                isFullscreen
+                  ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+                  : "grid-cols-1"
+              }`}
             >
               {filteredInterviewers.map((interviewer) => (
                 // <OutsourcedInterviewerCard

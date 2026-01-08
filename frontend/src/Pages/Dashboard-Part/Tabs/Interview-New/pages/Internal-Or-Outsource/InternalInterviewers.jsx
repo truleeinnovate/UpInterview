@@ -436,11 +436,11 @@ const InternalInterviews = ({
           </div>
           {/* v1.0.2 <-------------------------------------------------------------------------- */}
           <div
-            className={`grid gap-3 sm:grid-cols-1 md:grid-cols-2 
+            className={`grid gap-3 sm:grid-cols-1 md:grid-cols-1
             ${
               isFullscreen
-                ? "lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
-                : "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+                ? "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
+                : "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
             }
           `}
           >
@@ -448,17 +448,6 @@ const InternalInterviews = ({
             {filteredData?.map((item) => (
               <div
                 key={item._id}
-                // className={`relative flex items-center justify-between p-3 rounded-md transition-all duration-200
-                //   ${
-                //     navigatedfrom !== "dashboard"
-                //       ? "cursor-pointer"
-                //       : "cursor-default"
-                //   }
-                //   ${
-                //     navigatedfrom !== "dashboard" && isInterviewerSelected(item)
-                //       ? "bg-custom-bg border border-custom-blue opacity-70"
-                //       : "hover:bg-gray-50 border border-gray-200"
-                //   }`}
                 className={`relative flex items-center justify-between p-3 rounded-md transition-all duration-200
                   ${
                     navigatedfrom !== "dashboard"
