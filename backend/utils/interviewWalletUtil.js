@@ -820,9 +820,10 @@ async function applyAcceptInterviewWalletFlow({
  * @param {Object} params
  * @param {String} params.roundId - Interview round ID
  * @param {String} params.action - "Completed" or "Cancelled"
+ * @param {String} params.reasonCode - Reason code for settlement
  * @returns {Promise<Object|null>} Settlement result or null if no settlement needed
  */
-async function processAutoSettlement({ roundId, action, cancellationReason = null }) {
+async function processAutoSettlement({ roundId, action, reasonCode }) {
   // These requires are placed here to avoid circular dependencies
   const InterviewRequest = require("../models/InterviewRequest");
   const { InterviewRounds } = require("../models/Interview/InterviewRounds");
@@ -1144,7 +1145,7 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
         description: `Refund for cancelled/partial settlement - ${roundTitle}`,
         relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
         status: "completed",
-        reason: action === "Cancelled" ? "INTERVIEW_CANCELLED_REFUND" : "INTERVIEW_SETTLEMENT_REFUND",
+        reason: action === "Cancelled" ? reasonCode : "INTERVIEW_SETTLEMENT_REFUND",
         metadata: {
           roundId: roundId,
           settlementDate: new Date(),
@@ -1231,7 +1232,7 @@ async function processAutoSettlement({ roundId, action, cancellationReason = nul
         description: `Payment from ${companyName} - ${roundTitle} for ${positionTitle}`,
         relatedInvoiceId: invoiceDoc._id.toString(),
         status: "completed",
-        reason: action === "Completed" ? "INTERVIEW_COMPLETED_PAYOUT" : "INTERVIEW_CANCELLED_PAYOUT",
+        reason: action === "Completed" ? (reasonCode ? reasonCode : "INTERVIEW_COMPLETED_PAYOUT") : "INTERVIEW_CANCELLED_PAYOUT",
         metadata: {
           interviewId: interview._id?.toString(),
           roundId: roundId,

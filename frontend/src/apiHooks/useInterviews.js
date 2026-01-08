@@ -20,15 +20,15 @@ export const useInterviews = (
   const initialLoad = useRef(true);
 
   const params =
-    // useMemo(() => (
-    {
-      ...filters,
+  // useMemo(() => (
+  {
+    ...filters,
 
-      page: page,
-      limit: limit,
-      type: type,
-      upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
-    };
+    page: page,
+    limit: limit,
+    type: type,
+    upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
+  };
   //console.log("params", params);
 
   // ),
@@ -123,6 +123,7 @@ export const useInterviews = (
       templateId,
       externalId,
       id,
+      allowParallelScheduling,
     }) => {
       const interviewData = {
         candidateId,
@@ -131,6 +132,7 @@ export const useInterviews = (
         userId,
         ...(templateId && { templateId }),
         ...(externalId && { externalId }),
+        allowParallelScheduling,
         status: "Draft",
       };
 

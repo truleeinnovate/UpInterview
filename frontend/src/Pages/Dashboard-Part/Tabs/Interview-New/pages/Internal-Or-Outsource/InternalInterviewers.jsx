@@ -56,7 +56,10 @@ const InternalInterviews = ({
     { value: "Recruiter", label: "Recruiter" },
     { value: "Internal_Interviewer", label: "Internal Interviewer" },
   ];
-
+  console.log(
+    "INTERVIEWERS =========================================> ",
+    interviewers
+  );
   const getRoleLabel = (roleName) => {
     console.log("ROLE NAME ==================> ", roleName);
     const role = roles.find((r) => r.value === roleName);
@@ -130,10 +133,6 @@ const InternalInterviews = ({
       const interviewersArray = Array.isArray(interviewers) ? interviewers : [];
       return interviewersArray
         ?.filter((interviewer) => {
-          console.log(
-            "INTERVIEWER |||||||||||||||||||||||||||||||||||||||||: ",
-            interviewer
-          );
           // <------------------------------- v1.0.0
           // Filter by internal type
           if (interviewer.type !== "internal") {
@@ -144,6 +143,7 @@ const InternalInterviews = ({
           if (
             selectedRole !== "all" &&
             interviewer?.roleName !== selectedRole
+            // interviewer?.roleLabel !== selectedRole
           ) {
             return false;
           }
@@ -175,7 +175,7 @@ const InternalInterviews = ({
 
           /* System role (permission role) */
           roleName: interviewer?.roleName,
-          roleLabel: getRoleLabel(interviewer?.roleLabel),
+          roleLabel: getRoleLabel(interviewer?.roleName),
           profilePic: interviewer?.contact?.imageData?.path,
 
           /* Current role (designation) */
@@ -305,8 +305,6 @@ const InternalInterviews = ({
     setShowDropdown(false);
     onSelectCandidates([], type, "");
   };
-
-  console.log("FILTERED DATA ===========================> ", filteredData);
 
   return (
     // v1.0.3 <----------------------------------------------------------------------------------
@@ -450,75 +448,117 @@ const InternalInterviews = ({
             {filteredData?.map((item) => (
               <div
                 key={item._id}
-                className={`flex items-center justify-between p-3 rounded-md ${
-                  navigatedfrom !== "dashboard"
-                    ? "cursor-pointer"
-                    : "cursor-default"
-                } ${
-                  navigatedfrom !== "dashboard" && isInterviewerSelected(item)
-                    ? "bg-custom-bg border border-custom-blue"
-                    : "hover:bg-gray-50 border border-gray-200"
-                }`}
+                // className={`relative flex items-center justify-between p-3 rounded-md transition-all duration-200
+                //   ${
+                //     navigatedfrom !== "dashboard"
+                //       ? "cursor-pointer"
+                //       : "cursor-default"
+                //   }
+                //   ${
+                //     navigatedfrom !== "dashboard" && isInterviewerSelected(item)
+                //       ? "bg-custom-bg border border-custom-blue opacity-70"
+                //       : "hover:bg-gray-50 border border-gray-200"
+                //   }`}
+                className={`relative flex items-center justify-between p-3 rounded-md transition-all duration-200
+                  ${
+                    navigatedfrom !== "dashboard"
+                      ? "cursor-pointer"
+                      : "cursor-default"
+                  }
+                  ${
+                    navigatedfrom !== "dashboard" && isInterviewerSelected(item)
+                      ? "bg-custom-bg border border-custom-blue"
+                      : "hover:bg-gray-50 border border-gray-200"
+                  }`}
                 onClick={() =>
                   navigatedfrom !== "dashboard" && handleSelectClick(item)
                 }
               >
-                <div className="flex items-center">
+                {/* <div className="flex items-center"> */}
+                <div
+                  className={`flex items-center w-full ${
+                    isInterviewerSelected(item) ? "opacity-60" : "opacity-100"
+                  }`}
+                >
                   {viewType === "individuals" ? (
-                    <>
-                      {item?.imageData ? (
-                        <img
-                          src={item?.imageData?.path}
-                          alt={`${item?.firstName} ${item?.lastName}`}
-                          className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
-                          <span className="text-white font-semibold text-md -mt-[4px]">
-                            {(item?.firstName || "?")[0]?.toUpperCase()}
-                          </span>
-                        </div>
-                      )}
+                    <div className="flex items-center">
+                      <div className="w-10 h-10">
+                        {item?.imageData ? (
+                          <div className="w-10 h-10 rounded-full object-cover bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
+                            <img
+                              src={item?.imageData?.path}
+                              alt={`${item?.firstName} ${item?.lastName}`}
+                              className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-full object-cover bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
+                            <span className="text-white font-semibold text-md">
+                              {(item?.firstName || "?")[0]?.toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                       <div className="ml-3 flex flex-col gap-0.5">
                         {/* Name */}
-                        <p className="text-sm font-semibold text-gray-900 leading-tight">
-                          {item?.firstName || item?.lastName
-                            ? `${
-                                capitalizeFirstLetter(item?.firstName) || ""
-                              } ${capitalizeFirstLetter(item?.lastName) || ""}`
-                            : "No name available"}
-                        </p>
+                        <div className="flex items-center gap-3 mb-3">
+                          <p
+                            title={`${
+                              capitalizeFirstLetter(item?.firstName) || ""
+                            } ${capitalizeFirstLetter(item?.lastName) || ""}`}
+                            className="text-sm font-semibold truncate max-w-[120px] cursor-default text-gray-900 leading-tight"
+                          >
+                            {item?.firstName || item?.lastName
+                              ? `${
+                                  capitalizeFirstLetter(item?.firstName) || ""
+                                } ${
+                                  capitalizeFirstLetter(item?.lastName) || ""
+                                }`
+                              : "No name available"}
+                          </p>
 
-                        {/* System Role (Permission Role) */}
-                        <span
-                          className="inline-block w-fit text-[13px] rounded-full 
+                          {/* System Role (Permission Role) */}
+                          <span
+                            title={item?.roleLabel}
+                            className="inline-block truncate max-w-[90px] w-fit text-xs px-2 py-1 bg-custom-blue/10 rounded-full 
                           text-custom-blue font-semibold"
-                        >
-                          {item?.roleLabel}
-                        </span>
-
+                          >
+                            {item?.roleLabel}
+                          </span>
+                        </div>
                         {/* Current Role (Designation) */}
-                        <p className="text-xs text-gray-600 leading-tight italic">
-                          {item?.currentRole}
-                        </p>
+                        <div className="grid grid-cols-2 mb-1">
+                          <span className="text-xs text-gray-500">
+                            Current Role
+                          </span>
+                          <p
+                            title={item?.currentRole}
+                            className="text-xs truncate max-w-[120px] text-gray-800 leading-tight font-medium"
+                          >
+                            {item?.currentRole}
+                          </p>
+                        </div>
 
                         {/* Skills */}
-                        <p
-                          className="text-xs text-gray-500 leading-snug mt-2"
-                          title={item?.skills?.join(", ")}
-                        >
-                          {item?.skills?.length > 0
-                            ? item?.skills?.slice(0, 3)?.join(", ")
-                            : "No skills available"}
-                          {item?.skills?.length > 3 && (
-                            <span className="text-gray-400">
-                              {" "}
-                              +{item?.skills?.length - 3} more
-                            </span>
-                          )}
-                        </p>
+                        <div className="grid grid-cols-2">
+                          <span className="text-xs text-gray-500">Skills</span>
+                          <p
+                            className="text-xs text-gray-800 leading-snug font-medium"
+                            title={item?.skills?.join(", ")}
+                          >
+                            {item?.skills?.length > 0
+                              ? item?.skills?.slice(0, 2)?.join(", ")
+                              : "No skills available"}
+                            {item?.skills?.length > 2 && (
+                              <span className="text-gray-400">
+                                {" "}
+                                +{item?.skills?.length - 2} more
+                              </span>
+                            )}
+                          </p>
+                        </div>
                       </div>
-                    </>
+                    </div>
                   ) : (
                     <>
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -555,7 +595,12 @@ const InternalInterviews = ({
                 </div>
 
                 {isInterviewerSelected(item) && (
-                  <div className="h-5 w-5 rounded-full flex items-center justify-center bg-blue-500 text-white">
+                  <div
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-50
+                      h-6 w-6 rounded-full flex items-center justify-center 
+                      bg-custom-blue text-white shadow-lg ring-2 ring-custom-blue
+                      scale-110 transition-all duration-200"
+                  >
                     <svg
                       className="h-3 w-3"
                       fill="currentColor"

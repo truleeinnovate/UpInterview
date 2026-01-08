@@ -1,5 +1,6 @@
 // v1.0.0 - Ashok - Improved responsiveness
 // v1.0.1 - Ashok - Fixed minor issues while displaying name, role, image
+// v1.0.2 - Ashok - fixed profile letter issue when there is not profile image for outsource interviewers
 
 import React, { useState, useEffect } from "react";
 import {
@@ -63,6 +64,11 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
     }
   }, [displayInterviewers.length]);
 
+  console.log(
+    "INTERVIEWS ==============================> ",
+    displayInterviewers
+  );
+
   return (
     <div className="bg-white/80 backdrop-blur-lg p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300">
       {/* v1.0.0 <----------------------------------------------------------------------------- */}
@@ -115,8 +121,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
                       <span className="text-white font-semibold text-lg">
-                        {interviewer?.name.split(" ")[1]?.[0]?.toUpperCase() ||
-                          interviewer?.name.split(" ")[0]?.[0]?.toUpperCase()}
+                        {interviewer?.name?.trim()?.[0]?.toUpperCase()}
                       </span>
                     </div>
                   )}

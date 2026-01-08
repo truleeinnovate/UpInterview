@@ -270,6 +270,7 @@ const createInterview = async (req, res) => {
       updatingInterviewStatus,
       completionReason,
       externalId,
+      allowParallelScheduling,
     } = req.body;
     let candidate = null;
 
@@ -308,6 +309,7 @@ const createInterview = async (req, res) => {
       completionReason,
       status,
       externalId,
+      allowParallelScheduling: allowParallelScheduling || false,
     };
 
     // Generate interviewCode for new interview with tenant ID
@@ -504,6 +506,7 @@ const updateInterview = async (req, res) => {
       userId,
       updatingInterviewStatus,
       completionReason,
+      allowParallelScheduling,
     } = req.body;
 
     // Check if interview exists first
@@ -567,6 +570,13 @@ const updateInterview = async (req, res) => {
 
     if (status && status !== existingInterview.status) {
       interviewData.status = status;
+    }
+
+    if (
+      allowParallelScheduling !== undefined &&
+      allowParallelScheduling !== existingInterview.allowParallelScheduling
+    ) {
+      interviewData.allowParallelScheduling = allowParallelScheduling;
     }
 
     // Check if there are any actual changes
@@ -2229,26 +2239,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-          from: "mockinterviews",
-          localField: "mockInterviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        }
+        from: "mockinterviews",
+        localField: "mockInterviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      }
       : {
-          from: "interviews",
-          localField: "interviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        };
+        from: "interviews",
+        localField: "interviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2270,23 +2280,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-            {
-              $addFields: {
-                mainTenantIdNormalized: {
-                  $cond: [
-                    {
-                      $and: [
-                        { $ne: ["$mainInterview.tenantId", null] },
-                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                      ],
-                    },
-                    { $toObjectId: "$mainInterview.tenantId" },
-                    null,
-                  ],
-                },
+          {
+            $addFields: {
+              mainTenantIdNormalized: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ["$mainInterview.tenantId", null] },
+                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                    ],
+                  },
+                  { $toObjectId: "$mainInterview.tenantId" },
+                  null,
+                ],
               },
             },
-          ]
+          },
+        ]
         : []),
       // Lookup tenant for organization info
       {
