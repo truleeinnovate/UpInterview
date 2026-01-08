@@ -28,7 +28,7 @@ const participantSchema = new mongoose.Schema(
     },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }, // optional for candidate
     joinedAt: { type: Date },
-    status: { type: String, enum: ["Joined", "Not Joined"] },
+    status: { type: String, enum: ["Joined", "Not_Joined"] },
   },
   { _id: false }
 );
@@ -52,7 +52,7 @@ const roundHistorySchema = new mongoose.Schema(
     // reason: { type: String },
     reasonCode: { type: String }, // e.g. "candidate_requested"
     comment: { type: String }, // only when reasonCode === "other"
-    participants: [participantSchema], //this will track participants joined or not in video call or interview
+    // participants: [participantSchema], //this will track participants joined or not in video call or interview
     interviewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }], //when user select outsource or internal this will track
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
@@ -74,8 +74,9 @@ const interviewRoundSchema = new mongoose.Schema(
     interviewerType: String, // Internal or External
     duration: String,
     instructions: String,
-    candidateJoined: { type: Boolean, default: false },
-    interviewerJoined: { type: Boolean, default: false },
+    // candidateJoined: { type: Boolean, default: false },
+    // interviewerJoined: { type: Boolean, default: false },
+    participantSchema,
     // Current scheduled date/time
     // dateTime: { type: Date },
 

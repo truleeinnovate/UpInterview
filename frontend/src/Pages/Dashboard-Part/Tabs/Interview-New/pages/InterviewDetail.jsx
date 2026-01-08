@@ -459,7 +459,10 @@ const InterviewDetail = () => {
 
   const handleEditRound = (round, options = {}) => {
     navigate(`/interviews/${id}/rounds/${round._id}`, {
-      state: { isReschedule: options.isReschedule },
+      // state: { isReschedule: options.isReschedule },
+      state: {
+        ...options, // 👈 spread all options
+      },
     });
   };
 

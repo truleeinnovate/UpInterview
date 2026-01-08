@@ -77,7 +77,7 @@ const saveInterviewRound = async (req, res) => {
     // ==================== DETERMINE FINAL STATUS ====================
     let finalStatus = "Draft";
 
-    if (round.roundTitle === "Assessment") {
+    if (round.roundTitle === "Assessment" && round?.assessmentId) {
       finalStatus = "Scheduled";
     } else if (round.interviewerType !== "Internal") {
       // External / Outsource
@@ -160,7 +160,7 @@ const saveInterviewRound = async (req, res) => {
       linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
 
-    if (savedRound.roundTitle === "Assessment") {
+    if (savedRound.roundTitle === "Assessment" && round?.assessmentId) {
       try {
         console.log("[ASSESSMENT] shareAssessment() triggered");
 
@@ -414,6 +414,8 @@ const updateInterviewRound = async (req, res) => {
     $push: { history: [] },
   };
 
+  const incomingRound = round || {};
+
   // =======================================================
   // ASSESSMENT (DRAFT → SCHEDULED ONLY)
   // =======================================================
@@ -446,9 +448,11 @@ const updateInterviewRound = async (req, res) => {
   console.log("[ASSESSMENT] existingRound", existingRound.roundTitle);
   console.log("[ASSESSMENT] req.body.round", req.body.round);
   if (
-    existingRound.roundTitle === "Assessment" &&
+    incomingRound.roundTitle === "Assessment" &&
     !existingRound.scheduleAssessmentId &&
-    updateType === "AssessmentChange"
+    incomingRound?.assessmentId
+    //  &&
+    // updateType === "AssessmentChange"
   ) {
     console.log("[ASSESSMENT] Auto scheduling assessment");
 
@@ -479,7 +483,7 @@ const updateInterviewRound = async (req, res) => {
     };
 
     const payload = {
-      assessmentId: existingRound.assessmentId,
+      assessmentId: incomingRound?.assessmentId,
       selectedCandidates: [candidate],
       organizationId: actingAsTenantId,
       userId: actingAsUserId,
@@ -502,7 +506,7 @@ const updateInterviewRound = async (req, res) => {
     updatePayload.$set.scheduleAssessmentId =
       assessmentResponse.data?.scheduledAssessmentId;
     updatePayload.$set.assessmentId = req.body.round?.assessmentId;
-    updatePayload.$set.status = req.body.round?.status;
+    // updatePayload.$set.status = req.body.round?.status;
     updatePayload.$set.dateTime = req.body.round?.dateTime;
     updatePayload.$set.instructions = req.body.round?.instructions;
     updatePayload.$set.sequence = req.body.round?.sequence;
@@ -513,7 +517,12 @@ const updateInterviewRound = async (req, res) => {
     );
   }
 
-  const incomingRound = round || {};
+  if (updateType === "FULL_UPDATE") {
+    // For full updates, set all provided fields
+    Object.keys(round).forEach((key) => {
+      updatePayload.$set[key] = round[key];
+    });
+  }
 
   //after round create in post meeting id will update using this if condtion
   if (incomingRound.meetingId || incomingRound.meetPlatform) {
