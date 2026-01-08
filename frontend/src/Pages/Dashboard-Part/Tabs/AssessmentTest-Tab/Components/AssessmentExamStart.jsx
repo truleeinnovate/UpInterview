@@ -178,13 +178,16 @@ function AssessmentTest({
             const selectedAnswer = answers[question._id] || "";
             const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
             const questionType = question.snapshot?.questionType || question.questionType;
-            const isCorrect = verifyAnswer(question, selectedAnswer);
+            
+            const userAnswer = answers[question._id];
+            const isCorrect = verifyAnswer(question, userAnswer);
             const score = isCorrect ? (question.score || 0) : 0;
 
             return {
               questionId: question._id,
               questionType,
-              answer: selectedAnswer,
+              userAnswer: userAnswer,
+              correctAnswer: correctAnswer,
               isCorrect,
               score,
               isAnswerLater: skippedQuestions.includes(question._id),

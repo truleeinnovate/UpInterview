@@ -84,7 +84,7 @@ const mongoose = require('mongoose');
 
 const AnswerSchema = new mongoose.Schema({ 
     questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'assessmentQuestions', required: true },
-    answer: {
+    userAnswer: {
         type: mongoose.Schema.Types.Mixed,
         required: true,
         set: function(answer) {
@@ -101,6 +101,25 @@ const AnswerSchema = new mongoose.Schema({
                 return JSON.parse(answer);
             } catch (e) {
                 // If parsing fails, return as is
+                return answer;
+            }
+        }
+    },
+    correctAnswer: {
+        type: mongoose.Schema.Types.Mixed,
+        set: function(answer) {
+            if (answer === undefined || answer === null) return undefined;
+            // If it's an object, stringify it
+            if (typeof answer === 'object') {
+                return JSON.stringify(answer);
+            }
+            return answer;
+        },
+        get: function(answer) {
+            if (answer === undefined || answer === null) return undefined;
+            try {
+                return JSON.parse(answer);
+            } catch (e) {
                 return answer;
             }
         }

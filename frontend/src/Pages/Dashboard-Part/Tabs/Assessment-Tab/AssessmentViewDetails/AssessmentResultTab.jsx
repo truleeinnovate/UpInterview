@@ -21,7 +21,6 @@ function AssessmentResultsTab({
   scheduledAssessmentId,
 }) {
   const [results, setResults] = useState([]);
-  //console.log("result",results)
   const [loading, setLoading] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
@@ -32,7 +31,6 @@ function AssessmentResultsTab({
     const getResults = async () => {
       const { data, error } = await fetchAssessmentResults(assessment?._id);
       if (!error) {
-        // If type is provided, filter by scheduledAssessmentId
         if (type && scheduledAssessmentId) {
           const filtered = data.filter(
             (item) => item.scheduleId === scheduledAssessmentId
@@ -56,25 +54,17 @@ function AssessmentResultsTab({
   };
 
   const handleViewResult = (candidate, schedule) => {
-    // console.log("candidate", candidate);
-    // console.log("schedule", schedule);
-
     setSelectedCandidate(candidate);
     setSelectedSchedule(schedule);
     setShowResultView(true);
   };
-  // console.log("results ",results )
 
   const closeResultView = () => {
     setShowResultView(false);
     setSelectedCandidate(null);
     setSelectedSchedule(null);
   };
-  // <---------------------- v1.0.0
-  // <---------------------- v1.0.1
 
-  // Calculate statistics
-  // Only consider candidates with result 'pass' or 'fail'
   const allCandidates =
     results?.flatMap((schedule) => schedule.candidates || []) || [];
   const completedCandidates = allCandidates.filter(
@@ -88,13 +78,11 @@ function AssessmentResultsTab({
     (c) => c.result === "fail"
   ).length;
 
-  // Helper to check if a date is valid
   const isValidDate = (date) => {
     const d = new Date(date);
     return date && !isNaN(d);
   };
 
-  // Helper to get duration in minutes from assessment
   const getAssessmentDuration = () => {
     if (assessment && assessment.Duration) {
       const parsed = parseInt(assessment.Duration, 10);
@@ -103,22 +91,34 @@ function AssessmentResultsTab({
     return 30;
   };
 
-  // Helper to get time taken for a candidate
   const getTimeTaken = (candidate) => {
-    const duration = getAssessmentDuration();
+    const durationMin = getAssessmentDuration();
+    const totalSeconds = durationMin * 60;
     if (
       candidate.remainingTime !== undefined &&
       candidate.remainingTime !== null
     ) {
-      return Math.floor((duration * 60 - candidate.remainingTime) / 60);
+      let timeTakenSeconds = totalSeconds - candidate.remainingTime;
+      if (timeTakenSeconds < 0) {
+        timeTakenSeconds = 0;
+      }
+      const timeTakenMin = Math.floor(timeTakenSeconds / 60);
+      const timeTakenSec = timeTakenSeconds % 60;
+      const formatted = `${timeTakenMin}:${timeTakenSec.toString().padStart(2, '0')}`;
+      console.log('formatted', formatted);
+      return formatted;
     }
     return "-";
   };
-  // <-------------------------------v1.0.1
+
+  const getFullDurationFormatted = () => {
+    const durationMin = getAssessmentDuration();
+    return `${durationMin}:00`;
+  };
 
   if (loading) return <div className="p-4">Loading results...</div>;
-  // console.log("schedule", assessment);
   if (showResultView) {
+    const formattedTime = selectedCandidate ? getTimeTaken(selectedCandidate) : "-";
     return (
       <ScheduledAssessmentResultView
         candidate={selectedCandidate}
@@ -129,20 +129,17 @@ function AssessmentResultsTab({
         toggleArrow1={toggleArrow1}
         isFullscreen={isFullscreen}
         assessmentQuestions={assessmentQuestions}
+        timeTaken={formattedTime}
       />
     );
   }
   return (
-    // v1.0.2 <----------------------------------
     <div className="sm:px-2 p-4">
-      {/* v1.0.2 ----------------------------------> */}
       <h3 className="text-lg font-medium text-gray-900 mb-6">
         Assessment Results
       </h3>
-      {/* v1.0.2 <----------------------------------------------------------------------- */}
       <div className="grid sm:grid-cols-1 md:grid-cols-1 grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          {/* // <---------------------- v1.0.1 */}
 
           <div className="text-2xl font-semibold text-blue-600">
             {totalCompleted}
@@ -162,7 +159,6 @@ function AssessmentResultsTab({
           <div className="text-sm text-gray-500">Failed</div>
         </div>
       </div>
-      {/* v1.0.2 -----------------------------------------------------------------------> */}
 
       <div className="space-y-4">
         {results && results.length > 0 ? (
@@ -189,18 +185,17 @@ function AssessmentResultsTab({
                           .map((c) => new Date(c.expiryAt));
                         return validDates.length > 0
                           ? format(
-                              new Date(Math.min(...validDates)),
-                              "MMM dd, yyyy"
-                            )
+                            new Date(Math.min(...validDates)),
+                            "MMM dd, yyyy"
+                          )
                           : "N/A";
                       })()}
                     </span>
                     <span
-                      className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                        schedule.status === "active"
+                      className={`px-2.5 py-1 text-xs font-medium rounded-full ${schedule.status === "active"
                           ? "bg-green-100 text-green-800"
                           : "bg-gray-100 text-gray-800"
-                      }`}
+                        }`}
                     >
                       {schedule.status.charAt(0).toUpperCase() +
                         schedule.status.slice(1)}
@@ -229,7 +224,7 @@ function AssessmentResultsTab({
                             Answered Questions
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Duration (mins)
+                            Duration (mm:ss)
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Score
@@ -247,7 +242,7 @@ function AssessmentResultsTab({
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {schedule.candidates &&
-                        schedule.candidates.length > 0 ? (
+                          schedule.candidates.length > 0 ? (
                           schedule.candidates.map((candidate) => (
                             <tr key={candidate.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -262,30 +257,28 @@ function AssessmentResultsTab({
                                 {candidate.answeredQuestions}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {getTimeTaken(candidate)} /{" "}
-                                {getAssessmentDuration()} mins
+                                {getTimeTaken(candidate)} / {getFullDurationFormatted()}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {candidate.totalScore}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span
-                                  className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    candidate.result === "pass"
+                                  className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${candidate.result === "pass"
                                       ? "bg-green-100 text-green-800"
                                       : "bg-red-100 text-red-800"
-                                  }`}
+                                    }`}
                                 >
                                   {capitalizeFirstLetter(candidate?.result)}
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {candidate.completionDate &&
-                                isValidDate(candidate.completionDate)
+                                  isValidDate(candidate.completionDate)
                                   ? format(
-                                      new Date(candidate.completionDate),
-                                      "MMM dd, yyyy"
-                                    )
+                                    new Date(candidate.completionDate),
+                                    "MMM dd, yyyy"
+                                  )
                                   : "-"}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -326,7 +319,6 @@ function AssessmentResultsTab({
         )}
       </div>
     </div>
-    // <-------------------------------v1.0.1
   );
 }
 

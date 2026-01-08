@@ -17,8 +17,13 @@ function AssessmentResultView({
   toggleArrow1,
   isFullscreen,
   mode,
+  timeTaken, // Formatted time taken from AssessmentResultTab
   assessmentQuestions, // assessmentQuestions come from AssessmentViewDetails.jsx
 }) {
+
+  console.log('assessment', assessment);
+  console.log('assessmentQuestions', assessmentQuestions);
+  
   // <---------------------- v1.0.0
   // Helper to check if a date is valid
   const isValidDate = (date) => {
@@ -71,10 +76,6 @@ function AssessmentResultView({
   const totalDuration = assessment.Duration
     ? parseInt(assessment.Duration, 10)
     : 30;
-  const timeTaken =
-    candidate.remainingTime !== undefined && candidate.remainingTime !== null
-      ? Math.floor((totalDuration * 60 - candidate.remainingTime) / 60)
-      : "-";
   // <-------------------------------v1.0.0
 
   return (
