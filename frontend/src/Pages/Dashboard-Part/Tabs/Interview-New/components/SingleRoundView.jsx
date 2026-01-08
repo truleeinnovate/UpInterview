@@ -4,6 +4,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import RoundCard from "./RoundCard";
+import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
 
 const SingleRoundView = ({
   rounds,
@@ -122,6 +123,9 @@ const SingleRoundView = ({
                 <span className="mx-2">
                   {currentRound?.interviewMode?.charAt(0).toUpperCase() + currentRound?.interviewMode?.slice(1)}
                 </span>
+                {currentRound?.meetPlatform && currentRound?.roundTitle !== "Assessment" && (
+                  <MeetPlatformBadge platform={currentRound?.meetPlatform} />
+                )}
               </div>
             </div>
           </div>

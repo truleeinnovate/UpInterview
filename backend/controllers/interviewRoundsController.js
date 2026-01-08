@@ -1199,7 +1199,7 @@ const updateInterviewRoundStatus = async (req, res) => {
   try {
     const { roundId } = req.params;
     const { actingAsUserId } = res.locals.auth;
-    const { action, reasonCode, comment, cancellationReason } = req.body; // reasonCode = your selected reason, comment = "Other" text, cancellationReason = specific cancellation reason
+    const { action, reasonCode, comment, cancellationReason, roundOutcome, reason } = req.body; // reasonCode = your selected reason, comment = "Other" text, cancellationReason = specific cancellation reason
 
     // console.log("req.body", req.body);
 
@@ -1239,6 +1239,8 @@ const updateInterviewRoundStatus = async (req, res) => {
       Cancelled: "Cancelled",
       Incomplete: "Incomplete",
       NoShow: "NoShow",
+      Evaluated: "Evaluated",
+      Skipped: "Skipped",
     };
 
     const newStatus = actionToStatusMap[action];
@@ -1387,6 +1389,19 @@ const updateInterviewRoundStatus = async (req, res) => {
       }
 
       shouldSendCancellationEmail = true;
+    }
+
+    // Handle Evaluated action - save roundOutcome and evaluation reason
+    if (action === "Evaluated") {
+      if (roundOutcome) {
+        extraUpdate.$set.roundOutcome = roundOutcome;
+      }
+      if (reason) {
+        extraUpdate.$set.currentActionReason = reason;
+      }
+      if (comment) {
+        extraUpdate.$set.comments = comment;
+      }
     }
 
     // Merge smartUpdate (status + history) with extraUpdate (cancel-specific)
