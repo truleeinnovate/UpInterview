@@ -55,9 +55,9 @@ const AssessmentTestPage2 = ({
               <h2 className="sm:text-md md:text-md lg:text-xl xl:text-sl 2xl:text-xl text-xl font-bold text-white tracking-tight">
                 {assessment?.assessmentId?.AssessmentTitle}
               </h2>
-              <p className="text-white sm:text-sm md:text-sm lg:text-md xl:text-md 2xl:text-md mt-4 font-light">
+              {/* <p className="text-white sm:text-sm md:text-sm lg:text-md xl:text-md 2xl:text-md mt-4 font-light">
                 Complete your profile to begin the assessment
-              </p>
+              </p> */}
             </div>
           </div>
           <div className="sm:p-3 p-6 space-y-8">

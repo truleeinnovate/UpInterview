@@ -20,40 +20,33 @@ const ALLOWED_STATUS_CHANGES = {
 
 // Helper function to check if status change should trigger webhook
 const shouldTriggerWebhook = (eventType, status, previousStatus = null) => {
-  console.log(`[Webhook] Checking webhook trigger for event: ${eventType}, status: ${status}, previousStatus: ${previousStatus}`);
   
   switch (eventType) {
     case EVENT_TYPES.INTERVIEW_ROUND_STATUS_UPDATED:
       const shouldTriggerInterview = ALLOWED_STATUS_CHANGES.INTERVIEW.includes(status);
-      console.log(`[Webhook] Interview webhook trigger: ${shouldTriggerInterview} (allowed statuses: ${ALLOWED_STATUS_CHANGES.INTERVIEW.join(', ')})`);
       return shouldTriggerInterview;
       
     case EVENT_TYPES.ASSESSMENT_STATUS_UPDATED:
       const shouldTriggerAssessment = ALLOWED_STATUS_CHANGES.ASSESSMENT.includes(status);
-      console.log(`[Webhook] Assessment webhook trigger: ${shouldTriggerAssessment} (allowed statuses: ${ALLOWED_STATUS_CHANGES.ASSESSMENT.join(', ')})`);
       return shouldTriggerAssessment;
       
     case EVENT_TYPES.FEEDBACK_STATUS_UPDATED:
       const shouldTriggerFeedback = ALLOWED_STATUS_CHANGES.FEEDBACK.includes(status);
-      console.log(`[Webhook] Feedback webhook trigger: ${shouldTriggerFeedback} (allowed statuses: ${ALLOWED_STATUS_CHANGES.FEEDBACK.join(', ')})`);
       return shouldTriggerFeedback;
       
     default:
-      console.log(`[Webhook] Unknown event type: ${eventType}, allowing webhook`);
       return true; // Allow unknown event types by default
   }
 };
 
 const triggerWebhook = async (eventType, data, tenantId) => {
   try {
-    console.log(`[Webhook] Triggering webhook for event: ${eventType}, tenant: ${tenantId || 'all'}`);
 
     // Check if webhook should be triggered based on status
     const status = data.status || data.newStatus;
     const previousStatus = data.previousStatus || data.oldStatus;
     
     if (!shouldTriggerWebhook(eventType, status, previousStatus)) {
-      console.log(`[Webhook] Webhook trigger blocked for event: ${eventType}, status: ${status} - Status not in allowed list`);
       return;
     }
 
@@ -67,8 +60,6 @@ const triggerWebhook = async (eventType, data, tenantId) => {
       // Query by tenantId field (ObjectId)
       query.tenantId = tenantId;
     }
-
-    console.log(`[Webhook] Querying integrations with:`, query);
     
     // First check if there are any integrations (enabled or disabled) for this event
     const allIntegrations = await Integration.find({
@@ -76,20 +67,16 @@ const triggerWebhook = async (eventType, data, tenantId) => {
       ...(tenantId && { tenantId })
     });
     
-    console.log(`[Webhook] Found ${allIntegrations.length} total integrations for event ${eventType}`);
     
     if (allIntegrations.length === 0) {
-      console.log(`[Webhook] No integrations configured for event: ${eventType}`);
       return;
     }
 
     const enabledIntegrations = allIntegrations.filter(integration => integration.enabled);
     const disabledIntegrations = allIntegrations.filter(integration => !integration.enabled);
     
-    console.log(`[Webhook] Found ${enabledIntegrations.length} enabled and ${disabledIntegrations.length} disabled integrations`);
     
     if (enabledIntegrations.length === 0) {
-      console.log(`[Webhook] All integrations are disabled for event: ${eventType}. Skipping webhook triggers.`);
       return;
     }
 
@@ -143,23 +130,11 @@ const triggerWebhook = async (eventType, data, tenantId) => {
             }
           }
 
-          console.log(`[Webhook] Sending to ${integration.webhookUrl} with payload:`, {
-            event: eventType,
-            dataKeys: Object.keys(data),
-            timestamp: payload.timestamp
-          });
-
           const response = await axios.post(
             integration.webhookUrl,
             payload,
             config
           );
-
-          console.log(`[Webhook] Response from ${integration.webhookUrl}:`, {
-            status: response.status,
-            statusText: response.statusText,
-            data: response.data
-          });
 
           // Determine if the webhook was actually successful (2xx status codes)
           const isSuccess = response.status >= 200 && response.status < 300;
@@ -198,17 +173,11 @@ const triggerWebhook = async (eventType, data, tenantId) => {
           let errorDetails = {};
           
           if (error.name === "AbortError") {
-            console.error(`[Webhook] Timeout sending to ${integration.webhookUrl}`);
             errorDetails = {
               type: "timeout",
               message: "Webhook request timed out after 10 seconds"
             };
           } else if (error.response) {
-            console.error(`[Webhook] Error response from ${integration.webhookUrl}:`, {
-              status: error.response.status,
-              data: error.response.data,
-              headers: error.response.headers
-            });
             errorDetails = {
               type: "http_error",
               status: error.response.status,
@@ -217,14 +186,12 @@ const triggerWebhook = async (eventType, data, tenantId) => {
               headers: error.response.headers
             };
           } else if (error.request) {
-            console.error(`[Webhook] No response from ${integration.webhookUrl}:`, error.request);
             errorDetails = {
               type: "no_response",
               message: "No response received from webhook URL",
               request: error.request
             };
           } else {
-            console.error(`[Webhook] Error setting up request to ${integration.webhookUrl}:`, error.message);
             errorDetails = {
               type: "setup_error",
               message: error.message
@@ -260,12 +227,7 @@ const triggerWebhook = async (eventType, data, tenantId) => {
     });
 
   } catch (error) {
-    console.error("[Webhook] Error in triggerWebhook:", {
-      message: error.message,
-      stack: error.stack,
-      eventType,
-      tenantId,
-    });
+
   }
 };
 
@@ -322,9 +284,7 @@ const createConsolidatedWebhookLog = async ({ eventType, data, tenantId, webhook
     const log = new IntegrationLogs(logData);
     await log.save();
     
-    console.log(`[Webhook] Consolidated log created: ${logData.logId} - ${logData.status} (${successCount}/${totalWebhooks} successful)`);
   } catch (logError) {
-    console.error("[Webhook] Error creating consolidated webhook log:", logError);
     // Don't throw the error to prevent breaking the main webhook flow
   }
 };

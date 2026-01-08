@@ -9,9 +9,7 @@ import SubmitConfirmation from "./AssessmentExamComponents/AssessmentExamSubmitC
 import CompletionScreen from "./AssessmentExamComponents/AssessmentExamCompletionScreen.jsx";
 import QuestionNavigation from "./AssessmentExamComponents/AssessmentExamQuestionNavigation.jsx";
 import { config } from "../../../../../config.js";
-// v1.0.0 <-------------------------------------------------------------------
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
-// v1.0.0 ------------------------------------------------------------------->
 
 function AssessmentTest({
   assessment,
@@ -30,10 +28,8 @@ function AssessmentTest({
   const [isReviewing, setIsReviewing] = useState(false);
   const [skippedQuestions, setSkippedQuestions] = useState([]);
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
-  // v1.0.0 <-------------------------------------------------------------------
   const [showIncompletePopup, setShowIncompletePopup] = useState(false);
   useScrollLock(showIncompletePopup);
-  // v1.0.0 ------------------------------------------------------------------->
 
   useEffect(() => {
     if (duration) {
@@ -67,7 +63,6 @@ function AssessmentTest({
     }));
   };
 
-  //   v1.0.0 <---------------------------------------------------------------------
   const areAllQuestionsAnswered = () => {
     const allQuestions =
       questions?.sections?.flatMap((section) => section?.questions || []) || [];
@@ -75,194 +70,145 @@ function AssessmentTest({
       (q) => answers[q._id] !== undefined && answers[q._id] !== ""
     );
   };
-  //   v1.0.0 <---------------------------------------------------------------------
 
   const handleSubmit = () => {
-    // v1.0.0 <---------------------------------
     if (!areAllQuestionsAnswered()) {
       setShowIncompletePopup(true);
       return;
     }
-    // v1.0.0 <---------------------------------
     setShowConfirmSubmit(true);
   };
 
 
-// Enhanced verifyAnswer function with comprehensive trimming and type handling
-const verifyAnswer = (question, selectedAnswer) => {
-  const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
-  const questionType = question.snapshot?.questionType || question.questionType;
-  
-  // Helper function to clean and normalize answers with proper trimming
-  const normalizeAnswer = (answer, preserveFormatting = false) => {
-    if (answer === null || answer === undefined || answer === '') return '';
-    
-    let processedAnswer = answer.toString();
-    
-    if (!preserveFormatting) {
-      // For most answer types, trim and normalize
-      processedAnswer = processedAnswer.trim();
-    }
-    
-    return processedAnswer;
-  };
-  
-  // Enhanced MCQ cleaning function
-  const cleanMCQAnswer = (answer) => {
-    const normalized = normalizeAnswer(answer);
-    if (!normalized) return '';
-    
-    // Remove patterns like "A) ", "B) ", "C) " etc. from the beginning
-    // Also handles "A. ", "1) ", "1. " etc.
-    const cleaned = normalized
-      .replace(/^[A-Z][).]\s*/, '')  // Remove "A) ", "B) ", "A. ", "B. "
-      .replace(/^\d+[).]\s*/, '')    // Remove "1) ", "2) ", "1. ", "2. "
-      .trim();
-    
-    return cleaned.toLowerCase();
-  };
-  
-  // Enhanced boolean normalization
-  const normalizeBoolean = (value) => {
-    const normalized = normalizeAnswer(value);
-    if (!normalized) return '';
-    
-    const trueValues = ['true', 't', 'yes', 'y', '1', 'correct', 'right'];
-    const falseValues = ['false', 'f', 'no', 'n', '0', 'incorrect', 'wrong'];
-    
-    if (trueValues.includes(normalized.toLowerCase())) return 'true';
-    if (falseValues.includes(normalized.toLowerCase())) return 'false';
-    
-    return normalized.toLowerCase(); // Return as-is for strict comparison
-  };
+  const verifyAnswer = (question, selectedAnswer) => {
+    const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
+    const questionType = question.snapshot?.questionType || question.questionType;
 
-  switch (questionType) {
-    case 'MCQ':
-    case 'Multiple Choice':
-      // For MCQ, clean both answers before comparison
-      const cleanedSelected = cleanMCQAnswer(selectedAnswer);
-      const cleanedCorrect = cleanMCQAnswer(correctAnswer);
-      return cleanedSelected === cleanedCorrect;
-    
-    case 'Short Answer':
-      // For short answers, trim and compare case-insensitively
-      const shortSelected = normalizeAnswer(selectedAnswer);
-      const shortCorrect = normalizeAnswer(correctAnswer);
-      return shortSelected.toLowerCase() === shortCorrect.toLowerCase();
-    
-    case 'Long Answer':
-      // For long answers, trim and compare case-insensitively
-      const longSelected = normalizeAnswer(selectedAnswer);
-      const longCorrect = normalizeAnswer(correctAnswer);
-      return longSelected.toLowerCase() === longCorrect.toLowerCase();
-    
-    case 'Number':
-    case 'Numeric':
-      // For numbers, compare numerically after trimming
-      const numSelected = normalizeAnswer(selectedAnswer);
-      const numCorrect = normalizeAnswer(correctAnswer);
-      return parseFloat(numSelected) === parseFloat(numCorrect);
-    
-    case 'Boolean':
-      // For boolean, normalize both values and compare
-      const boolSelected = normalizeBoolean(selectedAnswer);
-      const boolCorrect = normalizeBoolean(correctAnswer);
-      return boolSelected === boolCorrect;
-    
-    case 'Programming':
-    case 'Code':
-      // For programming questions, preserve formatting but trim outer whitespace
-      const codeSelected = normalizeAnswer(selectedAnswer, true); // Preserve internal formatting
-      const codeCorrect = normalizeAnswer(correctAnswer, true);
-      return codeSelected === codeCorrect;
-    
-    default:
-      // Default comparison with trimming
-      const defaultSelected = normalizeAnswer(selectedAnswer);
-      const defaultCorrect = normalizeAnswer(correctAnswer);
-      return defaultSelected === defaultCorrect;
-  }
-};
+    const normalizeAnswer = (answer, preserveFormatting = false) => {
+      if (answer === null || answer === undefined || answer === '') return '';
+
+      let processedAnswer = answer.toString();
+
+      if (!preserveFormatting) {
+        processedAnswer = processedAnswer.trim();
+      }
+
+      return processedAnswer;
+    };
+
+    const cleanMCQAnswer = (answer) => {
+      const normalized = normalizeAnswer(answer);
+      if (!normalized) return '';
+
+      const cleaned = normalized
+        .replace(/^[A-Z][).]\s*/, '')
+        .replace(/^\d+[).]\s*/, '')
+        .trim();
+
+      return cleaned.toLowerCase();
+    };
+
+    const normalizeBoolean = (value) => {
+      const normalized = normalizeAnswer(value);
+      if (!normalized) return '';
+
+      const trueValues = ['true', 't', 'yes', 'y', '1', 'correct', 'right'];
+      const falseValues = ['false', 'f', 'no', 'n', '0', 'incorrect', 'wrong'];
+
+      if (trueValues.includes(normalized.toLowerCase())) return 'true';
+      if (falseValues.includes(normalized.toLowerCase())) return 'false';
+
+      return normalized.toLowerCase();
+    };
+
+    switch (questionType) {
+      case 'MCQ':
+      case 'Multiple Choice':
+        const cleanedSelected = cleanMCQAnswer(selectedAnswer);
+        const cleanedCorrect = cleanMCQAnswer(correctAnswer);
+        return cleanedSelected === cleanedCorrect;
+
+      case 'Short Answer':
+        const shortSelected = normalizeAnswer(selectedAnswer);
+        const shortCorrect = normalizeAnswer(correctAnswer);
+        return shortSelected.toLowerCase() === shortCorrect.toLowerCase();
+
+      case 'Long Answer':
+        const longSelected = normalizeAnswer(selectedAnswer);
+        const longCorrect = normalizeAnswer(correctAnswer);
+        return longSelected.toLowerCase() === longCorrect.toLowerCase();
+
+      case 'Number':
+      case 'Numeric':
+        const numSelected = normalizeAnswer(selectedAnswer);
+        const numCorrect = normalizeAnswer(correctAnswer);
+        return parseFloat(numSelected) === parseFloat(numCorrect);
+
+      case 'Boolean':
+        const boolSelected = normalizeBoolean(selectedAnswer);
+        const boolCorrect = normalizeBoolean(correctAnswer);
+        return boolSelected === boolCorrect;
+
+      case 'Programming':
+      case 'Code':
+        const codeSelected = normalizeAnswer(selectedAnswer, true);
+        const codeCorrect = normalizeAnswer(correctAnswer, true);
+        return codeSelected === codeCorrect;
+
+      default:
+        const defaultSelected = normalizeAnswer(selectedAnswer);
+        const defaultCorrect = normalizeAnswer(correctAnswer);
+        return defaultSelected === defaultCorrect;
+    }
+  };
 
   const handleConfirmSubmit = async () => {
     try {
-      const candidateAssessmentData = {
-        candidateAssessmentId: candidateAssessmentId, // Add candidateAssessmentId here
+
+      const submissionData = {
+        candidateAssessmentId,
         scheduledAssessmentId: assessment._id,
         candidateId: candidate._id,
         status: "completed",
-        sections: questions.sections.map((section) => ({
-          SectionName: section.sectionName || "Unnamed Section",
-          Answers: section.questions.map((question) => {
-            // Remove console logs to prevent loops
-            // console.log("Question ID:", question._id);
-            const correctAnswer =
-              question.snapshot?.correctAnswer || question.correctAnswer;
-          const selectedAnswer = answers[question._id];
-          const isCorrect = verifyAnswer(question, selectedAnswer);
-          const score = isCorrect ? question.score ?? 0 : 0;
-              // const selectedAnswer = answers[question._id];
-            // const isCorrect = correctAnswer === selectedAnswer;
-            // const score = isCorrect ? question.score ?? 0 : 0;
-            // console.log("Correct Answer:", correctAnswer);
-            // console.log("Selected Answer:", selectedAnswer);
-            // console.log("Score:", score);
+        remainingTime: timeLeft,
+        sections: questions.sections.map((section) => {
+
+          const sectionQuestions = section.questions.map((question) => {
+
+            const selectedAnswer = answers[question._id] || "";
+            const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
+            const questionType = question.snapshot?.questionType || question.questionType;
+            const isCorrect = verifyAnswer(question, selectedAnswer);
+            const score = isCorrect ? (question.score || 0) : 0;
+
             return {
               questionId: question._id,
+              questionType,
               answer: selectedAnswer,
-              isCorrect: isCorrect,
-              score: score,
+              isCorrect,
+              score,
               isAnswerLater: skippedQuestions.includes(question._id),
-              submittedAt: new Date(),
+              submittedAt: new Date().toISOString()
             };
-          }),
-          totalScore: section.questions.reduce((total, question) => {
-            const answer = answers[question._id];
-            const correctAnswer =
-              question.snapshot?.correctAnswer || question.correctAnswer;
-            return total + (answer === correctAnswer ? question.score ?? 0 : 0);
-          }, 0),
-          passScore: section.passScore ?? 0,
-          sectionResult:
-            section.questions.reduce((total, question) => {
-              const answer = answers[question._id];
-              const correctAnswer =
-                question.snapshot?.correctAnswer || question.correctAnswer;
-              return (
-                total + (answer === correctAnswer ? question.score ?? 0 : 0)
-              );
-            }, 0) >= (section.passScore ?? 0)
-              ? "pass"
-              : "fail",
-        })),
-        totalScore: questions.sections.reduce((total, section) => {
-          return (
-            total +
-            section.questions.reduce((sectionTotal, question) => {
-              const answer = answers[question._id];
-              const correctAnswer =
-                question.snapshot?.correctAnswer || question.correctAnswer;
-              return (
-                sectionTotal +
-                (answer === correctAnswer ? question.score ?? 0 : 0)
-              );
-            }, 0)
-          );
-        }, 0),
-        overallResult: questions.sections.every((section) => {
-          const sectionScore = section.questions.reduce((total, question) => {
-            const answer = answers[question._id];
-            const correctAnswer =
-              question.snapshot?.correctAnswer || question.correctAnswer;
-            return total + (answer === correctAnswer ? question.score ?? 0 : 0);
-          }, 0);
-          return sectionScore >= (section.passScore ?? 0);
-        })
-          ? "pass"
-          : "fail",
-        submittedAt: new Date(),
+          });
+
+          const sectionScore = sectionQuestions.reduce((sum, q) => sum + q.score, 0);
+          const sectionResult = sectionScore >= (section.passScore || 0) ? "pass" : "fail";
+
+          return {
+            sectionId: section._id,
+            sectionName: section.sectionName || "Unnamed Section",
+            passScore: section.passScore || 0,
+            questions: sectionQuestions,
+            totalScore: sectionScore,
+            sectionResult,
+            sectionPassed: sectionResult === "pass"
+          };
+        }),
+        submittedAt: new Date().toISOString()
       };
 
+      // Send the data to the backend
       const response = await fetch(
         `${config.REACT_APP_API_URL}/candidate-assessment/submit`,
         {
@@ -270,26 +216,33 @@ const verifyAnswer = (question, selectedAnswer) => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(candidateAssessmentData),
+          body: JSON.stringify(submissionData),
         }
       );
 
+      console.log("Response from backend:", response);
+
       const responseData = await response.json();
+
       if (!response.ok) {
+        console.error("Error submitting assessment:", responseData.message);
         throw new Error(responseData.message || "Failed to submit assessment");
       }
 
+      console.log("Assessment submitted successfully:", responseData);
       setIsSubmitted(true);
       setShowConfirmSubmit(false);
+
     } catch (error) {
-      console.error("Error submitting assessment:", error.message);
+      console.error("Error submitting assessment:", error);
+      alert(`Error submitting assessment: ${error.message}`);
     }
   };
 
   const handleStartReview = () => {
     setIsReviewing(true);
-    setCurrentQuestionIndex(0); // Reset to first question when starting review
-    setCurrentSection(0); // Also reset section to first section
+    setCurrentQuestionIndex(0);
+    setCurrentSection(0);
     setShowConfirmSubmit(false);
   };
 
@@ -338,7 +291,6 @@ const verifyAnswer = (question, selectedAnswer) => {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-indigo-50 to-white">
-      {/* v1.0.0 <------------------------------------------------ */}
       <div className="mx-auto sm:px-4 px-8 py-11">
         <div className="flex sm:flex-col md:flex-col gap-8">
           <AssessmentSidebar
@@ -354,7 +306,6 @@ const verifyAnswer = (question, selectedAnswer) => {
           />
           <div className="flex-1">
             <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg">
-            {/* v1.0.1 <----------------------------------------------------------------------------------------------- */}
               <div className="sm:p-4 md:px-4 p-8">
                 <div className="flex sm:flex-col sm:items-start items-center sm:justify-start sm:gap-4 justify-between mb-6">
                   <div className="flex sm:justify-between items-center space-x-4 sm:w-full">
@@ -377,11 +328,10 @@ const verifyAnswer = (question, selectedAnswer) => {
                       </button>
                     ) : (
                       <div
-                        className={`flex items-center px-4 py-2 rounded-lg ${
-                          timeLeft < 300
+                        className={`flex items-center px-4 py-2 rounded-lg ${timeLeft < 300
                             ? "bg-red-100 text-red-800"
                             : "bg-blue-100 text-custom-blue"
-                        }`}
+                          }`}
                       >
                         <ClockIcon className="sm:h-4 sm:w-4 h-5 w-5 mr-3" />
                         <span className="sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm font-mono font-semibold">
@@ -402,7 +352,6 @@ const verifyAnswer = (question, selectedAnswer) => {
                   {currentQuestion?.snapshot?.questionText}
                 </h3>
               </div>
-            {/* v1.0.1 -----------------------------------------------------------------------------------------------> */}
               <QuestionDisplay
                 question={currentQuestion}
                 answers={answers}
@@ -420,9 +369,6 @@ const verifyAnswer = (question, selectedAnswer) => {
           </div>
         </div>
       </div>
-      {/* v1.0.0 ------------------------------------------------> */}
-
-      {/* v1.0.0 <---------------------------------------------------------------------- */}
       {showIncompletePopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center mx-4">
@@ -441,7 +387,6 @@ const verifyAnswer = (question, selectedAnswer) => {
           </div>
         </div>
       )}
-      {/* v1.0.0 ----------------------------------------------------------------------> */}
     </div>
   );
 }
