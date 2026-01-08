@@ -191,7 +191,7 @@ const InterviewDetail = () => {
         isOpen: true,
         title: `Cannot ${action.charAt(0).toUpperCase() + action.slice(1)
           } Interview`,
-        message: `The following rounds are not in a completed state:<ul class="list-disc pl-5 mt-2 mb-3">${roundItems}</ul>Please update all rounds to a completed state (Completed, Cancelled, Selected, or Rejected) before ${action.toLowerCase()} the interview.`,
+        message: `The following rounds are not completed state:<ul class="list-disc pl-5 mt-2 mb-3">${roundItems}</ul>Please update all rounds to a completed state (Completed, Cancelled, Selected, or Rejected) before ${action.toLowerCase()} the interview.`,
         isHTML: true,
       });
       return false;
