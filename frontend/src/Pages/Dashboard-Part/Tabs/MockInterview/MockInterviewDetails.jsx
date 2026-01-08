@@ -518,7 +518,7 @@ const MockInterviewDetails = () => {
                                         round?.interviewMode
                                       )}
                                     </span>
-                                    <span>•</span>
+                                    <span className="mr-2">•</span>
                                     <MeetPlatformBadge
                                       platform={round?.meetPlatform}
                                     />
