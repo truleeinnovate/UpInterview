@@ -14,6 +14,7 @@
   "description": "",
   "dependencies": {
     "@videosdk.live/js-sdk": "^0.5.2",
+    "agenda": "^5.0.0",
     "axios": "^1.8.4",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
