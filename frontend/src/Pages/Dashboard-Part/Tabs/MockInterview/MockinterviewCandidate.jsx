@@ -1,14 +1,25 @@
 // v1.0.0 - Ashok - fixed z-index at popup
 
 import Modal from "react-modal";
-import { ExternalLink, X, GraduationCap, Building } from "lucide-react";
+import {
+  ExternalLink,
+  X,
+  GraduationCap,
+  Building,
+  Briefcase,
+  Clock,
+  CalendarDays,
+  FileText,
+} from "lucide-react";
 // import Loading from '../../../../Components/Loading';
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+import { formatDateTime } from "../../../../utils/dateFormatter";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
+
 Modal.setAppElement("#root");
 
 const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
- 
-
   // v1.0.0 <-----------------------------------------------------------
   useScrollLock(true);
   // v1.0.0 ----------------------------------------------------------->
@@ -84,11 +95,11 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
           <div className="space-y-2">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold text-gray-900">
-                {candidate?.candidateName || ""}
+                {capitalizeFirstLetter(candidate?.candidateName) || ""}
               </h3>
 
               <p className="text-gray-600 mt-1">
-                {candidate.Role || "position"}
+                {capitalizeFirstLetter(candidate?.currentRole) || "position"}
               </p>
             </div>
 
@@ -115,7 +126,6 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
               
                 </div>
               </div> */}
-
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4">
                   Professional Details
@@ -130,23 +140,82 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
                       <p className="text-sm text-gray-500">Qualification</p>
 
                       <p className="text-gray-700">
-                        {candidate?.higherQualification || "N/A"}
+                        {capitalizeFirstLetter(
+                          candidate?.higherQualification
+                        ) || "N/A"}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-custom-bg rounded-lg">
-                      <Building className="w-5 h-5" />
+                      <Briefcase className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Role</p>
-                      <p className="text-gray-700">
-                        {candidate?.Role || "N/A"}{" "}
-                      </p>
+                      <p className="text-sm text-gray-500">Experience</p>
+                      {candidate ? (
+                        <p className="text-gray-700">
+                          {candidate?.currentExperience} Years
+                        </p>
+                      ) : (
+                        "N/A"
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
+              {/* <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                  Interview Details
+                </h4>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-custom-bg rounded-lg">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Interview Title</p>
+                    {capitalizeFirstLetter(candidate?.rounds?.[0]?.roundTitle)}
+                  </div>
+                </div>
+                <div className="space-y-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-custom-bg rounded-lg">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Duration</p>
+                      {candidate?.rounds?.[0]?.duration}
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-custom-bg rounded-lg">
+                      <CalendarDays className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Created On</p>
+                      {formatDateTime(candidate?.rounds?.[0]?.createdAt)}
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-custom-bg rounded-lg">
+                      <CalendarDays className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      {
+                        <StatusBadge
+                          status={capitalizeFirstLetter(
+                            candidate?.rounds?.[0]?.status
+                          )}
+                        />
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div> */}
             </div>
 
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -159,7 +228,7 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
                     key={index}
                     className="px-3 py-1.5 bg-custom-bg text-custom-blue rounded-full text-sm font-medium border border-blue-100"
                   >
-                    {skill}
+                    {capitalizeFirstLetter(skill)}
                   </span>
                 ))}
               </div>
@@ -175,7 +244,7 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
                     href={candidate.resume.path}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 underline hover:text-blue-800 transition"
+                    className="text-custom-blue underline hover:text-custom-blue/90 transition"
                   >
                     {candidate?.resume?.filename || "View Resume"}
                   </a>
