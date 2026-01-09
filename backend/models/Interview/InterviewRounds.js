@@ -26,7 +26,7 @@ const participantSchema = new mongoose.Schema(
       enum: ["Candidate", "Interviewer", "Scheduler"],
       // required: true,
     },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }, // optional for candidate
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }, // optional for candidate
     joinedAt: { type: Date },
     status: { type: String, enum: ["Joined", "Not_Joined"] },
   },
@@ -74,9 +74,15 @@ const interviewRoundSchema = new mongoose.Schema(
     interviewerType: String, // Internal or External
     duration: String,
     instructions: String,
+
+    participants: {
+      type: [participantSchema],
+      default: [],
+    },
+
     // candidateJoined: { type: Boolean, default: false },
     // interviewerJoined: { type: Boolean, default: false },
-    participantSchema,
+    // participantSchema,
     // Current scheduled date/time
     // dateTime: { type: Date },
 
@@ -112,7 +118,7 @@ const interviewRoundSchema = new mongoose.Schema(
         "Skipped",
         "Evaluated",
         "FeedbackPending",
-        "FeedbackSubmitted"
+        "FeedbackSubmitted",
       ],
       default: "Draft",
     },
@@ -144,8 +150,8 @@ const interviewRoundSchema = new mongoose.Schema(
       ref: "ScheduledAssessment",
     },
 
-    roundOutcome: String,//STRONG_YES | YES | NEUTRAL | NO | STRONG_NO
-    roundScore: Number,//1–5
+    roundOutcome: String, //STRONG_YES | YES | NEUTRAL | NO | STRONG_NO
+    roundScore: Number, //1–5
 
     // External system identifier
     externalId: { type: String, sparse: true, index: true }, // External system identifier
