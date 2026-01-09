@@ -117,6 +117,12 @@ const interviewRoundSchema = new mongoose.Schema(
       default: "Draft",
     },
 
+    // noShowJobId: {
+    //   type: mongoose.Schema.Types.ObjectId, // Agenda job _id is ObjectId
+    //   default: null,
+    //   sparse: true,
+    // },
+
     // Track last and current actions + reasons
     /* ------------------------------------
      * Current Action Tracking
@@ -236,6 +242,24 @@ interviewRoundSchema.post("findOneAndUpdate", async function (doc) {
     );
   }
 });
+
+// const { scheduleOrRescheduleNoShow } = require(
+//   "../../services/interviews/roundNoShowScheduler"
+// );
+
+// // After create
+// interviewRoundSchema.post("save", async function (doc) {
+//   if (doc.isNew || doc.isModified("dateTime") || doc.isModified("status")) {
+//     await scheduleOrRescheduleNoShow(doc);
+//   }
+// });
+
+// // After update
+// interviewRoundSchema.post("findOneAndUpdate", async function (doc) {
+//   if (doc) {
+//     await scheduleOrRescheduleNoShow(doc);
+//   }
+// });
 
 const InterviewRounds = mongoose.model("InterviewRounds", interviewRoundSchema);
 module.exports = { InterviewRounds };

@@ -18,6 +18,8 @@ const {
   applyAcceptInterviewWalletFlow,
   computeInterviewPricingForAccept,
 } = require("../utils/interviewWalletUtil");
+//this will create agenda when round schedule based on round date time more than 20 mins interviwer or candidate no joined means it will update no show
+const { scheduleOrRescheduleNoShow } = require("../services/interviews/roundNoShowScheduler");
 
 //old mansoor code i have changed this code because each interviwer send one request
 
@@ -676,6 +678,7 @@ exports.acceptInterviewRequest = async (req, res) => {
         actingAsUserId: req.user?._id || null,
         changes,
       });
+      // await scheduleOrRescheduleNoShow(round);//calling agenda to trigger round
 
       // ✅ IMPORTANT: atomic update (NO manual history push)
       if (updatePayload) {
@@ -699,6 +702,8 @@ exports.acceptInterviewRequest = async (req, res) => {
           }
         );
       }
+
+      
 
       // round.interviewers.push(contactId);
       // round.status = scheduleAction;
