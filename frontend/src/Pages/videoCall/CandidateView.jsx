@@ -440,10 +440,10 @@ const CandidateView = () =>
                             diffHours
                           )}h ${Math.floor(diffMinutes % 60)}m)`;
                           color = "text-blue-600 bg-blue-100";
-                        } else if (diffMs > 0 && diffMs <= fifteenMinutes) {
-                          // 15 minutes before start
-                          text = "Interview started, please join";
-                          color = "text-green-600 bg-green-100";
+                        // } else if (diffMs > 0 && diffMs <= fifteenMinutes) {
+                        //   // 15 minutes before start
+                        //   text = "Interview started, please join";
+                        //   color = "text-green-600 bg-green-100";
                         } else if (now >= start && now <= end) {
                           // During interview
                           const minsLeft = Math.floor(
