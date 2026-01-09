@@ -250,6 +250,8 @@ exports.submitCandidateAssessment = async (req, res) => {
     const processedSections = await Promise.all(
       sections.map(async (section, sectionIndex) => {
 
+        console.log("section", section);
+
         const processedAnswers = await Promise.all(
           section.questions.map(async (question) => {
 
