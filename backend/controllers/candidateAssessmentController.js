@@ -202,14 +202,22 @@ function verifyAnswer(question, selectedAnswer) {
   return isCorrect;
 }
 exports.submitCandidateAssessment = async (req, res) => {
-
   res.locals.loggedByController = true;
   res.locals.processName = "Submit Candidate Assessment";
 
   const session = await mongoose.startSession();
-  session.startTransaction();
+  
+  // Set a timeout for the transaction
+  const transactionOptions = {
+    readPreference: 'primary',
+    readConcern: { level: 'snapshot' },
+    writeConcern: { w: 'majority' }
+  };
 
   try {
+    let oldStatus;
+    let updatedAssessment;
+    await session.withTransaction(async () => {
     const {
       candidateAssessmentId,
       scheduledAssessmentId,
@@ -282,7 +290,7 @@ exports.submitCandidateAssessment = async (req, res) => {
     const overallResult = allSectionsPassed ? 'pass' : 'fail';
     const remainingTime = req.body.remainingTime || null;
     // Update candidate assessment
-    const oldStatus = candidateAssessment.status;
+    oldStatus = candidateAssessment.status;
     const updateData = {
       status: overallResult, // Set status to 'pass' or 'fail' instead of 'completed'
       sections: processedSections,
@@ -294,7 +302,7 @@ exports.submitCandidateAssessment = async (req, res) => {
       updatedAt: new Date()
     };
 
-    const updatedAssessment = await CandidateAssessment.findByIdAndUpdate(
+    updatedAssessment = await CandidateAssessment.findByIdAndUpdate(
       candidateAssessmentId,
       { $set: updateData },
       { new: true, session }
@@ -304,9 +312,13 @@ exports.submitCandidateAssessment = async (req, res) => {
       throw new Error("Failed to update candidate assessment");
     }
 
-    await session.commitTransaction();
-    session.endSession();
+    // Transaction will be committed automatically if no errors are thrown
+    }, transactionOptions);
 
+    // End the session after transaction is complete
+    await session.endSession();
+
+    // Process notifications outside of transaction
     if (oldStatus !== updatedAssessment.status) {
       try {
         await createAssessmentStatusUpdateNotification(
@@ -334,17 +346,47 @@ exports.submitCandidateAssessment = async (req, res) => {
     });
 
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    // Check if session is still active before trying to abort
+    if (session.inTransaction()) {
+      try {
+        await session.abortTransaction();
+      } catch (abortError) {
+        console.error('Error aborting transaction:', abortError);
+      }
+    }
+
+    // End the session if it's still active
+    try {
+      if (session) await session.endSession();
+    } catch (sessionError) {
+      console.error('Error ending session:', sessionError);
+    }
 
     console.error("Error in submitCandidateAssessment:", {
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
+      name: error.name,
+      code: error.code
     });
 
-    return res.status(500).json({
+    // More specific error messages based on error type
+    let errorMessage = "Failed to submit assessment";
+    let statusCode = 500;
+
+    if (error.code === 2 || error.message.includes('Transaction is not active')) {
+      errorMessage = "Transaction timed out. Please try again.";
+      statusCode = 408; // Request Timeout
+    } else if (error.name === 'ValidationError') {
+      errorMessage = `Validation error: ${error.message}`;
+      statusCode = 400;
+    } else if (error.name === 'MongoError' && error.code === 112) {
+      errorMessage = "Database write operation conflict. Please try again.";
+      statusCode = 409; // Conflict
+    }
+
+    return res.status(statusCode).json({
       success: false,
-      message: "Failed to submit assessment",
+      message: errorMessage,
       error: error.message,
     });
   }
