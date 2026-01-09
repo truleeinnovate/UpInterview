@@ -11,6 +11,7 @@
 // v2.0.0 - Ashok - changed loading from skelton to shimmer and proper structure
 // v2.0.1 - Ashok - added question text at rangeLabel
 // v2.0.2 -Venkatesh - Close filter popup when sidebar opens
+// v2.0.3 - Ashok - Added prop isMeetingSidePanel to handle style and alignments for meeting page
 
 import React, {
   useState,

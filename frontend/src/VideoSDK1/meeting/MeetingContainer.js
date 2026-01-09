@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Added prop isMeetingSidePanel to QuestionBank to handle style and alignments
+
 // MeetingContainer.js (Updated PiP strip: Single-column vertical stack, full-width videos with equal height)
 import React, { useState, useEffect, useRef, createRef, memo } from "react";
 import {
@@ -590,7 +592,10 @@ export function MeetingContainer({
                   {/* Sidebar Content */}
                   <div className="flex-1 overflow-y-auto">
                     {sideBarMode === "CANDIDATE" ? (
-                      <CandidateDetails candidateData={candidateData} positionData={positionData} />
+                      <CandidateDetails
+                        candidateData={candidateData}
+                        positionData={positionData}
+                      />
                     ) : sideBarMode === "FEEDBACK" ? (
                       <FeedbackForm onClose={() => setSideBarMode(null)} />
                     ) : sideBarMode === "INTERVIEWACTIONS" ? (
@@ -610,7 +615,11 @@ export function MeetingContainer({
                         />
                       </div>
                     ) : sideBarMode === "QUESTIONBANK" ? (
-                      <QuestionBank />
+                      <div className="">
+                        <QuestionBank
+                          isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
+                        />
+                      </div>
                     ) : null}
                   </div>
                 </div>

@@ -1,4 +1,5 @@
 //<---v1.0.0-----Venkatesh---add sidebar open state and pass it to myquestionslist
+// v1.0.1 - Ashok - Added prop isMeetingSidePanel to handle style and alignments for meeting page
 
 import { useState } from "react";
 import MyQuestionListMain from "./MyQuestionsList.jsx";
@@ -24,10 +25,9 @@ const QuestionBank = ({
   interviewQuestionsLists,
   removedQuestionIds,
   isEmbedded = false,
-  onSelectQuestion = () => {}
+  onSelectQuestion = () => {},
+  isMeetingSidePanel,
 }) => {
-
-
   const { checkPermission, isInitialized } = usePermissionCheck();
   const { effectivePermissions } = usePermissions();
   const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
@@ -52,13 +52,15 @@ const QuestionBank = ({
   };
   //---v1.0.0----->
 
- const containerStyle = isEmbedded ? { 
-    padding: '0.5rem', 
-    height: '100%', 
-    overflowY: 'auto',
-    backgroundColor: 'white'
-  } : {};
-   const handleQuestionClick = (question) => {
+  const containerStyle = isEmbedded
+    ? {
+        padding: "0.5rem",
+        height: "100%",
+        overflowY: "auto",
+        backgroundColor: "white",
+      }
+    : {};
+  const handleQuestionClick = (question) => {
     if (isEmbedded) {
       onSelectQuestion(question);
       // Optionally close the sidebar after selection
@@ -82,10 +84,12 @@ const QuestionBank = ({
     //   }`}
     //   style={containerStyle}
     // >
-    <div 
-    className={`${isEmbedded ? 'question-bank-embedded' : 'h-full bg-white rounded-lg'} flex flex-col`}
-    style={containerStyle}
-  >
+    <div
+      className={`${
+        isEmbedded ? "question-bank-embedded" : "h-full bg-white rounded-lg"
+      } flex flex-col`}
+      style={containerStyle}
+    >
       {/* Tab Navigation - Fixed at top for modal context */}
       <div className="flex sm:gap-6 justify-between bg-white sm:px-0 sm:pl-4 text-center px-4 py-3 flex-shrink-0">
         <div className="flex sm:gap-6">
@@ -98,7 +102,14 @@ const QuestionBank = ({
             onClick={() => handleSuggestedTabClick()}
             type="button"
           >
-            Suggested <span className="sm:hidden inline">Questions</span>
+            Suggested
+            <span
+              className={`${
+                isMeetingSidePanel ? "hidden" : "sm:hidden inline ml-1"
+              }`}
+            >
+              Questions
+            </span>
           </button>
           <button
             className={`sm:px-0 px-6 py-3 font-medium text-sm ${
@@ -109,18 +120,35 @@ const QuestionBank = ({
             onClick={() => handleFavoriteTabClick()}
             type="button"
           >
-            My Questions <span className="sm:hidden inline">List</span>
+            My Questions
+            <span
+              className={`${
+                isMeetingSidePanel ? "hidden" : "sm:hidden inline ml-1"
+              }`}
+            >
+              List
+            </span>
           </button>
         </div>
         {/*<---v1.0.0-----*/}
         {activeTab === "MyQuestionsList" && (
           <div className="flex items-center sm:mr-4">
             <button
-              className="text-md bg-custom-blue text-white sm:text-sm px-4 py-2 rounded-md transition-colors flex items-center gap-2"
+              className={`bg-custom-blue text-white rounded-md transition-colors flex items-center gap-2 ${
+                isMeetingSidePanel
+                  ? "text-sm px-3 py-1"
+                  : "text-md  sm:text-sm px-4 py-2 "
+              } `}
               onClick={toggleSidebar}
             >
-              <Plus className="sm:h-4 h-5 sm:w-4 w-5" /> Add{" "}
-              <span className="sm:hidden inline">Question</span>
+              <Plus className="sm:h-4 h-5 sm:w-4 w-5" /> Add
+              <span
+                className={`${
+                  isMeetingSidePanel ? "hidden" : "sm:hidden inline ml-1"
+                }`}
+              >
+                Question
+              </span>
             </button>
           </div>
         )}
@@ -148,6 +176,7 @@ const QuestionBank = ({
             fromScheduleLater={fromScheduleLater}
             interviewQuestionsLists={interviewQuestionsLists}
             removedQuestionIds={removedQuestionIds}
+            isMeetingSidePanel={isMeetingSidePanel}
           />
         )}
         {activeTab === "MyQuestionsList" && (

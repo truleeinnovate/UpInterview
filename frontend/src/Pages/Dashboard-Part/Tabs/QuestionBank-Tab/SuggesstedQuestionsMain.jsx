@@ -11,6 +11,7 @@
 // v1.0.7 - Ashok - Fixed suggested questions header
 // v1.0.8 - Ashok - Fixed style issues
 // v1.0.9 - Ashok - fixed filter popup container scroll issue
+// v2.0.0 - Ashok - Added prop isMeetingSidePanel to handle styles according to meeting page
 
 import React, {
   useEffect,
@@ -54,13 +55,22 @@ function HeaderBar({
   onClickLeftPaginationIcon,
   onClickRightPagination,
   type,
+  isMeetingSidePanel,
 }) {
   // Using DropdownSelect for interview type selection; no manual portal/open-state needed.
 
   return (
-    <div className="flex items-center sm:justify-start justify-end px-4 py-3 marker:flex-shrink-0 overflow-x-auto">
-      <div className="flex gap-x-3 min-w-max whitespace-nowrap">
-
+    // <div className="flex items-center sm:justify-start justify-end px-4 py-3 marker:flex-shrink-0 overflow-x-auto">
+    <div
+      className={`flex items-center px-4 py-3 flex-shrink-0
+        ${
+          isMeetingSidePanel
+            ? "justify-start overflow-auto"
+            : "justify-end sm:justify-start md:justify-start lg:justify-start overflow-x-auto"
+        }
+      `}
+    >
+      <div className="flex gap-x-3 whitespace-nowrap">
         {/* Search */}
         <div className="relative flex items-center rounded-md border flex-shrink-0 w-64 bg-white">
           <span className="p-2 text-custom-blue">
@@ -108,23 +118,30 @@ function HeaderBar({
 
         {/* Questions per page selector */}
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-600">Show/Page:</span>
+          <span className="text-sm font-semibold text-gray-600">
+            Show/Page:
+          </span>
           <div className="flex items-center gap-1">
             <div className="w-28 flex-shrink-0">
               {(() => {
-                const pageSizeOptions = [10, 20, 30, 50, 100, 150, 200].map((size) => ({
-                  value: size,
-                  label: size,
-                }));
+                const pageSizeOptions = [10, 20, 30, 50, 100, 150, 200].map(
+                  (size) => ({
+                    value: size,
+                    label: size,
+                  })
+                );
                 const selectedOption =
-                  pageSizeOptions.find((opt) => opt.value === questionsPerPage) ||
-                  pageSizeOptions[0];
+                  pageSizeOptions.find(
+                    (opt) => opt.value === questionsPerPage
+                  ) || pageSizeOptions[0];
                 return (
                   <DropdownSelect
                     isSearchable={false}
                     value={selectedOption}
                     onChange={(opt) =>
-                      onChangeQuestionsPerPage(opt?.value ? Number(opt.value) : 10)
+                      onChangeQuestionsPerPage(
+                        opt?.value ? Number(opt.value) : 10
+                      )
                     }
                     options={pageSizeOptions}
                     placeholder="Per page"
@@ -148,10 +165,11 @@ function HeaderBar({
             <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
               <span
                 onClick={onClickLeftPaginationIcon}
-                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 1
+                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${
+                  currentPage === 1
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:bg-gray-100"
-                  }`}
+                }`}
               >
                 <IoIosArrowBack />
               </span>
@@ -159,10 +177,11 @@ function HeaderBar({
             <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
               <span
                 onClick={onClickRightPagination}
-                className={`border p-2 text-xl rounded-md cursor-pointer ${currentPage === totalPages || totalPages === 0
+                className={`border p-2 text-xl rounded-md cursor-pointer ${
+                  currentPage === totalPages || totalPages === 0
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:bg-gray-100"
-                  }`}
+                }`}
               >
                 <IoIosArrowForward />
               </span>
@@ -202,6 +221,7 @@ const SuggestedQuestionsComponent = ({
   interviewQuestionsList,
   interviewQuestionsLists,
   removedQuestionIds = [],
+  isMeetingSidePanel,
 }) => {
   const navigate = useNavigate();
   const [skillInput, setSkillInput] = useState("");
@@ -232,7 +252,6 @@ const SuggestedQuestionsComponent = ({
     setCurrentPage(1);
   }, [itemsPerPage]);
 
-
   const [questionTypeFilterItems, setQuestionTypeFilterItems] = useState([]);
   const [difficultyLevelFilterItems, setDifficultyLevelFilterItems] = useState(
     []
@@ -255,7 +274,6 @@ const SuggestedQuestionsComponent = ({
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearchInput, setDebouncedSearchInput] = useState("");
 
-
   // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -267,28 +285,29 @@ const SuggestedQuestionsComponent = ({
     };
   }, [searchInput]);
 
-
   // Combine all filters for API call
-  const apiFilters = useMemo(() => ({
-    questionType: selectedQuestionType,
-    page: currentPage,
-    limit: itemsPerPage,
-    search: debouncedSearchInput,
-    difficultyLevel: difficultyLevelFilterItems,
-    category: categoryFilterItems,
-    technology: technologyFilterItems,
-    questionTypes: questionTypeFilterItems,
-  }), [
-    selectedQuestionType,
-    currentPage,
-    itemsPerPage,
-    debouncedSearchInput,
-    difficultyLevelFilterItems,
-    categoryFilterItems,
-    technologyFilterItems,
-    questionTypeFilterItems,
-  ]);
-
+  const apiFilters = useMemo(
+    () => ({
+      questionType: selectedQuestionType,
+      page: currentPage,
+      limit: itemsPerPage,
+      search: debouncedSearchInput,
+      difficultyLevel: difficultyLevelFilterItems,
+      category: categoryFilterItems,
+      technology: technologyFilterItems,
+      questionTypes: questionTypeFilterItems,
+    }),
+    [
+      selectedQuestionType,
+      currentPage,
+      itemsPerPage,
+      debouncedSearchInput,
+      difficultyLevelFilterItems,
+      categoryFilterItems,
+      technologyFilterItems,
+      questionTypeFilterItems,
+    ]
+  );
 
   const {
     suggestedQuestions,
@@ -300,7 +319,7 @@ const SuggestedQuestionsComponent = ({
     questionTypeFilter,
     typeBreakdown,
     isLoading,
-    pagination
+    pagination,
   } = useQuestions(
     apiFilters
     //   {
@@ -308,7 +327,6 @@ const SuggestedQuestionsComponent = ({
 
     // }
   );
-
 
   useScrollLock(true);
   //<------v1.0.4--------
@@ -441,10 +459,6 @@ const SuggestedQuestionsComponent = ({
     uniqueTechnologies.length,
   ]);
 
-
-
-
-
   // Keep popup temp state in sync when opening the popup or when base sections update
   useEffect(() => {
     if (isPopupOpen) {
@@ -471,38 +485,48 @@ const SuggestedQuestionsComponent = ({
   const totalPages = pagination?.totalPages || 1;
 
   // Respect plan limit: compute effective total pages based on accessibleQuestions
-  const planAccessibleTotal = typeof accessibleQuestions === "number" ? accessibleQuestions : undefined;
-  const accessibleTotalPages = planAccessibleTotal ? Math.max(1, Math.ceil(planAccessibleTotal / itemsPerPage)) : totalPages;
+  const planAccessibleTotal =
+    typeof accessibleQuestions === "number" ? accessibleQuestions : undefined;
+  const accessibleTotalPages = planAccessibleTotal
+    ? Math.max(1, Math.ceil(planAccessibleTotal / itemsPerPage))
+    : totalPages;
   const effectiveTotalPages = Math.min(totalPages, accessibleTotalPages);
-
-
-
 
   const paginatedData = suggestedQuestions || [];
 
   // Determine locked items and prepare unlocked list for rendering
   const hasLockedOnPage = (paginatedData || []).some((q) => q?.isLocked);
-  const unlockedPaginatedData = (paginatedData || []).filter((q) => !q?.isLocked);
-  const lockedCount = typeof lockedQuestionsCount === "number"
-    ? lockedQuestionsCount
-    : (paginatedData || []).filter((q) => q?.isLocked).length;
-
+  const unlockedPaginatedData = (paginatedData || []).filter(
+    (q) => !q?.isLocked
+  );
+  const lockedCount =
+    typeof lockedQuestionsCount === "number"
+      ? lockedQuestionsCount
+      : (paginatedData || []).filter((q) => q?.isLocked).length;
 
   // Range label using accessible total (plan limit) when available
-  const totalAvailable = planAccessibleTotal ?? pagination?.totalQuestions ?? totalItems;
-  const startIndex = totalAvailable === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const totalAvailable =
+    planAccessibleTotal ?? pagination?.totalQuestions ?? totalItems;
+  const startIndex =
+    totalAvailable === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalAvailable);
-  const beyondAccessible = typeof planAccessibleTotal === "number" && currentPage > accessibleTotalPages;
+  const beyondAccessible =
+    typeof planAccessibleTotal === "number" &&
+    currentPage > accessibleTotalPages;
   const rangeLabel =
     totalAvailable === 0
       ? "0/0"
       : beyondAccessible
-        ? `${planAccessibleTotal}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`
-        : startIndex === endIndex
-          ? `${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`
-          : `${startIndex}-${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"}`;
-
-
+      ? `${planAccessibleTotal}/${totalAvailable} ${
+          totalAvailable > 1 ? "Questions" : "Question"
+        }`
+      : startIndex === endIndex
+      ? `${endIndex}/${totalAvailable} ${
+          totalAvailable > 1 ? "Questions" : "Question"
+        }`
+      : `${startIndex}-${endIndex}/${totalAvailable} ${
+          totalAvailable > 1 ? "Questions" : "Question"
+        }`;
 
   // Update mandatory status
   useEffect(() => {
@@ -517,7 +541,6 @@ const SuggestedQuestionsComponent = ({
       return updatedStatus;
     });
   }, [interviewQuestionsList, interviewQuestionsLists]);
-
 
   // Handlers
   const handleToggle = (questionId, item) => {
@@ -546,7 +569,7 @@ const SuggestedQuestionsComponent = ({
   const onClickAddButton = async (item) => {
     // Check if question is locked
     if (item.isLocked) {
-      navigate('/account-settings/subscription');
+      navigate("/account-settings/subscription");
       return;
     }
 
@@ -611,8 +634,6 @@ const SuggestedQuestionsComponent = ({
     }
   };
 
-
-
   const onClickCrossIcon = (skill) => {
     setSelectedSkills((prev) => prev.filter((s) => s !== skill));
   };
@@ -670,13 +691,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 1
             ? {
-              ...category,
-              options: category.options.map((opt) =>
-                opt.type.toLowerCase() === item
-                  ? { ...opt, isChecked: false }
-                  : opt
-              ),
-            }
+                ...category,
+                options: category.options.map((opt) =>
+                  opt.type.toLowerCase() === item
+                    ? { ...opt, isChecked: false }
+                    : opt
+                ),
+              }
             : category
         )
       );
@@ -686,13 +707,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 2
             ? {
-              ...category,
-              options: category.options.map((opt) =>
-                opt.level.toLowerCase() === item
-                  ? { ...opt, isChecked: false }
-                  : opt
-              ),
-            }
+                ...category,
+                options: category.options.map((opt) =>
+                  opt.level.toLowerCase() === item
+                    ? { ...opt, isChecked: false }
+                    : opt
+                ),
+              }
             : category
         )
       );
@@ -703,13 +724,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 3
             ? {
-              ...category,
-              options: category.options.map((opt) =>
-                String(opt.value).toLowerCase() === item
-                  ? { ...opt, isChecked: false }
-                  : opt
-              ),
-            }
+                ...category,
+                options: category.options.map((opt) =>
+                  String(opt.value).toLowerCase() === item
+                    ? { ...opt, isChecked: false }
+                    : opt
+                ),
+              }
             : category
         )
       );
@@ -719,13 +740,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 4
             ? {
-              ...category,
-              options: category.options.map((opt) =>
-                String(opt.value).toLowerCase() === item
-                  ? { ...opt, isChecked: false }
-                  : opt
-              ),
-            }
+                ...category,
+                options: category.options.map((opt) =>
+                  String(opt.value).toLowerCase() === item
+                    ? { ...opt, isChecked: false }
+                    : opt
+                ),
+              }
             : category
         )
       );
@@ -919,8 +940,6 @@ const SuggestedQuestionsComponent = ({
   const SkeletonLoader = () => {
     return (
       <div>
-       
-
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <ul className="flex flex-col gap-4 pr-2">
             {Array(4)
@@ -1094,8 +1113,8 @@ const SuggestedQuestionsComponent = ({
         onClickLeftPaginationIcon={onClickLeftPaginationIcon}
         onClickRightPagination={onClickRightPagination}
         type={type}
+        isMeetingSidePanel={isMeetingSidePanel}
       />
-
 
       {/* v1.0.5 -----------------------------------------------------------------> */}
       {isLoading ? (
@@ -1131,292 +1150,357 @@ const SuggestedQuestionsComponent = ({
               ...categoryFilterItems,
               ...technologyFilterItems,
             ].length > 0 && (
-                /* v1.0.6 <---------------------------------------------------------------------- */
-                /* v1.0.8 <---------------------------------------------------------------------- */
-                <div className="flex items-center flex-wrap px-4 pt-2 mb-3 gap-3">
-                  <h3 className="font-medium text-gray-700 text-sm">
-                    Filters applied:
-                  </h3>
-                  <ul className="flex gap-2 flex-wrap">
-                    {[
-                      ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
-                      ...difficultyLevelFilterItems,
-                      ...categoryFilterItems,
-                      ...technologyFilterItems,
-                    ].map((filterItem, index) => (
-                      <li
-                        key={index}
-                        className="flex items-center gap-1 rounded-full border border-custom-blue px-3 py-1 text-custom-blue font-medium bg-blue-50 text-sm"
-                      >
-                        <span>{capitalizeFirstLetter(filterItem)}</span>
-                        <button
-                          className="hover:text-red-500 transition-colors"
-                          onClick={() =>
-                            onClickRemoveSelectedFilterItem(filterItem)
-                          }
-                          type="button"
-                        >
-                          <X size={14} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                // v1.0.8 ---------------------------------------------------------------------->
-                // v1.0.6 ---------------------------------------------------------------------->
-              )}
-            {/* v1.0.7 <----------------------------------------------------------------------- */}
-            <ul className="flex flex-col gap-4 pr-2 h-[calc(100vh-210px)] overflow-y-auto">
-              {/* Render only unlocked cards first */}
-              {unlockedPaginatedData.length > 0 ? (
-                unlockedPaginatedData.map((item, index) => {
-                  // Regular unlocked card
-                  return (
-                    <div
+              /* v1.0.6 <---------------------------------------------------------------------- */
+              /* v1.0.8 <---------------------------------------------------------------------- */
+              <div className="flex items-center flex-wrap px-4 pt-2 mb-3 gap-3">
+                <h3 className="font-medium text-gray-700 text-sm">
+                  Filters applied:
+                </h3>
+                <ul className="flex gap-2 flex-wrap">
+                  {[
+                    ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
+                    ...difficultyLevelFilterItems,
+                    ...categoryFilterItems,
+                    ...technologyFilterItems,
+                  ].map((filterItem, index) => (
+                    <li
                       key={index}
-                      className="border rounded-lg h-full shadow-sm transition-shadow text-sm border-gray-200 hover:shadow-md"
+                      className="flex items-center gap-1 rounded-full border border-custom-blue px-3 py-1 text-custom-blue font-medium bg-blue-50 text-sm"
                     >
-                      <div className="flex justify-between items-center border-b border-gray-200 px-4">
-                        {/* v1.0.6 <---------------------------------------------------------------------------- */}
-                        <div className="flex items-start justify-start sm:w-[50%] md:w-[58%] w-[80%]">
-                          <div
-                            className="flex items-center gap-2 justify-center rounded-md px-3 py-1 text-white text-sm transition-colors bg-custom-blue/80"
-                          >
-                            <p className="font-medium">{item.technology[0]}</p>
-                          </div>
-                        </div>
-                        {/* v1.0.6 ----------------------------------------------------------------------------> */}
-                        <div
-                          className={`flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${type === "interviewerSection" ||
-                              type === "feedback" ||
-                              type === "assessment"
-                              ? "w-[15%]"
-                              : "sm:w-[28%] md:w-[20%] w-[10%]"
-                            }`}
-                        >
-                          <p
-                            className={`w-16 text-center ${getDifficultyStyles(
-                              item.difficultyLevel
-                            )} rounded-full py-1`}
-                            title="Difficulty Level"
-                          >
-                            {item.difficultyLevel}
-                          </p>
-                        </div>
-                        {fromScheduleLater && (
-                          <div className="flex justify-center text-center h-12 sm:border-0 border-r border-gray-200">
-                            <div className="flex items-center w-14 justify-center">
-                              <button
-                                onClick={() => {
-                                  if (
-                                    interviewQuestionsLists?.some(
-                                      (q) => q.questionId === item._id
-                                    )
-                                  ) {
-                                    handleToggle(item._id, item);
-                                  }
-                                }}
-                                className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
-                                    ? "bg-blue-100 border-custom-blue justify-end"
-                                    : "bg-gray-200 border-gray-300 justify-start"
-                                  }`}
-                                type="button"
-                              >
-                                <span
-                                  className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
-                                      ? "bg-custom-blue"
-                                      : "bg-gray-400"
-                                    }`}
-                                />
-                              </button>
+                      <span>{capitalizeFirstLetter(filterItem)}</span>
+                      <button
+                        className="hover:text-red-500 transition-colors"
+                        onClick={() =>
+                          onClickRemoveSelectedFilterItem(filterItem)
+                        }
+                        type="button"
+                      >
+                        <X size={14} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              // v1.0.8 ---------------------------------------------------------------------->
+              // v1.0.6 ---------------------------------------------------------------------->
+            )}
+            {/* v1.0.7 <----------------------------------------------------------------------- */}
+            <ul
+              // className="flex flex-col gap-4 pr-2 h-[calc(100vh-362px)] overflow-y-auto"
+              className="flex flex-col gap-4 pr-2 overflow-y-auto pb-6"
+              style={{
+                height: `calc(100vh - ${isMeetingSidePanel ? 362 : 206}px)`,
+              }}
+            >
+              {/* Render only unlocked cards first */}
+              {unlockedPaginatedData.length > 0
+                ? unlockedPaginatedData.map((item, index) => {
+                    // Regular unlocked card
+                    return (
+                      <div
+                        key={index}
+                        className="border rounded-lg h-full shadow-sm transition-shadow text-sm border-gray-200 hover:shadow-md"
+                      >
+                        <div className="flex justify-between items-center border-b border-gray-200 px-4">
+                          {/* v1.0.6 <---------------------------------------------------------------------------- */}
+                          <div className="flex items-start justify-start sm:w-[50%] md:w-[58%] w-[80%]">
+                            <div className="flex items-center gap-2 justify-center rounded-md px-3 py-1 text-white text-sm transition-colors bg-custom-blue/80">
+                              <p className="text-xs font-medium">
+                                {item.technology[0]}
+                              </p>
                             </div>
                           </div>
-                        )}
-                        {(type === "interviewerSection" ||
-                          type === "feedback") && (
+                          {/* v1.0.6 ----------------------------------------------------------------------------> */}
+                          <div
+                            className={`text-xs font-medium flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${
+                              type === "interviewerSection" ||
+                              type === "feedback" ||
+                              type === "assessment"
+                                ? "w-[15%]"
+                                : "sm:w-[28%] md:w-[20%] w-[10%]"
+                            } ${isMeetingSidePanel && "w-[20%] mx-4"}`}
+                          >
+                            <p
+                              className={`w-16 text-center ${getDifficultyStyles(
+                                item.difficultyLevel
+                              )} rounded-full py-1`}
+                              title="Difficulty Level"
+                            >
+                              {item.difficultyLevel}
+                            </p>
+                          </div>
+                          {fromScheduleLater && (
+                            <div className="flex justify-center text-center h-12 sm:border-0 border-r border-gray-200">
+                              <div className="flex items-center w-14 justify-center">
+                                <button
+                                  onClick={() => {
+                                    if (
+                                      interviewQuestionsLists?.some(
+                                        (q) => q.questionId === item._id
+                                      )
+                                    ) {
+                                      handleToggle(item._id, item);
+                                    }
+                                  }}
+                                  className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${
+                                    mandatoryStatus[item._id]
+                                      ? "bg-blue-100 border-custom-blue justify-end"
+                                      : "bg-gray-200 border-gray-300 justify-start"
+                                  }`}
+                                  type="button"
+                                >
+                                  <span
+                                    className={`w-3 h-3 rounded-full transition-colors ${
+                                      mandatoryStatus[item._id]
+                                        ? "bg-custom-blue"
+                                        : "bg-gray-400"
+                                    }`}
+                                  />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                          {(type === "interviewerSection" ||
+                            type === "feedback") && (
                             <div className="p-1 flex justify-center w-[8%]">
                               {item.isLocked ? (
                                 <button
                                   type="button"
-                                  onClick={() => navigate('/account-settings/subscription')}
-                                  className="sm:flex sm:items-center sm:justify-center bg-orange-500 py-1 px-2 text-white rounded-md transition-colors hover:bg-orange-600"
+                                  onClick={() =>
+                                    navigate("/account-settings/subscription")
+                                  }
+                                  className="text-xs font-medium sm:flex sm:items-center sm:justify-center bg-orange-500 py-1 px-2 text-white rounded-md transition-colors hover:bg-orange-600"
                                 >
                                   <Lock className="h-4 w-4 mr-1" />
-                                  <span className="sm:hidden inline">Upgrade</span>
+                                  <span
+                                    className={`${
+                                      isMeetingSidePanel
+                                        ? "hidden"
+                                        : "sm:hidden inline"
+                                    }`}
+                                  >
+                                    Upgrade
+                                  </span>
                                 </button>
                               ) : interviewQuestionsLists?.some(
-                                (q) => q.questionId === item._id
-                              ) ? (
+                                  (q) => q.questionId === item._id
+                                ) ? (
                                 <button
                                   type="button"
-                                  onClick={() => onClickRemoveQuestion(item?._id)}
-                                  className="sm:flex sm:items-center sm:justify-center rounded-md md:ml-4 bg-gray-500 px-2 py-1 text-white hover:bg-gray-600 transition-colors"
+                                  onClick={() =>
+                                    onClickRemoveQuestion(item?._id)
+                                  }
+                                  className="text-xs font-medium sm:flex sm:items-center sm:justify-center rounded-md md:ml-4 bg-gray-500 px-2 py-1 text-white hover:bg-gray-600 transition-colors"
                                 >
-                                  <span className="sm:hidden inline">Remove</span>
+                                  <span
+                                    className={`${
+                                      isMeetingSidePanel
+                                        ? "hidden"
+                                        : "sm:hidden inline"
+                                    }`}
+                                  >
+                                    Remove
+                                  </span>
                                   <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                                 </button>
                               ) : (
                                 <button
                                   type="button"
-                                  className="sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 px-2 text-white rounded-md transition-colors"
+                                  className="text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 px-2 text-white rounded-md transition-colors"
                                   onClick={() => onClickAddButton(item)}
                                 >
-                                  <span className="sm:hidden inline">Add</span>
+                                  <span
+                                    className={`${
+                                      isMeetingSidePanel
+                                        ? "hidden"
+                                        : "sm:hidden inline"
+                                    }`}
+                                  >
+                                    Add
+                                  </span>
                                   <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                                 </button>
                               )}
                             </div>
                           )}
-                        {type === "assessment" && (
-                          <div className="w-[8%] flex justify-center">
-                            {addedSections.some((s) =>
-                              s.Questions.some((q) => q.questionId === item._id)
-                            ) ? (
-                              <button
-                                type="button"
-                                onClick={() => onClickRemoveQuestion(item?._id)}
-                                className="sm:flex sm:items-center sm:justify-center rounded-md bg-red-500 px-2 py-1 text-white hover:bg-red-600 transition-colors"
-                              >
-                                <span className="sm:hidden inline">Remove</span>
-                                <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                              </button>
-                            ) : (
-                              // (
-                              //   <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
-                              //     ✓ <span className="sm:hidden inline">Added</span>
-                              //   </span>
-                              // )
-                              <button
-                                type="button"
-                                className={`sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${addedSections.reduce(
-                                  (acc, s) => acc + s.Questions.length,
-                                  0
-                                ) >= questionsLimit
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : ""
+                          {type === "assessment" && (
+                            <div className="w-[8%] flex justify-center">
+                              {addedSections.some((s) =>
+                                s.Questions.some(
+                                  (q) => q.questionId === item._id
+                                )
+                              ) ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    onClickRemoveQuestion(item?._id)
+                                  }
+                                  className="text-xs font-medium sm:flex sm:items-center sm:justify-center rounded-md bg-red-500 px-2 py-1 text-white hover:bg-red-600 transition-colors"
+                                >
+                                  <span
+                                    className={`${
+                                      isMeetingSidePanel
+                                        ? "hidden"
+                                        : "sm:hidden inline"
+                                    }`}
+                                  >
+                                    Remove
+                                  </span>
+                                  <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
+                                </button>
+                              ) : (
+                                // (
+                                //   <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
+                                //     ✓ <span className="sm:hidden inline">Added</span>
+                                //   </span>
+                                // )
+                                <button
+                                  type="button"
+                                  className={`text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${
+                                    addedSections.reduce(
+                                      (acc, s) => acc + s.Questions.length,
+                                      0
+                                    ) >= questionsLimit
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
                                   }`}
-                                onClick={() => onClickAddButton(item)}
-                                disabled={
-                                  addedSections.reduce(
-                                    (acc, s) => acc + s.Questions.length,
-                                    0
-                                  ) >= questionsLimit
-                                }
-                              >
-                                <span className="sm:hidden inline">Add</span>
-                                <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                              </button>
-                            )}
-                          </div>
-                        )}
+                                  onClick={() => onClickAddButton(item)}
+                                  disabled={
+                                    addedSections.reduce(
+                                      (acc, s) => acc + s.Questions.length,
+                                      0
+                                    ) >= questionsLimit
+                                  }
+                                >
+                                  <span
+                                    className={`${
+                                      isMeetingSidePanel
+                                        ? "hidden"
+                                        : "sm:hidden inline"
+                                    }`}
+                                  >
+                                    Add
+                                  </span>
+                                  <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
+                                </button>
+                              )}
+                            </div>
+                          )}
 
-                        {!type && !fromScheduleLater && (
-                          <div className="flex justify-center relative">
-                            <button
-                              type="button"
-                              className="border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
-                              onClick={() => toggleDropdown(item._id)}
-                            >
-                              Add{" "}
-                              <span className="sm:hidden md:hidden inline">
-                                to list
-                              </span>
-                            </button>
-                            {dropdownOpen === item._id && (
-                              <MyQuestionList
-                                question={item}
-                                closeDropdown={closeDropdown}
-                                isInterviewType={
-                                  dropdownValue === "Interview Questions"
-                                }
-                              />
-                            )}
+                          {!type && !fromScheduleLater && (
+                            <div className="flex justify-center relative">
+                              <button
+                                type="button"
+                                className="text-xs font-medium border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
+                                onClick={() => toggleDropdown(item._id)}
+                              >
+                                Add{" "}
+                                <span
+                                  className={`${
+                                    isMeetingSidePanel
+                                      ? "hidden"
+                                      : "sm:hidden md:hidden inline"
+                                  }`}
+                                >
+                                  to list
+                                </span>
+                              </button>
+                              {dropdownOpen === item._id && (
+                                <MyQuestionList
+                                  question={item}
+                                  closeDropdown={closeDropdown}
+                                  isInterviewType={
+                                    dropdownValue === "Interview Questions"
+                                  }
+                                />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4 border-b relative">
+                          <div className="flex items-start w-full pt-2 gap-2">
+                            <span className="sm:text-sm font-semibold">
+                              {(currentPage - 1) * itemsPerPage + index + 1}.
+                            </span>
+                            <p className="sm:text-sm text-gray-700 break-words w-full">
+                              {item.questionText}
+                            </p>
                           </div>
-                        )}
-                      </div>
-                      <div className="p-4 border-b relative">
-                        <div className="flex items-start w-full pt-2 gap-2">
-                          <span className="sm:text-sm font-semibold">
-                            {(currentPage - 1) * itemsPerPage + index + 1}.
-                          </span>
-                          <p className="sm:text-sm text-gray-700 break-words w-full">
-                            {item.questionText}
+                          {item.questionType === "MCQ" && item.options && (
+                            <div className="mb-2 ml-12 mt-2">
+                              <ul className="list-none">
+                                {(() => {
+                                  const isAnyOptionLong = item.options.some(
+                                    (option) => option.length > 55
+                                  );
+                                  return item.options.map((option, idx) => (
+                                    <li
+                                      key={idx}
+                                      className={`${
+                                        isAnyOptionLong
+                                          ? "block w-full"
+                                          : "inline-block w-1/2"
+                                      } mb-2`}
+                                    >
+                                      <span className="text-gray-700">
+                                        {option}
+                                      </span>
+                                    </li>
+                                  ));
+                                })()}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <p className="text-sm break-words whitespace-pre-wrap">
+                            <span className="sm:text-sm font-medium text-gray-700">
+                              Answer:{" "}
+                            </span>
+                            <span className="sm:text-sm text-gray-600">
+                              {item.questionType === "Programming"
+                                ? renderSolutions(item.solutions)
+                                : item.correctAnswer}
+                            </span>
+                          </p>
+                          <p className="sm:text-sm font-medium pt-2">
+                            Tags:{" "}
+                            <span className="text-sm text-gray-600">
+                              {Array.isArray(item.tags)
+                                ? item.tags.join(", ")
+                                : String(item.tags || "")}
+                            </span>
                           </p>
                         </div>
-                        {item.questionType === "MCQ" && item.options && (
-                          <div className="mb-2 ml-12 mt-2">
-                            <ul className="list-none">
-                              {(() => {
-                                const isAnyOptionLong = item.options.some(
-                                  (option) => option.length > 55
-                                );
-                                return item.options.map((option, idx) => (
-                                  <li
-                                    key={idx}
-                                    className={`${isAnyOptionLong
-                                        ? "block w-full"
-                                        : "inline-block w-1/2"
-                                      } mb-2`}
-                                  >
-                                    <span className="text-gray-700">
-                                      {option}
-                                    </span>
-                                  </li>
-                                ));
-                              })()}
-                            </ul>
-                          </div>
-                        )}
                       </div>
-                      <div className="p-4">
-                        <p className="text-sm break-words whitespace-pre-wrap">
-                          <span className="sm:text-sm font-medium text-gray-700">
-                            Answer:{" "}
-                          </span>
-                          <span className="sm:text-sm text-gray-600">
-                            {item.questionType === "Programming"
-                              ? renderSolutions(item.solutions)
-                              : item.correctAnswer}
-                          </span>
-                        </p>
-                        <p className="sm:text-sm font-medium pt-2">
-                          Tags:{" "}
-                          <span className="text-sm text-gray-600">
-                            {Array.isArray(item.tags)
-                              ? item.tags.join(", ")
-                              : String(item.tags || "")}
-                          </span>
-                        </p>
+                    );
+                  })
+                : !hasLockedOnPage && (
+                    <div className="h-full flex flex-col gap-4 justify-center items-center text-center mt-24">
+                      <div className="text-gray-400">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-12 w-12"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
                       </div>
+                      <h2 className="sm:text-sm text-gray-700 font-semibold text-lg">
+                        No Questions Found
+                      </h2>
+                      <p className="sm:text-sm text-gray-500">
+                        Try again with different filter options
+                      </p>
                     </div>
-                  );
-                })
-              ) : (!hasLockedOnPage && (
-                <div className="h-full flex flex-col gap-4 justify-center items-center text-center mt-24">
-                  <div className="text-gray-400">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-12 w-12"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="sm:text-sm text-gray-700 font-semibold text-lg">
-                    No Questions Found
-                  </h2>
-                  <p className="sm:text-sm text-gray-500">
-                    Try again with different filter options
-                  </p>
-                </div>
-              ))}
+                  )}
 
               {/* Show a single lock banner at the end if any items are locked on this page */}
               {hasLockedOnPage && (
@@ -1427,12 +1511,19 @@ const SuggestedQuestionsComponent = ({
                   <div className="relative min-h-[200px] flex items-center justify-center p-8">
                     <div className="flex flex-col items-center justify-center text-center">
                       <Lock className="w-12 h-12 text-gray-400 mb-3" />
-                      <p className="text-gray-700 font-medium text-lg mb-1">You’ve reached your plan limit</p>
+                      <p className="text-gray-700 font-medium text-lg mb-1">
+                        You’ve reached your plan limit
+                      </p>
                       <p className="text-gray-500 text-sm mb-4">
-                        {(planAccessibleTotal ?? accessibleQuestions ?? 0)} accessible • {(totalQuestionsFromAPI - accessibleQuestions)  ?? 0} Questions available
+                        {planAccessibleTotal ?? accessibleQuestions ?? 0}{" "}
+                        accessible •{" "}
+                        {totalQuestionsFromAPI - accessibleQuestions ?? 0}{" "}
+                        Questions available
                       </p>
                       <button
-                        onClick={() => navigate('/account-settings/subscription')}
+                        onClick={() =>
+                          navigate("/account-settings/subscription")
+                        }
                         className="px-6 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
                       >
                         Upgrade to unlock
