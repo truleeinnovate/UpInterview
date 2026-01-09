@@ -10,6 +10,8 @@ import {
   REJECT_OPTIONS,
   EVALUATED_OPTIONS,
   ROUND_OUTCOME_OPTIONS,
+  COMPLETE_OPTIONS,
+  WITHDRAW_OPTIONS, // Use consistent imports from roundHistoryOptions
 } from "../../../../../utils/roundHistoryOptions";
 
 // Policy warning component - only for External interviews
@@ -24,16 +26,16 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
     actionType === "Cancel"
       ? "Cancelled"
       : actionType === "NoShow"
-      ? "NoShow"
-      : roundStatus;
+        ? "NoShow"
+        : roundStatus;
 
   // Action label for display
   const actionLabel =
     actionType === "Cancel"
       ? "Cancelled"
       : actionType === "NoShow"
-      ? "Marked as No Show"
-      : "Rescheduled";
+        ? "Marked as No Show"
+        : "Rescheduled";
 
   useEffect(() => {
     if (!dateTime || !policyRoundStatus) return;
@@ -105,8 +107,8 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
           {actionType === "Cancel"
             ? "cancel"
             : actionType === "NoShow"
-            ? "mark as no show"
-            : "reschedule"}
+              ? "mark as no show"
+              : "reschedule"}
         </strong>{" "}
         a confirmed <strong>external interview</strong>.
       </p>
@@ -190,19 +192,23 @@ const DateChangeConfirmationModal = ({
   const isNoShowAction = actionType === "NoShow";
   const isRejectAction = actionType === "Reject";
   const isEvaluatedAction = actionType === "Evaluated";
+  const isWithdrawAction = actionType === "Withdraw";
+
   const requiresReason =
-    isCancelAction || isNoShowAction || isRejectAction || isEvaluatedAction;
+    isCancelAction || isNoShowAction || isRejectAction || isEvaluatedAction || isWithdrawAction;
 
   // Get the appropriate options for the dropdown
   const reasonOptions = isCancelAction
     ? CANCEL_OPTIONS
     : isNoShowAction
-    ? NO_SHOW_OPTIONS
-    : isRejectAction
-    ? REJECT_OPTIONS
-    : isEvaluatedAction
-    ? EVALUATED_OPTIONS
-    : [];
+      ? NO_SHOW_OPTIONS
+      : isRejectAction
+        ? REJECT_OPTIONS
+        : isEvaluatedAction
+          ? EVALUATED_OPTIONS
+          : isWithdrawAction
+            ? WITHDRAW_OPTIONS
+            : [];
 
   const dropdownOptions = reasonOptions.map((opt) => ({
     value: opt.value,
@@ -228,10 +234,10 @@ const DateChangeConfirmationModal = ({
 
     const payload = requiresReason
       ? {
-          reason: selectedReason,
-          comment: showOtherField ? otherText.trim() : undefined,
-          ...(isEvaluatedAction && { roundOutcome }),
-        }
+        reason: selectedReason,
+        comment: showOtherField ? otherText.trim() : undefined,
+        ...(isEvaluatedAction && { roundOutcome }),
+      }
       : {};
 
     if (onConfirm) onConfirm(payload);
@@ -243,6 +249,9 @@ const DateChangeConfirmationModal = ({
     if (isNoShowAction) return "Mark as No Show";
     if (isRejectAction) return "Reject Candidate";
     if (isEvaluatedAction) return "Mark as Evaluated";
+    if (isWithdrawAction) return "Withdraw Application";
+    if (actionType === "Complete") return "Complete Interview";
+    if (actionType === "Select") return "Select Candidate";
     return "Confirm Interview Change";
   };
 
@@ -253,6 +262,9 @@ const DateChangeConfirmationModal = ({
     if (isNoShowAction) return "Confirm No Show";
     if (isRejectAction) return "Confirm Reject";
     if (isEvaluatedAction) return "Confirm Evaluation";
+    if (isWithdrawAction) return "Confirm Withdraw";
+    if (actionType === "Complete") return "Confirm Completion";
+    if (actionType === "Select") return "Confirm Selection";
     if (isExternal && isRequestSent) return "Proceed & Cancel Invitations";
     if (isExternal && isScheduledOrReschedule) return "Proceed & Apply Policy";
     return "Proceed & Clear Interviewers";
@@ -279,103 +291,67 @@ const DateChangeConfirmationModal = ({
           {(isCancelAction ||
             isNoShowAction ||
             isRejectAction ||
-            isEvaluatedAction) && (
-            <>
-              {/* Show policy warning ONLY for External Cancel action */}
-              {isExternal && isCancelAction && (
-                <SettlementPolicyWarning
-                  dateTime={combinedDateTime}
-                  roundStatus={status}
-                  actionType={actionType}
-                />
-              )}
-
-              {/* For Internal, NoShow, Reject, or Evaluated show simple message */}
-              {(isInternal ||
-                isRejectAction ||
-                isNoShowAction ||
-                isEvaluatedAction) && (
-                <div className="text-sm text-gray-700 leading-relaxed">
-                  <p>
-                    You are about to{" "}
-                    <strong>
-                      {isCancelAction
-                        ? "cancel"
-                        : isNoShowAction
-                        ? "mark as no show"
-                        : isRejectAction
-                        ? "reject"
-                        : "mark as evaluated"}
-                    </strong>{" "}
-                    this {isRejectAction ? "candidate" : "round"}.
-                  </p>
-                </div>
-              )}
-
-              {/* Reason Dropdown - Always show for these actions */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for{" "}
-                  {isCancelAction
-                    ? "Cancellation"
-                    : isNoShowAction
-                    ? "No Show"
-                    : isRejectAction
-                    ? "Rejection"
-                    : "Evaluation"}
-                </label>
-                <DropdownSelect
-                  options={dropdownOptions}
-                  value={
-                    dropdownOptions.find(
-                      (opt) => opt.value === selectedReason
-                    ) || null
-                  }
-                  onChange={(selectedOption) => {
-                    setSelectedReason(selectedOption?.value || "");
-                  }}
-                  placeholder="Select a reason"
-                  isClearable
-                  menuPortalTarget={document.body}
-                  styles={{
-                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                  }}
-                />
-              </div>
-
-              {/* Other reason text field */}
-              {showOtherField && (
-                <div className="mt-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Specify other reason
-                  </label>
-                  <input
-                    type="text"
-                    value={otherText}
-                    onChange={(e) => setOtherText(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="Enter reason..."
+            isEvaluatedAction ||
+            isWithdrawAction) && (
+              <>
+                {/* Show policy warning ONLY for External Cancel action */}
+                {isExternal && isCancelAction && (
+                  <SettlementPolicyWarning
+                    dateTime={combinedDateTime}
+                    roundStatus={status}
+                    actionType={actionType}
                   />
-                </div>
-              )}
+                )}
 
-              {/* Round Outcome Dropdown - Only for Evaluated action */}
-              {isEvaluatedAction && (
+                {/* For Internal, NoShow, Reject, or Evaluated show simple message */}
+                {(isInternal ||
+                  isRejectAction ||
+                  isNoShowAction ||
+                  isEvaluatedAction) && (
+                    <div className="text-sm text-gray-700 leading-relaxed">
+                      <p>
+                        You are about to{" "}
+                        <strong>
+                          {isCancelAction
+                            ? "cancel"
+                            : isNoShowAction
+                              ? "mark as no show"
+                              : isRejectAction
+                                ? "reject"
+                                : isWithdrawAction
+                                  ? "withdraw"
+                                  : "mark as evaluated"}
+                        </strong>{" "}
+                        this {isRejectAction ? "candidate" : "round"}.
+                      </p>
+                    </div>
+                  )}
+
+                {/* Reason Dropdown - Always show for these actions */}
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Round Outcome <span className="text-red-500">*</span>
+                    Reason for{" "}
+                    {isCancelAction
+                      ? "Cancellation"
+                      : isNoShowAction
+                        ? "No Show"
+                        : isRejectAction
+                          ? "Rejection"
+                          : isWithdrawAction
+                            ? "Withdrawal"
+                            : "Evaluation"}
                   </label>
                   <DropdownSelect
-                    options={ROUND_OUTCOME_OPTIONS}
+                    options={dropdownOptions}
                     value={
-                      ROUND_OUTCOME_OPTIONS.find(
-                        (opt) => opt.value === roundOutcome
+                      dropdownOptions.find(
+                        (opt) => opt.value === selectedReason
                       ) || null
                     }
                     onChange={(selectedOption) => {
-                      setRoundOutcome(selectedOption?.value || "");
+                      setSelectedReason(selectedOption?.value || "");
                     }}
-                    placeholder="Select outcome"
+                    placeholder="Select a reason"
                     isClearable
                     menuPortalTarget={document.body}
                     styles={{
@@ -383,12 +359,65 @@ const DateChangeConfirmationModal = ({
                     }}
                   />
                 </div>
+
+                {/* Other reason text field */}
+                {showOtherField && (
+                  <div className="mt-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Specify other reason
+                    </label>
+                    <input
+                      type="text"
+                      value={otherText}
+                      onChange={(e) => setOtherText(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                      placeholder="Enter reason..."
+                    />
+                  </div>
+                )}
+
+                {/* Round Outcome Dropdown - Only for Evaluated action */}
+                {isEvaluatedAction && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Round Outcome <span className="text-red-500">*</span>
+                    </label>
+                    <DropdownSelect
+                      options={ROUND_OUTCOME_OPTIONS}
+                      value={
+                        ROUND_OUTCOME_OPTIONS.find(
+                          (opt) => opt.value === roundOutcome
+                        ) || null
+                      }
+                      onChange={(selectedOption) => {
+                        setRoundOutcome(selectedOption?.value || "");
+                      }}
+                      placeholder="Select outcome"
+                      isClearable
+                      menuPortalTarget={document.body}
+                      styles={{
+                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+
+          {/* Simple Confirmation for Complete/Select */}
+          {(actionType === "Complete" || actionType === "Select") && (
+            <div className="text-sm text-gray-700 leading-relaxed">
+              <p>
+                Are you sure you want to <strong>{actionType === "Complete" ? "complete" : "select"}</strong> this interview?
+              </p>
+              {actionType === "Complete" && (
+                <p className="mt-2 text-gray-500 text-xs">This will mark all rounds as completed.</p>
               )}
-            </>
+            </div>
           )}
 
           {/* Reschedule/Date Change Actions (original behavior) */}
-          {!requiresReason && (
+          {!requiresReason && actionType !== "Complete" && actionType !== "Select" && (
             <>
               {/* Case 1: External + RequestSent */}
               {isExternal && isRequestSent && (
@@ -452,11 +481,10 @@ const DateChangeConfirmationModal = ({
           <button
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
-            className={`px-6 py-2.5 rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-              isCancelAction || isNoShowAction || isEvaluatedAction
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-red-600 text-white hover:bg-red-700"
-            }`}
+            className={`px-6 py-2.5 rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isCancelAction || isNoShowAction || isEvaluatedAction || isRejectAction || isWithdrawAction
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "bg-custom-blue text-white hover:bg-custom-blue/90"
+              }`}
           >
             {isLoading ? (
               <>

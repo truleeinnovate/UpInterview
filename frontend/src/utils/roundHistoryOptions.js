@@ -85,3 +85,18 @@ export const INTERVIEW_INCOMPLETE_REASONS = [
   { label: "Rescheduled", value: "rescheduled" },
   { label: "Other", value: "other" },
 ];
+
+export const COMPLETE_OPTIONS = [
+  { label: "Candidate hired", value: "candidate_hired" },
+  { label: "Interview process finished", value: "interview_process_finished" },
+  { label: "All rounds completed", value: "all_rounds_completed" },
+  { label: "Other", value: "other" },
+];
+
+export const WITHDRAW_OPTIONS = [
+  { label: "Candidate took another offer", value: "candidate_took_another_offer" },
+  { label: "Salary not matching", value: "salary_not_matching" },
+  { label: "Personal reasons", value: "personal_reasons" },
+  { label: "Not interested", value: "not_interested" },
+  { label: "Other", value: "other" },
+];

@@ -11,9 +11,10 @@ export const notify = {
       position: "top-right",
     }),
 
-  error: (msg) =>
+  error: (msg, options = {}) =>
     toast.error(msg, {
       position: "top-right",
+      ...options,
     }),
 
   info: (msg) =>

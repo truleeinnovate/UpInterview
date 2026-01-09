@@ -35,7 +35,14 @@ import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
 import InterviewProgress from "../components/InterviewProgress";
 import StatusBadge from "../../CommonCode-AllTabs/StatusBadge.jsx";
 import FinalFeedbackModal from "../components/FinalFeedbackModal";
-import CompletionReasonModal from "../components/CompletionReasonModal";
+
+import DateChangeConfirmationModal from "../components/DateChangeConfirmationModal"; // Import the modal
+import {
+  CANCEL_OPTIONS,
+  REJECT_OPTIONS,
+  COMPLETE_OPTIONS,
+  WITHDRAW_OPTIONS, // Ensure this exists or use appropriate options
+} from "../../../../../utils/roundHistoryOptions"; // Import options
 import SingleRoundView from "../components/SingleRoundView";
 import VerticalRoundsView from "../components/VerticalRoundsView";
 import PositionSlideDetails from "../../Position-Tab/PositionSlideDetails";
@@ -199,39 +206,105 @@ const InterviewDetail = () => {
     return true;
   };
 
-  const handleCompleteClick = async () => {
-    if (checkRoundStatuses("complete")) {
-      setShowCompletionModal(true);
+  // Modal state for actions
+  const [actionModal, setActionModal] = useState({
+    isOpen: false,
+    actionType: "", // "Complete", "Reject", "Cancel", "Withdraw", "Select"
+    title: "",
+    requiresReason: false,
+  });
+
+  const handleConfirmAction = async (data) => {
+    const { reason, comment } = data;
+    const actionType = actionModal.actionType; // Get actionType from state
+
+    // Use comment if reason is "other" (case-insensitive) or if reason is missing but comment exists
+    const finalReason = (reason?.toLowerCase() === 'other' || reason === '__other__') ? comment : reason;
+
+    // Map action type to status
+    let newStatus = "";
+    switch (actionType) {
+      case "Complete": newStatus = "Completed"; break;
+      case "Reject": newStatus = "Rejected"; break;
+      case "Cancel": newStatus = "Cancelled"; break;
+      case "Withdraw": newStatus = "Withdrawn"; break;
+      case "Select": newStatus = "Selected"; break;
+      default: return;
     }
+
+    try {
+      // Pass reason as currentReason for Reject/Cancel/Withdraw, or completionReason for Complete
+      const isCompletion = newStatus === "Completed";
+
+      await updateInterviewStatus({
+        interviewId: id,
+        status: newStatus,
+        reason: isCompletion ? finalReason : null, // completionReason
+        currentReason: !isCompletion ? finalReason : null, // currentReason
+      });
+
+      notify.success(`Interview ${newStatus.toLowerCase()} successfully`);
+      setActionModal((prev) => ({ ...prev, isOpen: false }));
+    } catch (error) {
+      console.error(`Error updating interview status to ${newStatus}:`, error);
+      notify.error(`Failed to update interview status`);
+    }
+  };
+
+  const handleCompleteClick = async () => {
+    // if (checkRoundStatuses("complete")) {
+    setActionModal({
+      isOpen: true,
+      actionType: "Complete",
+      title: "Complete Interview",
+      requiresReason: false, // Confirmation only
+    });
+    // }
   };
 
   const handleCancelClick = async () => {
-    if (!checkRoundStatuses("cancel")) {
-      return; // This will show the error modal through checkRoundStatuses
-    }
-
-    setIsModalOpen(true);
+    // if (!checkRoundStatuses("cancel")) {
+    //   return; 
+    // }
+    setActionModal({
+      isOpen: true,
+      actionType: "Cancel",
+      title: "Cancel Interview",
+      requiresReason: true,
+    });
   };
 
   const handleSelectClick = async () => {
-    if (checkRoundStatuses("select")) {
-      // TODO: Add select interview logic
-      notify.success("Interview selected successfully");
-    }
+    // if (checkRoundStatuses("select")) {
+    setActionModal({
+      isOpen: true,
+      actionType: "Select",
+      title: "Select Candidate",
+      requiresReason: false, // Confirmation only
+    });
+    // }
   };
 
   const handleRejectClick = async () => {
-    if (checkRoundStatuses("reject")) {
-      // TODO: Add reject interview logic
-      notify.success("Interview rejected successfully");
-    }
+    // if (checkRoundStatuses("reject")) {
+    setActionModal({
+      isOpen: true,
+      actionType: "Reject",
+      title: "Reject Candidate",
+      requiresReason: true,
+    });
+    // }
   };
 
   const handleWithdrawClick = async () => {
-    if (checkRoundStatuses("withdraw")) {
-      // TODO: Add withdraw interview logic
-      notify.success("Interview withdrawn successfully");
-    }
+    // if (checkRoundStatuses("withdraw")) {
+    setActionModal({
+      isOpen: true,
+      actionType: "Withdraw",
+      title: "Withdraw Application",
+      requiresReason: true,
+    });
+    // }
   };
 
   // Ensure rounds is always an array
@@ -1086,15 +1159,7 @@ const InterviewDetail = () => {
         </div>
       )}
 
-      {showCompletionModal && (
-        <CompletionReasonModal
-          onClose={() => setShowCompletionModal(false)}
-          onComplete={handleCompleteWithReason}
-          pendingRoundsCount={pendingRounds.length}
-          interviewId={id}
-          interview={interview}
-        />
-      )}
+
 
       {entityDetailsSidebar && entityDetailsSidebar.type === "template" && (
         <TemplateDetail
@@ -1170,6 +1235,17 @@ const InterviewDetail = () => {
           round={selectedRound}
         />
       )} */}
+
+      {/* Action Confirmation Modal */}
+      <DateChangeConfirmationModal
+        isOpen={actionModal.isOpen}
+        onClose={() => setActionModal({ ...actionModal, isOpen: false })}
+        onConfirm={handleConfirmAction}
+        actionType={actionModal.actionType}
+        title={actionModal.title}
+        status={interview?.status} // Pass current status
+      // Pass requiresReason implicitly via actionType logic in Modal, or explicitly if Modal supports it
+      />
 
       {/* {selectPositionView === true && (
         <PositionSlideDetails

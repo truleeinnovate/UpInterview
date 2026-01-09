@@ -117,11 +117,10 @@ const OutsourcedInterviewerCard = ({
 
   return (
     <div
-      className={`bg-white rounded-lg border ${
-        isSelected
-          ? "border-orange-500 ring-2 ring-orange-200"
-          : "border-gray-200"
-      } p-4 shadow-sm hover:shadow-md transition-all`}
+      className={`bg-white rounded-lg border ${isSelected
+        ? "border-orange-500 ring-2 ring-orange-200"
+        : "border-gray-200"
+        } p-4 shadow-sm hover:shadow-md transition-all`}
     >
       <div className="w-full">
         <div className="flex items-center gap-3 w-full">
@@ -166,9 +165,8 @@ const OutsourcedInterviewerCard = ({
 
       <div className="mt-3">
         <div
-          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${
-            isExpanded ? "line-clamp-none" : "line-clamp-2"
-          }`}
+          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${isExpanded ? "line-clamp-none" : "line-clamp-2"
+            }`}
         >
           {capitalizeFirstLetter(introduction)}
         </div>
@@ -267,20 +265,20 @@ function OutsourcedInterviewerModal({
   // console.log("interviewers interviewers", interviewers);
   // console.log("contacts contacts", contacts);
 
-  console.log("navigatedfrom", {
-    onClose,
-    dateTime,
-    // positionData,
-    // candidateData,
-    onProceed,
-    skills,
-    currentRole,
-    navigatedfrom,
-    candidateExperience,
-    previousSelectedInterviewers,
-    // isMockInterview,
-    // positionData?.skills,
-  });
+  // console.log("navigatedfrom", {
+  //   onClose,
+  //   dateTime,
+  //   // positionData,
+  //   // candidateData,
+  //   onProceed,
+  //   skills,
+  //   currentRole,
+  //   navigatedfrom,
+  //   candidateExperience,
+  //   previousSelectedInterviewers,
+  //   // isMockInterview,
+  //   // positionData?.skills,
+  // });
 
   const [searchTerm, setSearchTerm] = useState("");
   const [rateRange, setRateRange] = useState(["", ""]);
@@ -668,10 +666,9 @@ function OutsourcedInterviewerModal({
               (interviewer) => {
                 const interviewerSkills = interviewer.contact?.skills || [];
                 console.log(
-                  `👤 Checking interviewer: ${
-                    interviewer.contact?.firstName ||
-                    interviewer.contact?.UserName ||
-                    "Unknown"
+                  `👤 Checking interviewer: ${interviewer.contact?.firstName ||
+                  interviewer.contact?.UserName ||
+                  "Unknown"
                   }`
                 );
                 console.log("📝 Interviewer's Skills:", interviewerSkills);
@@ -718,8 +715,7 @@ function OutsourcedInterviewerModal({
                 });
 
                 console.log(
-                  `🎯 ${
-                    interviewer.contact?.firstName || "Unknown"
+                  `🎯 ${interviewer.contact?.firstName || "Unknown"
                   } Skill Match Status: ${hasMatchingSkill}`
                 );
                 return hasMatchingSkill;
@@ -1236,9 +1232,10 @@ function OutsourcedInterviewerModal({
       const required = Number(grossRequiredAmount || 0).toFixed(2);
       //const currentBalance = Number(availableBalance || 0).toFixed(2);
       notify.error(
-        `Your available wallet balance is less than the highest interviewer hourly rate (including GST).\nRequired: ₹${required}\nPlease add funds to proceed.`
+        `Your available wallet balance is less than the highest interviewer hourly rate (including GST).\nRequired: ₹${required}\nPlease add funds to proceed.`,
+        { autoClose: 60000 }
       );
-      setTimeout(() => setShowWalletModal(true), 1000);
+      // setTimeout(() => setShowWalletModal(true), 1000); // Removed auto-open in favor of manual Top Up button
     }
     //----v1.0.1----->
     //-----v1.0.4-----Venkatesh---->
@@ -1285,14 +1282,19 @@ function OutsourcedInterviewerModal({
               Available Balance:
             </span>
             <span
-              className={`text-sm font-bold ${
-                availableBalance >= maxHourlyRate
-                  ? "text-green-600"
-                  : "text-red-600"
-              }`}
+              className={`text-sm font-bold ${availableBalance >= maxHourlyRate
+                ? "text-green-600"
+                : "text-red-600"
+                }`}
             >
               ₹{Number(availableBalance || 0).toFixed(2)}
             </span>
+            <button
+              onClick={() => setShowWalletModal(true)}
+              className="ml-3 text-xs bg-custom-blue text-white px-2.5 py-1 rounded hover:bg-custom-blue/90 transition-colors font-medium"
+            >
+              Top Up
+            </button>
           </div>
         </div>
         {/* v1.0.3 <------------------------- */}
@@ -1424,11 +1426,10 @@ function OutsourcedInterviewerModal({
           {/* v1.0.3 <--------------------------------------------------------------------- */}
           <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
             <div
-              className={`grid gap-4 ${
-                isFullscreen
-                  ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-                  : "grid-cols-1"
-              }`}
+              className={`grid gap-4 ${isFullscreen
+                ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+                : "grid-cols-1"
+                }`}
             >
               {filteredInterviewers.map((interviewer) => (
                 // <OutsourcedInterviewerCard
