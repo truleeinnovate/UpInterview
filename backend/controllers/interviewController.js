@@ -269,6 +269,7 @@ const createInterview = async (req, res) => {
       // interviewId,
       updatingInterviewStatus,
       completionReason,
+      currentReason, // Added currentReason
       externalId,
       allowParallelScheduling,
     } = req.body;
@@ -307,6 +308,7 @@ const createInterview = async (req, res) => {
       ownerId: userId,
       tenantId: orgId || undefined,
       completionReason,
+      currentReason, // Added currentReason
       status,
       externalId,
       allowParallelScheduling: allowParallelScheduling || false,
@@ -506,6 +508,7 @@ const updateInterview = async (req, res) => {
       userId,
       updatingInterviewStatus,
       completionReason,
+      currentReason, // Added currentReason
       allowParallelScheduling,
     } = req.body;
 
@@ -577,6 +580,14 @@ const updateInterview = async (req, res) => {
       allowParallelScheduling !== existingInterview.allowParallelScheduling
     ) {
       interviewData.allowParallelScheduling = allowParallelScheduling;
+    }
+
+    // Update currentReason if provided
+    if (
+      currentReason &&
+      currentReason !== existingInterview.currentReason
+    ) {
+      interviewData.currentReason = currentReason;
     }
 
     // Check if there are any actual changes

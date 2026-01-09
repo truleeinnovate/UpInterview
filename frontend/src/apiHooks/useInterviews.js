@@ -335,22 +335,24 @@ export const useInterviews = (
   // Update interview status mutation
 
   const updateInterviewStatus = useMutation({
-    mutationFn: async ({ interviewId, status, reason }) => {
+    mutationFn: async ({ interviewId, status, reason, currentReason }) => {
       const interviewData = {
         status,
         ...(reason && { completionReason: reason }),
+        ...(currentReason && { currentReason }),
         interviewId,
         updatingInterviewStatus: true,
       };
 
-      const response = await axios.post(
-        `${config.REACT_APP_API_URL}/interview`,
+      const response = await axios.patch(
+        `${config.REACT_APP_API_URL}/interview/${interviewId}`,
         interviewData,
         {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${Cookies.get("authToken")}`,
           },
+          withCredentials: true,
         }
       );
       return response.data;

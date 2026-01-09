@@ -10,7 +10,7 @@ const interviewSchema = new mongoose.Schema({
     // status: String, // draft --> if accept - inprogress - after all rounds selected or rejected
     status: {
         type: String,
-        enum: ['Draft', 'InProgress', 'Completed', 'Cancelled','Withdrawn','OnHold','Rejected','Selected','NoShow'],
+        enum: ['Draft', 'InProgress', 'Completed', 'Cancelled', 'Withdrawn', 'OnHold', 'Rejected', 'Selected', 'NoShow'],
         default: 'Draft'
     },
 
@@ -21,6 +21,7 @@ const interviewSchema = new mongoose.Schema({
     //   ownerId:   {type: mongoose.Schema.Types.ObjectId, ref: 'Users'},
     // tenantId: {type: mongoose.Schema.Types.ObjectId, ref: 'tenant'},
     completionReason: String,
+    currentReason: String, // Stores reason for status changes (Reject, Cancel, Withdraw)
     allowParallelScheduling: { type: Boolean, default: false },
     // <------------------------------- v1.0.0
     interviewCode: { type: String, unique: true, sparse: true }, // <-- it will store INT-00001, INT-00002 with unique constraint -->
