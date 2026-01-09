@@ -81,6 +81,17 @@ const CompanyEditProfile = () => {
       phone: "",
     },
 
+    regionalOffices: [
+      {
+        address: "",
+        city: "",
+        state: "",
+        zip: "",
+        country: "",
+        phone: "",
+      },
+    ],
+
     // Added social media fields
     socialMedia: {
       linkedin: "",
@@ -144,16 +155,29 @@ const CompanyEditProfile = () => {
             country: "",
             phone: "",
           },
-          regionalOffice: organizationDetails?.offices?.find(
+          // regionalOffice: organizationDetails?.offices?.find(
+          //   (office) => office.type === "Regional Office"
+          // ) || {
+          //   address: "",
+          //   city: "",
+          //   state: "",
+          //   zip: "",
+          //   country: "",
+          //   phone: "",
+          // },
+          regionalOffices: organizationDetails?.offices?.filter(
             (office) => office.type === "Regional Office"
-          ) || {
-            address: "",
-            city: "",
-            state: "",
-            zip: "",
-            country: "",
-            phone: "",
-          },
+          ) || [
+            {
+              address: "",
+              city: "",
+              state: "",
+              zip: "",
+              country: "",
+              phone: "",
+            },
+          ],
+
           socialMedia: {
             linkedin: organizationDetails?.socialMedia?.linkedin || "",
             twitter: organizationDetails?.socialMedia?.twitter || "",
@@ -297,14 +321,20 @@ const CompanyEditProfile = () => {
         location: formData.location,
 
         // Updated to include offices array
+        // offices: [
+        //   { ...formData.headquarters, type: "Headquarters" },
+        //   { ...formData.regionalOffice, type: "Regional Office" },
+        // ],
         offices: [
           { ...formData.headquarters, type: "Headquarters" },
-          { ...formData.regionalOffice, type: "Regional Office" },
+          ...formData.regionalOffices.map((office) => ({
+            ...office,
+            type: "Regional Office",
+          })),
         ],
 
         // branding: { logo: logoUrl }
       };
-
 
       // const response = await axios.patch(
       //     `${config.REACT_APP_API_URL}/Organization/organization-details/${id}`,
@@ -317,7 +347,6 @@ const CompanyEditProfile = () => {
         data: updatedData, // JSON data for org details
       });
 
-
       if (response.status === "success") {
         navigate("/account-settings/profile");
       }
@@ -326,6 +355,35 @@ const CompanyEditProfile = () => {
     } catch (error) {
       console.error("Error updating company profile:", error);
     }
+  };
+
+  const handleRegionalOfficeChange = (index, field, value) => {
+    const updatedOffices = [...formData.regionalOffices];
+    updatedOffices[index][field] = value;
+
+    setFormData((prev) => ({
+      ...prev,
+      regionalOffices: updatedOffices,
+    }));
+  };
+
+  const addRegionalOffice = () => {
+    setFormData((prev) => ({
+      ...prev,
+      regionalOffices: [
+        ...prev.regionalOffices,
+        { address: "", city: "", state: "", zip: "", country: "", phone: "" },
+      ],
+    }));
+  };
+
+  const removeRegionalOffice = (index) => {
+    const updated = formData.regionalOffices.filter((_, i) => i !== index);
+
+    setFormData((prev) => ({
+      ...prev,
+      regionalOffices: updated.length ? updated : prev.regionalOffices,
+    }));
   };
 
   return (
@@ -654,7 +712,7 @@ const CompanyEditProfile = () => {
             </div>
 
             {/* Regional Office Section */}
-            <div className=" pt-6">
+            {/* <div className=" pt-6">
               <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
                 Regional Office
               </h3>
@@ -722,7 +780,131 @@ const CompanyEditProfile = () => {
                   </div>
                 </div>
               </div>
+            </div> */}
+            {/* Regional Offices Section */}
+            <div className="pt-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Regional Offices
+                </h3>
+
+                <button
+                  type="button"
+                  onClick={addRegionalOffice}
+                  className="px-3 py-1.5 text-sm bg-custom-blue text-white rounded-md hover:bg-custom-blue/90"
+                >
+                  + Add More
+                </button>
+              </div>
+
+              {formData.regionalOffices.map((office, index) => (
+                <div
+                  key={index}
+                  className="mb-6 relative"
+                >
+                  {formData.regionalOffices.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeRegionalOffice(index)}
+                      className="absolute top-3 right-3 text-red-500 hover:text-red-700"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  )}
+
+                  <h4 className="font-medium text-gray-700 mb-3">
+                    Regional Office {index + 1}
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                      <div>
+                        <InputField
+                          value={office.address}
+                          onChange={(e) =>
+                            handleRegionalOfficeChange(
+                              index,
+                              "address",
+                              e.target.value
+                            )
+                          }
+                          label="Address"
+                        />
+                      </div>
+                      <div>
+                        <InputField
+                          value={office.city}
+                          onChange={(e) =>
+                            handleRegionalOfficeChange(
+                              index,
+                              "city",
+                              e.target.value
+                            )
+                          }
+                          label="City"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                      <div>
+                        <InputField
+                          value={office.state}
+                          onChange={(e) =>
+                            handleRegionalOfficeChange(
+                              index,
+                              "state",
+                              e.target.value
+                            )
+                          }
+                          label="State"
+                        />
+                      </div>
+                      <div>
+                        <InputField
+                          value={office.zip}
+                          onChange={(e) =>
+                            handleRegionalOfficeChange(
+                              index,
+                              "zip",
+                              e.target.value
+                            )
+                          }
+                          label="Zip Code"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                      <div>
+                        <InputField
+                          value={office.country}
+                          onChange={(e) =>
+                            handleRegionalOfficeChange(
+                              index,
+                              "country",
+                              e.target.value
+                            )
+                          }
+                          label="Country"
+                        />
+                      </div>
+                      <div>
+                        <InputField
+                          value={office.phone}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, "");
+                            if (value.length <= 10) {
+                              handleRegionalOfficeChange(index, "phone", value);
+                            }
+                          }}
+                          label="Phone"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+
             {/* </div> */}
           </div>
 

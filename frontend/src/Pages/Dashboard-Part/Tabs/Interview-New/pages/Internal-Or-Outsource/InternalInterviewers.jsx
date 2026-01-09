@@ -56,12 +56,8 @@ const InternalInterviews = ({
     { value: "Recruiter", label: "Recruiter" },
     { value: "Internal_Interviewer", label: "Internal Interviewer" },
   ];
-  console.log(
-    "INTERVIEWERS =========================================> ",
-    interviewers
-  );
+
   const getRoleLabel = (roleName) => {
-    console.log("ROLE NAME ==================> ", roleName);
     const role = roles.find((r) => r.value === roleName);
     return role ? role.label : "No role";
   };
@@ -440,7 +436,7 @@ const InternalInterviews = ({
             ${
               isFullscreen
                 ? "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
-                : "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
+                : "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
             }
           `}
           >
@@ -448,7 +444,7 @@ const InternalInterviews = ({
             {filteredData?.map((item) => (
               <div
                 key={item._id}
-                className={`relative flex items-center justify-between p-3 rounded-md transition-all duration-200
+                className={`relative z-0 flex items-center justify-between p-3 rounded-md transition-all duration-200
                   ${
                     navigatedfrom !== "dashboard"
                       ? "cursor-pointer"
@@ -490,12 +486,12 @@ const InternalInterviews = ({
                       </div>
                       <div className="ml-3 flex flex-col gap-0.5">
                         {/* Name */}
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex flex-col justify-start items-start gap-1 mb-3">
                           <p
                             title={`${
                               capitalizeFirstLetter(item?.firstName) || ""
                             } ${capitalizeFirstLetter(item?.lastName) || ""}`}
-                            className="text-sm font-semibold truncate max-w-[120px] cursor-default text-gray-900 leading-tight"
+                            className="text-xs font-semibold truncate max-w-[200px] cursor-default text-gray-900 leading-tight"
                           >
                             {item?.firstName || item?.lastName
                               ? `${
@@ -507,13 +503,13 @@ const InternalInterviews = ({
                           </p>
 
                           {/* System Role (Permission Role) */}
-                          <span
+                          <p
                             title={item?.roleLabel}
-                            className="inline-block truncate max-w-[90px] w-fit text-xs px-2 py-1 bg-custom-blue/10 rounded-full 
+                            className="inline-block truncate max-w-[200px] text-xs px-2 py-0.5 bg-custom-blue/10 rounded-full 
                           text-custom-blue font-semibold"
                           >
                             {item?.roleLabel}
-                          </span>
+                          </p>
                         </div>
                         {/* Current Role (Designation) */}
                         <div className="grid grid-cols-2 mb-1">
@@ -585,10 +581,10 @@ const InternalInterviews = ({
 
                 {isInterviewerSelected(item) && (
                   <div
-                    className="absolute right-3 top-1/2 -translate-y-1/2 z-50
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-20
                       h-6 w-6 rounded-full flex items-center justify-center 
                       bg-custom-blue text-white shadow-lg ring-2 ring-custom-blue
-                      scale-110 transition-all duration-200"
+                      scale-90 transition-all duration-200"
                   >
                     <svg
                       className="h-3 w-3"

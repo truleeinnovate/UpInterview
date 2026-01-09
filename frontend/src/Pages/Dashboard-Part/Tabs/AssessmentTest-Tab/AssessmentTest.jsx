@@ -1,6 +1,7 @@
 // v1.0.0  -  Ashraf  -  assessment sections and question api using from useassessmentscommon code)
 // v1.0.1  -  Ashok   -  changed logo url from local to cloud storage url
 // v1.0.1  -  Ashok   -  Improved responsiveness
+// v1.0.2  -  Ashok   -  Fixed logo and User name at navbar
 
 import axios from "axios";
 import CryptoJS from "crypto-js";
@@ -14,6 +15,7 @@ import toast from "react-hot-toast";
 import { config } from "../../../../config.js";
 // <---------------------- v1.0.0
 import { useAssessments } from "../../../../apiHooks/useAssessments.js";
+import { useTenantById } from "../../../../apiHooks/superAdmin/useTenants.js";
 
 const AssessmentTest = () => {
   const { fetchAssessmentQuestions } = useAssessments();
@@ -31,6 +33,9 @@ const AssessmentTest = () => {
   const [candidate, setCandidate] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [candidateAssessmentId, setCandidateAssessmentId] = useState(null);
+
+  const { tenant } = useTenantById(assessment?.tenantId);
+  console.log("ASSESSMENT TENANT =======================> ", tenant);
 
   // Fallback URL
 
@@ -242,10 +247,12 @@ const AssessmentTest = () => {
 
   const renderHeader = () => {
     // Get the organization logo from assessment data if available
-    const organizationLogo =
-      assessment?.organization?.logo ||
-      assessment?.assessmentId?.organization?.logo ||
-      "https://placehold.co/150x50?text=Organization";
+    // const organizationLogo =
+    //   assessment?.organization?.logo ||
+    //   assessment?.assessmentId?.organization?.logo ||
+    //   "https://placehold.co/150x50?text=Organization";
+
+    const organizationLogo = tenant?.tenant?.branding?.path;
 
     return (
       <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 sticky top-0 z-50">
@@ -253,28 +260,58 @@ const AssessmentTest = () => {
         <div className="max-w-[90rem] mx-auto sm:px-4 px-8 py-3">
           {/* v1.0.2 <------------------------------------------------------ */}
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              {/* v1.0.1 <--------------------------------------------------------------------------------------- */}
-              {/* <img src={logo} alt="Logo" className="w-20" /> */}
-              <img
-                src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp"
-                alt="Logo"
-                className="w-20"
-              />
-              {/* v1.0.1 <---------------------------------------------------------------------------------------  */}
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-400 font-semibold">
+                {tenant?.tenant
+                  ? [tenant.tenant.firstName, tenant.tenant.lastName]
+                      .filter(Boolean)
+                      .join(" ") || "Unknown User"
+                  : "Loading"}
+              </span>
+
+              {/* {organizationLogo && (
+                <img
+                  src={organizationLogo}
+                  alt={tenant?.company || "Organization Logo"}
+                  className="h-8 max-w-[120px] object-contain hover:opacity-80 transition-opacity"
+                  onError={(e) => {
+                    e.target.onerror = null; // Prevent infinite loop
+                    e.target.src =
+                      "https://placehold.co/150x50?text=Organization";
+                  }}
+                />
+              )} */}
+              {organizationLogo ? (
+                <img
+                  src={organizationLogo}
+                  alt={tenant?.company || "Organization Logo"}
+                  className="h-8 max-w-[120px] object-contain hover:opacity-80 transition-opacity"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src =
+                      "https://placehold.co/150x50?text=Organization";
+                  }}
+                />
+              ) : (
+                <img
+                  src="https://placehold.co/150x50?text=Organization"
+                  alt="Organization Logo"
+                  className="h-8 max-w-[120px] object-contain opacity-70"
+                />
+              )}
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">Powered by</span>
-              <img
-                src={organizationLogo}
-                alt="Organization Logo"
-                className="h-8 max-w-[120px] object-contain hover:opacity-80 transition-opacity"
-                onError={(e) => {
-                  e.target.onerror = null; // Prevent infinite loop
-                  e.target.src =
-                    "https://placehold.co/150x50?text=Organization";
-                }}
-              />
+              <div className="flex items-center space-x-2">
+                {/* v1.0.1 <--------------------------------------------------------------------------------------- */}
+                {/* <img src={logo} alt="Logo" className="w-20" /> */}
+                <img
+                  src="https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099243/upinterviewLogo_ng1wit.webp"
+                  alt="Logo"
+                  className="w-20"
+                />
+                {/* v1.0.1 <---------------------------------------------------------------------------------------  */}
+              </div>
             </div>
           </div>
         </div>

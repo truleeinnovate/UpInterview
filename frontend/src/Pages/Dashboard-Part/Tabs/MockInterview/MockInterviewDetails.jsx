@@ -23,6 +23,7 @@ import MockCandidateDetails from "./MockinterviewCandidate.jsx";
 import { useMockInterviewById } from "../../../../apiHooks/useMockInterviews.js";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import MeetPlatformBadge from "../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
+import { formatDateTime } from "../../../../utils/dateFormatter.js";
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
@@ -304,7 +305,7 @@ const MockInterviewDetails = () => {
                   <p className="mt-1 max-w-2xl text-sm text-gray-500">
                     Created on{" "}
                     {mockinterview?.createdAt
-                      ? new Date(mockinterview?.createdAt)?.toLocaleDateString()
+                      ? formatDateTime(mockinterview?.createdAt)
                       : "N/A"}
                   </p>
                   {/* v1.0.0 ---------------------------------------------------------------> */}
@@ -368,7 +369,7 @@ const MockInterviewDetails = () => {
                           )}
                         </div>
                         <div>
-                          <div className="flex items-center gap-6 font-medium">
+                          <div className="flex items-center gap-2 font-medium">
                             {candidate?.candidateName || "Unknown"}
                             <div>
                               {candidate && (
@@ -385,11 +386,12 @@ const MockInterviewDetails = () => {
                               )}
                             </div>
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Role: {candidate?.currentRole}
+                          <div className="grid grid-cols-2 text-xs text-gray-500 mt-1">
+                            <span>Current Role:</span> {candidate?.currentRole}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Experience: {candidate?.currentExperience} Years
+                          <div className="grid grid-cols-2 text-xs text-gray-500 mt-1">
+                            <span>Experience:</span>
+                            {candidate?.currentExperience} Years
                           </div>
                         </div>
                       </div>
@@ -411,7 +413,7 @@ const MockInterviewDetails = () => {
                     </dd>
                   </div>
                 </div>
-                <div className="mt-10">
+                {/* <div className="mt-10">
                   <dt className="text-sm font-medium text-gray-500">
                     Progress
                   </dt>
@@ -431,7 +433,7 @@ const MockInterviewDetails = () => {
                       ></div>
                     </div>
                   </dd>
-                </div>
+                </div> */}
 
                 {/* Interviewers summary */}
                 <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">

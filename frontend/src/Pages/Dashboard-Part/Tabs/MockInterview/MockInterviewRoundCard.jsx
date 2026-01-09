@@ -309,7 +309,7 @@ const MoockRoundCard = ({
       >
         <div className="p-5">
           <>
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-2 gap-4 sm:grid-cols-1">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-4 sm:grid-cols-1">
               <div>
                 <h4 className="text-sm font-medium text-gray-700 mb-2">
                   Schedule
@@ -444,7 +444,7 @@ const MoockRoundCard = ({
 
             <div className="w-full overflow-x-auto">
               {/* <div className="mt-6 w-full flex gap-2 whitespace-nowrap sm:justify-start md:justify-start justify-end overflow-x-auto"> */}
-              <div className="mt-6 flex gap-3 whitespace-nowrap min-w-max">
+              <div className="mt-6 flex gap-3 whitespace-nowrap min-w-max justify-end">
                 {/* Reschedule */}
                 {permissions.canReschedule &&
                   round.interviewerType === "external" &&
@@ -475,24 +475,10 @@ const MoockRoundCard = ({
                   </button>
                 )}
 
-                {/* Skipped */}
-                {permissions && (
-                  <button className="inline-flex items-center px-3 py-2 border border-orange-300 text-sm rounded-md text-orange-700 bg-orange-50 hover:bg-orange-100">
-                    <SkipForward className="h-4 w-4 mr-1" /> Skipped
-                  </button>
-                )}
-
                 {/* Evaluated */}
                 {permissions && (
                   <button className="inline-flex items-center px-3 py-2 border border-teal-300 text-sm rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100">
                     <ClipboardList className="h-4 w-4 mr-1" /> Evaluated
-                  </button>
-                )}
-
-                {/* Feedback Pending */}
-                {permissions && (
-                  <button className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100">
-                    <Hourglass className="h-4 w-4 mr-1" /> Feedback Pending
                   </button>
                 )}
 
@@ -526,22 +512,6 @@ const MoockRoundCard = ({
                 {permissions && (
                   <button className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100">
                     <MessageSquare className="h-4 w-4 mr-1" /> Feedback
-                  </button>
-                )}
-
-                {/* Share (always for Assessment) */}
-                {permissions && (
-                  <button className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100">
-                    <Share2 className="h-4 w-4 mr-1" />
-                    Resend Link
-                  </button>
-                )}
-
-                {/* Share (always for Assessment) */}
-                {permissions && (
-                  <button className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100">
-                    <Share2 className="h-4 w-4 mr-1" />
-                    Share
                   </button>
                 )}
 
