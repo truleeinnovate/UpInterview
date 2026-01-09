@@ -25,23 +25,18 @@ import { useMemo } from "react";
 import { extractUrlData } from "../../apiHooks/useVideoCall";
 import { useLocation } from "react-router-dom";
 const InterviewActions = ({
-  interviewData,
+  // interviewData,
   isAddMode,
   decodedData,
   onActionComplete,
 }) => {
-  const { updateRoundStatus } = useInterviews();
+  const { updateRoundStatus, useInterviewDetails } = useInterviews();
   const [currentTime, setCurrentTime] = useState(new Date());
-  // const [formData, setFormData] = useState({ reason: "", comments: "" });
-
   const [noShowReasonModalOpen, setNoShowReasonModalOpen] = useState(false);
-  // const [rejectReasonModalOpen, setRejectReasonModalOpen] = useState(false);
   const [completedReasonModalOpen, setCompletedReasonModalOpen] =
     useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
-  // const [confirmAction, setConfirmAction] = useState(null);
   const [cancelReasonModalOpen, setCancelReasonModalOpen] = useState(false);
-  // console.log("interviewData InterviewActions ", interviewData);
   const [markIncompleteModalOpen, setMarkIncompleteModalOpen] = useState(false);
   const [candidateJoinedReasonModalOpen, setCandidateJoinedReasonModalOpen] =
     useState(false);
@@ -62,29 +57,47 @@ const InterviewActions = ({
     [location.search]
   );
 
+  const { data, isLoading } = useInterviewDetails({
+    roundId: urlData.interviewRoundId,
+  });
+
+  // const candidateData = data?.candidateId || {};
+  // const positionData = data?.positionId || {};
+  const interviewData = data?.rounds[0] || {};
+  const participants = interviewData?.participants || [];
+  const isCandidateJoined = participants.some(
+    (p) => p.role === "Candidate" && p.status === "Joined"
+  );
+
+  // Function to check if a participant is interviewer Joined
+  const isInterviewerJoined = (userId) =>
+    participants.some(
+      (p) =>
+        p.role === "Interviewer" && p.userId === userId && p.status === "Joined"
+    );
+
+  // Function to check if a participant is Scheduler Joined
+  const isSchedulerJoined = (userId) =>
+    participants.some(
+      (p) =>
+        p.role === "Scheduler" && p.userId === userId && p.status === "Joined"
+    );
+
   // Mock interview times for demonstration
   // Replace the mock start/end time with real ones
   const parseInterviewTimes = (interviewData) => {
-    if (!interviewData?.interviewRound?.dateTime) return {};
+    // Use correct property
+    if (!interviewData?.dateTime) return {};
 
-    // Example: "17-08-2025 1:32 PM - 07:25 PM"
-    const dateTimeString = interviewData.interviewRound.dateTime;
+    const dateTimeString = interviewData.dateTime;
 
-    // Split on space to get all parts
     const parts = dateTimeString.split(" ");
-
-    // Extract date (first part)
     const date = parts[0];
-
-    // Extract start time (second and third parts)
     const startTime = `${parts[1]} ${parts[2]}`;
-
-    // Extract end time (fourth and fifth parts)
     const endTime = `${parts[4]} ${parts[5]}`;
 
     const [day, month, year] = date.split("-");
 
-    // Build Date strings
     const startDateTime = new Date(`${year}-${month}-${day} ${startTime}`);
     const endDateTime = new Date(`${year}-${month}-${day} ${endTime}`);
 
@@ -130,19 +143,6 @@ const InterviewActions = ({
     comment = null,
     type = null
   ) => {
-    // const roundData = {
-    //   status: newStatus,
-    //   completedDate: newStatus === "Completed",
-    //   rejectionReason: reason || null,
-    // };
-
-    // const payload = {
-    //   interviewId: interview._id,
-    //   round: { ...roundData },
-    //   roundId: round._id,
-    //   isEditing: true, // Always set isEditing to true
-    // };
-
     // For cancellation/no-show, we need to ensure we pass a reason
     if ((newStatus === "Cancelled" || newStatus === "NoShow") && !reasonValue) {
       if (newStatus === "Cancelled") {
@@ -157,12 +157,6 @@ const InterviewActions = ({
     // console.log("status reason", newStatus, reasonValue);
 
     try {
-      // const response = await axios.post(
-      //   `${config.REACT_APP_API_URL}/interview/save-round`,
-      //   payload
-      // );
-      // const response = await updateInterviewRound(payload);
-
       // Build the payload based on status
       const payload = {
         roundId: interviewData?.interviewRound?._id,
@@ -405,9 +399,9 @@ const InterviewActions = ({
           <div>
             <p className="text-white text-opacity-80">Status</p>
             <p className="font-semibold">
-              {interviewData?.interviewRound?.status === "InProgress"
+              {interviewData?.status === "InProgress"
                 ? "In Progress"
-                : interviewData?.interviewRound?.status}
+                : interviewData?.status}
             </p>
           </div>
         </div>
@@ -420,6 +414,23 @@ const InterviewActions = ({
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+          {/* isSchedulerJoined  Participation */}
+          {/* {urlData?.isSchedule && (
+            <ActionCard
+              icon={CheckCircle}
+              title="Scheduler Joined"
+              description="Confirm that the scheduler has successfully joined the interview"
+              // onClick={() => handleConfirm("interviewerJoined")}
+              onClick={() => {
+                // openModal("noShow");
+                // setActionInProgress(true);
+                setInterviewerJoinedReasonModalOpen(true);
+              }}
+              disabled={isCompleted || isSchedulerJoined}
+              variant="success"
+            />
+          )} */}
+
           {/* Interviewer Participation */}
           {urlData?.isSchedule && (
             <ActionCard
@@ -432,11 +443,7 @@ const InterviewActions = ({
                 // setActionInProgress(true);
                 setInterviewerJoinedReasonModalOpen(true);
               }}
-              disabled={
-                isCompleted ||
-                // !interviewerActionEnabled ||
-                interviewData?.interviewRound?.interviewerJoined
-              }
+              disabled={isCompleted || isInterviewerJoined}
               variant="success"
             />
           )}
@@ -453,9 +460,7 @@ const InterviewActions = ({
               setCandidateJoinedReasonModalOpen(true);
             }}
             disabled={
-              isCompleted ||
-              !candidateActionEnabled ||
-              interviewData?.interviewRound?.candidateJoined
+              isCompleted || !candidateActionEnabled || isCandidateJoined
             }
             variant="success"
             // timeUntil={!candidateActionEnabled ? getTimeUntilEnabled(new Date(startTime.getTime() + 15 * 60000)) : null}

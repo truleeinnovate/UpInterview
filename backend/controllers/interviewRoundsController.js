@@ -1216,11 +1216,14 @@ const updateInterviewRoundStatus = async (req, res) => {
       cancellationReason,
       roundOutcome,
       reason,
+      // participantCandidateRole,
     } = req.body; // reasonCode = your selected reason, comment = "Other" text, cancellationReason = specific cancellation reason
 
-    // console.log("req.body", req.body);
+    const isParticipantUpdate = req.body?.role || req.body?.joined;
 
-    if (!roundId || !action) {
+    console.log("req.body", req.body);
+
+    if (!roundId || (!action && !isParticipantUpdate)) {
       return res.status(400).json({
         success: false,
         message: "roundId and action are required",
@@ -1237,65 +1240,161 @@ const updateInterviewRoundStatus = async (req, res) => {
         .json({ success: false, message: "Round not found" });
     }
 
-    // Map frontend "action" to actual status
-    const actionToStatusMap = {
-      // Completed: "Completed",
-      // Selected: "Selected",
-      // Rejected: "Rejected",
-      // NoShow: "NoShow",
-      // Cancelled: "Cancelled",
+    let newStatus = null;
+    if (!isParticipantUpdate) {
+      // Map frontend "action" to actual status
+      const actionToStatusMap = {
+        // Completed: "Completed",
+        // Selected: "Selected",
+        // Rejected: "Rejected",
+        // NoShow: "NoShow",
+        // Cancelled: "Cancelled",
 
-      RequestSent: "RequestSent",
-      Scheduled: "Scheduled",
-      InProgress: "InProgress",
-      Completed: "Completed",
-      InCompleted: "InCompleted",
-      Rescheduled: "Rescheduled",
-      Rejected: "Rejected",
-      Selected: "Selected",
-      Cancelled: "Cancelled",
-      Incomplete: "Incomplete",
-      NoShow: "NoShow",
-      Evaluated: "Evaluated",
-      Skipped: "Skipped",
-    };
+        RequestSent: "RequestSent",
+        Scheduled: "Scheduled",
+        InProgress: "InProgress",
+        Completed: "Completed",
+        InCompleted: "InCompleted",
+        Rescheduled: "Rescheduled",
+        Rejected: "Rejected",
+        Selected: "Selected",
+        Cancelled: "Cancelled",
+        Incomplete: "Incomplete",
+        NoShow: "NoShow",
+        Evaluated: "Evaluated",
+        Skipped: "Skipped",
+      };
 
-    const newStatus = actionToStatusMap[action];
-    if (!newStatus) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid action" });
-    }
-
-    if (req.body?.candidateJoined || req.body?.interviewerJoined) {
-      const Updated = { $set: {} };
-
-      if (req.body.candidateJoined === true) {
-        Updated.$set.candidateJoined =
-          req.body.candidateJoined === true ? true : false;
-      } else if (req.body.interviewerJoined === true) {
-        Updated.$set.interviewerJoined =
-          req.body.interviewerJoined === true ? true : false;
+      newStatus = actionToStatusMap[action];
+      if (!newStatus) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid action" });
       }
-      // for candidate joined and interviewer joined status update
-      // Updated.$set.candidateJoined =
-      // req.body.candidateJoined === true ? true : false;
-
-      // Updated.$set.interviewerJoined =
-      //   req.body.interviewerJoined === true ? true : false;
-
-      // Apply update
-      const updatedRound = await InterviewRounds.findByIdAndUpdate(
-        roundId,
-        Updated,
-        { new: true, runValidators: true }
-      );
-      return res.status(200).json({
-        success: true,
-        message: "Interview round status updated successfully",
-        data: updatedRound,
-      });
     }
+
+    // ===== SAFE PARTICIPANT UPSERT (NO DUPLICATES, NO FAIL) =====
+    // ===== SAFE PARTICIPANT UPSERT (NO DUPLICATES, NO FAIL) =====
+    if (isParticipantUpdate) {
+      const { role, userId, joined } = req.body;
+
+      const status = joined ? "Joined" : "Not_Joined";
+      const joinedAt = joined ? new Date() : null;
+
+      const match =
+        role === "Candidate" ? { role: "Candidate" } : { role, userId };
+
+      // Update existing participant if exists
+      let updatedRound = await InterviewRounds.findOneAndUpdate(
+        {
+          _id: roundId,
+          participants: { $elemMatch: match },
+        },
+        {
+          $set: {
+            "participants.$.status": status,
+            "participants.$.joinedAt": joinedAt,
+          },
+        },
+        { new: true }
+      );
+
+      // If participant doesn't exist, add it
+      if (!updatedRound) {
+        const participantData = { role, status, joinedAt };
+        if (role !== "Candidate") participantData.userId = userId;
+
+        updatedRound = await InterviewRounds.findByIdAndUpdate(
+          roundId,
+          { $push: { participants: participantData } },
+          { new: true }
+        );
+      }
+
+      // ===== NEW LOGIC: Do NOT create history here for participant-only update =====
+      // History will be handled only by buildSmartRoundUpdate if `action` is provided.
+
+      // If no action/status is provided, return after participant update
+      if (!action) {
+        return res.status(200).json({
+          success: true,
+          message: "Participant updated successfully",
+          data: updatedRound,
+        });
+      }
+    }
+
+    // if (req.body?.role) {
+    //   const { role, userId, joined } = req.body;
+
+    //   const status = joined ? "Joined" : "Not_Joined";
+    //   const joinedAt = joined ? new Date() : null;
+
+    //   const match =
+    //     role === "Candidate" ? { role: "Candidate" } : { role, userId };
+
+    //   let updatedRound = await InterviewRounds.findOneAndUpdate(
+    //     {
+    //       _id: roundId,
+    //       participants: { $elemMatch: match },
+    //     },
+    //     {
+    //       $set: {
+    //         "participants.$.status": status,
+    //         "participants.$.joinedAt": joinedAt,
+    //       },
+    //     },
+    //     { new: true }
+    //   );
+
+    //   if (!updatedRound) {
+    //     if (role === "Candidate") {
+    //       const exists = await InterviewRounds.exists({
+    //         _id: roundId,
+    //         "participants.role": "Candidate",
+    //       });
+
+    //       updatedRound = exists
+    //         ? await InterviewRounds.findById(roundId)
+    //         : await InterviewRounds.findByIdAndUpdate(
+    //             roundId,
+    //             {
+    //               $push: {
+    //                 participants: {
+    //                   role: "Candidate",
+    //                   status,
+    //                   joinedAt,
+    //                 },
+    //               },
+    //             },
+    //             { new: true }
+    //           );
+    //     } else {
+    //       updatedRound = await InterviewRounds.findByIdAndUpdate(
+    //         roundId,
+    //         {
+    //           $push: {
+    //             participants: {
+    //               role,
+    //               userId,
+    //               status,
+    //               joinedAt,
+    //             },
+    //           },
+    //         },
+    //         { new: true }
+    //       );
+    //     }
+    //   }
+
+    //   console.log("updatedRound updatedRound", updatedRound);
+
+    //   return res.status(200).json({
+    //     success: true,
+    //     message: "Participant updated successfully",
+    //     data: updatedRound,
+    //   });
+    // }
 
     // Detect changes
     // const changes = {
@@ -1304,26 +1403,86 @@ const updateInterviewRoundStatus = async (req, res) => {
     //   anyChange: true,
     // };
 
-    // Build body for buildSmartRoundUpdate — this is key!
-    const smartBody = {
-      status: newStatus,
-      interviewerType: existingRound.interviewerType,
-      selectedInterviewers: existingRound.interviewers, // preserve current
-      // Pass reason via generic fields that buildSmartRoundUpdate understands
-      currentActionReason: reasonCode || null,
-      comments: comment || null,
-      // Optional: for reschedule cases (not used here, but safe)
-      rescheduleReason: reasonCode || null,
-    };
+    // ===== HISTORY CREATION LOGIC =====
+    // Check if this is a special one-time history case
+    // const participants = existingRound.participants || [];
+    // const isHistoryHandled = participants.some(
+    //   (p) => p.role === "Interviewer" || p.role === "Scheduler"
+    // );
 
-    // Let buildSmartRoundUpdate handle status change + history + reason
-    let smartUpdate = buildSmartRoundUpdate({
-      existingRound,
-      body: smartBody,
-      actingAsUserId,
-      // changes,
-      statusChanged: true,
-    });
+    // const isSpecialHistoryCase =
+    //   req.body?.History_Type === "Histoy_Handling" &&
+    //   !isHistoryHandled &&
+    //   action === "InProgress";
+
+    let smartUpdate = null;
+
+    if (req.body?.History_Type === "Histoy_Handling") {
+      // Special handling: only create history if conditions are met
+      const participants = existingRound.participants || [];
+      const isHistoryHandled = participants.some(
+        (p) => p.role === "Interviewer" || p.role === "Scheduler"
+      );
+
+      if (!isHistoryHandled && action === "InProgress") {
+        // ONE-TIME SPECIAL HISTORY CREATION
+        const smartBody = {
+          status: newStatus,
+          interviewerType: existingRound.interviewerType,
+          selectedInterviewers: existingRound.interviewers,
+          currentActionReason: reasonCode || null,
+          comments: comment || null,
+          rescheduleReason: reasonCode || null,
+        };
+
+        smartUpdate = buildSmartRoundUpdate({
+          existingRound,
+          body: smartBody,
+          actingAsUserId,
+          statusChanged: true,
+        });
+      }
+      // If conditions not met, smartUpdate remains null (no history created)
+    } else {
+      // NORMAL HISTORY CREATION FOR ALL OTHER CASES
+      const smartBody = {
+        status: newStatus,
+        interviewerType: existingRound.interviewerType,
+        selectedInterviewers: existingRound.interviewers,
+        currentActionReason: reasonCode || null,
+        comments: comment || null,
+        rescheduleReason: reasonCode || null,
+      };
+
+      smartUpdate = buildSmartRoundUpdate({
+        existingRound,
+        body: smartBody,
+        actingAsUserId,
+        statusChanged: true,
+      });
+    }
+    // Build body for buildSmartRoundUpdate — this is key!
+    // const smartBody = {
+    //   status: newStatus,
+    //   interviewerType: existingRound.interviewerType,
+    //   selectedInterviewers: existingRound.interviewers, // preserve current
+    //   // Pass reason via generic fields that buildSmartRoundUpdate understands
+    //   currentActionReason: reasonCode || null,
+    //   comments: comment || null,
+    //   // Optional: for reschedule cases (not used here, but safe)
+    //   rescheduleReason: reasonCode || null,
+    // };
+
+    // // Let buildSmartRoundUpdate handle status change + history + reason
+    // let smartUpdate = null;
+
+    // smartUpdate = buildSmartRoundUpdate({
+    //   existingRound,
+    //   body: smartBody,
+    //   actingAsUserId,
+    //   // changes,
+    //   statusChanged: true,
+    // });
 
     // console.log("smartUpdate", smartUpdate);
 
