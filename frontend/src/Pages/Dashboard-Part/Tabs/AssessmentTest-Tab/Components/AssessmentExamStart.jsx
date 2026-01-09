@@ -18,6 +18,7 @@ function AssessmentTest({
   duration,
   candidateAssessmentId,
 }) {
+
   const [currentSection, setCurrentSection] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -196,7 +197,9 @@ function AssessmentTest({
           });
 
           const sectionScore = sectionQuestions.reduce((sum, q) => sum + q.score, 0);
+          console.log('sectionscore:', sectionScore);
           const sectionResult = sectionScore >= (section.passScore || 0) ? "pass" : "fail";
+          console.log('sectionResult:', sectionResult);
 
           return {
             sectionId: section._id,
