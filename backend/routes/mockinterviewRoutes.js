@@ -5,10 +5,7 @@ const mockInterviewController = require("../controllers/mockInterviewController"
 const loggingService = require("../middleware/loggingService");
 
 // GET: Single mock interview with rounds by id
-router.get(
-  "/:id",
-  mockInterviewController.getMockInterviewDetails
-);
+router.get("/:id", mockInterviewController.getMockInterviewDetails);
 
 // POST: Create mock interview
 router.post(
@@ -26,26 +23,27 @@ router.patch(
   mockInterviewController.updateMockInterview
 );
 //create and update round
-router.post("/:mockInterviewId/round", loggingService.internalLoggingMiddleware,
+router.post(
+  "/:mockInterviewId/round",
+  loggingService.internalLoggingMiddleware,
   loggingService.FeedsMiddleware,
-  mockInterviewController.createMockInterviewRound);   // Create round
-router.patch("/:mockInterviewId/round/:roundId", loggingService.internalLoggingMiddleware,
+  mockInterviewController.createMockInterviewRound
+); // Create round
+router.patch(
+  "/:mockInterviewId/round/:roundId",
+  loggingService.internalLoggingMiddleware,
   loggingService.FeedsMiddleware,
-  mockInterviewController.updateMockInterviewRound); // Update round
-
-
+  mockInterviewController.updateMockInterviewRound
+); // Update round
 
 // POST: Validate mock interview data (for frontend validation)
-router.post(
-  "/mockinterview/validate/:page?",
-  mockInterviewController.validateMockInterview
-);
+router.post("/validate/:page?", mockInterviewController.validateMockInterview);
 
 router.patch(
-  "/mockinterview/:mockInterviewId/round/:roundId/cancel",
+  "/:mockInterviewId/round/:roundId",
   // loggingService.internalLoggingMiddleware,
   // loggingService.FeedsMiddleware,
-  mockInterviewController.deleteMockInterview
+  mockInterviewController.updateInterviewRoundStatus
 );
 
 module.exports = router;

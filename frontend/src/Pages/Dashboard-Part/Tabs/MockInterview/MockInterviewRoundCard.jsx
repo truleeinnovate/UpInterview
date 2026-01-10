@@ -5,36 +5,23 @@ import React, { useState } from "react";
 import {
   Calendar,
   Clock,
-  // ChevronDown,
-  // ChevronUp,
   ExternalLink,
   XCircle,
-  // User,
   MessageSquare,
   UserX,
-  SkipForward,
   ClipboardList,
-  Hourglass,
   Edit,
   CheckCircle,
-  Share2,
-  // ThumbsDown,
-  // CheckCircle,
-  // Edit,
 } from "lucide-react";
-// import Cookies from "js-cookie";
 import { createPortal } from "react-dom";
-// import { Button } from '../CommonCode-AllTabs/ui/button';
 import InterviewerAvatar from "../CommonCode-AllTabs/InterviewerAvatar";
 import FeedbackModal from "../Interview-New/components/FeedbackModal";
 import RejectionModal from "../Interview-New/components/RejectionModal";
 import { Button } from "../CommonCode-AllTabs/ui/button";
-// import axios from "axios";
 import { notify } from "../../../../services/toastService";
-// import { config } from "../../../../config";
-import { useCancelRound } from "../../../../apiHooks/useMockInterviews";
-// import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { useUpdateRoundStatus } from "../../../../apiHooks/useMockInterviews";
 import { useNavigate } from "react-router-dom";
+import DateChangeConfirmationModal from "../Interview-New/components/DateChangeConfirmationModal";
 
 const MoockRoundCard = ({
   mockinterview,
@@ -47,15 +34,33 @@ const MoockRoundCard = ({
   // const [showInterviewers, setShowInterviewers] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  // const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   // const [actionInProgress, setActionInProgress] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // Add near other state declarations
+  const [cancelReasonModalOpen, setCancelReasonModalOpen] = useState(false);
+  const [noShowReasonModalOpen, setNoShowReasonModalOpen] = useState(false);
+  const [rejectReasonModalOpen, setRejectReasonModalOpen] = useState(false);
+  const [completeReasonModalOpen, setCompleteReasonModalOpen] = useState(false);
+  const [evaluatedReasonModalOpen, setEvaluatedReasonModalOpen] =
+    useState(false);
+  const [completedReasonModalOpen, setCompletedReasonModalOpen] =
+    useState(false);
+  const [selectedReasonModalOpen, setSelectedReasonModalOpen] = useState(false);
+
+  // Assessment action popup states
+
+  // const [actionInProgress, setActionInProgress] = useState(false);
+  const [isCancellingRound, setIsCancellingRound] = useState(false); // Loading state for cancel operation
+  const [isNoShowingRound, setIsNoShowingRound] = useState(false); // Loading state for no-show operation
+
   const navigate = useNavigate();
 
   // console.log("round",round);
   // const { addOrUpdateMockInterview } = useMockInterviews();
-  const cancelRound = useCancelRound();
+  const updateRoundStatus = useUpdateRoundStatus();
 
   // const authToken = Cookies.get("authToken");
   // const tokenPayload = decodeJwt(authToken);
@@ -75,54 +80,56 @@ const MoockRoundCard = ({
     });
   };
 
-  const handleStatusChange = async (newStatus, reason = null) => {
-    // const roundData = {
-    //   ...round,
-    //   _id: round._id,
-
-    //   status: newStatus,
-    //   completedDate: newStatus === "Completed",
-    //   rejectionReason: reason || null,
-    // };
+  const handleStatusChange = async (
+    newStatus,
+    reasonValue = null,
+    comment = null,
+    roundOutcome = null
+  ) => {
+    // For cancellation/no-show, we need to ensure we pass a reason
+    if ((newStatus === "Cancelled" || newStatus === "NoShow") && !reasonValue) {
+      if (newStatus === "Cancelled") {
+        // setActionInProgress(true);
+        setCancelReasonModalOpen(true);
+      } else if (newStatus === "NoShow") {
+        // setActionInProgress(true);
+        setNoShowReasonModalOpen(true);
+      }
+      return;
+    }
 
     try {
-      // const response = await axios.patch(
-      //   `${config.REACT_APP_API_URL}/updateMockInterview/${round?.mockInterviewId}`,
-      //   payload
-      // );
-      // Call API to save/update Page 1 data
-      // const response = await addOrUpdateMockInterview({
-      //   formData: {
-      //     // id: round?.mockInterviewId,      // ID of existing mock interview (if editing)
-      //     ...mockinterview,
+      // Build the payload based on status
+      const payload = {
+        roundId: round?.rounds[0]?._id,
+        interviewId: mockinterview?._id,
+        action: newStatus,
+      };
 
-      //     rounds: [
-      //       // Always an array of rounds
-      //       {
-      //         ...round,
-      //         _id: round?._id, // keep round ID for updates
-      //         status: newStatus, // e.g. "Scheduled", "Completed", etc.
-      //         completedDate: newStatus === "Completed" ? new Date() : null,
-      //         rejectionReason: reason || null,
-      //         interviewers: Array.isArray(round?.interviewers)
-      //           ? round.interviewers.map((i) =>
-      //               typeof i === "object" ? i._id : i
-      //             )
-      //           : [],
-      //       },
-      //     ],
-      //     isEdit: true, // Always true for update
-      //   },
-      //   id: round?.mockInterviewId, // duplicate for backend compatibility
-      //   isEdit: true,
-      //   userId,
-      //   organizationId,
-      //   // the original round reference
-      // });
+      // Add cancellation / NoShow reason if provided
+      if (
+        (newStatus === "Cancelled" ||
+          newStatus === "NoShow" ||
+          newStatus === "Skipped") &&
+        reasonValue
+      ) {
+        payload.cancellationReason = reasonValue;
+        payload.comment = comment || null;
+      }
 
-      const response = await cancelRound.mutateAsync({
+      // Add evaluation data if Evaluated status
+      if (newStatus === "Evaluated") {
+        payload.reason = reasonValue;
+        payload.comment = comment || null;
+        if (roundOutcome) {
+          payload.roundOutcome = roundOutcome;
+        }
+      }
+
+      const response = await updateRoundStatus.mutateAsync({
         mockInterviewId: mockinterview?._id,
         roundId: round?.rounds[0]?._id,
+        payload,
       });
       // const savedMockId =
       //   response?.data?.mockInterview?._id ||
@@ -143,17 +150,127 @@ const MoockRoundCard = ({
     }
   };
 
-  const handleConfirmStatusChange = () => {
-    if (confirmAction) {
-      handleStatusChange(confirmAction);
+  // handling Completion functionlity
+  // setCompletedReasonModalOpen
+
+  const handleConfirmStatusChange = async ({
+    change = false,
+    reason,
+    comment,
+  }) => {
+    try {
+      // completedReasonModalOpen status handling
+      if (completedReasonModalOpen && change) {
+        await handleStatusChange("Completed", reason, comment || null);
+        setCompletedReasonModalOpen(false);
+      }
+      // selectedReasonModalOpen status handling
+      else if (selectedReasonModalOpen && change) {
+        await handleStatusChange("Selected", reason, comment || null);
+        setSelectedReasonModalOpen(false);
+      } else if (confirmAction && change) {
+        // Generic handle for other actions like Evaluated, FeedbackPending
+        await handleStatusChange(confirmAction, reason, comment || null);
+        setShowConfirmModal(false);
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
     }
-    setShowConfirmModal(false);
-    // setActionInProgress(false);
   };
 
   const handleReject = (reason) => {
     handleStatusChange("Rejected", reason);
     setShowRejectionModal(false);
+  };
+
+  const handleActionClick = (action) => {
+    // setActionInProgress(true);
+    if (action === "Evaluated") {
+      setEvaluatedReasonModalOpen(true);
+      // setActionInProgress(true);
+      return;
+    }
+
+    if (
+      action === "Completed" ||
+      // action === "Cancelled" ||
+      // action === "NoShow" ||
+      action === "Rejected" ||
+      action === "Selected" ||
+      action === "Scheduled" || // <-- add this line
+      action === "Skipped" ||
+      // action === "Evaluated" ||
+      action === "FeedbackPending"
+    ) {
+      setConfirmAction(action);
+      setShowConfirmModal(true);
+      // setActionInProgress(true);
+    }
+  };
+
+  // handling Rejection functionlity
+  const handleRejectWithReason = async ({ reason, comment }) => {
+    try {
+      await handleStatusChange("Rejected", reason, comment || null);
+      setRejectReasonModalOpen(false);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  // handling No show functionlity
+  const handleNoShowWithReason = async ({ reason, comment }) => {
+    setIsNoShowingRound(true);
+    try {
+      await handleStatusChange("NoShow", reason, comment || null);
+      setNoShowReasonModalOpen(false);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    } finally {
+      setIsNoShowingRound(false);
+    }
+  };
+
+  // handling Cancellation functionlity
+  const handleCancelWithReason = async ({ reason, comment }) => {
+    setIsCancellingRound(true);
+    try {
+      await handleStatusChange("Cancelled", reason, comment || null);
+      setCancelReasonModalOpen(false);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    } finally {
+      setIsCancellingRound(false);
+    }
+  };
+
+  // handling Rejection functionlity
+  const handleCompleteWithReason = async ({ reason, comment }) => {
+    try {
+      await handleStatusChange("Completed", reason, comment || null);
+      setCompleteReasonModalOpen(false);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  // handling Evaluated functionlity
+  const handleEvaluatedWithReason = async ({
+    reason,
+    comment,
+    roundOutcome,
+  }) => {
+    try {
+      await handleStatusChange(
+        "Evaluated",
+        reason,
+        comment || null,
+        roundOutcome
+      );
+      setEvaluatedReasonModalOpen(false);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
   };
 
   // const handleDeleteRound = async () => {
@@ -190,7 +307,7 @@ const MoockRoundCard = ({
     //   canFeedback: true,
     // },
     Draft: {
-      // canEdit: true,
+      canEdit: true,
       // canDelete: true,
       // canMarkScheduled: true,
       canReschedule: false,
@@ -200,7 +317,7 @@ const MoockRoundCard = ({
       canSelect: false,
     },
     RequestSent: {
-      // canEdit: true,
+      canEdit: true,
       // canDelete: false,
       // canMarkScheduled: true,
       canReschedule: true,
@@ -451,67 +568,34 @@ const MoockRoundCard = ({
                   round?.interviewType.toLowerCase() !== "instant" && (
                     <button
                       onClick={() =>
-                        navigate(`/mock-interview/${mockinterview?._id}/edit`)
+                        navigate(`/mock-interview/${mockinterview?._id}/edit`, {
+                          state: { isReschedule: true },
+                        })
                       }
-                      // onClick={() =>
-                      //   Navigate(`/mock-interview/${mockinterview?._id}/edit`)
-                      // }
-                      // `/mock-interview/${id}/edit`
-                      // onClick={() => onEdit(round, { isReschedule: true })}
-                      // onClick={() => {
-                      //   setActionInProgress(true);
-                      //   setConfirmAction("Rescheduled");
-                      //   setShowConfirmModal(true);
-                      // }}
                       className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
                     >
                       <Calendar className="h-4 w-4 mr-1" /> Reschedule
                     </button>
                   )}
                 {/* No Show */}
-                {permissions && (
-                  <button className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100">
+                {permissions.canNoShow && (
+                  <button
+                    onClick={() => {
+                      setNoShowReasonModalOpen(true);
+                    }}
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100"
+                  >
                     <UserX className="h-4 w-4 mr-1" /> No Show
                   </button>
                 )}
 
                 {/* Evaluated */}
-                {permissions && (
-                  <button className="inline-flex items-center px-3 py-2 border border-teal-300 text-sm rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100">
+                {permissions.canEvaluated && (
+                  <button
+                    onClick={() => handleActionClick("Evaluated")}
+                    className="inline-flex items-center px-3 py-2 border border-teal-300 text-sm rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100"
+                  >
                     <ClipboardList className="h-4 w-4 mr-1" /> Evaluated
-                  </button>
-                )}
-
-                {/* Edit */}
-                {permissions && (
-                  <button className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100">
-                    <Edit className="h-4 w-4 mr-1" /> Edit Round
-                  </button>
-                )}
-
-                {/* Delete */}
-                {permissions && (
-                  <button className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100">
-                    <XCircle className="h-4 w-4 mr-1" /> Delete Round
-                  </button>
-                )}
-                {/* Mark Scheduled */}
-                {permissions && (
-                  <button className="inline-flex items-center px-3 py-2 border border-indigo-300 text-sm rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100">
-                    <Clock className="h-4 w-4 mr-1" /> Mark Scheduled
-                  </button>
-                )}
-                {/* Complete */}
-                {permissions && (
-                  <button className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100">
-                    <CheckCircle className="h-4 w-4 mr-1" /> Complete
-                  </button>
-                )}
-
-                {/* Feedback */}
-                {permissions && (
-                  <button className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100">
-                    <MessageSquare className="h-4 w-4 mr-1" /> Feedback
                   </button>
                 )}
 
@@ -521,14 +605,94 @@ const MoockRoundCard = ({
                     <button
                       onClick={() => {
                         // setActionInProgress(true);
-                        setConfirmAction("Cancelled");
-                        setShowConfirmModal(true);
+                        setCancelReasonModalOpen(true);
                       }}
                       className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
                     >
                       <XCircle className="h-4 w-4 mr-1" /> Cancel
                     </button>
                   )}
+
+                {/* Edit */}
+                {permissions.canEdit &&
+                  (round?.status === "Draft" ||
+                    round?.status === "RequestSent") && (
+                    // round?.interviewType?.toLowerCase() === "instant") ||
+                    // round?.interviewType?.toLowerCase() !== "instant") &&
+                    //  (
+                    <button
+                      onClick={() =>
+                        navigate(`/mock-interview/${mockinterview?._id}/edit`, {
+                          state: { isEdit: true },
+                        })
+                      }
+                      className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                    >
+                      <Edit className="h-4 w-4 mr-1" /> Edit Round
+                    </button>
+                  )}
+
+                {/* Edit */}
+                {/* Single button for RequestSent (External) - Change Interviewers / Date */}
+                {round.status === "RequestSent" &&
+                  round?.interviewerType === "External" &&
+                  // !isInterviewCompleted &&
+                  round?.roundTitle !== "Assessment" &&
+                  round?.interviewType !== "instant" && (
+                    <button
+                      onClick={() =>
+                        navigate(`/mock-interview/${mockinterview?._id}/edit`, {
+                          state: { isRequestSent: true },
+                        })
+                      }
+                      // onClick={() => onEdit(round, { isRequestSent: true })}
+                      className="inline-flex items-center px-3 py-2 border border-yellow-500 text-sm rounded-md text-yellow-800 bg-yellow-50 hover:bg-yellow-100"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Change Interviewers
+                    </button>
+                  )}
+
+                {/* Delete */}
+                {permissions.canDelete && (
+                  <button
+                    onClick={() => setShowDeleteConfirmModal(true)}
+                    className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                  >
+                    <XCircle className="h-4 w-4 mr-1" /> Delete Round
+                  </button>
+                )}
+                {/* Mark Scheduled */}
+                {permissions.canMarkScheduled && (
+                  <button
+                    onClick={() => handleActionClick("Scheduled")}
+                    className="inline-flex items-center px-3 py-2 border border-indigo-300 text-sm rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
+                  >
+                    <Clock className="h-4 w-4 mr-1" /> Mark Scheduled
+                  </button>
+                )}
+                {/* Complete */}
+                {permissions.canComplete && (
+                  <button
+                    onClick={() => {
+                      setCompletedReasonModalOpen(true);
+                      // setConfirmAction("Selected");
+                    }}
+                    className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" /> Complete
+                  </button>
+                )}
+
+                {/* Feedback */}
+                {permissions?.canFeedback && (
+                  <button
+                    onClick={() => setShowFeedbackModal(true)}
+                    className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-1" /> Feedback
+                  </button>
+                )}
 
                 {/* Delete */}
                 {/* {canEdit && permissions.canDelete && (
@@ -589,23 +753,48 @@ const MoockRoundCard = ({
         </div>
       </div>
 
-      {showConfirmModal &&
+      {(completedReasonModalOpen ||
+        selectedReasonModalOpen ||
+        showConfirmModal) &&
         createPortal(
           // v1.0.5 <--------------------------------------------------------------------------------
           <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
             <div className="bg-white p-5 rounded-lg shadow-md">
               <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-3">
-                Are you sure you want to {confirmAction.toLowerCase()} this
-                round?
+                Are you sure you want to{" "}
+                {completedReasonModalOpen
+                  ? "Complete"
+                  : selectedReasonModalOpen
+                  ? "Select"
+                  : confirmAction === "Skipped"
+                  ? "mark as Skipped"
+                  : confirmAction === "FeedbackPending"
+                  ? "mark as Feedback Pending"
+                  : confirmAction === "Scheduled"
+                  ? "mark as Scheduled"
+                  : "Reject"}{" "}
+                this round?
               </h3>
               <div className="flex justify-end space-x-3">
                 <Button
                   variant="outline"
-                  onClick={() => setShowConfirmModal(false)}
+                  onClick={() => {
+                    setCompletedReasonModalOpen(false);
+                    setSelectedReasonModalOpen(false);
+                    setShowConfirmModal(false);
+                  }}
                 >
                   No, Cancel
                 </Button>
-                <Button variant="success" onClick={handleConfirmStatusChange}>
+                <Button
+                  className={`${
+                    confirmAction === "Cancelled" &&
+                    "bg-red-600 hover:bg-red-700"
+                  }`}
+                  variant="success"
+                  onClick={() => handleConfirmStatusChange({ change: true })}
+                  // onClick={handleConfirmStatusChange({ change: true })}
+                >
                   Yes, Confirm
                 </Button>
               </div>
@@ -614,30 +803,80 @@ const MoockRoundCard = ({
           document.body
           // v1.0.5 -------------------------------------------------------------------------------->
         )}
-      {/* {showDeleteConfirmModal &&
-              createPortal(
-                // v1.0.5 <------------------------------------------------------------------------------------------
-                <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
-                  <div className="bg-white p-5 rounded-lg shadow-md">
-                    <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-3">
-                      Are you sure you want to delete this round?
-                    </h3>
-                    <div className="flex justify-end space-x-3">
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowDeleteConfirmModal(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button variant="destructive" onClick={handleDeleteRound}>
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </div>,
-                document.body
-                // v1.0.5 ------------------------------------------------------------------------------------------>
-              )} */}
+
+      {/* Modal for No Show using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
+        isOpen={noShowReasonModalOpen}
+        onClose={() => {
+          setNoShowReasonModalOpen(false);
+          // setActionInProgress(false);
+        }}
+        onConfirm={handleNoShowWithReason}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="NoShow"
+        isLoading={isNoShowingRound}
+      />
+
+      {/* Modal for Reject using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
+        isOpen={rejectReasonModalOpen}
+        onClose={() => {
+          setRejectReasonModalOpen(false);
+          // setActionInProgress(false);
+        }}
+        onConfirm={handleRejectWithReason}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Reject"
+        isLoading={false}
+      />
+
+      {/* Modal for Complete using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
+        isOpen={completeReasonModalOpen}
+        onClose={() => {
+          setCompleteReasonModalOpen(false);
+          // setActionInProgress(false);
+        }}
+        onConfirm={handleCompleteWithReason}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Complete"
+        isLoading={false}
+      />
+
+      {/* Modal for Evaluated using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
+        isOpen={evaluatedReasonModalOpen}
+        onClose={() => {
+          setEvaluatedReasonModalOpen(false);
+          // setActionInProgress(false);
+        }}
+        onConfirm={handleEvaluatedWithReason}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Evaluated"
+        isLoading={false}
+      />
+
+      {/* Modal for Cancel using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
+        isOpen={cancelReasonModalOpen}
+        onClose={() => {
+          setCancelReasonModalOpen(false);
+        }}
+        onConfirm={handleCancelWithReason}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="Cancel"
+        isLoading={isCancellingRound}
+      />
 
       {showRejectionModal && (
         <RejectionModal
@@ -653,6 +892,34 @@ const MoockRoundCard = ({
           roundId={round}
         />
       )}
+
+      {showDeleteConfirmModal &&
+        createPortal(
+          // v1.0.5 <------------------------------------------------------------------------------------------
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
+            <div className="bg-white p-5 rounded-lg shadow-md">
+              <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-3">
+                Are you sure you want to delete this round?
+              </h3>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirmModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  // onClick={handleDeleteRound}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+          // v1.0.5 ------------------------------------------------------------------------------------------>
+        )}
 
       {/* {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">

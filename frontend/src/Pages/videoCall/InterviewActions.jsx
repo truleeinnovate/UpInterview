@@ -481,22 +481,26 @@ const InterviewActions = ({
             // timeUntil={!candidateActionEnabled ? getTimeUntilEnabled(new Date(startTime.getTime() + 15 * 60000)) : null}
           />
 
-          {/* Interview Completion */}
-          <ActionCard
-            icon={CheckCircle}
-            title="Mark Completed"
-            description="Mark the interview as successfully completed"
-            // onClick={() => openModal("completion", "completed")}
-            onClick={() => {
-              setActionInProgress(true);
-              setCompletedReasonModalOpen(true);
-              // setConfirmAction("Selected");
-            }}
-            disabled={isCompleted || !completionActionEnabled || isFinalStatus}
-            variant="success"
-            // timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
-            ready={completionActionEnabled}
-          />
+          {/* for scheduler Interview Completion */}
+          {urlData?.isSchedule && (
+            <ActionCard
+              icon={CheckCircle}
+              title="Mark Completed"
+              description="Mark the interview as successfully completed"
+              // onClick={() => openModal("completion", "completed")}
+              onClick={() => {
+                setActionInProgress(true);
+                setCompletedReasonModalOpen(true);
+                // setConfirmAction("Selected");
+              }}
+              disabled={
+                isCompleted || !completionActionEnabled || isFinalStatus
+              }
+              variant="success"
+              // timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
+              ready={completionActionEnabled}
+            />
+          )}
 
           <ActionCard
             icon={AlertTriangle}

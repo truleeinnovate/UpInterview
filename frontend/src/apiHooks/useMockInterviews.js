@@ -86,7 +86,14 @@ export const useMockInterviews = (params = {}) => {
   // Add/Update mock interview mutation
   // ====================== MUTATION 1: Save MockInterview (Page 1) ======================
   const saveMockInterview = useMutation({
-    mutationFn: async ({ formData, id, userId, organizationId, resume, isResumeRemoved }) => {
+    mutationFn: async ({
+      formData,
+      id,
+      userId,
+      organizationId,
+      resume,
+      isResumeRemoved,
+    }) => {
       const payload = {
         skills: Array.isArray(formData.skills) ? formData.skills : [],
         candidateName: formData.candidateName || "",
@@ -101,14 +108,17 @@ export const useMockInterviews = (params = {}) => {
       };
 
       const url = id
-        ? `${config.REACT_APP_API_URL}/mockinterview/${id}`
+        ? `${config.REACT_APP_API_URL}/mockinterview/updateMockInterview/${id}`
         : `${config.REACT_APP_API_URL}/mockinterview/create`;
 
       const method = id ? "patch" : "post";
 
       const response = await axios[method](url, payload);
 
-      const mockId = response.data.data?.mockInterview?._id || response.data.data?._id || response.data?._id;
+      const mockId =
+        response.data.data?.mockInterview?._id ||
+        response.data.data?._id ||
+        response.data?._id;
 
       // Resume upload
       if (mockId) {
@@ -131,9 +141,9 @@ export const useMockInterviews = (params = {}) => {
     mutationFn: async ({ mockInterviewId, round, interviewers, roundId }) => {
       if (!mockInterviewId) throw new Error("Mock Interview ID is required");
 
-    const payload = {
-      round,
-    };
+      const payload = {
+        round,
+      };
 
       const url = roundId
         ? `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}`
@@ -150,7 +160,8 @@ export const useMockInterviews = (params = {}) => {
   });
 
   // Loading states
-  const isMutationLoading = saveMockInterview.isPending || saveMockRound.isPending;
+  const isMutationLoading =
+    saveMockInterview.isPending || saveMockRound.isPending;
   const isLoading = isQueryLoading || isMutationLoading;
 
   return {
@@ -201,7 +212,7 @@ export const useMockInterviewById = (mockInterviewId) => {
     enabled: !!mockInterviewId && !!hasViewPermission,
     retry: 1,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 30,   // 30 minutes cache
+    gcTime: 1000 * 60 * 30, // 30 minutes cache
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
@@ -215,16 +226,16 @@ export const useMockInterviewById = (mockInterviewId) => {
   };
 };
 
-export const useCancelRound = () => {
+export const useUpdateRoundStatus = () => {
   const queryClient = useQueryClient();
   // const authToken = Cookies.get("authToken");
 
   return useMutation({
-    mutationFn: async ({ mockInterviewId, roundId }) => {
+    mutationFn: async ({ mockInterviewId, roundId, payload }) => {
       return (
         await axios.patch(
-          `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}/cancel`,
-          {}
+          `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}`,
+          { payload }
           // {
           //   headers: {
           //     Authorization: `Bearer ${authToken}`,
