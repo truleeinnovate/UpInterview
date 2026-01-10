@@ -1255,43 +1255,7 @@ const RoundCard = ({
                     <h4 className="text-sm font-medium text-gray-700">
                       Schedule
                     </h4>
-                    {/* <div>
-                      {round?.meetPlatform &&
-                        round?.roundTitle !== "Assessment" && (
-                          <div>
-                            {round.meetPlatform === "googlemeet" ? (
-                              <div>Google Meet</div>
-                            ) : round.meetPlatform === "zoom" ? (
-                              <div>Zoom</div>
-                            ) : (
-                              <div>Custom Link</div>
-                            )}
-                          </div>
-                        )}
-                    </div> */}
-                    {/* <div>
-                      {round?.meetPlatform &&
-                        round?.roundTitle !== "Assessment" && (
-                          <MeetPlatformBadge platform={round?.meetPlatform} />
-                        )}
-                    </div> */}
                   </div>
-                  {/* <div className="flex items-center text-sm text-gray-500 mb-1">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    <span>Scheduled: {formatDate(round.scheduledDate)}</span>
-                    {isInstantInterview() && (
-                      <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
-                        Instant
-                      </span>
-                    )}
-                  </div> */}
-
-                  {/* {round.dateTime && (
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      <span>Scheduled At: {round.dateTime}</span>
-                    </div>
-                  )} */}
                   {round.dateTime && (
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="h-4 w-4 mr-1" />

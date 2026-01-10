@@ -863,8 +863,6 @@ const RoundFormInterviews = () => {
         contact: i.contact || i, // preserve full object if needed
       }));
 
-      console.log("normalized", normalized);
-
       setExternalInterviewers(normalized);
       setInternalInterviewers([]); // clear internal
     }

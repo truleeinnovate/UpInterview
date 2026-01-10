@@ -12,7 +12,6 @@ const {
   validateMockInterview,
   validateMockInterviewUpdate,
 } = require("../validations/mockInterviewValidation");
-const { createRequest } = require("./InterviewRequestController.js");
 // const {
 //   sendOutsourceInterviewRequestEmails,
 //   sendInterviewRoundCancellationEmails,
@@ -32,64 +31,159 @@ const {
   buildSmartRoundUpdate,
   getRoundScoreFromOutcome,
 } = require("./interviewRoundsController.js");
-
+const InterviewRequest = require("../models/InterviewRequest.js");
 // Get single mock interview with rounds by id
 // GET /mockinterview/:id
-exports.getMockInterviewDetails = async (req, res) => {
-  res.locals.loggedByController = true;
-  res.locals.processName = "Get Mock Interview Details";
+// exports.getMockInterviewDetails = async (req, res) => {
+//   res.locals.loggedByController = true;
+//   res.locals.processName = "Get Mock Interview Details";
 
+//   const { id } = req.params;
+//   const { actingAsUserId, actingAsTenantId } = res.locals.auth;
+
+//   try {
+//     // Validate auth context
+//     if (!actingAsUserId || !actingAsTenantId) {
+//       return res.status(401).json({
+//         success: false,
+//         message: "Unauthorized: Missing user or tenant context",
+//       });
+//     }
+
+//     // Validate ID
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid mock interview ID",
+//       });
+//     }
+
+//     // Fetch mock interview
+//     const mockInterview = await MockInterview.findById(id)
+//       .select("-__v") // optional: exclude version key
+//       .lean();
+
+//     if (!mockInterview) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Mock interview not found",
+//       });
+//     }
+
+//     // Fetch the single round with populated interviewers
+//     const round = await MockInterviewRound.findOne({ mockInterviewId: id })
+//       .populate({
+//         path: "interviewers",
+//         model: "Contacts",
+//         select: "firstName lastName email Name", // include Name for consistency
+//       })
+//       .lean();
+
+
+//     // 4️⃣ Fetch ONLY pending (inprogress) outsource requests
+//     const pendingRequests = await InterviewRequest.find({
+//       roundId: { $in: round._id },
+//       status: "inprogress",
+//     })
+//       .populate({
+//         path: "interviewerId",
+//         select: "firstName lastName email",
+//       })
+//       .lean();
+
+//     // Map: roundId → array of pending requests
+//     const pendingRequestMap = {};
+//     pendingRequests.forEach((req) => {
+//       const roundKey = String(req.roundId);
+//       if (!pendingRequestMap[roundKey]) {
+//         pendingRequestMap[roundKey] = [];
+//       }
+//       pendingRequestMap[roundKey].push(req);
+//     })
+//     // Combine data
+//     const data = {
+//       ...mockInterview,
+//       rounds: round ? [round] : [], // always return as array for consistency
+//       pendingOutsourceRequests: pendingRequestMap[String(round._id)] || [],
+//     };
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Mock interview details fetched successfully",
+//       data,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching mock interview details:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch mock interview details",
+//       error: error.message,
+//     });
+//   }
+// };
+
+exports.getMockInterviewDetails = async (req, res) => {
   const { id } = req.params;
-  const { actingAsUserId, actingAsTenantId } = res.locals.auth;
 
   try {
-    // Validate auth context
-    if (!actingAsUserId || !actingAsTenantId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: Missing user or tenant context",
-      });
-    }
-
-    // Validate ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid mock interview ID",
-      });
+      return res.status(400).json({ success: false, message: "Invalid mock interview ID" });
     }
 
-    // Fetch mock interview
+    // 1. Fetch main mock interview document
     const mockInterview = await MockInterview.findById(id)
-      .select("-__v") // optional: exclude version key
+      .select("-__v")
       .lean();
 
     if (!mockInterview) {
-      return res.status(404).json({
-        success: false,
-        message: "Mock interview not found",
-      });
+      return res.status(404).json({ success: false, message: "Mock interview not found" });
     }
 
-    // Fetch the single round with populated interviewers
+    // 2. Fetch the single round (if exists) with populated interviewers
     const round = await MockInterviewRound.findOne({ mockInterviewId: id })
       .populate({
         path: "interviewers",
         model: "Contacts",
-        select: "firstName lastName email Name", // include Name for consistency
+        select: "firstName lastName email Name profilePicture",
       })
       .lean();
 
-    // Combine data
-    const data = {
+    // 3. Fetch pending outsource requests — only if round exists
+    let pendingOutsourceRequests = [];
+
+    if (round) {
+      pendingOutsourceRequests = await InterviewRequest.find({
+        roundId: round._id,
+        status: "inprogress",
+      })
+        .populate({
+          path: "interviewerId",
+          select: "firstName lastName email",
+        })
+        .lean();
+    }
+
+    // 4. Build enriched round (pending requests only here)
+    const enrichedRound = round
+      ? {
+        ...round,
+        interviewers: round.interviewers || [],
+        questions: [],                       // Mock has no questions
+        pendingOutsourceRequests,            // ← only here, per round
+        scheduledAssessment: null,           // Mock never has this
+      }
+      : null;
+
+    // 5. Final clean response — NO pending requests at root level
+    const responseData = {
       ...mockInterview,
-      rounds: round ? [round] : [], // always return as array for consistency
+      // Rounds array (empty or with 1 enriched round)
+      rounds: enrichedRound ? [enrichedRound] : [],
     };
 
-    return res.status(200).json({
+    return res.json({
       success: true,
-      message: "Mock interview details fetched successfully",
-      data,
+      data: responseData,
     });
   } catch (error) {
     console.error("Error fetching mock interview details:", error);
@@ -100,473 +194,6 @@ exports.getMockInterviewDetails = async (req, res) => {
     });
   }
 };
-
-// exports.createMockInterview = async (req, res) => {
-//   res.locals.loggedByController = true;
-//   res.locals.processName = "Create mock interview with rounds";
-//   console.log("req.body", req.body);
-//   try {
-//     const validation = validateMockInterview(req.body);
-//     console.log("validation", validation);
-//     if (!validation.isValid) {
-//       return res.status(400).json({
-//         status: "error",
-//         message: "Validation failed",
-//         errors: validation.errors,
-//       });
-//     }
-
-//     const {
-//       skills,
-//       ownerId,
-//       tenantId,
-//       candidateName,
-//       higherQualification,
-//       currentExperience,
-//       // technology,
-//       currentRole,
-//       jobDescription,
-//       rounds,
-//       createdById,
-//       lastModifiedById,
-//     } = req.body;
-
-//     console.log("req.body", req.body);
-
-//     // Generate mockInterviewCode using centralized service
-//     const mockInterviewCode = await generateUniqueId(
-//       "MINT",
-//       MockInterview,
-//       "mockInterviewCode"
-//     );
-
-//     // Create mock interview
-//     const mockInterview = new MockInterview({
-//       skills,
-//       currentRole,
-//       candidateName,
-//       higherQualification,
-//       currentExperience,
-//       // technology,
-//       jobDescription,
-//       ownerId,
-//       tenantId,
-//       mockInterviewCode,
-//       createdBy: createdById || ownerId,
-//       updatedBy: lastModifiedById || createdById || ownerId,
-//     });
-
-//     const newMockInterview = await mockInterview.save();
-
-//     // Create rounds if provided (for Page 2 submit)
-//     let createdRounds = [];
-//     if (rounds && Array.isArray(rounds) && rounds.length > 0) {
-//       const roundPromises = rounds.map((round, index) => {
-//         const mockInterviewRound = new MockInterviewRound({
-//           mockInterviewId: newMockInterview._id,
-//           sequence: round.sequence || index + 1,
-//           roundTitle: round.roundTitle,
-//           interviewMode: round.interviewMode,
-//           interviewType: round.interviewType,
-//           interviewerType: round.interviewerType,
-//           duration: round.duration,
-//           instructions: round.instructions,
-//           dateTime: round.dateTime,
-//           interviewerViewType: round.interviewerViewType,
-//           interviewers: round.interviewers || [],
-//           status: round.status || "Draft",
-//           currentAction: round.currentAction,
-//           currentActionReason: round.currentActionReason,
-//           meetingId: round.meetingId,
-//         });
-
-//         return mockInterviewRound.save();
-//       });
-
-//       createdRounds = await Promise.all(roundPromises);
-//     }
-
-//     // Generate feed and logs
-//     res.locals.feedData = {
-//       tenantId,
-//       feedType: "info",
-//       action: {
-//         name: "mock_interview_created",
-//         description: `Mock interview ${
-//           rounds && rounds.length > 0
-//             ? "with " + rounds.length + " rounds "
-//             : ""
-//         }was created successfully`,
-//       },
-//       ownerId,
-//       parentId: newMockInterview._id,
-//       parentObject: "Mock interview",
-//       metadata: req.body,
-//       severity: "low",
-//       message: `Mock interview ${
-//         rounds && rounds.length > 0 ? "with " + rounds.length + " rounds " : ""
-//       }was created successfully`,
-//     };
-
-//     res.locals.logData = {
-//       tenantId,
-//       ownerId,
-//       processName: "Create mock interview with rounds",
-//       requestBody: req.body,
-//       message: "Mock interview created successfully",
-//       status: "success",
-//       responseBody: {
-//         mockInterview: newMockInterview,
-//         rounds: createdRounds,
-//       },
-//     };
-
-//     // Send response
-//     res.status(201).json({
-//       status: "success",
-//       message: `Mock interview ${
-//         rounds && rounds.length > 0 ? "with " + rounds.length + " rounds " : ""
-//       }created successfully`,
-//       data: {
-//         mockInterview: newMockInterview,
-//         rounds: createdRounds,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Error creating mock interview:", error);
-
-//     res.locals.logData = {
-//       tenantId: req.body.tenantId,
-//       ownerId: req.body.ownerId,
-//       processName: "Create mock interview",
-//       requestBody: req.body,
-//       message: error.message,
-//       status: "error",
-//     };
-
-//     res.status(500).json({
-//       status: "error",
-//       message: "Failed to create mock interview. Please try again later.",
-//       data: { error: error.message },
-//     });
-//   }
-// };
-
-// // ✅ FIXED - No Duplicate Rounds on PATCH (Scoping Issue Fixed)
-// exports.updateMockInterview = async (req, res) => {
-//   res.locals.loggedByController = true;
-//   res.locals.processName = "Update mock interview";
-
-//   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-//     return res.status(400).json({ message: "Invalid mock ID" });
-//   }
-
-//   const mockId = new mongoose.Types.ObjectId(req.params.id); // req.params.id;
-
-//   // const objectRoundId = new mongoose.Types.ObjectId(roundId);
-
-//   try {
-//     // ✅ Validate incoming data
-//     const validation = validateMockInterviewUpdate(req.body);
-//     if (!validation.isValid) {
-//       return res.status(400).json({
-//         status: "error",
-//         message: "Validation failed",
-//         errors: validation.errors,
-//       });
-//     }
-
-//     const {
-//       skills,
-//       ownerId,
-//       tenantId,
-//       candidateName,
-//       higherQualification,
-//       currentExperience,
-//       // technology,
-//       currentRole,
-//       jobDescription,
-//       rounds,
-//       createdById,
-//       lastModifiedById,
-//     } = validation.validatedData;
-
-//     // ✅ Fetch existing mock interview
-//     const existingMockInterview = await MockInterview.findById(mockId);
-//     if (!existingMockInterview) {
-//       return res.status(404).json({
-//         status: "error",
-//         message: "Mock interview not found",
-//       });
-//     }
-
-//     console.log("req.body updatted", req.body);
-
-//     let changes = [];
-//     let roundsUpdatedCount = 0;
-//     let roundsCreatedCount = 0;
-
-//     // ✅ Update skills
-//     if (skills && Array.isArray(skills)) {
-//       changes.push({
-//         fieldName: "skills",
-//         oldValue: existingMockInterview.skills,
-//         newValue: skills,
-//       });
-//       existingMockInterview.skills = skills;
-//     }
-
-//     // ✅ Update basic fields
-//     const basicFields = {
-//       candidateName,
-//       higherQualification,
-//       currentExperience,
-//       // technology,
-//       currentRole,
-//       jobDescription,
-//     };
-
-//     Object.keys(basicFields).forEach((field) => {
-//       if (
-//         basicFields[field] !== undefined &&
-//         existingMockInterview[field] !== basicFields[field]
-//       ) {
-//         changes.push({
-//           fieldName: field,
-//           oldValue: existingMockInterview[field],
-//           newValue: basicFields[field],
-//         });
-//         existingMockInterview[field] = basicFields[field];
-//       }
-//     });
-
-//     // ✅ Update metadata
-//     if (lastModifiedById) existingMockInterview.updatedBy = lastModifiedById;
-//     existingMockInterview.updatedAt = new Date();
-
-//     // ✅ Handle rounds - FIXED LOGIC
-//     if (req.body.rounds !== undefined) {
-//       let roundsArray = [];
-//       if (Array.isArray(req.body.rounds)) {
-//         roundsArray = req.body.rounds;
-//       } else if (req.body.rounds && typeof req.body.rounds === "object") {
-//         roundsArray = [req.body.rounds];
-//       }
-
-//       if (roundsArray.length > 0) {
-//         for (const round of roundsArray) {
-//           // 🔥 FIX: Check both _id and id fields properly
-//           const roundId = round?._id || round?.id;
-
-//           if (roundId) {
-//             // ✅ This is an EXISTING round - UPDATE it
-
-//             try {
-//               const existingRound = await MockInterviewRound.findOne({
-//                 _id: roundId,
-//                 mockInterviewId: mockId,
-//               });
-
-//               if (!existingRound) {
-//                 console.warn(
-//                   `Round ${roundId} not found in database, skipping update`
-//                 );
-//                 continue;
-//               }
-
-//               // Track changes
-//               const roundChanges = [];
-//               const updateFields = [
-//                 "sequence",
-//                 "roundTitle",
-//                 "interviewMode",
-//                 "interviewType",
-//                 "interviewerType",
-//                 "duration",
-//                 "instructions",
-//                 "dateTime",
-//                 "interviewerViewType",
-//                 "status",
-//                 "currentAction",
-//                 "currentActionReason",
-//                 "meetingId",
-//               ];
-
-//               // Update scalar fields
-//               updateFields.forEach((field) => {
-//                 if (
-//                   round[field] !== undefined &&
-//                   existingRound[field] !== round[field]
-//                 ) {
-//                   roundChanges.push({
-//                     fieldName: `${field} (round ${
-//                       round.sequence || existingRound.sequence
-//                     })`,
-//                     oldValue: existingRound[field],
-//                     newValue: round[field],
-//                   });
-//                   existingRound[field] = round[field];
-//                 }
-//               });
-
-//               // Update interviewers array
-//               if (round.interviewers && Array.isArray(round.interviewers)) {
-//                 const oldInterviewers = JSON.stringify(
-//                   existingRound.interviewers
-//                 );
-//                 const newInterviewers = JSON.stringify(round.interviewers);
-
-//                 if (oldInterviewers !== newInterviewers) {
-//                   roundChanges.push({
-//                     fieldName: `interviewers (round ${
-//                       round.sequence || existingRound.sequence
-//                     })`,
-//                     oldValue: existingRound.interviewers,
-//                     newValue: round.interviewers,
-//                   });
-//                   existingRound.interviewers = round.interviewers;
-//                 }
-//               }
-
-//               // Save if there are changes
-//               if (roundChanges.length > 0) {
-//                 await existingRound.save();
-//                 changes.push(...roundChanges);
-//                 roundsUpdatedCount++;
-//               } else {
-//               }
-//             } catch (err) {
-//               console.error(`❌ Error updating round ${roundId}:`, err);
-//               throw err;
-//             }
-//           } else {
-//             // ✅ This is a NEW round - CREATE it
-
-//             try {
-//               const currentRoundCount = await MockInterviewRound.countDocuments(
-//                 {
-//                   mockInterviewId: mockId,
-//                 }
-//               );
-
-//               const newRound = new MockInterviewRound({
-//                 mockInterviewId: mockId,
-//                 sequence: round.sequence || currentRoundCount + 1,
-//                 roundTitle: round.roundTitle,
-//                 interviewMode: round.interviewMode,
-//                 interviewType: round.interviewType,
-//                 interviewerType: round.interviewerType,
-//                 duration: round.duration,
-//                 instructions: round.instructions,
-//                 dateTime: round.dateTime,
-//                 interviewerViewType: round.interviewerViewType,
-//                 interviewers: round.interviewers || [],
-//                 status: round.status || "Draft",
-//                 currentAction: round.currentAction,
-//                 currentActionReason: round.currentActionReason,
-//                 meetingId: round.meetingId,
-//               });
-
-//               const savedRound = await newRound.save();
-
-//               // Add to mock interview rounds array
-//               if (!existingMockInterview.rounds) {
-//                 existingMockInterview.rounds = [];
-//               }
-//               existingMockInterview.rounds.push(savedRound._id);
-
-//               changes.push({
-//                 fieldName: "new_round",
-//                 oldValue: "none",
-//                 newValue: `Round ${savedRound.sequence} created`,
-//               });
-
-//               roundsCreatedCount++;
-//             } catch (err) {
-//               console.error(`❌ Error creating new round:`, err);
-//               throw err;
-//             }
-//           }
-//         }
-//       }
-//     }
-
-//     // ✅ Save mock interview
-//     const updatedMockInterview = await existingMockInterview.save();
-
-//     // ✅ Feed data
-//     res.locals.feedData = {
-//       tenantId: tenantId || existingMockInterview.tenantId,
-//       feedType: "update",
-//       action: {
-//         name: "mock_interview_updated",
-//         description: "Mock interview updated successfully",
-//       },
-//       ownerId: ownerId || existingMockInterview.ownerId,
-//       parentId: mockId,
-//       parentObject: "Mock interview",
-//       metadata: req.body,
-//       severity: "low",
-//       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
-//         fieldName,
-//         message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
-//       })),
-//       history: changes,
-//     };
-
-//     // ✅ Log data
-//     res.locals.logData = {
-//       tenantId: tenantId || existingMockInterview.tenantId,
-//       ownerId: ownerId || existingMockInterview.ownerId,
-//       processName: "Update mock interview",
-//       requestBody: req.body,
-//       message: "Mock interview updated successfully",
-//       status: "success",
-//       responseBody: updatedMockInterview,
-//     };
-
-//     // ✅ Get all updated rounds
-//     const updatedRounds = await MockInterviewRound.find({
-//       mockInterviewId: mockId,
-//     });
-//     // .sort({ sequence: 1 });
-
-//     // ✅ Success response
-//     res.status(200).json({
-//       status: "success",
-//       message: "Mock interview updated successfully",
-//       data: {
-//         mockInterview: updatedMockInterview,
-//         rounds: updatedRounds,
-//         updateSummary: {
-//           totalRounds: updatedRounds.length,
-//           roundsUpdated: roundsUpdatedCount,
-//           roundsCreated: roundsCreatedCount,
-//           totalChanges: changes.length,
-//         },
-//       },
-//     });
-//   } catch (error) {
-//     console.error("❌ Error updating MockInterview:", error);
-
-//     // ✅ Safe logging of error - FIXED: Proper string conversion
-//     res.locals.logData = {
-//       tenantId: req.body.tenantId,
-//       ownerId: req.body.ownerId,
-//       processName: "Update mock interview",
-//       requestBody: req.body,
-//       message: error.message || "Unknown error occurred",
-//       status: "error",
-//       responseError: error.stack || error.message || "No stack trace available",
-//     };
-
-//     res.status(500).json({
-//       status: "error",
-//       message: "Failed to update mock interview. Please try again later.",
-//       data: { error: error.message },
-//     });
-//   }
-// };
 
 // Only creates the MockInterview (candidate details) - NO ROUNDS
 exports.createMockInterview = async (req, res) => {
@@ -986,6 +613,8 @@ exports.updateMockInterviewRound = async (req, res) => {
 
   try {
     const { round, updateType } = req.body;
+    console.log("round", round);
+    console.log("updateType", updateType);
     if (!round) {
       return res.status(400).json({ message: "Round data is required" });
     }
@@ -1003,6 +632,31 @@ exports.updateMockInterviewRound = async (req, res) => {
       return res.status(404).json({ message: "Mock interview not found" });
     }
 
+    // ── SPECIAL CASE: Only updating meeting link (called after creation) ──
+    if (updateType === "MEETING_LINK_ONLY") {
+      const updateOps = { $set: {} };
+
+      // Use round (what frontend sends)
+      if (round.meetingId) {
+        updateOps.$set.meetingId = round.meetingId;
+      }
+      if (round.meetPlatform) {
+        updateOps.$set.meetPlatform = round.meetPlatform;
+      }
+
+
+      const updatedRound = await MockInterviewRound.findByIdAndUpdate(
+        roundId,
+        updateOps,
+        { new: true, runValidators: true }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Meeting link updated successfully",
+        data: { round: updatedRound },
+      });
+    }
     // Process interviewers
     if (round.interviewers) {
       round.interviewers = await processInterviewers(round.interviewers);
@@ -1160,14 +814,14 @@ exports.updateMockInterviewRound = async (req, res) => {
 
     const finalUpdate = smartUpdate
       ? {
-          $set: { ...updatePayload.$set, ...smartUpdate.$set },
-          $push: {
-            history: [
-              ...updatePayload.$push.history,
-              ...smartUpdate.$push.history,
-            ],
-          },
-        }
+        $set: { ...updatePayload.$set, ...smartUpdate.$set },
+        $push: {
+          history: [
+            ...updatePayload.$push.history,
+            ...smartUpdate.$push.history,
+          ],
+        },
+      }
       : updatePayload;
 
     const updatedRound = await MockInterviewRound.findByIdAndUpdate(
@@ -1649,7 +1303,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => {} }), locals: {} }
+        { status: () => ({ json: () => { } }), locals: {} }
       );
     }
 
