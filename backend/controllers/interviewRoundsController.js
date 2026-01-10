@@ -31,7 +31,9 @@ const {
   processWithdrawnRefund,
 } = require("../utils/interviewWalletUtil");
 //this will create agenda when round schedule based on round date time more than 20 mins interviwer or candidate no joined means it will update no show
-const { scheduleOrRescheduleNoShow } = require("../services/interviews/roundNoShowScheduler");
+const {
+  scheduleOrRescheduleNoShow,
+} = require("../services/interviews/roundNoShowScheduler");
 // const {
 // handleInterviewerRequestFlow
 // } = require("../utils/Interviews/handleInterviewerRequestFlow.js");
@@ -52,6 +54,27 @@ const saveInterviewRound = async (req, res) => {
         .status(400)
         .json({ message: "Interview ID and round data are required." });
     }
+
+    // ==================== ADD PARALLEL SCHEDULING VALIDATION HERE ====================
+    // Only validate for new rounds (not updates - roundId would be present for updates)
+    if (!roundId) {
+      const validation = await validateRoundCreationBasedOnParallelScheduling(
+        interviewId,
+        true
+      );
+      console.log("validation", validation);
+      console.log("round?.interviewers.length", round?.interviewers);
+      if (!validation.isValid && round?.interviewers.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: validation.message,
+          code: validation.code,
+          details: validation.activeRound || validation.latestRoundOutcome,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
+    // ==================== END VALIDATION ====================
 
     // Process interviewers if present
     if (round.interviewers) {
@@ -900,7 +923,6 @@ const updateInterviewRound = async (req, res) => {
       shouldcreateRequestFlow = true;
       generateMeetingLink = true;
       // await scheduleOrRescheduleNoShow(round);
-
     }
     //  else if (
     //   wasScheduledBefore &&
@@ -1944,7 +1966,7 @@ async function handleInterviewerRequestFlow({
   // cancelOldRequests = false,
 }) {
   const { createRequest } = require("./InterviewRequestController.js");
-  
+
   const interview = await Interview.findById(interviewId).lean();
   if (!interview) return;
 
@@ -2055,136 +2077,6 @@ async function handleInternalRoundEmails({
     }
   );
 }
-
-// function detectRoundChanges({
-//   existingRound,
-//   incomingRound,
-//   selectedInterviewers,
-// }) {
-//   const changes = {
-//     statusChanged: false,
-//     dateTimeChanged: false,
-//     interviewersChanged: false,
-//     anyChange: false,
-//   };
-
-//   // Status change
-//   if (incomingRound.status && incomingRound.status !== existingRound.status) {
-//     changes.statusChanged = true;
-//     changes.anyChange = true;
-//   }
-
-//   // DateTime change
-//   if (
-//     incomingRound.dateTime &&
-//     new Date(incomingRound.dateTime).getTime() !==
-//       new Date(existingRound.dateTime).getTime()
-//   ) {
-//     changes.dateTimeChanged = true;
-//     changes.anyChange = true;
-//   }
-
-//   // Interviewers change
-//   const oldIds = (existingRound.interviewers || [])
-//     .map((i) => String(i.contact?._id || i._id))
-//     .sort();
-
-//   const newIds = (selectedInterviewers || [])
-//     .map((i) => String(i.contact?._id || i._id))
-//     .sort();
-
-//   if (JSON.stringify(oldIds) !== JSON.stringify(newIds)) {
-//     changes.interviewersChanged = true;
-//     changes.anyChange = true;
-//   }
-
-//   return changes;
-// }
-
-// function detectRoundChanges({
-//   existingRound,
-//   incomingRound,
-//   selectedInterviewers = [],
-//   compareInterviewers = true,
-//   compareQuestions = true,
-//   compareInstructions = true,
-// }) {
-//   const changes = {
-//     statusChanged: false,
-//     dateTimeChanged: false,
-//     // interviewersChanged: false,
-//     instructionsChanged: false, // ✅ NEW
-//     questionsChanged: false, // ✅ NEW
-//     anyChange: false,
-//   };
-
-//   console.log("detectRoundChanges", {
-//     existingRound,
-//     incomingRound,
-//   });
-
-//   // Status change
-//   if (incomingRound.status && incomingRound.status !== existingRound.status) {
-//     changes.statusChanged = true;
-//     changes.anyChange = true;
-//   }
-
-//   // DateTime change
-//   if (
-//     incomingRound.dateTime &&
-//     incomingRound.dateTime !== existingRound.dateTime
-//     // incomingRound.dateTime &&
-//     // new Date(incomingRound.dateTime).getTime() !==
-//     //   new Date(existingRound.dateTime).getTime()
-//   ) {
-//     changes.dateTimeChanged = true;
-//     changes.anyChange = true;
-//   }
-
-//   // Interviewers change (optional)
-//   // if (compareInterviewers) {
-//   //   const oldIds = (existingRound.interviewers || [])
-//   //     .map((i) => String(i.contact?._id || i._id))
-//   //     .sort();
-
-//   //   const newIds = (selectedInterviewers || [])
-//   //     .map((i) => String(i.contact?._id || i._id))
-//   //     .sort();
-
-//   //   if (JSON.stringify(oldIds) !== JSON.stringify(newIds)) {
-//   //     changes.interviewersChanged = true;
-//   //     changes.anyChange = true;
-//   //   }
-//   // }
-
-//   // Instructions change (optional)
-//   if (
-//     compareInstructions &&
-//     incomingRound.instructions !== undefined &&
-//     incomingRound.instructions !== existingRound.instructions
-//   ) {
-//     changes.instructionsChanged = true;
-//     changes.anyChange = true;
-//   }
-
-//   // Questions change (optional – deep compare)
-//   if (compareQuestions) {
-//     const oldQuestions = JSON.stringify(existingRound.questions || []);
-//     const newQuestions = JSON.stringify(incomingRound.questions || []);
-
-//       const existingQuestions = await interviewQuestions.find({
-//   interviewId : existingRound?.interviewId,
-//   roundId: existingRound?._id,
-// });
-
-//     if (oldQuestions !== newQuestions) {
-//       changes.questionsChanged = true;
-//       changes.anyChange = true;
-//     }
-//   }
-
-//   return changes;
-// }
 
 async function detectRoundChanges({
   existingRound,
@@ -2559,6 +2451,112 @@ const triggerInterviewRoundStatusUpdated = async (
     );
   } catch (error) {
     console.error("Error in triggerInterviewRoundStatusUpdated:", error);
+  }
+};
+
+// Common validation function for both POST and PATCH APIs Healper fucntion
+const validateRoundCreationBasedOnParallelScheduling = async (
+  interviewId,
+  isNewRound = true,
+  roundId = null
+) => {
+  try {
+    const interview = await Interview.findById(interviewId).lean();
+    if (!interview) {
+      return { isValid: false, message: "Interview not found" };
+    }
+
+    // Check if allowParallelScheduling is false
+    if (!interview.allowParallelScheduling) {
+      // Find all existing rounds for this interview
+      const existingRounds = await InterviewRounds.find({
+        interviewId,
+        status: { $nin: ["Completed", "Cancelled", "Skipped", "Rejected"] },
+      }).sort({ sequence: 1 });
+
+      if (existingRounds.length > 0) {
+        // Check if any round has NO or STRONG_NO outcome
+        const hasNegativeOutcomeRound = existingRounds.some((round) =>
+          ["NO", "STRONG_NO"].includes(round.roundOutcome)
+        );
+
+        if (hasNegativeOutcomeRound) {
+          // For new round creation - block it
+          if (isNewRound) {
+            return {
+              isValid: false,
+              message:
+                "Cannot create new round. A previous round has negative outcome (NO/STRONG_NO) and parallel scheduling is disabled.",
+              code: "PARALLEL_SCHEDULING_DISABLED_NEGATIVE_OUTCOME",
+            };
+          }
+
+          // For updating existing round to scheduled/rescheduled status
+          if (roundId) {
+            // Check if this is the round with negative outcome
+            const currentRoundIndex = existingRounds.findIndex(
+              (r) => r._id.toString() === roundId.toString()
+            );
+            const currentRound = existingRounds[currentRoundIndex];
+
+            // If current round has negative outcome, prevent scheduling/rescheduling
+            if (
+              currentRound &&
+              ["NO", "STRONG_NO"].includes(currentRound.roundOutcome)
+            ) {
+              return {
+                isValid: false,
+                message:
+                  "Cannot schedule/reschedule this round. It has negative outcome (NO/STRONG_NO) and parallel scheduling is disabled.",
+                code: "NEGATIVE_OUTCOME_NO_SCHEDULING",
+              };
+            }
+          }
+        }
+
+        // Additional check: If any round is in Scheduled/Rescheduled status and parallel scheduling is false
+        // This prevents creating new rounds when previous ones are still active
+        const hasActiveScheduledRound = existingRounds.some((round) =>
+          ["Scheduled", "Rescheduled", "RequestSent", "InProgress"].includes(
+            round.status
+          )
+        );
+
+        if (hasActiveScheduledRound && isNewRound) {
+          // Find the active round
+          const activeRound = existingRounds.find((round) =>
+            ["Scheduled", "Rescheduled", "RequestSent", "InProgress"].includes(
+              round.status
+            )
+          );
+
+          return {
+            isValid: false,
+            message: `Cannot create new round. Round "${
+              activeRound.roundTitle || "#" + activeRound.sequence
+            }" is currently ${activeRound.status.toLowerCase()} and parallel scheduling is disabled.`,
+            activeRound: {
+              sequence: activeRound.sequence,
+              roundTitle: activeRound.roundTitle,
+              status: activeRound.status,
+            },
+            code: "ACTIVE_ROUND_EXISTS_NO_PARALLEL",
+          };
+        }
+      }
+    }
+
+    return { isValid: true };
+  } catch (error) {
+    console.error(
+      "Error in validateRoundCreationBasedOnParallelScheduling:",
+      error
+    );
+    return {
+      isValid: false,
+      message: "Validation error",
+      error: error.message,
+    };
   }
 };
 
