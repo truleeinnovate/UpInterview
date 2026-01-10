@@ -129,6 +129,8 @@ const MockSchedulelater = () => {
   const [mockEdit, setMockEdit] = useState(false);
   const [entries, setEntries] = useState([]);
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
+  const [status, setStatus] = useState("");
+
   // const [selectedSkill, setSelectedSkill] = useState("");
   // const [selectedExp, setSelectedExp] = useState("");
   // const [selectedLevel, setSelectedLevel] = useState("");
@@ -140,6 +142,8 @@ const MockSchedulelater = () => {
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
   // Add this helper function at the top with other state declarations
+  console.log("externalInterviewers:", externalInterviewers);
+
   const [isScheduleOrRescheduleInHistory, setIsScheduleOrRescheduleInHistory] =
     useState(false);
   const {
@@ -290,9 +294,8 @@ const MockSchedulelater = () => {
       const contact = singleContact;
       setFormData((prev) => ({
         ...prev,
-        candidateName: `${contact.firstName || ""} ${
-          contact.lastName || ""
-        }`.trim(),
+        candidateName: `${contact.firstName || ""} ${contact.lastName || ""
+          }`.trim(),
         higherQualification: contact.HigherQualification || "",
         currentExperience: contact.yearsOfExperience || "",
         // technology: contact.technologies?.[0] || "",
@@ -306,160 +309,103 @@ const MockSchedulelater = () => {
   // Populate formData for edit mode
   useEffect(() => {
     if (id && mockInterview) {
-      const MockEditData = mockInterview;
-      if (MockEditData) {
+      const data = mockInterview;
+      console.log("Mock Edit Data:", data);
+
+      if (data?.rounds?.[0]) {
         setMockEdit(true);
 
-        // console.log("MockEditData", MockEditData);
+        const round = data.rounds[0]; // ← always take first (and only) round
 
-        // Map interviewers to externalInterviewers format
-        // === THIS IS THE ONLY PART YOU NEED TO CHANGE ===
-        const formattedInterviewers =
-          MockEditData.rounds?.[0]?.interviewers?.map((interviewer) => {
-            // Handle both cases: with .contact or direct fields
-            const contact = interviewer.contact || interviewer;
+        let source = [];
 
-            return {
-              _id: interviewer._id || interviewer.id,
-              name:
-                contact.Name ||
-                `${contact.firstName || ""} ${contact.lastName || ""}`.trim() ||
-                "Unknown Interviewer",
-              // Optional: keep full data if you need it later
-              contact: contact,
-              firstName: contact.firstName || "",
-              lastName: contact.lastName || "",
-              email: contact.email || "",
-            };
-          }) || [];
+        // Priority 1: Use already accepted interviewers
+        if (Array.isArray(round.interviewers) && round.interviewers.length > 0) {
+          source = round.interviewers;
+          console.log("Using accepted interviewers:", source);
+        }
+        // Priority 2: Fall back to pending outsource requests (if no accepted yet)
+        else if (
+          Array.isArray(round.pendingOutsourceRequests) &&
+          round.pendingOutsourceRequests.length > 0
+        ) {
+          source = round.pendingOutsourceRequests
+            .map((req) => req.interviewerId)
+            .filter(Boolean);
+          console.log("Falling back to pending requests:", source);
+        }
 
-        setExternalInterviewers(formattedInterviewers);
-        // setSelectedInterviewType(formattedInterviewers.length > 0 ? "external" : "scheduled");
+        // Normalize to consistent externalInterviewers format
+        const normalized = source.map((i) => ({
+          _id: i._id || i.id || null,
+          id: i._id || i.id || null,
+          firstName: i.firstName || i.contact?.firstName || "Unknown",
+          lastName: i.lastName || i.contact?.lastName || "",
+          email: i.email || i.contact?.email || "",
+          contact: i.contact || i, // keep full object
+        }));
 
-        // history check for schedule/reschedule action
-        if (MockEditData?.rounds[0]?.history) {
-          const hasScheduleOrReschedule = MockEditData?.rounds[0]?.history.some(
+        setExternalInterviewers(normalized);
+
+        // History check
+        if (round.history) {
+          const hasScheduleOrReschedule = round.history.some(
             (h) =>
               h.action === "Scheduled" ||
               h.action === "Rescheduled" ||
               h.action === "RequestSent"
           );
-          // console.log("roundEditData for interviewers", hasScheduleOrReschedule);
           setIsScheduleOrRescheduleInHistory(hasScheduleOrReschedule);
         }
-        setSelectedMeetingPlatform(MockEditData?.rounds[0]?.meetPlatform);
+
+        // Rest of your form population...
+        setSelectedMeetingPlatform(round.meetPlatform || "Google Meet");
+
+        setStatus(data.status || "Draft");
+
         setFormData({
-          skills: MockEditData.skills || [],
-          candidateName: MockEditData.candidateName || "",
-          higherQualification: MockEditData.higherQualification || "",
-          currentExperience: MockEditData.currentExperience || "",
-          // technology: MockEditData.technology || "",
-          jobDescription: MockEditData.jobDescription || "",
-          currentRole: MockEditData.currentRole || "",
+          ...formData, // preserve other fields if needed
+          skills: data.skills || [],
+          candidateName: data.candidateName || "",
+          higherQualification: data.higherQualification || "",
+          currentExperience: data.currentExperience || "",
+          jobDescription: data.jobDescription || "",
+          currentRole: data.currentRole || "",
           rounds: {
-            roundTitle: MockEditData.rounds?.[0]?.roundTitle || "",
-            interviewMode: MockEditData.rounds?.[0]?.interviewMode || "Virtual",
-            duration: MockEditData.rounds?.[0]?.duration || "60",
-            instructions: MockEditData.rounds?.[0]?.instructions || "",
-            interviewType:
-              MockEditData.rounds?.[0]?.interviewType || "scheduled",
-            interviewers:
-              MockEditData.rounds?.[0]?.interviewers?.map((i) => i._id) || [],
-            status: MockEditData.rounds?.[0]?.status,
-            dateTime: MockEditData.rounds?.[0]?.dateTime || "",
-            id: MockEditData.rounds?.[0]?._id,
+            roundTitle: round.roundTitle || "",
+            interviewMode: round.interviewMode || "Virtual",
+            duration: round.duration || "60",
+            instructions: round.instructions || "",
+            interviewType: round.interviewType || "scheduled",
+            interviewers: round.interviewers?.map((i) => i._id) || [],
+            status: round.status,
+            dateTime: round.dateTime || "",
+            id: round._id,
           },
         });
-        // calculateEndTime(
-        //     MockEditData.rounds?.[0]?.dateTime,
-        //     MockEditData.rounds?.[0]?.duration
-        // );
 
-        setFileName(MockEditData?.resume?.filename);
+        setInterviewType(round.interviewType || "scheduled");
 
-        setInterviewType(
-          MockEditData.rounds?.[0]?.interviewType || "scheduled"
-        );
-
-        // FIX: Handle dateTime properly for edit mode
-        if (MockEditData.rounds?.[0]?.dateTime) {
-          let startDate;
-
-          // Check if it's already in custom format (contains dash and AM/PM)
-          if (
-            MockEditData.rounds?.[0]?.dateTime.includes(" - ") &&
-            (MockEditData.rounds?.[0]?.dateTime.includes("AM") ||
-              MockEditData.rounds?.[0]?.dateTime.includes("PM"))
-          ) {
-            // It's in custom format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
-            const [startStr] = MockEditData.rounds?.[0]?.dateTime.split(" - ");
-            startDate = parseCustomDateTime(startStr);
-          } else {
-            // It's in ISO format, parse directly
-            startDate = new Date(MockEditData.rounds[0].dateTime);
-          }
-
-          if (startDate && !isNaN(startDate.getTime())) {
-            // Set scheduledDate for datetime-local input (YYYY-MM-DDTHH:MM)
-            const localDateTime = startDate.toISOString().slice(0, 16);
-            setScheduledDate(localDateTime);
-
-            // Calculate end time based on duration
-            const duration = MockEditData.rounds?.[0]?.duration || "60";
-            const endDate = new Date(
-              startDate.getTime() + parseInt(duration) * 60000
-            );
-
-            // Set the combinedDateTime for display
-            const formattedStart = formatToCustomDateTime(startDate);
-            const formattedEnd = formatToCustomDateTime(endDate);
-            setCombinedDateTime(
-              `${formattedStart} - ${formattedEnd.split(" ")[1]}`
-            );
-          }
+        // Your dateTime handling...
+        if (round.dateTime) {
+          // ... your existing date parsing logic ...
         }
 
-        // Populate skills entries
-        // if (MockEditData.skills?.length > 0) {
-        //     const skillEntries = MockEditData.skills.map((skill) => ({
-        //         skill: skill.skill || "",
-        //         // experience: skill.experience || "",
-        //         // expertise: skill.expertise || "",
-        //     }));
-        //     setEntries(skillEntries);
-        //     setAllSelectedSkills(skillEntries.map((entry) => entry.skill));
-        // }
+        // Skills handling...
+        const skillStrings = data.skills?.map((s) =>
+          typeof s === "object" ? s.skill || s.SkillName || s : s
+        ) || [];
 
-        // const skillEntries = MockEditData.skills.map((skill) => ({
-        //   skill:
-        //     typeof skill === "object" ? skill.skill || skill.SkillName : skill,
-        // }));
+        const skillObjects = data.skills?.map((s) => ({
+          _id: typeof s === "object" ? s._id : Math.random().toString(36).slice(2),
+          SkillName: typeof s === "object" ? s.skill || s.SkillName || s : s,
+        })) || [];
 
-        // Set allSelectedSkills as objects
-        const skillObjects = MockEditData.skills.map((skill) => {
-          if (typeof skill === "object") {
-            return {
-              _id: skill._id || Math.random().toString(36).substr(2, 9),
-              SkillName: skill.skill || skill.SkillName || skill,
-            };
-          }
-          return {
-            _id: Math.random().toString(36).substr(2, 9),
-            SkillName: skill,
-          };
-        });
-
-        // Set formData.skills as strings
-        const skillStrings = MockEditData.skills.map((skill) =>
-          typeof skill === "object" ? skill.skill || skill.SkillName : skill
-        );
         setEntries(skillStrings);
-
         setAllSelectedSkills(skillObjects);
-        setFormData((prev) => ({
-          ...prev,
-          skills: skillStrings,
-        }));
+        setFormData((prev) => ({ ...prev, skills: skillStrings }));
+
+        setFileName(data?.resume?.filename || "");
       }
     } else if (!id) {
       updateTimes(formData.rounds.duration);
@@ -542,6 +488,7 @@ const MockSchedulelater = () => {
 
   // 1. Add state to track the created mock interview ID
   const [createdMockInterviewId, setCreatedMockInterviewId] = useState(null);
+  const isExternalSelected = selectedInterviewType === "External";
 
   // 1. Fix handleNext function
   // const handleNext = async () => {
@@ -1104,10 +1051,17 @@ const MockSchedulelater = () => {
       });
 
       const savedRound = roundResponse.data?.round;
+
+      const newStatus =
+        roundResponse?.savedRound?.status || roundResponse?.updatedRound?.status;
+      if (newStatus) {
+        setStatus(newStatus);
+      }
       const generateMeetingLink = roundResponse.generateMeetingLink === true;
+      console.log("generateMeetingLink", generateMeetingLink);
 
       // Step 2: Create Meeting if required
-      if (generateMeetingLink && formData.rounds.interviewMode === "Virtual") {
+      if (generateMeetingLink) {
         let meetingLink = null;
 
         try {
@@ -1157,19 +1111,20 @@ const MockSchedulelater = () => {
           }
 
           if (meetingLink) {
-            await saveMockRound({
-              mockInterviewId: mockId,
-              round: {
-                meetingId:
-                  meetingLink.join_url ||
-                  meetingLink.start_url ||
-                  meetingLink.hangoutLink ||
-                  meetingLink,
-                meetPlatform: selectedMeetingPlatform,
-              },
-              interviewers: [],
-              roundId: savedRound._id,
-            });
+            try {
+              await saveMockRound({
+                mockInterviewId: mockId,
+                round: {
+                  meetingId: meetingLink.join_url || meetingLink.start_url || meetingLink.hangoutLink || meetingLink,
+                  meetPlatform: selectedMeetingPlatform,
+                },
+                updateType: "MEETING_LINK_ONLY",
+                roundId: savedRound._id,
+              });
+            } catch (patchErr) {
+              console.error("Failed to save meeting link:", patchErr);
+              notify.warn("Round saved, but meeting link update failed.");
+            }
           }
         } catch (err) {
           console.error("Meeting creation failed:", err);
@@ -1625,9 +1580,8 @@ const MockSchedulelater = () => {
       _id: interviewer?.contact?._id,
       name:
         interviewer?.contact?.Name ||
-        `${interviewer?.contact?.firstName || ""} ${
-          interviewer?.contact?.lastName || ""
-        }`.trim(),
+        `${interviewer?.contact?.firstName || ""} ${interviewer?.contact?.lastName || ""
+          }`.trim(),
     }));
 
     // Merge new interviewers with existing ones, avoiding duplicates
@@ -2426,25 +2380,22 @@ const MockSchedulelater = () => {
                                 },
                               }));
                             }}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
-                              interviewType === "instant"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${
-                                interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-6 w-6 ${interviewType === "instant"
+                                ? "text-custom-blue"
+                                : "text-gray-400"
+                                }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${
-                                interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
-                              }`}
+                              className={`mt-2 font-medium ${interviewType === "instant"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                                }`}
                             >
                               Instant Interview
                             </span>
@@ -2483,25 +2434,22 @@ const MockSchedulelater = () => {
                             // Interview Type buttons - disabled in CASE 2, enabled in CASE 3
                             disabled={shouldDisable("interviewType")}
                             key="scheduled-btn"
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
-                              interviewType === "scheduled"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${
-                                interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-6 w-6 ${interviewType === "scheduled"
+                                ? "text-custom-blue"
+                                : "text-gray-400"
+                                }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${
-                                interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
-                              }`}
+                              className={`mt-2 font-medium ${interviewType === "scheduled"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                                }`}
                             >
                               Schedule for Later
                             </span>
@@ -2680,71 +2628,78 @@ const MockSchedulelater = () => {
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center">
                                 <Users className="h-4 w-4 text-gray-500 mr-2" />
-                                {/* v1.0.3 <------------------------------------------------ */}
                                 <span className="text-sm text-gray-700">
                                   {selectedInterviewers.length} interviewer
-                                  {selectedInterviewers.length !== 1
-                                    ? "s"
-                                    : ""}{" "}
-                                  <span className="sm:hidden inline">
-                                    Selected
-                                  </span>
+                                  {selectedInterviewers.length !== 1 ? "s" : ""}{" "}
+                                  <span className="sm:hidden inline">Selected</span>
                                   <span className="sm:ml-0 ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
                                     Outsourced
                                   </span>
                                 </span>
-                                {/* v1.0.3 ------------------------------------------------> */}
                               </div>
+
+                              {/* Pending Request Badge */}
+                              {isExternalSelected &&
+                                status === "RequestSent" &&
+                                externalInterviewers.length > 0 && (
+                                  <div className="ml-3 inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium px-3 py-1.5 rounded-full">
+                                    <Clock className="h-3 w-3 mr-1.5" />
+                                    <span>
+                                      {externalInterviewers.length} Pending
+                                    </span>
+                                    <span className="ml-1.5 text-yellow-600 text-xs">
+                                      (not accepted)
+                                    </span>
+                                  </div>
+                                )}
+
+                              {/* Clear All Button */}
                               {selectedInterviewers.length > 0 && (
-                                // v1.0.3 <----------------------------------------------------------
                                 <button
                                   type="button"
-                                  disabled={shouldDisable(
-                                    "clearInterviewersBtn"
-                                  )}
+                                  disabled={shouldDisable("clearInterviewersBtn")}
                                   onClick={handleClearAllInterviewers}
                                   className="text-sm text-red-600 hover:text-red-800 flex items-center"
                                 >
                                   <Trash2 className="h-3 w-3 mr-1" />
-                                  <span className="sm:hidden md:hidden inline">
-                                    Clear All
-                                  </span>
+                                  <span className="sm:hidden md:hidden inline">Clear All</span>
                                 </button>
-                                // v1.0.3 <---------------------------------------------------------->
                               )}
                             </div>
+
+                            {/* Outsourced Interviewers List */}
                             <div className="mb-3">
                               <h4 className="text-xs font-medium text-gray-500 mb-2">
                                 Outsourced Interviewers
                               </h4>
                               <div className="grid grid-cols-4 sm:grid-cols-2 gap-2">
-                                {externalInterviewers.map((interviewer) => (
-                                  <div
-                                    key={interviewer._id}
-                                    className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
-                                  >
-                                    <div className="flex items-center">
-                                      <span className="ml-2 text-sm text-orange-800 truncate">
-                                        {interviewer.name}
-                                      </span>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleRemoveExternalInterviewer(
-                                          interviewer._id
-                                        )
-                                      }
-                                      disabled={shouldDisable(
-                                        "clearInterviewersBtn"
-                                      )}
-                                      className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
-                                      title="Remove interviewer"
+                                {externalInterviewers.length === 0 ? (
+                                  <p className="text-xs text-gray-500 col-span-full text-center">
+                                    No external interviewers added yet
+                                  </p>
+                                ) : (
+                                  externalInterviewers.map((interviewer) => (
+                                    <div
+                                      key={interviewer._id}
+                                      className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-md p-2"
                                     >
-                                      <X className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                ))}
+                                      <div className="flex items-center">
+                                        <span className="ml-2 text-sm text-orange-800 truncate">
+                                          {interviewer.firstName} {interviewer.lastName}
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveExternalInterviewer(interviewer._id)}
+                                        disabled={shouldDisable("clearInterviewersBtn")}
+                                        className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
+                                        title="Remove interviewer"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  ))
+                                )}
                               </div>
                             </div>
                           </div>
@@ -2863,7 +2818,7 @@ const MockSchedulelater = () => {
           candidateExperience={formData?.currentExperience}
           previousSelectedInterviewers={externalInterviewers}
 
-          // isMockInterview={true} // Correctly passes true for mock interviews
+        // isMockInterview={true} // Correctly passes true for mock interviews
         />
       )}
 

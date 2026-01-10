@@ -292,7 +292,15 @@ const MoockRoundCard = ({
   // Get interviewers based on interviewerType
 
   const externalInterviewers =
-    round?.interviewerType === "external" ? round?.interviewers || [] : [];
+    round?.interviewerType === "External"
+      ? Array.isArray(round?.interviewers) && round.interviewers.length > 0
+        ? round.interviewers
+        : Array.isArray(round?.pendingOutsourceRequests)
+          ? round.pendingOutsourceRequests
+            .map((req) => req.interviewerId)
+            .filter(Boolean)
+          : []
+      : [];
 
   const roundActionPermissions = {
     // Draft: {
@@ -420,40 +428,34 @@ const MoockRoundCard = ({
   return (
     <>
       <div
-        className={`bg-white rounded-lg ${
-          !hideHeader && "shadow-md"
-        } overflow-hidden ${isActive ? "ring-2 ring-blue-500" : ""}`}
+        className={`bg-white rounded-lg ${!hideHeader && "shadow-md"
+          } overflow-hidden ${isActive ? "ring-2 ring-blue-500" : ""}`}
       >
         <div className="p-5">
           <>
             <div className="grid grid-cols-2 md:grid-cols-2 gap-4 sm:grid-cols-1">
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">
-                  Schedule
-                </h4>
-                {/* v1.0.0 <------------------------------------------------------------------- */}
-                <div className="flex sm:flex-col sm:items-start items-center text-sm text-gray-500 mb-1">
-                  <div className="flex gap-1">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    Scheduled:
-                  </div>
-                  <div className="flex items-center justify-between sm:w-full">
-                    <span>{formatDate(round?.dateTime?.split(" ")[0])}</span>
-                    {/* commmented for conformation */}
-                    {/* {isInstantInterview() && (
-                      <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
-                        Instant
-                      </span>
-                    )} */}
-                  </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="text-sm font-medium text-gray-700">
+                    Schedule
+                  </h4>
                 </div>
+                {round.dateTime && (
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    <span>
+                      Scheduled At: {round.dateTime.split(" - ")[0]}
+                    </span>
+                  </div>
+                )}
+
                 {/* v1.0.0 <------------------------------------------------------------------- */}
-                {round.completedDate && (
+                {/* {round.completedDate && (
                   <div className="flex items-center text-sm text-gray-500">
                     <Clock className="h-4 w-4 mr-1" />
                     <span>Completed: {formatDate(round?.completedDate)}</span>
                   </div>
-                )}
+                )} */}
                 {round.duration && (
                   <div className="flex items-center text-sm text-gray-500 mt-1">
                     <Clock className="h-4 w-4 mr-1" />
@@ -467,18 +469,6 @@ const MoockRoundCard = ({
                   <h4 className="text-sm font-medium text-gray-700">
                     Interviewers
                   </h4>
-                  {/* v1.0.0 <--------------------------------------------------------------------------------- */}
-                  {/* <button
-                    onClick={() => setShowInterviewers(!showInterviewers)}
-                    className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                  >
-                    {showInterviewers ? "Hide" : "Show"}
-                    {showInterviewers ? (
-                      <ChevronUp className="h-4 w-4 ml-1" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 ml-1" />
-                    )}
-                  </button> */}
                 </div>
 
                 {externalInterviewers.length === 0 && (
@@ -490,35 +480,6 @@ const MoockRoundCard = ({
                 {
                   <div className="space-y-2">
                     {/* v1.0.0 ------------------------------------------------------------------ */}
-
-                    {/* {round?.interviewers?.length > 0 && (
-                      <div>
-                        <div className="flex items-center text-xs text-gray-500 mb-1">
-                          <User className="h-3 w-3 mr-1" />
-                          <span>Internal ({round?.interviewers?.length})</span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {round?.interviewers?.map((interviewer) => (
-                            <div
-                              key={interviewer._id}
-                              className="flex items-center"
-                            >
-                              <InterviewerAvatar
-                                interviewer={interviewer}
-                                size="sm"
-                              />
-                              <span className="ml-1 text-xs text-gray-600">
-                                {interviewer?.firstName ||
-                                  "" + interviewer.lastName ||
-                                  ""}
-                              </span>
-                            
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
- */}
 
                     {externalInterviewers.length > 0 && (
                       <div>
@@ -765,14 +726,14 @@ const MoockRoundCard = ({
                 {completedReasonModalOpen
                   ? "Complete"
                   : selectedReasonModalOpen
-                  ? "Select"
-                  : confirmAction === "Skipped"
-                  ? "mark as Skipped"
-                  : confirmAction === "FeedbackPending"
-                  ? "mark as Feedback Pending"
-                  : confirmAction === "Scheduled"
-                  ? "mark as Scheduled"
-                  : "Reject"}{" "}
+                    ? "Select"
+                    : confirmAction === "Skipped"
+                      ? "mark as Skipped"
+                      : confirmAction === "FeedbackPending"
+                        ? "mark as Feedback Pending"
+                        : confirmAction === "Scheduled"
+                          ? "mark as Scheduled"
+                          : "Reject"}{" "}
                 this round?
               </h3>
               <div className="flex justify-end space-x-3">
@@ -787,13 +748,12 @@ const MoockRoundCard = ({
                   No, Cancel
                 </Button>
                 <Button
-                  className={`${
-                    confirmAction === "Cancelled" &&
+                  className={`${confirmAction === "Cancelled" &&
                     "bg-red-600 hover:bg-red-700"
-                  }`}
+                    }`}
                   variant="success"
                   onClick={() => handleConfirmStatusChange({ change: true })}
-                  // onClick={handleConfirmStatusChange({ change: true })}
+                // onClick={handleConfirmStatusChange({ change: true })}
                 >
                   Yes, Confirm
                 </Button>
@@ -910,7 +870,7 @@ const MoockRoundCard = ({
                 </Button>
                 <Button
                   variant="destructive"
-                  // onClick={handleDeleteRound}
+                // onClick={handleDeleteRound}
                 >
                   Delete
                 </Button>
@@ -941,27 +901,5 @@ const MoockRoundCard = ({
     </>
   );
 };
-
-// RoundCard.propTypes = {
-//   round: PropTypes.shape({
-//     id: PropTypes.string.isRequired,
-//     name: PropTypes.string.isRequired,
-//     type: PropTypes.string.isRequired,
-//     mode: PropTypes.string.isRequired,
-//     status: PropTypes.string.isRequired,
-//     scheduledDate: PropTypes.string,
-//     completedDate: PropTypes.string,
-//     duration: PropTypes.number,
-//     interviewers: PropTypes.arrayOf(PropTypes.string).isRequired,
-//     questions: PropTypes.arrayOf(PropTypes.string).isRequired,
-//     detailedFeedback: PropTypes.string,
-//     feedbacks: PropTypes.array
-//   }).isRequired,
-//   interviewId: PropTypes.string.isRequired,
-//   canEdit: PropTypes.bool.isRequired,
-//   onEdit: PropTypes.func.isRequired,
-//   isActive: PropTypes.bool,
-//   hideHeader: PropTypes.bool
-// };
 
 export default MoockRoundCard;

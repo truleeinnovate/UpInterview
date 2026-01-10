@@ -1,185 +1,113 @@
-const mongoose = require("mongoose");
-const { MockInterview } = require("../../models/Mockinterview/mockinterview");
-const { Interview } = require("../../models/Interview/Interview.js");
-const InterviewRequest = require("../../models/InterviewRequest.js");
-const { generateUniqueId } = require("../../services/uniqueIdGeneratorService");
-const { sendOutsourceInterviewRequestEmails } = require("../../controllers/EmailsController/interviewEmailController");
-// const { createRequest } = require("../../controllers/InterviewRequestController.js");
+// utils/Interviews/handleInterviewerRequestFlow.js
 
+const mongoose = require('mongoose');
+const { Interview } = require('../../models/Interview/Interview');
+const { MockInterview } = require('../../models/Mockinterview/mockinterview');
+const { createRequest } = require('../../controllers/InterviewRequestController');
+const { sendOutsourceInterviewRequestEmails } = require('../../controllers/EmailsController/interviewEmailController');
+
+/**
+ * Unified function to create interview requests (works for both real & mock interviews)
+ */
 async function handleInterviewerRequestFlow({
   interviewId,
   round,
   selectedInterviewers = [],
   isMockInterview = false,
+  // cancelOldRequests = false, // you can add back later if needed
 }) {
-    console.log("isMockInterview",isMockInterview);
-    
+  // 1. Get parent document
   let interview;
+  if (isMockInterview) {
+    interview = await MockInterview.findById(interviewId).lean();
+  } else {
+    interview = await Interview.findById(interviewId).lean();
+  }
 
-  try {
-    if (isMockInterview) {
-      interview = await MockInterview.findById(interviewId).lean();
-    } else {
-      interview = await Interview.findById(interviewId).lean();
-    }
-
-    if (!interview) {
-      console.error("Parent not found:", interviewId);
-      return;
-    }
-  } catch (err) {
-    console.error("DB error:", err);
+  if (!interview) {
+    console.error(`Parent ${isMockInterview ? 'mock' : ''} interview not found:`, interviewId);
     return;
   }
 
-  // Force External for mock interviews
-  const effectiveInterviewerType = isMockInterview ? "External" : round.interviewerType;
+  // Optional: Cancel old pending requests (useful mostly in update flows)
+  // if (cancelOldRequests) {
+  //   await InterviewRequest.updateMany(
+  //     { roundId: round._id, status: { $in: ['inprogress', 'requestsent'] } },
+  //     { status: 'withdrawn', respondedAt: new Date() }
+  //   );
+  // }
 
+  // 2. Create requests for each selected interviewer
   for (const interviewer of selectedInterviewers) {
-    // For mock: interviewer._id
-    // For real: interviewer.contact._id
-    const interviewerId = interviewer._id || interviewer.contact?._id;
+    // ── Flexible ID resolution ──
+    const interviewerId = interviewer._id || interviewer.contact?._id || interviewer.contactId;
 
     if (!interviewerId || !mongoose.Types.ObjectId.isValid(interviewerId)) {
-      console.error("Invalid interviewer ID:", interviewer);
+      console.error('Invalid interviewer ID:', interviewer);
       continue;
     }
 
-    // For mock interviews, contactId = interviewerId (since no separate contact)
-    const contactId = isMockInterview ? interviewerId : (interviewer.contactId || interviewer.contact?._id);
+    // For mock interviews → contactId = interviewerId (same person)
+    const contactId = isMockInterview ? interviewerId : (interviewer.contact?._id || interviewer.contactId);
 
-    await createRequest({
-      body: {
-        tenantId: interview.tenantId,
-        ownerId: interview.ownerId,
-        scheduledInterviewId: isMockInterview ? undefined : interview._id,
-        interviewerType: effectiveInterviewerType, // ← FORCE External for mock
-        interviewerId,
-        contactId, // ← correct for both cases
-        dateTime: round.dateTime,
-        duration: round.duration,
-        candidateId: isMockInterview ? undefined : interview.candidateId,
-        positionId: isMockInterview ? undefined : interview.positionId,
-        roundId: round._id,
-        expiryDateTime: round.expiryDateTime || new Date(Date.now() + 24*60*60*1000),
-        isMockInterview,
-      }
-    }, { status: () => ({ json: () => {} }) });
+    // Fake minimal res object — only with what's needed
+    const fakeRes = {
+      locals: {}, // ← prevents crash
+      status: () => ({ json: () => {} }),
+    };
+
+    await createRequest(
+      {
+        body: {
+          tenantId: interview.tenantId?.toString(),
+          ownerId: interview.ownerId?.toString(),
+          scheduledInterviewId: isMockInterview ? undefined : interview._id,
+          interviewerType: round.interviewerType || 'External', // default for mock
+          interviewerId,
+          contactId,
+          dateTime: round.dateTime,
+          duration: round.duration,
+          candidateId: isMockInterview ? undefined : interview.candidateId,
+          positionId: isMockInterview ? undefined : interview.positionId,
+          roundId: round._id,
+          expiryDateTime: round.expiryDateTime,
+          isMockInterview,
+          requestMessage: round.interviewerType === 'Internal' 
+            ? 'Internal interview request' 
+            : 'External interview request',
+        },
+      },
+      fakeRes
+    );
   }
 
-  // Send emails only for External
-  if (effectiveInterviewerType === "External") {
-    const interviewerIds = selectedInterviewers
-      .map(i => (i._id || i.contact?._id)?.toString())
+  // 3. Send emails → only for External interviewers
+  if (round.interviewerType === 'External') {
+    const interviewerContactIds = selectedInterviewers
+      .map(i => (i.contact?._id || i.contactId || i._id)?.toString())
       .filter(Boolean);
 
-    if (interviewerIds.length > 0) {
-      await sendOutsourceInterviewRequestEmails({
-        body: {
-          interviewId: interview._id,
-          roundId: round._id,
-          interviewerIds,
-          type: isMockInterview ? "mockinterview" : "interview",
-        }
-      }, { status: () => ({ json: () => {} }) });
-      console.log("Emails sent to:", interviewerIds);
+    if (interviewerContactIds.length > 0) {
+      const fakeResForEmail = {
+        locals: {},
+        status: () => ({ json: () => {} }),
+      };
+
+      await sendOutsourceInterviewRequestEmails(
+        {
+          body: {
+            interviewId: interview._id,
+            roundId: round._id,
+            interviewerIds: interviewerContactIds,
+            type: isMockInterview ? 'mockinterview' : 'interview',
+          },
+        },
+        fakeResForEmail
+      );
+
+      console.log(`Outsource emails sent to ${interviewerContactIds.length} external interviewers`);
     }
   }
 }
-
-createRequest = async (req, res) => {
-  // Mark that logging will be handled by this controller
-//   res.locals.loggedByController = true;
-//   res.locals.processName = "Create Interview Request";
-
-  try {
-    const {
-      tenantId,
-      ownerId,
-      scheduledInterviewId,
-      interviewerType,
-      dateTime,
-      duration,
-      interviewerId,
-      candidateId,
-      positionId,
-      // status,
-      roundId,
-      requestMessage,
-      expiryDateTime,
-      isMockInterview,
-      contactId,
-    } = req.body;
-    const isInternal = interviewerType === "Internal";
-
-    // Generate custom request ID using centralized service with tenant ID
-    const customRequestId = await generateUniqueId(
-      "INT-RQST",
-      InterviewRequest,
-      "customRequestId",
-      tenantId
-    );
-
-    const newRequest = new InterviewRequest({
-      interviewRequestCode: customRequestId,
-      tenantId: new mongoose.Types.ObjectId(tenantId),
-      ownerId,
-      scheduledInterviewId: isMockInterview
-        ? undefined
-        : new mongoose.Types.ObjectId(scheduledInterviewId),
-      interviewerType,
-      contactId: new mongoose.Types.ObjectId(contactId),
-      interviewerId: new mongoose.Types.ObjectId(interviewerId), // Save interviewerId instead of an array
-      dateTime,
-      duration,
-      candidateId: isMockInterview
-        ? undefined
-        : new mongoose.Types.ObjectId(candidateId),
-      positionId: isMockInterview
-        ? undefined
-        : new mongoose.Types.ObjectId(positionId),
-      status: isInternal ? "accepted" : "inprogress",
-      roundId: new mongoose.Types.ObjectId(roundId),
-      requestMessage: isInternal
-        ? "Internal interview request"
-        : "Outsource interview request",
-      expiryDateTime,
-      isMockInterview,
-    });
-
-    await newRequest.save();
-
-    // Structured internal log for successful interview request creation
-    // res.locals.logData = {
-    //   tenantId: tenantId || "",
-    //   ownerId: ownerId || "",
-    //   processName: "Create Interview Request",
-    //   requestBody: req.body,
-    //   status: "success",
-    //   message: "Interview request created successfully",
-    //   responseBody: newRequest,
-    // };
-
-    res.status(201).json({
-      message: "Interview request created successfully",
-      data: newRequest,
-    });
-  } catch (error) {
-    console.error("Error creating interview request:", error);
-    // Structured internal log for error case
-    // res.locals.logData = {
-    //   tenantId: req.body?.tenantId || "",
-    //   ownerId: req.body?.ownerId || "",
-    //   processName: "Create Interview Request",
-    //   requestBody: req.body,
-    //   status: "error",
-    //   message: error.message,
-    // };
-
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
-  }
-};
 
 module.exports = { handleInterviewerRequestFlow };
