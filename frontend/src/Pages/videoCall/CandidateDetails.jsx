@@ -8,9 +8,15 @@ import {
   Briefcase,
   ChevronUp,
   ChevronDown,
+  Building2,
+  Clock,
 } from "lucide-react";
 
-const CandidateDetails = ({ candidateData, positionData, isFullScreen = false }) => {
+const CandidateDetails = ({
+  candidateData,
+  positionData,
+  isFullScreen = false,
+}) => {
   console.log("candidate in candidate details ", candidateData);
   console.log("positionData in candidate details ", positionData);
   const [expandedSections, setExpandedSections] = useState({
@@ -30,8 +36,11 @@ const CandidateDetails = ({ candidateData, positionData, isFullScreen = false })
   const candidateDetails = {
     skills: candidateData?.skills || candidateData?.candidate?.skills || [],
     certificates:
-      candidateData?.certificates || candidateData?.candidate?.certificates || [],
-    projects: candidateData?.projects || candidateData?.candidate?.projects || [],
+      candidateData?.certificates ||
+      candidateData?.candidate?.certificates ||
+      [],
+    projects:
+      candidateData?.projects || candidateData?.candidate?.projects || [],
   };
 
   return (
@@ -39,9 +48,9 @@ const CandidateDetails = ({ candidateData, positionData, isFullScreen = false })
     <div className="space-y-6">
       {/* Basic Info */}
       <div className="bg-white rounded-lg p-6 shadow-sm">
-        <div className="flex items-center mb-4">
+        <div className="flex items-center">
           {candidateData?.candidate?.FirstName && (
-            <>
+            <div className="mb-4">
               <User
                 className="sm:h-4 sm:w-4 md:h-4 md:w-4 h-5 w-5 mr-2"
                 style={{ color: "rgb(33, 121, 137)" }}
@@ -49,10 +58,10 @@ const CandidateDetails = ({ candidateData, positionData, isFullScreen = false })
               <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
                 Candidate Information
               </h3>
-            </>
+            </div>
           )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p className="text-sm font-medium text-gray-500">Name</p>
             <p className="text-sm text-gray-900">
@@ -81,6 +90,86 @@ const CandidateDetails = ({ candidateData, positionData, isFullScreen = false })
           <div>
             <p className="text-sm font-medium text-gray-500">Company Name</p>
             <p className="text-gray-900">{positionData?.companyname}</p>
+          </div>
+        </div> */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+            {/* name */}
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-custom-bg rounded-lg">
+                <User className="w-5 h-5 text-gray-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Name</p>
+                <p
+                  className="text-sm text-gray-900 truncate cursor-default max-w-[200px]"
+                  title={`${
+                    candidateData?.FirstName ||
+                    candidateData?.candidate?.FirstName ||
+                    ""
+                  } ${
+                    candidateData?.LastName ||
+                    candidateData?.candidate?.LastName ||
+                    ""
+                  }`}
+                >
+                  {candidateData?.FirstName ||
+                    candidateData?.candidate?.FirstName}{" "}
+                  {candidateData?.LastName ||
+                    candidateData?.candidate?.LastName}
+                </p>
+              </div>
+            </div>
+            {/* Experience */}
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-custom-bg rounded-lg">
+                <Clock className="w-5 h-5 text-gray-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Experience</p>
+                <p className="text-sm text-gray-900">
+                  {candidateData?.CurrentExperience ||
+                  candidateData?.candidate?.CurrentExperience
+                    ? `${
+                        candidateData?.CurrentExperience ||
+                        candidateData?.candidate?.CurrentExperience
+                      } Years`
+                    : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+            {/* Position */}
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-custom-bg rounded-lg">
+                <Briefcase className="w-5 h-5 text-gray-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Position</p>
+                <p
+                  className="text-sm text-gray-900 truncate cursor-default max-w-[200px]"
+                  title={positionData?.title}
+                >
+                  {positionData?.title}
+                </p>
+              </div>
+            </div>
+            {/* Company */}
+            <div className="flex items-center gap-3 cursor-default">
+              <div className="p-2 bg-custom-bg rounded-lg">
+                <Building2 className="w-5 h-5 text-gray-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Company</p>
+                <p
+                  className="text-sm text-gray-900 truncate max-w-[200px]"
+                  title={positionData?.companyname}
+                >
+                  {positionData?.companyname}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -476,9 +476,9 @@ const InterviewerView = ({
               )}
               {activeTab === "interviewActions" && (
                 <InterviewActions
-                  interviewData={selectedCandidate}
+                  // interviewData={selectedCandidate}
                   isAddMode={true}
-                  decodedData={decodedData}
+                  // decodedData={decodedData}
                 />
               )}
               {activeTab === "feedback" && (

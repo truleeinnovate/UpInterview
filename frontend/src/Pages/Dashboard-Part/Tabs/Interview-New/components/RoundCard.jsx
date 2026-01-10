@@ -980,7 +980,7 @@ const RoundCard = ({
       canExtendAssessment: true,
       canCancelAssessment: true,
       canNoShow: true,
-      canSkipped: true,
+      canSkipped: false,
       canEvaluated: true,
       canFeedbackPending: false,
     },
@@ -1123,7 +1123,7 @@ const RoundCard = ({
       canShareLink: false,
       canNoShow: false,
       canSkipped: false,
-      canEvaluated: true,
+      canEvaluated: false,
       canFeedbackPending: false,
     },
   };

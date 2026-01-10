@@ -9,10 +9,10 @@ import {
   MicOff,
   VideoOff,
 } from "lucide-react";
-import { useMediaDevice } from "@videosdk.live/react-sdk";
+// import { useMediaDevice } from "@videosdk.live/react-sdk";
 import { useInterviews } from "../../apiHooks/useInterviews";
 import { extractUrlData } from "../../apiHooks/useVideoCall";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // Determine which sections to show based on roleInfo
@@ -48,11 +48,11 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
   console.log("urlData in RoleSelector:", urlData);
 
- const { data, isLoading } = useInterviewDetails(
-    {roundId: urlData.interviewRoundId}
-  );
+  const { data, isLoading } = useInterviewDetails({
+    roundId: urlData.interviewRoundId,
+  });
 
-  console.log('data 22 from roleselector', data);
+  console.log("data 22 from roleselector", data);
 
   // const candidateData = data;
 
@@ -73,7 +73,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   console.log("Current Status:", interviewRoundData);
 
   // Function to update interview status to "in-progress"
-  const updateInterviewStatus = async () => {
+  const updateInterviewStatus = async (role) => {
     try {
       setIsUpdatingStatus(true);
 
@@ -96,6 +96,11 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
         roundId: interviewRoundData?._id,
         interviewId: interviewRoundData?.interviewId,
         action: "InProgress",
+        role: role,
+        userId: urlData?.interviewerId,
+        History_Type: "Histoy_Handling",
+        joined:
+          (role === "Interviewer" && true) || (role === "Scheduler" && true),
       });
 
       return response;
@@ -113,27 +118,18 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // Handle role selection
   const handleRoleSelect = async (role) => {
     // if (role === "interviewer") {
-      try {
-        // Wait for the API call to succeed
-        await updateInterviewStatus();
+    try {
+      // Wait for the API call to succeed
+      await updateInterviewStatus(role);
 
-        // Only proceed if API call was successful
-        onRoleSelect(role);
-      } catch (error) {
-        // Handle the error - don't call onRoleSelect
-        console.error("Failed to update interview status:", error);
-        // You could show a toast message here
-        // toast.error("Failed to start interview. Please try again.");
-      }
-    // } else {
-    //   // For candidate role, proceed directly
-    //   onRoleSelect(role);
-    // }
-    // if (role === "interviewer") {
-    //   // Update status to "in-progress" before proceeding
-    //   await updateInterviewStatus();
-    // }
-    // onRoleSelect(role);
+      // Only proceed if API call was successful
+      onRoleSelect(role);
+    } catch (error) {
+      // Handle the error - don't call onRoleSelect
+      console.error("Failed to update interview status:", error);
+      // You could show a toast message here
+      // toast.error("Failed to start interview. Please try again.");
+    }
   };
 
   // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
@@ -360,7 +356,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     <div className="bg-gradient-to-br from-[#217989] to-[#1a616e] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl py-8 sm:px-4 md:px-4 px-8 w-full max-w-8xl">
         <div className="text-center mb-6">
-          {console.log('interviewRoundData?.meetPlatform near video preview ', interviewRoundData?.meetPlatform)}
+          {console.log(
+            "interviewRoundData?.meetPlatform near video preview ",
+            interviewRoundData?.meetPlatform
+          )}
           {interviewRoundData?.meetPlatform === "platform" ? (
             <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden mb-8 max-w-2xl mx-auto">
               <div className="relative aspect-video bg-black">
@@ -592,7 +591,9 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
                     window.open(currentUrl.toString(), "_blank");
                   } else {
-                    handleRoleSelect("interviewer");
+                    handleRoleSelect(
+                      urlData?.isInterviewer ? "interviewer" : "scheduler"
+                    );
                   }
                 }}
                 className={`w-full sm:text-sm md:text-sm ${

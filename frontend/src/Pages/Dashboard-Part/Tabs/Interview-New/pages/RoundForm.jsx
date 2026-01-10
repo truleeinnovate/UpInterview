@@ -296,7 +296,7 @@ const RoundFormInterviews = () => {
     isReschedule = false,
     isEdit = false,
     isRequestSent = false,
-    mode, // optional if you switch to mode-based approach
+    // mode, // optional if you switch to mode-based approach
   } = location.state || {};
 
   console.log("isReschedule:", isReschedule);
@@ -792,6 +792,8 @@ const RoundFormInterviews = () => {
       ? roundEditData.interviewMode.charAt(0).toUpperCase() +
         roundEditData.interviewMode.slice(1)
       : "";
+
+    setSelectedMeetingPlatform(roundEditData?.meetPlatform || "");
     setInterviewMode(normalizedMode);
     setSelectedInterviewType(roundEditData.interviewerType || null);
     setInterviewQuestionsList(roundEditData.questions || []);
@@ -1237,7 +1239,7 @@ const RoundFormInterviews = () => {
     }));
   };
 
-  console.log("internalInterviewers:", internalInterviewers);
+  // console.log("internalInterviewers:", internalInterviewers);
 
   // Replace the existing interviewType change handler
   const handleInterviewTypeChange = (type) => {
@@ -2210,6 +2212,10 @@ const RoundFormInterviews = () => {
         response: err.response?.data,
       });
 
+      // if (err.response?.data?.message) {
+      //   notify.error(err.response.data.message);
+      // }
+
       const backendMessage = err?.response?.data?.message;
       const requiredTopupAmount = err?.response?.data?.requiredTopupAmount;
       const numericTopup =
@@ -2353,6 +2359,84 @@ const RoundFormInterviews = () => {
     setShowDropdown(false);
   };
 
+  // validate sequence handler
+  // const validateSequenceInput = (inputSequence) => {
+  //   if (!rounds || rounds.length === 0) return { isValid: true };
+
+  //   const completedRounds = rounds.filter(
+  //     (round) => round.status === "Completed"
+  //   );
+  //   const highestCompletedSequence =
+  //     completedRounds.length > 0
+  //       ? Math.max(...completedRounds.map((r) => r.sequence))
+  //       : 0;
+
+  //   const maxAllowedSequence = rounds.length + 1;
+
+  //   if (inputSequence <= highestCompletedSequence) {
+  //     return {
+  //       isValid: false,
+  //       message: `Sequence must be greater than ${highestCompletedSequence} (highest completed round)`,
+  //     };
+  //   }
+
+  //   if (inputSequence > maxAllowedSequence) {
+  //     return {
+  //       isValid: false,
+  //       message: `Maximum allowed sequence is ${maxAllowedSequence}`,
+  //     };
+  //   }
+
+  //   return { isValid: true };
+  // };
+
+  // 1. Update the validateSequenceInput function
+  const validateSequenceInput = (inputSequence, currentRoundId = roundId) => {
+    if (!rounds || rounds.length === 0) return { isValid: true };
+
+    const completedOrNonDraftRounds = rounds.filter(
+      (round) => round.status !== "Draft" && round._id !== currentRoundId
+    );
+
+    const fixedSequences = completedOrNonDraftRounds.map((r) => r.sequence);
+    const maxFixedSequence =
+      fixedSequences.length > 0 ? Math.max(...fixedSequences) : 0;
+
+    // Check if trying to place after a fixed sequence
+    for (const seq of fixedSequences) {
+      if (inputSequence === seq) {
+        return {
+          isValid: false,
+          message: `Cannot use sequence ${seq} - round with this sequence is already ${
+            rounds.find((r) => r.sequence === seq)?.status || "locked"
+          }`,
+        };
+      }
+    }
+
+    // Check if trying to place before a fixed sequence (but after any previous fixed)
+    const lowerFixed = fixedSequences.filter((s) => s < inputSequence);
+    const maxLowerFixed = lowerFixed.length > 0 ? Math.max(...lowerFixed) : 0;
+
+    if (inputSequence <= maxLowerFixed) {
+      return {
+        isValid: false,
+        message: `Sequence must be greater than ${maxLowerFixed} (next available after fixed rounds)`,
+      };
+    }
+
+    const maxAllowedSequence = rounds.length + 1;
+
+    if (inputSequence > maxAllowedSequence) {
+      return {
+        isValid: false,
+        message: `Maximum allowed sequence is ${maxAllowedSequence}`,
+      };
+    }
+
+    return { isValid: true };
+  };
+
   const toggleSection = async (sectionId, e) => {
     e.preventDefault(); // Prevent default behavior
     e.stopPropagation();
@@ -2376,8 +2460,6 @@ const RoundFormInterviews = () => {
     //   await fetchQuestionsForAssessment(assessmentTemplate.assessmentId);
     // }
   };
-  console.log("interviewQuestionsList", interviewQuestionsList);
-
   return (
     <div className="h-[calc(100vh-4rem)] mt-2 overflow-y-auto bg-gray-50">
       {/* v1.0.5 <------------------------------------------------------------- */}
@@ -2534,6 +2616,8 @@ const RoundFormInterviews = () => {
                           onChange={(e) => {
                             const newMode = e.target.value;
 
+                            console.log("newMode", newMode);
+
                             // Clear external interviewers when switching from Virtual to Face to Face
                             if (
                               newMode === "Face to Face" &&
@@ -2548,6 +2632,13 @@ const RoundFormInterviews = () => {
                               }
                               // Optional: Show notification to user
                               // notify.warn("Interview mode changed to Face to Face - external interviewers have been cleared.");
+                            } else if (
+                              newMode === "Face to Face" &&
+                              internalInterviewers.length === 0
+                            ) {
+                              setSelectedInterviewType("Internal");
+                            } else {
+                              setSelectedInterviewType(null);
                             }
 
                             setInterviewMode(newMode);
@@ -2574,13 +2665,48 @@ const RoundFormInterviews = () => {
                         // Sequence - should be editable in edit mode with scheduled status
                         // Sequence - should be enabled in CASE 2, disabled in CASE 3
                         disabled={shouldDisable("sequence")}
+                        // onChange={(e) => {
+                        //   setSequence(parseInt(e.target.value));
+                        //   setErrors({ ...errors, sequence: "" }); // Clear error on change
+                        // }}
+
+                        // onChange={(e) => {
+                        //   const newSequence = parseInt(e.target.value);
+                        //   if (!isNaN(newSequence) && newSequence >= 1) {
+                        //     const validation =
+                        //       validateSequenceInput(newSequence);
+                        //     if (validation.isValid) {
+                        //       setSequence(newSequence);
+                        //       setErrors({ ...errors, sequence: "" });
+                        //     } else {
+                        //       setErrors({
+                        //         ...errors,
+                        //         sequence: validation.message,
+                        //       });
+                        //     }
+                        //   }
+                        // }}
+
+                        // 2. Update the sequence onChange handler
+                        // In the InputField for Sequence, update the onChange handler:
                         onChange={(e) => {
-                          setSequence(parseInt(e.target.value));
-                          setErrors({ ...errors, sequence: "" }); // Clear error on change
+                          const newSequence = parseInt(e.target.value);
+                          if (!isNaN(newSequence) && newSequence >= 1) {
+                            const validation = validateSequenceInput(
+                              newSequence,
+                              roundId
+                            );
+                            if (validation.isValid) {
+                              setSequence(newSequence);
+                              setErrors({ ...errors, sequence: "" });
+                            } else {
+                              setErrors({
+                                ...errors,
+                                sequence: validation.message,
+                              });
+                            }
+                          }
                         }}
-                        // className={`mt-1 block w-full border ${
-                        //   errors.sequence ? "border-red-500" : "border-gray-300"
-                        // } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                         error={errors.sequence}
                         required
                       />

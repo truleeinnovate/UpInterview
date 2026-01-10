@@ -588,7 +588,11 @@ export function MeetingContainer({
                         />
                       </div>
                     ) : sideBarMode === "QUESTIONBANK" ? (
-                      <QuestionBank />
+                      <div className="">
+                        <QuestionBank
+                          isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
+                        />
+                      </div>
                     ) : null}
                   </div>
                 </div>
