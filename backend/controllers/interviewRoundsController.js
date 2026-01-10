@@ -1725,7 +1725,7 @@ const getRoundScoreFromOutcome = (roundOutcome) => {
  * ✅ Clear Internal vs External handling
  * ✅ Append-only history
  */
-function buildSmartRoundUpdate({
+async function buildSmartRoundUpdate({
   existingRound,
   body,
   actingAsUserId,
@@ -2565,5 +2565,6 @@ module.exports = {
   updateInterviewRound,
   updateInterviewRoundStatus,
   buildSmartRoundUpdate,
+  getRoundScoreFromOutcome,
   // parseDateTimeString,
 };

@@ -6,7 +6,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import Cookies from "js-cookie";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   validatemockForm,
   getErrorMessage,
@@ -82,9 +82,11 @@ const MockSchedulelater = () => {
     loadCurrentRoles,
     isCurrentRolesFetching,
   } = useMasterData({}, pageType);
-  const { saveMockInterview, saveMockRound, isMutationLoading } = useMockInterviews();
+  const { saveMockInterview, saveMockRound, isMutationLoading } =
+    useMockInterviews();
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { mockInterview } = useMockInterviewById(id);
   const {
     data,
@@ -137,11 +139,24 @@ const MockSchedulelater = () => {
   // const [searchTerm, setSearchTerm] = useState("");
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
+  // Add this helper function at the top with other state declarations
+  const [isScheduleOrRescheduleInHistory, setIsScheduleOrRescheduleInHistory] =
+    useState(false);
+  const {
+    isReschedule = false,
+    isEdit = false,
+    isRequestSent = false,
+    // mode, // optional if you switch to mode-based approach
+  } = location.state || {};
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;
+
+  console.log("isReschedule:", isReschedule);
+  console.log("isEdit:", isEdit);
+  console.log("isRequestSent:", isRequestSent);
 
   // Role dropdown states - no longer needed with DropdownWithSearchField
   // const [showDropdownRole, setShowDropdownRole] = useState(false);
@@ -167,47 +182,107 @@ const MockSchedulelater = () => {
 
   // v1.0.1 ---------------------------------------------------------------------------->
 
-  // No longer needed - handled by DropdownWithSearchField
-  // const toggleDropdownRole = () => {
-  //   setShowDropdownRole(!showDropdownRole);
-  // };
+  // Simplified shouldDisable function with all conditions
+  const shouldDisable = (fieldName) => {
+    // CASE 1: Draft status and no schedule/reschedule in history → ALL editable
+    if (
+      (formData?.rounds?.status === "Draft" &&
+        !isScheduleOrRescheduleInHistory) ||
+      (formData?.rounds?.status === "Cancelled" &&
+        isReschedule &&
+        isScheduleOrRescheduleInHistory)
+    ) {
+      return false; // Nothing is disabled
+    }
 
-  // No longer needed - handled by DropdownWithSearchField onChange
-  // const handleRoleSelect = (role) => {
-  //   setFormData((prevData) => ({
-  //     ...prevData,
-  //     Role: role.RoleName,
-  //   }));
-  //   setShowDropdownRole(false);
-  //   setSearchRoleText("");
-  //   setErrors((prevErrors) => ({
-  //     ...prevErrors,
-  //     Role: "",
-  //   }));
-  // };
+    // case 4
 
-  // No longer needed - handled by DropdownWithSearchField internally
-  // const filteredRoles = currentRoles.filter((role) =>
-  //   role.RoleName.toLowerCase().includes(searchRoleText.toLowerCase())
-  // );
+    if (
+      formData?.rounds?.status === "Draft" &&
+      isScheduleOrRescheduleInHistory
+    ) {
+      if (
+        fieldName === "interviewType" ||
+        fieldName === "scheduledDate" ||
+        fieldName === "instructions" ||
+        fieldName === "sequence" ||
+        fieldName === "questions" ||
+        fieldName === "internalInterviewersBtn" ||
+        fieldName === "externalInterviewersBtn" ||
+        fieldName === "clearInterviewersBtn" ||
+        fieldName === "removeInterviewerBtn"
+      ) {
+        console.log("Editable field in edit mode: Draft", fieldName);
+        return false;
+      }
+      return true;
+    }
 
-  // const filteredSkills = skills.filter((skill) =>
-  //   skill.SkillName.toLowerCase().includes(searchTerm.toLowerCase())
-  // );
+    // CASE 2: Edit mode with Scheduled/Rescheduled status
+    if (
+      isEdit &&
+      (formData?.rounds?.status === "Scheduled" ||
+        formData?.rounds?.status === "Rescheduled" ||
+        formData?.rounds?.status === "RequestSent")
+      //  && isScheduleOrRescheduleInHistory
+    ) {
+      // Only instructions, sequence, questions are editable
+      if (
+        fieldName === "instructions" ||
+        fieldName === "sequence" ||
+        fieldName === "questions"
+      ) {
+        console.log("Editable field in edit mode: 2", fieldName);
+        return false; // These are editable
+      }
+      return true; // Everything else is disabled
+    }
 
-  // Close role dropdown when clicking outside - no longer needed with DropdownWithSearchField
-  // useEffect(() => {
-  //   const handleClickOutside = (event) => {
-  //     if (dropdownRoleRef.current && !dropdownRoleRef.current.contains(event.target)) {
-  //       setShowDropdownRole(false);
-  //       setSearchRoleText("");
-  //     }
-  //   };
-  //   document.addEventListener("mousedown", handleClickOutside);
-  //   return () => {
-  //     document.removeEventListener("mousedown", handleClickOutside);
-  //   };
-  // }, []);
+    // console.log("isReschedule:", isReschedule);
+    // console.log("status:", status);
+
+    // CASE 3: Reschedule mode with Scheduled/Rescheduled status
+    if (
+      (isReschedule || isRequestSent) &&
+      (formData?.rounds?.status === "Scheduled" ||
+        formData?.rounds?.status === "Rescheduled" ||
+        formData?.rounds?.status === "RequestSent")
+      //  ||
+      // (status === "Draft" && isScheduleOrRescheduleInHistory)
+    ) {
+      // Only datetime and interviewers are editable
+      if (
+        fieldName === "scheduledDate" ||
+        fieldName === "interviewType"
+        // ||
+        // category === "interviewers"
+      ) {
+        console.log("Editable field in edit mode: datetime", fieldName);
+        // console.log("Editable field in reschedule:", fieldName, category);
+        // console.log("Editable field in reschedule:", category);
+        return false; // These are editable
+      }
+      return true; // Everything else is disabled
+    }
+
+    // Original logic for other cases (RequestSent, etc.)
+    const disabledInStatus = {
+      interviewMode: ["RequestSent", "Scheduled", "Rescheduled"],
+      duration: ["RequestSent", "Scheduled", "Rescheduled"],
+      interviewType: ["RequestSent", "Scheduled", "Rescheduled"],
+      scheduledDate: ["RequestSent", "Scheduled", "Rescheduled"],
+      internalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+      externalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+      removeInterviewerBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+      clearInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+      dateChangeConfirmation: ["RequestSent", "Scheduled", "Rescheduled"],
+    };
+
+    const statusList = disabledInStatus[fieldName] || [];
+
+    console.log("statusList", statusList);
+    return statusList.includes(formData?.rounds?.status);
+  };
 
   // Populate formData for new interview from singleContact
   useEffect(() => {
@@ -215,8 +290,9 @@ const MockSchedulelater = () => {
       const contact = singleContact;
       setFormData((prev) => ({
         ...prev,
-        candidateName: `${contact.firstName || ""} ${contact.lastName || ""
-          }`.trim(),
+        candidateName: `${contact.firstName || ""} ${
+          contact.lastName || ""
+        }`.trim(),
         higherQualification: contact.HigherQualification || "",
         currentExperience: contact.yearsOfExperience || "",
         // technology: contact.technologies?.[0] || "",
@@ -238,26 +314,40 @@ const MockSchedulelater = () => {
 
         // Map interviewers to externalInterviewers format
         // === THIS IS THE ONLY PART YOU NEED TO CHANGE ===
-        const formattedInterviewers = MockEditData.rounds?.[0]?.interviewers?.map((interviewer) => {
-          // Handle both cases: with .contact or direct fields
-          const contact = interviewer.contact || interviewer;
+        const formattedInterviewers =
+          MockEditData.rounds?.[0]?.interviewers?.map((interviewer) => {
+            // Handle both cases: with .contact or direct fields
+            const contact = interviewer.contact || interviewer;
 
-          return {
-            _id: interviewer._id || interviewer.id,
-            name: contact.Name ||
-              `${contact.firstName || ""} ${contact.lastName || ""}`.trim() ||
-              "Unknown Interviewer",
-            // Optional: keep full data if you need it later
-            contact: contact,
-            firstName: contact.firstName || "",
-            lastName: contact.lastName || "",
-            email: contact.email || "",
-          };
-        }) || [];
+            return {
+              _id: interviewer._id || interviewer.id,
+              name:
+                contact.Name ||
+                `${contact.firstName || ""} ${contact.lastName || ""}`.trim() ||
+                "Unknown Interviewer",
+              // Optional: keep full data if you need it later
+              contact: contact,
+              firstName: contact.firstName || "",
+              lastName: contact.lastName || "",
+              email: contact.email || "",
+            };
+          }) || [];
 
         setExternalInterviewers(formattedInterviewers);
         // setSelectedInterviewType(formattedInterviewers.length > 0 ? "external" : "scheduled");
 
+        // history check for schedule/reschedule action
+        if (MockEditData?.rounds[0]?.history) {
+          const hasScheduleOrReschedule = MockEditData?.rounds[0]?.history.some(
+            (h) =>
+              h.action === "Scheduled" ||
+              h.action === "Rescheduled" ||
+              h.action === "RequestSent"
+          );
+          // console.log("roundEditData for interviewers", hasScheduleOrReschedule);
+          setIsScheduleOrRescheduleInHistory(hasScheduleOrReschedule);
+        }
+        setSelectedMeetingPlatform(MockEditData?.rounds[0]?.meetPlatform);
         setFormData({
           skills: MockEditData.skills || [],
           candidateName: MockEditData.candidateName || "",
@@ -912,7 +1002,6 @@ const MockSchedulelater = () => {
   //   }
   // };
 
-
   // Page 1: Save only candidate/mock details
   const handleNext = async () => {
     setShowSkillValidation(true);
@@ -969,7 +1058,11 @@ const MockSchedulelater = () => {
     e.preventDefault();
 
     setShowSkillValidation(true);
-    const { formIsValid, newErrors } = validatemockForm(formData, formData.skills, errors);
+    const { formIsValid, newErrors } = validatemockForm(
+      formData,
+      formData.skills,
+      errors
+    );
     setErrors(newErrors);
 
     if (!formIsValid) {
@@ -1018,7 +1111,9 @@ const MockSchedulelater = () => {
         let meetingLink = null;
 
         try {
-          const { createMeeting } = await import("../../../../utils/meetingPlatforms.js");
+          const { createMeeting } = await import(
+            "../../../../utils/meetingPlatforms.js"
+          );
 
           if (selectedMeetingPlatform === "google-meet") {
             meetingLink = await createMeeting("googlemeet", {
@@ -1039,7 +1134,9 @@ const MockSchedulelater = () => {
 
               const date = new Date(year, month - 1, day, hours, minutes);
               const minFuture = new Date(Date.now() + 15 * 60 * 1000);
-              return (date < minFuture ? minFuture : date).toISOString().slice(0, 19);
+              return (date < minFuture ? minFuture : date)
+                .toISOString()
+                .slice(0, 19);
             };
 
             const startTime = formatStartTimeForZoom(combinedDateTime);
@@ -1049,7 +1146,11 @@ const MockSchedulelater = () => {
               type: 2,
               ...(startTime && { start_time: startTime }),
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-              settings: { join_before_host: true, host_video: false, participant_video: false },
+              settings: {
+                join_before_host: true,
+                host_video: false,
+                participant_video: false,
+              },
             };
 
             meetingLink = await createMeeting("zoommeet", { payload });
@@ -1059,7 +1160,11 @@ const MockSchedulelater = () => {
             await saveMockRound({
               mockInterviewId: mockId,
               round: {
-                meetingId: meetingLink.join_url || meetingLink.start_url || meetingLink.hangoutLink || meetingLink,
+                meetingId:
+                  meetingLink.join_url ||
+                  meetingLink.start_url ||
+                  meetingLink.hangoutLink ||
+                  meetingLink,
                 meetPlatform: selectedMeetingPlatform,
               },
               interviewers: [],
@@ -1068,22 +1173,27 @@ const MockSchedulelater = () => {
           }
         } catch (err) {
           console.error("Meeting creation failed:", err);
-          notify.warn("Saved successfully, but meeting link could not be created.");
+          notify.warn(
+            "Saved successfully, but meeting link could not be created."
+          );
         }
       }
 
-      notify.success(mockEdit ? "Mock interview updated!" : "Mock interview scheduled!");
+      notify.success(
+        mockEdit ? "Mock interview updated!" : "Mock interview scheduled!"
+      );
       navigate("/mock-interview");
 
       // Reset form...
     } catch (error) {
       console.error("Error:", error);
-      notify.error(error.response?.data?.message || "Failed to save mock interview");
+      notify.error(
+        error.response?.data?.message || "Failed to save mock interview"
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
-
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
@@ -1515,8 +1625,9 @@ const MockSchedulelater = () => {
       _id: interviewer?.contact?._id,
       name:
         interviewer?.contact?.Name ||
-        `${interviewer?.contact?.firstName || ""} ${interviewer?.contact?.lastName || ""
-          }`.trim(),
+        `${interviewer?.contact?.firstName || ""} ${
+          interviewer?.contact?.lastName || ""
+        }`.trim(),
     }));
 
     // Merge new interviewers with existing ones, avoiding duplicates
@@ -1978,6 +2089,7 @@ const MockSchedulelater = () => {
                         type="text"
                         id="rounds.roundTitle"
                         label="Round Title"
+                        disabled={shouldDisable("roundTitle")}
                         required
                         error={errors["rounds.roundTitle"]}
                         placeholder="Enter round title"
@@ -2286,6 +2398,8 @@ const MockSchedulelater = () => {
                         <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
                           <button
                             type="button"
+                            key="instant-btn"
+                            disabled={shouldDisable("interviewType")}
                             onClick={() => {
                               setInterviewType("instant");
 
@@ -2312,22 +2426,25 @@ const MockSchedulelater = () => {
                                 },
                               }));
                             }}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "instant"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${interviewType === "instant"
-                                ? "text-custom-blue"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "instant"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Instant Interview
                             </span>
@@ -2363,22 +2480,28 @@ const MockSchedulelater = () => {
                                 },
                               }));
                             }}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            // Interview Type buttons - disabled in CASE 2, enabled in CASE 3
+                            disabled={shouldDisable("interviewType")}
+                            key="scheduled-btn"
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "scheduled"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${interviewType === "scheduled"
-                                ? "text-custom-blue"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "scheduled"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Schedule for Later
                             </span>
@@ -2408,6 +2531,8 @@ const MockSchedulelater = () => {
                                 // onChange={(e) =>
                                 //   setScheduledDate(e.target.value)
                                 // }
+                                // Scheduled Date - disabled in CASE 2, enabled in CASE 3
+                                disabled={shouldDisable("scheduledDate")}
                                 onChange={(e) => {
                                   // Clear outsourced data when date/time changes
                                   if (externalInterviewers.length > 0) {
@@ -2419,11 +2544,23 @@ const MockSchedulelater = () => {
                                         interviewers: [],
                                       },
                                     }));
+
+                                    setTimeout(() => e.target.blur(), 1000);
                                     notify.warning(
                                       "Date/time changed. Outsourced interviewers have been cleared."
                                     );
                                   }
                                   setScheduledDate(e.target.value);
+                                }}
+                                onBlur={() => {
+                                  // Force update times when input loses focus (popup closes)
+                                  if (scheduledDate) {
+                                    setTimeout(
+                                      () =>
+                                        updateTimes(formData?.rounds?.duration),
+                                      1000
+                                    );
+                                  }
                                 }}
                                 min={new Date().toISOString().slice(0, 16)}
                                 className="mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
@@ -2446,10 +2583,11 @@ const MockSchedulelater = () => {
                                 { value: "90", label: "90 min" },
                                 { value: "120", label: "120 min" },
                               ]}
+                              disabled={shouldDisable("duration") || true}
                               onChange={handleChange}
                               error={errors["rounds.duration"]}
                               placeholder="Select duration"
-                              disabled={true} // Add this to disable the field
+                              // disabled={true} // Add this to disable the field
                               readOnly={true} // Also make it read-only
                             />
                           </div>
@@ -2516,6 +2654,12 @@ const MockSchedulelater = () => {
                             onClick={() => setShowOutsourcePopup(true)}
                             variant="outline"
                             size="sm"
+                            disabled={
+                              // roundEditData?.interviewerType === "Internal" ||
+                              // isInternalSelected ||
+                              // interviewMode === "Face to Face" ||
+                              shouldDisable("externalInterviewersBtn")
+                            }
                           >
                             <User className="h-4 w-4 mr-1 text-orange-600" />
                             {/* v1.0.3 <------------------------------------------------- */}
@@ -2555,6 +2699,9 @@ const MockSchedulelater = () => {
                                 // v1.0.3 <----------------------------------------------------------
                                 <button
                                   type="button"
+                                  disabled={shouldDisable(
+                                    "clearInterviewersBtn"
+                                  )}
                                   onClick={handleClearAllInterviewers}
                                   className="text-sm text-red-600 hover:text-red-800 flex items-center"
                                 >
@@ -2588,6 +2735,9 @@ const MockSchedulelater = () => {
                                           interviewer._id
                                         )
                                       }
+                                      disabled={shouldDisable(
+                                        "clearInterviewersBtn"
+                                      )}
                                       className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
                                       title="Remove interviewer"
                                     >
@@ -2619,6 +2769,10 @@ const MockSchedulelater = () => {
                       placeholder="Provide detailed instructions for interviewers including evaluation criteria, scoring guidelines (e.g., 1-10 scale), key focus areas, time allocation, and specific protocols to follow during the interview session."
                       // placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
                       error={errors["rounds.instructions"]}
+                      readOnly={
+                        // roundTitle === "Assessment" ||
+                        shouldDisable("instructions")
+                      }
                     />
                   </>
                 )}
@@ -2709,7 +2863,7 @@ const MockSchedulelater = () => {
           candidateExperience={formData?.currentExperience}
           previousSelectedInterviewers={externalInterviewers}
 
-        // isMockInterview={true} // Correctly passes true for mock interviews
+          // isMockInterview={true} // Correctly passes true for mock interviews
         />
       )}
 

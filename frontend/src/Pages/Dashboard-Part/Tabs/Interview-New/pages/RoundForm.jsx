@@ -214,7 +214,6 @@ const RoundFormInterviews = () => {
   const { data: interviewDetails } = useInterviewDetails({
     interviewId: interviewId,
   });
-  // const stateisReschedule = useLocation().state;
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -291,7 +290,6 @@ const RoundFormInterviews = () => {
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
   const location = useLocation();
-  // const isReschedule = location.state?.isReschedule || false;
   const {
     isReschedule = false,
     isEdit = false,
@@ -299,7 +297,6 @@ const RoundFormInterviews = () => {
     // mode, // optional if you switch to mode-based approach
   } = location.state || {};
 
-  console.log("isReschedule:", isReschedule);
   console.log("isEdit:", isEdit);
   console.log("isRequestSent:", isRequestSent);
 
@@ -996,38 +993,6 @@ const RoundFormInterviews = () => {
 
   // Simplified shouldDisable function with all conditions
   const shouldDisable = (fieldName) => {
-    // Map field names to categories
-    // const fieldCategories = {
-    //   // Basic fields
-    //   roundTitle: "roundTitle",
-    //   interviewMode: "interviewMode",
-
-    //   // Date/time fields
-    //   duration: "duration",
-    //   interviewType: "interviewType",
-    //   scheduledDate: "datetime",
-
-    //   // Interviewer fields
-    //   internalInterviewersBtn: "interviewers",
-    //   externalInterviewersBtn: "interviewers",
-    //   removeInterviewerBtn: "interviewers",
-    //   clearInterviewersBtn: "interviewers",
-
-    //   // Editable in edit mode
-    //   sequence: "sequence",
-    //   instructions: "instructions",
-    //   questions: "questions",
-    // };
-
-    // console.log("Evaluating shouldDisable for:", fieldName);
-    // console.log("fieldCategories[fieldName]:", fieldCategories[fieldName]);
-
-    // const category = fieldCategories[fieldName] || fieldName;
-    // console.log(
-    //   "isScheduleOrRescheduleInHistory:",
-    //   isScheduleOrRescheduleInHistory,
-    //   status
-    // );
     // CASE 1: Draft status and no schedule/reschedule in history → ALL editable
     if (
       (status === "Draft" && !isScheduleOrRescheduleInHistory) ||
@@ -2564,11 +2529,7 @@ const RoundFormInterviews = () => {
                         value={
                           isCustomRoundTitle ? customRoundTitle : roundTitle
                         }
-                        disabled={
-                          // isEditing ||
-                          // isReschedule ||
-                          shouldDisable("roundTitle")
-                        }
+                        disabled={shouldDisable("roundTitle")}
                         options={ROUND_TITLES}
                         // options={[
                         //   { value: "Assessment", label: "Assessment" },
@@ -2599,8 +2560,6 @@ const RoundFormInterviews = () => {
                           required
                           disabled={
                             roundTitle === "Assessment" ||
-                            // isEditing ||
-                            // isReschedule ||
                             shouldDisable("interviewMode")
                           }
                           name="interviewMode"
@@ -2732,8 +2691,6 @@ const RoundFormInterviews = () => {
                         ]}
                         disabled={
                           roundTitle === "Assessment" ||
-                          // isEditing ||
-                          // isReschedule ||
                           shouldDisable("duration")
                         }
                         onChange={(e) => {
@@ -3410,27 +3367,19 @@ const RoundFormInterviews = () => {
                                 // Disable if:
                                 // - Editing/rescheduling and original type was External
                                 // - Or currently External is selected (in create mode)
-                                // (isEditing || isReschedule) &&
+
                                 roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
                               }
-                              // ((isEditing || isReschedule) &&
                               disabled={
                                 roundEditData?.interviewerType === "External" ||
                                 isExternalSelected ||
                                 // status === "RequestSent" ||
                                 shouldDisable("internalInterviewersBtn")
                               }
-                              // disabled={
-                              //   ((isEditing || isReschedule) &&
-                              //     roundEditData?.interviewerType ===
-                              //       "External") ||
-                              //   isExternalSelected
-                              // }
-                              // (isEditing || isReschedule) &&
                               title={
                                 roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
@@ -3460,7 +3409,6 @@ const RoundFormInterviews = () => {
                                   : ""
                               }
                               disabled={
-                                // ((isEditing || isReschedule) &&
                                 roundEditData?.interviewerType === "External" ||
                                 //  ||
                                 // isInternalSelected ||
@@ -3470,12 +3418,6 @@ const RoundFormInterviews = () => {
                                 // status === "Rescheduled"
                                 shouldDisable("internalInterviewersBtn")
                               }
-                              // disabled={
-                              //   ((isEditing || isReschedule) &&
-                              //     roundEditData?.interviewerType ===
-                              //       "External") ||
-                              //   isExternalSelected
-                              // }
                               title={
                                 shouldDisable("internalInterviewersBtn") &&
                                 roundEditData?.interviewerType === "External"
@@ -3509,16 +3451,10 @@ const RoundFormInterviews = () => {
                                 : ""
                             }
                             disabled={
-                              // ((isEditing || isReschedule) &&
                               roundEditData?.interviewerType === "Internal" ||
                               isInternalSelected ||
                               interviewMode === "Face to Face" ||
                               shouldDisable("externalInterviewersBtn")
-                              // status === "RequestSent" ||
-                              // status === "Rescheduled" ||
-                              // // (
-                              // status === "Scheduled"
-                              // && internalInterviewers.length > 0)
                             }
                             title={
                               shouldDisable("externalInterviewersBtn") &&

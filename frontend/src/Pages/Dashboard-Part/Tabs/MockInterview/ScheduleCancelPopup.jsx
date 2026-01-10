@@ -1,15 +1,19 @@
-import { useCancelRound } from "../../../../apiHooks/useMockInterviews";
+import { useUpdateRoundStatus } from "../../../../apiHooks/useMockInterviews";
 
 const ScheduleCancelPopup = ({ onClose, row }) => {
-  const cancelRound = useCancelRound();
+  const updateRoundStatus = useUpdateRoundStatus();
 
   console.log(row, "row");
   const handlePopupConfirm = async (e, _id) => {
     e.preventDefault();
     try {
-      await cancelRound.mutateAsync({
+      const payload = {
+        action: "Cancelled",
+      };
+      await updateRoundStatus.mutateAsync({
         mockInterviewId: row?._id,
         roundId: row?.rounds[0]?._id,
+        payload,
       });
       //   let result = await deleteMockInterview.mutateAsync(row._id);
       //   console.log(result, "result");
