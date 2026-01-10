@@ -631,6 +631,7 @@ const InterviewDetail = () => {
   // Check if all rounds are completed
   const allRoundsCompleted = totalRounds > 0 && completedRounds === totalRounds;
 
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* v1.0.3 <------------------------------------------------------------ */}
@@ -673,122 +674,144 @@ const InterviewDetail = () => {
                     </span>
                   </div>
                   {/* v1.0.4 <------------------------------------------------------------------------------------------------------ */}
-                  <div className="flex items-center gap-2">
-                    {interview?.status === "InProgress" && (() => {
-                      const actions = [
-                        {
-                          label: "Complete Interview",
-                          icon: CheckCircle,
-                          onClick: handleCompleteClick,
-                          bgColor: "bg-green-600",
-                          hoverColor: "hover:bg-green-700",
-                          ringColor: "focus:ring-green-500",
-                        },
-                        {
-                          label: "Cancel Interview",
-                          icon: XCircle,
-                          onClick: handleCancelClick,
-                          bgColor: "bg-red-600",
-                          hoverColor: "hover:bg-red-700",
-                          ringColor: "focus:ring-red-500",
-                        },
-                        {
-                          label: "Select",
-                          icon: ThumbsUp,
-                          onClick: handleSelectClick,
-                          bgColor: "bg-teal-600",
-                          hoverColor: "hover:bg-teal-700",
-                          ringColor: "focus:ring-teal-500",
-                        },
-                        {
-                          label: "Reject",
-                          icon: ThumbsDown,
-                          onClick: handleRejectClick,
-                          bgColor: "bg-purple-600",
-                          hoverColor: "hover:bg-purple-700",
-                          ringColor: "focus:ring-purple-500",
-                        },
-                        {
-                          label: "Withdraw",
-                          icon: Ban,
-                          onClick: handleWithdrawClick,
-                          bgColor: "bg-orange-600",
-                          hoverColor: "hover:bg-orange-700",
-                          ringColor: "focus:ring-orange-500",
-                        },
-                      ];
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {interview?.status === "InProgress" && (
+                      (() => {
+                        // Normalize statuses to lowercase for safe comparison
+                        const blockingStatuses = new Set([
+                          'Scheduled',
+                          'Rescheduled',
+                          'InProgress',
+                          'RequestSent'
+                        ]);
 
-                      const visibleActions = actions.slice(0, 2);
-                      const hiddenActions = actions.slice(2);
+                        const hasBlockingRound = rounds.some(r =>
+                          r?.status && blockingStatuses.has(r.status)
+                        );
 
-                      return (
-                        <>
-                          {visibleActions.map((action, index) => {
-                            const Icon = action.icon;
-                            return (
-                              <button
-                                key={index}
-                                onClick={action.onClick}
-                                className={`inline-flex flex-shrink-0 items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white ${action.bgColor} ${action.hoverColor} focus:outline-none focus:ring-2 focus:ring-offset-2 ${action.ringColor}`}
-                              >
-                                <Icon className="h-4 w-4 mr-1" />
-                                {action.label}
-                              </button>
-                            );
-                          })}
+                        // Only show actions when interview is InProgress AND no blocking rounds
+                        if (hasBlockingRound) return null;
 
-                          {hiddenActions.length > 0 && (
-                            <div className="relative">
-                              <button
-                                onClick={() => setShowMoreActions(!showMoreActions)}
-                                className="inline-flex flex-shrink-0 items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                              >
-                                <MoreVertical className="h-4 w-4 mr-1" />
-                                More
-                              </button>
+                        const actions = [
+                          {
+                            label: "Complete Interview",
+                            icon: CheckCircle,
+                            onClick: handleCompleteClick,
+                            bgColor: "bg-green-600",
+                            hoverColor: "hover:bg-green-700",
+                            ringColor: "focus:ring-green-500",
+                          },
+                          {
+                            label: "Cancel Interview",
+                            icon: XCircle,
+                            onClick: handleCancelClick,
+                            bgColor: "bg-red-600",
+                            hoverColor: "hover:bg-red-700",
+                            ringColor: "focus:ring-red-500",
+                          },
+                          {
+                            label: "Selected",
+                            icon: ThumbsUp,
+                            onClick: handleSelectClick,
+                            bgColor: "bg-teal-600",
+                            hoverColor: "hover:bg-teal-700",
+                            ringColor: "focus:ring-teal-500",
+                          },
+                          {
+                            label: "Rejected",
+                            icon: ThumbsDown,
+                            onClick: handleRejectClick,
+                            bgColor: "bg-purple-600",
+                            hoverColor: "hover:bg-purple-700",
+                            ringColor: "focus:ring-purple-500",
+                          },
+                          {
+                            label: "Withdraw",
+                            icon: Ban,
+                            onClick: handleWithdrawClick,
+                            bgColor: "bg-orange-600",
+                            hoverColor: "hover:bg-orange-700",
+                            ringColor: "focus:ring-orange-500",
+                          },
+                        ];
 
-                              {showMoreActions && (
-                                <>
-                                  <div
-                                    className="fixed inset-0 z-10"
-                                    onClick={() => setShowMoreActions(false)}
-                                  />
-                                  <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
-                                    <div className="py-1" role="menu">
-                                      {hiddenActions.map((action, index) => {
-                                        const Icon = action.icon;
-                                        return (
-                                          <button
-                                            key={index}
-                                            onClick={() => {
-                                              action.onClick();
-                                              setShowMoreActions(false);
-                                            }}
-                                            className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150"
-                                            role="menuitem"
-                                          >
-                                            <Icon className="h-4 w-4 mr-3" />
-                                            {action.label}
-                                          </button>
-                                        );
-                                      })}
+                        const visibleActions = actions.slice(0, 2);
+                        const hiddenActions = actions.slice(2);
+
+                        // If we have no visible AND no hidden actions → don't render anything
+                        if (actions.length === 0) return null;
+
+                        return (
+                          <>
+                            {/* Always visible buttons */}
+                            {visibleActions.map((action, index) => {
+                              const Icon = action.icon;
+                              return (
+                                <button
+                                  key={index}
+                                  onClick={action.onClick}
+                                  className={`inline-flex flex-shrink-0 items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white ${action.bgColor} ${action.hoverColor} focus:outline-none focus:ring-2 focus:ring-offset-2 ${action.ringColor}`}
+                                >
+                                  <Icon className="h-4 w-4 mr-1" />
+                                  {action.label}
+                                </button>
+                              );
+                            })}
+
+                            {/* "More" button only if there are actually hidden actions */}
+                            {hiddenActions.length > 0 && (
+                              <div className="relative">
+                                <button
+                                  onClick={() => setShowMoreActions(prev => !prev)}
+                                  className="inline-flex flex-shrink-0 items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                  <MoreVertical className="h-4 w-4 mr-1" />
+                                  More
+                                </button>
+
+                                {showMoreActions && (
+                                  <>
+                                    <div
+                                      className="fixed inset-0 z-10"
+                                      onClick={() => setShowMoreActions(false)}
+                                    />
+                                    <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20">
+                                      <div className="py-1" role="menu">
+                                        {hiddenActions.map((action, index) => {
+                                          const Icon = action.icon;
+                                          return (
+                                            <button
+                                              key={index}
+                                              onClick={() => {
+                                                action.onClick();
+                                                setShowMoreActions(false);
+                                              }}
+                                              className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150"
+                                              role="menuitem"
+                                            >
+                                              <Icon className="h-4 w-4 mr-3 text-gray-500" />
+                                              {action.label}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
                                     </div>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()
+                    )}
+
                     {interview?.status === "Draft" && (
                       <Link
                         to={`/interviews/${id}/edit`}
                         className="inline-flex flex-shrink-0 items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
                         <Edit className="h-4 w-4 mr-1" />
-                        Edit{" "}
-                        <span className="sm:hidden inline ml-1">Interview</span>
+                        Edit <span className="sm:hidden inline ml-1">Interview</span>
                       </Link>
                     )}
                   </div>
