@@ -2107,7 +2107,6 @@ const RoundFormInterviews = () => {
                   meetingId: meetingLink?.start_url || meetingLink,
                   meetPlatform: selectedMeetingPlatform,
                 },
-                questions: [], // no change
               };
 
               await updateInterviewRound(meetingPayload);
