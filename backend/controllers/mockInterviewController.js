@@ -612,7 +612,8 @@ exports.updateMockInterviewRound = async (req, res) => {
   }
 
   try {
-    const { round, updateType } = req.body;
+    const updateType = req.body.updateType;
+    const round = req.body.round || req.body;
     console.log("round", round);
     console.log("updateType", updateType);
     if (!round) {
@@ -815,12 +816,12 @@ exports.updateMockInterviewRound = async (req, res) => {
     const finalUpdate = smartUpdate
       ? {
         $set: { ...updatePayload.$set, ...smartUpdate.$set },
-        $push: {
-          history: [
-            ...updatePayload.$push.history,
-            ...smartUpdate.$push.history,
-          ],
-        },
+        // $push: {
+        //   history: [
+        //     ...updatePayload.$push.history,
+        //     ...smartUpdate.$push.history,
+        //   ],
+        // },
       }
       : updatePayload;
 

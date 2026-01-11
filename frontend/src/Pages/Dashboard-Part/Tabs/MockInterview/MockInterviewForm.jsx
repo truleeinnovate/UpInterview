@@ -130,6 +130,9 @@ const MockSchedulelater = () => {
   const [entries, setEntries] = useState([]);
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
   const [status, setStatus] = useState("");
+    const [externalMaxHourlyRate, setExternalMaxHourlyRate] = useState(0);
+    const [hasManuallyClearedInterviewers, setHasManuallyClearedInterviewers] =
+      useState(false);
 
   // const [selectedSkill, setSelectedSkill] = useState("");
   // const [selectedExp, setSelectedExp] = useState("");
@@ -415,12 +418,68 @@ const MockSchedulelater = () => {
   const [errors, setErrors] = useState({});
   const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
 
-  // const [showDropdownQualification, setShowDropdownQualification] =
-  //   useState(false);
+  function formatStartTimeForZoom(combinedDateTime) {
+    if (!combinedDateTime) return null;
 
-  // const toggleDropdownQualification = () => {
-  //   setShowDropdownQualification(!showDropdownQualification);
-  // };
+    try {
+      console.log("🔵 Formatting for Zoom - Input:", combinedDateTime);
+
+      // Parse "05-01-2026 08:10 PM - 09:10 PM" format
+      const [dateTimePart] = combinedDateTime.split(" - ");
+      const parts = dateTimePart.trim().split(" ");
+
+      if (parts.length < 3) {
+        throw new Error("Invalid datetime format");
+      }
+
+      const datePart = parts[0]; // "05-01-2026"
+      const timePart = parts[1]; // "08:10"
+      const meridiem = parts[2]; // "PM"
+
+      const [day, month, year] = datePart.split("-").map(Number);
+      let [hours, minutes] = timePart.split(":").map(Number);
+
+      console.log("🔵 Parsed:", { day, month, year, hours, minutes, meridiem });
+
+      // Convert to 24-hour format
+      if (meridiem === "PM" && hours !== 12) hours += 12;
+      if (meridiem === "AM" && hours === 12) hours = 0;
+
+      // Create date in LOCAL timezone (not UTC)
+      const localDate = new Date(year, month - 1, day, hours, minutes, 0);
+
+      console.log("🔵 Local date created:", localDate.toString());
+
+      // Ensure it's at least 5 minutes in the future
+      const now = new Date();
+      const minFuture = new Date(now.getTime() + 5 * 60 * 1000);
+
+      console.log("🔵 Current time:", now.toString());
+      console.log("🔵 Min future time:", minFuture.toString());
+
+      if (localDate < minFuture) {
+        console.warn(
+          "⚠️ Scheduled time is in the past, adjusting to 5 minutes from now"
+        );
+        const adjustedDate = new Date(now.getTime() + 5 * 60 * 1000);
+        const formatted = adjustedDate
+          .toISOString()
+          .replace("Z", "")
+          .slice(0, 19);
+        console.log("🔵 Adjusted formatted time:", formatted);
+        return formatted;
+      }
+
+      // Format for Zoom API: YYYY-MM-DDTHH:mm:ss (NO 'Z' suffix)
+      const formatted = localDate.toISOString().replace("Z", "").slice(0, 19);
+      console.log("🔵 Final formatted time:", formatted);
+
+      return formatted;
+    } catch (error) {
+      console.error("❌ Error formatting start time for Zoom:", error);
+      return null;
+    }
+  }
 
   const [fileName, setFileName] = useState("");
   const inputRef = useRef();
@@ -1036,6 +1095,8 @@ const MockSchedulelater = () => {
 
     try {
       // Step 1: Save/Update Round
+      let updateType = "FULL_UPDATE";
+
       const roundResponse = await saveMockRound({
         mockInterviewId: mockId,
         round: {
@@ -1060,45 +1121,44 @@ const MockSchedulelater = () => {
       const generateMeetingLink = roundResponse.generateMeetingLink === true;
       console.log("generateMeetingLink", generateMeetingLink);
 
-      // Step 2: Create Meeting if required
-      if (generateMeetingLink) {
+      // Step 2: Create & Save Meeting Link (for Mock Interviews)
+      if (generateMeetingLink && formData.rounds.interviewMode === "Virtual") {
         let meetingLink = null;
 
         try {
-          const { createMeeting } = await import(
-            "../../../../utils/meetingPlatforms.js"
-          );
+          setIsMeetingCreationLoading(true);
+          setMeetingCreationProgress("Creating meeting link...");
+
+          const { createMeeting } = await import("../../../../utils/meetingPlatforms.js");
+
+          // Common payload fields (same as real interviews)
+          const commonPayload = {
+            roundTitle: savedRound.roundTitle,
+            instructions: savedRound.instructions || "",
+            combinedDateTime: savedRound.dateTime || combinedDateTime,
+            duration: savedRound.duration || formData.rounds.duration,
+            selectedInterviewers: savedRound.interviewers || externalInterviewers,
+          };
 
           if (selectedMeetingPlatform === "google-meet") {
-            meetingLink = await createMeeting("googlemeet", {
-              roundTitle: savedRound.roundTitle,
-              instructions: savedRound.instructions,
-              combinedDateTime: savedRound.dateTime,
-              duration: savedRound.duration,
-              selectedInterviewers: savedRound.interviewers,
-            });
+            meetingLink = await createMeeting("googlemeet", commonPayload, (progress) =>
+              setMeetingCreationProgress(progress)
+            );
           } else if (selectedMeetingPlatform === "zoom") {
-            const formatStartTimeForZoom = (str) => {
-              if (!str) return null;
-              const [datePart, timePart, meridiem] = str.split(" ");
-              const [day, month, year] = datePart.split("-").map(Number);
-              let [hours, minutes] = timePart.split(":").map(Number);
-              if (meridiem === "PM" && hours !== 12) hours += 12;
-              if (meridiem === "AM" && hours === 12) hours = 0;
+            console.log("🟣 Creating Zoom meeting for Mock Interview...");
+            console.log("🟣 combinedDateTime:", combinedDateTime);
 
-              const date = new Date(year, month - 1, day, hours, minutes);
-              const minFuture = new Date(Date.now() + 15 * 60 * 1000);
-              return (date < minFuture ? minFuture : date)
-                .toISOString()
-                .slice(0, 19);
-            };
+            const formattedStartTime = formatStartTimeForZoom(combinedDateTime);
 
-            const startTime = formatStartTimeForZoom(combinedDateTime);
-            const payload = {
-              topic: savedRound.roundTitle,
-              duration: Number(savedRound.duration),
-              type: 2,
-              ...(startTime && { start_time: startTime }),
+            if (!formattedStartTime) {
+              throw new Error("Invalid start time for Zoom meeting");
+            }
+
+            const zoomPayload = {
+              topic: savedRound.roundTitle || "Mock Interview Round",
+              duration: Number(savedRound.duration || "60"),
+              type: 2, // scheduled meeting
+              start_time: formattedStartTime,
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
               settings: {
                 join_before_host: true,
@@ -1107,30 +1167,37 @@ const MockSchedulelater = () => {
               },
             };
 
-            meetingLink = await createMeeting("zoommeet", { payload });
+            meetingLink = await createMeeting("zoommeet", { payload: zoomPayload }, (progress) =>
+              setMeetingCreationProgress(progress)
+            );
+          } else if (selectedMeetingPlatform === "platform") { // VideoSDK / other
+            meetingLink = await createMeeting("videosdk", commonPayload, (progress) =>
+              setMeetingCreationProgress(progress)
+            );
           }
 
           if (meetingLink) {
-            try {
-              await saveMockRound({
-                mockInterviewId: mockId,
-                round: {
-                  meetingId: meetingLink.join_url || meetingLink.start_url || meetingLink.hangoutLink || meetingLink,
-                  meetPlatform: selectedMeetingPlatform,
-                },
-                updateType: "MEETING_LINK_ONLY",
-                roundId: savedRound._id,
-              });
-            } catch (patchErr) {
-              console.error("Failed to save meeting link:", patchErr);
-              notify.warn("Round saved, but meeting link update failed.");
-            }
+            setMeetingCreationProgress("Saving meeting link...");
+
+            // Save meeting link using mock-specific PATCH
+            await saveMockRound({
+              mockInterviewId: mockId,
+              roundId: savedRound._id,
+              updateType: "MEETING_LINK_ONLY",
+              round: {                       // ← keep nested
+                meetingId: meetingLink?.join_url || meetingLink?.start_url || meetingLink?.hangoutLink || meetingLink,
+                meetPlatform: selectedMeetingPlatform,
+              },
+            });
+
+            setMeetingCreationProgress("Meeting link saved successfully!");
           }
         } catch (err) {
           console.error("Meeting creation failed:", err);
-          notify.warn(
-            "Saved successfully, but meeting link could not be created."
-          );
+          notify.warn("Round saved successfully, but meeting link could not be created.");
+          setMeetingCreationProgress("Meeting creation failed");
+        } finally {
+          setIsMeetingCreationLoading(false);
         }
       }
 
@@ -1154,7 +1221,7 @@ const MockSchedulelater = () => {
   const sidebarRef = useRef(null);
 
   const closeSidebar = () => {
-    setSidebarOpen(false);
+    setSidebarOpen(false);  
   };
 
   const handleOutsideClick = useCallback((event) => {
@@ -1575,45 +1642,86 @@ const MockSchedulelater = () => {
     }
   }, [scheduledDate, formData.rounds.duration, interviewType]);
 
-  const handleExternalInterviewerSelect = (newInterviewers) => {
-    const formattedInterviewers = newInterviewers.map((interviewer) => ({
-      _id: interviewer?.contact?._id,
-      name:
-        interviewer?.contact?.Name ||
-        `${interviewer?.contact?.firstName || ""} ${interviewer?.contact?.lastName || ""
-          }`.trim(),
-    }));
+  // const handleExternalInterviewerSelect = (newInterviewers) => {
+  //   const formattedInterviewers = newInterviewers.map((interviewer) => ({
+  //     _id: interviewer?.contact?._id,
+  //     name:
+  //       interviewer?.contact?.Name ||
+  //       `${interviewer?.contact?.firstName || ""} ${interviewer?.contact?.lastName || ""
+  //         }`.trim(),
+  //   }));
 
-    // Merge new interviewers with existing ones, avoiding duplicates
-    setExternalInterviewers((prev) => {
-      const existingIds = prev.map((i) => i._id);
-      const uniqueNewInterviewers = formattedInterviewers.filter(
-        (i) => !existingIds.includes(i._id)
-      );
-      return [...prev, ...uniqueNewInterviewers];
-    });
+  //   // Merge new interviewers with existing ones, avoiding duplicates
+  //   setExternalInterviewers((prev) => {
+  //     const existingIds = prev.map((i) => i._id);
+  //     const uniqueNewInterviewers = formattedInterviewers.filter(
+  //       (i) => !existingIds.includes(i._id)
+  //     );
+  //     return [...prev, ...uniqueNewInterviewers];
+  //   });
 
-    setSelectedInterviewType("external");
-  };
+  //   setSelectedInterviewType("external");
+  // };
 
-  const handleRemoveExternalInterviewer = (interviewerId) => {
-    setExternalInterviewers((prev) =>
-      prev.filter((i) => i._id !== interviewerId)
+  // const handleRemoveExternalInterviewer = (interviewerId) => {
+  //   setExternalInterviewers((prev) =>
+  //     prev.filter((i) => i._id !== interviewerId)
+  //   );
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     rounds: {
+  //       ...prev.rounds,
+  //       interviewers: prev.rounds.interviewers.filter(
+  //         (id) => id !== interviewerId
+  //       ),
+  //     },
+  //   }));
+  //   if (externalInterviewers.length === 1) {
+  //     setSelectedInterviewType("scheduled");
+  //   }
+  // };
+
+
+    const handleExternalInterviewerSelect = (interviewers, maxHourlyRate) => {
+    // if (selectedInterviewType === "Internal") {
+    //   alert(
+    //     "You need to clear Internal interviewers before selecting outsourced interviewers."
+    //   );
+    //   return;
+    // }
+    setSelectedInterviewType("External");
+
+    // Ensure no duplicates and append new interviewers
+    const uniqueInterviewers = interviewers.filter(
+      (newInterviewer) =>
+        !externalInterviewers.some((i) => i.id === newInterviewer.id)
     );
-    setFormData((prev) => ({
-      ...prev,
-      rounds: {
-        ...prev.rounds,
-        interviewers: prev.rounds.interviewers.filter(
-          (id) => id !== interviewerId
-        ),
-      },
-    }));
-    if (externalInterviewers.length === 1) {
-      setSelectedInterviewType("scheduled");
-    }
+
+    setSelectedInterviewType("External");
+    setExternalInterviewers([...externalInterviewers, ...uniqueInterviewers]); // Append new interviewers
+    setExternalMaxHourlyRate(Number(maxHourlyRate) || 0);
+    setHasManuallyClearedInterviewers(false); // Reset flag when adding new interviewers
   };
 
+    const handleRemoveExternalInterviewer = (interviewerId) => {
+    setExternalInterviewers((prev) => {
+      const updatedInterviewers = prev.filter(
+        (i) => i.id !== interviewerId && i._id !== interviewerId
+      );
+
+      // Reset selectedInterviewType if no interviewers are left
+      if (
+        updatedInterviewers.length === 0
+      ) {
+        // Set flag when manually removing all external interviewers
+        setHasManuallyClearedInterviewers(true);
+        setSelectedInterviewType(null);
+        setExternalMaxHourlyRate(0);
+      }
+
+      return updatedInterviewers;
+    });
+  };
   const handleClearAllInterviewers = () => {
     setExternalInterviewers([]);
     setFormData((prev) => ({
