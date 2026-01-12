@@ -29,18 +29,16 @@ async function handleInterviewerRequestFlow({
     return;
   }
 
-  // Optional: Cancel old pending requests (useful mostly in update flows)
-  // if (cancelOldRequests) {
-  //   await InterviewRequest.updateMany(
-  //     { roundId: round._id, status: { $in: ['inprogress', 'requestsent'] } },
-  //     { status: 'withdrawn', respondedAt: new Date() }
-  //   );
-  // }
+
+  const resolveInterviewerId = (interviewer) =>
+    interviewer?.contact?._id || interviewer?._id;
 
   // 2. Create requests for each selected interviewer
   for (const interviewer of selectedInterviewers) {
     // ── Flexible ID resolution ──
-    const interviewerId = interviewer._id || interviewer.contact?._id || interviewer.contactId;
+    // const interviewerId = interviewer._id || interviewer.contact?._id || interviewer.contactId;
+    const interviewerId = resolveInterviewerId(interviewer);
+
 
     if (!interviewerId || !mongoose.Types.ObjectId.isValid(interviewerId)) {
       console.error('Invalid interviewer ID:', interviewer);
@@ -48,12 +46,12 @@ async function handleInterviewerRequestFlow({
     }
 
     // For mock interviews → contactId = interviewerId (same person)
-    const contactId = isMockInterview ? interviewerId : (interviewer.contact?._id || interviewer.contactId);
+    // const contactId = isMockInterview ? interviewerId : (interviewer.contact?._id || interviewer.contactId);
 
     // Fake minimal res object — only with what's needed
     const fakeRes = {
       locals: {}, // ← prevents crash
-      status: () => ({ json: () => {} }),
+      status: () => ({ json: () => { } }),
     };
 
     await createRequest(
@@ -64,7 +62,7 @@ async function handleInterviewerRequestFlow({
           scheduledInterviewId: isMockInterview ? undefined : interview._id,
           interviewerType: round.interviewerType || 'External', // default for mock
           interviewerId,
-          contactId,
+          // contactId,
           dateTime: round.dateTime,
           duration: round.duration,
           candidateId: isMockInterview ? undefined : interview.candidateId,
@@ -72,8 +70,8 @@ async function handleInterviewerRequestFlow({
           roundId: round._id,
           expiryDateTime: round.expiryDateTime,
           isMockInterview,
-          requestMessage: round.interviewerType === 'Internal' 
-            ? 'Internal interview request' 
+          requestMessage: round.interviewerType === 'Internal'
+            ? 'Internal interview request'
             : 'External interview request',
         },
       },
@@ -90,7 +88,7 @@ async function handleInterviewerRequestFlow({
     if (interviewerContactIds.length > 0) {
       const fakeResForEmail = {
         locals: {},
-        status: () => ({ json: () => {} }),
+        status: () => ({ json: () => { } }),
       };
 
       await sendOutsourceInterviewRequestEmails(

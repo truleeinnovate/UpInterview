@@ -39,10 +39,10 @@ const OutsourceInterviewRequestSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     }, //is mock interview true use contactId else use candidateId
-    contactId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Contacts",
-    }, //from mockinterview candidate
+    // contactId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Contacts",
+    // }, //from mockinterview candidate
     positionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Position",
