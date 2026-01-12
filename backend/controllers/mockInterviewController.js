@@ -79,7 +79,6 @@ const InterviewRequest = require("../models/InterviewRequest.js");
 //       })
 //       .lean();
 
-
 //     // 4️⃣ Fetch ONLY pending (inprogress) outsource requests
 //     const pendingRequests = await InterviewRequest.find({
 //       roundId: { $in: round._id },
@@ -127,7 +126,9 @@ exports.getMockInterviewDetails = async (req, res) => {
 
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid mock interview ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid mock interview ID" });
     }
 
     // 1. Fetch main mock interview document
@@ -136,7 +137,9 @@ exports.getMockInterviewDetails = async (req, res) => {
       .lean();
 
     if (!mockInterview) {
-      return res.status(404).json({ success: false, message: "Mock interview not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Mock interview not found" });
     }
 
     // 2. Fetch the single round (if exists) with populated interviewers
@@ -166,12 +169,12 @@ exports.getMockInterviewDetails = async (req, res) => {
     // 4. Build enriched round (pending requests only here)
     const enrichedRound = round
       ? {
-        ...round,
-        interviewers: round.interviewers || [],
-        questions: [],                       // Mock has no questions
-        pendingOutsourceRequests,            // ← only here, per round
-        scheduledAssessment: null,           // Mock never has this
-      }
+          ...round,
+          interviewers: round.interviewers || [],
+          questions: [], // Mock has no questions
+          pendingOutsourceRequests, // ← only here, per round
+          scheduledAssessment: null, // Mock never has this
+        }
       : null;
 
     // 5. Final clean response — NO pending requests at root level
@@ -556,14 +559,22 @@ exports.createMockInterviewRound = async (req, res) => {
     }
 
     // =================== HISTORY UPDATE (CREATE) ===================
-    const historyUpdate = buildSmartRoundUpdate({
-      body: round,
+    const historyUpdate = await buildSmartRoundUpdate({
+      body: savedRound,
       actingAsUserId: mockInterview.ownerId,
       isCreate: true,
     });
 
+    console.log("historyUpdate", historyUpdate);
+
     if (historyUpdate) {
-      await MockInterviewRound.findByIdAndUpdate(savedRound._id, historyUpdate);
+      await MockInterviewRound.findByIdAndUpdate(
+        savedRound._id,
+        historyUpdate,
+        {
+          new: true,
+        }
+      );
     }
 
     // =================== MEETING LINK (if virtual) ===================
@@ -644,7 +655,6 @@ exports.updateMockInterviewRound = async (req, res) => {
       if (round.meetPlatform) {
         updateOps.$set.meetPlatform = round.meetPlatform;
       }
-
 
       const updatedRound = await MockInterviewRound.findByIdAndUpdate(
         roundId,
@@ -806,7 +816,7 @@ exports.updateMockInterviewRound = async (req, res) => {
       updatePayload.$set.interviewers = round.interviewers;
 
     // History via smart update
-    const smartUpdate = buildSmartRoundUpdate({
+    const smartUpdate = await buildSmartRoundUpdate({
       existingRound,
       body: round,
       actingAsUserId: mockInterview.ownerId,
@@ -815,14 +825,14 @@ exports.updateMockInterviewRound = async (req, res) => {
 
     const finalUpdate = smartUpdate
       ? {
-        $set: { ...updatePayload.$set, ...smartUpdate.$set },
-        // $push: {
-        //   history: [
-        //     ...updatePayload.$push.history,
-        //     ...smartUpdate.$push.history,
-        //   ],
-        // },
-      }
+          $set: { ...updatePayload.$set, ...smartUpdate.$set },
+          // $push: {
+          //   history: [
+          //     ...updatePayload.$push.history,
+          //     ...smartUpdate.$push.history,
+          //   ],
+          // },
+        }
       : updatePayload;
 
     const updatedRound = await MockInterviewRound.findByIdAndUpdate(
@@ -1304,7 +1314,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => { } }), locals: {} }
+        { status: () => ({ json: () => {} }), locals: {} }
       );
     }
 

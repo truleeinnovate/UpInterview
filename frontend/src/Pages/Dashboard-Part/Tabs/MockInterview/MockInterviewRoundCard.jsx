@@ -296,10 +296,10 @@ const MoockRoundCard = ({
       ? Array.isArray(round?.interviewers) && round.interviewers.length > 0
         ? round.interviewers
         : Array.isArray(round?.pendingOutsourceRequests)
-          ? round.pendingOutsourceRequests
+        ? round.pendingOutsourceRequests
             .map((req) => req.interviewerId)
             .filter(Boolean)
-          : []
+        : []
       : [];
 
   const roundActionPermissions = {
@@ -316,63 +316,92 @@ const MoockRoundCard = ({
     // },
     Draft: {
       canEdit: true,
-      // canDelete: true,
-      // canMarkScheduled: true,
+      canDelete: true,
+      canMarkScheduled: false,
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: true,
+      canNoShow: false,
+      canSkipped: true,
     },
     RequestSent: {
       canEdit: true,
-      // canDelete: false,
-      // canMarkScheduled: true,
-      canReschedule: true,
-      canCancel: true,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
     },
     Scheduled: {
-      // canEdit: false,
-      // canDelete: false,
-      // canMarkScheduled: false,
+      canEdit: true,
+      canDelete: false,
+      canMarkScheduled: false,
       canReschedule: true,
       canCancel: true,
       canComplete: true,
-      canReject: false,
-      canSelect: false,
+      canFeedback: false,
+      canShareLink: false,
+      canResendLink: true,
+      //only for if round title assessment
+      canExtendAssessment: true,
+      canCancelAssessment: true,
+      canNoShow: true,
+      canSkipped: false,
+      canEvaluated: true,
+      canFeedbackPending: false,
     },
     Rescheduled: {
-      // canEdit: false,
-      // canDelete: false,
-      // canMarkScheduled: false,
+      canEdit: true,
+      canDelete: false,
+      canMarkScheduled: false,
       canReschedule: true,
       canCancel: true,
       canComplete: true,
-      // canReject: false,
-      // canSelect: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: true,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
     },
     Completed: {
-      // canEdit: false,
-      // canDelete: false,
-      // canMarkScheduled: false,
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      // canReject: true,
-      // canSelect: true,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canEvaluated: true,
+    },
+    //  added by ranjith new status validation
+    InProgress: {
+      canEdit: false,
+      canDelete: false,
+      canNoShow: true,
     },
     Cancelled: {
-      // canEdit: false,
-      // canDelete: false,
-      // canMarkScheduled: false,
-      canReschedule: false,
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: true,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
     },
     // Rejected: {
     //   canEdit: false,
@@ -383,7 +412,9 @@ const MoockRoundCard = ({
     //   canComplete: false,
     //   canReject: false,
     //   canSelect: false,
-
+    //   canFeedback: true,
+    //   canResendLink: false,
+    //   canShareLink: false,
     // },
     // Selected: {
     //   canEdit: false,
@@ -394,7 +425,10 @@ const MoockRoundCard = ({
     //   canComplete: false,
     //   canReject: false,
     //   canSelect: false,
-
+    //   canFeedback: true,
+    //   canResendLink: false,
+    //   canShareLink: false,
+    //   canNoShow: false,
     // },
     InComplete: {
       canEdit: false,
@@ -403,8 +437,10 @@ const MoockRoundCard = ({
       canReschedule: true,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
     },
     NoShow: {
       canEdit: false,
@@ -413,8 +449,55 @@ const MoockRoundCard = ({
       canReschedule: true,
       canCancel: false,
       canComplete: false,
-      canReject: false,
-      canSelect: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+    },
+    Skipped: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
+    },
+    Evaluated: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
+    },
+    FeedbackPending: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
     },
   };
 
@@ -428,8 +511,9 @@ const MoockRoundCard = ({
   return (
     <>
       <div
-        className={`bg-white rounded-lg ${!hideHeader && "shadow-md"
-          } overflow-hidden ${isActive ? "ring-2 ring-blue-500" : ""}`}
+        className={`bg-white rounded-lg ${
+          !hideHeader && "shadow-md"
+        } overflow-hidden ${isActive ? "ring-2 ring-blue-500" : ""}`}
       >
         <div className="p-5">
           <>
@@ -443,9 +527,7 @@ const MoockRoundCard = ({
                 {round.dateTime && (
                   <div className="flex items-center text-sm text-gray-500">
                     <Calendar className="h-4 w-4 mr-1" />
-                    <span>
-                      Scheduled At: {round.dateTime.split(" - ")[0]}
-                    </span>
+                    <span>Scheduled At: {round.dateTime.split(" - ")[0]}</span>
                   </div>
                 )}
 
@@ -575,30 +657,29 @@ const MoockRoundCard = ({
                   )}
 
                 {/* Edit */}
-                {permissions.canEdit &&
-                  (round?.status === "Draft" ||
-                    round?.status === "RequestSent") && (
-                    // round?.interviewType?.toLowerCase() === "instant") ||
-                    // round?.interviewType?.toLowerCase() !== "instant") &&
-                    //  (
-                    <button
-                      onClick={() =>
-                        navigate(`/mock-interview/${mockinterview?._id}/edit`, {
-                          state: { isEdit: true },
-                        })
-                      }
-                      className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
-                    >
-                      <Edit className="h-4 w-4 mr-1" /> Edit Round
-                    </button>
-                  )}
+                {permissions.canEdit && (
+                  // (round?.status === "Draft" ||
+                  //   round?.status === "RequestSent") &&
+                  // round?.interviewType?.toLowerCase() === "instant") ||
+                  // round?.interviewType?.toLowerCase() !== "instant") &&
+                  //  (
+                  <button
+                    onClick={() =>
+                      navigate(`/mock-interview/${mockinterview?._id}/edit`, {
+                        state: { isEdit: true },
+                      })
+                    }
+                    className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                  >
+                    <Edit className="h-4 w-4 mr-1" /> Edit Round
+                  </button>
+                )}
 
                 {/* Edit */}
                 {/* Single button for RequestSent (External) - Change Interviewers / Date */}
                 {round.status === "RequestSent" &&
-                  round?.interviewerType === "External" &&
-                  // !isInterviewCompleted &&
-                  round?.roundTitle !== "Assessment" &&
+                  // round?.interviewerType === "External" &&
+
                   round?.interviewType !== "instant" && (
                     <button
                       onClick={() =>
@@ -726,14 +807,14 @@ const MoockRoundCard = ({
                 {completedReasonModalOpen
                   ? "Complete"
                   : selectedReasonModalOpen
-                    ? "Select"
-                    : confirmAction === "Skipped"
-                      ? "mark as Skipped"
-                      : confirmAction === "FeedbackPending"
-                        ? "mark as Feedback Pending"
-                        : confirmAction === "Scheduled"
-                          ? "mark as Scheduled"
-                          : "Reject"}{" "}
+                  ? "Select"
+                  : confirmAction === "Skipped"
+                  ? "mark as Skipped"
+                  : confirmAction === "FeedbackPending"
+                  ? "mark as Feedback Pending"
+                  : confirmAction === "Scheduled"
+                  ? "mark as Scheduled"
+                  : "Reject"}{" "}
                 this round?
               </h3>
               <div className="flex justify-end space-x-3">
@@ -748,12 +829,13 @@ const MoockRoundCard = ({
                   No, Cancel
                 </Button>
                 <Button
-                  className={`${confirmAction === "Cancelled" &&
+                  className={`${
+                    confirmAction === "Cancelled" &&
                     "bg-red-600 hover:bg-red-700"
-                    }`}
+                  }`}
                   variant="success"
                   onClick={() => handleConfirmStatusChange({ change: true })}
-                // onClick={handleConfirmStatusChange({ change: true })}
+                  // onClick={handleConfirmStatusChange({ change: true })}
                 >
                   Yes, Confirm
                 </Button>
@@ -870,7 +952,7 @@ const MoockRoundCard = ({
                 </Button>
                 <Button
                   variant="destructive"
-                // onClick={handleDeleteRound}
+                  // onClick={handleDeleteRound}
                 >
                   Delete
                 </Button>
