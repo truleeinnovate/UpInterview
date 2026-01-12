@@ -24,7 +24,7 @@ const assessmentQuestionsSchema = new mongoose.Schema({
             questionId: { 
                 type: mongoose.Schema.Types.ObjectId, 
                 required: true 
-            },
+            },//this is question bank ref id
             source: { 
                 type: String, 
                 enum: ["system", "custom"], 
