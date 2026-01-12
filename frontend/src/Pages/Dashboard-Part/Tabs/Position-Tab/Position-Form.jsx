@@ -48,7 +48,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [templateLimit, setTemplateLimit] = useState(TEMPLATE_DROPDOWN_LIMIT);
   const [templateSearch, setTemplateSearch] = useState("");
   const [debouncedTemplateSearch, setDebouncedTemplateSearch] = useState("");
-  
+
   // State for tooltip visibility
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -263,6 +263,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         skill: skill.skill || "",
         experience: skill.experience || "",
         expertise: skill.expertise || "",
+        requirement_level: skill.requirement_level || "REQUIRED",
         _id: skill._id || "",
       })) || [];
 
@@ -350,8 +351,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           t.title
             ? t.title.charAt(0).toUpperCase() + t.title.slice(1)
             : t.type
-            ? t.type.charAt(0).toUpperCase() + t.type.slice(1)
-            : "Unnamed Template";
+              ? t.type.charAt(0).toUpperCase() + t.type.slice(1)
+              : "Unnamed Template";
 
         return {
           value: t._id,
@@ -391,11 +392,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         const selectedTitleLabel =
           selectedTemplate.title
             ? selectedTemplate.title.charAt(0).toUpperCase() +
-              selectedTemplate.title.slice(1)
+            selectedTemplate.title.slice(1)
             : selectedTemplate.type
-            ? selectedTemplate.type.charAt(0).toUpperCase() +
+              ? selectedTemplate.type.charAt(0).toUpperCase() +
               selectedTemplate.type.slice(1)
-            : "Unnamed Template";
+              : "Unnamed Template";
 
         baseOptions.push({
           value: selectedTemplate._id,
@@ -419,7 +420,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
               >
                 {selectedTemplate.type
                   ? selectedTemplate.type.charAt(0).toUpperCase() +
-                    selectedTemplate.type.slice(1)
+                  selectedTemplate.type.slice(1)
                   : ""}
               </span>
             </div>
@@ -481,7 +482,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           // If either is empty, clear cross-field errors
           if (
             next.minexperience ===
-              "Min Experience cannot be greater than Max" ||
+            "Min Experience cannot be greater than Max" ||
             next.minexperience === "Min and Max Experience cannot be equal"
           )
             next.minexperience = "";
@@ -532,7 +533,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           } else {
             if (
               next.minsalary ===
-                "Minimum Salary cannot be greater than Maximum" ||
+              "Minimum Salary cannot be greater than Maximum" ||
               next.minsalary === "Minimum and Maximum Salary cannot be equal"
             )
               next.minsalary = "";
@@ -557,10 +558,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry
       );
       setEntries(updatedEntries);
@@ -660,7 +661,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         entries || [],
         dataToSubmit.rounds || []
       );
-      
+
       if (!formIsValid) {
         setErrors(newErrors);
         // v1.0.1 <------------------------------------------------------
@@ -702,6 +703,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           skill: entry.skill,
           experience: entry.experience,
           expertise: entry.expertise,
+          requirement_level: entry.requirement_level || "REQUIRED",
         })),
       additionalNotes: dataToSubmit.additionalNotes,
       jobDescription: dataToSubmit.jobDescription.trim(),
@@ -715,7 +717,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // rounds: dataToSubmit?.template?.rounds || [],
     };
 
-    
+
     try {
       // let response;
       // if (isEdit && positionId) {
@@ -737,7 +739,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       });
       // Updated Successfully
 
-      
+
       if (response.status === "success") {
         notify.success("Position added successfully");
       } else if (
@@ -793,17 +795,17 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       }
     } catch (error) {
       // --- MAP BACKEND VALIDATION ERRORS TO FRONTEND ---
-      
+
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save position"
+        error.message ||
+        "Failed to save position"
       );
 
       if (error.response && error.response.status === 400) {
         const backendErrors = error.response.data.errors || {};
-        
+
         setErrors(backendErrors);
         scrollToFirstError(backendErrors, fieldRefs);
       } else {
@@ -1333,7 +1335,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           max={1000000000}
                           label="Min Salary (Annual)"
                           name="minSalary"
-                          // required={formData.maxSalary ? true : false}
+                        // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
                           value={formData.maxSalary}
@@ -1344,7 +1346,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           error={errors.maxsalary}
                           label="Max Salary (Annual)"
                           name="maxSalary"
-                          // required={formData.minSalary ? true : false}
+                        // required={formData.minSalary ? true : false}
                         />
                       </div>
                     </div>
@@ -1361,7 +1363,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         max={100}
                         label="No. of Positions"
                         name="NoofPositions"
-                        // required
+                      // required
                       />
 
                       <div>
@@ -1415,6 +1417,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         entries={entries}
                         errors={errors}
                         showValidation={showSkillValidation}
+                        showRequirementLevel={true}
                         onSkillsValidChange={(hasValidSkills) => {
                           // Clear the skills error if at least one complete row exists
                           if (hasValidSkills && errors.skills) {
@@ -1429,7 +1432,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           setEntries((prevEntries) => {
                             const newEntries = [
                               ...prevEntries,
-                              { skill: "", experience: "", expertise: "" },
+                              { skill: "", experience: "", expertise: "", requirement_level: "REQUIRED" },
                             ];
                             // Only set editing index if callback is provided
                             if (
@@ -1561,7 +1564,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             const resolvedTemplate =
                               fromList ||
                               (selectedTemplate &&
-                              selectedTemplate._id === templateId
+                                selectedTemplate._id === templateId
                                 ? selectedTemplate
                                 : null);
 
@@ -1602,7 +1605,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             onChange={(selected) => {
                               formData.status = selected.value;
                               setFormData({ ...formData });
-                             
+
                             }} // update state with value
                             // options={statusOptions}
                             options={statusOptions.map((option) => ({
@@ -1661,8 +1664,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                               External ID
                             </label>
                             <div className="relative tooltip-container">
-                              <Info 
-                                className="w-4 h-4 text-gray-400 cursor-pointer" 
+                              <Info
+                                className="w-4 h-4 text-gray-400 cursor-pointer"
                                 onClick={() => setShowTooltip(!showTooltip)}
                               />
                               {showTooltip && (
