@@ -1744,6 +1744,15 @@ async function buildSmartRoundUpdate({
 
   const now = new Date();
 
+  console.log("existingRound", {
+    existingRound,
+    body,
+    actingAsUserId,
+    changes,
+    isCreate,
+    statusChanged,
+  });
+
   /* ---------------- Helpers ---------------- */
 
   const resolveComment = (reasonCode, comment) =>

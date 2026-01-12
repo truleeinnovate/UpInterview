@@ -39,6 +39,7 @@ import axios from "axios";
 import { config } from "../../../../config.js";
 import { createMeeting } from "../../../../utils/meetingPlatforms.js";
 import { useVideoSettingsQuery } from "../../../../apiHooks/VideoDetail.js";
+import DateChangeConfirmationModal from "../Interview-New/components/DateChangeConfirmationModal.jsx";
 
 // v1.0.1 ---------------------------------------------------------------->
 
@@ -116,6 +117,7 @@ const MockSchedulelater = () => {
       dateTime: "",
     },
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMeetingPlatform, setSelectedMeetingPlatform] =
     useState("platform"); // Default to Google Meet googlemeet
@@ -130,10 +132,12 @@ const MockSchedulelater = () => {
   const [entries, setEntries] = useState([]);
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
   const [status, setStatus] = useState("");
-    const [externalMaxHourlyRate, setExternalMaxHourlyRate] = useState(0);
-    const [hasManuallyClearedInterviewers, setHasManuallyClearedInterviewers] =
-      useState(false);
-
+  const [externalMaxHourlyRate, setExternalMaxHourlyRate] = useState(0);
+  const [hasManuallyClearedInterviewers, setHasManuallyClearedInterviewers] =
+    useState(false);
+  const [showDateChangeConfirmation, setShowDateChangeConfirmation] =
+    useState(false);
+  const [pendingDateChange, setPendingDateChange] = useState(null); // { type: 'interviewType' | 'scheduledDate' | 'duration', value: any }
   // const [selectedSkill, setSelectedSkill] = useState("");
   // const [selectedExp, setSelectedExp] = useState("");
   // const [selectedLevel, setSelectedLevel] = useState("");
@@ -145,7 +149,7 @@ const MockSchedulelater = () => {
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
   // Add this helper function at the top with other state declarations
-  console.log("externalInterviewers:", externalInterviewers);
+  // console.log("qualifications:", qualifications);
 
   const [isScheduleOrRescheduleInHistory, setIsScheduleOrRescheduleInHistory] =
     useState(false);
@@ -209,11 +213,18 @@ const MockSchedulelater = () => {
       isScheduleOrRescheduleInHistory
     ) {
       if (
+        // page one
+        // fieldName === "candidateName" ||
+        fieldName === "higherQualification" ||
+        fieldName === "currentExperience" ||
+        fieldName === "currentRole" ||
+        fieldName === "skills" ||
+        fieldName === "jobDescription" ||
+        // page two
         fieldName === "interviewType" ||
         fieldName === "scheduledDate" ||
         fieldName === "instructions" ||
-        fieldName === "sequence" ||
-        fieldName === "questions" ||
+        fieldName === "roundTitle" ||
         fieldName === "internalInterviewersBtn" ||
         fieldName === "externalInterviewersBtn" ||
         fieldName === "clearInterviewersBtn" ||
@@ -236,8 +247,14 @@ const MockSchedulelater = () => {
       // Only instructions, sequence, questions are editable
       if (
         fieldName === "instructions" ||
-        fieldName === "sequence" ||
-        fieldName === "questions"
+        fieldName === "roundTitle" ||
+        // fieldName === "candidateName" ||
+        fieldName === "higherQualification" ||
+        fieldName === "jobDescription" ||
+        fieldName === "roundTitle"
+
+        // fieldName === "sequence" ||
+        // fieldName === "questions"
       ) {
         console.log("Editable field in edit mode: 2", fieldName);
         return false; // These are editable
@@ -297,8 +314,9 @@ const MockSchedulelater = () => {
       const contact = singleContact;
       setFormData((prev) => ({
         ...prev,
-        candidateName: `${contact.firstName || ""} ${contact.lastName || ""
-          }`.trim(),
+        candidateName: `${contact.firstName || ""} ${
+          contact.lastName || ""
+        }`.trim(),
         higherQualification: contact.HigherQualification || "",
         currentExperience: contact.yearsOfExperience || "",
         // technology: contact.technologies?.[0] || "",
@@ -323,7 +341,10 @@ const MockSchedulelater = () => {
         let source = [];
 
         // Priority 1: Use already accepted interviewers
-        if (Array.isArray(round.interviewers) && round.interviewers.length > 0) {
+        if (
+          Array.isArray(round.interviewers) &&
+          round.interviewers.length > 0
+        ) {
           source = round.interviewers;
           console.log("Using accepted interviewers:", source);
         }
@@ -395,14 +416,19 @@ const MockSchedulelater = () => {
         }
 
         // Skills handling...
-        const skillStrings = data.skills?.map((s) =>
-          typeof s === "object" ? s.skill || s.SkillName || s : s
-        ) || [];
+        const skillStrings =
+          data.skills?.map((s) =>
+            typeof s === "object" ? s.skill || s.SkillName || s : s
+          ) || [];
 
-        const skillObjects = data.skills?.map((s) => ({
-          _id: typeof s === "object" ? s._id : Math.random().toString(36).slice(2),
-          SkillName: typeof s === "object" ? s.skill || s.SkillName || s : s,
-        })) || [];
+        const skillObjects =
+          data.skills?.map((s) => ({
+            _id:
+              typeof s === "object"
+                ? s._id
+                : Math.random().toString(36).slice(2),
+            SkillName: typeof s === "object" ? s.skill || s.SkillName || s : s,
+          })) || [];
 
         setEntries(skillStrings);
         setAllSelectedSkills(skillObjects);
@@ -1018,7 +1044,7 @@ const MockSchedulelater = () => {
     if (!formIsValid) return;
 
     setIsSubmitting(true);
-
+    console.log("formData", formData);
     try {
       const response = await saveMockInterview({
         formData: {
@@ -1035,6 +1061,8 @@ const MockSchedulelater = () => {
         resume,
         isResumeRemoved,
       });
+
+      console.log("response", response);
 
       // FIX: Correct path to _id
       const savedMockId =
@@ -1107,6 +1135,7 @@ const MockSchedulelater = () => {
           instructions: formData.rounds.instructions || "",
           dateTime: combinedDateTime,
           selectedInterviewers: externalInterviewers,
+          maxHourlyRate: externalMaxHourlyRate,
         },
         roundId: existingRoundId,
       });
@@ -1114,7 +1143,8 @@ const MockSchedulelater = () => {
       const savedRound = roundResponse.data?.round;
 
       const newStatus =
-        roundResponse?.savedRound?.status || roundResponse?.updatedRound?.status;
+        roundResponse?.savedRound?.status ||
+        roundResponse?.updatedRound?.status;
       if (newStatus) {
         setStatus(newStatus);
       }
@@ -1129,7 +1159,9 @@ const MockSchedulelater = () => {
           setIsMeetingCreationLoading(true);
           setMeetingCreationProgress("Creating meeting link...");
 
-          const { createMeeting } = await import("../../../../utils/meetingPlatforms.js");
+          const { createMeeting } = await import(
+            "../../../../utils/meetingPlatforms.js"
+          );
 
           // Common payload fields (same as real interviews)
           const commonPayload = {
@@ -1137,12 +1169,15 @@ const MockSchedulelater = () => {
             instructions: savedRound.instructions || "",
             combinedDateTime: savedRound.dateTime || combinedDateTime,
             duration: savedRound.duration || formData.rounds.duration,
-            selectedInterviewers: savedRound.interviewers || externalInterviewers,
+            selectedInterviewers:
+              savedRound.interviewers || externalInterviewers,
           };
 
           if (selectedMeetingPlatform === "google-meet") {
-            meetingLink = await createMeeting("googlemeet", commonPayload, (progress) =>
-              setMeetingCreationProgress(progress)
+            meetingLink = await createMeeting(
+              "googlemeet",
+              commonPayload,
+              (progress) => setMeetingCreationProgress(progress)
             );
           } else if (selectedMeetingPlatform === "zoom") {
             console.log("🟣 Creating Zoom meeting for Mock Interview...");
@@ -1167,12 +1202,17 @@ const MockSchedulelater = () => {
               },
             };
 
-            meetingLink = await createMeeting("zoommeet", { payload: zoomPayload }, (progress) =>
-              setMeetingCreationProgress(progress)
+            meetingLink = await createMeeting(
+              "zoommeet",
+              { payload: zoomPayload },
+              (progress) => setMeetingCreationProgress(progress)
             );
-          } else if (selectedMeetingPlatform === "platform") { // VideoSDK / other
-            meetingLink = await createMeeting("videosdk", commonPayload, (progress) =>
-              setMeetingCreationProgress(progress)
+          } else if (selectedMeetingPlatform === "platform") {
+            // VideoSDK / other
+            meetingLink = await createMeeting(
+              "videosdk",
+              commonPayload,
+              (progress) => setMeetingCreationProgress(progress)
             );
           }
 
@@ -1184,8 +1224,13 @@ const MockSchedulelater = () => {
               mockInterviewId: mockId,
               roundId: savedRound._id,
               updateType: "MEETING_LINK_ONLY",
-              round: {                       // ← keep nested
-                meetingId: meetingLink?.join_url || meetingLink?.start_url || meetingLink?.hangoutLink || meetingLink,
+              round: {
+                // ← keep nested
+                meetingId:
+                  meetingLink?.join_url ||
+                  meetingLink?.start_url ||
+                  meetingLink?.hangoutLink ||
+                  meetingLink,
                 meetPlatform: selectedMeetingPlatform,
               },
             });
@@ -1194,7 +1239,9 @@ const MockSchedulelater = () => {
           }
         } catch (err) {
           console.error("Meeting creation failed:", err);
-          notify.warn("Round saved successfully, but meeting link could not be created.");
+          notify.warn(
+            "Round saved successfully, but meeting link could not be created."
+          );
           setMeetingCreationProgress("Meeting creation failed");
         } finally {
           setIsMeetingCreationLoading(false);
@@ -1221,7 +1268,7 @@ const MockSchedulelater = () => {
   const sidebarRef = useRef(null);
 
   const closeSidebar = () => {
-    setSidebarOpen(false);  
+    setSidebarOpen(false);
   };
 
   const handleOutsideClick = useCallback((event) => {
@@ -1681,8 +1728,7 @@ const MockSchedulelater = () => {
   //   }
   // };
 
-
-    const handleExternalInterviewerSelect = (interviewers, maxHourlyRate) => {
+  const handleExternalInterviewerSelect = (interviewers, maxHourlyRate) => {
     // if (selectedInterviewType === "Internal") {
     //   alert(
     //     "You need to clear Internal interviewers before selecting outsourced interviewers."
@@ -1698,21 +1744,34 @@ const MockSchedulelater = () => {
     );
 
     setSelectedInterviewType("External");
-    setExternalInterviewers([...externalInterviewers, ...uniqueInterviewers]); // Append new interviewers
+
+    // Normalize to consistent externalInterviewers format
+    const normalized = [...externalInterviewers, ...uniqueInterviewers].map(
+      (i) => ({
+        _id: i._id || i.id || null,
+        id: i._id || i.id || null,
+        firstName: i.firstName || i.contact?.firstName || "Unknown",
+        lastName: i.lastName || i.contact?.lastName || "",
+        email: i.email || i.contact?.email || "",
+        contact: i.contact || i, // keep full object
+      })
+    );
+
+    console.log("normalized", normalized);
+    setExternalInterviewers(normalized);
+    // setExternalInterviewers([...externalInterviewers, ...uniqueInterviewers]); // Append new interviewers
     setExternalMaxHourlyRate(Number(maxHourlyRate) || 0);
     setHasManuallyClearedInterviewers(false); // Reset flag when adding new interviewers
   };
 
-    const handleRemoveExternalInterviewer = (interviewerId) => {
+  const handleRemoveExternalInterviewer = (interviewerId) => {
     setExternalInterviewers((prev) => {
       const updatedInterviewers = prev.filter(
         (i) => i.id !== interviewerId && i._id !== interviewerId
       );
 
       // Reset selectedInterviewType if no interviewers are left
-      if (
-        updatedInterviewers.length === 0
-      ) {
+      if (updatedInterviewers.length === 0) {
         // Set flag when manually removing all external interviewers
         setHasManuallyClearedInterviewers(true);
         setSelectedInterviewType(null);
@@ -1733,6 +1792,26 @@ const MockSchedulelater = () => {
     }));
     setSelectedInterviewType("scheduled");
   };
+
+  // onChange={(e) => {
+  //   // Clear outsourced data when date/time changes
+  //   if (externalInterviewers.length > 0) {
+  //     setExternalInterviewers([]);
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       rounds: {
+  //         ...prev.rounds,
+  //         interviewers: [],
+  //       },
+  //     }));
+
+  //     setTimeout(() => e.target.blur(), 1000);
+  //     notify.warning(
+  //       "Date/time changed. Outsourced interviewers have been cleared."
+  //     );
+  //   }
+  //   setScheduledDate(e.target.value);
+  // }}
 
   const addSkill = (skillName) => {
     const trimmedSkill = skillName.trim();
@@ -1773,6 +1852,183 @@ const MockSchedulelater = () => {
     } else {
       notify.error("Skill already exists");
     }
+  };
+
+  const formatForDatetimeLocal = (date) => {
+    const pad = (n) => String(n).padStart(2, "0");
+    const y = date.getFullYear();
+    const m = pad(date.getMonth() + 1);
+    const d = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    return `${y}-${m}-${d}T${hh}:${mm}`;
+  };
+
+  const twoHoursFromNowLocal = () => {
+    const d = new Date();
+    d.setHours(d.getHours() + 2);
+    d.setSeconds(0, 0); // strip seconds/millis for consistency
+    return formatForDatetimeLocal(d);
+  };
+
+  const handleScheduledDateChange = (e) => {
+    const val = e.target.value;
+
+    // Check if external interviewers exist and date is actually changing
+    if (externalInterviewers.length > 0 && val !== scheduledDate) {
+      // Set pending change and show confirmation popup
+      setPendingDateChange({
+        type: "scheduledDate",
+        value: val,
+      });
+      setTimeout(() => setShowDateChangeConfirmation(true), 1500);
+      // setShowDateChangeConfirmation(true);
+      return; // Don't proceed until user confirms
+    }
+
+    // const minVal = twoHoursFromNowLocal();
+    // Prevent selecting past/less than 2 hours from now
+    // const newScheduledDate = val && val < minVal ? minVal : val;
+
+    if (externalInterviewers.length > 0) {
+      setExternalInterviewers([]);
+      setFormData((prev) => ({
+        ...prev,
+        rounds: {
+          ...prev.rounds,
+          interviewers: [],
+        },
+      }));
+    }
+
+    setScheduledDate(e.target.value);
+  };
+
+  const handleConfirmDateChange = () => {
+    if (!pendingDateChange) return;
+
+    console.log(
+      "Confirming date/time change in Mock Interview:",
+      pendingDateChange
+    );
+
+    // ────────────────────────────────────────────────────────────────
+    // 1. Clear external interviewers when user confirms the change
+    // ────────────────────────────────────────────────────────────────
+    if (externalInterviewers.length > 0) {
+      setExternalInterviewers([]);
+      setExternalMaxHourlyRate(0);
+      setSelectedInterviewType(null);
+      setHasManuallyClearedInterviewers(true);
+
+      notify.warning(
+        "Date/time changed → All outsourced interviewers cleared."
+      );
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 2. Calculate new values immediately (avoid race conditions)
+    // ────────────────────────────────────────────────────────────────
+    let newInterviewType = interviewType;
+    let newScheduledDate = scheduledDate;
+    let newCombinedDateTime = combinedDateTime;
+    let newStartTime = startTime;
+    let newEndTime = endTime;
+
+    // Helper to calculate new start + end
+    const calculateNewTimes = (baseDate) => {
+      if (!baseDate) return { start: null, end: null };
+
+      const start = new Date(baseDate);
+      if (isNaN(start.getTime())) return { start: null, end: null };
+
+      const end = new Date(start);
+      end.setMinutes(end.getMinutes() + Number(formData.rounds.duration || 60));
+
+      return { start, end };
+    };
+
+    if (pendingDateChange.type === "interviewType") {
+      newInterviewType = pendingDateChange.value;
+      setInterviewType(newInterviewType);
+
+      // Update formData too
+      setFormData((prev) => ({
+        ...prev,
+        rounds: {
+          ...prev.rounds,
+          interviewType: newInterviewType,
+        },
+      }));
+
+      if (newInterviewType === "instant") {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 15);
+        now.setSeconds(0, 0);
+
+        const { start, end } = calculateNewTimes(now);
+
+        newStartTime = start?.toISOString() || "";
+        newEndTime = end?.toISOString() || "";
+
+        const formattedStart = formatToCustomDateTime(start);
+        const formattedEnd = formatToCustomDateTime(end).split(" ")[1] || "";
+
+        newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
+
+        // Clear scheduled date when switching to instant
+        newScheduledDate = "";
+        setScheduledDate("");
+      }
+    } else if (pendingDateChange.type === "scheduledDate") {
+      console.log("scheduledDate", scheduledDate);
+      const minAllowed = twoHoursFromNowLocal(); // your helper function
+      newScheduledDate =
+        pendingDateChange.value < minAllowed
+          ? minAllowed
+          : pendingDateChange.value;
+
+      setScheduledDate(newScheduledDate);
+
+      const { start, end } = calculateNewTimes(newScheduledDate);
+
+      newStartTime = start?.toISOString() || "";
+      newEndTime = end?.toISOString() || "";
+
+      const formattedStart = formatToCustomDateTime(start);
+      const formattedEnd = formatToCustomDateTime(end).split(" ")[1] || "";
+
+      newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 3. Update all related states at once
+    // ────────────────────────────────────────────────────────────────
+    setStartTime(newStartTime);
+    setEndTime(newEndTime);
+    setCombinedDateTime(newCombinedDateTime);
+
+    setFormData((prev) => ({
+      ...prev,
+      rounds: {
+        ...prev.rounds,
+        dateTime: newCombinedDateTime,
+        interviewType: newInterviewType,
+      },
+    }));
+
+    // ────────────────────────────────────────────────────────────────
+    // 4. Mark as confirmed + close modal
+    // ────────────────────────────────────────────────────────────────
+    setPendingDateChange((prev) => ({ ...prev, confirmed: true }));
+    setShowDateChangeConfirmation(false);
+    setPendingDateChange(null);
+
+    // Optional: You can trigger submit automatically after confirmation
+    // (many teams do this in reschedule flows)
+    // setTimeout(() => {
+    //   handleSubmit(new Event("submit"), "dateChangeConfirmed");
+    // }, 300);
   };
 
   // Handle skill removal
@@ -1838,6 +2094,7 @@ const MockSchedulelater = () => {
                         inputRef={fieldRefs.candidateName}
                         value={formData.candidateName}
                         onChange={handleChange}
+                        // disabled={shouldDisable("candidateName")}
                         name="candidateName"
                         type="text"
                         id="CandidateName"
@@ -1853,6 +2110,7 @@ const MockSchedulelater = () => {
                         name="currentExperience"
                         value={formData.currentExperience}
                         onChange={handleChange}
+                        disabled={shouldDisable("currentExperience")}
                         onKeyDown={handleExperienceKeyDown}
                         id="Experience"
                         label="Current Experience"
@@ -1869,6 +2127,7 @@ const MockSchedulelater = () => {
                         label="Current Role"
                         name="currentRole"
                         value={formData.currentRole}
+                        disabled={shouldDisable("currentRole")}
                         options={currentRoles.map((r) => ({
                           value: r.roleName,
                           label: r.roleLabel,
@@ -1894,6 +2153,7 @@ const MockSchedulelater = () => {
                         containerRef={fieldRefs.higherQualification}
                         label="Higher Qualification"
                         name="higherQualification"
+                        disabled={shouldDisable("higherQualification")}
                         value={formData.higherQualification}
                         options={qualifications.map((q) => ({
                           value: q.QualificationName,
@@ -1935,6 +2195,7 @@ const MockSchedulelater = () => {
                                 label: skill.SkillName,
                               })) || []
                           }
+                          disabled={shouldDisable("skills")}
                           onChange={(option) => {
                             if (!option) return;
                             const selectedOption = option?.target?.value
@@ -2036,6 +2297,7 @@ const MockSchedulelater = () => {
                       inputRef={fieldRefs.jobDescription}
                       value={formData.jobDescription}
                       onChange={handleChange}
+                      disabled={shouldDisable("jobDescription")}
                       name="jobDescription"
                       label="Job Description"
                       rows={6}
@@ -2068,6 +2330,7 @@ const MockSchedulelater = () => {
                               ref={inputRef}
                               type="file"
                               id="fileUpload"
+                              disabled={shouldDisable("resume")}
                               style={{ display: "none" }}
                               onChange={handleFileChange}
                             />
@@ -2488,22 +2751,25 @@ const MockSchedulelater = () => {
                                 },
                               }));
                             }}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "instant"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${interviewType === "instant"
-                                ? "text-custom-blue"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "instant"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Instant Interview
                             </span>
@@ -2542,22 +2808,25 @@ const MockSchedulelater = () => {
                             // Interview Type buttons - disabled in CASE 2, enabled in CASE 3
                             disabled={shouldDisable("interviewType")}
                             key="scheduled-btn"
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "scheduled"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${interviewType === "scheduled"
-                                ? "text-custom-blue"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "scheduled"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Schedule for Later
                             </span>
@@ -2589,24 +2858,31 @@ const MockSchedulelater = () => {
                                 // }
                                 // Scheduled Date - disabled in CASE 2, enabled in CASE 3
                                 disabled={shouldDisable("scheduledDate")}
-                                onChange={(e) => {
-                                  // Clear outsourced data when date/time changes
-                                  if (externalInterviewers.length > 0) {
-                                    setExternalInterviewers([]);
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      rounds: {
-                                        ...prev.rounds,
-                                        interviewers: [],
-                                      },
-                                    }));
+                                // onChange={(e) => {
+                                //   // Clear outsourced data when date/time changes
+                                //   if (externalInterviewers.length > 0) {
+                                //     setExternalInterviewers([]);
+                                //     setFormData((prev) => ({
+                                //       ...prev,
+                                //       rounds: {
+                                //         ...prev.rounds,
+                                //         interviewers: [],
+                                //       },
+                                //     }));
 
-                                    setTimeout(() => e.target.blur(), 1000);
-                                    notify.warning(
-                                      "Date/time changed. Outsourced interviewers have been cleared."
-                                    );
-                                  }
-                                  setScheduledDate(e.target.value);
+                                //     setTimeout(() => e.target.blur(), 1000);
+                                //     notify.warning(
+                                //       "Date/time changed. Outsourced interviewers have been cleared."
+                                //     );
+                                //   }
+                                //   setScheduledDate(e.target.value);
+                                // }}
+
+                                onChange={(e) => {
+                                  handleScheduledDateChange(e);
+                                  // Also trigger blur to close the picker
+                                  setTimeout(() => e.target.blur(), 1000);
+                                  //  e.target.blur();
                                 }}
                                 onBlur={() => {
                                   // Force update times when input loses focus (popup closes)
@@ -2738,8 +3014,12 @@ const MockSchedulelater = () => {
                                 <Users className="h-4 w-4 text-gray-500 mr-2" />
                                 <span className="text-sm text-gray-700">
                                   {selectedInterviewers.length} interviewer
-                                  {selectedInterviewers.length !== 1 ? "s" : ""}{" "}
-                                  <span className="sm:hidden inline">Selected</span>
+                                  {selectedInterviewers.length !== 1
+                                    ? "s"
+                                    : ""}{" "}
+                                  <span className="sm:hidden inline">
+                                    Selected
+                                  </span>
                                   <span className="sm:ml-0 ml-1 px-2 py-0.5 bg-orange-100 text-orange-800 rounded-full text-xs">
                                     Outsourced
                                   </span>
@@ -2765,12 +3045,16 @@ const MockSchedulelater = () => {
                               {selectedInterviewers.length > 0 && (
                                 <button
                                   type="button"
-                                  disabled={shouldDisable("clearInterviewersBtn")}
+                                  disabled={shouldDisable(
+                                    "clearInterviewersBtn"
+                                  )}
                                   onClick={handleClearAllInterviewers}
                                   className="text-sm text-red-600 hover:text-red-800 flex items-center"
                                 >
                                   <Trash2 className="h-3 w-3 mr-1" />
-                                  <span className="sm:hidden md:hidden inline">Clear All</span>
+                                  <span className="sm:hidden md:hidden inline">
+                                    Clear All
+                                  </span>
                                 </button>
                               )}
                             </div>
@@ -2793,13 +3077,20 @@ const MockSchedulelater = () => {
                                     >
                                       <div className="flex items-center">
                                         <span className="ml-2 text-sm text-orange-800 truncate">
-                                          {interviewer.firstName} {interviewer.lastName}
+                                          {interviewer.firstName}{" "}
+                                          {interviewer.lastName}
                                         </span>
                                       </div>
                                       <button
                                         type="button"
-                                        onClick={() => handleRemoveExternalInterviewer(interviewer._id)}
-                                        disabled={shouldDisable("clearInterviewersBtn")}
+                                        onClick={() =>
+                                          handleRemoveExternalInterviewer(
+                                            interviewer._id
+                                          )
+                                        }
+                                        disabled={shouldDisable(
+                                          "clearInterviewersBtn"
+                                        )}
                                         className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
                                         title="Remove interviewer"
                                       >
@@ -2926,8 +3217,25 @@ const MockSchedulelater = () => {
           candidateExperience={formData?.currentExperience}
           previousSelectedInterviewers={externalInterviewers}
 
-        // isMockInterview={true} // Correctly passes true for mock interviews
+          // isMockInterview={true} // Correctly passes true for mock interviews
         />
+      )}
+
+      {showDateChangeConfirmation && (
+        // shouldDisable("scheduledDate") &&
+        <div className="fixed inset-0 z-[9999]">
+          <DateChangeConfirmationModal
+            isOpen={showDateChangeConfirmation}
+            onClose={() => {
+              setShowDateChangeConfirmation(false);
+              setPendingDateChange(null);
+            }}
+            onConfirm={handleConfirmDateChange}
+            selectedInterviewType={selectedInterviewType}
+            status={status}
+            combinedDateTime={combinedDateTime} // your formatted date string
+          />
+        </div>
       )}
 
       {/* {showOutsourcePopup && (
