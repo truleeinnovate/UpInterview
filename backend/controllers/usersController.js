@@ -338,7 +338,6 @@ const getInterviewers = async (req, res) => {
             roleLabel: user?.roleId?.label || "",
             roleName: user?.roleId?.roleName || "",
 
-
             type: "internal",
 
             days: [],
@@ -356,10 +355,29 @@ const getInterviewers = async (req, res) => {
         .populate("contact")
         .lean();
 
+      // Fetch all roles (used to map currentRole → role data)
+      const roleMasters = await RoleMaster.find({})
+        .select("roleName roleLabel roleCategory")
+        .lean();
+
       return availabilities.map((availability) => {
         const contact = availability.contact || {};
         const ownerId = contact.ownerId?.toString();
         const user = users.find((u) => u._id.toString() === ownerId) || {};
+
+        // const role = roleMasters
+        //   .find({
+        //     roleName: contact?.currentRole,
+        //   })
+        //   .lean();
+
+        // Find role using contact.currentRole
+        const matchedRole =
+          roleMasters.find(
+            (r) => r.roleName === contact.currentRole
+            // ||
+            //   r.roleLabel === contact.currentRole
+          ) || {};
 
         // Get the first available time slot for nextAvailable
         let nextAvailable = null;
@@ -399,6 +417,9 @@ const getInterviewers = async (req, res) => {
           _id: availability._id,
           contact: {
             ...contact,
+            // 🔽 role data from RoleMaster
+            // roleName: matchedRole.roleName || "",
+            roleLabel: matchedRole.roleLabel || "",
             ownerId: user._id,
             email: user.email,
             isFreelancer: "true",
