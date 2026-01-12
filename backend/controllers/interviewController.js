@@ -46,6 +46,7 @@ const ScheduledAssessment = require("../models/Assessment/assessmentsSchema.js")
 const {
   CandidateAssessment,
 } = require("../models/Assessment/candidateAssessment.js");
+const { Application } = require("../models/Application.js");
 
 // const { createRequest } = require("./InterviewRequestController.js");
 // const {
@@ -455,6 +456,51 @@ const createInterview = async (req, res) => {
       interviewId: interview._id,
       status: "applied",
     });
+
+    // Create Application document
+    try {
+      const position = await Position.findById(positionId).lean();
+
+      // Check if application already exists
+      const existingApp = await Application.findOne({ candidateId, positionId, tenantId: orgId });
+
+      if (!existingApp) {
+        // Generate applicationNumber explicitly (findOneAndUpdate doesn't trigger pre-save hooks)
+        const applicationNumber = await generateUniqueId(
+          "APPNUM",
+          Application,
+          "applicationNumber",
+          orgId
+        );
+
+        await Application.create({
+          applicationNumber,
+          candidateId,
+          positionId,
+          tenantId: orgId,
+          companyId: position?.companyId || null,
+          interviewId: interview._id,
+          status: "INTERVIEWING",
+          currentStage: "Interview Created",
+          ownerId: userId,
+          createdBy: userId,
+        });
+        console.log('[INTERVIEW] Application created with number:', applicationNumber);
+      } else {
+        // Update existing application with interview reference if needed
+        if (!existingApp.interviewId) {
+          await Application.findByIdAndUpdate(existingApp._id, {
+            interviewId: interview._id,
+            status: "INTERVIEWING",
+            currentStage: "Interview Created",
+          });
+        }
+        console.log('[INTERVIEW] Application already exists for candidate:', candidateId);
+      }
+    } catch (appError) {
+      console.error('[INTERVIEW] Error creating Application:', appError);
+      // Continue execution even if Application creation fails
+    }
 
     res.locals.logData = {
       tenantId: interview.tenantId?.toString() || orgId || "",

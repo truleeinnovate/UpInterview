@@ -168,6 +168,13 @@ const ENTITY_CONFIG = {
     fieldName: "logId",
     maxRetries: 5,
   },
+  // Application
+  APPNUM: {
+    startNumber: 1,
+    padLength: 5,
+    fieldName: "applicationNumber",
+    maxRetries: 5,
+  },
   // Default configuration for custom prefixes
   DEFAULT: {
     startNumber: 50001,
@@ -249,8 +256,7 @@ async function generateUniqueId(
       );
 
       console.warn(
-        `[UniqueID] Detected existing ${uniqueId} in ${
-          Model.modelName
+        `[UniqueID] Detected existing ${uniqueId} in ${Model.modelName
         }. Advanced sequence to ${Math.max(
           maxExisting,
           nextSeq
