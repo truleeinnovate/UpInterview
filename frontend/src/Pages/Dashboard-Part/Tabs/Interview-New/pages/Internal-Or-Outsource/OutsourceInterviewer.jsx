@@ -54,7 +54,7 @@ const OutsourcedInterviewerCard = ({
   //  ||
   // interviewer?.contact?.CurrentRole ||
   // "Interviewer";
-  const CurrentRole = interviewer?.contact?.currentRole;
+  const CurrentRole = interviewer?.contact?.roleLabel;
   const company = interviewer?.contact?.industry || "Freelancer";
   console.log(
     "CURRENT ROLE ==========================================> ",
@@ -117,10 +117,11 @@ const OutsourcedInterviewerCard = ({
 
   return (
     <div
-      className={`bg-white rounded-lg border ${isSelected
-        ? "border-orange-500 ring-2 ring-orange-200"
-        : "border-gray-200"
-        } p-4 shadow-sm hover:shadow-md transition-all`}
+      className={`bg-white rounded-lg border ${
+        isSelected
+          ? "border-orange-500 ring-2 ring-orange-200"
+          : "border-gray-200"
+      } p-4 shadow-sm hover:shadow-md transition-all`}
     >
       <div className="w-full">
         <div className="flex items-center gap-3 w-full">
@@ -165,8 +166,9 @@ const OutsourcedInterviewerCard = ({
 
       <div className="mt-3">
         <div
-          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${isExpanded ? "line-clamp-none" : "line-clamp-2"
-            }`}
+          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${
+            isExpanded ? "line-clamp-none" : "line-clamp-2"
+          }`}
         >
           {capitalizeFirstLetter(introduction)}
         </div>
@@ -262,7 +264,7 @@ function OutsourcedInterviewerModal({
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
 
-  // console.log("interviewers interviewers", interviewers);
+  console.log("interviewers interviewers", interviewers);
   // console.log("contacts contacts", contacts);
 
   // console.log("navigatedfrom", {
@@ -666,9 +668,10 @@ function OutsourcedInterviewerModal({
               (interviewer) => {
                 const interviewerSkills = interviewer.contact?.skills || [];
                 console.log(
-                  `👤 Checking interviewer: ${interviewer.contact?.firstName ||
-                  interviewer.contact?.UserName ||
-                  "Unknown"
+                  `👤 Checking interviewer: ${
+                    interviewer.contact?.firstName ||
+                    interviewer.contact?.UserName ||
+                    "Unknown"
                   }`
                 );
                 console.log("📝 Interviewer's Skills:", interviewerSkills);
@@ -715,7 +718,8 @@ function OutsourcedInterviewerModal({
                 });
 
                 console.log(
-                  `🎯 ${interviewer.contact?.firstName || "Unknown"
+                  `🎯 ${
+                    interviewer.contact?.firstName || "Unknown"
                   } Skill Match Status: ${hasMatchingSkill}`
                 );
                 return hasMatchingSkill;
@@ -1282,10 +1286,11 @@ function OutsourcedInterviewerModal({
               Available Balance:
             </span>
             <span
-              className={`text-sm font-bold ${availableBalance >= maxHourlyRate
-                ? "text-green-600"
-                : "text-red-600"
-                }`}
+              className={`text-sm font-bold ${
+                availableBalance >= maxHourlyRate
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
             >
               ₹{Number(availableBalance || 0).toFixed(2)}
             </span>
@@ -1426,10 +1431,11 @@ function OutsourcedInterviewerModal({
           {/* v1.0.3 <--------------------------------------------------------------------- */}
           <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
             <div
-              className={`grid gap-4 ${isFullscreen
-                ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-                : "grid-cols-1"
-                }`}
+              className={`grid gap-4 ${
+                isFullscreen
+                  ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+                  : "grid-cols-1"
+              }`}
             >
               {filteredInterviewers.map((interviewer) => (
                 // <OutsourcedInterviewerCard
