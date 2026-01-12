@@ -23,7 +23,7 @@ function AssessmentResultView({
 
   console.log('assessment', assessment);
   console.log('assessmentQuestions', assessmentQuestions);
-  
+
   // <---------------------- v1.0.0
   // Helper to check if a date is valid
   const isValidDate = (date) => {
@@ -59,14 +59,14 @@ function AssessmentResultView({
   // Section results for 'Each Section'
   const sectionResults = isEachSection
     ? candidate.sections.map((section) => ({
-        name: section.SectionName,
-        score: section.totalScore,
-        passScore: section.passScore,
-        result:
-          section.totalScore >= (section.passScore || 0) ? "pass" : "fail",
-        answered: section.Answers.filter((a) => !a.isAnswerLater).length,
-        total: section.Answers.length,
-      }))
+      name: section.SectionName,
+      score: section.totalScore,
+      passScore: section.passScore,
+      result:
+        section.totalScore >= (section.passScore || 0) ? "pass" : "fail",
+      answered: section.Answers.filter((a) => !a.isAnswerLater).length,
+      total: section.Answers.length,
+    }))
     : [];
 
   // Overall result
@@ -81,9 +81,8 @@ function AssessmentResultView({
   return (
     // v1.0.2 <---------------------------------------------------------------
     <div
-      className={`flex ${
-        isFullscreen ? "flex-col" : "flex-col"
-      } gap-6 h-full min-h-screen sm:p-0 p-6`}
+      className={`flex ${isFullscreen ? "flex-col" : "flex-col"
+        } gap-6 h-full min-h-screen sm:p-0 p-6`}
     >
       {/* v1.0.2 ------------------------------------------------------------> */}
       {/* Back Button */}
@@ -102,18 +101,16 @@ function AssessmentResultView({
       {/* Main Content */}
       {/* v1.0.2 <--------------------------------------------------------------- */}
       <div
-        className={`flex ${
-          isFullscreen ? "sm:flex-col md:flex-col flex-row w-full" : "flex-col"
-        } gap-6 flex-1`}
+        className={`flex ${isFullscreen ? "sm:flex-col md:flex-col flex-row w-full" : "flex-col"
+          } gap-6 flex-1`}
       >
         {/* v1.0.2 ---------------------------------------------------------------> */}
         {/* Left Panel - Candidate Details */}
         {/* v1.0.2 <--------------------------------------------------------------- */}
 
         <div
-          className={`${
-            isFullscreen ? "sm:w-full md:w-full w-1/3" : "w-full"
-          } bg-white rounded-lg shadow-sm border border-gray-200 h-fit`}
+          className={`${isFullscreen ? "sm:w-full md:w-full w-1/3" : "w-full"
+            } bg-white rounded-lg shadow-sm border border-gray-200 h-fit`}
         >
           {/* v1.0.2 ---------------------------------------------------------------> */}
           <div className="p-6">
@@ -158,17 +155,16 @@ function AssessmentResultView({
 
                     <span className="text-gray-600">Status:</span>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        overallResult === "pass"
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${overallResult === "pass"
                           ? "bg-green-100 text-green-800"
                           : overallResult === "fail"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
                     >
                       {overallResult
                         ? overallResult.charAt(0).toUpperCase() +
-                          overallResult.slice(1)
+                        overallResult.slice(1)
                         : "N/A"}
                     </span>
                   </div>
@@ -185,9 +181,9 @@ function AssessmentResultView({
                     <span className="font-medium">
                       {isValidDate(candidate.completionDate)
                         ? format(
-                            new Date(candidate.completionDate),
-                            "MMM dd, yyyy hh:mm a"
-                          )
+                          new Date(candidate.completionDate),
+                          "MMM dd, yyyy hh:mm a"
+                        )
                         : "-"}
                     </span>
                   </div>
@@ -242,11 +238,10 @@ function AssessmentResultView({
                           Score: {section.score}/{section.passScore}
                         </span>
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            section.result === "pass"
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${section.result === "pass"
                               ? "bg-green-100 text-green-800"
                               : "bg-red-100 text-red-800"
-                          }`}
+                            }`}
                         >
                           {section.result.charAt(0).toUpperCase() +
                             section.result.slice(1)}
@@ -264,9 +259,8 @@ function AssessmentResultView({
         {/* v1.0.2 <--------------------------------------------------------------- */}
         {/* v1.0.3 <------------------------------------------------------------------------- */}
         <div
-          className={`max-h-[100vh-160px] ${
-            isFullscreen ? "sm:w-full md:w-full w-2/3" : "w-full"
-          } bg-white rounded-lg shadow-sm border border-gray-200 flex-1`}
+          className={`max-h-[100vh-160px] ${isFullscreen ? "sm:w-full md:w-full w-2/3" : "w-full"
+            } bg-white rounded-lg shadow-sm border border-gray-200 flex-1`}
         >
           {/* v1.0.2 ---------------------------------------------------------------> */}
           <div className="p-4 border-b border-gray-200">
@@ -276,14 +270,15 @@ function AssessmentResultView({
           <div className="divide-y divide-gray-200 max-h-[calc(100vh-116px)] overflow-y-auto">
             {assessmentQuestions?.sections?.map((section, index) => {
               const candidateSection = candidate.sections.find(
-                (candSec) => candSec.SectionName === section.sectionName
+                (candSec) =>
+                  candSec.sectionId?.toString() === section._id?.toString()
               );
               const answerCount =
                 candidateSection?.Answers.filter((a) => !a.isAnswerLater)
                   .length || 0;
               const sectionPass = isEachSection
                 ? candidateSection?.totalScore >=
-                  (candidateSection?.passScore || 0)
+                (candidateSection?.passScore || 0)
                 : true;
               // <-------------------------------v1.0.1
 
@@ -312,9 +307,8 @@ function AssessmentResultView({
                         </span>
                         {isEachSection && (
                           <span
-                            className={`font-medium ${
-                              sectionPass ? "text-green-600" : "text-red-600"
-                            }`}
+                            className={`font-medium ${sectionPass ? "text-green-600" : "text-red-600"
+                              }`}
                           >
                             {sectionPass ? "Passed" : "Failed"}
                           </span>
@@ -372,13 +366,12 @@ function AssessmentResultView({
                                       Candidate's Answer
                                     </p>
                                     <p
-                                      className={`font-medium break-words whitespace-pre-wrap ${
-                                        isCorrect === false
+                                      className={`font-medium break-words whitespace-pre-wrap ${isCorrect === false
                                           ? "text-red-600"
                                           : isCorrect
-                                          ? "text-green-600"
-                                          : "text-gray-800"
-                                      }`}
+                                            ? "text-green-600"
+                                            : "text-gray-800"
+                                        }`}
                                     >
                                       {userAnswer}
                                     </p>
