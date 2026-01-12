@@ -1970,21 +1970,6 @@ async function handleInterviewerRequestFlow({
   const interview = await Interview.findById(interviewId).lean();
   if (!interview) return;
 
-  // console.log("body", {
-  //   interviewId,
-  //   round,
-  //   selectedInterviewers,
-  //   cancelOldRequests,
-  // });
-
-  // 1️⃣ Cancel old requests (PATCH only)
-  // if (cancelOldRequests) {
-  //   await InterviewRequest.updateMany(
-  //     { roundId: round._id, status: "inprogress" },
-  //     { status: "withdrawn", respondedAt: new Date() }
-  //   );
-  // }
-
   const resolveInterviewerId = (interviewer) =>
     interviewer?.contact?._id || interviewer?._id;
 
