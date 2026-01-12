@@ -21,6 +21,7 @@ function AssessmentResultsTab({
   scheduledAssessmentId,
 }) {
   const [results, setResults] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);

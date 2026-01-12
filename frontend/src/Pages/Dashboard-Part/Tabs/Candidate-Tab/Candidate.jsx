@@ -839,58 +839,71 @@ function Candidate({
             );
           },
         },
-        {
-          key: "expiryAt",
-          header: "Expiry Date",
-          render: (value, row) => {
-            if (!row.expiryAt) return "N/A";
+      {
+  key: "expiryAt",
+  header: "Expiry Date",
+  render: (value, row) => {
+    const status = (row.status || "pending").toLowerCase();
 
-            const now = new Date();
-            const expiry = new Date(row.expiryAt);
-            const timeDiff = expiry.getTime() - now.getTime();
+    // ── Special cases ────────────────────────────────────────
 
-            if (timeDiff <= 0) {
-              return (
-                <span className="text-red-600 text-sm font-medium">
-                  Expired
-                </span>
-              );
-            }
+    if (status === "expired") {
+      return (
+        <div className="text-sm">
+          <div className="font-medium text-red-700">
+            Expired
+          </div>
+          {row.expiryAt && (
+            <div className="text-xs text-red-600/70">
+              {new Date(row.expiryAt).toLocaleDateString()}
+            </div>
+          )}
+        </div>
+      );
+    }
 
-            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor(
-              (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-            );
+    if (["completed", "pass", "fail"].includes(status)) {
+      if (row.endedAt) {
+        return (
+          <div className="text-sm">
+            <div className="font-medium text-gray-900">
+              {new Date(row.endedAt).toLocaleDateString()}
+            </div>
+            <div className="text-xs text-gray-500">
+              Completed
+            </div>
+          </div>
+        );
+      }
+      return (
+        <span className="text-gray-600 text-sm">
+          Completed
+        </span>
+      );
+    }
 
-            let timeText = "";
-            if (days > 0) {
-              timeText = `${days}d ${hours}h`;
-            } else if (hours > 0) {
-              timeText = `${hours}h`;
-            } else {
-              const minutes = Math.floor(
-                (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
-              );
-              timeText = `${minutes}m`;
-            }
+    if (status === "cancelled") {
+      return (
+        <span className="text-gray-500 text-sm font-medium">
+          Cancelled
+        </span>
+      );
+    }
 
-            return (
-              <div className="text-sm">
-                <div className="font-medium text-gray-900">
-                  {expiry.toLocaleDateString()}
-                </div>
-                <div
-                  className={`text-xs ${timeDiff < 24 * 60 * 60 * 1000
-                      ? "text-red-600"
-                      : "text-gray-500"
-                    }`}
-                >
-                  {timeText} remaining
-                </div>
-              </div>
-            );
-          },
-        },
+    // ── All other statuses (pending, in_progress, extended...) ──
+    // Just show the expiry date — NO remaining time
+
+    if (!row.expiryAt) {
+      return <span className="text-gray-400 text-sm">N/A</span>;
+    }
+
+    return (
+      <div className="text-sm font-medium text-gray-900">
+        {new Date(row.expiryAt).toLocaleDateString()}
+      </div>
+    );
+  },
+},
       ]
       : []),
     // ------------------------------ v1.0.2 >

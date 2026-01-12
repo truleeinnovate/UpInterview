@@ -699,6 +699,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
  * @param {Object} req - Request object containing outsource interview request data
  * @param {Object} res - Response object (optional, for direct API calls)
  */
+
 exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
   try {
     const {
@@ -708,12 +709,10 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       type,
     } = req.body;
 
-    // console.log("req.body sendOutsourceInterviewRequestEmails", req.body);
-
     const companyName = process.env.COMPANY_NAME || "UpInterview";
     const supportEmail = process.env.SUPPORT_EMAIL || "support@upinterview.com";
 
-    // Validation (your existing code is fine)
+    // Validation (keep your existing validation)
     if (!interviewId || !mongoose.isValidObjectId(interviewId)) {
       return errorResponse(res, 400, "Invalid or missing interview ID");
     }
@@ -728,9 +727,9 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     let interview = type === "mockinterview"
       ? await MockInterview.findById(interviewId)
       : await Interview.findById(interviewId)
-        .populate("candidateId", "FirstName LastName")
-        .populate("ownerId", "firstName lastName")
-        .populate("positionId", "title");
+          .populate("candidateId", "FirstName LastName")
+          .populate("ownerId", "firstName lastName")
+          .populate("positionId", "title");
 
     if (!interview) return errorResponse(res, 404, "Interview not found");
 
@@ -751,9 +750,7 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       ? tenant.company.trim()
       : "";
 
-    // console.log("orgCompanyName:", orgCompanyName);
-
-    // Load unified template
+    // Load template
     const template = await emailTemplateModel.findOne({
       category: "outsource_interview_request",
       isSystemTemplate: true,
@@ -771,11 +768,12 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
 
     if (!round) return errorResponse(res, 404, "Round not found");
 
-    // Prepare values
-    const values = {
+    // Prepare template data
+    const templateData = {
       companyName,
       roundTitle: round.roundTitle || "Interview Round",
       candidateName,
+      interviewerName: "", // will be set per interviewer
       interviewMode: round.interviewMode || "Online",
       dateTime: round.dateTime ? formatStartDateTime(round.dateTime) : "To be scheduled",
       duration: round.duration || "60 minutes",
@@ -783,10 +781,11 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       supportEmail,
       dashboardLink: `${config.REACT_APP_API_URL_FRONTEND}/home`,
       orgCompanyName,
-      position: interview?.positionId?.title?.trim() || ""
+      position: interview?.positionId?.title || ""
     };
 
-    // console.log("position:", values.position);
+    // Compile Handlebars template once (outside loop for performance)
+    const compiled = Handlebars.compile(template.body);
 
     const notifications = [];
     const emailPromises = [];
@@ -798,56 +797,19 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
         .filter(Boolean)
         .join(" ") || "Interviewer";
 
-      // Inside the for loop:
+      // Set interviewer name for this iteration
+      const data = { ...templateData, interviewerName };
 
-      let emailBody = template.body;
+      // Render with Handlebars (handles {{#if}} automatically)
+      let emailBody = compiled(data);
 
-      // Debug raw template
-      // console.log("Raw template contains '{{position}}' exactly?", template.body.includes('{{position}}'));
-
-      // Step 1: Replace all placeholders
-      Object.entries({
-        ...values,
-        interviewerName
-      }).forEach(([key, val]) => {
-        // Exact match
-        emailBody = emailBody.replace(`{{${key}}}`, val || '');
-
-        // Fallback: remove any extra spaces inside {{ }}
-        emailBody = emailBody.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), val || '');
-
-        // Fallback: case insensitive (if someone wrote {{Position}})
-        emailBody = emailBody.replace(new RegExp(`{{${key}}}`, 'gi'), val || '');
-      });
-
-      // Debug after replacement
-      // console.log("After all replacements - contains 'Fullstack Developer'?", emailBody.includes("Fullstack Developer"));
-
-      // Step 2: Conditional removal (only if empty)
-      if (!values.orgCompanyName.trim()) {
-        emailBody = emailBody
-          .replace(/<span class="company-part">[\s\S]*?<\/span>/gi, '')
-          .replace(/<p class="company-part">[\s\S]*?<\/p>/gi, '');
-      }
-
-      if (!values.position.trim()) {
-        console.log("Removing position row (empty value)");
-        emailBody = emailBody.replace(/<p class="position-part">[\s\S]*?<\/p>/gi, '');
-      } else {
-        console.log("KEEPING position row - value:", values.position);
-      }
-
-      // Step 3: Final cleanup
+      // Minimal cleanup (Handlebars usually doesn't need much)
       emailBody = emailBody
-        .replace(/\s*for\s*\.\s*/gi, '.')
-        .replace(/,\s*\./g, '.')
         .replace(/\s+/g, ' ')
         .replace(/>\s+</g, '><')
         .trim();
 
-      // Debug final
-      // console.log("Final body contains Position?:", emailBody.includes("Fullstack Developer") ? "YES" : "NO");
-      const subject = template.subject.replace(/{{roundTitle}}/g, values.roundTitle);
+      const subject = template.subject.replace(/{{roundTitle}}/g, data.roundTitle);
 
       emailPromises.push(
         sendEmail(interviewer.email, subject, emailBody)
@@ -875,7 +837,7 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     const successfulEmails = emailResults.filter(r => r.success);
     const failedEmails = emailResults.filter(r => !r.success);
 
-    // Update notification statuses (your existing code is fine)
+    // Your existing status update logic...
     if (successfulEmails.length > 0) {
       await Notification.updateMany(
         {
@@ -910,8 +872,6 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
         failedEmailsList: failedEmails.map(r => ({ email: r.email, interviewerId: r.interviewerId, error: r.error })),
       }
     };
-
-    // console.log("result outsource interview", result);
 
     if (res) return res.status(200).json(result);
     return result;

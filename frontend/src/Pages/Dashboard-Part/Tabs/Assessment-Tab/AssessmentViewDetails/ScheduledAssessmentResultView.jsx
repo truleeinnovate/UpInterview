@@ -339,7 +339,7 @@ function AssessmentResultView({
                             question._id.toString()
                         );
                         const isCorrect = answer?.isCorrect;
-                        const userAnswer = answer?.answer || "Not Answered";
+                        const userAnswer = answer?.userAnswer || "Not Answered";
                         const marks = answer?.score ?? 0;
 
                         return (
