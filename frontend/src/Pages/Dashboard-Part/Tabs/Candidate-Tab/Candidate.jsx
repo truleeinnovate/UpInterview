@@ -92,8 +92,8 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
             : action.key === "edit"
-            ? "text-green-600 hover:bg-green-600/10"
-            : "text-blue-600 bg-green-600/10";
+              ? "text-green-600 hover:bg-green-600/10"
+              : "text-blue-600 bg-green-600/10";
 
         return (
           <button
@@ -501,15 +501,15 @@ function Candidate({
     setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        //<-----v1.0.4--------
-        filters.experience.max ||
-        filters.roles.length > 0 ||
-        filters.universities.length > 0 ||
-        filters.relevantExperience.min ||
-        filters.relevantExperience.max ||
-        !!filters.createdDate
+      filters.tech.length > 0 ||
+      filters.experience.min ||
+      //<-----v1.0.4--------
+      filters.experience.max ||
+      filters.roles.length > 0 ||
+      filters.universities.length > 0 ||
+      filters.relevantExperience.min ||
+      filters.relevantExperience.max ||
+      !!filters.createdDate
       //-----v1.0.4-------->
     );
     setFilterPopupOpen(false);
@@ -712,14 +712,14 @@ function Candidate({
                       isAssessmentView
                         ? `/assessment/${row?.assessmentId}/view-details/${row?._id}`
                         : // `/assessments/candidate-details/${row._id}`
-                          effectivePermissions.Candidates?.View &&
-                            `view-details/${row._id}`,
+                        effectivePermissions.Candidates?.View &&
+                        `view-details/${row._id}`,
                       {
                         state: isAssessmentView
                           ? {
-                              from: `/assessment-details/${row?.assessmentId}`,
-                              assessmentId: row?.assessmentId,
-                            }
+                            from: `/assessment-details/${row?.assessmentId}`,
+                            assessmentId: row?.assessmentId,
+                          }
                           : { from: "/candidate" },
                       }
                     )
@@ -789,18 +789,24 @@ function Candidate({
           className="flex flex-wrap gap-1 cursor-default"
           title={value?.map((skill) => skill.skill)?.join(", ")}
         >
-          {value.slice(0, 1).map((skill, idx) => (
-            <span
-              key={idx}
-              className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue rounded-full text-xs"
-            >
-              {skill.skill || "Not Provided"}
-            </span>
-          ))}
-          {value.length > 1 && (
-            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
-              +{value.length - 1}
-            </span>
+          {value && value.length > 0 ? (
+            <>
+              {value.slice(0, 1).map((skill, idx) => (
+                <span
+                  key={idx}
+                  className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue rounded-full text-xs"
+                >
+                  {skill.skill || "Not Provided"}
+                </span>
+              ))}
+              {value.length > 1 && (
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
+                  +{value.length - 1}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-gray-400 text-xs">No Skills</span>
           )}
         </div>
         // v1.0.9 ----------------------------------------------------------------------------->
@@ -817,76 +823,75 @@ function Candidate({
     // Add status column only for assessment view
     ...(isAssessmentView
       ? [
-          {
-            key: "status",
-            header: "Status",
-            render: (value, row) => {
-              const status = row.status || "pending";
+        {
+          key: "status",
+          header: "Status",
+          render: (value, row) => {
+            const status = row.status || "pending";
+            return (
+              <span
+                className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                  status
+                )}`}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </span>
+            );
+          },
+        },
+        {
+          key: "expiryAt",
+          header: "Expiry Date",
+          render: (value, row) => {
+            if (!row.expiryAt) return "N/A";
+
+            const now = new Date();
+            const expiry = new Date(row.expiryAt);
+            const timeDiff = expiry.getTime() - now.getTime();
+
+            if (timeDiff <= 0) {
               return (
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                    status
-                  )}`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                <span className="text-red-600 text-sm font-medium">
+                  Expired
                 </span>
               );
-            },
-          },
-          {
-            key: "expiryAt",
-            header: "Expiry Date",
-            render: (value, row) => {
-              if (!row.expiryAt) return "N/A";
+            }
 
-              const now = new Date();
-              const expiry = new Date(row.expiryAt);
-              const timeDiff = expiry.getTime() - now.getTime();
+            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor(
+              (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+            );
 
-              if (timeDiff <= 0) {
-                return (
-                  <span className="text-red-600 text-sm font-medium">
-                    Expired
-                  </span>
-                );
-              }
-
-              const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-              const hours = Math.floor(
-                (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+            let timeText = "";
+            if (days > 0) {
+              timeText = `${days}d ${hours}h`;
+            } else if (hours > 0) {
+              timeText = `${hours}h`;
+            } else {
+              const minutes = Math.floor(
+                (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
               );
+              timeText = `${minutes}m`;
+            }
 
-              let timeText = "";
-              if (days > 0) {
-                timeText = `${days}d ${hours}h`;
-              } else if (hours > 0) {
-                timeText = `${hours}h`;
-              } else {
-                const minutes = Math.floor(
-                  (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
-                );
-                timeText = `${minutes}m`;
-              }
-
-              return (
-                <div className="text-sm">
-                  <div className="font-medium text-gray-900">
-                    {expiry.toLocaleDateString()}
-                  </div>
-                  <div
-                    className={`text-xs ${
-                      timeDiff < 24 * 60 * 60 * 1000
-                        ? "text-red-600"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {timeText} remaining
-                  </div>
+            return (
+              <div className="text-sm">
+                <div className="font-medium text-gray-900">
+                  {expiry.toLocaleDateString()}
                 </div>
-              );
-            },
+                <div
+                  className={`text-xs ${timeDiff < 24 * 60 * 60 * 1000
+                      ? "text-red-600"
+                      : "text-gray-500"
+                    }`}
+                >
+                  {timeText} remaining
+                </div>
+              </div>
+            );
           },
-        ]
+        },
+      ]
       : []),
     // ------------------------------ v1.0.2 >
   ];
@@ -895,123 +900,123 @@ function Candidate({
   const tableActions = [
     ...(effectivePermissions.Candidates?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) =>
-              navigate(
-                isAssessmentView
-                  ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
-                  : // `/assessments/candidate-details/${row._id}`
-                    `view-details/${row._id}`,
-                {
-                  state: isAssessmentView
-                    ? {
-                        from: `/assessment-details/${row?.assessmentId}`,
-                        assessmentId: row?.assessmentId,
-                      }
-                    : { from: "/candidate" },
-                }
-              ),
-            // navigate(
-            //   isAssessmentView
-            //     ? `candidate-details/${row._id}`
-            //     : `view-details/${row._id}`,
-            //   {
-            //     state: isAssessmentView
-            //       ? {
-            //           from: `/assessment-details/${row?.assessmentId}`,
-            //           assessmentId: row?.assessmentId,
-            //         }
-            //       : { from: "/candidate" },
-            //   }
-            // ),
-          },
-        ]
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (row) =>
+            navigate(
+              isAssessmentView
+                ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
+                : // `/assessments/candidate-details/${row._id}`
+                `view-details/${row._id}`,
+              {
+                state: isAssessmentView
+                  ? {
+                    from: `/assessment-details/${row?.assessmentId}`,
+                    assessmentId: row?.assessmentId,
+                  }
+                  : { from: "/candidate" },
+              }
+            ),
+          // navigate(
+          //   isAssessmentView
+          //     ? `candidate-details/${row._id}`
+          //     : `view-details/${row._id}`,
+          //   {
+          //     state: isAssessmentView
+          //       ? {
+          //           from: `/assessment-details/${row?.assessmentId}`,
+          //           assessmentId: row?.assessmentId,
+          //         }
+          //       : { from: "/candidate" },
+          //   }
+          // ),
+        },
+      ]
       : []),
     ...(!isAssessmentView
       ? [
-          {
-            key: "360-view",
-            label: "360° View",
-            icon: <CircleUser className="w-4 h-4 text-purple-600" />,
-            onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
-          },
-          ...(effectivePermissions.Candidates?.Edit
-            ? [
-                {
-                  key: "edit",
-                  label: "Edit",
-                  icon: <Pencil className="w-4 h-4 text-green-600" />,
-                  onClick: (row) => navigate(`edit/${row._id}`),
-                },
-              ]
-            : []),
-          ...(effectivePermissions.Candidates?.Delete
-            ? [
-                {
-                  key: "delete",
-                  label: "Delete",
-                  icon: <Trash className="w-4 h-4 text-red-600" />,
-                  // onClick: (row) => navigate(`delete/${row._id}`),
-                  onClick: (row) => {
-                    setShowDeleteConfirmModal(true);
-                    setDeleteCandidate(row);
-                  },
-                },
-              ]
-            : []),
-        ]
+        {
+          key: "360-view",
+          label: "360° View",
+          icon: <CircleUser className="w-4 h-4 text-purple-600" />,
+          onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+        },
+        ...(effectivePermissions.Candidates?.Edit
+          ? [
+            {
+              key: "edit",
+              label: "Edit",
+              icon: <Pencil className="w-4 h-4 text-green-600" />,
+              onClick: (row) => navigate(`edit/${row._id}`),
+            },
+          ]
+          : []),
+        ...(effectivePermissions.Candidates?.Delete
+          ? [
+            {
+              key: "delete",
+              label: "Delete",
+              icon: <Trash className="w-4 h-4 text-red-600" />,
+              // onClick: (row) => navigate(`delete/${row._id}`),
+              onClick: (row) => {
+                setShowDeleteConfirmModal(true);
+                setDeleteCandidate(row);
+              },
+            },
+          ]
+          : []),
+      ]
       : []),
     ...(isAssessmentView
       ? [
-          // <-------------------------------v1.0.1
-          // Only show resend link for candidates that can be resent
-          {
-            key: "resend-link",
-            label: "Resend Link",
-            icon: (row) => {
-              const isLoading = resendLoading[row.id];
-              return isLoading ? (
-                <div className="w-4 h-4 flex items-center justify-center">
-                  <svg
-                    className="animate-spin h-4 w-4 text-custom-blue"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                </div>
-              ) : (
-                <Mail className="w-4 h-4 text-custom-blue" />
-              );
-            },
-            onClick: (row) => {
-              if (!resendLoading[row.id]) {
-                onResendLink(row.id);
-              }
-            },
-            show: (row) => {
-              const result = shouldShowButton(row, "resend");
-              return result;
-            },
-            disabled: (row) => resendLoading[row.id],
+        // <-------------------------------v1.0.1
+        // Only show resend link for candidates that can be resent
+        {
+          key: "resend-link",
+          label: "Resend Link",
+          icon: (row) => {
+            const isLoading = resendLoading[row.id];
+            return isLoading ? (
+              <div className="w-4 h-4 flex items-center justify-center">
+                <svg
+                  className="animate-spin h-4 w-4 text-custom-blue"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+            ) : (
+              <Mail className="w-4 h-4 text-custom-blue" />
+            );
           },
-        ]
+          onClick: (row) => {
+            if (!resendLoading[row.id]) {
+              onResendLink(row.id);
+            }
+          },
+          show: (row) => {
+            const result = shouldShowButton(row, "resend");
+            return result;
+          },
+          disabled: (row) => resendLoading[row.id],
+        },
+      ]
       : []),
     // ------------------------------v1.0.1 >
   ];
@@ -1246,79 +1251,79 @@ function Candidate({
     // View Details
     ...(effectivePermissions.Candidates?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (item, e) => {
-              isAssessmentView
-                ? navigate(`/${item?.assessmentId}/view-details/${item._id}`)
-                : navigate(`view-details/${item._id}`);
-            },
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (item, e) => {
+            isAssessmentView
+              ? navigate(`/${item?.assessmentId}/view-details/${item._id}`)
+              : navigate(`view-details/${item._id}`);
           },
-        ]
+        },
+      ]
       : []),
 
     // 360° View (only if not in assessment view)
     ...(!isAssessmentView
       ? [
-          {
-            key: "360view",
-            label: "360° View",
-            icon: <CircleUser className="w-4 h-4 text-purple-600" />,
-            onClick: (item, e) => {
-              item?._id && navigate(`/candidate/${item._id}`);
-            },
+        {
+          key: "360view",
+          label: "360° View",
+          icon: <CircleUser className="w-4 h-4 text-purple-600" />,
+          onClick: (item, e) => {
+            item?._id && navigate(`/candidate/${item._id}`);
           },
-        ]
+        },
+      ]
       : []),
 
     // Edit (only if not in assessment view)
     ...(!isAssessmentView && effectivePermissions.Candidates?.Edit
       ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (item, e) => {
-              navigate(`edit/${item._id}`);
-            },
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (item, e) => {
+            navigate(`edit/${item._id}`);
           },
-        ]
+        },
+      ]
       : []),
 
     // Resend Link (only if in assessment view)
     ...(isAssessmentView
       ? [
-          {
-            key: "resend",
-            label: "Resend Link",
-            icon: <Mail className="w-4 h-4 text-custom-blue" />,
-            isVisible: (item) => shouldShowButton(item, "resend"),
-            onClick: (item, e) => {
-              if (!resendLoading[item.id]) {
-                onResendLink(item.id);
-              }
-            },
-            loading: (item) => resendLoading[item.id],
-            disabled: (item) => resendLoading[item.id],
+        {
+          key: "resend",
+          label: "Resend Link",
+          icon: <Mail className="w-4 h-4 text-custom-blue" />,
+          isVisible: (item) => shouldShowButton(item, "resend"),
+          onClick: (item, e) => {
+            if (!resendLoading[item.id]) {
+              onResendLink(item.id);
+            }
           },
-        ]
+          loading: (item) => resendLoading[item.id],
+          disabled: (item) => resendLoading[item.id],
+        },
+      ]
       : []),
 
     // Delete
     ...(effectivePermissions.Candidates?.Delete
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (item) => {
-              setShowDeleteConfirmModal(true);
-              setDeleteCandidate(item);
-            },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: (item) => {
+            setShowDeleteConfirmModal(true);
+            setDeleteCandidate(item);
           },
-        ]
+        },
+      ]
       : []),
   ];
   // v1.0.8 ------------------------------------------------------------------------------>
@@ -1370,7 +1375,7 @@ function Candidate({
               ? ""
               : "fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background"
           }
-          // v1.0.7 ---------------------------------------------------------->
+        // v1.0.7 ---------------------------------------------------------->
         >
           <div className="sm:px-0">
             <motion.div className="bg-white">
@@ -1399,16 +1404,13 @@ function Candidate({
                       data={currentFilteredRows.map((candidate) => ({
                         ...candidate,
                         id: candidate._id,
-                        title: `${candidate?.FirstName || ""} ${
-                          candidate?.LastName || ""
-                        }`.trim(),
-                        firstName: `${
-                          candidate?.FirstName.charAt(0).toUpperCase() +
-                            candidate?.FirstName.slice(1) || ""
-                        } ${
-                          candidate?.LastName.charAt(0).toUpperCase() +
-                            candidate?.LastName.slice(1) || ""
-                        }`.trim(),
+                        title: `${candidate?.FirstName || ""} ${candidate?.LastName || ""
+                          }`.trim(),
+                        firstName: `${candidate?.FirstName.charAt(0).toUpperCase() +
+                          candidate?.FirstName.slice(1) || ""
+                          } ${candidate?.LastName.charAt(0).toUpperCase() +
+                          candidate?.LastName.slice(1) || ""
+                          }`.trim(),
                         subTitle:
                           candidate?.CurrentRole ||
                           candidate?.CurrentExperience ||
@@ -1463,11 +1465,10 @@ function Candidate({
                           {qualifications?.length > 0 ? (
                             qualifications.map((q, index) => (
                               <label
-                                key={`${
-                                  q._id ||
+                                key={`${q._id ||
                                   q.QualificationName ||
                                   "qualification"
-                                }-${index}`}
+                                  }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -1480,7 +1481,7 @@ function Candidate({
                                   }
                                   // v1.0.3 <--------------------------------------------------------------
                                   className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                  // v1.0.3 -------------------------------------------------------------->
+                                // v1.0.3 -------------------------------------------------------------->
                                 />
                                 <span className="text-sm">
                                   {q.QualificationName}
@@ -1514,9 +1515,8 @@ function Candidate({
                           {skills?.length > 0 ? (
                             skills.map((skill, index) => (
                               <label
-                                key={`${
-                                  skill._id || skill.SkillName || "skill"
-                                }-${index}`}
+                                key={`${skill._id || skill.SkillName || "skill"
+                                  }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -1529,7 +1529,7 @@ function Candidate({
                                   }
                                   // v1.0.3 <--------------------------------------------------------------
                                   className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                  // v1.0.3 -------------------------------------------------------------->
+                                // v1.0.3 -------------------------------------------------------------->
                                 />
                                 <span className="text-sm">
                                   {skill.SkillName}
@@ -1672,9 +1672,8 @@ function Candidate({
                           {currentRoles?.length > 0 ? (
                             currentRoles.map((role, index) => (
                               <label
-                                key={`${
-                                  role._id || role.roleName || "role"
-                                }-${index}`}
+                                key={`${role._id || role.roleName || "role"
+                                  }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -1719,11 +1718,10 @@ function Candidate({
                           {colleges?.length > 0 ? (
                             colleges.map((college, index) => (
                               <label
-                                key={`${
-                                  college._id ||
+                                key={`${college._id ||
                                   college.University_CollegeName ||
                                   "college"
-                                }-${index}`}
+                                  }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input

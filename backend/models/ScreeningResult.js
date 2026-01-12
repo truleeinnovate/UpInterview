@@ -1,0 +1,97 @@
+// v1.0.0  -  Created ScreeningResult schema for resume screening results
+
+const mongoose = require("mongoose");
+
+const ScreeningResultSchema = new mongoose.Schema(
+    {
+        resumeId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Resume",
+            required: true,
+            index: true,
+        },
+        positionId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Position",
+            required: true,
+            index: true,
+        },
+        candidateId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Candidate",
+            index: true,
+        },
+        tenantId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Organization",
+            required: true,
+            index: true,
+        },
+
+        // Screening Scores
+        score: {
+            type: Number,
+            min: 0,
+            max: 100,
+        },
+        skillMatch: {
+            type: Number,
+            min: 0,
+            max: 100, // Percentage match
+        },
+        experienceMatch: {
+            type: Number,
+            min: 0,
+            max: 100, // Percentage match
+        },
+
+        // Recommendation
+        recommendation: {
+            type: String,
+            enum: ["PROCEED", "HOLD", "REJECT"],
+            required: true,
+        },
+
+        // Additional screening details
+        matchedSkills: [{
+            type: String,
+        }],
+        missingSkills: [{
+            type: String,
+        }],
+        screeningNotes: {
+            type: String,
+        },
+
+        // Audit
+        screenedAt: {
+            type: Date,
+            default: Date.now,
+        },
+        screenedBy: {
+            type: String, // Can be "AI", "Manual", or a user reference
+        },
+        ownerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Users",
+        },
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Users",
+        },
+    },
+    {
+        timestamps: true,
+    }
+);
+
+// Compound index for unique screening per resume-position pair
+ScreeningResultSchema.index({ resumeId: 1, positionId: 1 }, { unique: true });
+
+// Index for efficient queries
+ScreeningResultSchema.index({ tenantId: 1, recommendation: 1 });
+ScreeningResultSchema.index({ positionId: 1, recommendation: 1 });
+
+const ScreeningResult = mongoose.model("ScreeningResult", ScreeningResultSchema);
+
+module.exports = { ScreeningResult };
