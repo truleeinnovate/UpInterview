@@ -40,7 +40,7 @@ router.patch(
 router.post("/validate/:page?", mockInterviewController.validateMockInterview);
 
 router.patch(
-  "/:mockInterviewId/round/:roundId",
+  "/:mockInterviewId/round/:roundId/status",
   // loggingService.internalLoggingMiddleware,
   // loggingService.FeedsMiddleware,
   mockInterviewController.updateInterviewRoundStatus

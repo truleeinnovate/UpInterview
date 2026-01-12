@@ -101,10 +101,13 @@ const MoockRoundCard = ({
     try {
       // Build the payload based on status
       const payload = {
-        roundId: round?.rounds[0]?._id,
-        interviewId: mockinterview?._id,
+        // roundId: round?.rounds[0]?._id,
+        // interviewId: mockinterview?._id,
         action: newStatus,
       };
+
+      console.log("payload", round?._id);
+      console.log("payload", mockinterview?._id);
 
       // Add cancellation / NoShow reason if provided
       if (
@@ -126,9 +129,11 @@ const MoockRoundCard = ({
         }
       }
 
+      console.log("payload", payload);
+
       const response = await updateRoundStatus.mutateAsync({
         mockInterviewId: mockinterview?._id,
-        roundId: round?.rounds[0]?._id,
+        roundId: round?._id,
         payload,
       });
       // const savedMockId =

@@ -309,6 +309,8 @@ exports.updateMockInterview = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Update mock interview";
 
+  console.log("req.body updateMockInterview", req.body);
+
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     return res.status(400).json({ message: "Invalid mock ID" });
   }
@@ -345,24 +347,86 @@ exports.updateMockInterview = async (req, res) => {
       });
     }
 
-    let changes = [];
+    console.log("existingMockInterview", existingMockInterview);
 
-    // Update skills
-    if (skills && Array.isArray(skills)) {
+    // let changes = [];
+
+    // // Update skills
+    // if (skills && Array.isArray(skills)) {
+    //   if (
+    //     JSON.stringify(existingMockInterview.skills) !== JSON.stringify(skills)
+    //   ) {
+    //     changes.push({
+    //       fieldName: "skills",
+    //       oldValue: existingMockInterview.skills,
+    //       newValue: skills,
+    //     });
+
+    //     existingMockInterview.skills = skills;
+
+    //     // 🔴 REQUIRED for array / nested updates
+    //     existingMockInterview.markModified("skills");
+    //     // existingMockInterview.skills = skills;
+    //   }
+    // }
+
+    // // Update basic fields
+    // // const basicFields = {
+    // //   candidateName,
+    // //   higherQualification,
+    // //   currentExperience,
+    // //   currentRole,
+    // //   jobDescription,
+    // // };
+
+    // // Update basic fields (use req.body as fallback)
+    // const basicFields = {
+    //   candidateName: candidateName ?? req.body.candidateName,
+    //   higherQualification: higherQualification ?? req.body.higherQualification,
+    //   currentExperience: currentExperience ?? req.body.currentExperience,
+    //   currentRole: currentRole ?? req.body.currentRole,
+    //   jobDescription: jobDescription ?? req.body.jobDescription,
+    // };
+
+    // Object.keys(basicFields).forEach((field) => {
+    //   if (
+    //     basicFields[field] !== undefined &&
+    //     existingMockInterview[field] !== basicFields[field]
+    //   ) {
+    //     changes.push({
+    //       fieldName: field,
+    //       oldValue: existingMockInterview[field],
+    //       newValue: basicFields[field],
+    //     });
+
+    //     // const oldVal = existingMockInterview[field];
+    //     const newVal = basicFields[field];
+
+    //     existingMockInterview.set(field, newVal);
+    //     existingMockInterview.markModified(field); // 🔴 REQUIRED
+    //     // existingMockInterview[field] = basicFields[field];
+    //   }
+    // });
+
+    const updatePayload = {};
+    const changes = [];
+
+    /* ---------- SKILLS (ARRAY) ---------- */
+    if (Array.isArray(skills)) {
       if (
         JSON.stringify(existingMockInterview.skills) !== JSON.stringify(skills)
       ) {
+        updatePayload.skills = skills;
         changes.push({
           fieldName: "skills",
           oldValue: existingMockInterview.skills,
           newValue: skills,
         });
-        existingMockInterview.skills = skills;
       }
     }
 
-    // Update basic fields
-    const basicFields = {
+    /* ---------- BASIC FIELDS ---------- */
+    const allowedFields = {
       candidateName,
       higherQualification,
       currentExperience,
@@ -370,27 +434,42 @@ exports.updateMockInterview = async (req, res) => {
       jobDescription,
     };
 
-    Object.keys(basicFields).forEach((field) => {
-      if (
-        basicFields[field] !== undefined &&
-        existingMockInterview[field] !== basicFields[field]
-      ) {
+    Object.entries(allowedFields).forEach(([field, newValue]) => {
+      if (newValue !== undefined && existingMockInterview[field] !== newValue) {
+        updatePayload[field] = newValue;
         changes.push({
           fieldName: field,
           oldValue: existingMockInterview[field],
-          newValue: basicFields[field],
+          newValue,
         });
-        existingMockInterview[field] = basicFields[field];
       }
     });
+
+    if (changes.length === 0) {
+      return res.status(200).json({
+        status: "success",
+        message: "No changes detected",
+        data: { mockInterview: existingMockInterview },
+      });
+    }
 
     // Update metadata
     if (lastModifiedById) existingMockInterview.updatedBy = lastModifiedById;
     existingMockInterview.updatedAt = new Date();
 
+    console.log("changes", changes);
+
     // Save only if there are changes
     if (changes.length > 0) {
-      const updatedMockInterview = await existingMockInterview.save();
+      // const updatedMockInterview = await existingMockInterview.save();
+
+      const updatedMockInterview = await MockInterview.findByIdAndUpdate(
+        mockId,
+        { $set: updatePayload },
+        { new: true }
+      );
+
+      console.log("updatedMockInterview", updatedMockInterview);
 
       // Feed data
       res.locals.feedData = {
@@ -949,7 +1028,7 @@ exports.validateMockInterview = async (req, res) => {
 exports.updateInterviewRoundStatus = async (req, res) => {
   try {
     const { mockInterviewId, roundId } = req.params;
-
+    console.log("req.params", req.params);
     // Check if mock interview exists
     const interview = await MockInterview.findById(mockInterviewId);
     if (!interview) {
@@ -957,6 +1036,8 @@ exports.updateInterviewRoundStatus = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Mock interview not found" });
     }
+
+    console.log("payload", req.body);
 
     // Check if round exists
     const round = await MockInterviewRound.findById(roundId);
@@ -980,7 +1061,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
 
     const isParticipantUpdate = req.body?.role || req.body?.joined;
 
-    console.log("req.body", req.body);
+    // console.log("req.body", req.body);
 
     if (!roundId || (!action && !isParticipantUpdate)) {
       return res.status(400).json({

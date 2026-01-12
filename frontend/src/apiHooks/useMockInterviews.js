@@ -111,6 +111,8 @@ export const useMockInterviews = (params = {}) => {
         ? `${config.REACT_APP_API_URL}/mockinterview/updateMockInterview/${id}`
         : `${config.REACT_APP_API_URL}/mockinterview/create`;
 
+      console.log("url", url);
+
       const method = id ? "patch" : "post";
 
       const response = await axios[method](url, payload);
@@ -137,31 +139,37 @@ export const useMockInterviews = (params = {}) => {
   });
 
   // ====================== MUTATION 2: Save/Update Round (Page 2) ======================
-const saveMockRound = useMutation({
-  mutationFn: async ({ mockInterviewId, round, roundId, updateType, ...rest }) => {
-    if (!mockInterviewId) throw new Error("Mock Interview ID is required");
+  const saveMockRound = useMutation({
+    mutationFn: async ({
+      mockInterviewId,
+      round,
+      roundId,
+      updateType,
+      ...rest
+    }) => {
+      if (!mockInterviewId) throw new Error("Mock Interview ID is required");
 
-    const payload = {
-      round: round || {},           // always include round (nested)
-      ...(updateType && { updateType }),  // ← explicitly add updateType if provided
-      ...rest,                            // any other extra fields
-    };
+      const payload = {
+        round: round || {}, // always include round (nested)
+        ...(updateType && { updateType }), // ← explicitly add updateType if provided
+        ...rest, // any other extra fields
+      };
 
-    const url = roundId
-      ? `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}`
-      : `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round`;
+      const url = roundId
+        ? `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}`
+        : `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round`;
 
-    const method = roundId ? "patch" : "post";
+      const method = roundId ? "patch" : "post";
 
-    console.log("Sending payload to backend:", payload); // ← debug this!
+      console.log("Sending payload to backend:", payload); // ← debug this!
 
-    const response = await axios[method](url, payload);
-    return response.data;
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["mockinterviews"] });
-  },
-});
+      const response = await axios[method](url, payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mockinterviews"] });
+    },
+  });
 
   // Loading states
   const isMutationLoading =
@@ -238,8 +246,8 @@ export const useUpdateRoundStatus = () => {
     mutationFn: async ({ mockInterviewId, roundId, payload }) => {
       return (
         await axios.patch(
-          `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}`,
-          { payload }
+          `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}/status`,
+          payload
           // {
           //   headers: {
           //     Authorization: `Bearer ${authToken}`,
