@@ -529,15 +529,15 @@ const getCandidatesData = async (req, res) => {
     ]);
 
     // Debug logging
-    console.log('📊 [getCandidatesData] Pipeline results:', {
-      candidatesCount: candidates.length,
-      firstCandidate: candidates[0] ? {
-        _id: candidates[0]._id,
-        FirstName: candidates[0].FirstName,
-        skills: candidates[0].skills,
-        HigherQualification: candidates[0].HigherQualification,
-      } : 'No candidates'
-    });
+    // console.log('📊 [getCandidatesData] Pipeline results:', {
+    //   candidatesCount: candidates.length,
+    //   firstCandidate: candidates[0] ? {
+    //     _id: candidates[0]._id,
+    //     FirstName: candidates[0].FirstName,
+    //     skills: candidates[0].skills,
+    //     HigherQualification: candidates[0].HigherQualification,
+    //   } : 'No candidates'
+    // });
 
     const total = countResult[0]?.total || 0;
 

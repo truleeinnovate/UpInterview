@@ -2,6 +2,7 @@ const {
   CandidateAssessment,
 } = require("../models/Assessment/candidateAssessment");
 const { Candidate } = require("../models/candidate.js");
+const { Resume } = require("../models/Resume.js");
 const { generateOTP } = require("../utils/generateOtp");
 const Otp = require("../models/Otp");
 const mongoose = require("mongoose");
@@ -76,7 +77,7 @@ exports.getPublicCandidateDetailsByAssessmentId = async (req, res) => {
     const candidate = await Candidate.findById(
       candidateAssessment.candidateId
     )
-      .select("FirstName LastName Email Phone ImageData")
+      .select("FirstName LastName Email Phone")
       .lean();
 
     if (!candidate) {
@@ -86,13 +87,19 @@ exports.getPublicCandidateDetailsByAssessmentId = async (req, res) => {
       });
     }
 
+    // Fetch ImageData from active Resume (moved from Candidate)
+    const activeResume = await Resume.findOne({
+      candidateId: candidateAssessment.candidateId,
+      isActive: true,
+    }).select("ImageData").lean();
+
     const publicCandidate = {
       _id: candidate._id,
       FirstName: candidate.FirstName,
       LastName: candidate.LastName,
       Email: candidate.Email,
       Phone: candidate.Phone,
-      ImageData: candidate.ImageData || null,
+      ImageData: activeResume?.ImageData || null,
     };
 
     return res.status(200).json(publicCandidate);
@@ -206,7 +213,7 @@ exports.submitCandidateAssessment = async (req, res) => {
   res.locals.processName = "Submit Candidate Assessment";
 
   const session = await mongoose.startSession();
-  
+
   // Set a timeout for the transaction
   const transactionOptions = {
     readPreference: 'primary',
@@ -218,103 +225,103 @@ exports.submitCandidateAssessment = async (req, res) => {
     let oldStatus;
     let updatedAssessment;
     await session.withTransaction(async () => {
-    const {
-      candidateAssessmentId,
-      scheduledAssessmentId,
-      candidateId,
-      status,
-      sections,
-      submittedAt
-    } = req.body;
+      const {
+        candidateAssessmentId,
+        scheduledAssessmentId,
+        candidateId,
+        status,
+        sections,
+        submittedAt
+      } = req.body;
 
-    // Input validation
-    if (!candidateAssessmentId || !sections || !submittedAt) {
-      console.error("Missing required fields in request");
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields",
-      });
-    }
+      // Input validation
+      if (!candidateAssessmentId || !sections || !submittedAt) {
+        console.error("Missing required fields in request");
+        return res.status(400).json({
+          success: false,
+          message: "Missing required fields",
+        });
+      }
 
-    let candidateAssessment = await CandidateAssessment.findById(
-      new mongoose.Types.ObjectId(candidateAssessmentId)
-    ).session(session).populate('scheduledAssessmentId');
+      let candidateAssessment = await CandidateAssessment.findById(
+        new mongoose.Types.ObjectId(candidateAssessmentId)
+      ).session(session).populate('scheduledAssessmentId');
 
-    if (!candidateAssessment) {
-      return res.status(404).json({
-        success: false,
-        message: "Candidate assessment not found",
-      });
-    }
+      if (!candidateAssessment) {
+        return res.status(404).json({
+          success: false,
+          message: "Candidate assessment not found",
+        });
+      }
 
-    const processedSections = await Promise.all(
-      sections.map(async (section, sectionIndex) => {
+      const processedSections = await Promise.all(
+        sections.map(async (section, sectionIndex) => {
 
-        console.log("section", section);
+          console.log("section", section);
 
-        const processedAnswers = await Promise.all(
-          section.questions.map(async (question) => {
+          const processedAnswers = await Promise.all(
+            section.questions.map(async (question) => {
 
-            const isCorrect = question.isCorrect;
-            const score = question.score || 0;
+              const isCorrect = question.isCorrect;
+              const score = question.score || 0;
 
-            return {
-              questionId: question.questionId,
-              userAnswer: question.userAnswer,
-              correctAnswer: question.correctAnswer, // Store the correct answer
-              isCorrect,
-              score,
-              isAnswerLater: question.isAnswerLater || false,
-              submittedAt: new Date(question.submittedAt || Date.now())
-            };
-          })
-        );
+              return {
+                questionId: question.questionId,
+                userAnswer: question.userAnswer,
+                correctAnswer: question.correctAnswer, // Store the correct answer
+                isCorrect,
+                score,
+                isAnswerLater: question.isAnswerLater || false,
+                submittedAt: new Date(question.submittedAt || Date.now())
+              };
+            })
+          );
 
-        const sectionScore = processedAnswers.reduce((sum, answer) => sum + (answer.score || 0), 0);
-        const sectionPassScore = Number(section.passScore) || 0;
-        const sectionResult = sectionScore >= sectionPassScore ? "pass" : "fail";
+          const sectionScore = processedAnswers.reduce((sum, answer) => sum + (answer.score || 0), 0);
+          const sectionPassScore = Number(section.passScore) || 0;
+          const sectionResult = sectionScore >= sectionPassScore ? "pass" : "fail";
 
-        return {
-          sectionId: section.sectionId,
-          sectionName: section.sectionName,
-          totalScore: sectionScore,
-          passScore: sectionPassScore,
-          sectionResult,
-          sectionPassed: sectionResult === "pass",
-          Answers: processedAnswers  // FIX: Only Answers (removed questions)
-        };
-      })
-    );
+          return {
+            sectionId: section.sectionId,
+            sectionName: section.sectionName,
+            totalScore: sectionScore,
+            passScore: sectionPassScore,
+            sectionResult,
+            sectionPassed: sectionResult === "pass",
+            Answers: processedAnswers  // FIX: Only Answers (removed questions)
+          };
+        })
+      );
 
-    // Calculate overall assessment result
-    const totalScore = processedSections.reduce((total, section) => total + section.totalScore, 0);
-    const allSectionsPassed = processedSections.every(section => section.sectionResult === 'pass');
-    const overallResult = allSectionsPassed ? 'pass' : 'fail';
-    const remainingTime = req.body.remainingTime || null;
-    // Update candidate assessment
-    oldStatus = candidateAssessment.status;
-    const updateData = {
-      status: overallResult, // Set status to 'pass' or 'fail' instead of 'completed'
-      sections: processedSections,
-      totalScore,
-      submittedAt: new Date(submittedAt),
-      endedAt: new Date(),
-      remainingTime,
-      overallResult,
-      updatedAt: new Date()
-    };
+      // Calculate overall assessment result
+      const totalScore = processedSections.reduce((total, section) => total + section.totalScore, 0);
+      const allSectionsPassed = processedSections.every(section => section.sectionResult === 'pass');
+      const overallResult = allSectionsPassed ? 'pass' : 'fail';
+      const remainingTime = req.body.remainingTime || null;
+      // Update candidate assessment
+      oldStatus = candidateAssessment.status;
+      const updateData = {
+        status: overallResult, // Set status to 'pass' or 'fail' instead of 'completed'
+        sections: processedSections,
+        totalScore,
+        submittedAt: new Date(submittedAt),
+        endedAt: new Date(),
+        remainingTime,
+        overallResult,
+        updatedAt: new Date()
+      };
 
-    updatedAssessment = await CandidateAssessment.findByIdAndUpdate(
-      candidateAssessmentId,
-      { $set: updateData },
-      { new: true, session }
-    ).populate('scheduledAssessmentId');
+      updatedAssessment = await CandidateAssessment.findByIdAndUpdate(
+        candidateAssessmentId,
+        { $set: updateData },
+        { new: true, session }
+      ).populate('scheduledAssessmentId');
 
-    if (!updatedAssessment) {
-      throw new Error("Failed to update candidate assessment");
-    }
+      if (!updatedAssessment) {
+        throw new Error("Failed to update candidate assessment");
+      }
 
-    // Transaction will be committed automatically if no errors are thrown
+      // Transaction will be committed automatically if no errors are thrown
     }, transactionOptions);
 
     // End the session after transaction is complete

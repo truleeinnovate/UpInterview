@@ -9,6 +9,7 @@ const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
 const CandidatePosition = require("../models/CandidatePosition.js");
 const { Contacts } = require("../models/Contacts.js");
 const { Interview } = require("../models/Interview/Interview.js");
+const { Resume } = require("../models/Resume.js");
 const Tenant = require("../models/Tenant.js");
 
 // Import validation functions
@@ -414,17 +415,18 @@ const getFeedbackByRoundId = async (req, res) => {
     });
 
     // Fetch CandidatePosition
-    const candidatePosition = await CandidatePosition.findOne({
+    let candidatePosition = await CandidatePosition.findOne({
       interviewId: interviewRound.interviewId,
     })
       .populate(
         "candidateId",
-        "FirstName LastName Email Phone skills CurrentExperience"
+        "FirstName LastName Email Phone"
       )
       .populate(
         "positionId",
         "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary"
-      );
+      )
+      .lean();
 
     // Fetch Feedback
     const feedbackQuery = { interviewRoundId: roundId };
@@ -432,18 +434,69 @@ const getFeedbackByRoundId = async (req, res) => {
       feedbackQuery.interviewerId = interviewerId;
     }
 
-    const feedbacks = await FeedbackModel.find(feedbackQuery)
+    let feedbacks = await FeedbackModel.find(feedbackQuery)
       .populate("candidateId", "FirstName LastName Email Phone ownerId")
       .populate(
         "positionId",
         "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary"
       )
       .populate("interviewerId", "FirstName LastName Email Phone")
-      .populate("ownerId", "firstName lastName email");
-    // .populate({
-    //   path: "questionFeedback.questionId",
-    //   model: "InterviewQuestions"
-    // });
+      .populate("ownerId", "firstName lastName email")
+      .lean();
+
+    // Fetch Resume data for candidate (skills, experience, etc. moved from Candidate)
+    const candidateIds = [];
+    if (candidatePosition?.candidateId?._id) {
+      candidateIds.push(candidatePosition.candidateId._id);
+    }
+    feedbacks.forEach((fb) => {
+      if (fb.candidateId?._id && !candidateIds.some(id => String(id) === String(fb.candidateId._id))) {
+        candidateIds.push(fb.candidateId._id);
+      }
+    });
+
+    if (candidateIds.length > 0) {
+      const resumes = await Resume.find({
+        candidateId: { $in: candidateIds },
+        isActive: true,
+      }).select("candidateId skills CurrentExperience CurrentRole ImageData").lean();
+
+      const resumeMap = {};
+      resumes.forEach((r) => {
+        resumeMap[String(r.candidateId)] = r;
+      });
+
+      // Merge Resume data into candidatePosition.candidateId
+      if (candidatePosition?.candidateId?._id) {
+        const resume = resumeMap[String(candidatePosition.candidateId._id)];
+        if (resume) {
+          candidatePosition.candidateId = {
+            ...candidatePosition.candidateId,
+            skills: resume.skills,
+            CurrentExperience: resume.CurrentExperience,
+            CurrentRole: resume.CurrentRole,
+            ImageData: resume.ImageData,
+          };
+        }
+      }
+
+      // Merge Resume data into feedbacks
+      feedbacks = feedbacks.map((fb) => {
+        if (fb.candidateId?._id) {
+          const resume = resumeMap[String(fb.candidateId._id)];
+          if (resume) {
+            fb.candidateId = {
+              ...fb.candidateId,
+              skills: resume.skills,
+              CurrentExperience: resume.CurrentExperience,
+              CurrentRole: resume.CurrentRole,
+              ImageData: resume.ImageData,
+            };
+          }
+        }
+        return fb;
+      });
+    }
 
     // Fetch all Interview Questions for the round
     const interviewQuestionsList = await InterviewQuestions.find({
@@ -486,7 +539,7 @@ const getFeedbackByRoundId = async (req, res) => {
       });
 
       return {
-        ...fb.toObject(),
+        ...fb,
         questionFeedback: mergedQuestions,
       };
     });
@@ -660,7 +713,7 @@ const getCandidateByRoundId = async (req, res) => {
       });
     }
 
-    const candidate = round.interviewId?.candidateId;
+    let candidate = round.interviewId?.candidateId;
     const position = round.interviewId?.positionId;
 
     if (!candidate) {
@@ -668,6 +721,26 @@ const getCandidateByRoundId = async (req, res) => {
         success: false,
         message: "Candidate not found for this round",
       });
+    }
+
+    // Fetch Resume data for candidate (skills, experience, etc. moved from Candidate)
+    if (candidate._id) {
+      const activeResume = await Resume.findOne({
+        candidateId: candidate._id,
+        isActive: true,
+      }).select("skills CurrentExperience CurrentRole ImageData").lean();
+
+      if (activeResume) {
+        // Convert Mongoose document to plain object if needed
+        const candidateObj = candidate.toObject ? candidate.toObject() : candidate;
+        candidate = {
+          ...candidateObj,
+          skills: activeResume.skills,
+          CurrentExperience: activeResume.CurrentExperience,
+          CurrentRole: activeResume.CurrentRole,
+          ImageData: activeResume.ImageData,
+        };
+      }
     }
 
     // Full Response with all details
@@ -821,7 +894,7 @@ const updateFeedback = async (req, res) => {
     }
 
     // Find and update the feedback
-    const updatedFeedback = await FeedbackModel.findByIdAndUpdate(
+    let updatedFeedback = await FeedbackModel.findByIdAndUpdate(
       id,
       updateData,
       {
@@ -831,16 +904,35 @@ const updateFeedback = async (req, res) => {
     )
       .populate(
         "candidateId",
-        "FirstName LastName Email Phone skills CurrentExperience"
+        "FirstName LastName Email Phone"
       )
       .populate("interviewerId", "FirstName LastName Email Phone")
-      .populate("positionId", "title companyname");
+      .populate("positionId", "title companyname")
+      .lean();
 
     if (!updatedFeedback) {
       return res.status(404).json({
         success: false,
         message: "Feedback not found",
       });
+    }
+
+    // Fetch Resume data for candidate (skills, experience, etc. moved from Candidate)
+    if (updatedFeedback.candidateId?._id) {
+      const activeResume = await Resume.findOne({
+        candidateId: updatedFeedback.candidateId._id,
+        isActive: true,
+      }).select("skills CurrentExperience CurrentRole ImageData").lean();
+
+      if (activeResume) {
+        updatedFeedback.candidateId = {
+          ...updatedFeedback.candidateId,
+          skills: activeResume.skills,
+          CurrentExperience: activeResume.CurrentExperience,
+          CurrentRole: activeResume.CurrentRole,
+          ImageData: activeResume.ImageData,
+        };
+      }
     }
 
     // When updating, also ensure newly added interviewer questions are persisted
@@ -918,6 +1010,7 @@ const updateFeedback = async (req, res) => {
 
     // Trigger webhook for feedback status update if status changed to submitted
     if (updatedFeedback.status === "submitted") {
+      //if (updateData.status && updatedFeedback) {
       try {
         const webhookPayload = {
           feedbackId: updatedFeedback._id,
@@ -1002,8 +1095,8 @@ const validateFeedback = async (req, res) => {
       errors,
       value: validatedData,
     } = isUpdate
-      ? validateUpdateFeedback(req.body)
-      : validateCreateFeedback(req.body);
+        ? validateUpdateFeedback(req.body)
+        : validateCreateFeedback(req.body);
 
     if (!isValid) {
       return res.status(400).json({

@@ -133,25 +133,49 @@ exports.getAllRequests = async (req, res) => {
 
     if (!hasPaginationParams) {
       // Legacy behavior: return full list (used by some existing UIs)
-      const requests = await InterviewRequest.find()
-        .populate({
-          path: "positionId",
-          model: "Position",
-          select: "title",
-          match: (doc) =>
-            mongoose.Types.ObjectId.isValid(doc.positionId) ? {} : null,
-        })
-        .populate({
-          path: "candidateId",
-          model: "Candidate",
-          select: "skills",
-        })
-        .populate({
-          path: "interviewerId",
-          model: "Contacts",
-          select: "firstName lastName email phone currentRole imageData skills",
-        })
-        .lean();
+      // Use aggregation to lookup skills from active Resume
+      const requests = await InterviewRequest.aggregate([
+        // Lookup position
+        {
+          $lookup: {
+            from: "positions",
+            localField: "positionId",
+            foreignField: "_id",
+            as: "positionId",
+          },
+        },
+        { $unwind: { path: "$positionId", preserveNullAndEmptyArrays: true } },
+        // Lookup active resume for candidate to get skills
+        {
+          $lookup: {
+            from: "resume",
+            let: { candId: "$candidateId" },
+            pipeline: [
+              { $match: { $expr: { $eq: ["$candidateId", "$$candId"] }, isActive: true } },
+              { $project: { skills: 1 } },
+            ],
+            as: "candidateResume",
+          },
+        },
+        { $unwind: { path: "$candidateResume", preserveNullAndEmptyArrays: true } },
+        // Lookup interviewer
+        {
+          $lookup: {
+            from: "contacts",
+            localField: "interviewerId",
+            foreignField: "_id",
+            as: "interviewerId",
+          },
+        },
+        { $unwind: { path: "$interviewerId", preserveNullAndEmptyArrays: true } },
+        // Project only needed fields
+        {
+          $addFields: {
+            "candidateId": { skills: "$candidateResume.skills" },
+          },
+        },
+        { $project: { candidateResume: 0 } },
+      ]);
       return res.status(200).json(requests);
     }
 
@@ -166,9 +190,9 @@ exports.getAllRequests = async (req, res) => {
 
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     const pipeline = [
@@ -391,11 +415,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       roundDetails = mockRound
         ? {
-            roundTitle: mockRound.roundTitle,
-            interviewType: mockRound.interviewType,
-            duration: mockRound.duration,
-            dateTime: mockRound.dateTime,
-          }
+          roundTitle: mockRound.roundTitle,
+          interviewType: mockRound.interviewType,
+          duration: mockRound.duration,
+          dateTime: mockRound.dateTime,
+        }
         : null;
     } else {
       // Fetch from InterviewRounds collection
@@ -406,11 +430,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       roundDetails = interviewRound
         ? {
-            roundTitle: interviewRound.roundTitle,
-            interviewType: interviewRound.interviewType,
-            duration: interviewRound.duration,
-            dateTime: interviewRound.dateTime,
-          }
+          roundTitle: interviewRound.roundTitle,
+          interviewType: interviewRound.interviewType,
+          duration: interviewRound.duration,
+          dateTime: interviewRound.dateTime,
+        }
         : null;
     }
   }
@@ -425,11 +449,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       candidateDetails = contact
         ? {
-            id: contact._id,
-            name: `${contact.firstName} ${contact.lastName}`,
-            email: contact.email,
-            phone: contact.phone,
-          }
+          id: contact._id,
+          name: `${contact.firstName} ${contact.lastName}`,
+          email: contact.email,
+          phone: contact.phone,
+        }
         : null;
     }
   } else {
@@ -441,11 +465,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       candidateDetails = candidate
         ? {
-            id: candidate._id,
-            name: `${candidate.FirstName} ${candidate.LastName}`,
-            email: candidate.Email,
-            phone: candidate.Phone,
-          }
+          id: candidate._id,
+          name: `${candidate.FirstName} ${candidate.LastName}`,
+          email: candidate.Email,
+          phone: candidate.Phone,
+        }
         : null;
     }
   }
@@ -459,12 +483,12 @@ const formatInterviewRequest = async (request) => {
       .lean();
     positionDetails = position
       ? {
-          id: position._id,
-          title: position.title,
-          description: position.description,
-          location: position.location,
-          companyname: position.companyname, // Added to match frontend
-        }
+        id: position._id,
+        title: position.title,
+        description: position.description,
+        location: position.location,
+        companyname: position.companyname, // Added to match frontend
+      }
       : null;
   }
 
@@ -667,7 +691,7 @@ exports.acceptInterviewRequest = async (req, res) => {
         );
       }
 
-      
+
 
       // round.interviewers.push(contactId);
       // round.status = scheduleAction;
@@ -819,23 +843,22 @@ exports.acceptInterviewRequest = async (req, res) => {
 
     const successResponse = {
       success: true,
-      message: `${
-        request.isMockInterview ? "Mock i" : "I"
-      }nterview request accepted; funds held and emails processed`,
+      message: `${request.isMockInterview ? "Mock i" : "I"
+        }nterview request accepted; funds held and emails processed`,
       wallet: {
         balance: updatedWallet?.balance,
         holdAmount: updatedWallet?.holdAmount,
       },
       transaction: savedTransaction
         ? {
-            _id: transactionId,
-            type: savedTransaction.type,
-            amount: savedTransaction.amount,
-            description: savedTransaction.description,
-            relatedInvoiceId: savedTransaction.relatedInvoiceId,
-            status: savedTransaction.status,
-            metadata: savedTransaction.metadata,
-          }
+          _id: transactionId,
+          type: savedTransaction.type,
+          amount: savedTransaction.amount,
+          description: savedTransaction.description,
+          relatedInvoiceId: savedTransaction.relatedInvoiceId,
+          status: savedTransaction.status,
+          metadata: savedTransaction.metadata,
+        }
         : null,
       appliedDiscount: request.isMockInterview
         ? appliedDiscountPercentage
@@ -876,20 +899,42 @@ exports.getSingleInterviewRequest = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const request = await InterviewRequest.findById(id)
-      .populate({
-        path: "candidateId",
-        model: "Candidate",
-        select: "skills",
-      })
-      // v1.0.0 <------------------------------------------------------------------------
-      .populate({
-        path: "interviewerId",
-        model: "Contacts",
-        select: "firstName lastName email phone currentRole imageData skills", // customize fields
-      });
-    // v1.0.0 ------------------------------------------------------------------------>
+    // Use aggregation to lookup skills from active Resume
+    const requests = await InterviewRequest.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(id) } },
+      // Lookup active resume for candidate to get skills
+      {
+        $lookup: {
+          from: "resume",
+          let: { candId: "$candidateId" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$candidateId", "$$candId"] }, isActive: true } },
+            { $project: { skills: 1 } },
+          ],
+          as: "candidateResume",
+        },
+      },
+      { $unwind: { path: "$candidateResume", preserveNullAndEmptyArrays: true } },
+      // Lookup interviewer
+      {
+        $lookup: {
+          from: "contacts",
+          localField: "interviewerId",
+          foreignField: "_id",
+          as: "interviewerId",
+        },
+      },
+      { $unwind: { path: "$interviewerId", preserveNullAndEmptyArrays: true } },
+      // Add skills to candidateId object
+      {
+        $addFields: {
+          "candidateId": { skills: "$candidateResume.skills" },
+        },
+      },
+      { $project: { candidateResume: 0 } },
+    ]);
 
+    const request = requests.length > 0 ? requests[0] : null;
     return res.status(200).json(request);
   } catch (error) {
     console.error("Internal server error:", error.message);

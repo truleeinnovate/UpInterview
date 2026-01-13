@@ -4,6 +4,7 @@
 const mongoose = require("mongoose");
 const WalletTopup = require("../models/WalletTopup");
 const { Candidate } = require("../models/candidate");
+const { Resume } = require("../models/Resume");
 const { MockInterview } = require("../models/Mockinterview/mockinterview");
 const {
   getTaxConfigForTenant,
@@ -357,7 +358,16 @@ async function computeInterviewPricingForAccept({
       };
     }
 
-    const experienceYears = Number(candidate.CurrentExperience);
+    // Fetch active resume to get CurrentExperience (moved from Candidate to Resume)
+    const activeResume = await Resume.findOne({
+      candidateId: request.candidateId,
+      isActive: true
+    });
+
+    // Try Resume first, fallback to legacy Candidate field
+    const experienceYears = Number(
+      activeResume?.CurrentExperience
+    );
     if (isNaN(experienceYears) || experienceYears < 0) {
       return {
         error: `Invalid or missing CurrentExperience for candidate (${request.candidateId}).`,

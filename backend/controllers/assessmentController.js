@@ -709,6 +709,8 @@ exports.getAssessmentResults = async (req, res) => {
     }
 
     // Prepare response data
+    const { Resume } = require("../models/Resume.js");
+
     const results = await Promise.all(
       scheduledAssessments.map(async (schedule) => {
         // Find all candidate assessments for this schedule (not just completed)
@@ -718,10 +720,26 @@ exports.getAssessmentResults = async (req, res) => {
           // Removed isActive: true filter to show cancelled candidates
           // ------------------------------v1.0.1 >
         })
-          .populate("candidateId", "FirstName LastName Email CurrentExperience")
+          .populate("candidateId", "FirstName LastName Email")
           .select(
             "candidateId status totalScore endedAt sections startedAt remainingTime expiryAt"
           );
+
+        // Fetch Resume data for all candidates to get CurrentExperience
+        const candidateIds = candidateAssessments
+          .filter((ca) => ca.candidateId?._id)
+          .map((ca) => ca.candidateId._id);
+
+        const resumes = await Resume.find({
+          candidateId: { $in: candidateIds },
+          isActive: true,
+        }).select("candidateId CurrentExperience").lean();
+
+        const resumeMap = {};
+        resumes.forEach((r) => {
+          resumeMap[String(r.candidateId)] = r;
+        });
+
         // ------------------------------v1.0.0 >
         // Process candidate results with pass/fail logic
         const formattedCandidates = candidateAssessments.map((ca) => {
@@ -744,12 +762,16 @@ exports.getAssessmentResults = async (req, res) => {
           }
           // ------------------------------v1.0.0 >
 
+          // Get experience from Resume
+          const resume = resumeMap[String(ca.candidateId?._id)];
+          const experience = resume?.CurrentExperience || 0;
+
           return {
             id: ca._id,
             candidateId: ca.candidateId._id,
             name: `${ca.candidateId.FirstName} ${ca.candidateId.LastName}`,
             email: ca.candidateId.Email,
-            experience: ca.candidateId.CurrentExperience || 0,
+            experience: experience,
             totalScore: ca.totalScore,
             result: resultStatus,
             // <-------------------------------v1.0.0

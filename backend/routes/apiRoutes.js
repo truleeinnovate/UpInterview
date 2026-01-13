@@ -55,6 +55,7 @@ const { TenantCompany } = require("../models/TenantCompany/TenantCompany.js");
 const { authContextMiddleware } = require("../middleware/authContext.js");
 const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
 const { buildPermissionQuery } = require("../utils/buildPermissionQuery");
+const { Resume } = require("../models/Resume.js");
 
 const modelRequirements = {
   candidate: {
@@ -2101,16 +2102,50 @@ router.get(
             // -------------------------------------------------------
             // 1️⃣ GET ALL INTERVIEWS BASED ON TENANT/OWNER (NEEDED)
             // -------------------------------------------------------
-            const feedbackInterviews = await Interview.find(query)
+            let feedbackInterviews = await Interview.find(query)
               .populate(
                 "candidateId",
-                "FirstName LastName Email Phone skills CurrentExperience"
+                "FirstName LastName Email Phone"
               )
               .populate(
                 "positionId",
                 "title companyname jobDescription Location"
               )
               .lean();
+
+            // Fetch Resume data for candidates (skills, experience moved from Candidate)
+            const fbInterviewCandidateIds = feedbackInterviews
+              .filter((i) => i.candidateId?._id)
+              .map((i) => i.candidateId._id);
+
+            if (fbInterviewCandidateIds.length > 0) {
+              const fbInterviewResumes = await Resume.find({
+                candidateId: { $in: fbInterviewCandidateIds },
+                isActive: true,
+              }).select("candidateId skills CurrentExperience CurrentRole ImageData").lean();
+
+              const fbInterviewResumeMap = {};
+              fbInterviewResumes.forEach((r) => {
+                fbInterviewResumeMap[String(r.candidateId)] = r;
+              });
+
+              // Merge Resume data into interviews
+              feedbackInterviews = feedbackInterviews.map((i) => {
+                if (i.candidateId?._id) {
+                  const resume = fbInterviewResumeMap[String(i.candidateId._id)];
+                  if (resume) {
+                    i.candidateId = {
+                      ...i.candidateId,
+                      skills: resume.skills,
+                      CurrentExperience: resume.CurrentExperience,
+                      CurrentRole: resume.CurrentRole,
+                      ImageData: resume.ImageData,
+                    };
+                  }
+                }
+                return i;
+              });
+            }
 
             const feedbackInterviewIds = feedbackInterviews.map((i) => i._id);
 
@@ -2256,10 +2291,10 @@ router.get(
             // -------------------------------------------------------
             // 1️⃣3️⃣ FETCH FEEDBACK WITH POPULATION
             // -------------------------------------------------------
-            const feedbacks = await FeedbackModel.find(baseQuery)
+            let feedbacks = await FeedbackModel.find(baseQuery)
               .populate(
                 "candidateId",
-                "FirstName LastName Email Phone skills CurrentExperience imageUrl"
+                "FirstName LastName Email Phone"
               )
               .populate(
                 "positionId",
@@ -2275,6 +2310,40 @@ router.get(
               // .skip(skip)
               .limit(feedbackLimitNum)
               .lean();
+
+            // Fetch Resume data for candidates (skills, experience, etc. moved from Candidate)
+            const feedbackCandidateIds = feedbacks
+              .filter((f) => f.candidateId?._id)
+              .map((f) => f.candidateId._id);
+
+            if (feedbackCandidateIds.length > 0) {
+              const feedbackResumes = await Resume.find({
+                candidateId: { $in: feedbackCandidateIds },
+                isActive: true,
+              }).select("candidateId skills CurrentExperience CurrentRole ImageData").lean();
+
+              const feedbackResumeMap = {};
+              feedbackResumes.forEach((r) => {
+                feedbackResumeMap[String(r.candidateId)] = r;
+              });
+
+              // Merge Resume data into feedbacks
+              feedbacks = feedbacks.map((f) => {
+                if (f.candidateId?._id) {
+                  const resume = feedbackResumeMap[String(f.candidateId._id)];
+                  if (resume) {
+                    f.candidateId = {
+                      ...f.candidateId,
+                      skills: resume.skills,
+                      CurrentExperience: resume.CurrentExperience,
+                      CurrentRole: resume.CurrentRole,
+                      ImageData: resume.ImageData,
+                    };
+                  }
+                }
+                return f;
+              });
+            }
 
             // -------------------------------------------------------
             // 1️⃣4️⃣ GET INTERVIEW QUESTIONS FOR EACH FEEDBACK
@@ -2607,7 +2676,7 @@ async function handleInterviewFiltering(options) {
       .populate({
         path: "candidateId",
         select:
-          "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
+          "FirstName LastName Email",
         model: "Candidate",
       })
       .populate({
@@ -2617,6 +2686,44 @@ async function handleInterviewFiltering(options) {
       })
       .populate({ path: "templateId", model: "InterviewTemplate" })
       .lean();
+
+    // ==========================================================
+    // STEP 1.5: Fetch Resume data for each candidate (skills, experience, etc.)
+    // ==========================================================
+    const candidateIds = interviews
+      .filter((i) => i.candidateId?._id)
+      .map((i) => i.candidateId._id);
+
+    if (candidateIds.length > 0) {
+      const resumes = await Resume.find({
+        candidateId: { $in: candidateIds },
+        isActive: true,
+      })
+        .select("candidateId skills CurrentExperience CurrentRole ImageData")
+        .lean();
+
+      const resumeMap = {};
+      resumes.forEach((r) => {
+        resumeMap[String(r.candidateId)] = r;
+      });
+
+      // Merge resume data into candidateId
+      interviews = interviews.map((i) => {
+        if (i.candidateId?._id) {
+          const resume = resumeMap[String(i.candidateId._id)];
+          if (resume) {
+            i.candidateId = {
+              ...i.candidateId,
+              skills: resume.skills,
+              CurrentExperience: resume.CurrentExperience,
+              CurrentRole: resume.CurrentRole,
+              ImageData: resume.ImageData,
+            };
+          }
+        }
+        return i;
+      });
+    }
 
     // console.log(`Fetched ${interviews.length} interviews`);
 
@@ -3278,7 +3385,7 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
 
 async function getUpcomingRoundsOnly({ matchInterview, now, limit = 5 }) {
   // First, get all rounds with the proper status
-  const allRounds = await InterviewRounds.find({
+  let allRounds = await InterviewRounds.find({
     dateTime: { $exists: true, $ne: "" },
     status: { $in: ["Draft", "RequestSent", "Scheduled"] },
   })
@@ -3293,8 +3400,7 @@ async function getUpcomingRoundsOnly({ matchInterview, now, limit = 5 }) {
       populate: [
         {
           path: "candidateId",
-          select:
-            "FirstName LastName Email Technology skills CurrentExperience ImageData",
+          select: "FirstName LastName Email",
         },
         {
           path: "positionId",
@@ -3307,6 +3413,39 @@ async function getUpcomingRoundsOnly({ matchInterview, now, limit = 5 }) {
 
   // Filter out rounds where interview is null (due to tenant/owner mismatch)
   const filteredRounds = allRounds.filter((round) => round.interviewId);
+
+  // Fetch Resume data for all candidates
+  const candidateIds = filteredRounds
+    .filter((r) => r.interviewId?.candidateId?._id)
+    .map((r) => r.interviewId.candidateId._id);
+
+  let resumeMap = {};
+  if (candidateIds.length > 0) {
+    const resumes = await Resume.find({
+      candidateId: { $in: candidateIds },
+      isActive: true,
+    }).select("candidateId skills CurrentExperience CurrentRole ImageData").lean();
+
+    resumes.forEach((r) => {
+      resumeMap[String(r.candidateId)] = r;
+    });
+  }
+
+  // Merge Resume data into candidates
+  filteredRounds.forEach((round) => {
+    if (round.interviewId?.candidateId?._id) {
+      const resume = resumeMap[String(round.interviewId.candidateId._id)];
+      if (resume) {
+        round.interviewId.candidateId = {
+          ...round.interviewId.candidateId,
+          skills: resume.skills,
+          CurrentExperience: resume.CurrentExperience,
+          CurrentRole: resume.CurrentRole,
+          ImageData: resume.ImageData,
+        };
+      }
+    }
+  });
 
   // Parse dates and filter upcoming
   const upcomingRounds = [];
