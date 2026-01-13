@@ -43,6 +43,10 @@ Modal.setAppElement("#root");
 const PositionSlideDetails = () => {
   const { id } = useParams();
   const { position: fetchedPosition, isLoading } = usePositionById(id);
+  console.log(
+    "CURRENT POSITION ============================> ",
+    fetchedPosition
+  );
 
   const [rounds, setRounds] = useState([]);
   const [activeRound, setActiveRound] = useState(null);
@@ -270,7 +274,7 @@ const PositionSlideDetails = () => {
               <div className="sm:text-start text-center mb-4">
                 {/* v1.0.6 ---------------------------------------------> */}
                 <h3 className="sm:text-xl text-2xl font-bold text-gray-900 truncate">
-                  {position?.companyname || ""}
+                  {position?.companyname?.name || ""}
                 </h3>
                 <p className="text-gray-600 mt-1">
                   {position?.title.charAt(0).toUpperCase() +
@@ -309,7 +313,7 @@ const PositionSlideDetails = () => {
                       <span className="text-sm">Company Name</span>
                     </div>
                     <p className="text-sm font-medium text-gray-800 truncate">
-                      {position?.companyname}
+                      {position?.companyname?.name}
                     </p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">

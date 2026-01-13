@@ -2,6 +2,7 @@
 // v1.0.1  -  Ashok   -  changed logo url from local to cloud storage url
 // v1.0.1  -  Ashok   -  Improved responsiveness
 // v1.0.2  -  Ashok   -  Fixed logo and User name at navbar
+// v1.0.3  -  Ashok   -  fixed logo whenever there is logo then only it will display
 
 import axios from "axios";
 import CryptoJS from "crypto-js";
@@ -281,7 +282,7 @@ const AssessmentTest = () => {
                   }}
                 />
               )} */}
-              {organizationLogo ? (
+              {/* {organizationLogo ? (
                 <img
                   src={organizationLogo}
                   alt={tenant?.company || "Organization Logo"}
@@ -297,6 +298,17 @@ const AssessmentTest = () => {
                   src="https://placehold.co/150x50?text=Organization"
                   alt="Organization Logo"
                   className="h-8 max-w-[120px] object-contain opacity-70"
+                />
+              )} */}
+              {organizationLogo && (
+                <img
+                  src={organizationLogo}
+                  alt={tenant?.company || "Organization Logo"}
+                  className="h-8 max-w-[120px] object-contain hover:opacity-80 transition-opacity"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.style.display = "none";
+                  }}
                 />
               )}
             </div>

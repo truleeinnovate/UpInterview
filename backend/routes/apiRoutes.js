@@ -1979,6 +1979,11 @@ router.get(
               model: "Contacts",
               select: "firstName lastName email",
             })
+            .populate({
+              path: "companyname", // This is the field where you store the ID
+              model: "TenantCompany", // This must match your Company model name
+              select: "name industry", // Only fetch necessary fields
+            })
             .sort({ _id: -1 })
             // .sort({ createdAt: -1 })
             .skip(positionSkip)

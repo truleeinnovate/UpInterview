@@ -210,6 +210,16 @@ const FeedbackFormModel = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/Feedback/FeedbackFormModel.jsx")
 );
 
+const Companies = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Companies/Companies.jsx")
+);
+const CompanyDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Companies/CompanyDetails.jsx")
+);
+const CompanyForm = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Companies/CompanyForm.jsx")
+);
+
 // Code Editor
 const CodeEditor = lazy(() =>
   import("./Pages/Dashboard-Part/Tabs/CodeEditor/Editor.jsx")
@@ -554,7 +564,13 @@ const AuthRoutes = () => (
     <Route
       path="/video-call"
       element={
-        <Suspense fallback={<div><Loading /></div>}>
+        <Suspense
+          fallback={
+            <div>
+              <Loading />
+            </div>
+          }
+        >
           <VideoSDKDashboard1 />
         </Suspense>
       }
@@ -1162,6 +1178,14 @@ const MainAppRoutes = ({
                   }
                 />
               </>
+            )}
+
+            {hasPermission("Companies") && (
+              <Route path="/companies" element={<Companies />}>
+                <Route path="new" element={<CompanyForm mode="Create" />} />
+                <Route path="view/:id" element={<CompanyDetails />} />
+                <Route path="edit/:id" element={<CompanyForm mode="Edit" />} />
+              </Route>
             )}
 
             {/* Support Desk Admin*/}

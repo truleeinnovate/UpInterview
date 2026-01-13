@@ -72,14 +72,14 @@ const CompanyEditProfile = () => {
       country: "",
       phone: "",
     },
-    regionalOffice: {
-      address: "",
-      city: "",
-      state: "",
-      zip: "",
-      country: "",
-      phone: "",
-    },
+    // regionalOffice: {
+    //   address: "",
+    //   city: "",
+    //   state: "",
+    //   zip: "",
+    //   country: "",
+    //   phone: "",
+    // },
 
     regionalOffices: [
       {

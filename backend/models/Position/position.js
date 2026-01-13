@@ -12,7 +12,6 @@ const roundSchema = new mongoose.Schema(
     // interviewerGroupName: { type: String },
     interviewerGroupId: { type: String },
 
-
     interviewerViewType: { type: String },
     selectedInterviewersType: { type: String },
     interviewers: [
@@ -37,15 +36,19 @@ const roundSchema = new mongoose.Schema(
 
 const positionSchema = new mongoose.Schema(
   {
-    // <------------------------------- v1.0.0 
+    // <------------------------------- v1.0.0
     positionCode: { type: String },
     // ------------------------------ v1.0.0 >
     title: String,
-    companyname: String,
+    // companyname: String,
+    companyname: { type: mongoose.Schema.Types.ObjectId, ref: "TenantCompany" },
     jobDescription: String,
     minexperience: Number,
     maxexperience: Number,
-      templateId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewTemplate' },
+    templateId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "InterviewTemplate",
+    },
     skills: [
       {
         skill: String,
@@ -63,14 +66,18 @@ const positionSchema = new mongoose.Schema(
     maxSalary: String,
     // EmployementType:String,
     NoofPositions: Number,
-    status: {type:String,enum:["draft","opened","closed","hold","cancelled"], default:"draft"},
+    status: {
+      type: String,
+      enum: ["draft", "opened", "closed", "hold", "cancelled"],
+      default: "draft",
+    },
     Location: String,
     // workMode:String,
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-    tenantId:  { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
+    tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
     // Mansoor: added external id for creating the external id only from the external hrms applications
     externalId: { type: String, sparse: true, index: true },
   },

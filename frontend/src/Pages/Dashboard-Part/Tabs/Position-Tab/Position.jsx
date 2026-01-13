@@ -573,7 +573,7 @@ const PositionTab = () => {
         <div className="flex items-center">
           <div className="h-8 w-8 flex-shrink-0">
             <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-              {row.title ? row.title.charAt(0).toUpperCase() : "?"}
+              {row?.title ? row.title.charAt(0).toUpperCase() : "?"}
             </div>
           </div>
           <div className="ml-3">
@@ -590,9 +590,9 @@ const PositionTab = () => {
     {
       key: "companyname",
       header: "Company",
-      render: (value) => (
+      render: (value, row) => (
         <span className="cursor-default" title={value}>
-          {value ? value : "Not Provided"}
+          {row?.companyname ? row?.companyname?.name : "Not Provided"}
         </span>
       ),
     },
@@ -705,9 +705,9 @@ const PositionTab = () => {
     {
       key: "companyname",
       header: "Company",
-      render: (value) => (
+      render: (value, row) => (
         <span className="cursor-default" title={value}>
-          {value ? value : "Not Provided"}
+          {row?.companyname ? row?.companyname?.name : "Not Provided"}
         </span>
       ),
     },

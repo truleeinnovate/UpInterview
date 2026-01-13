@@ -229,7 +229,8 @@ const updatePosition = async (req, res) => {
 
     const positionData = {
       title: updateFields.title || currentPosition.title,
-      companyname: updateFields.companyName || currentPosition.companyname,
+      // companyname: updateFields.companyName || currentPosition.companyname,
+      companyname: updateFields.companyname || currentPosition.companyname,
       jobDescription:
         updateFields.jobDescription || currentPosition.jobDescription,
       minexperience:
@@ -392,7 +393,9 @@ const updatePosition = async (req, res) => {
       fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
         fieldName,
         // message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
-        message: `${fieldName} updated from '${formatValue(oldValue)}' to '${formatValue(newValue)}'`,
+        message: `${fieldName} updated from '${formatValue(
+          oldValue
+        )}' to '${formatValue(newValue)}'`,
       })),
       history: changes,
     };
@@ -515,6 +518,11 @@ const getPositionById = async (req, res) => {
         path: "rounds.interviewers",
         model: "Contacts",
         select: "firstName lastName email",
+      })
+      .populate({
+        path: "companyname", // This is the field where you store the ID
+        model: "TenantCompany", // This must match your Company model name
+        select: "name industry", // Only fetch necessary fields
       })
       .populate("skills") // Populate skills if needed
       .lean(); // Convert to plain JS object for performance
