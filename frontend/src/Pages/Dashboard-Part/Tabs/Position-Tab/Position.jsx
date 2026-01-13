@@ -578,8 +578,9 @@ const PositionTab = () => {
           </div>
           <div className="ml-3">
             <div
-              className="text-sm font-medium text-custom-blue cursor-pointer"
+              className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
               onClick={() => handleView(row)}
+              title={capitalizeFirstLetter(row?.title)}
             >
               {capitalizeFirstLetter(row?.title) || "N/A"}
             </div>
@@ -591,7 +592,10 @@ const PositionTab = () => {
       key: "companyname",
       header: "Company",
       render: (value, row) => (
-        <span className="cursor-default" title={value}>
+        <span
+          className="block cursor-default truncate max-w-[140px]"
+          title={row?.companyname?.name}
+        >
           {row?.companyname ? row?.companyname?.name : "Not Provided"}
         </span>
       ),
