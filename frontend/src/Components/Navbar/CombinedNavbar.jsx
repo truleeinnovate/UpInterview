@@ -12,6 +12,7 @@
 // v2.0.0  -  Ashok   -  fixed icons vertically expanding issue
 // v2.0.1  -  Ashok   -  kept Interviews, QuestionBank, Internal Logs out side
 // v2.0.2  -  Ashok   -  fixed interviews path in mobile navbar
+// v2.0.3  -  Ashok   -  Added new Tab Companies
 
 import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -444,6 +445,11 @@ const CombinedNavbar = React.memo(() => {
           path: "/support-desk",
           label: "Support Desk",
           permissionKey: "SupportDesk.ViewTab",
+        },
+        {
+          path: "/companies",
+          label: "Companies",
+          permissionKey: "Companies.ViewTab",
         },
       ];
     }
@@ -1376,7 +1382,8 @@ const CombinedNavbar = React.memo(() => {
 
                     {(enhancedCheckPermission("Analytics") ||
                       enhancedCheckPermission("SupportDesk") ||
-                      enhancedCheckPermission("QuestionBank")) && (
+                      enhancedCheckPermission("QuestionBank") ||
+                      enhancedCheckPermission("Companies")) && (
                       <div
                         className="relative h-full flex items-center"
                         ref={moreRef}
@@ -1400,7 +1407,8 @@ const CombinedNavbar = React.memo(() => {
                           {(isActive("/analytics") ||
                             isActive("/support-desk") ||
                             isActive("/feedback") ||
-                            isActive("/question-bank")) && (
+                            isActive("/question-bank") ||
+                            isActive("/companies")) && (
                             <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                           )}
                         </button>
@@ -1429,6 +1437,9 @@ const CombinedNavbar = React.memo(() => {
                                         label: "Support Desk",
                                       },
                                     ]
+                                  : []),
+                                ...(enhancedCheckPermission("Companies")
+                                  ? [{ to: "/companies", label: "Companies" }]
                                   : []),
                               ].map(({ to, label }) => (
                                 <NavLink

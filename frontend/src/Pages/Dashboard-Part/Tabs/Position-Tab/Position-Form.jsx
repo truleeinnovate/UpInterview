@@ -38,8 +38,36 @@ import DescriptionField from "../../../../Components/FormFields/DescriptionField
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 // v1.0.1 ---------------------------------------------------------------------------->
+import { useCompanies } from "../../../../apiHooks/TenantCompany/useTenantCompanies.js"; // Add this import
 
 const PositionForm = ({ mode, onClose, isModal = false }) => {
+  // <---------------------------------------------------------------
+  const { getAllCompanies, isLoading: isCompaniesFetchingAction } =
+    useCompanies();
+  const [companiesList, setCompaniesList] = useState([]);
+
+  const fetchCompaniesData = async () => {
+    try {
+      const data = await getAllCompanies();
+      setCompaniesList(data || []);
+    } catch (error) {
+      console.error("Failed to fetch companies:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompaniesData();
+  }, []);
+
+  // Company Options: Purely from the new hook, no "Other"
+  // Find this block and update it
+  const companyOptionsRS = useMemo(() => {
+    return (companiesList || []).map((c) => ({
+      value: c?._id, // Store the MongoDB ID as the value
+      label: c?.name, // Show the Name as the label in the UI
+    }));
+  }, [companiesList]);
+  // --------------------------------------------------------------->
   const { isMutationLoading, addOrUpdatePosition } = usePositions({
     limit: 1,
   });
@@ -55,13 +83,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   // Close tooltip when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showTooltip && !event.target.closest('.tooltip-container')) {
+      if (showTooltip && !event.target.closest(".tooltip-container")) {
         setShowTooltip(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showTooltip]);
 
   const {
@@ -78,18 +106,22 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const pageType = "adminPortal";
 
   const {
-    companies,
+    // companies,
     locations,
     skills,
-    loadCompanies,
+    // loadCompanies,
     loadLocations,
     loadSkills,
-    isCompaniesFetching,
+    // isCompaniesFetching,
     isLocationsFetching,
   } = useMasterData({}, pageType);
 
   const { id } = useParams();
   const { position: selectedPosition } = usePositionById(id);
+  console.log(
+    "SELECTED POSITION ===============================> ",
+    selectedPosition
+  );
 
   // Fetch the position's linked interview template by id instead of
   // relying on the paginated/filtered templatesData list.
@@ -149,8 +181,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
   const [errors, setErrors] = useState({});
   const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
-  const [showDropdownCompany, setShowDropdownCompany] = useState(false);
-  const [isCustomCompany, setIsCustomCompany] = useState(false);
+  // const [showDropdownCompany, setShowDropdownCompany] = useState(false);
+  // const [isCustomCompany, setIsCustomCompany] = useState(false);
   const [companySearchTerm, setCompanySearchTerm] = useState("");
   const companyDropdownRef = useRef(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -185,7 +217,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         companyDropdownRef.current &&
         !companyDropdownRef.current.contains(event.target)
       ) {
-        setShowDropdownCompany(false);
+        // setShowDropdownCompany(false);
         setCompanySearchTerm("");
       }
     };
@@ -201,11 +233,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     setSearchTerm("");
   };
 
-  const filteredCompanies = companies?.filter((company) =>
-    company.CompanyName?.toString()
-      .toLowerCase()
-      .includes(companySearchTerm.toLowerCase())
-  );
+  // const filteredCompanies = companies?.filter((company) =>
+  //   company.CompanyName?.toString()
+  //     .toLowerCase()
+  //     .includes(companySearchTerm.toLowerCase())
+  // );
 
   useEffect(() => {
     if (currentStage !== "basic") {
@@ -213,38 +245,85 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     }
   }, [currentStage]);
 
+  // useEffect(() => {
+  //   if (!id || !selectedPosition) {
+  //     return;
+  //   }
+
+  //   const companyName = selectedPosition?.companyname || "";
+
+  //   if (companyName && Array.isArray(companies) && companies.length > 0) {
+  //     const companyExists = companies.some(
+  //       (company) => company.CompanyName === companyName
+  //     );
+  //     if (!companyExists) {
+  //       setIsCustomCompany(true);
+  //     } else {
+  //       setIsCustomCompany(false);
+  //     }
+  //   } else if (
+  //     companyName &&
+  //     (!Array.isArray(companies) || companies.length === 0)
+  //   ) {
+  //     setIsCustomCompany(true);
+  //   }
+
+  //   if (hasInitializedFormRef.current) {
+  //     return;
+  //   }
+
+  //   setIsEdit(true);
+
+  //   setFormData({
+  //     title: selectedPosition?.title || "",
+  //     companyName: companyName,
+  //     minexperience: selectedPosition?.minexperience || 0,
+  //     maxexperience: selectedPosition?.maxexperience || 0,
+  //     minSalary: selectedPosition?.minSalary || "",
+  //     maxSalary: selectedPosition?.maxSalary || "",
+  //     jobDescription: selectedPosition?.jobDescription || "",
+  //     additionalNotes: selectedPosition?.additionalNotes || "",
+  //     NoofPositions: selectedPosition?.NoofPositions?.toString() || "",
+  //     Location: selectedPosition?.Location || "",
+  //     externalId: selectedPosition?.externalId || "",
+  //     template: selectedTemplate || {},
+  //     status: selectedPosition?.status || "",
+  //   });
+
+  //   const formattedSkills =
+  //     selectedPosition?.skills?.map((skill) => ({
+  //       skill: skill.skill || "",
+  //       experience: skill.experience || "",
+  //       expertise: skill.expertise || "",
+  //       _id: skill._id || "",
+  //     })) || [];
+
+  //   setEntries(formattedSkills);
+  //   setAllSelectedSkills(
+  //     selectedPosition?.skills?.map((skill) => skill.skill) || []
+  //   );
+
+  //   hasInitializedFormRef.current = true;
+
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [id, selectedPosition, companies, selectedTemplate]);
+
   useEffect(() => {
-    if (!id || !selectedPosition) {
-      return;
-    }
-
-    const companyName = selectedPosition?.companyname || "";
-
-    if (companyName && Array.isArray(companies) && companies.length > 0) {
-      const companyExists = companies.some(
-        (company) => company.CompanyName === companyName
-      );
-      if (!companyExists) {
-        setIsCustomCompany(true);
-      } else {
-        setIsCustomCompany(false);
-      }
-    } else if (
-      companyName &&
-      (!Array.isArray(companies) || companies.length === 0)
-    ) {
-      setIsCustomCompany(true);
-    }
-
-    if (hasInitializedFormRef.current) {
-      return;
-    }
+    // 1. Guard clauses
+    if (!id || !selectedPosition) return;
+    if (hasInitializedFormRef.current) return;
 
     setIsEdit(true);
 
+    // 2. Map existing data to formData state
+    // Ensure the keys match exactly what your form fields use (e.g., formData.companyName)
     setFormData({
       title: selectedPosition?.title || "",
-      companyName: companyName,
+      // companyName: selectedPosition?.companyname || "", // Match backend field 'companyname'
+      companyName:
+        selectedPosition?.companyname?._id ||
+        selectedPosition?.companyname?.name ||
+        "",
       minexperience: selectedPosition?.minexperience || 0,
       maxexperience: selectedPosition?.maxexperience || 0,
       minSalary: selectedPosition?.minSalary || "",
@@ -255,9 +334,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       Location: selectedPosition?.Location || "",
       externalId: selectedPosition?.externalId || "",
       template: selectedTemplate || {},
-      status: selectedPosition?.status || "",
+      status: selectedPosition?.status || "opened",
     });
 
+    // 3. Map Skills
     const formattedSkills =
       selectedPosition?.skills?.map((skill) => ({
         skill: skill.skill || "",
@@ -272,10 +352,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       selectedPosition?.skills?.map((skill) => skill.skill) || []
     );
 
+    // 4. Mark as initialized so it doesn't overwrite user changes on re-renders
     hasInitializedFormRef.current = true;
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, selectedPosition, companies, selectedTemplate]);
+  }, [id, selectedPosition, selectedTemplate]);
 
   const statusOptions = STATUS_OPTIONS.map((s) => ({
     value: s,
@@ -330,9 +409,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   };
 
   // Mapped options for shared DropdownWithSearchField
-  const companyOptionsRS = (companies || [])
-    .map((c) => ({ value: c?.CompanyName, label: c?.CompanyName }))
-    .concat([{ value: "__other__", label: "+ Others" }]);
+  // const companyOptionsRS = (companies || [])
+  //   .map((c) => ({ value: c?.CompanyName, label: c?.CompanyName }))
+  //   .concat([{ value: "__other__", label: "+ Others" }]);
+  // const locationOptionsRS = (locations || [])
+  //   .map((l) => ({ value: l?.LocationName, label: l?.LocationName }))
+  //   .concat([{ value: "__other__", label: "+ Others" }]);
   const locationOptionsRS = (locations || [])
     .map((l) => ({ value: l?.LocationName, label: l?.LocationName }))
     .concat([{ value: "__other__", label: "+ Others" }]);
@@ -369,14 +451,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
               <span
                 className={
                   "text-md " +
-                  (t.type === "custom"
-                    ? "text-custom-blue"
-                    : "text-green-600")
+                  (t.type === "custom" ? "text-custom-blue" : "text-green-600")
                 }
               >
-                {t.type
-                  ? t.type.charAt(0).toUpperCase() + t.type.slice(1)
-                  : ""}
+                {t.type ? t.type.charAt(0).toUpperCase() + t.type.slice(1) : ""}
               </span>
             </div>
           ),
@@ -387,7 +465,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     // Ensure the edit-mode selected template is always present in options,
     // even if it's not in the current templatesData page.
     if (selectedTemplate && selectedTemplate._id) {
-      const exists = baseOptions.some((opt) => opt.value === selectedTemplate._id);
+      const exists = baseOptions.some(
+        (opt) => opt.value === selectedTemplate._id
+      );
       if (!exists) {
         const selectedTitleLabel =
           selectedTemplate.title
@@ -680,7 +760,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       NoofPositions: dataToSubmit?.NoofPositions
         ? parseInt(dataToSubmit?.NoofPositions)
         : null,
-      companyname: dataToSubmit.companyName,
+      // companyname: dataToSubmit.companyName,
+      companyname: dataToSubmit.companyName || null,
       companyName: dataToSubmit.companyName,
       ...(dataToSubmit.minexperience && {
         minexperience: parseInt(dataToSubmit.minexperience),
@@ -1281,7 +1362,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
                       {/* Company Name */}
                       <div>
-                        <DropdownWithSearchField
+                        {/* <DropdownWithSearchField
                           value={formData.companyName}
                           options={companyOptionsRS}
                           onChange={handleChange}
@@ -1294,6 +1375,18 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           setIsCustomName={setIsCustomCompany}
                           onMenuOpen={loadCompanies}
                           loading={isCompaniesFetching}
+                        /> */}
+                        <DropdownWithSearchField
+                          value={formData.companyName}
+                          options={companyOptionsRS}
+                          onChange={handleChange}
+                          containerRef={fieldRefs.companyname}
+                          label="Company Name"
+                          name="companyName"
+                          onMenuOpen={fetchCompaniesData}
+                          loading={isCompaniesFetchingAction}
+                          placeholder="Select Company"
+                          required
                         />
                       </div>
                     </div>
@@ -1578,7 +1671,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           name="template"
                           required={false}
                           loading={isTemplatesFetching}
-                          onMenuScrollToBottom={handleTemplateMenuScrollToBottom}
+                          onMenuScrollToBottom={
+                            handleTemplateMenuScrollToBottom
+                          }
                         />
                         {/* //v1.0.5 Ranjith <-----------------------------------> */}
                         {formData.template?._id && (

@@ -12,7 +12,6 @@ const roundSchema = new mongoose.Schema(
     // interviewerGroupName: { type: String },
     interviewerGroupId: { type: String },
 
-
     interviewerViewType: { type: String },
     selectedInterviewersType: { type: String },
     interviewers: [
@@ -37,11 +36,12 @@ const roundSchema = new mongoose.Schema(
 
 const positionSchema = new mongoose.Schema(
   {
-    // <------------------------------- v1.0.0 
+    // <------------------------------- v1.0.0
     positionCode: { type: String },
     // ------------------------------ v1.0.0 >
     title: String,
-    companyname: String,
+    // companyname: String,
+    companyname: { type: mongoose.Schema.Types.ObjectId, ref: "TenantCompany" },
     jobDescription: String,
     minexperience: Number,
     maxexperience: Number,

@@ -1284,6 +1284,12 @@ const regionalTaxConfigRoutes = require("./routes/RegionalTaxConfigRoutes/region
 app.use("/regional-taxes", regionalTaxConfigRoutes);
 // ----------------------------------------------------->
 
+// <----------------------------------------------------------------------------------
+// Company Routes
+const tenantCompanyRoutes = require("./routes/TenantCompanyRoutes/tenantCompanyRoutes.js");
+app.use("/tenant-companies", tenantCompanyRoutes);
+// ---------------------------------------------------------------------------------->
+
 // support desk
 const supportUserRoutes = require("./routes/supportUserRoutes");
 app.use("/", supportUserRoutes);
