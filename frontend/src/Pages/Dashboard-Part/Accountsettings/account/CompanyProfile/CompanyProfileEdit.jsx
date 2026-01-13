@@ -146,7 +146,7 @@ const CompanyEditProfile = () => {
           location: organizationDetails?.location || "",
           logo: organizationDetails?.branding?.logo || "",
           headquarters: organizationDetails?.offices?.find(
-            (office) => office.type === "Headquarters"
+            (office) => office.type === "headquarters"
           ) || {
             address: "",
             city: "",
@@ -166,7 +166,7 @@ const CompanyEditProfile = () => {
           //   phone: "",
           // },
           regionalOffices: organizationDetails?.offices?.filter(
-            (office) => office.type === "Regional Office"
+            (office) => office.type === "regionalOffice"
           ) || [
             {
               address: "",
@@ -326,10 +326,10 @@ const CompanyEditProfile = () => {
         //   { ...formData.regionalOffice, type: "Regional Office" },
         // ],
         offices: [
-          { ...formData.headquarters, type: "Headquarters" },
+          { ...formData.headquarters, type: "headquarters" },
           ...formData.regionalOffices.map((office) => ({
             ...office,
-            type: "Regional Office",
+            type: "regionalOffice",
           })),
         ],
 
@@ -798,10 +798,7 @@ const CompanyEditProfile = () => {
               </div>
 
               {formData.regionalOffices.map((office, index) => (
-                <div
-                  key={index}
-                  className="mb-6 relative"
-                >
+                <div key={index} className="mb-6 relative">
                   {formData.regionalOffices.length > 1 && (
                     <button
                       type="button"

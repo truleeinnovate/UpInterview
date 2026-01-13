@@ -99,15 +99,9 @@ const Companies = () => {
   const [companyToDelete, setCompanyToDelete] = useState(null);
   const [companies, setCompanies] = useState([]);
 
-  const { industries, loadIndustries, isIndustriesFetching } = useMasterData(
-    {},
-    "adminPortal"
-  );
+  const { industries } = useMasterData({}, "adminPortal");
+  const { getAllCompanies, deleteCompany } = useCompanies();
 
-  // --- 1. CALL THE HOOK ---
-  const { getAllCompanies, deleteCompany, isLoading } = useCompanies();
-
-  // --- 2. FETCH DATA ON MOUNT ---
   const fetchCompanies = async () => {
     try {
       const data = await getAllCompanies();
@@ -132,11 +126,9 @@ const Companies = () => {
   const [selectedFilters, setSelectedFilters] = useState(defaultFilters);
   const [tempFilters, setTempFilters] = useState(defaultFilters);
 
-  // Immediate filtering logic
   const processedData = React.useMemo(() => {
     let result = [...(companiesData || [])];
 
-    // Search using searchQuery directly instead of debouncedSearch
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -159,7 +151,6 @@ const Companies = () => {
     return result;
   }, [companiesData, searchQuery, selectedFilters]);
 
-  // Reset page when search or filters change
   useEffect(() => {
     setCurrentPage(0);
   }, [searchQuery, selectedFilters]);
@@ -198,7 +189,7 @@ const Companies = () => {
     },
     {
       key: "createdAt",
-      header: "Joined Date",
+      header: "Created Date",
       render: (value) => formatDateTime(value),
     },
   ];
@@ -313,20 +304,6 @@ const Companies = () => {
             <div>
               <h4 className="font-semibold mb-2">Industry</h4>
               {industries.map((i) => (
-                // <label key={i} className="flex gap-2 text-sm">
-                //   <input
-                //     type="checkbox"
-                //     className="accent-custom-blue"
-                //     checked={tempFilters.industry.includes(i)}
-                //     onChange={(e) => {
-                //       const next = e.target.checked
-                //         ? [...tempFilters.industry, i]
-                //         : tempFilters.industry.filter((item) => item !== i);
-                //       setTempFilters({ ...tempFilters, industry: next });
-                //     }}
-                //   />
-                //   {i}
-                // </label>
                 <label
                   key={i._id}
                   className="flex gap-2 text-sm cursor-pointer hover:text-custom-blue"
