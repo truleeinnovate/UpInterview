@@ -74,6 +74,7 @@ const ApplicationSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
+        collection: "application"
     }
 );
 

@@ -82,6 +82,7 @@ const ScreeningResultSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
+        collection: "screeningresult"
     }
 );
 
