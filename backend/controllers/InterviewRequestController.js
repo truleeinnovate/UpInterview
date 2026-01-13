@@ -810,6 +810,7 @@ exports.acceptInterviewRequest = async (req, res) => {
             : round?.interviewId,
           roundId: roundId,
           sendEmails: true,
+          type: request.isMockInterview ? "mockinterview" : "interview",
         },
       });
     } catch (emailError) {

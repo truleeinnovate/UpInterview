@@ -2063,6 +2063,7 @@ async function handleInternalRoundEmails({
         interviewId,
         roundId,
         sendEmails: true,
+        type: "interview",
       },
     },
     {

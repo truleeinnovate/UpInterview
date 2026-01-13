@@ -12,11 +12,11 @@ const {
   validateMockInterview,
   validateMockInterviewUpdate,
 } = require("../validations/mockInterviewValidation");
-// const {
-//   sendOutsourceInterviewRequestEmails,
-//   sendInterviewRoundCancellationEmails,
-//   sendInterviewerCancelledEmails,
-// } = require("./EmailsController/interviewEmailController.js");
+const {
+  // sendOutsourceInterviewRequestEmails,
+  sendInterviewRoundCancellationEmails,
+  sendInterviewerCancelledEmails,
+} = require("./EmailsController/interviewEmailController.js");
 const {
   WALLET_BUSINESS_TYPES,
   createWalletTransaction,
