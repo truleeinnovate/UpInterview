@@ -88,7 +88,7 @@ const MockSchedulelater = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { mockInterview } = useMockInterviewById(id);
+  const { mockInterview, isMockLoading } = useMockInterviewById(id);
   const {
     data,
     // isLoading,
@@ -160,6 +160,15 @@ const MockSchedulelater = () => {
     // mode, // optional if you switch to mode-based approach
   } = location.state || {};
 
+  const [errors, setErrors] = useState({});
+  const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
+
+  const [fileName, setFileName] = useState("");
+  const inputRef = useRef();
+  const [resume, setResume] = useState(null);
+  const [isResumeRemoved, setIsResumeRemoved] = useState(false);
+  const [resumeError, setResumeError] = useState("");
+
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
@@ -220,6 +229,7 @@ const MockSchedulelater = () => {
         fieldName === "currentRole" ||
         fieldName === "skills" ||
         fieldName === "jobDescription" ||
+        fieldName === "resume" ||
         // page two
         fieldName === "interviewType" ||
         fieldName === "scheduledDate" ||
@@ -408,12 +418,54 @@ const MockSchedulelater = () => {
           },
         });
 
-        setInterviewType(round.interviewType || "scheduled");
-
-        // Your dateTime handling...
+        // Replace the dateTime handling section with this:
         if (round.dateTime) {
-          // ... your existing date parsing logic ...
+          console.log("Setting datetime for edit mode:", round.dateTime);
+
+          // Parse the existing datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
+          const [dateTimePart, endTimePart] = round.dateTime.split(" - ");
+
+          if (dateTimePart) {
+            // Parse the start time from the existing format
+            const parsedStartTime = parseCustomDateTime(dateTimePart.trim());
+
+            if (parsedStartTime && !isNaN(parsedStartTime.getTime())) {
+              // Format for datetime-local input: YYYY-MM-DDTHH:MM
+              const year = parsedStartTime.getFullYear();
+              const month = String(parsedStartTime.getMonth() + 1).padStart(
+                2,
+                "0"
+              );
+              const day = String(parsedStartTime.getDate()).padStart(2, "0");
+              const hours = String(parsedStartTime.getHours()).padStart(2, "0");
+              const minutes = String(parsedStartTime.getMinutes()).padStart(
+                2,
+                "0"
+              );
+
+              const datetimeLocalValue = `${year}-${month}-${day}T${hours}:${minutes}`;
+              console.log("Setting scheduledDate to:", datetimeLocalValue);
+
+              setScheduledDate(datetimeLocalValue);
+            }
+          }
+
+          // Set combinedDateTime for display
+          setCombinedDateTime(round.dateTime);
+
+          // Calculate end time
+          if (dateTimePart) {
+            const startTime = parseCustomDateTime(dateTimePart.trim());
+            if (startTime) {
+              const endTime = calculateEndTime(
+                startTime.toISOString(),
+                round.duration || "60"
+              );
+              setEndTime(endTime);
+            }
+          }
         }
+        setInterviewType(round.interviewType || "scheduled");
 
         // Skills handling...
         const skillStrings =
@@ -439,10 +491,7 @@ const MockSchedulelater = () => {
     } else if (!id) {
       updateTimes(formData.rounds.duration);
     }
-  }, [id, mockInterview]);
-
-  const [errors, setErrors] = useState({});
-  const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
+  }, [id, mockInterview, isMockLoading]);
 
   function formatStartTimeForZoom(combinedDateTime) {
     if (!combinedDateTime) return null;
@@ -506,12 +555,6 @@ const MockSchedulelater = () => {
       return null;
     }
   }
-
-  const [fileName, setFileName] = useState("");
-  const inputRef = useRef();
-  const [resume, setResume] = useState(null);
-  const [isResumeRemoved, setIsResumeRemoved] = useState(false);
-  const [resumeError, setResumeError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -1085,6 +1128,146 @@ const MockSchedulelater = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleConfirmDateChange = () => {
+    if (!pendingDateChange) return;
+
+    console.log(
+      "Confirming date/time change in Mock Interview:",
+      pendingDateChange
+    );
+
+    // ────────────────────────────────────────────────────────────────
+    // 1. Clear external interviewers when user confirms the change
+    // ────────────────────────────────────────────────────────────────
+    if (externalInterviewers.length > 0) {
+      setExternalInterviewers([]);
+      setExternalMaxHourlyRate(0);
+      setSelectedInterviewType(null);
+      setHasManuallyClearedInterviewers(true);
+
+      notify.warning(
+        "Date/time changed → All outsourced interviewers cleared."
+      );
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 2. Calculate new values immediately (avoid race conditions)
+    // ────────────────────────────────────────────────────────────────
+    let newInterviewType = interviewType;
+    let newScheduledDate = scheduledDate;
+    let newCombinedDateTime = combinedDateTime;
+    let newStartTime = startTime;
+    let newEndTime = endTime;
+
+    // Helper to calculate new start + end
+    const calculateNewTimes = (baseDate) => {
+      if (!baseDate) return { start: null, end: null };
+
+      const start = new Date(baseDate);
+      if (isNaN(start.getTime())) return { start: null, end: null };
+
+      const end = new Date(start);
+      end.setMinutes(end.getMinutes() + Number(formData.rounds.duration || 60));
+
+      return { start, end };
+    };
+
+    if (pendingDateChange.type === "interviewType") {
+      newInterviewType = pendingDateChange.value;
+      setInterviewType(newInterviewType);
+
+      // Update formData too
+      setFormData((prev) => ({
+        ...prev,
+        rounds: {
+          ...prev.rounds,
+          interviewType: newInterviewType,
+        },
+      }));
+
+      if (newInterviewType === "instant") {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 15);
+        now.setSeconds(0, 0);
+
+        const { start, end } = calculateNewTimes(now);
+
+        newStartTime = start?.toISOString() || "";
+        newEndTime = end?.toISOString() || "";
+
+        const formattedStart = formatToCustomDateTime(start);
+        const formattedEnd = formatToCustomDateTime(end).split(" ")[1] || "";
+
+        newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
+
+        // Clear scheduled date when switching to instant
+        newScheduledDate = "";
+        setScheduledDate("");
+      }
+    } else if (pendingDateChange.type === "scheduledDate") {
+      console.log("scheduledDate", scheduledDate);
+      const minAllowed = twoHoursFromNowLocal(); // your helper function
+      newScheduledDate =
+        pendingDateChange.value < minAllowed
+          ? minAllowed
+          : pendingDateChange.value;
+
+      setScheduledDate(newScheduledDate);
+
+      const { start, end } = calculateNewTimes(newScheduledDate);
+
+      newStartTime = start?.toISOString() || "";
+      newEndTime = end?.toISOString() || "";
+
+      const formattedStart = formatToCustomDateTime(start);
+      const formattedEnd = formatToCustomDateTime(end).split(" ")[1] || "";
+
+      newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 3. Update all related states at once
+    // ────────────────────────────────────────────────────────────────
+    setStartTime(newStartTime);
+    setEndTime(newEndTime);
+    setCombinedDateTime(newCombinedDateTime);
+
+    setFormData((prev) => ({
+      ...prev,
+      rounds: {
+        ...prev.rounds,
+        dateTime: newCombinedDateTime,
+        interviewType: newInterviewType,
+      },
+    }));
+
+    // ────────────────────────────────────────────────────────────────
+    // 4. Mark as confirmed + close modal
+    // ────────────────────────────────────────────────────────────────
+    setPendingDateChange((prev) => ({ ...prev, confirmed: true }));
+
+    // CHANGED: Pass the new calculated values directly to handleSubmit
+    // Use setTimeout to ensure state updates have propagated
+    setTimeout(() => {
+      handleSubmit(new Event("submit"), "confirmClearinterviwers", {
+        interviewType: newInterviewType,
+        scheduledDate: newScheduledDate,
+        combinedDateTime: newCombinedDateTime,
+        startTime: newStartTime,
+        endTime: newEndTime,
+      });
+    }, 100);
+
+    setShowDateChangeConfirmation(false);
+    setPendingDateChange(null);
+
+    // Optional: You can trigger submit automatically after confirmation
+    // (many teams do this in reschedule flows)
+    // setTimeout(() => {
+    //   handleSubmit(new Event("submit"), "dateChangeConfirmed");
+    // }, 300);
   };
 
   // Page 2: Save round + create meeting
@@ -1904,131 +2087,114 @@ const MockSchedulelater = () => {
     setScheduledDate(e.target.value);
   };
 
-  const handleConfirmDateChange = () => {
-    if (!pendingDateChange) return;
+  // const handleInterviewTypeChange = (type) => {
+  //   // onClick={() => {
+  //   //   setInterviewType("instant");
 
-    console.log(
-      "Confirming date/time change in Mock Interview:",
-      pendingDateChange
-    );
+  //   //   // Clear outsourced data when switching to instant
+  //   //   if (externalInterviewers.length > 0) {
+  //   //     setExternalInterviewers([]);
+  //   //     setFormData((prev) => ({
+  //   //       ...prev,
+  //   //       rounds: {
+  //   //         ...prev.rounds,
+  //   //         interviewers: [],
+  //   //       },
+  //   //     }));
+  //   //     notify.warning(
+  //   //       "Interview type changed to instant. Outsourced interviewers have been cleared."
+  //   //     );
+  //   //   }
 
-    // ────────────────────────────────────────────────────────────────
-    // 1. Clear external interviewers when user confirms the change
-    // ────────────────────────────────────────────────────────────────
+  //   //   setFormData((prev) => ({
+  //   //     ...prev,
+  //   //     rounds: {
+  //   //       ...prev.rounds,
+  //   //       interviewType: "instant",
+  //   //     },
+  //   //   }));
+  //   // }}
+  //   if (externalInterviewers.length > 0) {
+  //     setExternalInterviewers([]);
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       rounds: {
+  //         ...prev.rounds,
+  //         interviewers: [],
+  //       },
+  //     }));
+  //   }
+  //   setSelectedInterviewType(type);
+  // };
+
+  const handleInterviewTypeChange = (type) => {
+    // Don't do anything if clicking the same type
+    if (type === interviewType) return;
+
+    // Check if external interviewers exist and we're changing type
     if (externalInterviewers.length > 0) {
-      setExternalInterviewers([]);
-      setExternalMaxHourlyRate(0);
-      setSelectedInterviewType(null);
-      setHasManuallyClearedInterviewers(true);
-
-      notify.warning(
-        "Date/time changed → All outsourced interviewers cleared."
-      );
+      // Set pending change and show confirmation popup
+      setPendingDateChange({
+        type: "interviewType",
+        value: type,
+      });
+      setTimeout(() => setShowDateChangeConfirmation(true), 100);
+      return; // Don't proceed until user confirms
     }
 
-    // ────────────────────────────────────────────────────────────────
-    // 2. Calculate new values immediately (avoid race conditions)
-    // ────────────────────────────────────────────────────────────────
-    let newInterviewType = interviewType;
-    let newScheduledDate = scheduledDate;
-    let newCombinedDateTime = combinedDateTime;
-    let newStartTime = startTime;
-    let newEndTime = endTime;
+    // Update interview type
+    setInterviewType(type);
 
-    // Helper to calculate new start + end
-    const calculateNewTimes = (baseDate) => {
-      if (!baseDate) return { start: null, end: null };
+    // Clear scheduled date when switching to instant
+    if (type === "instant") {
+      setScheduledDate("");
 
-      const start = new Date(baseDate);
-      if (isNaN(start.getTime())) return { start: null, end: null };
+      // Calculate instant time: now + 15 minutes
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 15);
+      now.setSeconds(0, 0);
 
-      const end = new Date(start);
+      const end = new Date(now);
       end.setMinutes(end.getMinutes() + Number(formData.rounds.duration || 60));
 
-      return { start, end };
-    };
+      // Format the datetime for display
+      const formattedStart = formatToCustomDateTime(now);
+      const formattedEnd = formatToCustomDateTime(end).split(" ")[1];
+      const newDateTime = `${formattedStart} - ${formattedEnd}`;
 
-    if (pendingDateChange.type === "interviewType") {
-      newInterviewType = pendingDateChange.value;
-      setInterviewType(newInterviewType);
+      // Update all datetime states
+      setStartTime(now.toISOString());
+      setEndTime(end.toISOString());
+      setCombinedDateTime(newDateTime);
 
-      // Update formData too
+      // Update form data
       setFormData((prev) => ({
         ...prev,
         rounds: {
           ...prev.rounds,
-          interviewType: newInterviewType,
+          dateTime: newDateTime,
+          interviewType: "instant",
         },
       }));
 
-      if (newInterviewType === "instant") {
-        const now = new Date();
-        now.setMinutes(now.getMinutes() + 15);
-        now.setSeconds(0, 0);
+      // Show instant interview info
+      notify.info("Instant interview scheduled for 15 minutes from now");
+    } else if (type === "scheduled") {
+      // For scheduled, just update the interview type
+      setFormData((prev) => ({
+        ...prev,
+        rounds: {
+          ...prev.rounds,
+          interviewType: "scheduled",
+        },
+      }));
 
-        const { start, end } = calculateNewTimes(now);
-
-        newStartTime = start?.toISOString() || "";
-        newEndTime = end?.toISOString() || "";
-
-        const formattedStart = formatToCustomDateTime(start);
-        const formattedEnd = formatToCustomDateTime(end).split(" ")[1] || "";
-
-        newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
-
-        // Clear scheduled date when switching to instant
-        newScheduledDate = "";
-        setScheduledDate("");
+      // Set minimum datetime if not already set
+      if (!scheduledDate) {
+        const minVal = twoHoursFromNowLocal();
+        setScheduledDate(minVal);
       }
-    } else if (pendingDateChange.type === "scheduledDate") {
-      console.log("scheduledDate", scheduledDate);
-      const minAllowed = twoHoursFromNowLocal(); // your helper function
-      newScheduledDate =
-        pendingDateChange.value < minAllowed
-          ? minAllowed
-          : pendingDateChange.value;
-
-      setScheduledDate(newScheduledDate);
-
-      const { start, end } = calculateNewTimes(newScheduledDate);
-
-      newStartTime = start?.toISOString() || "";
-      newEndTime = end?.toISOString() || "";
-
-      const formattedStart = formatToCustomDateTime(start);
-      const formattedEnd = formatToCustomDateTime(end).split(" ")[1] || "";
-
-      newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
     }
-
-    // ────────────────────────────────────────────────────────────────
-    // 3. Update all related states at once
-    // ────────────────────────────────────────────────────────────────
-    setStartTime(newStartTime);
-    setEndTime(newEndTime);
-    setCombinedDateTime(newCombinedDateTime);
-
-    setFormData((prev) => ({
-      ...prev,
-      rounds: {
-        ...prev.rounds,
-        dateTime: newCombinedDateTime,
-        interviewType: newInterviewType,
-      },
-    }));
-
-    // ────────────────────────────────────────────────────────────────
-    // 4. Mark as confirmed + close modal
-    // ────────────────────────────────────────────────────────────────
-    setPendingDateChange((prev) => ({ ...prev, confirmed: true }));
-    setShowDateChangeConfirmation(false);
-    setPendingDateChange(null);
-
-    // Optional: You can trigger submit automatically after confirmation
-    // (many teams do this in reschedule flows)
-    // setTimeout(() => {
-    //   handleSubmit(new Event("submit"), "dateChangeConfirmed");
-    // }, 300);
   };
 
   // Handle skill removal
@@ -2725,32 +2891,34 @@ const MockSchedulelater = () => {
                             type="button"
                             key="instant-btn"
                             disabled={shouldDisable("interviewType")}
-                            onClick={() => {
-                              setInterviewType("instant");
+                            // onClick={() => {
+                            //   setInterviewType("instant");
 
-                              // Clear outsourced data when switching to instant
-                              if (externalInterviewers.length > 0) {
-                                setExternalInterviewers([]);
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  rounds: {
-                                    ...prev.rounds,
-                                    interviewers: [],
-                                  },
-                                }));
-                                notify.warning(
-                                  "Interview type changed to instant. Outsourced interviewers have been cleared."
-                                );
-                              }
+                            //   // Clear outsourced data when switching to instant
+                            //   if (externalInterviewers.length > 0) {
+                            //     setExternalInterviewers([]);
+                            //     setFormData((prev) => ({
+                            //       ...prev,
+                            //       rounds: {
+                            //         ...prev.rounds,
+                            //         interviewers: [],
+                            //       },
+                            //     }));
+                            //     notify.warning(
+                            //       "Interview type changed to instant. Outsourced interviewers have been cleared."
+                            //     );
+                            //   }
 
-                              setFormData((prev) => ({
-                                ...prev,
-                                rounds: {
-                                  ...prev.rounds,
-                                  interviewType: "instant",
-                                },
-                              }));
-                            }}
+                            //   setFormData((prev) => ({
+                            //     ...prev,
+                            //     rounds: {
+                            //       ...prev.rounds,
+                            //       interviewType: "instant",
+                            //     },
+                            //   }));
+                            // }}
+
+                            onClick={() => handleInterviewTypeChange("instant")}
                             className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
                               interviewType === "instant"
                                 ? "border-custom-blue bg-blue-50"
@@ -2779,32 +2947,36 @@ const MockSchedulelater = () => {
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
-                              setInterviewType("scheduled");
+                            // onClick={() => {
+                            //   setInterviewType("scheduled");
 
-                              // Clear outsourced data when switching to scheduled
-                              if (externalInterviewers.length > 0) {
-                                setExternalInterviewers([]);
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  rounds: {
-                                    ...prev.rounds,
-                                    interviewers: [],
-                                  },
-                                }));
-                                notify.warning(
-                                  "Interview type changed. Outsourced interviewers have been cleared."
-                                );
-                              }
+                            //   // Clear outsourced data when switching to scheduled
+                            //   if (externalInterviewers.length > 0) {
+                            //     setExternalInterviewers([]);
+                            //     setFormData((prev) => ({
+                            //       ...prev,
+                            //       rounds: {
+                            //         ...prev.rounds,
+                            //         interviewers: [],
+                            //       },
+                            //     }));
+                            //     notify.warning(
+                            //       "Interview type changed. Outsourced interviewers have been cleared."
+                            //     );
+                            //   }
 
-                              setFormData((prev) => ({
-                                ...prev,
-                                rounds: {
-                                  ...prev.rounds,
-                                  interviewType: "scheduled",
-                                },
-                              }));
-                            }}
+                            //   setFormData((prev) => ({
+                            //     ...prev,
+                            //     rounds: {
+                            //       ...prev.rounds,
+                            //       interviewType: "scheduled",
+                            //     },
+                            //   }));
+                            // }}
+
+                            onClick={() =>
+                              handleInterviewTypeChange("scheduled")
+                            } // Use new handler
                             // Interview Type buttons - disabled in CASE 2, enabled in CASE 3
                             disabled={shouldDisable("interviewType")}
                             key="scheduled-btn"

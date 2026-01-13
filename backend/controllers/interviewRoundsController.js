@@ -1738,9 +1738,9 @@ async function buildSmartRoundUpdate({
   const isInternal = body.interviewerType === "Internal";
   const isExternal = !isInternal;
 
-  // console.log("body", body);
-  // console.log("changes", changes);
-  // console.log("isExternal", isExternal);
+  console.log("body", body);
+  console.log("changes", changes);
+  console.log("isExternal", isExternal);
 
   const now = new Date();
 
