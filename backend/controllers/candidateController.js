@@ -447,7 +447,7 @@ const getCandidatesData = async (req, res) => {
       // Lookup active resume for each candidate
       {
         $lookup: {
-          from: "resumes",
+          from: "resume",
           let: { candidateId: "$_id" },
           pipeline: [
             {
@@ -580,7 +580,7 @@ const searchCandidates = async (req, res) => {
       // Lookup active resume
       {
         $lookup: {
-          from: "resumes",
+          from: "resume",
           let: { candidateId: "$_id" },
           pipeline: [
             {

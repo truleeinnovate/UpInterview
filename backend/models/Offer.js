@@ -108,6 +108,7 @@ const OfferSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
+        collection: "offer"
     }
 );
 
