@@ -15,10 +15,47 @@ const getAllCandidatePositions = async (req, res) => {
     //     }
     //-----v1.0.1--->
 
-    const candidatePositions = await CandidatePosition.find()
+    let candidatePositions = await CandidatePosition.find()
       .populate("candidateId")
       .populate("positionId")
-      .populate("interviewId");
+      .populate("interviewId")
+      .lean();
+
+    // Fetch Resume data for all candidates
+    const { Resume } = require("../models/Resume.js");
+    const candidateIds = candidatePositions
+      .filter((cp) => cp.candidateId?._id)
+      .map((cp) => cp.candidateId._id);
+
+    if (candidateIds.length > 0) {
+      const resumes = await Resume.find({
+        candidateId: { $in: candidateIds },
+        isActive: true,
+      }).select("candidateId skills CurrentExperience CurrentRole ImageData").lean();
+
+      const resumeMap = {};
+      resumes.forEach((r) => {
+        resumeMap[String(r.candidateId)] = r;
+      });
+
+      // Merge resume data into candidateId
+      candidatePositions = candidatePositions.map((cp) => {
+        if (cp.candidateId?._id) {
+          const resume = resumeMap[String(cp.candidateId._id)];
+          if (resume) {
+            cp.candidateId = {
+              ...cp.candidateId,
+              skills: resume.skills,
+              CurrentExperience: resume.CurrentExperience,
+              CurrentRole: resume.CurrentRole,
+              ImageData: resume.ImageData,
+            };
+          }
+        }
+        return cp;
+      });
+    }
+
     res.status(200).json(candidatePositions);
   } catch (error) {
     console.error("Error fetching candidate positions:", error);
@@ -128,20 +165,20 @@ const getCandidatePositionsByCandidateId = async (req, res) => {
       updatedAt: pos.updatedAt,
       positionInfo: pos.positionDetails
         ? {
-            title: pos.positionDetails.title || "",
-            companyname: pos.positionDetails.companyname || "",
-            jobdescription: pos.positionDetails.jobdescription || "",
-            minexperience: pos.positionDetails.minexperience || 0,
-            maxexperience: pos.positionDetails.maxexperience || 0,
-            skills: pos.positionDetails.skills || [],
-            additionalnotes: pos.positionDetails.additionalnotes || "",
-            rounds: pos.positionDetails.rounds || [],
-            createdBy: pos.positionDetails.CreatedBy || "",
-            lastModifiedById: pos.positionDetails.LastModifiedById || "",
-            ownerId: pos.positionDetails.ownerId || "",
-            tenantId: pos.positionDetails.tenantId || "",
-            createdDate: pos.positionDetails.createdDate || "",
-          }
+          title: pos.positionDetails.title || "",
+          companyname: pos.positionDetails.companyname || "",
+          jobdescription: pos.positionDetails.jobdescription || "",
+          minexperience: pos.positionDetails.minexperience || 0,
+          maxexperience: pos.positionDetails.maxexperience || 0,
+          skills: pos.positionDetails.skills || [],
+          additionalnotes: pos.positionDetails.additionalnotes || "",
+          rounds: pos.positionDetails.rounds || [],
+          createdBy: pos.positionDetails.CreatedBy || "",
+          lastModifiedById: pos.positionDetails.LastModifiedById || "",
+          ownerId: pos.positionDetails.ownerId || "",
+          tenantId: pos.positionDetails.tenantId || "",
+          createdDate: pos.positionDetails.createdDate || "",
+        }
         : null,
     }));
 

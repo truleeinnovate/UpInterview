@@ -47,6 +47,7 @@ const {
   CandidateAssessment,
 } = require("../models/Assessment/candidateAssessment.js");
 const { Application } = require("../models/Application.js");
+const { Resume } = require("../models/Resume.js");
 
 // const { createRequest } = require("./InterviewRequestController.js");
 // const {
@@ -2807,11 +2808,10 @@ const getInterviewDataforOrg = async (req, res) => {
     }
 
     // 1️⃣ Fetch interview
-    const interview = await Interview.findById(finalInterviewId)
+    let interview = await Interview.findById(finalInterviewId)
       .populate({
         path: "candidateId",
-        select:
-          "FirstName LastName Email CurrentRole skills CurrentExperience ImageData",
+        select: "FirstName LastName Email",
       })
       .populate({
         path: "positionId",
@@ -2822,6 +2822,26 @@ const getInterviewDataforOrg = async (req, res) => {
 
     if (!interview) {
       return res.status(404).json({ message: "Interview not found" });
+    }
+
+    // Fetch Resume data for candidate (skills, experience, etc. moved from Candidate)
+    if (interview.candidateId?._id) {
+      const activeResume = await Resume.findOne({
+        candidateId: interview.candidateId._id,
+        isActive: true,
+      })
+        .select("CurrentRole skills CurrentExperience ImageData")
+        .lean();
+
+      if (activeResume) {
+        interview.candidateId = {
+          ...interview.candidateId,
+          CurrentRole: activeResume.CurrentRole,
+          skills: activeResume.skills,
+          CurrentExperience: activeResume.CurrentExperience,
+          ImageData: activeResume.ImageData,
+        };
+      }
     }
 
     // 2️⃣ Fetch rounds with accepted interviewers populated
@@ -2896,18 +2916,51 @@ const getInterviewDataforOrg = async (req, res) => {
         .lean();
 
       // 5.2 Fetch Candidate Assessments
-      const candidateAssessments = await CandidateAssessment.find({
+      let candidateAssessments = await CandidateAssessment.find({
         scheduledAssessmentId: { $in: assessmentScheduleIds },
       })
         .populate({
           path: "candidateId",
-          select:
-            "FirstName LastName Email Phone CurrentRole CurrentExperience ImageData",
+          select: "FirstName LastName Email Phone",
         })
         .select(
           "scheduledAssessmentId candidateId status progress remainingTime totalScore expiryAt createdAt updatedAt"
         )
         .lean();
+
+      // 5.2.1 Fetch Resume data for all candidates
+      const candIds = candidateAssessments
+        .filter((ca) => ca.candidateId?._id)
+        .map((ca) => ca.candidateId._id);
+
+      if (candIds.length > 0) {
+        const resumes = await Resume.find({
+          candidateId: { $in: candIds },
+          isActive: true,
+        }).select("candidateId CurrentRole skills CurrentExperience ImageData").lean();
+
+        const resumeMap = {};
+        resumes.forEach((r) => {
+          resumeMap[String(r.candidateId)] = r;
+        });
+
+        // Merge Resume data into candidateId
+        candidateAssessments = candidateAssessments.map((ca) => {
+          if (ca.candidateId?._id) {
+            const resume = resumeMap[String(ca.candidateId._id)];
+            if (resume) {
+              ca.candidateId = {
+                ...ca.candidateId,
+                CurrentRole: resume.CurrentRole,
+                skills: resume.skills,
+                CurrentExperience: resume.CurrentExperience,
+                ImageData: resume.ImageData,
+              };
+            }
+          }
+          return ca;
+        });
+      }
 
       // 5.3 Group candidates by scheduledAssessmentId
       const candidateMap = {};
