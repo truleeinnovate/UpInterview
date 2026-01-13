@@ -139,7 +139,41 @@ export const useMockInterviews = (params = {}) => {
   });
 
   // ====================== MUTATION 2: Save/Update Round (Page 2) ======================
-  const saveMockRound = useMutation({
+
+  // Create NEW Round (POST)
+  const createMockRound = useMutation({
+    mutationFn: async ({ mockInterviewId, round, updateType, ...rest }) => {
+      if (!mockInterviewId) throw new Error("Mock Interview ID is required");
+
+      const payload = {
+        round: round || {},
+        ...(updateType && { updateType }),
+        ...rest,
+      };
+
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round`,
+        payload
+      );
+
+      return response.data;
+    },
+
+    // ← Fixed: use variables from mutation context
+    onSuccess: (data, variables) => {
+      const { mockInterviewId } = variables; // ← this is where it comes from!
+
+      queryClient.invalidateQueries({ queryKey: ["mockinterviews"] });
+      if (mockInterviewId) {
+        queryClient.invalidateQueries({
+          queryKey: ["mockinterview", mockInterviewId],
+        });
+      }
+    },
+  });
+
+  // Update EXISTING Round (PATCH)
+  const updateMockRound = useMutation({
     mutationFn: async ({
       mockInterviewId,
       round,
@@ -148,33 +182,79 @@ export const useMockInterviews = (params = {}) => {
       ...rest
     }) => {
       if (!mockInterviewId) throw new Error("Mock Interview ID is required");
+      if (!roundId) throw new Error("Round ID is required for update");
 
       const payload = {
-        round: round || {}, // always include round (nested)
-        ...(updateType && { updateType }), // ← explicitly add updateType if provided
-        ...rest, // any other extra fields
+        round: round || {},
+        ...(updateType && { updateType }),
+        ...rest,
       };
 
-      const url = roundId
-        ? `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}`
-        : `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round`;
+      const response = await axios.patch(
+        `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}`,
+        payload
+      );
 
-      const method = roundId ? "patch" : "post";
-
-      console.log("Sending payload to backend:", payload); // ← debug this!
-
-      const response = await axios[method](url, payload);
       return response.data;
     },
-    onSuccess: () => {
+
+    // ← Fixed: same pattern
+    onSuccess: (data, variables) => {
+      const { mockInterviewId } = variables;
+
       queryClient.invalidateQueries({ queryKey: ["mockinterviews"] });
+      if (mockInterviewId) {
+        queryClient.invalidateQueries({
+          queryKey: ["mockinterview", mockInterviewId],
+        });
+      }
     },
   });
 
-  // Loading states
+  // Correct (use isPending)
   const isMutationLoading =
-    saveMockInterview.isPending || saveMockRound.isPending;
+    saveMockInterview.isPending ||
+    createMockRound.isPending ||
+    updateMockRound.isPending;
+
   const isLoading = isQueryLoading || isMutationLoading;
+
+  // const saveMockRound = useMutation({
+  //   mutationFn: async ({
+  //     mockInterviewId,
+  //     round,
+  //     roundId,
+  //     updateType,
+  //     ...rest
+  //   }) => {
+  //     if (!mockInterviewId) throw new Error("Mock Interview ID is required");
+
+  //     const payload = {
+  //       round: round || {}, // always include round (nested)
+  //       ...(updateType && { updateType }), // ← explicitly add updateType if provided
+  //       ...rest, // any other extra fields
+  //     };
+
+  //     const url = roundId
+  //       ? `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}`
+  //       : `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round`;
+
+  //     const method = roundId ? "patch" : "post";
+
+  //     console.log("Sending payload to backend:", payload); // ← debug this!
+
+  //     const response = await axios[method](url, payload);
+  //     return response.data;
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["mockinterviews"] });
+  //   },
+  // });
+
+  // Loading states
+  // const isMutationLoading =
+  //   saveMockInterview.isPending || saveMockRound.isPending;
+  // const isLoading = isQueryLoading || isMutationLoading;
 
   return {
     // List data
@@ -192,8 +272,12 @@ export const useMockInterviews = (params = {}) => {
     saveMockInterview: saveMockInterview.mutateAsync,
     isSavingMock: saveMockInterview.isPending,
 
-    saveMockRound: saveMockRound.mutateAsync,
-    isSavingRound: saveMockRound.isPending,
+    // second page
+    createMockRound: createMockRound.mutateAsync,
+    updateMockRound: updateMockRound.mutateAsync,
+
+    // saveMockRound: saveMockRound.mutateAsync,
+    // isSavingRound: saveMockRound.isPending,
   };
 };
 

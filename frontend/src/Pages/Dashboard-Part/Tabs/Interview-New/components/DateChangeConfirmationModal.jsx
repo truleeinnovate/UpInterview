@@ -26,16 +26,16 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
     actionType === "Cancel"
       ? "Cancelled"
       : actionType === "NoShow"
-        ? "NoShow"
-        : roundStatus;
+      ? "NoShow"
+      : roundStatus;
 
   // Action label for display
   const actionLabel =
     actionType === "Cancel"
       ? "Cancelled"
       : actionType === "NoShow"
-        ? "Marked as No Show"
-        : "Rescheduled";
+      ? "Marked as No Show"
+      : "Rescheduled";
 
   useEffect(() => {
     if (!dateTime || !policyRoundStatus) return;
@@ -107,8 +107,8 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
           {actionType === "Cancel"
             ? "cancel"
             : actionType === "NoShow"
-              ? "mark as no show"
-              : "reschedule"}
+            ? "mark as no show"
+            : "reschedule"}
         </strong>{" "}
         a confirmed <strong>external interview</strong>.
       </p>
@@ -171,6 +171,11 @@ const DateChangeConfirmationModal = ({
   const [otherText, setOtherText] = useState("");
   const [roundOutcome, setRoundOutcome] = useState("");
 
+  console.log("selectedInterviewType", selectedInterviewType);
+  console.log("status", status);
+  console.log("combinedDateTime", combinedDateTime);
+  console.log("actionType", actionType);
+
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -195,20 +200,24 @@ const DateChangeConfirmationModal = ({
   const isWithdrawAction = actionType === "Withdraw";
 
   const requiresReason =
-    isCancelAction || isNoShowAction || isRejectAction || isEvaluatedAction || isWithdrawAction;
+    isCancelAction ||
+    isNoShowAction ||
+    isRejectAction ||
+    isEvaluatedAction ||
+    isWithdrawAction;
 
   // Get the appropriate options for the dropdown
   const reasonOptions = isCancelAction
     ? CANCEL_OPTIONS
     : isNoShowAction
-      ? NO_SHOW_OPTIONS
-      : isRejectAction
-        ? REJECT_OPTIONS
-        : isEvaluatedAction
-          ? EVALUATED_OPTIONS
-          : isWithdrawAction
-            ? WITHDRAW_OPTIONS
-            : [];
+    ? NO_SHOW_OPTIONS
+    : isRejectAction
+    ? REJECT_OPTIONS
+    : isEvaluatedAction
+    ? EVALUATED_OPTIONS
+    : isWithdrawAction
+    ? WITHDRAW_OPTIONS
+    : [];
 
   const dropdownOptions = reasonOptions.map((opt) => ({
     value: opt.value,
@@ -234,10 +243,10 @@ const DateChangeConfirmationModal = ({
 
     const payload = requiresReason
       ? {
-        reason: selectedReason,
-        comment: showOtherField ? otherText.trim() : undefined,
-        ...(isEvaluatedAction && { roundOutcome }),
-      }
+          reason: selectedReason,
+          comment: showOtherField ? otherText.trim() : undefined,
+          ...(isEvaluatedAction && { roundOutcome }),
+        }
       : {};
 
     if (onConfirm) onConfirm(payload);
@@ -293,65 +302,106 @@ const DateChangeConfirmationModal = ({
             isRejectAction ||
             isEvaluatedAction ||
             isWithdrawAction) && (
-              <>
-                {/* Show policy warning ONLY for External Cancel action */}
-                {isExternal && isCancelAction && (
-                  <SettlementPolicyWarning
-                    dateTime={combinedDateTime}
-                    roundStatus={status}
-                    actionType={actionType}
+            <>
+              {/* Show policy warning ONLY for External Cancel action */}
+              {isExternal && isCancelAction && (
+                <SettlementPolicyWarning
+                  dateTime={combinedDateTime}
+                  roundStatus={status}
+                  actionType={actionType}
+                />
+              )}
+
+              {/* For Internal, NoShow, Reject, or Evaluated show simple message */}
+              {(isInternal ||
+                isRejectAction ||
+                isNoShowAction ||
+                isEvaluatedAction) && (
+                <div className="text-sm text-gray-700 leading-relaxed">
+                  <p>
+                    You are about to{" "}
+                    <strong>
+                      {isCancelAction
+                        ? "cancel"
+                        : isNoShowAction
+                        ? "mark as no show"
+                        : isRejectAction
+                        ? "reject"
+                        : isWithdrawAction
+                        ? "withdraw"
+                        : "mark as evaluated"}
+                    </strong>{" "}
+                    this {isRejectAction ? "candidate" : "round"}.
+                  </p>
+                </div>
+              )}
+
+              {/* Reason Dropdown - Always show for these actions */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason for{" "}
+                  {isCancelAction
+                    ? "Cancellation"
+                    : isNoShowAction
+                    ? "No Show"
+                    : isRejectAction
+                    ? "Rejection"
+                    : isWithdrawAction
+                    ? "Withdrawal"
+                    : "Evaluation"}
+                </label>
+                <DropdownSelect
+                  options={dropdownOptions}
+                  value={
+                    dropdownOptions.find(
+                      (opt) => opt.value === selectedReason
+                    ) || null
+                  }
+                  onChange={(selectedOption) => {
+                    setSelectedReason(selectedOption?.value || "");
+                  }}
+                  placeholder="Select a reason"
+                  isClearable
+                  menuPortalTarget={document.body}
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
+                />
+              </div>
+
+              {/* Other reason text field */}
+              {showOtherField && (
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Specify other reason
+                  </label>
+                  <input
+                    type="text"
+                    value={otherText}
+                    onChange={(e) => setOtherText(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Enter reason..."
                   />
-                )}
+                </div>
+              )}
 
-                {/* For Internal, NoShow, Reject, or Evaluated show simple message */}
-                {(isInternal ||
-                  isRejectAction ||
-                  isNoShowAction ||
-                  isEvaluatedAction) && (
-                    <div className="text-sm text-gray-700 leading-relaxed">
-                      <p>
-                        You are about to{" "}
-                        <strong>
-                          {isCancelAction
-                            ? "cancel"
-                            : isNoShowAction
-                              ? "mark as no show"
-                              : isRejectAction
-                                ? "reject"
-                                : isWithdrawAction
-                                  ? "withdraw"
-                                  : "mark as evaluated"}
-                        </strong>{" "}
-                        this {isRejectAction ? "candidate" : "round"}.
-                      </p>
-                    </div>
-                  )}
-
-                {/* Reason Dropdown - Always show for these actions */}
+              {/* Round Outcome Dropdown - Only for Evaluated action */}
+              {isEvaluatedAction && (
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Reason for{" "}
-                    {isCancelAction
-                      ? "Cancellation"
-                      : isNoShowAction
-                        ? "No Show"
-                        : isRejectAction
-                          ? "Rejection"
-                          : isWithdrawAction
-                            ? "Withdrawal"
-                            : "Evaluation"}
+                    Round Outcome <span className="text-red-500">*</span>
                   </label>
                   <DropdownSelect
-                    options={dropdownOptions}
+                    options={ROUND_OUTCOME_OPTIONS}
                     value={
-                      dropdownOptions.find(
-                        (opt) => opt.value === selectedReason
+                      ROUND_OUTCOME_OPTIONS.find(
+                        (opt) => opt.value === roundOutcome
                       ) || null
                     }
                     onChange={(selectedOption) => {
-                      setSelectedReason(selectedOption?.value || "");
+                      setRoundOutcome(selectedOption?.value || "");
                     }}
-                    placeholder="Select a reason"
+                    placeholder="Select outcome"
                     isClearable
                     menuPortalTarget={document.body}
                     styles={{
@@ -359,113 +409,80 @@ const DateChangeConfirmationModal = ({
                     }}
                   />
                 </div>
-
-                {/* Other reason text field */}
-                {showOtherField && (
-                  <div className="mt-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Specify other reason
-                    </label>
-                    <input
-                      type="text"
-                      value={otherText}
-                      onChange={(e) => setOtherText(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                      placeholder="Enter reason..."
-                    />
-                  </div>
-                )}
-
-                {/* Round Outcome Dropdown - Only for Evaluated action */}
-                {isEvaluatedAction && (
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Round Outcome <span className="text-red-500">*</span>
-                    </label>
-                    <DropdownSelect
-                      options={ROUND_OUTCOME_OPTIONS}
-                      value={
-                        ROUND_OUTCOME_OPTIONS.find(
-                          (opt) => opt.value === roundOutcome
-                        ) || null
-                      }
-                      onChange={(selectedOption) => {
-                        setRoundOutcome(selectedOption?.value || "");
-                      }}
-                      placeholder="Select outcome"
-                      isClearable
-                      menuPortalTarget={document.body}
-                      styles={{
-                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                      }}
-                    />
-                  </div>
-                )}
-              </>
-            )}
+              )}
+            </>
+          )}
 
           {/* Simple Confirmation for Complete/Select */}
           {(actionType === "Complete" || actionType === "Select") && (
             <div className="text-sm text-gray-700 leading-relaxed">
               <p>
-                Are you sure you want to <strong>{actionType === "Complete" ? "complete" : "select"}</strong> this interview?
+                Are you sure you want to{" "}
+                <strong>
+                  {actionType === "Complete" ? "complete" : "select"}
+                </strong>{" "}
+                this interview?
               </p>
               {actionType === "Complete" && (
-                <p className="mt-2 text-gray-500 text-xs">This will mark all rounds as completed.</p>
+                <p className="mt-2 text-gray-500 text-xs">
+                  This will mark all rounds as completed.
+                </p>
               )}
             </div>
           )}
 
           {/* Reschedule/Date Change Actions (original behavior) */}
-          {!requiresReason && actionType !== "Complete" && actionType !== "Select" && (
-            <>
-              {/* Case 1: External + RequestSent */}
-              {isExternal && isRequestSent && (
-                <div className="text-sm text-gray-700 leading-relaxed space-y-4">
-                  <p>
-                    Interview invitations have already been successfully sent to
-                    the selected interviewers.
-                  </p>
-                  <p>
-                    Modifying the date, time, or interview type will{" "}
-                    <strong>automatically cancel</strong> all existing
-                    invitations.
-                  </p>
-                  <p>
-                    You will need to select new interviewers and send fresh
-                    invitations afterward.
-                  </p>
-                  <p className="font-medium">
-                    Are you sure you wish to proceed?
-                  </p>
-                </div>
-              )}
+          {!requiresReason &&
+            actionType !== "Complete" &&
+            actionType !== "Select" && (
+              <>
+                {/* Case 1: External + RequestSent */}
+                {isExternal && isRequestSent && (
+                  <div className="text-sm text-gray-700 leading-relaxed space-y-4">
+                    <p>
+                      Interview invitations have already been successfully sent
+                      to the selected interviewers.
+                    </p>
+                    <p>
+                      Modifying the date, time, or interview type will{" "}
+                      <strong>automatically cancel</strong> all existing
+                      invitations.
+                    </p>
+                    <p>
+                      You will need to select new interviewers and send fresh
+                      invitations afterward.
+                    </p>
+                    <p className="font-medium">
+                      Are you sure you wish to proceed?
+                    </p>
+                  </div>
+                )}
 
-              {/* Case 2: External + Scheduled/Reschedule → Show Policy */}
-              {isExternal && isScheduledOrReschedule && (
-                <SettlementPolicyWarning
-                  dateTime={combinedDateTime}
-                  roundStatus={status}
-                  actionType={null}
-                />
-              )}
+                {/* Case 2: External + Scheduled/Reschedule → Show Policy */}
+                {isExternal && isScheduledOrReschedule && (
+                  <SettlementPolicyWarning
+                    dateTime={combinedDateTime}
+                    roundStatus={status}
+                    actionType={null}
+                  />
+                )}
 
-              {/* Case 3: Internal Interview */}
-              {isInternal && (
-                <div className="text-sm text-gray-700 leading-relaxed space-y-4">
-                  <p>
-                    Changing the interview date, time, or type will remove the
-                    currently assigned interviewers.
-                  </p>
-                  <p>
-                    You will need to reselect interviewers to continue
-                    scheduling.
-                  </p>
-                  <p className="font-medium">Do you wish to proceed?</p>
-                </div>
-              )}
-            </>
-          )}
+                {/* Case 3: Internal Interview */}
+                {isInternal && (
+                  <div className="text-sm text-gray-700 leading-relaxed space-y-4">
+                    <p>
+                      Changing the interview date, time, or type will remove the
+                      currently assigned interviewers.
+                    </p>
+                    <p>
+                      You will need to reselect interviewers to continue
+                      scheduling.
+                    </p>
+                    <p className="font-medium">Do you wish to proceed?</p>
+                  </div>
+                )}
+              </>
+            )}
         </div>
 
         {/* Footer */}
@@ -481,10 +498,15 @@ const DateChangeConfirmationModal = ({
           <button
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
-            className={`px-6 py-2.5 rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isCancelAction || isNoShowAction || isEvaluatedAction || isRejectAction || isWithdrawAction
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-custom-blue text-white hover:bg-custom-blue/90"
-              }`}
+            className={`px-6 py-2.5 rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+              isCancelAction ||
+              isNoShowAction ||
+              isEvaluatedAction ||
+              isRejectAction ||
+              isWithdrawAction
+                ? "bg-red-600 text-white hover:bg-red-700"
+                : "bg-custom-blue text-white hover:bg-custom-blue/90"
+            }`}
           >
             {isLoading ? (
               <>
