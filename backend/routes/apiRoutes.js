@@ -49,6 +49,7 @@ const CandidatePosition = require("../models/CandidatePosition.js");
 const {
   CandidateAssessment,
 } = require("../models/Assessment/candidateAssessment.js");
+const { TenantCompany } = require("../models/TenantCompany/TenantCompany.js");
 // ------------------------------v1.0.7 >
 
 const { authContextMiddleware } = require("../middleware/authContext.js");
@@ -1897,12 +1898,20 @@ router.get(
           // Apply search
           if (searchQuery) {
             const searchRegex = new RegExp(searchQuery, "i");
+            // Search for matching company IDs by name (since companyname is an ObjectId reference)
+            const matchingCompanies = await TenantCompany.find({ name: searchRegex }).select('_id').lean();
+            const matchingCompanyIds = matchingCompanies.map(c => c._id);
+
             query.$or = [
               { title: searchRegex },
-              { companyname: searchRegex },
               { Location: searchRegex },
               { positionCode: searchRegex },
             ];
+
+            // Include company name search if any matching companies found
+            if (matchingCompanyIds.length > 0) {
+              query.$or.push({ companyname: { $in: matchingCompanyIds } });
+            }
           }
 
           // Apply location filter
@@ -1917,10 +1926,25 @@ router.get(
             query["skills.skill"] = { $in: techs };
           }
 
-          // Apply company filter
+          // Apply company filter - lookup company ObjectIds by name
           if (company) {
             const companies = Array.isArray(company) ? company : [company];
-            query.companyname = { $in: companies };
+            // Check if the values are already ObjectIds or company names
+            const isObjectId = (val) => mongoose.Types.ObjectId.isValid(val) && String(new mongoose.Types.ObjectId(val)) === val;
+            if (companies.every(isObjectId)) {
+              // If all values are valid ObjectIds, use them directly
+              query.companyname = { $in: companies.map(id => new mongoose.Types.ObjectId(id)) };
+            } else {
+              // Otherwise, lookup company ObjectIds by name
+              const companyDocs = await TenantCompany.find({ name: { $in: companies } }).select('_id').lean();
+              const companyIds = companyDocs.map(c => c._id);
+              if (companyIds.length > 0) {
+                query.companyname = { $in: companyIds };
+              } else {
+                // No matching companies found, set an impossible condition
+                query.companyname = { $in: [] };
+              }
+            }
           }
 
           // Apply experience filter
@@ -1972,22 +1996,72 @@ router.get(
           }
 
           // Fetch paginated data with sort
-          const positionData = await DataModel.find(query)
-            .populate({
-              path: "rounds.interviewers",
-              model: "Contacts",
-              select: "firstName lastName email",
-            })
-            .populate({
-              path: "companyname", // This is the field where you store the ID
-              model: "TenantCompany", // This must match your Company model name
-              select: "name industry", // Only fetch necessary fields
-            })
-            .sort({ _id: -1 })
-            // .sort({ createdAt: -1 })
-            .skip(positionSkip)
-            .limit(parsedPositionLimit)
-            .lean();
+          // Use aggregation to handle legacy data where companyname might be a string instead of ObjectId
+
+          // Convert string IDs to ObjectIds for aggregation (aggregation doesn't auto-cast like find())
+          const positionAggQuery = { ...query };
+          if (positionAggQuery.tenantId && typeof positionAggQuery.tenantId === 'string') {
+            positionAggQuery.tenantId = new mongoose.Types.ObjectId(positionAggQuery.tenantId);
+          }
+          if (positionAggQuery.ownerId && typeof positionAggQuery.ownerId === 'string') {
+            positionAggQuery.ownerId = new mongoose.Types.ObjectId(positionAggQuery.ownerId);
+          }
+
+          const positionData = await DataModel.aggregate([
+            { $match: positionAggQuery },
+            { $sort: { _id: -1 } },
+            { $skip: positionSkip },
+            { $limit: parsedPositionLimit },
+            // Lookup company only if companyname is a valid ObjectId
+            {
+              $lookup: {
+                from: "tenantcompanies",
+                let: { companyId: "$companyname" },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $eq: [{ $type: "$$companyId" }, "objectId"] },
+                          { $eq: ["$_id", "$$companyId"] }
+                        ]
+                      }
+                    }
+                  },
+                  { $project: { name: 1, industry: 1 } }
+                ],
+                as: "companyInfo"
+              }
+            },
+            // Also handle the case where companyname is a string (legacy data)
+            {
+              $addFields: {
+                companyname: {
+                  $cond: {
+                    if: { $gt: [{ $size: "$companyInfo" }, 0] },
+                    then: { $arrayElemAt: ["$companyInfo", 0] },
+                    else: {
+                      $cond: {
+                        if: { $eq: [{ $type: "$companyname" }, "string"] },
+                        then: { name: "$companyname", _id: null },
+                        else: "$companyname"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            { $unset: "companyInfo" },
+            // Lookup interviewers for rounds
+            {
+              $lookup: {
+                from: "contacts",
+                localField: "rounds.interviewers",
+                foreignField: "_id",
+                as: "interviewerDetails"
+              }
+            }
+          ]);
 
           // Get total count
           total = await DataModel.countDocuments(query);

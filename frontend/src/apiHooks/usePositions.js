@@ -35,7 +35,7 @@ export const usePositions = (filters = {}) => {
     },
     enabled: !!hasViewPermission,
     retry: 1,
-    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
+    staleTime: 1000 * 30, // 30 seconds - data stays fresh, then refetches on next access
     cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
     refetchOnWindowFocus: false, // Don't refetch when window regains focus
     // refetchOnMount: false, // Don't refetch when component mounts if data exists
@@ -82,10 +82,10 @@ export const usePositions = (filters = {}) => {
         // }
       });
 
-      // Invalidate to ensure consistency
-      queryClient.invalidateQueries(["positions"]);
+      // Invalidate to ensure consistency - force immediate refetch
+      queryClient.invalidateQueries({ queryKey: ["positions"], refetchType: 'all' });
       if (variables?.id) {
-        queryClient.invalidateQueries(["position", variables.id]);
+        queryClient.invalidateQueries({ queryKey: ["position", variables.id], refetchType: 'all' });
       }
     },
     onError: (error) => {
@@ -151,7 +151,7 @@ export const usePositions = (filters = {}) => {
       queryClient.invalidateQueries(["positions"]);
     },
 
-    onError: (error) => {},
+    onError: (error) => { },
   });
   // v1.0.0 ------------------------------------------------------------------------------>
 
