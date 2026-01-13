@@ -8,6 +8,7 @@ const {
 } = require("../validations/candidateValidation.js");
 const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Candidate } = require("../models/candidate.js");
+const { Resume } = require("../models/Resume.js");
 const { Interview } = require("../models/Interview/Interview.js");
 const {
   CandidateAssessment,
@@ -18,7 +19,7 @@ const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
 // Add a new Candidate
 const addCandidatePostCall = async (req, res) => {
   console.log("🚀 [addCandidatePostCall] Starting candidate creation process");
-  
+
   // Mark that logging will be handled by the controller
   res.locals.loggedByController = true;
   res.locals.processName = "Create Candidate";
@@ -26,7 +27,7 @@ const addCandidatePostCall = async (req, res) => {
 
   try {
     console.log("📝 [addCandidatePostCall] Validating request body:", req.body);
-    
+
     // Joi validation
     const { isValid, errors } = validateCandidateData(req.body);
     if (!isValid) {
@@ -37,7 +38,7 @@ const addCandidatePostCall = async (req, res) => {
         errors,
       });
     }
-    
+
     console.log("✅ [addCandidatePostCall] Validation passed");
 
     const {
@@ -72,7 +73,7 @@ const addCandidatePostCall = async (req, res) => {
         context: "Missing owner identification",
       });
     }
-    
+
     console.log("✅ [addCandidatePostCall] Owner validation passed");
 
     //res.locals.loggedByController = true;
@@ -86,6 +87,7 @@ const addCandidatePostCall = async (req, res) => {
     //   }
     //-----v1.0.1--->
 
+    // Create candidate with only personal info fields
     newCandidate = new Candidate({
       FirstName,
       LastName,
@@ -95,14 +97,6 @@ const addCandidatePostCall = async (req, res) => {
       CountryCode,
       Date_Of_Birth,
       Gender,
-      HigherQualification,
-      UniversityCollege,
-      CurrentExperience, // CurrentExperience is related to total experience in Ui mentioned.
-      CurrentRole,
-      RelevantExperience,
-      // Technology,
-      skills,
-      PositionId,
       ownerId,
       tenantId,
       createdBy: ownerId,
@@ -111,6 +105,32 @@ const addCandidatePostCall = async (req, res) => {
     await newCandidate.save();
 
     console.log('✅ [addCandidatePostCall] Candidate saved successfully');
+
+    // Create Resume with professional/resume-related fields
+    const { ImageData, resume: resumeFile, source } = req.body;
+
+    const newResume = new Resume({
+      candidateId: newCandidate._id,
+      fileUrl: resumeFile?.path || null,
+      HigherQualification,
+      UniversityCollege,
+      CurrentExperience,
+      RelevantExperience,
+      CurrentRole,
+      skills,
+      ImageData,
+      resume: resumeFile,
+      source: source || "MANUAL",
+      isActive: true,
+      uploadedAt: new Date(),
+      ownerId,
+      tenantId,
+      createdBy: ownerId,
+    });
+
+    await newResume.save();
+
+    console.log('✅ [addCandidatePostCall] Resume saved successfully');
 
     // Generate feed
     res.locals.feedData = {
@@ -295,15 +315,25 @@ const updateCandidatePatchCall = async (req, res) => {
       });
     }
 
-    // Perform the update
-    const updateData = {
-      ...updateFields,
-      updatedBy: ownerId,
-    };
+    // Separate candidate fields and resume fields
+    const candidateFields = ['FirstName', 'LastName', 'Email', 'Phone', 'CountryCode', 'Date_Of_Birth', 'Gender', 'externalId'];
+    const resumeFields = ['HigherQualification', 'UniversityCollege', 'CurrentExperience', 'RelevantExperience', 'CurrentRole', 'skills', 'ImageData', 'resume', 'source'];
 
+    const candidateUpdateData = { updatedBy: ownerId };
+    const resumeUpdateData = { updatedBy: ownerId };
+
+    Object.keys(updateFields).forEach(key => {
+      if (candidateFields.includes(key)) {
+        candidateUpdateData[key] = updateFields[key];
+      } else if (resumeFields.includes(key)) {
+        resumeUpdateData[key] = updateFields[key];
+      }
+    });
+
+    // Update Candidate
     const updatedCandidate = await Candidate.findByIdAndUpdate(
       candidateId,
-      updateData,
+      candidateUpdateData,
       { new: true, runValidators: true }
     );
 
@@ -311,6 +341,16 @@ const updateCandidatePatchCall = async (req, res) => {
       return res
         .status(404)
         .json({ message: "Candidate not found after update" });
+    }
+
+    // Update or create Resume if resume fields are present
+    if (Object.keys(resumeUpdateData).length > 1) {
+      await Resume.findOneAndUpdate(
+        { candidateId, isActive: true },
+        { $set: resumeUpdateData },
+        { new: true, upsert: true }
+      );
+      console.log('✅ [updateCandidatePatchCall] Resume updated successfully');
     }
 
     // Generate feed
@@ -393,43 +433,113 @@ const getCandidatesData = async (req, res) => {
     const skip = parseInt(page) * parseInt(limit);
     const limitNum = parseInt(limit);
 
-    // Build query efficiently
-    let query = { tenantId: req.tenantId };
+    // Build base candidate query
+    let candidateQuery = { tenantId: req.tenantId };
 
     // Search optimization - use text index
     if (search) {
-      query.$text = { $search: search };
+      candidateQuery.$text = { $search: search };
     }
 
-    // Filter optimizations
+    // Use aggregation to join with Resume collection
+    const pipeline = [
+      { $match: candidateQuery },
+      // Lookup active resume for each candidate
+      {
+        $lookup: {
+          from: "resume",
+          let: { candidateId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$candidateId", "$$candidateId"] },
+                    { $eq: ["$isActive", true] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: "activeResume"
+        }
+      },
+      // Unwind the resume (will be null if no active resume)
+      {
+        $unwind: {
+          path: "$activeResume",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+    ];
+
+    // Add resume-based filters
     if (status) {
-      query.HigherQualification = { $in: status.split(",") };
+      pipeline.push({
+        $match: { "activeResume.HigherQualification": { $in: status.split(",") } }
+      });
     }
 
     if (tech) {
-      query["skills.skill"] = { $in: tech.split(",") };
+      pipeline.push({
+        $match: { "activeResume.skills.skill": { $in: tech.split(",") } }
+      });
     }
 
     if (minExperience || maxExperience) {
-      query.CurrentExperience = {};
-      if (minExperience) query.CurrentExperience.$gte = parseInt(minExperience);
-      if (maxExperience) query.CurrentExperience.$lte = parseInt(maxExperience);
+      const expMatch = {};
+      if (minExperience) expMatch.$gte = parseInt(minExperience);
+      if (maxExperience) expMatch.$lte = parseInt(maxExperience);
+      pipeline.push({
+        $match: { "activeResume.CurrentExperience": expMatch }
+      });
     }
 
-    // Add other filters similarly...
+    // Project the fields we need - with fallback to legacy candidate fields
+    pipeline.push({
+      $project: {
+        FirstName: 1,
+        LastName: 1,
+        Email: 1,
+        Phone: 1,
+        createdAt: 1,
+        // Resume fields with fallback to legacy candidate fields (for backward compatibility)
+        CurrentExperience: { $ifNull: ["$activeResume.CurrentExperience", "$CurrentExperience"] },
+        skills: { $ifNull: ["$activeResume.skills", "$skills"] },
+        HigherQualification: { $ifNull: ["$activeResume.HigherQualification", "$HigherQualification"] },
+        ImageData: { $ifNull: ["$activeResume.ImageData", "$ImageData"] },
+        CurrentRole: { $ifNull: ["$activeResume.CurrentRole", "$CurrentRole"] },
+      }
+    });
 
-    // Get total count (can be optimized with estimatedDocumentsCount for large datasets)
-    const total = await Candidate.countDocuments(query);
+    // Sort, skip, and limit
+    pipeline.push(
+      { $sort: { _id: -1 } },
+      { $skip: skip },
+      { $limit: limitNum }
+    );
 
-    // Fetch paginated data with only needed fields
-    const candidates = await Candidate.find(query)
-      .select(
-        "FirstName LastName Email Phone CurrentExperience skills HigherQualification ImageData createdAt CurrentRole"
-      )
-      .sort({ _id: -1 })
-      .skip(skip)
-      .limit(limitNum)
-      .lean(); // Use lean for better performance
+    // Get total count
+    const countPipeline = pipeline.slice(0, pipeline.findIndex(p => p.$sort));
+    countPipeline.push({ $count: "total" });
+
+    const [candidates, countResult] = await Promise.all([
+      Candidate.aggregate(pipeline),
+      Candidate.aggregate(countPipeline)
+    ]);
+
+    // Debug logging
+    console.log('📊 [getCandidatesData] Pipeline results:', {
+      candidatesCount: candidates.length,
+      firstCandidate: candidates[0] ? {
+        _id: candidates[0]._id,
+        FirstName: candidates[0].FirstName,
+        skills: candidates[0].skills,
+        HigherQualification: candidates[0].HigherQualification,
+      } : 'No candidates'
+    });
+
+    const total = countResult[0]?.total || 0;
 
     res.json({
       data: candidates,
@@ -451,12 +561,12 @@ const searchCandidates = async (req, res) => {
   try {
     const { search, filters = {}, limit = 50 } = req.body;
 
-    let query = { tenantId: req.tenantId };
+    let candidateMatch = { tenantId: req.tenantId };
 
     if (search) {
       // Use regex for partial matching - consider text index for better performance
       const searchRegex = new RegExp(search, "i");
-      query.$or = [
+      candidateMatch.$or = [
         { FirstName: searchRegex },
         { LastName: searchRegex },
         { Email: searchRegex },
@@ -464,17 +574,49 @@ const searchCandidates = async (req, res) => {
       ];
     }
 
-    // Apply filters
-    Object.keys(filters).forEach((key) => {
-      if (filters[key]) {
-        query[key] = filters[key];
-      }
-    });
+    // Use aggregation to join with Resume collection
+    const pipeline = [
+      { $match: candidateMatch },
+      // Lookup active resume
+      {
+        $lookup: {
+          from: "resume",
+          let: { candidateId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$candidateId", "$$candidateId"] },
+                    { $eq: ["$isActive", true] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: "activeResume"
+        }
+      },
+      {
+        $unwind: {
+          path: "$activeResume",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      // Project fields with resume data
+      {
+        $project: {
+          FirstName: 1,
+          LastName: 1,
+          Email: 1,
+          Phone: 1,
+          CurrentExperience: "$activeResume.CurrentExperience"
+        }
+      },
+      { $limit: parseInt(limit) }
+    ];
 
-    const results = await Candidate.find(query)
-      .select("FirstName LastName Email Phone CurrentExperience")
-      .limit(parseInt(limit))
-      .lean();
+    const results = await Candidate.aggregate(pipeline);
 
     res.json({ data: results });
   } catch (error) {
@@ -526,22 +668,45 @@ const getCandidateById = async (req, res) => {
       : { _id: id };
 
     const candidate = await Candidate.findOne(query)
-      // .populate("CurrentRole", "roleName roleLabel")
       .lean();
-
-    const role = await RoleMaster.findOne({ roleName: candidate.CurrentRole })
-      .select("roleName roleLabel")
-      .lean();
-
-    candidate.roleDetails = role || null;
-
-    // console.log("candidate", candidate);
 
     if (!candidate) {
       return res.status(404).json({ message: "Candidate not found" });
     }
 
-    res.status(200).json(candidate);
+    // Fetch active resume for the candidate
+    const activeResume = await Resume.findOne({
+      candidateId: id,
+      isActive: true
+    }).lean();
+
+    // Get role details from resume's CurrentRole
+    let roleDetails = null;
+    if (activeResume?.CurrentRole) {
+      roleDetails = await RoleMaster.findOne({ roleName: activeResume.CurrentRole })
+        .select("roleName roleLabel")
+        .lean();
+    }
+
+    // Combine candidate with active resume data
+    const response = {
+      ...candidate,
+      // Include resume fields for backward compatibility
+      ...(activeResume && {
+        HigherQualification: activeResume.HigherQualification,
+        UniversityCollege: activeResume.UniversityCollege,
+        CurrentExperience: activeResume.CurrentExperience,
+        RelevantExperience: activeResume.RelevantExperience,
+        CurrentRole: activeResume.CurrentRole,
+        skills: activeResume.skills,
+        ImageData: activeResume.ImageData,
+        resume: activeResume.resume,
+      }),
+      roleDetails,
+      activeResume, // Include full resume object as well
+    };
+
+    res.status(200).json(response);
   } catch (error) {
     console.error("🔥 [getCandidateById] Error:", error);
     res

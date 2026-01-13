@@ -47,7 +47,7 @@ const saveInterviewRound = async (req, res) => {
   try {
     const { roundId, interviewId, round, questions } = req.body;
 
-    console.log("req.bodyround", round);
+    // console.log("req.bodyround", round);
 
     if (!interviewId || !round) {
       return res
@@ -411,7 +411,7 @@ const updateInterviewRound = async (req, res) => {
 
   let roundIdParam = req.params.roundId;
 
-  console.log("req.bodyround", req.body);
+  // console.log("req.bodyround", req.body);
 
   if (!mongoose.Types.ObjectId.isValid(roundIdParam)) {
     return res.status(400).json({ message: "Invalid roundId" });
@@ -1744,6 +1744,15 @@ async function buildSmartRoundUpdate({
 
   const now = new Date();
 
+  console.log("existingRound", {
+    existingRound,
+    body,
+    actingAsUserId,
+    changes,
+    isCreate,
+    statusChanged,
+  });
+
   /* ---------------- Helpers ---------------- */
 
   const resolveComment = (reasonCode, comment) =>
@@ -1969,21 +1978,6 @@ async function handleInterviewerRequestFlow({
 
   const interview = await Interview.findById(interviewId).lean();
   if (!interview) return;
-
-  // console.log("body", {
-  //   interviewId,
-  //   round,
-  //   selectedInterviewers,
-  //   cancelOldRequests,
-  // });
-
-  // 1️⃣ Cancel old requests (PATCH only)
-  // if (cancelOldRequests) {
-  //   await InterviewRequest.updateMany(
-  //     { roundId: round._id, status: "inprogress" },
-  //     { status: "withdrawn", respondedAt: new Date() }
-  //   );
-  // }
 
   const resolveInterviewerId = (interviewer) =>
     interviewer?.contact?._id || interviewer?._id;

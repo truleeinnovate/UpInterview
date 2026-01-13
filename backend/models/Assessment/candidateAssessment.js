@@ -45,7 +45,7 @@
 //     totalScore: Number,
 //     passScore: Number,
 //     sectionResult: { type: String, enum: ['pass', 'fail'] },
-    
+
 // });
 
 // const CandidateAssessmentSchema = new mongoose.Schema({
@@ -71,7 +71,7 @@
 //     remainingTime: { type: Number, default: null }, // Time left in seconds
 //     lastSelectedSection:{type:Number}
 
- 
+
 // },{timestamps:true});
 
 
@@ -82,12 +82,15 @@
 
 const mongoose = require('mongoose');
 
-const AnswerSchema = new mongoose.Schema({ 
-    questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'assessmentQuestions', required: true },
+const AnswerSchema = new mongoose.Schema({
+    questionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },//this will store selcted assessment question id not question bank id
     userAnswer: {
         type: mongoose.Schema.Types.Mixed,
         required: true,
-        set: function(answer) {
+        set: function (answer) {
             // If it's an object (like from interview questions), stringify it
             if (typeof answer === 'object' && answer !== null) {
                 return JSON.stringify(answer);
@@ -95,7 +98,7 @@ const AnswerSchema = new mongoose.Schema({
             // If it's already a string, return as is
             return answer;
         },
-        get: function(answer) {
+        get: function (answer) {
             try {
                 // Try to parse the answer if it's a JSON string
                 return JSON.parse(answer);
@@ -107,7 +110,7 @@ const AnswerSchema = new mongoose.Schema({
     },
     correctAnswer: {
         type: mongoose.Schema.Types.Mixed,
-        set: function(answer) {
+        set: function (answer) {
             if (answer === undefined || answer === null) return undefined;
             // If it's an object, stringify it
             if (typeof answer === 'object') {
@@ -115,7 +118,7 @@ const AnswerSchema = new mongoose.Schema({
             }
             return answer;
         },
-        get: function(answer) {
+        get: function (answer) {
             if (answer === undefined || answer === null) return undefined;
             try {
                 return JSON.parse(answer);
@@ -129,7 +132,7 @@ const AnswerSchema = new mongoose.Schema({
     isAnswerLater: { type: Boolean, default: false },
     submittedAt: { type: Date, default: Date.now },
     notes: { type: String } // For backward compatibility with interview questions
-},{ 
+}, {
     timestamps: true,
     toJSON: { getters: true }, // Apply getters when converting to JSON
     toObject: { getters: true } // Apply getters when converting to object
@@ -141,7 +144,7 @@ const sectionSchema = new mongoose.Schema({
     totalScore: Number,
     passScore: Number,
     sectionResult: { type: String, enum: ['pass', 'fail'] },
-    
+
 });
 
 const CandidateAssessmentSchema = new mongoose.Schema({
@@ -151,30 +154,30 @@ const CandidateAssessmentSchema = new mongoose.Schema({
         type: String,
         // enum: ['pending', 'in_progress', 'completed', 'cancelled', 'failed','pass', 'rescheduled'],
         // <-------------------------------v1.0.1
-        enum: ['pending', 'in_progress', 'completed', 'cancelled', 'failed','pass', 'extended',"expired"],
+        enum: ['pending', 'in_progress', 'completed', 'cancelled', 'failed', 'pass', 'extended', "expired"],
         // ------------------------------v1.0.1 >
         default: 'pending'
     },
     isActive: { type: Boolean, default: true }, // Control individual schedules
-    assessmentLink: { type: String},
+    assessmentLink: { type: String },
     expiryAt: { type: Date, required: true },
     startedAt: { type: Date },
     endedAt: { type: Date },
     progress: { type: Number, default: 0 },
     totalScore: { type: Number, default: 0 },
     rescheduledTo: { type: mongoose.Schema.Types.ObjectId, ref: 'CandidateAssessment' },
-       // <-------------------------------v1.0.0
+    // <-------------------------------v1.0.0
     // createdAt: { type: Date, default: Date.now },   
- // ------------------------------v1.0.0 > 
+    // ------------------------------v1.0.0 > 
     completionTime: { type: String },
     sections: [sectionSchema],
     remainingTime: { type: Number, default: null }, // Time left in seconds
-    lastSelectedSection:{type:Number}
+    lastSelectedSection: { type: Number }
 
- 
-},{timestamps:true});
+
+}, { timestamps: true });
 
 
 const CandidateAssessment = mongoose.model('CandidateAssessment', CandidateAssessmentSchema)
 
-module.exports = {CandidateAssessment}
+module.exports = { CandidateAssessment }

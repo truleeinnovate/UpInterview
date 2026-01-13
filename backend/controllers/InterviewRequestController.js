@@ -21,45 +21,7 @@ const {
 //this will create agenda when round schedule based on round date time more than 20 mins interviwer or candidate no joined means it will update no show
 const { scheduleOrRescheduleNoShow } = require("../services/interviews/roundNoShowScheduler");
 
-//old mansoor code i have changed this code because each interviwer send one request
 
-// exports.createRequest = async (req, res) => {
-//     try {
-//         const {
-//             tenantId, ownerId, scheduledInterviewId, interviewerType,
-//             dateTime, duration, interviewerIds, candidateId,
-//             positionId, status, roundId, requestMessage, expiryDateTime
-//         } = req.body;
-
-//         // const formattedInterviewerIds = interviewerIds.map(interviewer => ({
-//         //     id: mongoose.isValidObjectId(interviewer.id) ? new mongoose.Types.ObjectId(interviewer.id) : null,
-//         //     status: interviewer.status || "inprogress"
-//         // })).filter(interviewer => interviewer.id !== null);
-
-//         const newRequest = new OutsourceInterviewRequest({
-//             tenantId: new mongoose.Types.ObjectId(tenantId),
-//             ownerId,
-//             scheduledInterviewId: new mongoose.Types.ObjectId(scheduledInterviewId),
-//             interviewerType,
-//             interviewerIds: interviewerIds,
-//             dateTime,
-//             duration,
-//             candidateId,
-//             positionId,
-//             status,
-//             // roundNumber,
-//             roundId,
-//             requestMessage,
-//             expiryDateTime,
-//         });
-
-//         await newRequest.save();
-//         res.status(201).json({ message: 'Interview request created successfully', data: newRequest });
-//     } catch (error) {
-//         console.error('Error creating interview request:', error);
-//         res.status(500).json({ message: 'Internal server error', error: error.message });
-//     }
-// };
 
 // each interviwer send one request
 
@@ -84,7 +46,7 @@ exports.createRequest = async (req, res) => {
       requestMessage,
       expiryDateTime,
       isMockInterview,
-      contactId,
+      // contactId,
     } = req.body;
     const isInternal = interviewerType === "Internal";
 
@@ -104,7 +66,9 @@ exports.createRequest = async (req, res) => {
         ? undefined
         : new mongoose.Types.ObjectId(scheduledInterviewId),
       interviewerType,
-      contactId: new mongoose.Types.ObjectId(contactId),
+      // contactId: isMockInterview
+      //   ? undefined
+      //   : new mongoose.Types.ObjectId(contactId),
       interviewerId: new mongoose.Types.ObjectId(interviewerId), // Save interviewerId instead of an array
       dateTime,
       duration,

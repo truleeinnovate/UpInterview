@@ -45,15 +45,17 @@ const positionSchema = new mongoose.Schema(
     jobDescription: String,
     minexperience: Number,
     maxexperience: Number,
-    templateId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "InterviewTemplate",
-    },
+    templateId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewTemplate' },
     skills: [
       {
         skill: String,
         experience: String,
         expertise: String,
+        requirement_level: {
+          type: String,
+          enum: ['REQUIRED', 'PREFERRED', 'NICE_TO_HAVE', 'OPTIONAL'],
+          default: 'REQUIRED'
+        }
       },
     ],
     additionalNotes: String,
@@ -66,11 +68,7 @@ const positionSchema = new mongoose.Schema(
     maxSalary: String,
     // EmployementType:String,
     NoofPositions: Number,
-    status: {
-      type: String,
-      enum: ["draft", "opened", "closed", "hold", "cancelled"],
-      default: "draft",
-    },
+    status: { type: String, enum: ["draft", "opened", "closed", "hold", "cancelled"], default: "draft" },
     Location: String,
     // workMode:String,
 

@@ -32,6 +32,7 @@ const SkillsField = forwardRef(
 
       onOpenSkills,
       showValidation = false, // New prop to control when validation errors are shown
+      showRequirementLevel = false, // New prop to show/hide Requirement Level dropdown (only for Position)
     },
     ref
   ) => {
@@ -53,6 +54,14 @@ const SkillsField = forwardRef(
       "8-9 Years",
       "9-10 Years",
       "10+ Years",
+    ];
+
+    // Requirement Level options - backend stores value, frontend shows label
+    const requirementLevelOptions = [
+      { value: "REQUIRED", label: "Must-Have" },
+      { value: "PREFERRED", label: "Preferred" },
+      { value: "NICE_TO_HAVE", label: "Good to Have" },
+      { value: "OPTIONAL", label: "Optional" },
     ];
 
     const confirmDelete = () => {
@@ -258,7 +267,7 @@ const SkillsField = forwardRef(
             <div key={index}>
               <div className={`border p-2 rounded-lg bg-gray-100 w-full flex`}>
                 <>
-                  <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 bg-white rounded w-full p-2 mr-3 gap-2">
+                  <div className={`grid grid-cols-1 ${showRequirementLevel ? 'lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4' : 'lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3'} bg-white rounded w-full p-2 mr-3 gap-2`}>
                     <div className="px-1">
                       <DropdownWithSearchField
                         options={getAvailableSkillsForRow(index).map((s) => ({
@@ -349,6 +358,29 @@ const SkillsField = forwardRef(
                         </span>
                       )}
                     </div>
+                    {showRequirementLevel && (
+                      <div className="px-1">
+                        <DropdownSelect
+                          options={requirementLevelOptions}
+                          isSearchable={false}
+                          value={
+                            requirementLevelOptions.find(
+                              (o) => o.value === entry.requirement_level
+                            ) || requirementLevelOptions[0]
+                          }
+                          onChange={(opt) => {
+                            if (onUpdateEntry) {
+                              onUpdateEntry(index, {
+                                ...entry,
+                                requirement_level: opt?.value || "REQUIRED",
+                              });
+                            }
+                          }}
+                          placeholder="Requirement Level"
+                          classNamePrefix="rs"
+                        />
+                      </div>
+                    )}
                   </div>
                   {/* Only show delete button for rows beyond the 3rd row */}
                   {entries.length > 3 && (

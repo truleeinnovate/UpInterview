@@ -483,10 +483,10 @@ router.get(
               rounds,
               roleDetails: roleInfo
                 ? {
-                    roleName: roleInfo.roleName,
-                    roleLabel: roleInfo.roleLabel,
-                    roleCategory: roleInfo.roleCategory,
-                  }
+                  roleName: roleInfo.roleName,
+                  roleLabel: roleInfo.roleLabel,
+                  roleCategory: roleInfo.roleCategory,
+                }
                 : null,
             };
           });
@@ -501,9 +501,8 @@ router.get(
 
               return interviewers.some((int) => {
                 if (!int) return false;
-                const fullName = `${int.firstName || ""} ${
-                  int.lastName || ""
-                }`.trim();
+                const fullName = `${int.firstName || ""} ${int.lastName || ""
+                  }`.trim();
                 return mockInterviewer.includes(fullName);
               });
             });
@@ -1317,8 +1316,8 @@ router.get(
                 createdDate === "last7"
                   ? 7
                   : createdDate === "last30"
-                  ? 30
-                  : 90;
+                    ? 30
+                    : 90;
               const date = new Date();
               date.setDate(date.getDate() - days);
               Basequery.createdAt = { $gte: date };
@@ -2266,7 +2265,6 @@ router.get(
           } = req.query;
 
           const parsedCandidatePage = parseInt(candidatePage) || 1;
-          // const parsedCandidateLimit = candidateLimit;
 
           // Parse candidateLimit - handle "infinity" or other non-numeric values
           let parsedCandidateLimit;
@@ -2277,19 +2275,69 @@ router.get(
           ) {
             parsedCandidateLimit = 0; // 0 means no limit in MongoDB
           } else {
-            parsedCandidateLimit = candidateLimit; // Default to 10 if not provided
+            parsedCandidateLimit = parseInt(candidateLimit) || 10;
           }
 
           const candidateSkip =
             (parsedCandidatePage - 1) * (parsedCandidateLimit || 0);
 
-          // const candidateSkip =
-          //   (parsedCandidatePage - 1) * parsedCandidateLimit;
+          // Convert tenantId to ObjectId for aggregation (aggregate doesn't auto-cast like find)
+          const aggregationQuery = { ...query };
+          if (aggregationQuery.tenantId && typeof aggregationQuery.tenantId === 'string') {
+            aggregationQuery.tenantId = new mongoose.Types.ObjectId(aggregationQuery.tenantId);
+          }
+          if (aggregationQuery.ownerId && typeof aggregationQuery.ownerId === 'string') {
+            aggregationQuery.ownerId = new mongoose.Types.ObjectId(aggregationQuery.ownerId);
+          }
 
-          // Apply search
+          // Build aggregation pipeline for candidate with Resume join
+          const candidatePipeline = [
+            { $match: aggregationQuery },
+            // Lookup active resume for each candidate
+            {
+              $lookup: {
+                from: "resume",
+                let: { candidateId: "$_id" },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $eq: ["$candidateId", "$$candidateId"] },
+                          { $eq: ["$isActive", true] }
+                        ]
+                      }
+                    }
+                  }
+                ],
+                as: "activeResume"
+              }
+            },
+            // Unwind resume (preserveNullAndEmptyArrays for candidates without resume)
+            {
+              $unwind: {
+                path: "$activeResume",
+                preserveNullAndEmptyArrays: true
+              }
+            },
+            // Add computed fields with fallback to legacy data
+            {
+              $addFields: {
+                skills: { $ifNull: ["$activeResume.skills", "$skills"] },
+                CurrentExperience: { $ifNull: ["$activeResume.CurrentExperience", "$CurrentExperience"] },
+                HigherQualification: { $ifNull: ["$activeResume.HigherQualification", "$HigherQualification"] },
+                RelevantExperience: { $ifNull: ["$activeResume.RelevantExperience", "$RelevantExperience"] },
+                CurrentRole: { $ifNull: ["$activeResume.CurrentRole", "$CurrentRole"] },
+                UniversityCollege: { $ifNull: ["$activeResume.UniversityCollege", "$UniversityCollege"] },
+                ImageData: { $ifNull: ["$activeResume.ImageData", "$ImageData"] },
+              }
+            }
+          ];
+
+          // Apply search filter
           if (candidateSearch) {
             const searchRegex = new RegExp(candidateSearch, "i");
-            query.$or = [
+            candidatePipeline[0].$match.$or = [
               { FirstName: searchRegex },
               { LastName: searchRegex },
               { Email: searchRegex },
@@ -2297,81 +2345,86 @@ router.get(
             ];
           }
 
-          // Apply filters
+          // Apply filters on Resume fields (after lookup)
+          const postLookupFilters = {};
+
           if (candidateStatus) {
-            const statuses = Array.isArray(candidateStatus)
-              ? candidateStatus
-              : [candidateStatus];
-            query.HigherQualification = { $in: statuses };
+            const statuses = Array.isArray(candidateStatus) ? candidateStatus : [candidateStatus];
+            postLookupFilters.HigherQualification = { $in: statuses };
           }
 
           if (candidateTech) {
-            const techs = Array.isArray(candidateTech)
-              ? candidateTech
-              : [candidateTech];
-            query["skills.skill"] = { $in: techs };
+            const techs = Array.isArray(candidateTech) ? candidateTech : [candidateTech];
+            postLookupFilters["skills.skill"] = { $in: techs };
           }
 
           const candidateExpMin = parseInt(candidateExperienceMin) || 0;
           const candidateExpMax = parseInt(candidateExperienceMax) || Infinity;
           if (candidateExpMin > 0 || candidateExpMax < Infinity) {
-            query.CurrentExperience = {};
-            if (candidateExpMin > 0)
-              query.CurrentExperience.$gte = candidateExpMin;
-            if (candidateExpMax < Infinity)
-              query.CurrentExperience.$lte = candidateExpMax;
+            postLookupFilters.CurrentExperience = {};
+            if (candidateExpMin > 0) postLookupFilters.CurrentExperience.$gte = candidateExpMin;
+            if (candidateExpMax < Infinity) postLookupFilters.CurrentExperience.$lte = candidateExpMax;
           }
 
-          const candidateRelExpMin =
-            parseInt(candidateRelevantExperienceMin) || 0;
-          const candidateRelExpMax =
-            parseInt(candidateRelevantExperienceMax) || Infinity;
+          const candidateRelExpMin = parseInt(candidateRelevantExperienceMin) || 0;
+          const candidateRelExpMax = parseInt(candidateRelevantExperienceMax) || Infinity;
           if (candidateRelExpMin > 0 || candidateRelExpMax < Infinity) {
-            query.RelevantExperience = {};
-            if (candidateRelExpMin > 0)
-              query.RelevantExperience.$gte = candidateRelExpMin;
-            if (candidateRelExpMax < Infinity)
-              query.RelevantExperience.$lte = candidateRelExpMax;
+            postLookupFilters.RelevantExperience = {};
+            if (candidateRelExpMin > 0) postLookupFilters.RelevantExperience.$gte = candidateRelExpMin;
+            if (candidateRelExpMax < Infinity) postLookupFilters.RelevantExperience.$lte = candidateRelExpMax;
           }
 
           if (candidateRoles) {
-            const roleList = Array.isArray(candidateRoles)
-              ? candidateRoles
-              : [candidateRoles];
-            query.CurrentRole = { $in: roleList };
+            const roleList = Array.isArray(candidateRoles) ? candidateRoles : [candidateRoles];
+            postLookupFilters.CurrentRole = { $in: roleList };
           }
 
           if (candidateUniversities) {
-            const uniList = Array.isArray(candidateUniversities)
-              ? candidateUniversities
-              : [candidateUniversities];
-            query.UniversityCollege = { $in: uniList };
+            const uniList = Array.isArray(candidateUniversities) ? candidateUniversities : [candidateUniversities];
+            postLookupFilters.UniversityCollege = { $in: uniList };
           }
 
           if (candidateCreatedDate === "last7") {
             const date = new Date();
             date.setDate(date.getDate() - 7);
-            query.createdAt = { $gte: date };
+            postLookupFilters.createdAt = { $gte: date };
           } else if (candidateCreatedDate === "last30") {
             const date = new Date();
             date.setDate(date.getDate() - 30);
-            query.createdAt = { $gte: date };
+            postLookupFilters.createdAt = { $gte: date };
           }
 
-          // Fetch paginated data with sort
-          const candidateData = await Candidate.find(query)
-            .sort({ _id: -1 })
-            .skip(candidateSkip)
-            .limit(parsedCandidateLimit)
-            .lean();
+          // Add post-lookup filters if any
+          if (Object.keys(postLookupFilters).length > 0) {
+            candidatePipeline.push({ $match: postLookupFilters });
+          }
 
-          // Fetch role labels for both CurrentRole and Technology
-          const allRoles = await RoleMaster.find(
-            {},
-            { roleName: 1, roleLabel: 1 }
-          ).lean();
+          // Debug logging
+          console.log('[Candidate API] Aggregation query:', JSON.stringify(aggregationQuery));
+          console.log('[Candidate API] Post-lookup filters:', JSON.stringify(postLookupFilters));
+          console.log('[Candidate API] Pipeline length:', candidatePipeline.length);
 
-          // Map: roleName → roleLabel
+          // Get total count before pagination
+          const countPipeline = [...candidatePipeline, { $count: "total" }];
+          const countResult = await Candidate.aggregate(countPipeline);
+          total = countResult[0]?.total || 0;
+
+          console.log('[Candidate API] Total count:', total);
+
+          // Add sorting and pagination
+          candidatePipeline.push(
+            { $sort: { _id: -1 } },
+            { $skip: candidateSkip }
+          );
+          if (parsedCandidateLimit > 0) {
+            candidatePipeline.push({ $limit: parsedCandidateLimit });
+          }
+
+          // Execute aggregation
+          const candidateData = await Candidate.aggregate(candidatePipeline);
+
+          // Fetch role labels
+          const allRoles = await RoleMaster.find({}, { roleName: 1, roleLabel: 1 }).lean();
           const roleMap = {};
           allRoles.forEach((r) => {
             roleMap[r.roleName] = r.roleLabel;
@@ -2382,11 +2435,6 @@ router.get(
             c.currentRoleLabel = roleMap[c.CurrentRole] || null;
             c.technologyLabel = roleMap[c.Technology] || null;
           });
-
-          // console.log("Candidate", candidateData);
-
-          // Get total count
-          total = await Candidate.countDocuments(query);
 
           dataObj = {
             candidate: candidateData,
@@ -2708,8 +2756,8 @@ async function handleInterviewFiltering(options) {
     const roundIds = rounds.map((r) => r._id);
     const questions = roundIds.length
       ? await InterviewQuestions.find({ roundId: { $in: roundIds } })
-          .select("roundId snapshot")
-          .lean()
+        .select("roundId snapshot")
+        .lean()
       : [];
 
     const questionsMap = questions.reduce((acc, q) => {
@@ -2878,17 +2926,17 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     monthlyData.lastMonthCount === 0
       ? "up"
       : monthlyData.currentMonthCount >= monthlyData.lastMonthCount
-      ? "up"
-      : "down";
+        ? "up"
+        : "down";
 
   const totalTrendValue =
     monthlyData.lastMonthCount === 0
       ? "+100% vs last month"
       : `${(
-          ((monthlyData.currentMonthCount - monthlyData.lastMonthCount) /
-            monthlyData.lastMonthCount) *
-          100
-        ).toFixed(1)}% vs last month`;
+        ((monthlyData.currentMonthCount - monthlyData.lastMonthCount) /
+          monthlyData.lastMonthCount) *
+        100
+      ).toFixed(1)}% vs last month`;
 
   // --------------------------------------------------------------------
   // OUTSOURCED INTERVIEWS
@@ -2948,17 +2996,17 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     outsourcedData.lastMonthCount === 0
       ? "up"
       : outsourcedData.currentMonthCount >= outsourcedData.lastMonthCount
-      ? "up"
-      : "down";
+        ? "up"
+        : "down";
 
   const outsourcedTrendValue =
     outsourcedData.lastMonthCount === 0
       ? "+100% vs last month"
       : `${(
-          ((outsourcedData.currentMonthCount - outsourcedData.lastMonthCount) /
-            outsourcedData.lastMonthCount) *
-          100
-        ).toFixed(1)}% vs last month`;
+        ((outsourcedData.currentMonthCount - outsourcedData.lastMonthCount) /
+          outsourcedData.lastMonthCount) *
+        100
+      ).toFixed(1)}% vs last month`;
 
   // --------------------------------------------------------------------
   // UPCOMING INTERVIEWS (with safe date parsing)
@@ -3079,17 +3127,17 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     upcomingData.lastWeekCount === 0
       ? "up"
       : upcomingData.currentWeekCount >= upcomingData.lastWeekCount
-      ? "up"
-      : "down";
+        ? "up"
+        : "down";
 
   const upcomingTrendValue =
     upcomingData.lastWeekCount === 0
       ? "+100% vs last week"
       : `${(
-          ((upcomingData.currentWeekCount - upcomingData.lastWeekCount) /
-            upcomingData.lastWeekCount) *
-          100
-        ).toFixed(1)}% vs last week`;
+        ((upcomingData.currentWeekCount - upcomingData.lastWeekCount) /
+          upcomingData.lastWeekCount) *
+        100
+      ).toFixed(1)}% vs last week`;
   console.log("upcomingData", {
     matchInterview,
     now,
