@@ -58,7 +58,10 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       interviewId,
       roundId,
       sendEmails = true, // Default to true, can be controlled by caller
+      type
     } = req.body;
+    console.log("sendInterviewRoundEmails");
+
 
     // Set company name and support email from environment variables or defaults
     const companyName = process.env.COMPANY_NAME || "UpInterview";
@@ -88,20 +91,44 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     }
 
     // Fetch interview with candidate details
-    const interview = await Interview.findById(interviewId)
-      .populate("candidateId")
-      .populate("ownerId")
-      .populate("positionId", "title");
-    if (!interview) {
-      const error = {
-        success: false,
-        message: "Interview not found",
-      };
-      if (res) {
-        return res.status(404).json(error);
-      }
-      return error;
-    }
+    // const interview = await Interview.findById(interviewId)
+    //   .populate("candidateId")
+    //   .populate("ownerId")
+    //   .populate("positionId", "title");
+    // if (!interview) {
+    //   const error = {
+    //     success: false,
+    //     message: "Interview not found",
+    //   };
+    //   if (res) {
+    //     return res.status(404).json(error);
+    //   }
+    //   return error;
+    // }
+
+    // Load interview with position populated
+    let interview = type === "mockinterview"
+      ? await MockInterview.findById(interviewId)
+      : await Interview.findById(interviewId)
+        .populate("candidateId", "FirstName LastName Email")
+        .populate("ownerId", "firstName lastName")
+        .populate("positionId", "title");
+
+    if (!interview) return errorResponse(res, 404, "Interview not found");
+
+    // Candidate
+    let candidate = type === "mockinterview"
+      ? await Contacts.findOne({ ownerId: interview.ownerId })
+      : interview.candidateId;
+
+    if (!candidate) return errorResponse(res, 404, "Candidate not found");
+
+    const candidateName = type === "mockinterview"
+      ? [candidate.firstName, candidate.lastName].filter(Boolean).join(" ") || "Candidate"
+      : [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") || "Candidate";
+
+    const candidateEmail =
+      type === "mockinterview" ? candidate.email : candidate.Email;
 
     const position = interview.positionId?.title || "Not Assigned";
 
@@ -139,7 +166,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     }
 
     const isFaceToFace = round.interviewMode === "Face to Face";
-    const candidate = interview.candidateId;
+    // const candidate = interview.candidateId;
     const owner = interview.ownerId;
 
     if (!candidate) {
@@ -154,7 +181,6 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     }
 
     // Get candidate email
-    const candidateEmail = candidate.Email;
     if (!candidateEmail) {
       const error = {
         success: false,
@@ -202,7 +228,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     const emailPromises = [];
 
     // Handle Face-to-Face interviews
-    if (isFaceToFace) {
+    if (isFaceToFace && type !== "mockinterview") {
       // Get face-to-face template
 
       const templateCategory =
@@ -560,7 +586,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       }
 
       // Send email to scheduler/owner
-      if (schedulerTemplate && schedulerEmail) {
+      if (schedulerTemplate && schedulerEmail && type !== "mockinterview") {
         const candidateName =
           [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
           "Candidate";
@@ -708,6 +734,8 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       interviewerIds,
       type,
     } = req.body;
+    console.log("sendOutsourceInterviewRequestEmails");
+
 
     const companyName = process.env.COMPANY_NAME || "UpInterview";
     const supportEmail = process.env.SUPPORT_EMAIL || "support@upinterview.com";
@@ -727,9 +755,9 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
     let interview = type === "mockinterview"
       ? await MockInterview.findById(interviewId)
       : await Interview.findById(interviewId)
-          .populate("candidateId", "FirstName LastName")
-          .populate("ownerId", "firstName lastName")
-          .populate("positionId", "title");
+        .populate("candidateId", "FirstName LastName Email")
+        .populate("ownerId", "firstName lastName")
+        .populate("positionId", "title");
 
     if (!interview) return errorResponse(res, 404, "Interview not found");
 
@@ -746,9 +774,17 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
 
     // Tenant → company name
     const tenant = await Tenant.findById(interview.tenantId);
-    const orgCompanyName = (tenant?.type === "organization" && tenant?.company?.trim())
-      ? tenant.company.trim()
-      : "";
+    let orgCompanyName = null;
+
+    if (
+      tenant &&
+      tenant.type === "organization" &&
+      typeof tenant.company === "string" &&
+      tenant.company.trim().length > 0
+    ) {
+      orgCompanyName = tenant.company.trim();
+    }
+
 
     // Load template
     const template = await emailTemplateModel.findOne({
@@ -768,6 +804,17 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
 
     if (!round) return errorResponse(res, 404, "Round not found");
 
+    let position = null;
+
+    if (
+      interview?.positionId &&
+      typeof interview.positionId.title === "string" &&
+      interview.positionId.title.trim()
+    ) {
+      position = interview.positionId.title.trim();
+    }
+
+
     // Prepare template data
     const templateData = {
       companyName,
@@ -780,8 +827,8 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       instructions: round.instructions || "Please review the interview request and accept if you are available.",
       supportEmail,
       dashboardLink: `${config.REACT_APP_API_URL_FRONTEND}/home`,
-      orgCompanyName,
-      position: interview?.positionId?.title || ""
+      orgCompanyName, // ✅ null if not org
+      position,       // ✅ null if not exists
     };
 
     // Compile Handlebars template once (outside loop for performance)
@@ -895,7 +942,9 @@ function errorResponse(res, status, message) {
 //this helps us to send email when round cancelled with round status is scheduled.-Ashraf
 exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
   try {
-    const { interviewId, roundId, sendEmails = true } = req.body;
+    const { interviewId, roundId, sendEmails = true, type } = req.body;
+    console.log("sendInterviewRoundCancellationEmails");
+
 
     const companyName = process.env.COMPANY_NAME || "UpInterview";
     const supportEmail = process.env.SUPPORT_EMAIL || "support@upinterview.com";
@@ -908,12 +957,36 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
       return sendError(res, 400, "Invalid or missing round ID");
     }
 
+    // Load interview with position populated
+    let interview = type === "mockinterview"
+      ? await MockInterview.findById(interviewId)
+      : await Interview.findById(interviewId)
+        .populate("candidateId", "FirstName LastName Email")
+        .populate("ownerId", "firstName lastName")
+        .populate("positionId", "title");
+
+    if (!interview) return errorResponse(res, 404, "Interview not found");
+
+    // Candidate
+    let candidate = type === "mockinterview"
+      ? await Contacts.findOne({ ownerId: interview.ownerId })
+      : interview.candidateId;
+
+    if (!candidate) return errorResponse(res, 404, "Candidate not found");
+
+    const candidateName = type === "mockinterview"
+      ? [candidate.firstName, candidate.lastName].filter(Boolean).join(" ") || "Candidate"
+      : [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") || "Candidate";
+
+    const candidateEmail =
+      type === "mockinterview" ? candidate.email : candidate.Email;
+
     // Fetch data
-    const interview = await Interview.findById(interviewId)
-      .populate("candidateId")
-      .populate("ownerId")
-      .populate("positionId", "title");
-    if (!interview) return sendError(res, 404, "Interview not found");
+    // const interview = await Interview.findById(interviewId)
+    //   .populate("candidateId")
+    //   .populate("ownerId")
+    //   .populate("positionId", "title");
+    // if (!interview) return sendError(res, 404, "Interview not found");
 
     const position = interview.positionId?.title || "Not Assigned";
     const tenant = await Tenant.findById(interview.tenantId);
@@ -929,10 +1002,10 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
       return res, "Cancellation emails queued for later", { roundId };
     }
 
-    const candidate = interview.candidateId;
-    if (!candidate || !candidate.Email) {
-      return sendError(res, 400, "Candidate or email not found");
-    }
+    // const candidate = interview.candidateId;
+    // if (!candidate || !candidate.Email) {
+    //   return sendError(res, 400, "Candidate or email not found");
+    // }
 
     // Scheduler (owner contact)
     let schedulerEmail = null;
@@ -1002,20 +1075,20 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
     };
 
     // Send to Candidate
-    const candidateName =
-      [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
-      "Candidate";
+    // const candidateName =
+    //   [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
+    //   "Candidate";
     const candidateBody = generateBody(candidateName);
 
     emailPromises.push(
-      sendEmail(candidate.Email, subject, candidateBody)
+      sendEmail(candidateEmail, subject, candidateBody)
         .then(() => ({
-          email: candidate.Email,
+          email: candidateEmail,
           recipient: "candidate",
           success: true,
         }))
         .catch((err) => ({
-          email: candidate.Email,
+          email: candidateEmail,
           recipient: "candidate",
           success: false,
           error: err.message,
@@ -1053,7 +1126,7 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
     }
 
     // Send to Scheduler
-    if (schedulerEmail) {
+    if (schedulerEmail && type !== "mockinterview") {
       const schedulerName =
         [scheduler?.firstName, scheduler?.lastName].filter(Boolean).join(" ") ||
         "Scheduler";
@@ -1154,9 +1227,10 @@ exports.sendInterviewerCancelledEmails = async (req, res = null) => {
       interviewId,
       roundId,
       cancelledInterviewerId,
-      type = "interview",
+      type,
       interviewerType, // "Internal" | "External"
     } = req.body;
+    console.log("sendInterviewerCancelledEmails");
 
     /* ================= VALIDATION ================= */
     if (!mongoose.isValidObjectId(interviewId))
@@ -1173,7 +1247,7 @@ exports.sendInterviewerCancelledEmails = async (req, res = null) => {
       type === "mockinterview"
         ? await MockInterview.findById(interviewId)
         : await Interview.findById(interviewId)
-          .populate("candidateId")
+          .populate("candidateId", "FirstName LastName Email")
           .populate("ownerId")
           .populate("positionId", "title");
 
@@ -1298,7 +1372,7 @@ exports.sendInterviewerCancelledEmails = async (req, res = null) => {
     }
 
     /* ================= SCHEDULER EMAIL ================= */
-    if (schedulerEmail) {
+    if (schedulerEmail && type !== "mockinterview") {
       sendRenderedEmail(
         templates.scheduler,
         schedulerEmail,
