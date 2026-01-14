@@ -970,25 +970,6 @@ const RoundFormInterviews = () => {
     assessmentData,
   ]);
 
-  // SUPER SIMPLE: Just check if field should be disabled
-  // const shouldDisable = (fieldName) => {
-  //   // Fields that should be disabled in these statuses
-  //   const disabledInStatus = {
-  //     interviewMode: ["RequestSent", "Scheduled", "Rescheduled"],
-  //     duration: ["RequestSent", "Scheduled", "Rescheduled"],
-  //     interviewType: ["RequestSent", "Scheduled", "Rescheduled"],
-  //     scheduledDate: ["RequestSent", "Scheduled", "Rescheduled"],
-  //     internalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
-  //     externalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
-  //     removeInterviewerBtn: ["RequestSent", "Scheduled", "Rescheduled"],
-  //     clearInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
-  //     dateChangeConfirmation: ["RequestSent", "Scheduled", "Rescheduled"],
-  //   };
-
-  //   const statusList = disabledInStatus[fieldName] || [];
-  //   return statusList.includes(status);
-  // };
-
   // Simplified shouldDisable function with all conditions
   const shouldDisable = (fieldName) => {
     // CASE 1: Draft status and no schedule/reschedule in history → ALL editable
@@ -1180,18 +1161,9 @@ const RoundFormInterviews = () => {
     } else {
       // setInterviewMode("");
       setInstructions(previousRoundTitle === "Assessment" ? "" : instructions); // Clear instructions for non-Assessment rounds
-      // setInterviewType("instant");
-      // setScheduledDate("");
-      // setDuration(60);
-      // setStartTime("");
-      // setEndTime("");
+
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
       setSelectedAssessmentData(null);
-      // setCombinedDateTime("");
-
-      // setInterviewerGroupName("");
-      // setInterviewerGroupId("");
-      // setInterviewerViewType("");
     }
 
     setErrors((prev) => ({
@@ -1208,21 +1180,6 @@ const RoundFormInterviews = () => {
   const handleInterviewTypeChange = (type) => {
     // Clear external interviewers when switching between instant and scheduled
     if (type === interviewType) return;
-
-    // If external interviewers exist and we're changing type, clear them
-    // if (externalInterviewers.length > 0) {
-    //   setExternalInterviewers([]);
-    //   setHasManuallyClearedInterviewers(true);
-
-    //   // Reset status if it was RequestSent
-    //   if (status === "RequestSent") {
-    //     setStatus("Draft");
-    //   }
-
-    //   if (selectedInterviewType === "External") {
-    //     setSelectedInterviewType(null);
-    //   }
-    // }
 
     // Check if external interviewers exist and date/time is changing
     if (externalInterviewers.length > 0) {
@@ -1739,8 +1696,8 @@ const RoundFormInterviews = () => {
           JSON.stringify(interviewQuestionsList) !==
             JSON.stringify(originalQuestions);
 
-        console.log("criticalFieldsUnchanged:", criticalFieldsUnchanged);
-        console.log("safeFieldsChanged:", safeFieldsChanged);
+        // console.log("criticalFieldsUnchanged:", criticalFieldsUnchanged);
+        // console.log("safeFieldsChanged:", safeFieldsChanged);
 
         if (criticalFieldsUnchanged && safeFieldsChanged) {
           console.log(

@@ -280,22 +280,6 @@ const MoockRoundCard = ({
     }
   };
 
-  // const handleDeleteRound = async () => {
-  //   try {
-  //     await deleteRoundMutation(round._id);
-  //     notify.success("Round Deleted successfully");
-  //   } catch (error) {
-  //     console.error("Error Deleting Round:", error);
-  //     notify.error("Failed to Delete Round");
-  //   }
-  // };
-
-  // const handleRemoveInterviewer = (interviewerId) => {
-  //   const updatedRound = {
-  //     interviewers: round.interviewers.filter((id) => id !== interviewerId),
-  //   };
-  // };
-
   // Get interviewers based on interviewerType
 
   const externalInterviewers =
@@ -609,10 +593,8 @@ const MoockRoundCard = ({
               </div>
             </div>
 
-            <div className="w-full overflow-x-auto">
-              {/* <div className="mt-6 w-full flex gap-2 whitespace-nowrap sm:justify-start md:justify-start justify-end overflow-x-auto"> */}
+            {/* <div className="w-full overflow-x-auto">
               <div className="mt-6 flex gap-3 whitespace-nowrap min-w-max justify-end">
-                {/* Reschedule */}
                 {permissions.canReschedule &&
                   // round.interviewerType === "external" &&
                   round?.interviewType.toLowerCase() !== "instant" && (
@@ -627,7 +609,6 @@ const MoockRoundCard = ({
                       <Calendar className="h-4 w-4 mr-1" /> Reschedule
                     </button>
                   )}
-                {/* No Show */}
                 {permissions.canNoShow && (
                   <button
                     onClick={() => {
@@ -639,7 +620,6 @@ const MoockRoundCard = ({
                   </button>
                 )}
 
-                {/* Evaluated */}
                 {permissions.canEvaluated && (
                   <button
                     onClick={() => handleActionClick("Evaluated")}
@@ -649,7 +629,6 @@ const MoockRoundCard = ({
                   </button>
                 )}
 
-                {/* Cancel */}
                 {permissions.canCancel &&
                   round?.interviewType.toLowerCase() !== "instant" && (
                     <button
@@ -663,7 +642,6 @@ const MoockRoundCard = ({
                     </button>
                   )}
 
-                {/* Edit */}
                 {permissions.canEdit && (
                   // (round?.status === "Draft" ||
                   //   round?.status === "RequestSent") &&
@@ -682,8 +660,6 @@ const MoockRoundCard = ({
                   </button>
                 )}
 
-                {/* Edit */}
-                {/* Single button for RequestSent (External) - Change Interviewers / Date */}
                 {round.status === "RequestSent" &&
                   // round?.interviewerType === "External" &&
 
@@ -702,7 +678,6 @@ const MoockRoundCard = ({
                     </button>
                   )}
 
-                {/* Delete */}
                 {permissions.canDelete && (
                   <button
                     onClick={() => setShowDeleteConfirmModal(true)}
@@ -711,7 +686,6 @@ const MoockRoundCard = ({
                     <XCircle className="h-4 w-4 mr-1" /> Delete Round
                   </button>
                 )}
-                {/* Mark Scheduled */}
                 {permissions.canMarkScheduled && (
                   <button
                     onClick={() => handleActionClick("Scheduled")}
@@ -720,7 +694,6 @@ const MoockRoundCard = ({
                     <Clock className="h-4 w-4 mr-1" /> Mark Scheduled
                   </button>
                 )}
-                {/* Complete */}
                 {permissions.canComplete && (
                   <button
                     onClick={() => {
@@ -733,7 +706,6 @@ const MoockRoundCard = ({
                   </button>
                 )}
 
-                {/* Feedback */}
                 {permissions?.canFeedback && (
                   <button
                     onClick={() => setShowFeedbackModal(true)}
@@ -743,51 +715,6 @@ const MoockRoundCard = ({
                   </button>
                 )}
 
-                {/* Delete */}
-                {/* {canEdit && permissions.canDelete && (
-                    <button
-                      onClick={() => setShowDeleteConfirmModal(true)}
-                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                    >
-                      <XCircle className="h-4 w-4 mr-1" /> Delete Round
-                    </button>
-                  )}
-                 */}
-
-                {/* Complete */}
-                {/* {permissions.canComplete && (
-                  <button
-                    onClick={() => handleActionClick("Completed")}
-                    className="inline-flex items-center px-3 py-2 border border-green-300 text-sm rounded-md text-green-700 bg-green-50 hover:bg-green-100"
-                  >
-                    <CheckCircle className="h-4 w-4 mr-1" /> Complete
-                  </button>
-                )} */}
-
-                {/* Select */}
-                {/* {console.log("333", permissions.canSelect)}
-                  {permissions.canSelect && (
-                    <button
-                      onClick={handleSelect}
-                      className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" /> Select
-                    </button>
-                  )}
-                  
-                  {console.log("333", permissions.canReject)}
-                  {permissions.canReject && (
-                    <button
-                      onClick={() =>
-                        setShowRejectionModal(true) || setActionInProgress(true)
-                      }
-                      className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                    >
-                      <ThumbsDown className="h-4 w-4 mr-1" /> Reject
-                    </button>
-                  )} */}
-
-                {/* Feedback */}
                 {permissions.canFeedback && (
                   <button
                     onClick={() => setShowFeedbackModal(true)}
@@ -797,12 +724,12 @@ const MoockRoundCard = ({
                   </button>
                 )}
               </div>
-            </div>
+            </div> */}
           </>
         </div>
       </div>
 
-      {(completedReasonModalOpen ||
+      {/* {(completedReasonModalOpen ||
         selectedReasonModalOpen ||
         showConfirmModal) &&
         createPortal(
@@ -853,7 +780,6 @@ const MoockRoundCard = ({
           // v1.0.5 -------------------------------------------------------------------------------->
         )}
 
-      {/* Modal for No Show using DateChangeConfirmationModal */}
       <DateChangeConfirmationModal
         isOpen={noShowReasonModalOpen}
         onClose={() => {
@@ -867,8 +793,6 @@ const MoockRoundCard = ({
         actionType="NoShow"
         isLoading={isNoShowingRound}
       />
-
-      {/* Modal for Reject using DateChangeConfirmationModal */}
       <DateChangeConfirmationModal
         isOpen={rejectReasonModalOpen}
         onClose={() => {
@@ -883,7 +807,6 @@ const MoockRoundCard = ({
         isLoading={false}
       />
 
-      {/* Modal for Complete using DateChangeConfirmationModal */}
       <DateChangeConfirmationModal
         isOpen={completeReasonModalOpen}
         onClose={() => {
@@ -898,7 +821,6 @@ const MoockRoundCard = ({
         isLoading={false}
       />
 
-      {/* Modal for Evaluated using DateChangeConfirmationModal */}
       <DateChangeConfirmationModal
         isOpen={evaluatedReasonModalOpen}
         onClose={() => {
@@ -913,7 +835,6 @@ const MoockRoundCard = ({
         isLoading={false}
       />
 
-      {/* Modal for Cancel using DateChangeConfirmationModal */}
       <DateChangeConfirmationModal
         isOpen={cancelReasonModalOpen}
         onClose={() => {
@@ -968,7 +889,7 @@ const MoockRoundCard = ({
           </div>,
           document.body
           // v1.0.5 ------------------------------------------------------------------------------------------>
-        )}
+        )} */}
 
       {/* {showConfirmModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
