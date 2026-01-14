@@ -137,20 +137,30 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     const tenantCompanyName = tenant?.company || companyName;
     const address = tenant?.offices?.[0]?.address || "To be provided";
 
-    // Fetch round details
-    const round = await InterviewRounds.findById(roundId).populate(
-      "interviewers"
-    );
+    let round;
+
+    if (type === "mockinterview") {
+      round = await MockInterviewRound
+        .findById(roundId)
+        .populate("interviewers");
+    } else {
+      round = await InterviewRounds
+        .findById(roundId)
+        .populate("interviewers");
+    }
+
     if (!round) {
       const error = {
         success: false,
         message: "Interview round not found",
       };
+
       if (res) {
         return res.status(404).json(error);
       }
       return error;
     }
+
 
     // Check if emails should be sent based on the sendEmails parameter
     if (!sendEmails) {
@@ -445,9 +455,9 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
 
       // Send email to candidate
       if (candidateTemplate && candidateEmail) {
-        const candidateName =
-          [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
-          "Candidate";
+        // const candidateName =
+        //   [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
+        //   "Candidate";
         const emailSubject = candidateTemplate.subject
           .replace(/{{orgCompanyName}}/g, tenantCompanyName)
           .replace(/{{roundTitle}}/g, roundTitle);
@@ -774,16 +784,18 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
 
     // Tenant → company name
     const tenant = await Tenant.findById(interview.tenantId);
-    let orgCompanyName = null;
+    const showCompany =
+      !!(
+        tenant &&
+        tenant.type === "organization" &&
+        typeof tenant.company === "string" &&
+        tenant.company.trim()
+      );
 
-    if (
-      tenant &&
-      tenant.type === "organization" &&
-      typeof tenant.company === "string" &&
-      tenant.company.trim().length > 0
-    ) {
-      orgCompanyName = tenant.company.trim();
-    }
+    const orgCompanyName = showCompany
+      ? tenant.company.trim()
+      : null;
+
 
 
     // Load template
@@ -804,15 +816,16 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
 
     if (!round) return errorResponse(res, 404, "Round not found");
 
-    let position = null;
+    const showPosition =
+      !!(
+        interview?.positionId &&
+        typeof interview.positionId.title === "string" &&
+        interview.positionId.title.trim()
+      );
 
-    if (
-      interview?.positionId &&
-      typeof interview.positionId.title === "string" &&
-      interview.positionId.title.trim()
-    ) {
-      position = interview.positionId.title.trim();
-    }
+    const position = showPosition
+      ? interview.positionId.title.trim()
+      : null;
 
 
     // Prepare template data
@@ -827,8 +840,12 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
       instructions: round.instructions || "Please review the interview request and accept if you are available.",
       supportEmail,
       dashboardLink: `${config.REACT_APP_API_URL_FRONTEND}/home`,
-      orgCompanyName, // ✅ null if not org
-      position,       // ✅ null if not exists
+      // 🔥 flags
+      showCompany,
+      orgCompanyName,
+
+      showPosition,
+      position,
     };
 
     // Compile Handlebars template once (outside loop for performance)
