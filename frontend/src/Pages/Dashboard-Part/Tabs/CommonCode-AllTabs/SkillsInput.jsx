@@ -23,6 +23,7 @@ const SkillsField = forwardRef(
       entries,
       errors,
       onAddSkill,
+      onAddMultipleSkills, // New prop for adding multiple skills at once from popup
 
       onDeleteSkill,
       onUpdateEntry, // New prop for updating entries
@@ -236,6 +237,78 @@ const SkillsField = forwardRef(
       return node;
     });
 
+    // State for skills selection popup
+    const [showSkillsPopup, setShowSkillsPopup] = useState(false);
+    const [popupSearchTerm, setPopupSearchTerm] = useState("");
+    const [popupSelectedSkills, setPopupSelectedSkills] = useState([]);
+
+    // Get already selected skills from entries
+    const getAlreadySelectedSkills = () => {
+      return entries.map((e) => e.skill).filter(Boolean);
+    };
+
+    // Handle opening the popup - initialize with already selected skills
+    const handleOpenSkillsPopup = () => {
+      setPopupSelectedSkills(getAlreadySelectedSkills());
+      setPopupSearchTerm("");
+      setShowSkillsPopup(true);
+    };
+
+    // Handle closing the popup
+    const handleCloseSkillsPopup = () => {
+      setShowSkillsPopup(false);
+      setPopupSearchTerm("");
+      setPopupSelectedSkills([]);
+    };
+
+    // Toggle skill selection in popup
+    const toggleSkillInPopup = (skillName) => {
+      setPopupSelectedSkills((prev) => {
+        if (prev.includes(skillName)) {
+          return prev.filter((s) => s !== skillName);
+        } else {
+          return [...prev, skillName];
+        }
+      });
+    };
+
+    // Apply skill changes from popup
+    const handleApplySkillChanges = () => {
+      const currentSkills = getAlreadySelectedSkills();
+      const newSelectedSkills = popupSelectedSkills;
+
+      // Find skills to add (in popup but not in current entries)
+      const skillsToAdd = newSelectedSkills.filter(s => !currentSkills.includes(s));
+
+      // Find skills to remove (in current entries but not in popup)
+      const skillsToRemove = currentSkills.filter(s => !newSelectedSkills.includes(s));
+
+      // Apply changes through parent handlers
+      if (onAddMultipleSkills && (skillsToAdd.length > 0 || skillsToRemove.length > 0)) {
+        // Build the new skill entries list
+        const newEntries = skillsToAdd.map((skillName) => ({
+          skill: skillName,
+          experience: "",
+          expertise: "",
+          requirement_level: "REQUIRED",
+        }));
+
+        // Call parent with skills to add and remove
+        onAddMultipleSkills(newEntries, skillsToRemove);
+      }
+
+      handleCloseSkillsPopup();
+    };
+
+    // Get all skills for popup (filtered by search)
+    const getFilteredSkillsForPopup = () => {
+      return skills
+        .filter((skill) =>
+          skill.SkillName.toLowerCase().includes(popupSearchTerm.toLowerCase())
+        )
+        .map((s) => s.SkillName);
+    };
+
     return (
       <div ref={containerRef}>
         <div className="flex justify-between items-center">
@@ -253,13 +326,124 @@ const SkillsField = forwardRef(
           {entries.length < 10 && (
             <button
               type="button"
-              onClick={handleAddSkillRow}
-              className="flex items-center justify-center text-sm bg-custom-blue text-white px-2 py-1 rounded hover:bg-custom-blue/80"
+              onClick={handleOpenSkillsPopup}
+              className="flex items-center justify-center text-sm bg-custom-blue text-white px-3 py-1.5 rounded-md hover:bg-custom-blue/80 transition-colors shadow-sm"
             >
-              <FaPlus className="mr-1 w-5 h-5" /> Add Rows
+              <FaPlus className="mr-1.5 w-4 h-4" /> Add Skills
             </button>
           )}
         </div>
+
+        {/* Skills Selection Popup */}
+        {showSkillsPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={handleCloseSkillsPopup}
+            />
+            {/* Modal */}
+            <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col animate-in fade-in zoom-in duration-200">
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Select Skills
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleCloseSkillsPopup}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="px-6 py-4 border-b border-gray-100">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search skills..."
+                    value={popupSearchTerm}
+                    onChange={(e) => setPopupSearchTerm(e.target.value)}
+                    className="w-full px-4 py-3 pl-10 border-2 border-custom-blue/30 rounded-lg focus:border-custom-blue focus:ring-2 focus:ring-custom-blue/20 outline-none transition-all text-gray-700 placeholder-gray-400"
+                    autoFocus
+                  />
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <p className="mt-2 text-sm text-gray-500">
+                  {popupSelectedSkills.length} skill{popupSelectedSkills.length !== 1 ? "s" : ""} selected
+                </p>
+              </div>
+
+              {/* Skills Grid */}
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {getFilteredSkillsForPopup().map((skillName) => {
+                    const isSelected = popupSelectedSkills.includes(skillName);
+                    return (
+                      <button
+                        key={skillName}
+                        type="button"
+                        onClick={() => toggleSkillInPopup(skillName)}
+                        className={`
+                          px-4 py-3 rounded-lg border-2 text-left text-sm font-medium transition-all duration-150
+                          ${isSelected
+                            ? "border-custom-blue bg-custom-blue/10 text-custom-blue ring-2 ring-custom-blue/20"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                          }
+                        `}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="truncate">{skillName}</span>
+                          {isSelected && (
+                            <svg className="w-5 h-5 text-custom-blue flex-shrink-0 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {getFilteredSkillsForPopup().length === 0 && (
+                    <div className="col-span-full text-center py-8 text-gray-500">
+                      {popupSearchTerm
+                        ? `No skills found for "${popupSearchTerm}"`
+                        : "All available skills have been added"}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+                <button
+                  type="button"
+                  onClick={handleCloseSkillsPopup}
+                  className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApplySkillChanges}
+                  className="px-5 py-2.5 rounded-lg font-medium transition-colors bg-custom-blue text-white hover:bg-custom-blue/90 shadow-sm"
+                >
+                  Apply Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Skills entries below */}
         <div className="space-y-2 mb-4 mt-5">

@@ -32,6 +32,7 @@ import VerticalRoundsViewPosition from "./PositionRound/VerticalRoundsViewPositi
 // import Cookies from "js-cookie";
 // import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import Activity from "../../Tabs/CommonCode-AllTabs/Activity";
+import AddCandidateForm from "../Candidate-Tab/AddCandidateForm";
 import Loading from "../../../../Components/Loading";
 import { usePositionById } from "../../../../apiHooks/usePositions";
 import Breadcrumb from "../../Tabs/CommonCode-AllTabs/Breadcrumb";
@@ -52,7 +53,8 @@ const PositionSlideDetails = () => {
   const [activeRound, setActiveRound] = useState(null);
   const [roundsViewMode, setRoundsViewMode] = useState("vertical");
   const [position, setPosition] = useState(null);
-  const [activeTab, setActiveTab] = useState("Details");
+  const [activeTab, setActiveTab] = useState("Overview");
+  const [showAddCandidateModal, setShowAddCandidateModal] = useState(false);
 
   // Count internal and external interviewers across all rounds
   // const allInterviewerIds = new Set();
@@ -232,23 +234,18 @@ const PositionSlideDetails = () => {
         {/* Tabs Navigation */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`${activeTab === tab.id
-                    ? "border-custom-blue text-custom-blue"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1`}
-                >
-                  {/* <span className="mr-2">{tab.icon}</span> */}
-                  <Icon className="w-4 h-4" />
-                  {tab.name}
-                </button>
-              );
-            })}
+            {["Overview", "Candidates", "Applications", "Interviews", "Activity Feed"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`${activeTab === tab
+                  ? "border-custom-blue text-custom-blue"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1`}
+              >
+                {tab}
+              </button>
+            ))}
           </nav>
         </div>
         {/* v1.0.4 ------------------------------------------------------------------------------------------> */}
@@ -256,30 +253,57 @@ const PositionSlideDetails = () => {
         {/* v1.0.0---------------------------> */}
 
         {/* Tab Content */}
-        {activeTab === "Details" && (
+        {activeTab === "Overview" && (
           <div className="flex-1 relative">
-            {/* v1.0.6 <-------------------------------------------------------------------------- */}
-            <Link
-              to={`/position/edit-position/${position?._id}`}
-              state={{ from: location.pathname }}
-              className="absolute top-0 right-0 inline-flex items-center sm:px-2 sm:py-2 px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-            >
-              <Edit className="sm:h-5 sm:w-5 h-4 w-4 sm:mr-0 mr-1" />
-              <span className="sm:hidden inline">Edit Position</span>
-            </Link>
-            {/* v1.0.6 --------------------------------------------------------------------------> */}
-            <div className="space-y-6 mt-4">
-              {/* v1.0.6 <--------------------------------------------- */}
-              <div className="text-start mb-4">
-                {/* v1.0.6 ---------------------------------------------> */}
-                <h3 className="sm:text-xl text-2xl font-bold text-gray-900 truncate">
-                  {position?.title.charAt(0).toUpperCase() +
-                    position?.title?.slice(1) || "position"}
+            {/* v1.0.8 - Updated Header Section */}
+            <div className="flex flex-row sm:flex-col items-center justify-between gap-4 py-4 px-1 bg-gray-50/50 rounded-lg mb-6">
+              {/* Left Side - Title, Company & Status */}
+              <div>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  {position?.title
+                    ? position.title.charAt(0).toUpperCase() +
+                    position.title.slice(1)
+                    : "Position"}
                 </h3>
-                <p className="text-gray-600 mt-1">
-                  Company: {position?.companyname?.name || ""}
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-gray-600 text-sm">
+                    Company: {position?.companyname?.name || "N/A"}
+                  </p>
+                  {/* <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 capitalize">
+                    {position?.status || "Open"}
+                  </span> */}
+                </div>
               </div>
+
+              {/* Right Side - Action Buttons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Link
+                  to={`/position/edit-position/${position?._id}`}
+                  state={{ from: location.pathname }}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
+                >
+                  <Edit className="h-4 w-4 mr-1.5" />
+                  Edit Position
+                </Link>
+                {/* <button
+                  onClick={() => navigate(`/candidates/upload?positionId=${position?._id}`)}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
+                >
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Upload Resumes
+                </button> */}
+                <button
+                  onClick={() => setShowAddCandidateModal(true)}
+                  className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
+                >
+                  <Users className="h-4 w-4 mr-1.5" />
+                  Add Candidate
+                </button>
+              </div>
+            </div>
+            {/* v1.0.8 - End Header Section */}
+
+            <div className="space-y-6">
 
               {/* {position.rounds?.length === 0
                 // && template.rounds?.length === 0
@@ -669,13 +693,54 @@ const PositionSlideDetails = () => {
             {/* v1.0.4 -----------------------------------------------------------------------------> */}
           </div>
         )}
+
+        {/* Candidates Tab */}
+        {activeTab === "Candidates" && (
+          <div className="bg-white rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Candidates</h3>
+            <p className="text-gray-500">Candidates associated with this position will appear here.</p>
+          </div>
+        )}
+
+        {/* Applications Tab */}
+        {activeTab === "Applications" && (
+          <div className="bg-white rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Applications</h3>
+            <p className="text-gray-500">Applications for this position will appear here.</p>
+          </div>
+        )}
+
+        {/* Interviews Tab */}
+        {activeTab === "Interviews" && (
+          <div className="bg-white rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Interviews</h3>
+            <p className="text-gray-500">Interviews scheduled for this position will appear here.</p>
+          </div>
+        )}
         {/* v1.0.5 <------------------------------- */}
-        {activeTab === "Activity" && (
+        {activeTab === "Activity Feed" && (
           <div className="sm:p-0 p-6">
             <Activity parentId={id} />
           </div>
         )}
         {/* v1.0.5 -------------------------------> */}
+
+        {/* Add Candidate Modal */}
+        {showAddCandidateModal && (
+          <Modal
+            isOpen={showAddCandidateModal}
+            onRequestClose={() => setShowAddCandidateModal(false)}
+            className="fixed inset-0 flex items-center justify-center z-50"
+            overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-40"
+          >
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <AddCandidateForm
+                isModal={true}
+                onClose={() => setShowAddCandidateModal(false)}
+              />
+            </div>
+          </Modal>
+        )}
       </div>
     </div>
     // v1.0.4 ---------------------------------------------------------------->

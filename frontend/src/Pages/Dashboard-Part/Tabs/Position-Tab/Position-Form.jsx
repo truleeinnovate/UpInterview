@@ -1573,6 +1573,64 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
                           setSelectedExp("");
                           setSelectedLevel("");
                         }}
+                        onAddMultipleSkills={(newSkillEntries, skillsToRemove = []) => {
+                          setEntries((prevEntries) => {
+                            let updatedEntries = [...prevEntries];
+
+                            // First, handle skill removals
+                            if (skillsToRemove.length > 0) {
+                              // Count current skills with data
+                              const currentFilledSkills = updatedEntries.filter(e => e.skill).length;
+                              const remainingSkillsAfterRemoval = currentFilledSkills - skillsToRemove.length;
+
+                              // If we still have 3+ skills after removal, remove rows entirely
+                              if (remainingSkillsAfterRemoval >= 3) {
+                                updatedEntries = updatedEntries.filter(entry =>
+                                  !skillsToRemove.includes(entry.skill)
+                                );
+                              } else {
+                                // If we'd have less than 3, just clear the skill but keep rows
+                                updatedEntries = updatedEntries.map((entry) => {
+                                  if (skillsToRemove.includes(entry.skill)) {
+                                    return { skill: "", experience: "", expertise: "", requirement_level: "REQUIRED" };
+                                  }
+                                  return entry;
+                                });
+                              }
+
+                              // Ensure we always have at least 3 rows
+                              while (updatedEntries.length < 3) {
+                                updatedEntries.push({ skill: "", experience: "", expertise: "", requirement_level: "REQUIRED" });
+                              }
+                            }
+
+                            // Then, add new skills - fill empty rows first
+                            let skillIndex = 0;
+                            for (let i = 0; i < updatedEntries.length && skillIndex < newSkillEntries.length; i++) {
+                              if (!updatedEntries[i].skill) {
+                                updatedEntries[i] = {
+                                  ...updatedEntries[i],
+                                  skill: newSkillEntries[skillIndex].skill,
+                                  requirement_level: newSkillEntries[skillIndex].requirement_level || "REQUIRED",
+                                };
+                                skillIndex++;
+                              }
+                            }
+
+                            // Add remaining skills as new rows
+                            while (skillIndex < newSkillEntries.length && updatedEntries.length < 10) {
+                              updatedEntries.push(newSkillEntries[skillIndex]);
+                              skillIndex++;
+                            }
+
+                            return updatedEntries;
+                          });
+                          // Update allSelectedSkills
+                          setAllSelectedSkills((prev) => {
+                            let updated = prev.filter(s => !skillsToRemove.includes(s));
+                            return [...updated, ...newSkillEntries.map((e) => e.skill)];
+                          });
+                        }}
                         onEditSkill={(index) => {
                           const entry = entries[index];
                           setSelectedSkill(entry.skill || "");

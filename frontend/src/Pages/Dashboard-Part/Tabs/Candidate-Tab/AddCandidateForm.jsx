@@ -64,6 +64,7 @@ const AddCandidateForm = ({
   onClose,
   isModal = false,
   hideAddButton = false,
+  candidateId = null, // Optional: Pass candidateId when using as modal for editing
 }) => {
   const pageType = "adminPortal";
   const {
@@ -101,7 +102,9 @@ const AddCandidateForm = ({
     error: _error,
     addOrUpdateCandidate,
   } = useCandidates();
-  const { id } = useParams();
+  const { id: routeId } = useParams();
+  // Use candidateId prop when in modal mode, otherwise use route param
+  const id = isModal ? candidateId : routeId;
   const { candidate: selectedCandidate } = useCandidateById(id);
   const navigate = useNavigate();
   const location = useLocation();
@@ -312,10 +315,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry
       );
       setEntries(updatedEntries);
@@ -482,12 +485,12 @@ const AddCandidateForm = ({
       [name]: errorMessage,
       ...(name === "CurrentExperience" && formData.RelevantExperience
         ? {
-            RelevantExperience: getErrorMessage(
-              "RelevantExperience",
-              formData.RelevantExperience,
-              nextFormData
-            ),
-          }
+          RelevantExperience: getErrorMessage(
+            "RelevantExperience",
+            formData.RelevantExperience,
+            nextFormData
+          ),
+        }
         : {}),
     }));
   };
@@ -725,8 +728,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save candidate"
+        error.message ||
+        "Failed to save candidate"
       );
 
       if (error.response?.data?.errors) {
@@ -948,7 +951,7 @@ const AddCandidateForm = ({
                     // error={errors.Gender}
                     containerRef={fieldRefs.Gender}
                     label="Gender"
-                    // required
+                  // required
                   />
                 </div>
                 {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -1135,6 +1138,63 @@ const AddCandidateForm = ({
                     setSelectedExp("");
                     setSelectedLevel("");
                   }}
+                  onAddMultipleSkills={(newSkillEntries, skillsToRemove = []) => {
+                    setEntries((prevEntries) => {
+                      let updatedEntries = [...prevEntries];
+
+                      // First, handle skill removals
+                      if (skillsToRemove.length > 0) {
+                        // Count current skills with data
+                        const currentFilledSkills = updatedEntries.filter(e => e.skill).length;
+                        const remainingSkillsAfterRemoval = currentFilledSkills - skillsToRemove.length;
+
+                        // If we still have 3+ skills after removal, remove rows entirely
+                        if (remainingSkillsAfterRemoval >= 3) {
+                          updatedEntries = updatedEntries.filter(entry =>
+                            !skillsToRemove.includes(entry.skill)
+                          );
+                        } else {
+                          // If we'd have less than 3, just clear the skill but keep rows
+                          updatedEntries = updatedEntries.map((entry) => {
+                            if (skillsToRemove.includes(entry.skill)) {
+                              return { skill: "", experience: "", expertise: "" };
+                            }
+                            return entry;
+                          });
+                        }
+
+                        // Ensure we always have at least 3 rows
+                        while (updatedEntries.length < 3) {
+                          updatedEntries.push({ skill: "", experience: "", expertise: "" });
+                        }
+                      }
+
+                      // Then, add new skills - fill empty rows first
+                      let skillIndex = 0;
+                      for (let i = 0; i < updatedEntries.length && skillIndex < newSkillEntries.length; i++) {
+                        if (!updatedEntries[i].skill) {
+                          updatedEntries[i] = {
+                            ...updatedEntries[i],
+                            skill: newSkillEntries[skillIndex].skill,
+                          };
+                          skillIndex++;
+                        }
+                      }
+
+                      // Add remaining skills as new rows
+                      while (skillIndex < newSkillEntries.length && updatedEntries.length < 10) {
+                        updatedEntries.push(newSkillEntries[skillIndex]);
+                        skillIndex++;
+                      }
+
+                      return updatedEntries;
+                    });
+                    // Update allSelectedSkills
+                    setAllSelectedSkills((prev) => {
+                      let updated = prev.filter(s => !skillsToRemove.includes(s));
+                      return [...updated, ...newSkillEntries.map((e) => e.skill)];
+                    });
+                  }}
                   onEditSkill={(index) => {
                     const entry = entries[index];
                     setSelectedSkill(entry.skill || "");
@@ -1197,8 +1257,8 @@ const AddCandidateForm = ({
                         External ID
                       </label>
                       <div className="relative tooltip-container">
-                        <Info 
-                          className="w-4 h-4 text-gray-400 cursor-pointer" 
+                        <Info
+                          className="w-4 h-4 text-gray-400 cursor-pointer"
                           onClick={() => setShowTooltip(!showTooltip)}
                         />
                         {showTooltip && (
@@ -1229,9 +1289,8 @@ const AddCandidateForm = ({
                   type="button"
                   onClick={handleClose}
                   disabled={isMutationLoading}
-                  className={`sm:px-2 sm:py-1 md:px-2 md:py-1 lg:px-6 lg:py-2 xl:px-6 xl:py-2 2xl:px-6 2xl:py-2 sm:text-sm text-custom-blue border border-custom-blue rounded-lg transition-colors ${
-                    isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className={`sm:px-2 sm:py-1 md:px-2 md:py-1 lg:px-6 lg:py-2 xl:px-6 xl:py-2 2xl:px-6 2xl:py-2 sm:text-sm text-custom-blue border border-custom-blue rounded-lg transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                 >
                   Cancel
                 </button>
