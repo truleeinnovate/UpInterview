@@ -117,7 +117,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   } = useMasterData({}, pageType);
 
   const { id } = useParams();
-  const { position: selectedPosition } = usePositionById(id);
+  const { position: selectedPosition, isLoading: isPositionLoading } = usePositionById(id);
   console.log(
     "SELECTED POSITION ===============================> ",
     selectedPosition
@@ -125,8 +125,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
   // Fetch the position's linked interview template by id instead of
   // relying on the paginated/filtered templatesData list.
-  const { data: selectedTemplate } = useInterviewtemplateDetails(
-    selectedPosition?.templateId
+  const { data: selectedTemplate, isLoading: isTemplateLoading } = useInterviewtemplateDetails(
+    selectedPosition?.templateId?._id || selectedPosition?.templateId
   );
   const location = useLocation();
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -168,6 +168,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     maxSalary: "",
     minSalary: "",
     jobDescription: "",
+    requirements: "",
     additionalNotes: "",
     skills: [],
     template: {},
@@ -310,7 +311,14 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
   useEffect(() => {
     // 1. Guard clauses
+    if (isPositionLoading) return;
     if (!id || !selectedPosition) return;
+
+    // Wait for template to load if a template ID exists
+    const templateId =
+      selectedPosition?.templateId?._id || selectedPosition?.templateId;
+    if (templateId && isTemplateLoading) return;
+
     if (hasInitializedFormRef.current) return;
 
     setIsEdit(true);
@@ -329,6 +337,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       minSalary: selectedPosition?.minSalary || "",
       maxSalary: selectedPosition?.maxSalary || "",
       jobDescription: selectedPosition?.jobDescription || "",
+      requirements: selectedPosition?.requirements || "",
       additionalNotes: selectedPosition?.additionalNotes || "",
       NoofPositions: selectedPosition?.NoofPositions?.toString() || "",
       Location: selectedPosition?.Location || "",
@@ -341,7 +350,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     const formattedSkills =
       selectedPosition?.skills?.map((skill) => ({
         skill: skill.skill || "",
-        experience: skill.experience || "",
         expertise: skill.expertise || "",
         requirement_level: skill.requirement_level || "REQUIRED",
         _id: skill._id || "",
@@ -779,15 +787,15 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       externalId: dataToSubmit.externalId || undefined,
       // Filter out empty skill rows - only include rows where at least one field has a value
       skills: entries
-        .filter((entry) => entry.skill || entry.experience || entry.expertise)
+        .filter((entry) => entry.skill || entry.expertise)
         .map((entry) => ({
           skill: entry.skill,
-          experience: entry.experience,
           expertise: entry.expertise,
           requirement_level: entry.requirement_level || "REQUIRED",
         })),
       additionalNotes: dataToSubmit.additionalNotes,
       jobDescription: dataToSubmit.jobDescription.trim(),
+      requirements: dataToSubmit.requirements?.trim() || "",
       // templateId: dataToSubmit.template,
       // ✅ fix naming mismatch (backend expects selectedTemplete)
       templateId: dataToSubmit.template?._id || null,
@@ -1503,7 +1511,32 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       maxLength={1000}
                     />
 
-                    {/* skills */}
+                    {/* Requirements */}
+                    <DescriptionField
+                      value={formData.requirements}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData({ ...formData, requirements: value });
+                        if (errors.requirements) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            requirements: "",
+                          }));
+                        }
+                      }}
+                      name="requirements"
+                      inputRef={fieldRefs.requirements}
+                      error={errors.requirements}
+                      label="Requirements (one per line)"
+                      required
+                      placeholder="5+ years of Salesforce development experience
+Expert knowledge of Apex, Lightning Web Components, and Visualforce
+Strong understanding of Salesforce data model and security
+Experience with Salesforce integrations (REST/SOAP APIs)"
+                      rows={6}
+                      maxLength={2000}
+                    />
+
                     <div>
                       <SkillsField
                         ref={fieldRefs.skills}
@@ -1539,6 +1572,64 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           setSelectedSkill("");
                           setSelectedExp("");
                           setSelectedLevel("");
+                        }}
+                        onAddMultipleSkills={(newSkillEntries, skillsToRemove = []) => {
+                          setEntries((prevEntries) => {
+                            let updatedEntries = [...prevEntries];
+
+                            // First, handle skill removals
+                            if (skillsToRemove.length > 0) {
+                              // Count current skills with data
+                              const currentFilledSkills = updatedEntries.filter(e => e.skill).length;
+                              const remainingSkillsAfterRemoval = currentFilledSkills - skillsToRemove.length;
+
+                              // If we still have 3+ skills after removal, remove rows entirely
+                              if (remainingSkillsAfterRemoval >= 3) {
+                                updatedEntries = updatedEntries.filter(entry =>
+                                  !skillsToRemove.includes(entry.skill)
+                                );
+                              } else {
+                                // If we'd have less than 3, just clear the skill but keep rows
+                                updatedEntries = updatedEntries.map((entry) => {
+                                  if (skillsToRemove.includes(entry.skill)) {
+                                    return { skill: "", experience: "", expertise: "", requirement_level: "REQUIRED" };
+                                  }
+                                  return entry;
+                                });
+                              }
+
+                              // Ensure we always have at least 3 rows
+                              while (updatedEntries.length < 3) {
+                                updatedEntries.push({ skill: "", experience: "", expertise: "", requirement_level: "REQUIRED" });
+                              }
+                            }
+
+                            // Then, add new skills - fill empty rows first
+                            let skillIndex = 0;
+                            for (let i = 0; i < updatedEntries.length && skillIndex < newSkillEntries.length; i++) {
+                              if (!updatedEntries[i].skill) {
+                                updatedEntries[i] = {
+                                  ...updatedEntries[i],
+                                  skill: newSkillEntries[skillIndex].skill,
+                                  requirement_level: newSkillEntries[skillIndex].requirement_level || "REQUIRED",
+                                };
+                                skillIndex++;
+                              }
+                            }
+
+                            // Add remaining skills as new rows
+                            while (skillIndex < newSkillEntries.length && updatedEntries.length < 10) {
+                              updatedEntries.push(newSkillEntries[skillIndex]);
+                              skillIndex++;
+                            }
+
+                            return updatedEntries;
+                          });
+                          // Update allSelectedSkills
+                          setAllSelectedSkills((prev) => {
+                            let updated = prev.filter(s => !skillsToRemove.includes(s));
+                            return [...updated, ...newSkillEntries.map((e) => e.skill)];
+                          });
                         }}
                         onEditSkill={(index) => {
                           const entry = entries[index];

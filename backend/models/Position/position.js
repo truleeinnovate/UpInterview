@@ -43,13 +43,13 @@ const positionSchema = new mongoose.Schema(
     // companyname: String,
     companyname: { type: mongoose.Schema.Types.ObjectId, ref: "TenantCompany" },
     jobDescription: String,
+    requirements: String,
     minexperience: Number,
     maxexperience: Number,
     templateId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewTemplate' },
     skills: [
       {
         skill: String,
-        experience: String,
         expertise: String,
         requirement_level: {
           type: String,

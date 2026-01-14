@@ -439,6 +439,8 @@ router.get(
             .limit(limitNum)
             .lean();
 
+
+
           const interviewIds = mockInterviews.map((i) => i._id);
 
           const roleNames = mockInterviews
@@ -1893,7 +1895,7 @@ router.get(
           } = req.query;
 
           const parsedPositionPage = parseInt(page) || 1;
-          const parsedPositionLimit = parseInt(limit);
+          const parsedPositionLimit = parseInt(limit) || 10;
           const positionSkip = (parsedPositionPage - 1) * parsedPositionLimit;
 
           // Apply search
@@ -2688,6 +2690,56 @@ async function handleInterviewFiltering(options) {
       .lean();
 
     // ==========================================================
+    // STEP 1.5: Manual Safe Population for CompanyName
+    // (Handles mixed ObjectId/String data that crashes mongoose populate)
+    // ==========================================================
+    const companyIds = new Set();
+    interviews.forEach((i) => {
+      const pos = i.positionId;
+      if (
+        pos &&
+        pos.companyname &&
+        mongoose.isValidObjectId(pos.companyname)
+      ) {
+        companyIds.add(String(pos.companyname));
+      }
+    });
+
+    if (companyIds.size > 0) {
+      const companies = await TenantCompany.find({
+        _id: { $in: [...companyIds] },
+      })
+        .select("name")
+        .lean();
+      const companyMap = {};
+      companies.forEach((c) => {
+        companyMap[String(c._id)] = c;
+      });
+
+      interviews.forEach((i) => {
+        if (i.positionId && i.positionId.companyname) {
+          const rawVal = i.positionId.companyname;
+          if (mongoose.isValidObjectId(rawVal)) {
+            const comp = companyMap[String(rawVal)];
+            i.positionId.companyname = comp || { name: "Unknown Company" };
+          } else if (typeof rawVal === "string") {
+            i.positionId.companyname = { name: rawVal };
+          }
+        }
+      });
+    } else {
+      interviews.forEach((i) => {
+        if (
+          i.positionId &&
+          i.positionId.companyname &&
+          typeof i.positionId.companyname === "string"
+        ) {
+          i.positionId.companyname = { name: i.positionId.companyname };
+        }
+      });
+    }
+
+    // ==========================================================
     // STEP 1.5: Fetch Resume data for each candidate (skills, experience, etc.)
     // ==========================================================
     const candidateIds = interviews
@@ -2749,7 +2801,7 @@ async function handleInterviewFiltering(options) {
             c.Email,
             c.CurrentRole,
             p.title,
-            p.companyname,
+            p.companyname?.name || p.companyname,
             i.interviewCode,
             i.interviewTitle,
             i.interviewType,
@@ -2784,7 +2836,7 @@ async function handleInterviewFiltering(options) {
     if (Array.isArray(company) && company.length) {
       const set = new Set(company.map(toLower));
       interviews = interviews.filter((i) => {
-        const comp = toLower(i.positionId?.companyname);
+        const comp = toLower(i.positionId?.companyname?.name || i.positionId?.companyname);
         return comp && set.has(comp);
       });
     }

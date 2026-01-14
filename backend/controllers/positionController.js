@@ -78,6 +78,7 @@ const createPosition = async (req, res) => {
       title: req.body.title || "",
       companyname: req.body.companyname || "",
       jobDescription: req.body.jobDescription || "",
+      requirements: req.body.requirements || "",
       minexperience: req.body.minexperience || undefined,
       maxexperience: req.body.maxexperience || undefined,
       skills: req.body.skills || [],
@@ -117,9 +118,9 @@ const createPosition = async (req, res) => {
         sequence: round?.sequence || 0,
         questions: round?.questions
           ? round.questions?.map((q) => ({
-              questionId: q.questionId,
-              snapshot: q.snapshot,
-            }))
+            questionId: q.questionId,
+            snapshot: q.snapshot,
+          }))
           : [],
       }));
     } else {
@@ -233,6 +234,10 @@ const updatePosition = async (req, res) => {
       companyname: updateFields.companyname || currentPosition.companyname,
       jobDescription:
         updateFields.jobDescription || currentPosition.jobDescription,
+      requirements:
+        updateFields.requirements !== undefined
+          ? updateFields.requirements
+          : currentPosition.requirements,
       minexperience:
         updateFields.minexperience || currentPosition.minexperience,
       maxexperience:
@@ -249,6 +254,9 @@ const updatePosition = async (req, res) => {
         ? Number(updateFields.NoofPositions)
         : currentPosition.NoofPositions,
       Location: updateFields.Location || currentPosition.Location,
+      externalId: updateFields.externalId !== undefined
+        ? updateFields.externalId
+        : currentPosition.externalId,
       status: updateFields.status ?? currentPosition.status,
       updatedBy: ownerId,
     };
@@ -271,9 +279,9 @@ const updatePosition = async (req, res) => {
         sequence: round.sequence || 0,
         questions: round.questions
           ? round.questions.map((q) => ({
-              questionId: q.questionId || null,
-              snapshot: q.snapshot || null,
-            }))
+            questionId: q.questionId || null,
+            snapshot: q.snapshot || null,
+          }))
           : [],
       }));
     } else {
@@ -523,6 +531,11 @@ const getPositionById = async (req, res) => {
         path: "companyname", // This is the field where you store the ID
         model: "TenantCompany", // This must match your Company model name
         select: "name industry", // Only fetch necessary fields
+      })
+      .populate({
+        path: "templateId",
+        model: "InterviewTemplate",
+        select: "title _id", // Fetch template title
       })
       .populate("skills") // Populate skills if needed
       .lean(); // Convert to plain JS object for performance

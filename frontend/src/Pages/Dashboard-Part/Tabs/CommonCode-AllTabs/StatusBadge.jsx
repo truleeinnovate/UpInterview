@@ -11,6 +11,7 @@ function StatusBadge({ status, size = "md", className = "" }) {
         return "info";
       case "Completed":
       case "Selected":
+      case "Opened":
         return "success";
       case "Cancelled":
       case "NoShow":
@@ -22,7 +23,8 @@ function StatusBadge({ status, size = "md", className = "" }) {
         return "warning";
       case "Draft":
         return "gray";
-      case "RequestSent" || "Request Sent":
+      case "RequestSent":
+      case "Request Sent":
         return "orange";
       default:
         return "secondary";

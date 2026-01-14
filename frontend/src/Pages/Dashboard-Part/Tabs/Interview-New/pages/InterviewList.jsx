@@ -667,9 +667,9 @@ function InterviewList() {
             </div>
             <div
               className="text-sm text-gray-500 truncate cursor-default"
-              title={position?.companyname}
+              title={position?.companyname?.name || position?.companyname}
             >
-              {capitalizeFirstLetter(position?.companyname) || "No Company"} •{" "}
+              {capitalizeFirstLetter(position?.companyname?.name || position?.companyname) || "No Company"} •{" "}
               {capitalizeFirstLetter(position?.Location) || "No location"}
             </div>
           </div>

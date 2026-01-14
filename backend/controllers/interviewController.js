@@ -2816,6 +2816,10 @@ const getInterviewDataforOrg = async (req, res) => {
       .populate({
         path: "positionId",
         select: "title companyname Location skills minexperience maxexperience",
+        populate: {
+          path: "companyname",
+          select: "name",
+        },
       })
       .populate("templateId")
       .lean();

@@ -35,6 +35,7 @@ import PositionForm from "./Position-Form";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import { usePositions } from "../../../../apiHooks/usePositions";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
+import { useCompanies } from "../../../../apiHooks/TenantCompany/useTenantCompanies";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 // v1.0.4 <------------------------------------------------------
 import { useMediaQuery } from "react-responsive";
@@ -95,8 +96,8 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
             : action.key === "edit"
-            ? "text-green-600 hover:bg-green-600/10"
-            : "text-blue-600 bg-green-600/10";
+              ? "text-green-600 hover:bg-green-600/10"
+              : "text-blue-600 bg-green-600/10";
 
         return (
           <button
@@ -166,7 +167,8 @@ const PositionTab = () => {
   // All hooks at the top
   const pageType = "adminPortal";
   const { effectivePermissions, isInitialized } = usePermissions();
-  const { locations, skills, companies } = useMasterData({}, pageType); //<-----v1.03-----
+  const { locations, skills } = useMasterData({}, pageType); // Removed companies from here
+  const { getAllCompanies } = useCompanies(); // Use tenant companies hook
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -220,6 +222,7 @@ const PositionTab = () => {
   //  Ranjith added delete Candidate functionality
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deletePosition, setDeletePosition] = useState(null);
+  const [tenantCompanies, setTenantCompanies] = useState([]);
   const rowsPerPage = 10;
   // Replace the current usePositions call with one that includes filters
   const queryFilters = {
@@ -282,12 +285,25 @@ const PositionTab = () => {
     ];
   }, [locations]);
 
-  // Memoize unique company names from master data
+  // Memoize unique company names from TenantCompany collection
   const uniqueCompanyNames = useMemo(() => {
-    if (!Array.isArray(companies)) return [];
-    return [...new Set(companies.map((c) => c?.CompanyName).filter(Boolean))];
-  }, [companies]);
+    if (!Array.isArray(tenantCompanies)) return [];
+    return [...new Set(tenantCompanies.map((c) => c?.name).filter(Boolean))];
+  }, [tenantCompanies]);
   //-----v1.03----->
+
+  // Fetch tenant companies on mount
+  useEffect(() => {
+    const fetchTenantCompanies = async () => {
+      try {
+        const companies = await getAllCompanies();
+        setTenantCompanies(companies || []);
+      } catch (error) {
+        console.error("Error fetching tenant companies:", error);
+      }
+    };
+    fetchTenantCompanies();
+  }, [getAllCompanies]);
 
   // v1.0.2 <------------------------------------------------------
   // useEffect(() => {
@@ -420,13 +436,13 @@ const PositionTab = () => {
     setCurrentPage(0);
     setIsFilterActive(
       filters.location.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.company.length > 0 ||
-        filters.experience.min > 0 ||
-        filters.experience.max < 15 ||
-        filters.salaryMin > 0 ||
-        filters.salaryMax > 0 ||
-        !!filters.createdDate
+      filters.tech.length > 0 ||
+      filters.company.length > 0 ||
+      filters.experience.min > 0 ||
+      filters.experience.max < 15 ||
+      filters.salaryMin > 0 ||
+      filters.salaryMax > 0 ||
+      !!filters.createdDate
     );
     setFilterPopupOpen(false);
   };
@@ -663,44 +679,44 @@ const PositionTab = () => {
   const tableActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => handleView(row),
-          },
-        ]
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (row) => handleView(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-          //<----v1.02-----
-          {
-            key: "change_status",
-            label: "Change Status",
-            icon: <Repeat className="w-4 h-4 text-green-600" />,
-            onClick: (row) => openStatusModal(row),
-          },
-          //----v1.02----->
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => handleEdit(row),
-          },
-        ]
+        //<----v1.02-----
+        {
+          key: "change_status",
+          label: "Change Status",
+          icon: <Repeat className="w-4 h-4 text-green-600" />,
+          onClick: (row) => openStatusModal(row),
+        },
+        //----v1.02----->
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (row) => handleEdit(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (row) => {
-              setShowDeleteConfirmModal(true);
-              setDeletePosition(row);
-            },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: (row) => {
+            setShowDeleteConfirmModal(true);
+            setDeletePosition(row);
           },
-        ]
+        },
+      ]
       : []),
   ];
   // v1.0.5 <----------------------------------------------------------------------------------
@@ -776,47 +792,47 @@ const PositionTab = () => {
   const kanbanActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => handleView(row),
-          },
-        ]
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (row) => handleView(row),
+        },
+      ]
       : []),
 
     ...(effectivePermissions.Positions?.Edit
       ? [
-          {
-            key: "change_status",
-            label: "Change Status",
-            icon: <Repeat className="w-4 h-4 text-green-600" />,
-            onClick: (row) => openStatusModal(row),
-          },
-        ]
+        {
+          key: "change_status",
+          label: "Change Status",
+          icon: <Repeat className="w-4 h-4 text-green-600" />,
+          onClick: (row) => openStatusModal(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => handleEdit(row),
-          },
-        ]
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (row) => handleEdit(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (row) => {
-              setShowDeleteConfirmModal(true);
-              setDeletePosition(row);
-            },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: (row) => {
+            setShowDeleteConfirmModal(true);
+            setDeletePosition(row);
           },
-        ]
+        },
+      ]
       : []),
   ];
   // v1.0.8 ---------------------------------------------------------------------------------->
@@ -987,7 +1003,7 @@ const PositionTab = () => {
                                 onChange={() => handleLocationToggle(location)}
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                // v1.0.1 --------------------------------------------------------------->
+                              // v1.0.1 --------------------------------------------------------------->
                               />
                               <span className="text-sm">{location}</span>
                             </label>
@@ -1028,7 +1044,7 @@ const PositionTab = () => {
                                 }
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                // v1.0.1 <---------------------------------------------------------------
+                              // v1.0.1 <---------------------------------------------------------------
                               />
                               <span className="text-sm">{skill.SkillName}</span>
                             </label>
