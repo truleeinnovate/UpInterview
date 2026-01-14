@@ -1695,7 +1695,7 @@ const updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => {} }), locals: {} }
+        { status: () => ({ json: () => { } }), locals: {} }
       );
     }
 
@@ -2017,7 +2017,7 @@ async function handleInterviewerRequestFlow({
           isMockInterview: false,
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} }
+      { status: () => ({ json: () => { } }), locals: {} }
     );
   }
 
@@ -2036,7 +2036,7 @@ async function handleInterviewerRequestFlow({
           type: "interview",
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} }
+      { status: () => ({ json: () => { } }), locals: {} }
     );
     console.log(
       "Outsource interview request emails sent successfully",
@@ -2076,7 +2076,7 @@ async function handleInternalRoundEmails({
       },
     },
     {
-      status: () => ({ json: () => {} }),
+      status: () => ({ json: () => { } }),
       locals: {},
     }
   );
@@ -2381,7 +2381,11 @@ const validateRoundCreationBasedOnParallelScheduling = async (
       const existingRounds = await InterviewRounds.find({
         interviewId,
         status: { $nin: ["Completed", "Cancelled", "Skipped", "Rejected"] },
-      }).sort({ sequence: 1 });
+      });
+
+      // ✅ in-memory sort (safe for Cosmos)
+      existingRounds.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+
 
       if (existingRounds.length > 0) {
         // Check if any round has NO or STRONG_NO outcome
@@ -2441,9 +2445,8 @@ const validateRoundCreationBasedOnParallelScheduling = async (
 
           return {
             isValid: false,
-            message: `Cannot create new round. Round "${
-              activeRound.roundTitle || "#" + activeRound.sequence
-            }" is currently ${activeRound.status.toLowerCase()} and parallel scheduling is disabled.`,
+            message: `Cannot create new round. Round "${activeRound.roundTitle || "#" + activeRound.sequence
+              }" is currently ${activeRound.status.toLowerCase()} and parallel scheduling is disabled.`,
             activeRound: {
               sequence: activeRound.sequence,
               roundTitle: activeRound.roundTitle,

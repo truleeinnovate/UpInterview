@@ -76,7 +76,7 @@ const createPosition = async (req, res) => {
     // Map request body to schema fields
     const positionData = {
       title: req.body.title || "",
-      companyname: req.body.companyname || "",
+      companyname: req.body.companyname,
       jobDescription: req.body.jobDescription || "",
       requirements: req.body.requirements || "",
       minexperience: req.body.minexperience || undefined,
