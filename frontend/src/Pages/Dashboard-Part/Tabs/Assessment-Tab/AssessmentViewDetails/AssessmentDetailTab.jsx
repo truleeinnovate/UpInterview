@@ -243,7 +243,7 @@ function DetailsTab({ assessment, assessmentQuestions }) {
     //   </div>
     //   {/* v1.0.1 -----------------------------------------------------------------------------> */}
     // </div>
-    <div className="sm:p-0 p-6 mb-10">
+    <div className="overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-20">
       <div className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Basic Details Section */}

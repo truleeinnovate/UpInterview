@@ -26,6 +26,7 @@ import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scro
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { useUpdateOrganization } from "../../../../../apiHooks/useOrganization";
 import LoadingButton from "../../../../../Components/LoadingButton";
+import PhoneField from "../../../../../Components/FormFields/PhoneField";
 
 Modal.setAppElement("#root");
 
@@ -59,6 +60,7 @@ const CompanyEditProfile = () => {
     firstName: "",
     lastName: "",
     email: "",
+    countryCode: "+91", // default country code
     phone: "",
     jobTitle: "",
     location: "",
@@ -121,6 +123,25 @@ const CompanyEditProfile = () => {
     label: `${size} employees`,
   }));
 
+  // For Headquarters
+  const handleHQPhoneUpdate = (e) => {
+    const { name, value } = e.target;
+    const field = name === "Phone" ? "phone" : "countryCode";
+    setFormData((prev) => ({
+      ...prev,
+      headquarters: { ...prev.headquarters, [field]: value },
+    }));
+  };
+
+  // For Regional Offices (Array)
+  const handleRegionalPhoneUpdate = (index, e) => {
+    const { name, value } = e.target;
+    const field = name === "Phone" ? "phone" : "countryCode";
+    const updatedOffices = [...formData.regionalOffices];
+    updatedOffices[index][field] = value;
+    setFormData((prev) => ({ ...prev, regionalOffices: updatedOffices }));
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -130,6 +151,13 @@ const CompanyEditProfile = () => {
         // Find user based on userId
 
         const organizationDetails = organization_Data.data;
+
+        const hq = organizationDetails?.offices?.find(
+          (o) => o.type === "headquarters"
+        );
+        const regionals = organizationDetails?.offices?.filter(
+          (o) => o.type === "regionalOffice"
+        );
 
         // Update form data with API response
         setFormData({
@@ -141,43 +169,55 @@ const CompanyEditProfile = () => {
           firstName: organizationDetails?.firstName || "",
           lastName: organizationDetails?.lastName || "",
           email: organizationDetails?.email || "",
+          countryCode: organizationDetails?.countryCode || "+1",
           phone: organizationDetails?.phone || "",
           jobTitle: organizationDetails?.jobTitle || "",
           location: organizationDetails?.location || "",
           logo: organizationDetails?.branding?.logo || "",
-          headquarters: organizationDetails?.offices?.find(
-            (office) => office.type === "headquarters"
-          ) || {
-            address: "",
-            city: "",
-            state: "",
-            zip: "",
-            country: "",
-            phone: "",
-          },
-          // regionalOffice: organizationDetails?.offices?.find(
-          //   (office) => office.type === "Regional Office"
+          // headquarters: organizationDetails?.offices?.find(
+          //   (office) => office.type === "headquarters"
           // ) || {
           //   address: "",
           //   city: "",
           //   state: "",
           //   zip: "",
           //   country: "",
+          //   countryCode: "+91",
           //   phone: "",
           // },
-          regionalOffices: organizationDetails?.offices?.filter(
-            (office) => office.type === "regionalOffice"
-          ) || [
-            {
-              address: "",
-              city: "",
-              state: "",
-              zip: "",
-              country: "",
-              phone: "",
-            },
-          ],
-
+          // // regionalOffice: organizationDetails?.offices?.find(
+          // //   (office) => office.type === "Regional Office"
+          // // ) || {
+          // //   address: "",
+          // //   city: "",
+          // //   state: "",
+          // //   zip: "",
+          // //   country: "",
+          // //   phone: "",
+          // // },
+          // regionalOffices: organizationDetails?.offices?.filter(
+          //   (office) => office.type === "regionalOffice"
+          // ) || [
+          //   {
+          //     address: "",
+          //     city: "",
+          //     state: "",
+          //     zip: "",
+          //     country: "",
+          //     countryCode: "+91",
+          //     phone: "",
+          //   },
+          // ],
+          headquarters: hq
+            ? { ...hq, countryCode: hq.countryCode || "+91" }
+            : {},
+          regionalOffices:
+            regionals?.length > 0
+              ? regionals.map((office) => ({
+                  ...office,
+                  countryCode: office.countryCode || "+91",
+                }))
+              : [{ address: "", countryCode: "+91", phone: "" /* ... rest */ }],
           socialMedia: {
             linkedin: organizationDetails?.socialMedia?.linkedin || "",
             twitter: organizationDetails?.socialMedia?.twitter || "",
@@ -275,6 +315,7 @@ const CompanyEditProfile = () => {
     firstName: useRef(null),
     lastName: useRef(null),
     email: useRef(null),
+    countryCode: useRef(null),
     phone: useRef(null),
     jobTitle: useRef(null),
     location: useRef(null),
@@ -315,6 +356,7 @@ const CompanyEditProfile = () => {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
+        countryCode: formData?.countryCode,
         phone: formData.phone,
         jobTitle: formData.jobTitle,
         socialMedia: formData.socialMedia,
@@ -384,6 +426,18 @@ const CompanyEditProfile = () => {
       ...prev,
       regionalOffices: updated.length ? updated : prev.regionalOffices,
     }));
+  };
+
+  const handlePhoneUpdate = (e) => {
+    const { name, value } = e.target;
+    // name will be "Phone" or "CountryCode" based on the PhoneField component
+    setFormData((prev) => ({
+      ...prev,
+      [name === "Phone" ? "phone" : "countryCode"]: value,
+    }));
+
+    // Clear errors when user types
+    setErrors((prev) => ({ ...prev, phone: "" }));
   };
 
   return (
@@ -570,7 +624,7 @@ const CompanyEditProfile = () => {
                 />
               </div>
               <div>
-                <InputField
+                {/* <InputField
                   value={formData.phone}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, "");
@@ -585,7 +639,21 @@ const CompanyEditProfile = () => {
                   error={errors.phone}
                   label="Phone"
                   required
-                />
+                /> */}
+                {/* Replace the old Phone InputField with this */}
+                <div>
+                  <PhoneField
+                    label="Phone"
+                    required
+                    countryCodeValue={formData.countryCode}
+                    onCountryCodeChange={handlePhoneUpdate}
+                    countryCodeRef={fieldRefs.countryCode}
+                    phoneValue={formData.phone}
+                    onPhoneChange={handlePhoneUpdate}
+                    phoneRef={fieldRefs.phone}
+                    phoneError={errors.phone}
+                  />
+                </div>
               </div>
             </div>
 
@@ -692,7 +760,7 @@ const CompanyEditProfile = () => {
                     />
                   </div>
                   <div>
-                    <InputField
+                    {/* <InputField
                       value={formData.headquarters.phone}
                       onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, "");
@@ -705,7 +773,17 @@ const CompanyEditProfile = () => {
                       name="headquarters.phone"
                       label="Phone"
                       error={errors.headquarters?.phone}
-                    />
+                    /> */}
+                    <div>
+                      <PhoneField
+                        label="Phone"
+                        countryCodeValue={formData.headquarters.countryCode}
+                        onCountryCodeChange={handleHQPhoneUpdate}
+                        phoneValue={formData.headquarters.phone}
+                        onPhoneChange={handleHQPhoneUpdate}
+                        phoneError={errors.headquarters?.phone}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -885,7 +963,7 @@ const CompanyEditProfile = () => {
                         />
                       </div>
                       <div>
-                        <InputField
+                        {/* <InputField
                           value={office.phone}
                           onChange={(e) => {
                             const value = e.target.value.replace(/\D/g, "");
@@ -894,7 +972,21 @@ const CompanyEditProfile = () => {
                             }
                           }}
                           label="Phone"
-                        />
+                        /> */}
+                        <div>
+                          <PhoneField
+                            label="Phone"
+                            countryCodeValue={office.countryCode}
+                            onCountryCodeChange={(e) =>
+                              handleRegionalPhoneUpdate(index, e)
+                            }
+                            phoneValue={office.phone}
+                            onPhoneChange={(e) =>
+                              handleRegionalPhoneUpdate(index, e)
+                            }
+                            phoneError={errors.regionalOffices?.[index]?.phone}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

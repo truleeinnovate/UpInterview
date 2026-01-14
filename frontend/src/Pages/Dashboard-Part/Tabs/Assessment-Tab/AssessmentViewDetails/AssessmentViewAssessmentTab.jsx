@@ -180,7 +180,6 @@ function AssessmentsTab({ assessment }) {
     return <div className="p-4 text-gray-600">Loading Assessments...</div>;
 
   const formattedCandidates = (candidates) =>
-
     (Array.isArray(candidates) ? candidates : []).map((candidate) => ({
       id: candidate._id,
       _id: candidate.candidateId._id,
@@ -215,7 +214,7 @@ function AssessmentsTab({ assessment }) {
   return (
     <>
       {/* <---------------------- v1.0.1 */}
-      <div className="space-y-6">
+      <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-20">
         <div className="flex justify-end items-center">
           {hasSections && (
             <button

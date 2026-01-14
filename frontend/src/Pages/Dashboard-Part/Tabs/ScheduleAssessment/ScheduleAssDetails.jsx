@@ -180,7 +180,7 @@ function ScheduleAssDetails() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center justify-start w-full border-b mb-6">
+        <div className="flex items-center justify-start w-full border-b mb-2">
           <div className="flex items-center justify-start w-80 gap-2">
             <button
               onClick={() => setActiveTab("candidate")}
@@ -208,7 +208,7 @@ function ScheduleAssDetails() {
         </div>
 
         {/* Content */}
-        <div className="flex-grow overflow-y-auto">
+        <div className="flex-grow">
           {loading ? (
             <div className="text-center py-8 text-gray-500">
               Loading Candidates...
@@ -222,7 +222,7 @@ function ScheduleAssDetails() {
               />
             </div>
           ) : (
-            <div>
+            <div className="min-h-screen">
               <AssessmentResultsTab
                 assessment={assessment}
                 toggleStates={toggleStates}

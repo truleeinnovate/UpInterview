@@ -105,8 +105,10 @@ function AssessmentResultsTab({
       }
       const timeTakenMin = Math.floor(timeTakenSeconds / 60);
       const timeTakenSec = timeTakenSeconds % 60;
-      const formatted = `${timeTakenMin}:${timeTakenSec.toString().padStart(2, '0')}`;
-      console.log('formatted', formatted);
+      const formatted = `${timeTakenMin}:${timeTakenSec
+        .toString()
+        .padStart(2, "0")}`;
+      console.log("formatted", formatted);
       return formatted;
     }
     return "-";
@@ -119,29 +121,32 @@ function AssessmentResultsTab({
 
   if (loading) return <div className="p-4">Loading results...</div>;
   if (showResultView) {
-    const formattedTime = selectedCandidate ? getTimeTaken(selectedCandidate) : "-";
+    const formattedTime = selectedCandidate
+      ? getTimeTaken(selectedCandidate)
+      : "-";
     return (
-      <ScheduledAssessmentResultView
-        candidate={selectedCandidate}
-        schedule={selectedSchedule}
-        assessment={assessment}
-        onBack={closeResultView}
-        toggleStates={toggleStates}
-        toggleArrow1={toggleArrow1}
-        isFullscreen={isFullscreen}
-        assessmentQuestions={assessmentQuestions}
-        timeTaken={formattedTime}
-      />
+      <div className="overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-12">
+        <ScheduledAssessmentResultView
+          candidate={selectedCandidate}
+          schedule={selectedSchedule}
+          assessment={assessment}
+          onBack={closeResultView}
+          toggleStates={toggleStates}
+          toggleArrow1={toggleArrow1}
+          isFullscreen={isFullscreen}
+          assessmentQuestions={assessmentQuestions}
+          timeTaken={formattedTime}
+        />
+      </div>
     );
   }
   return (
-    <div className="sm:px-2 p-4">
+    <div className="sm:px-2 overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-20">
       <h3 className="text-lg font-medium text-gray-900 mb-6">
         Assessment Results
       </h3>
       <div className="grid sm:grid-cols-1 md:grid-cols-1 grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-
           <div className="text-2xl font-semibold text-blue-600">
             {totalCompleted}
           </div>
@@ -186,17 +191,18 @@ function AssessmentResultsTab({
                           .map((c) => new Date(c.expiryAt));
                         return validDates.length > 0
                           ? format(
-                            new Date(Math.min(...validDates)),
-                            "MMM dd, yyyy"
-                          )
+                              new Date(Math.min(...validDates)),
+                              "MMM dd, yyyy"
+                            )
                           : "N/A";
                       })()}
                     </span>
                     <span
-                      className={`px-2.5 py-1 text-xs font-medium rounded-full ${schedule.status === "active"
+                      className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                        schedule.status === "active"
                           ? "bg-green-100 text-green-800"
                           : "bg-gray-100 text-gray-800"
-                        }`}
+                      }`}
                     >
                       {schedule.status.charAt(0).toUpperCase() +
                         schedule.status.slice(1)}
@@ -243,7 +249,7 @@ function AssessmentResultsTab({
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {schedule.candidates &&
-                          schedule.candidates.length > 0 ? (
+                        schedule.candidates.length > 0 ? (
                           schedule.candidates.map((candidate) => (
                             <tr key={candidate.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -258,28 +264,30 @@ function AssessmentResultsTab({
                                 {candidate.answeredQuestions}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {getTimeTaken(candidate)} / {getFullDurationFormatted()}
+                                {getTimeTaken(candidate)} /{" "}
+                                {getFullDurationFormatted()}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {candidate.totalScore}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span
-                                  className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${candidate.result === "pass"
+                                  className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                    candidate.result === "pass"
                                       ? "bg-green-100 text-green-800"
                                       : "bg-red-100 text-red-800"
-                                    }`}
+                                  }`}
                                 >
                                   {capitalizeFirstLetter(candidate?.result)}
                                 </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {candidate.completionDate &&
-                                  isValidDate(candidate.completionDate)
+                                isValidDate(candidate.completionDate)
                                   ? format(
-                                    new Date(candidate.completionDate),
-                                    "MMM dd, yyyy"
-                                  )
+                                      new Date(candidate.completionDate),
+                                      "MMM dd, yyyy"
+                                    )
                                   : "-"}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
