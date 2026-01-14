@@ -209,9 +209,7 @@ const positionValidationSchema = Joi.object({
         skill: Joi.string()
           .required()
           .messages({ "any.required": "Skill is required" }),
-        experience: Joi.string()
-          .required()
-          .messages({ "any.required": "Experience is required" }),
+        experience: Joi.string().optional().allow(null, ""),
         expertise: Joi.string()
           .required()
           .messages({ "any.required": "Expertise is required" }),

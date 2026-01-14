@@ -58,11 +58,11 @@ export const validateForm = (formData, entries, rounds) => {
     formIsValid = false;
   }
 
-   // Validate experience range
+  // Validate experience range
   if (formData.minexperience && formData.maxexperience) {
     const minExp = parseInt(formData.minexperience);
     const maxExp = parseInt(formData.maxexperience);
-    
+
     if (minExp === maxExp) {
       errors.minexperience = "Min and Max Experience cannot be equal";
       errors.maxexperience = "Max and Min Experience cannot be equal";
@@ -75,29 +75,29 @@ export const validateForm = (formData, entries, rounds) => {
   }
 
 
- // Salary validation - only validate if at least one salary field is filled
- if (formData.minSalary || formData.maxSalary) {
-  // Validate minSalary
-  if (formData.minSalary) {
-    if (parseInt(formData.minSalary) < 0) {
-      errors.minsalary = "Minimum salary cannot be negative";
-      formIsValid = false;
+  // Salary validation - only validate if at least one salary field is filled
+  if (formData.minSalary || formData.maxSalary) {
+    // Validate minSalary
+    if (formData.minSalary) {
+      if (parseInt(formData.minSalary) < 0) {
+        errors.minsalary = "Minimum salary cannot be negative";
+        formIsValid = false;
+      }
     }
-  }
 
-  // Validate maxSalary
-  if (formData.maxSalary) {
-    if (parseInt(formData.maxSalary) < 0) {
-      errors.maxsalary = "Maximum salary cannot be negative";
-      formIsValid = false;
+    // Validate maxSalary
+    if (formData.maxSalary) {
+      if (parseInt(formData.maxSalary) < 0) {
+        errors.maxsalary = "Maximum salary cannot be negative";
+        formIsValid = false;
+      }
     }
-  }
 
-// Validate relationship between min and max salary
+    // Validate relationship between min and max salary
     if (formData.minSalary && formData.maxSalary) {
       const minSalary = parseInt(formData.minSalary);
       const maxSalary = parseInt(formData.maxSalary);
-      
+
       if (minSalary === maxSalary) {
         errors.minsalary = "Minimum and Maximum Salary cannot be equal";
         errors.maxsalary = "Maximum and Minimum Salary cannot be equal";
@@ -120,60 +120,60 @@ export const validateForm = (formData, entries, rounds) => {
 
   // Skills validation: ignore entirely empty rows, validate only rows where any field is filled
   const filledEntries = (entries || []).filter(
-    (e) => (e?.skill && e.skill !== "") || (e?.experience && e.experience !== "") || (e?.expertise && e.expertise !== "")
+    (e) => (e?.skill && e.skill !== "") || (e?.expertise && e.expertise !== "") || (e?.requirement_level && e.requirement_level !== "")
   );
   if (filledEntries.length === 0) {
     errors.skills = "At least one skill must be selected";
     formIsValid = false;
   } else {
-      // Check each filled entry for missing fields
-      const invalidEntries = filledEntries.map((entry, index) => {
-          const missingFields = [];
-          if (!entry.skill) missingFields.push('skill');
-          if (!entry.experience) missingFields.push('experience');
-          if (!entry.expertise) missingFields.push('expertise');
-          
-          return missingFields.length > 0 
-              ? { index, missingFields }
-              : null;
-      }).filter(Boolean);
+    // Check each filled entry for missing fields
+    const invalidEntries = filledEntries.map((entry, index) => {
+      const missingFields = [];
+      if (!entry.skill) missingFields.push('skill');
+      if (!entry.expertise) missingFields.push('expertise');
+      if (!entry.requirement_level) missingFields.push('requirement_level');
 
-      if (invalidEntries.length > 0) {
-          // Create a more helpful error message
-          const errorMessages = invalidEntries.map(({index, missingFields}) => 
-              `Row ${index + 1}: Please fill in ${missingFields.join(', ')}`
-          );
-          
-          errors.skills = errorMessages.join('; ');
-          formIsValid = false;
-      }
+      return missingFields.length > 0
+        ? { index, missingFields }
+        : null;
+    }).filter(Boolean);
+
+    if (invalidEntries.length > 0) {
+      // Create a more helpful error message
+      const errorMessages = invalidEntries.map(({ index, missingFields }) =>
+        `Row ${index + 1}: Please fill in ${missingFields.join(', ')}`
+      );
+
+      errors.skills = errorMessages.join('; ');
+      formIsValid = false;
+    }
   }
 
-    // Add salary validation
-    if (formData.minSalary && formData.maxSalary) {
-      if (parseInt(formData.minSalary) > parseInt(formData.maxSalary)) {
-        errors.minsalary = "Minimum Salary cannot be greater than Maximum";
-        formIsValid = false;
-      } else if (parseInt(formData.maxSalary) < parseInt(formData.minSalary)) {
-        errors.maxsalary = "Maximum Salary cannot be less than Minimum";
-        formIsValid = false;
-      }
+  // Add salary validation
+  if (formData.minSalary && formData.maxSalary) {
+    if (parseInt(formData.minSalary) > parseInt(formData.maxSalary)) {
+      errors.minsalary = "Minimum Salary cannot be greater than Maximum";
+      formIsValid = false;
+    } else if (parseInt(formData.maxSalary) < parseInt(formData.minSalary)) {
+      errors.maxsalary = "Maximum Salary cannot be less than Minimum";
+      formIsValid = false;
     }
+  }
 
 
 
-    // Add No of Positions validation
-    // if (!formData.NoofPositions || parseInt(formData.NoofPositions) <= 0) {
-    //   errors.NoofPositions = "Number of Positions must be greater than 0";
-    //   formIsValid = false;
-    // }
-    // v1.0.0 <----------------------------------------------------------------------
-    // Add location validation
-    // if (!formData.Location) {
-    //   errors.Location = "Location is required";
-    //   formIsValid = false;
-    // }
-    // v1.0.0 ---------------------------------------------------------------------->
+  // Add No of Positions validation
+  // if (!formData.NoofPositions || parseInt(formData.NoofPositions) <= 0) {
+  //   errors.NoofPositions = "Number of Positions must be greater than 0";
+  //   formIsValid = false;
+  // }
+  // v1.0.0 <----------------------------------------------------------------------
+  // Add location validation
+  // if (!formData.Location) {
+  //   errors.Location = "Location is required";
+  //   formIsValid = false;
+  // }
+  // v1.0.0 ---------------------------------------------------------------------->
 
   return { formIsValid, newErrors: errors };
 };

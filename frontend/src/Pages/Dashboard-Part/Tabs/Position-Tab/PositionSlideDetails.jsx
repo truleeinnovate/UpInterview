@@ -239,8 +239,8 @@ const PositionSlideDetails = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`${activeTab === tab.id
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1`}
                 >
                   {/* <span className="mr-2">{tab.icon}</span> */}
@@ -270,14 +270,14 @@ const PositionSlideDetails = () => {
             {/* v1.0.6 --------------------------------------------------------------------------> */}
             <div className="space-y-6 mt-4">
               {/* v1.0.6 <--------------------------------------------- */}
-              <div className="sm:text-start text-center mb-4">
+              <div className="text-start mb-4">
                 {/* v1.0.6 ---------------------------------------------> */}
                 <h3 className="sm:text-xl text-2xl font-bold text-gray-900 truncate">
-                  {position?.companyname?.name || ""}
-                </h3>
-                <p className="text-gray-600 mt-1">
                   {position?.title.charAt(0).toUpperCase() +
                     position?.title?.slice(1) || "position"}
+                </h3>
+                <p className="text-gray-600 mt-1">
+                  Company: {position?.companyname?.name || ""}
                 </p>
               </div>
 
@@ -303,71 +303,161 @@ const PositionSlideDetails = () => {
                 )} */}
 
               <div className="space-y-4">
-                {/* v1.0.4 <---------------------------------------------------------------- */}
-                <h4 className="font-semibold text-gray-800">Job Details</h4>
-                <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-center gap-2 text-gray-600 mb-1">
-                      <Building2 className="w-4 h-4 text-custom-blue" />
-                      <span className="text-sm">Company Name</span>
+                {/* 3-Column Layout for Position Details */}
+                <div className="grid grid-cols-3 sm:grid-cols-1 gap-6">
+                  {/* Position Details Column */}
+                  <div className="bg-gray-50 rounded-lg p-5 shadow-sm">
+                    <h4 className="font-semibold text-gray-800 mb-4">Position Details</h4>
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <MapPin className="w-4 h-4 text-custom-blue mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-500">Location</p>
+                          <p className="font-medium text-gray-800">{position?.Location || "Not Disclosed"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Briefcase className="w-4 h-4 text-custom-blue mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-500">Employment Type</p>
+                          <p className="font-medium text-gray-800">{position?.employmentType || "Full-time"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <FileText className="w-4 h-4 text-custom-blue mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-500">Open Date</p>
+                          <p className="font-medium text-gray-800">
+                            {position?.createdAt
+                              ? new Date(position.createdAt).toLocaleDateString('en-CA')
+                              : "Not Available"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-custom-blue font-bold text-sm">#</span>
+                        <div>
+                          <p className="text-sm text-gray-500">No. of Positions</p>
+                          <p className="font-medium text-gray-800">{position?.NoofPositions || 1}</p>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm font-medium text-gray-800 truncate">
-                      {position?.companyname?.name}
-                    </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-center gap-2 text-gray-600 mb-1">
-                      <MapPin className="w-4 h-4 text-red-500" />
-                      <span className="text-sm">Location</span>
+
+                  {/* Experience & Compensation Column */}
+                  <div className="bg-gray-50 rounded-lg p-5 shadow-sm">
+                    <h4 className="font-semibold text-gray-800 mb-4">Experience & Compensation</h4>
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <Briefcase className="w-4 h-4 text-custom-blue mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-500">Experience Required</p>
+                          <p className="font-medium text-gray-800">
+                            {position?.minexperience && position?.maxexperience
+                              ? `${position.minexperience}-${position.maxexperience} years`
+                              : "Not Disclosed"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-custom-blue font-bold text-sm">₹</span>
+                        <div>
+                          <p className="text-sm text-gray-500">Salary Range (Annual)</p>
+                          <p className="font-medium text-gray-800">
+                            {position?.minSalary && position?.maxSalary
+                              ? `₹${position.minSalary?.toLocaleString()} - ₹${position.maxSalary?.toLocaleString()}`
+                              : position?.minSalary
+                                ? `₹${position.minSalary?.toLocaleString()} - Not Disclosed`
+                                : position?.maxSalary
+                                  ? `₹0 - ₹${position.maxSalary?.toLocaleString()}`
+                                  : "Not Disclosed"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <FileText className="w-4 h-4 text-custom-blue mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-500">Interview Template</p>
+                          <p className="font-medium text-gray-800">{position?.templateId?.title || "Not Assigned"}</p>
+                        </div>
+                      </div>
+                      {position?.externalId && (
+                        <div className="flex items-start gap-3">
+                          <span className="text-custom-blue font-bold text-sm">#</span>
+                          <div>
+                            <p className="text-sm text-gray-500">External ID</p>
+                            <p className="font-medium text-gray-800">{position.externalId}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm font-medium text-gray-800">
-                      {position?.Location || "Not Disclosed"}
-                    </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-center gap-2 text-gray-600 mb-1">
-                      <span className="text-md text-custom-blue">₹</span>
-                      <span className="text-sm">Salary Range (Annual)</span>
+
+                  {/* Hiring Team Column */}
+                  <div className="bg-gray-50 rounded-lg p-5 shadow-sm">
+                    <h4 className="font-semibold text-gray-800 mb-4">Hiring Team</h4>
+                    <div className="space-y-3">
+                      {/* Static Hiring Team members */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold">
+                          M
+                        </div>
+                        <p className="font-medium text-gray-800 text-sm">
+                          Michael Roberts <span className="text-gray-500 font-normal">(CTO)</span>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold">
+                          J
+                        </div>
+                        <p className="font-medium text-gray-800 text-sm">
+                          Jennifer Lee <span className="text-gray-500 font-normal">(Salesforce Architect)</span>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold">
+                          D
+                        </div>
+                        <p className="font-medium text-gray-800 text-sm">
+                          David Chen <span className="text-gray-500 font-normal">(Senior Developer)</span>
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-sm font-medium text-gray-800">
-                      {position?.minSalary && position?.maxSalary
-                        ? `${position.minSalary} - ${position.maxSalary}`
-                        : position?.minSalary
-                          ? `${position.minSalary} - Not Disclosed`
-                          : position?.maxSalary
-                            ? `0 - ${position.maxSalary}`
-                            : "Not Disclosed"}
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-center gap-2 text-gray-600 mb-1">
-                      <Briefcase className="w-4 h-4 text-gray-500" />
-                      <p className="text-sm text-gray-600">Experience</p>
-                    </div>
-                    <p className="font-medium text-gray-800">
-                      {position?.minexperience +
-                        " - " +
-                        position?.maxexperience +
-                        " Years" || "Not Disclosed"}
-                    </p>
                   </div>
                 </div>
               </div>
-              {/* v1.0.4 ----------------------------------------------------------------> */}
 
-              <div className="space-y-4 w-full">
-                <h4 className="font-semibold text-gray-800">Job Description</h4>
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  {position?.jobDescription ? (
-                    <div className="text-gray-700 text-sm break-words whitespace-pre-line">
-                      {position.jobDescription}
-                    </div>
-                  ) : (
-                    <p className="text-gray-400 italic">
-                      No Job Description Provided
-                    </p>
-                  )}
-                </div>
+              {/* Job Description Section */}
+              <div className="bg-gray-50 rounded-lg p-6 w-full">
+                <h4 className="font-semibold text-gray-800 mb-3">Job Description</h4>
+                {position?.jobDescription ? (
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {position.jobDescription}
+                  </p>
+                ) : (
+                  <p className="text-gray-400 italic text-sm">
+                    No Job Description Provided
+                  </p>
+                )}
+              </div>
+
+              {/* Requirements Section */}
+              <div className="bg-gray-50 rounded-lg p-6 w-full">
+                <h4 className="font-semibold text-gray-800 mb-3">Requirements</h4>
+                {position?.requirements ? (
+                  <ul className="space-y-2 list-none">
+                    {position.requirements.split('\n').filter(line => line.trim()).map((requirement, index) => (
+                      <li key={index} className="flex items-baseline gap-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-custom-blue flex-shrink-0 mt-1.5"></span>
+                        <span className="text-gray-600 text-sm">{requirement.trim()}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-400 italic text-sm">
+                    No Requirements Provided
+                  </p>
+                )}
               </div>
               {/* v1.0.4 <---------------------------------------------------------------------------------- */}
               <div className="bg-white rounded-xl sm:shadow-none shadow-sm sm:border-none border border-gray-100 sm:p-0 p-6">
@@ -426,16 +516,11 @@ const PositionSlideDetails = () => {
                       <div
                         key={`skill-${index}`}
                         // className="flex gap-2 justify-center w-full px-3 py-3 bg-custom-bg rounded-full border border-blue-100"
-                        className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-2 w-full px-3 py-3 bg-custom-bg rounded-lg md:rounded-full lg:rounded-full xl:rounded-full 2xl:rounded-full border border-blue-100"
+                        className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-2 w-full px-3 py-3 bg-custom-bg rounded-lg md:rounded-full lg:rounded-full xl:rounded-full 2xl:rounded-full border border-blue-100"
                       >
                         <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
                           <span className="truncate max-w-full">
                             {skill.skill}
-                          </span>
-                        </span>
-                        <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
-                          <span className="truncate max-w-full">
-                            {skill.experience}
                           </span>
                         </span>
                         <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
@@ -461,56 +546,27 @@ const PositionSlideDetails = () => {
                   {/* v1.0.0 -------> */}
                 </div>
               </div>
-              {/* v1.0.4 ----------------------------------------------------------------------------------> */}
-            </div>
 
-            {/* External ID Field - Only show for organization users */}
-            {position?.externalId && isOrganization && (
-              <div className="bg-white rounded-xl sm:shadow-none shadow-sm sm:border-none border border-gray-100 sm:p-0 p-6 mt-6">
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                  External ID
-                </h4>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-custom-bg rounded-lg">
-                    <IdCard className="w-5 h-5 text-gray-500" />
-                  </div>
-                  <span className="text-gray-700">{position?.externalId}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Interviewers summary */}
-            <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <div className="flex items-center mb-2">
-                <Users className="h-5 w-5 text-gray-500 mr-2" />
-                <h4 className="text-sm font-medium text-gray-700">
-                  Interviewers
-                </h4>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <div className="px-3 py-1 bg-custom-blue/10 text-custom-blue rounded-full text-sm">
-                  <span className="font-medium">
-                    {internalInterviewerCount}
-                  </span>{" "}
-                  Internal
-                </div>
-                {/* <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
-                  <span className="font-medium">
-                    {externalInterviewerIds.size}
-                  </span>{" "}
-                  Outsourced
-                </div>
-                <div className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                  <span className="font-medium">{allInterviewerIds.size}</span>{" "}
-                  Total
-                </div> */}
-              </div>
+              {/* Additional Note */}
+              {position?.additionalNotes && <div className="bg-gray-50 rounded-lg p-6 w-full">
+                <h4 className="font-semibold text-gray-800 mb-3">Additional Notes</h4>
+                {position?.additionalNotes ? (
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {position.additionalNotes}
+                  </p>
+                ) : (
+                  <p className="text-gray-400 italic text-sm">
+                    No Additional Notes Provided
+                  </p>
+                )}
+              </div>}
+              {/* v1.0.4 -----------------------------------------------------------------------------------> */}
             </div>
 
             {/* Interview Rounds Table Header */}
             {/* <div className="border-t border-gray-200 px-4 py-5 sm:px-6"> */}
             {/* v1.0.4 <----------------------------------------------------------------------------- */}
-            <div className="border-t border-gray-200 py-5">
+            <div className="py-5">
               <div className="flex justify-between items-center mb-4">
                 {/* <h3 className="text-lg leading-6 font-medium text-gray-900"> */}
                 <h3 className="sm:text-md text-lg leading-6 font-medium text-gray-900">

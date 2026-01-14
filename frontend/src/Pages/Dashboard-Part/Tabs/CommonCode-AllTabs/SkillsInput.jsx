@@ -131,7 +131,7 @@ const SkillsField = forwardRef(
 
       entries.forEach((entry, index) => {
         const isCompleteRow =
-          entry.skill && entry.experience && entry.expertise;
+          entry.skill && (showRequirementLevel || entry.experience) && entry.expertise;
         const hasAnyValue = entry.skill || entry.experience || entry.expertise;
 
         // First 3 rows are mandatory
@@ -147,7 +147,7 @@ const SkillsField = forwardRef(
               if (!entry.skill) {
                 errors.skill = true;
               }
-              if (!entry.experience) {
+              if (!showRequirementLevel && !entry.experience) {
                 errors.experience = true;
               }
               if (!entry.expertise) {
@@ -167,7 +167,7 @@ const SkillsField = forwardRef(
             if (!entry.skill) {
               errors.skill = true;
             }
-            if (!entry.experience) {
+            if (!showRequirementLevel && !entry.experience) {
               errors.experience = true;
             }
             if (!entry.expertise) {
@@ -267,7 +267,7 @@ const SkillsField = forwardRef(
             <div key={index}>
               <div className={`border p-2 rounded-lg bg-gray-100 w-full flex`}>
                 <>
-                  <div className={`grid grid-cols-1 ${showRequirementLevel ? 'lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4' : 'lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3'} bg-white rounded w-full p-2 mr-3 gap-2`}>
+                  <div className={`grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 bg-white rounded w-full p-2 mr-3 gap-2`}>
                     <div className="px-1">
                       <DropdownWithSearchField
                         options={getAvailableSkillsForRow(index).map((s) => ({
@@ -304,7 +304,7 @@ const SkillsField = forwardRef(
                         <span className="text-red-500 text-xs mt-1">Skill required</span>
                       )} */}
                     </div>
-                    <div className="px-1">
+                    {!showRequirementLevel && <div className="px-1">
                       <DropdownSelect
                         options={experienceOptionsRS}
                         isSearchable={false}
@@ -330,7 +330,7 @@ const SkillsField = forwardRef(
                           Experience required
                         </span>
                       )}
-                    </div>
+                    </div>}
                     <div className="px-1">
                       <DropdownSelect
                         options={expertiseOptionsRS}
