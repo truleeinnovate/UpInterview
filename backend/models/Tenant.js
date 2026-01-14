@@ -1,3 +1,5 @@
+// v1.0.0 - Ashok - Added Country code
+
 const mongoose = require("mongoose");
 
 // Ranjith added OrganizationSchema
@@ -7,16 +9,17 @@ const TenantSchema = new mongoose.Schema(
     firstName: { type: String },
     lastName: { type: String },
     email: { type: String },
+    countryCode: { type: String },
     phone: { type: String },
     // username: { type: String },
     jobTitle: { type: String },
     company: { type: String },
     employees: { type: String },
     country: { type: String },
-    regionCode: { type: String, default:"IN"}, // e.g. IN, US, AE
+    regionCode: { type: String, default: "IN" }, // e.g. IN, US, AE
     currency: {
-      code: { type: String, default:"INR" }, // e.g. INR, USD
-      symbol: { type: String, default:"₹" }, // e.g. ₹, $
+      code: { type: String, default: "INR" }, // e.g. INR, USD
+      symbol: { type: String, default: "₹" }, // e.g. ₹, $
     },
     type: { type: String, enum: ["organization", "individual"] },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
@@ -34,10 +37,10 @@ const TenantSchema = new mongoose.Schema(
         "draft",
       ],
       default: "draft",
-      index: true
+      index: true,
     },
     //need to add boolean value for individaul pages wich page is submitted
-    isTestTenant:{type:Boolean,default:false},
+    isTestTenant: { type: Boolean, default: false },
 
     // Company Details
     industry: { type: String }, // added
@@ -76,6 +79,7 @@ const TenantSchema = new mongoose.Schema(
         state: { type: String },
         country: { type: String },
         zip: { type: String },
+        countryCode: { type: String },
         phone: { type: String },
       },
     ],

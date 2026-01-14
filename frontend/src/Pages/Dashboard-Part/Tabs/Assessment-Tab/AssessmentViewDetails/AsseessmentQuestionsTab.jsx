@@ -6,13 +6,13 @@ import QuestionCard from "./QuestionCard/QuestionCard";
 
 function QuestionsTab({ sections, toggleStates, toggleArrow1 }) {
   return (
-    <div className="">
+    <div className="overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-18">
       <div className="space-y-5">
         {sections?.length > 0 ? (
           sections.map((section, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+              className="bg-white rounded-xl shadow-sm border border-gray-200"
             >
               <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center space-x-4">

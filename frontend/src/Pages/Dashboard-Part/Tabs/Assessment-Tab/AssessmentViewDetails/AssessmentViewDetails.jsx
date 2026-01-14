@@ -115,7 +115,7 @@ function AssessmentView() {
       id: "Questions",
       name: "Questions",
       // icon: "❓",
-      icon: FileQuestion ,
+      icon: FileQuestion,
       content: (
         <QuestionsTab
           sections={assessmentQuestions.sections || []}
@@ -128,14 +128,14 @@ function AssessmentView() {
       id: "Assessments",
       name: "Assessments",
       // icon: "📑",
-      icon: ClipboardCheck ,
+      icon: ClipboardCheck,
       content: <AssessmentsTab assessment={assessment} />,
     },
     {
       id: "Results",
       name: "Results",
       // icon: "📈",
-      icon: AwardIcon ,
+      icon: AwardIcon,
       content: (
         <AssessmentResultsTab
           assessment={assessment}
@@ -182,7 +182,7 @@ function AssessmentView() {
               <div className="h-full bg-white shadow-xl flex flex-col">
                 {/* <------------------------------- v1.0.1  */}
                 {/* v1.0.5 <---------------------------------------------------------- */}
-                <div className="sm:px-4 px-6 py-4 flex items-center justify-between">
+                <div className="sm:px-4 px-6 py-2 flex items-center justify-between">
                   {/* ------------------------------ v1.0.1 > */}
                   <h3 className="text-lg font-medium text-gray-900">
                     Assessment Template Details
@@ -227,7 +227,7 @@ function AssessmentView() {
                     </button>
                   </div>
                 </div>
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1">
                   <Tab.Group
                     selectedIndex={selectedTab}
                     onChange={setSelectedTab}
@@ -239,7 +239,7 @@ function AssessmentView() {
                           <Tab
                             key={idx}
                             className={({ selected }) =>
-                              `py-4 px-4 text-sm font-medium border-b-2 focus:outline-none flex items-center gap-1 ${
+                              `py-2 px-4 text-sm font-medium border-b-2 focus:outline-none flex items-center gap-1 ${
                                 selected
                                   ? "border-custom-blue text-custom-blue"
                                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -253,9 +253,16 @@ function AssessmentView() {
                         );
                       })}
                     </Tab.List>
-                    <Tab.Panels className="p-4">
+                    <Tab.Panels>
                       {tabs.map((tab, idx) => (
-                        <Tab.Panel key={idx} className="focus:outline-none">
+                        <Tab.Panel
+                          key={idx}
+                          className={`focus:outline-none ${
+                            selectedTab === 4
+                              ? "overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-20"
+                              : ""
+                          }`}
+                        >
                           {tab.content}
                         </Tab.Panel>
                       ))}

@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - Added Country Code in the addresses
 
 import { useEffect, useState } from "react";
 import { GlobeAltIcon } from "@heroicons/react/24/outline";
@@ -7,8 +8,6 @@ import Cookies from "js-cookie";
 import { BrandingSection } from "./BrandingSection";
 import { Outlet, useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
-import { useCustomContext } from "../../../../../Context/Contextfetch";
-import Loading from "../../../../../Components/Loading";
 import { useOrganization } from "../../../../../apiHooks/useOrganization";
 
 // Loading Skeleton for Basic Info Section
@@ -200,8 +199,13 @@ const OfficeLocationsSection = ({ companyProfile, isLoading }) => {
           {validOffices.map((office) => (
             <div key={office._id} className="border p-4 rounded-lg">
               <div className="flex justify-between items-start">
-                <h4 className="font-medium">{office.type}</h4>
-                <span className="text-sm text-gray-500">{office.phone}</span>
+                <h4 className="font-medium">{office?.type === "regionalOffice" ? "Regional Office" : "Headquarters"}</h4>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-gray-500">
+                    {office?.countryCode}
+                  </span>
+                  <span className="text-sm text-gray-500">{office.phone}</span>
+                </div>
               </div>
               <p className="mt-2 text-gray-600">
                 {office.address}
@@ -228,7 +232,7 @@ const OfficeLocationsSection = ({ companyProfile, isLoading }) => {
 const CompanyProfile = () => {
   // const { organizationsLoading, organizationData } = useCustomContext();
   const { organizationsLoading, organizationData } = useOrganization();
-  
+
   const [brandingSettings, setBrandingSettings] = useState({});
   const [companyProfile, setCompanyProfile] = useState({});
   const navigate = useNavigate();
