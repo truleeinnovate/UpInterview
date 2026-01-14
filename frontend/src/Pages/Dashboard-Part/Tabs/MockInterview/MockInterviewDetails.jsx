@@ -14,16 +14,34 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
+  Calendar,
+  Clock,
+  XCircle,
+  MessageSquare,
+  UserX,
+  ClipboardList,
+  CheckCircle,
+  MoreVertical,
 } from "lucide-react";
 // import axios from "axios";
 import StatusBadge from "../CommonCode-AllTabs/StatusBadge.jsx";
 import Breadcrumb from "../CommonCode-AllTabs/Breadcrumb.jsx";
 import MoockRoundCard from "./MockInterviewRoundCard.jsx";
 import MockCandidateDetails from "./MockinterviewCandidate.jsx";
-import { useMockInterviewById } from "../../../../apiHooks/useMockInterviews.js";
+import {
+  useMockInterviewById,
+  useUpdateRoundStatus,
+} from "../../../../apiHooks/useMockInterviews.js";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import MeetPlatformBadge from "../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
 import { formatDateTime } from "../../../../utils/dateFormatter.js";
+import { notify } from "../../../../services/toastService.js";
+import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
+import { createPortal } from "react-dom";
+import DateChangeConfirmationModal from "../Interview-New/components/DateChangeConfirmationModal";
+import RejectionModal from "../Interview-New/components/RejectionModal.jsx";
+import FeedbackModal from "../Interview-New/components/FeedbackModal";
+import { useRef } from "react";
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
@@ -34,6 +52,33 @@ const MockInterviewDetails = () => {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [expandedRounds, setExpandedRounds] = useState({});
+
+  // const [showInterviewers, setShowInterviewers] = useState(false);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  // const [actionInProgress, setActionInProgress] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // Add near other state declarations
+  const [cancelReasonModalOpen, setCancelReasonModalOpen] = useState(false);
+  const [noShowReasonModalOpen, setNoShowReasonModalOpen] = useState(false);
+  const [rejectReasonModalOpen, setRejectReasonModalOpen] = useState(false);
+  const [completeReasonModalOpen, setCompleteReasonModalOpen] = useState(false);
+  const [evaluatedReasonModalOpen, setEvaluatedReasonModalOpen] =
+    useState(false);
+  const [completedReasonModalOpen, setCompletedReasonModalOpen] =
+    useState(false);
+  const [selectedReasonModalOpen, setSelectedReasonModalOpen] = useState(false);
+  // const [actionInProgress, setActionInProgress] = useState(false);
+  const [isCancellingRound, setIsCancellingRound] = useState(false); // Loading state for cancel operation
+  const [isNoShowingRound, setIsNoShowingRound] = useState(false); // Loading state for no-show operation
+
+  const [showMoreActions, setShowMoreActions] = useState(false);
+  const updateRoundStatus = useUpdateRoundStatus();
+
+  const moreActionsRef = useRef(null);
 
   const handleView = (candidate) => {
     if (!candidate) return; // Prevents error if candidate is undefined
@@ -54,6 +99,23 @@ const MockInterviewDetails = () => {
       );
     }
   }, [mockinterview]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        moreActionsRef.current &&
+        !moreActionsRef.current.contains(event.target)
+      ) {
+        setShowMoreActions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // v1.0.0 <----------------------------------------------------------------
   useEffect(() => {
@@ -89,6 +151,680 @@ const MockInterviewDetails = () => {
   //     }
   //   }
   // }, [rounds]);
+
+  // Count internal and external interviewers across all rounds
+  const allInterviewerIds = new Set();
+  // const internalInterviewerIds = new Set();
+  const externalInterviewerIds = new Set();
+
+  // const updateInterviewStatus = async (newStatus, reason = null) => {
+  //   if (rounds) {
+  //     const interviewData = {
+  //       status: newStatus,
+  //       ...(reason && { completionReason: reason }), // Add reason only if provided
+  //     };
+
+  //     try {
+  //       await axios.post(`${config.REACT_APP_API_URL}/interview`, {
+  //         ...interviewData,
+  //         interviewId: id,
+  //         updatingInterviewStatus: true,
+  //       });
+  //     } catch (error) {
+  //       console.error("Error updating interview status:", error);
+  //     }
+  //   }
+  // };
+
+  // Call this function for completion with a reason
+  // const handleCompleteWithReason = (reason) => {
+  //   updateInterviewStatus("Completed", reason);
+  //   setShowCompletionModal(false);
+  // };
+
+  // Call this function for cancellation
+
+  const canAddRound = () => {
+    // Check if the mock interview is in draft status
+    // If it is, then the user can add a new round
+    return mockinterview?.rounds?.status === "Draft";
+  };
+  /*******  0f06b6ee-9185-481b-bd68-17acfa422ab0  *******/
+
+  // const canEditRound = (round) => {
+  //   return mockinterview?.status === 'Draft' && round.status !== 'Completed';
+  // };
+
+  // const handleEditRound = (round) => {
+  //   navigate(`/interviews/${id}/rounds/${round._id}`);
+  // };
+
+  const handleAddRound = () => {
+    navigate(`/mock-interview/${id}/edit`, {
+      state: { from: "tableMode" },
+    });
+    // navigate(`/interviews/${id}/rounds/new`);
+  };
+
+  const handleStatusChange = async (
+    newStatus,
+    reasonValue = null,
+    comment = null,
+    roundOutcome = null
+  ) => {
+    // For cancellation/no-show, we need to ensure we pass a reason
+    if ((newStatus === "Cancelled" || newStatus === "NoShow") && !reasonValue) {
+      if (newStatus === "Cancelled") {
+        // setActionInProgress(true);
+        setCancelReasonModalOpen(true);
+      } else if (newStatus === "NoShow") {
+        // setActionInProgress(true);
+        setNoShowReasonModalOpen(true);
+      }
+      return;
+    }
+
+    try {
+      // Build the payload based on status
+      const payload = {
+        // roundId: round?.rounds[0]?._id,
+        // interviewId: mockinterview?._id,
+        action: newStatus,
+      };
+
+      console.log("payload", rounds[0]?._id);
+      console.log("payload", mockinterview?._id);
+
+      console.log("payload", payload);
+
+      // Add cancellation / NoShow reason if provided
+      if (
+        (newStatus === "Cancelled" ||
+          newStatus === "NoShow" ||
+          newStatus === "Skipped") &&
+        reasonValue
+      ) {
+        payload.reasonCode = reasonValue;
+        payload.comment = comment || null;
+      }
+
+      // Add evaluation data if Evaluated status
+      if (newStatus === "Evaluated") {
+        payload.reason = reasonValue;
+        payload.comment = comment || null;
+        if (roundOutcome) {
+          payload.roundOutcome = roundOutcome;
+        }
+      }
+
+      console.log("payload", payload);
+
+      const response = await updateRoundStatus.mutateAsync({
+        mockInterviewId: mockinterview?._id,
+        roundId: rounds[0]?._id,
+        payload,
+      });
+      // const savedMockId =
+      //   response?.data?.mockInterview?._id ||
+      //   response?._id ||
+      //   response?.data?._id;
+
+      // Show success toast
+      if (response) {
+        notify.success(`Round status updated to ${newStatus}`, {});
+      }
+
+      if (!response) {
+        notify.error("Failed to save mock interview data");
+        return;
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  // handling Completion functionlity
+  // setCompletedReasonModalOpen
+
+  const handleConfirmStatusChange = async ({
+    change = false,
+    reason,
+    comment,
+  }) => {
+    try {
+      // completedReasonModalOpen status handling
+      if (completedReasonModalOpen && change) {
+        await handleStatusChange("Completed", reason, comment || null);
+        setCompletedReasonModalOpen(false);
+      }
+      // selectedReasonModalOpen status handling
+      else if (selectedReasonModalOpen && change) {
+        await handleStatusChange("Selected", reason, comment || null);
+        setSelectedReasonModalOpen(false);
+      } else if (confirmAction && change) {
+        // Generic handle for other actions like Evaluated, FeedbackPending
+        await handleStatusChange(confirmAction, reason, comment || null);
+        setShowConfirmModal(false);
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  const handleReject = (reason) => {
+    handleStatusChange("Rejected", reason);
+    setShowRejectionModal(false);
+  };
+
+  const handleActionClick = (action) => {
+    // setActionInProgress(true);
+    if (action === "Evaluated") {
+      setEvaluatedReasonModalOpen(true);
+      // setActionInProgress(true);
+      return;
+    }
+
+    if (
+      action === "Completed" ||
+      // action === "Cancelled" ||
+      // action === "NoShow" ||
+      action === "Rejected" ||
+      action === "Selected" ||
+      action === "Scheduled" || // <-- add this line
+      action === "Skipped" ||
+      // action === "Evaluated" ||
+      action === "FeedbackPending"
+    ) {
+      setConfirmAction(action);
+      setShowConfirmModal(true);
+      // setActionInProgress(true);
+    }
+  };
+
+  // handling Rejection functionlity
+  const handleRejectWithReason = async ({ reason, comment }) => {
+    try {
+      await handleStatusChange("Rejected", reason, comment || null);
+      setRejectReasonModalOpen(false);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  // handling No show functionlity
+  const handleNoShowWithReason = async ({ reason, comment }) => {
+    setIsNoShowingRound(true);
+    try {
+      await handleStatusChange("NoShow", reason, comment || null);
+      setNoShowReasonModalOpen(false);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    } finally {
+      setIsNoShowingRound(false);
+    }
+  };
+
+  // handling Cancellation functionlity
+  const handleCancelWithReason = async ({ reason, comment }) => {
+    setIsCancellingRound(true);
+    try {
+      await handleStatusChange("Cancelled", reason, comment || null);
+      setCancelReasonModalOpen(false);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    } finally {
+      setIsCancellingRound(false);
+    }
+  };
+
+  // handling Rejection functionlity
+  const handleCompleteWithReason = async ({ reason, comment }) => {
+    try {
+      await handleStatusChange("Completed", reason, comment || null);
+      setCompleteReasonModalOpen(false);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  // handling Evaluated functionlity
+  const handleEvaluatedWithReason = async ({
+    reason,
+    comment,
+    roundOutcome,
+  }) => {
+    try {
+      await handleStatusChange(
+        "Evaluated",
+        reason,
+        comment || null,
+        roundOutcome
+      );
+      setEvaluatedReasonModalOpen(false);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  // const handleSelectRound = (roundId) => {
+  //   setActiveRound(roundId);
+  // };
+
+  // const toggleViewMode = () => {
+  //   setRoundsViewMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
+  // };
+
+  // const pendingRounds = rounds?.filter(round =>
+  //   ['Pending', 'Scheduled'].includes(round.status)
+  // );
+
+  // const handleViewEntityDetails = (
+  //   entity,
+  //   type,
+  //   viewType = 'sidebar'
+  // ) => {
+  //   if (viewType === 'sidebar') {
+  //     setEntityDetailsSidebar({ entity, type });
+  //     setEntityDetailsModal(null);
+  //   } else {
+  //     setEntityDetailsModal({ entity, type });
+  //     setEntityDetailsSidebar(null);
+  //   }
+  // };
+
+  // Handle opening entity in new modal
+  // const handleOpenEntityInNew = (entity, type) => {
+  //   setEntityDetailsModal({ entity, type });
+  //   setEntityDetailsSidebar(null);
+  // };
+
+  // Create breadcrumb items with status
+
+  // Calculate progress percentage
+  const completedRounds =
+    rounds?.filter((round) => round.status === "Completed").length || 0;
+  const totalRounds = rounds?.length || 0;
+  const progressPercentage =
+    totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0;
+
+  // Check if all rounds are completed
+  // const allRoundsCompleted = totalRounds > 0 && completedRounds === totalRounds;
+
+  // Normalize rounds for calculations
+  const normalizedRounds = Array.isArray(rounds)
+    ? rounds
+    : rounds
+    ? [rounds]
+    : [];
+
+  console.log(mockinterview);
+
+  const roundActionPermissions = {
+    // Draft: {
+    //   canEdit: true,
+    //   canDelete: true,
+    //   canMarkScheduled: true,
+    //   canReschedule: true,
+    //   canCancel: true,
+    //   canComplete: true,
+    //   canReject: true,
+    //   canSelect: true,
+    //   canFeedback: true,
+    // },
+    Draft: {
+      canEdit: true,
+      canDelete: true,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: true,
+      canNoShow: false,
+      canSkipped: true,
+    },
+    RequestSent: {
+      canEdit: true,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+    },
+    Scheduled: {
+      canEdit: true,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: true,
+      canCancel: true,
+      canComplete: true,
+      canFeedback: false,
+      canShareLink: false,
+      canResendLink: true,
+      //only for if round title assessment
+      canExtendAssessment: true,
+      canCancelAssessment: true,
+      canNoShow: true,
+      canSkipped: false,
+      canEvaluated: true,
+      canFeedbackPending: false,
+    },
+    Rescheduled: {
+      canEdit: true,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: true,
+      canCancel: true,
+      canComplete: true,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: true,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
+    },
+    Completed: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canEvaluated: true,
+    },
+    //  added by ranjith new status validation
+    InProgress: {
+      canEdit: false,
+      canDelete: false,
+      canNoShow: true,
+    },
+    Cancelled: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: true,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+    },
+    // Rejected: {
+    //   canEdit: false,
+    //   canDelete: false,
+    //   canMarkScheduled: false,
+    //   canReschedule: false,
+    //   canCancel: false,
+    //   canComplete: false,
+    //   canReject: false,
+    //   canSelect: false,
+    //   canFeedback: true,
+    //   canResendLink: false,
+    //   canShareLink: false,
+    // },
+    // Selected: {
+    //   canEdit: false,
+    //   canDelete: false,
+    //   canMarkScheduled: false,
+    //   canReschedule: false,
+    //   canCancel: false,
+    //   canComplete: false,
+    //   canReject: false,
+    //   canSelect: false,
+    //   canFeedback: true,
+    //   canResendLink: false,
+    //   canShareLink: false,
+    //   canNoShow: false,
+    // },
+    InComplete: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: true,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+    },
+    NoShow: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: true,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+    },
+    Skipped: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
+    },
+    Evaluated: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
+    },
+    FeedbackPending: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: false,
+      canFeedbackPending: false,
+    },
+  };
+
+  // Helper to get permissions for current round status
+  const getRoundPermissions = (status) =>
+    roundActionPermissions[status] || roundActionPermissions["Draft"];
+
+  // console.log("status", round.status);
+  const permissions = getRoundPermissions(rounds[0]?.status);
+
+  // Create action buttons configuration
+  const createActionButtons = () => {
+    const actions = [];
+
+    // Reschedule
+    if (
+      permissions.canReschedule &&
+      rounds[0]?.interviewType.toLowerCase() !== "instant"
+    ) {
+      actions.push({
+        label: "Reschedule",
+        icon: Calendar,
+        onClick: () =>
+          navigate(`/mock-interview/${mockinterview?._id}/edit`, {
+            state: { isReschedule: true },
+          }),
+        className:
+          "inline-flex items-center  text-sm text-blue-700 bg-blue-50 hover:bg-blue-100",
+        showInMore: true,
+      });
+    }
+
+    // No Show
+    if (permissions.canNoShow) {
+      actions.push({
+        label: "No Show",
+        icon: UserX,
+        onClick: () => setNoShowReasonModalOpen(true),
+        className:
+          "inline-flex items-center  text-sm  text-gray-700 bg-gray-50 hover:bg-gray-100",
+        showInMore: true,
+      });
+    }
+
+    // Evaluated
+    if (permissions.canEvaluated) {
+      actions.push({
+        label: "Evaluated",
+        icon: ClipboardList,
+        onClick: () => handleActionClick("Evaluated"),
+        className:
+          "inline-flex items-center  text-sm text-teal-700 bg-teal-50 hover:bg-teal-100",
+        showInMore: true,
+      });
+    }
+
+    // Cancel
+    if (
+      permissions.canCancel &&
+      rounds[0]?.interviewType.toLowerCase() !== "instant"
+    ) {
+      actions.push({
+        label: "Cancel",
+        icon: XCircle,
+        onClick: () => setCancelReasonModalOpen(true),
+        className:
+          "inline-flex items-center  text-sm text-red-700 bg-red-50 hover:bg-red-100",
+        showInMore: true,
+      });
+    }
+
+    // Edit
+    if (permissions.canEdit) {
+      actions.push({
+        label: "Edit Round",
+        icon: Edit,
+        onClick: () =>
+          navigate(`/mock-interview/${mockinterview?._id}/edit`, {
+            state: { isEdit: true },
+          }),
+        className:
+          "inline-flex items-center text-sm text-yellow-700 bg-yellow-50 hover:bg-yellow-100",
+        showInMore: true,
+      });
+    }
+
+    // Change Interviewers (for RequestSent status)
+    if (
+      rounds[0]?.status === "RequestSent" &&
+      rounds[0]?.interviewType !== "instant"
+    ) {
+      actions.push({
+        label: "Change Interviewers",
+        icon: Edit,
+        onClick: () =>
+          navigate(`/mock-interview/${mockinterview?._id}/edit`, {
+            state: { isRequestSent: true },
+          }),
+        className:
+          "inline-flex items-center  text-sm  text-yellow-800 bg-yellow-50 hover:bg-yellow-100",
+        showInMore: true,
+      });
+    }
+
+    // Delete
+    if (permissions.canDelete) {
+      actions.push({
+        label: "Delete Round",
+        icon: XCircle,
+        onClick: () => setShowDeleteConfirmModal(true),
+        className:
+          "inline-flex items-center text-sm  text-red-700 bg-red-50 hover:bg-red-100",
+        showInMore: true,
+      });
+    }
+
+    // Mark Scheduled
+    if (permissions.canMarkScheduled) {
+      actions.push({
+        label: "Mark Scheduled",
+        icon: Clock,
+        onClick: () => handleActionClick("Scheduled"),
+        className:
+          "inline-flex items-center  text-sm  text-indigo-700 bg-indigo-50 hover:bg-indigo-100",
+        showInMore: true,
+      });
+    }
+
+    // Complete
+    if (permissions.canComplete) {
+      actions.push({
+        label: "Complete",
+        icon: CheckCircle,
+        onClick: () => setCompletedReasonModalOpen(true),
+        className:
+          "inline-flex items-center text-sm  text-green-700 bg-green-50 hover:bg-green-100",
+        showInMore: true,
+      });
+    }
+
+    // Feedback
+    if (permissions?.canFeedback) {
+      actions.push({
+        label: "Feedback",
+        icon: MessageSquare,
+        onClick: () => setShowFeedbackModal(true),
+        className:
+          "inline-flex items-center    text-sm  text-purple-700 bg-purple-50 hover:bg-purple-100",
+        showInMore: true,
+      });
+    }
+
+    return actions;
+  };
+
+  const actionButtons = createActionButtons();
+  const visibleActions = actionButtons.filter((action) => !action.showInMore);
+  const hiddenActions = actionButtons.filter((action) => action.showInMore);
+
+  const breadcrumbItems = [
+    {
+      label: "Mock Interview",
+      path: "/mock-interview",
+    },
+    {
+      label: candidate?.candidateName || "Mock Interview",
+      path: `/interviews/${id}`,
+      status: mockinterview?.status,
+    },
+  ];
 
   // Ensure hooks are always called before any conditional return
   if (isLoading) {
@@ -144,129 +880,6 @@ const MockInterviewDetails = () => {
     );
   }
 
-  // Count internal and external interviewers across all rounds
-  const allInterviewerIds = new Set();
-  // const internalInterviewerIds = new Set();
-  const externalInterviewerIds = new Set();
-
-  // const updateInterviewStatus = async (newStatus, reason = null) => {
-  //   if (rounds) {
-  //     const interviewData = {
-  //       status: newStatus,
-  //       ...(reason && { completionReason: reason }), // Add reason only if provided
-  //     };
-
-  //     try {
-  //       await axios.post(`${config.REACT_APP_API_URL}/interview`, {
-  //         ...interviewData,
-  //         interviewId: id,
-  //         updatingInterviewStatus: true,
-  //       });
-  //     } catch (error) {
-  //       console.error("Error updating interview status:", error);
-  //     }
-  //   }
-  // };
-
-  // Call this function for completion with a reason
-  // const handleCompleteWithReason = (reason) => {
-  //   updateInterviewStatus("Completed", reason);
-  //   setShowCompletionModal(false);
-  // };
-
-  // Call this function for cancellation
-
-  /*************  ✨ Windsurf Command 🌟  *************/
-  /**
-   * Check if the user can add a new round to the mock interview
-   * @returns {boolean} True if the user can add a new round, false otherwise
-   */
-  const canAddRound = () => {
-    // Check if the mock interview is in draft status
-    // If it is, then the user can add a new round
-    return mockinterview?.rounds?.status === "Draft";
-  };
-  /*******  0f06b6ee-9185-481b-bd68-17acfa422ab0  *******/
-
-  // const canEditRound = (round) => {
-  //   return mockinterview?.status === 'Draft' && round.status !== 'Completed';
-  // };
-
-  // const handleEditRound = (round) => {
-  //   navigate(`/interviews/${id}/rounds/${round._id}`);
-  // };
-
-  const handleAddRound = () => {
-    navigate(`/mock-interview/${id}/edit`, {
-      state: { from: "tableMode" },
-    });
-    // navigate(`/interviews/${id}/rounds/new`);
-  };
-
-  // const handleSelectRound = (roundId) => {
-  //   setActiveRound(roundId);
-  // };
-
-  // const toggleViewMode = () => {
-  //   setRoundsViewMode(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
-  // };
-
-  // const pendingRounds = rounds?.filter(round =>
-  //   ['Pending', 'Scheduled'].includes(round.status)
-  // );
-
-  // const handleViewEntityDetails = (
-  //   entity,
-  //   type,
-  //   viewType = 'sidebar'
-  // ) => {
-  //   if (viewType === 'sidebar') {
-  //     setEntityDetailsSidebar({ entity, type });
-  //     setEntityDetailsModal(null);
-  //   } else {
-  //     setEntityDetailsModal({ entity, type });
-  //     setEntityDetailsSidebar(null);
-  //   }
-  // };
-
-  // Handle opening entity in new modal
-  // const handleOpenEntityInNew = (entity, type) => {
-  //   setEntityDetailsModal({ entity, type });
-  //   setEntityDetailsSidebar(null);
-  // };
-
-  // Create breadcrumb items with status
-  const breadcrumbItems = [
-    {
-      label: "Mock Interview",
-      path: "/mock-interview",
-    },
-    {
-      label: candidate?.candidateName || "Mock Interview",
-      path: `/interviews/${id}`,
-      status: mockinterview?.status,
-    },
-  ];
-
-  // Calculate progress percentage
-  const completedRounds =
-    rounds?.filter((round) => round.status === "Completed").length || 0;
-  const totalRounds = rounds?.length || 0;
-  const progressPercentage =
-    totalRounds > 0 ? (completedRounds / totalRounds) * 100 : 0;
-
-  // Check if all rounds are completed
-  // const allRoundsCompleted = totalRounds > 0 && completedRounds === totalRounds;
-
-  // Normalize rounds for calculations
-  const normalizedRounds = Array.isArray(rounds)
-    ? rounds
-    : rounds
-    ? [rounds]
-    : [];
-
-  console.log(mockinterview);
-
   return (
     <>
       <div className="min-h-screen bg-gray-50">
@@ -286,8 +899,8 @@ const MockInterviewDetails = () => {
 
             <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
               {/* v1.0.2 <------------------------------------------------------------------------- */}
-              <div className="flex flex-row justify-between items-start sm:items-center px-4 py-5 sm:px-6 gap-4">
-                <div>
+              <div className="flex flex-col justify-between items-start sm:items-center px-4 py-5 sm:px-6 gap-4">
+                <div className="flex justify-between w-full">
                   {/* v1.0.1 <----------------------------------------------------------------------------- */}
                   <h3 className="flex items-center text-lg leading-6 font-medium text-gray-900 gap-3">
                     Mock Interview Details
@@ -300,6 +913,60 @@ const MockInterviewDetails = () => {
                       </span>
                     )}
                   </h3>
+
+                  {/* Always visible buttons */}
+                  {/* {visibleActions.map((action, index) => {
+                    const Icon = action.icon;
+                    return (
+                      <button
+                        key={index}
+                        onClick={action.onClick}
+                        className={`inline-flex flex-shrink-0 items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white ${action.bgColor} ${action.hoverColor} focus:outline-none focus:ring-2 focus:ring-offset-2 ${action.ringColor}`}
+                      >
+                        <Icon className="h-4 w-4 mr-1" />
+                        {action.label}
+                      </button>
+                    );
+                  })} */}
+
+                  {/* "More" button only if there are actually hidden actions */}
+                  {hiddenActions.length > 0 && (
+                    <div
+                      className=" relative inline-block"
+                      ref={moreActionsRef}
+                    >
+                      <button
+                        onClick={() => setShowMoreActions((prev) => !prev)}
+                        className="inline-flex items-center justify-center p-2 border border-gray-300 rounded-md"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+
+                      {showMoreActions && (
+                        <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-xl bg-white z-50">
+                          {hiddenActions.map((action, index) => {
+                            const Icon = action.icon;
+                            return (
+                              <button
+                                key={index}
+                                onClick={() => {
+                                  action.onClick();
+                                  setShowMoreActions(false);
+                                }}
+                                className="w-full flex items-center px-4 py-3 text-sm hover:bg-blue-50"
+                              >
+                                <Icon className="h-4 w-4 mr-3" />
+                                {action.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div>
                   {/* v1.0.1 -----------------------------------------------------------------------------> */}
                   {/* v1.0.0 <--------------------------------------------------------------- */}
                   <p className="mt-1 max-w-2xl text-sm text-gray-500">
@@ -332,27 +999,14 @@ const MockInterviewDetails = () => {
                         <span className="sm:hidden inline">Edit Interview</span>
                       </button>
                     )}
-
-                  {/* <Link
-                    to={`/mock-interview/${id}/edit`}
-                    // onClick={() =>  navigate(`/mock-interview/${mockinterview._id}/edit`, { state: { from: location.pathname }})}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <Edit className="h-4 w-4 sm:mr-0 mr-1" />
-                    <span className="sm:hidden inline">Edit Interview</span>
-                  </Link> */}
                 </div>
               </div>
               {/* v1.0.2 -------------------------------------------------------------------------> */}
               {/* v1.0.1 <------------------------------------------------------ */}
               <div className="border-t border-gray-200 px-4 py-5">
                 {/* v1.0.1 ------------------------------------------------------> */}
-                <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-1">
+                <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-1 mb-4">
                   <div className="sm:col-span-1">
-                    {/* <dt className="text-sm font-medium text-gray-500 flex items-center">
-                      <User className="h-5 w-5 mr-1" />
-                      Candidate
-                    </dt> */}
                     <dd className="mt-1 text-sm text-gray-900">
                       <div className="flex items-center gap-2 mb-6">
                         <div className="mr-0 mb-3 sm:mb-0 sm:mr-3">
@@ -413,54 +1067,6 @@ const MockInterviewDetails = () => {
                     </dd>
                   </div>
                 </div>
-                {/* <div className="mt-10">
-                  <dt className="text-sm font-medium text-gray-500">
-                    Progress
-                  </dt>
-                  <dd className="mt-1">
-                    <div className="flex items-center">
-                      <span className="text-sm text-gray-900 mr-2">
-                        {completedRounds} of {totalRounds} rounds completed
-                      </span>
-                      <span className="text-sm font-medium text-custom-blue">
-                        {progressPercentage.toFixed(0)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                      <div
-                        className="bg-custom-blue h-2.5 rounded-full"
-                        style={{ width: `${progressPercentage}%` }}
-                      ></div>
-                    </div>
-                  </dd>
-                </div> */}
-
-                {/* Interviewers summary */}
-                <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div className="flex items-center mb-2">
-                    <Users className="h-5 w-5 text-gray-500 mr-2" />
-                    <h4 className="text-sm font-medium text-gray-700">
-                      Interviewers
-                    </h4>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {/* <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                      <span className="font-medium">{internalInterviewerIds.size}</span> Internal
-                    </div> */}
-                    <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
-                      <span className="font-medium">
-                        {externalInterviewerIds.size}
-                      </span>{" "}
-                      Outsourced
-                    </div>
-                    <div className="px-3 py-1 bg-custom-blue/10 text-custom-blue rounded-full text-sm">
-                      <span className="font-medium">
-                        {allInterviewerIds.size}
-                      </span>{" "}
-                      Total
-                    </div>
-                  </div>
-                </div>
 
                 {/* Interview Rounds Table Header */}
                 {/* v1.0.1 <---------------------------------------------- */}
@@ -471,13 +1077,7 @@ const MockInterviewDetails = () => {
                       Mock Interview Round
                     </h3>
                   </div>
-                  {/* <InterviewProgress
-                    rounds={normalizedRounds}
-                    interviewId={id}
-                    currentRoundId={activeRound || undefined}
-                    // viewMode={roundsViewMode}
-                    onSelectRound={handleSelectRound}
-                  /> */}
+
                   {rounds.length > 0 && (
                     <div className="mt-6">
                       <div className="space-y-4">
@@ -574,77 +1174,180 @@ const MockInterviewDetails = () => {
           </div>
         </main>
 
-        {/* {showFinalFeedbackModal && (
-          <FinalFeedbackModal
-            onClose={() => setShowFinalFeedbackModal(false)}
-            interviewId={id}
-          />
-        )} */}
-
-        {/* Confirmation Modal for cancle interview */}
-        {/* {isModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg">
-              <h2 className="text-lg font-semibold mb-4">
-                Are you sure you want to cancel this interview?
-              </h2>
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-300 rounded-md"
-                >
-                  No
-                </button>
-                <button
-                  onClick={confirmCancel}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md"
-                >
-                  Yes, Cancel
-                </button>
+        {(completedReasonModalOpen ||
+          selectedReasonModalOpen ||
+          showConfirmModal) &&
+          createPortal(
+            // v1.0.5 <--------------------------------------------------------------------------------
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
+              <div className="bg-white p-5 rounded-lg shadow-md">
+                <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-3">
+                  Are you sure you want to{" "}
+                  {completedReasonModalOpen
+                    ? "Complete"
+                    : selectedReasonModalOpen
+                    ? "Select"
+                    : confirmAction === "Skipped"
+                    ? "mark as Skipped"
+                    : confirmAction === "FeedbackPending"
+                    ? "mark as Feedback Pending"
+                    : confirmAction === "Scheduled"
+                    ? "mark as Scheduled"
+                    : "Reject"}{" "}
+                  this round?
+                </h3>
+                <div className="flex justify-end space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setCompletedReasonModalOpen(false);
+                      setSelectedReasonModalOpen(false);
+                      setShowConfirmModal(false);
+                    }}
+                  >
+                    No, Cancel
+                  </Button>
+                  <Button
+                    className={`${
+                      confirmAction === "Cancelled" &&
+                      "bg-red-600 hover:bg-red-700"
+                    }`}
+                    variant="success"
+                    onClick={() => handleConfirmStatusChange({ change: true })}
+                    // onClick={handleConfirmStatusChange({ change: true })}
+                  >
+                    Yes, Confirm
+                  </Button>
+                </div>
               </div>
-            </div>
-          </div>
-        )} */}
+            </div>,
+            document.body
+            // v1.0.5 -------------------------------------------------------------------------------->
+          )}
 
-        {/* {showCompletionModal && (
-          <CompletionReasonModal
-            onClose={() => setShowCompletionModal(false)}
-            onComplete={handleCompleteWithReason}
-            pendingRoundsCount={pendingRounds.length}
-            interviewId={id}
-            interview={interview}
+        {/* Modal for No Show using DateChangeConfirmationModal */}
+        <DateChangeConfirmationModal
+          isOpen={noShowReasonModalOpen}
+          onClose={() => {
+            setNoShowReasonModalOpen(false);
+            // setActionInProgress(false);
+          }}
+          onConfirm={handleNoShowWithReason}
+          selectedInterviewType={rounds[0]?.interviewerType}
+          status={rounds[0]?.status}
+          combinedDateTime={rounds[0]?.dateTime}
+          actionType="NoShow"
+          isLoading={isNoShowingRound}
+        />
+
+        {/* Modal for Reject using DateChangeConfirmationModal */}
+        <DateChangeConfirmationModal
+          isOpen={rejectReasonModalOpen}
+          onClose={() => {
+            setRejectReasonModalOpen(false);
+            // setActionInProgress(false);
+          }}
+          onConfirm={handleRejectWithReason}
+          selectedInterviewType={rounds[0]?.interviewerType}
+          status={rounds[0]?.roundStatus}
+          combinedDateTime={rounds[0]?.dateTime}
+          actionType="Reject"
+          isLoading={false}
+        />
+
+        {/* Modal for Complete using DateChangeConfirmationModal */}
+        <DateChangeConfirmationModal
+          isOpen={completeReasonModalOpen}
+          onClose={() => {
+            setCompleteReasonModalOpen(false);
+            // setActionInProgress(false);
+          }}
+          onConfirm={handleCompleteWithReason}
+          selectedInterviewType={rounds[0]?.interviewerType}
+          status={rounds[0]?.roundStatus}
+          combinedDateTime={rounds[0]?.dateTime}
+          actionType="Complete"
+          isLoading={false}
+        />
+
+        {/* Modal for Evaluated using DateChangeConfirmationModal */}
+        <DateChangeConfirmationModal
+          isOpen={evaluatedReasonModalOpen}
+          onClose={() => {
+            setEvaluatedReasonModalOpen(false);
+            // setActionInProgress(false);
+          }}
+          onConfirm={handleEvaluatedWithReason}
+          selectedInterviewType={rounds[0]?.interviewerType}
+          status={rounds[0]?.roundStatus}
+          combinedDateTime={rounds[0]?.dateTime}
+          actionType="Evaluated"
+          isLoading={false}
+        />
+
+        {/* Modal for Cancel using DateChangeConfirmationModal */}
+        <DateChangeConfirmationModal
+          isOpen={cancelReasonModalOpen}
+          onClose={() => {
+            setCancelReasonModalOpen(false);
+          }}
+          onConfirm={handleCancelWithReason}
+          selectedInterviewType={rounds[0]?.interviewerType}
+          status={rounds[0]?.roundStatus}
+          combinedDateTime={rounds[0]?.dateTime}
+          actionType="Cancel"
+          isLoading={isCancellingRound}
+        />
+
+        {showRejectionModal && (
+          <RejectionModal
+            onClose={() => setShowRejectionModal(false)}
+            onReject={handleReject}
+            roundName={rounds[0]?.name}
           />
-        )} */}
-
-        {/* Entity Details Sidebar */}
-        {/* {entityDetailsSidebar && (
-          <EntityDetailsSidebar
-            onClose={() => setEntityDetailsSidebar(null)}
-            entity={entityDetailsSidebar.entity}
-            entityType={entityDetailsSidebar.type}
-            onOpenInNew={() => handleOpenEntityInNew(entityDetailsSidebar.entity, entityDetailsSidebar.type)}
+        )}
+        {showFeedbackModal && (
+          <FeedbackModal
+            onClose={() => setShowFeedbackModal(false)}
+            // interviewId={interviewData._id}
+            roundId={rounds[0]}
           />
         )}
 
-        {entityDetailsModal && (
-          <EntityDetailsModal
-            onClose={() => setEntityDetailsModal(null)}
-            entity={entityDetailsModal.entity}
-            entityType={entityDetailsModal.type}
-          />
-        )} */}
+        {showDeleteConfirmModal &&
+          createPortal(
+            // v1.0.5 <------------------------------------------------------------------------------------------
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 sm:px-4">
+              <div className="bg-white p-5 rounded-lg shadow-md">
+                <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold mb-3">
+                  Are you sure you want to delete this round?
+                </h3>
+                <div className="flex justify-end space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDeleteConfirmModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    // onClick={handleDeleteRound}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </div>,
+            document.body
+            // v1.0.5 ------------------------------------------------------------------------------------------>
+          )}
+
         {selectCandidateView === true && (
           <MockCandidateDetails
             candidate={selectedCandidate}
             onClose={() => setSelectCandidateView(null)}
           />
         )}
-        {/* {selectPositionView === true && (
-        <PositionSlideDetails
-          position={selectedPosition}
-          onClose={() => setSelectPositionView(null)}
-        />
-      )} */}
       </div>
     </>
   );

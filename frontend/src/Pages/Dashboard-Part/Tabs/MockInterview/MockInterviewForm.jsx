@@ -165,7 +165,14 @@ const MockSchedulelater = () => {
   const inputRef = useRef();
   const [resume, setResume] = useState(null);
   const [isResumeRemoved, setIsResumeRemoved] = useState(false);
+
   const [resumeError, setResumeError] = useState("");
+
+  // 1. Add these new state variables near other time-related states
+  // Add these:
+  const [liveInstantDisplay, setLiveInstantDisplay] = useState(""); // ← only for beautiful UI preview
+  const instantIntervalRef = useRef(null); // better than state for interval
+  const [lastInstantCalculation, setLastInstantCalculation] = useState(null);
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -255,7 +262,7 @@ const MockSchedulelater = () => {
       // Only instructions, sequence, questions are editable
       if (
         fieldName === "instructions" ||
-        fieldName === "roundTitle" ||
+        // fieldName === "roundTitle" ||
         // fieldName === "candidateName" ||
         fieldName === "higherQualification" ||
         fieldName === "jobDescription" ||
@@ -1453,6 +1460,31 @@ const MockSchedulelater = () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
 
+    let finalDateTime = combinedDateTime; // default
+
+    // ── FRESH CALCULATION FOR INSTANT ───────────────────────────────
+    if (interviewType === "instant") {
+      const { display } = calculateInstantTimes(
+        Number(formData.rounds.duration) || 60
+      );
+      finalDateTime = display;
+
+      // You can also log for debugging:
+      // console.log("Final instant time saved:", finalDateTime);
+
+      // Optional: update formData just before sending (not necessary for display anymore)
+      setFormData((prev) => ({
+        ...prev,
+        rounds: {
+          ...prev.rounds,
+          dateTime: finalDateTime,
+        },
+      }));
+
+      // Tiny delay → helps React batch updates (optional but safer)
+      await new Promise((r) => setTimeout(r, 50));
+    }
+
     try {
       setShowSkillValidation(true);
       const { formIsValid, newErrors } = validatemockForm(
@@ -2010,30 +2042,80 @@ const MockSchedulelater = () => {
   //   }, [interviewType]);
 
   // Replace the problematic useEffect and updateTimes function with:
+  // useEffect(() => {
+  //   if (interviewType === "instant") {
+  //     const start = new Date();
+  //     start.setMinutes(start.getMinutes() + 15);
+  //     const end = new Date(start);
+  //     end.setMinutes(end.getMinutes() + Number(formData.rounds.duration || 60));
+
+  //     setStartTime(start.toISOString());
+  //     setEndTime(end.toISOString());
+  //     const formattedStart = formatToCustomDateTime(start);
+  //     const formattedEnd = formatToCustomDateTime(end).split(" ")[1];
+  //     const newDateTime = `${formattedStart} - ${formattedEnd}`;
+
+  //     setCombinedDateTime(newDateTime);
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       rounds: {
+  //         ...prev.rounds,
+  //         dateTime: newDateTime,
+  //         interviewType: "instant",
+  //       },
+  //     }));
+  //   }
+  // }, [interviewType, formData.rounds.duration]);
+
+  // Replace your existing calculateInstantTimes with this cleaner version
+  const calculateInstantTimes = useCallback((durationMinutes = 60) => {
+    const now = new Date();
+    const start = new Date(now.getTime() + 15 * 60 * 1000); // +15 min
+    start.setSeconds(0, 0);
+    start.setMilliseconds(0);
+
+    const end = new Date(start.getTime() + Number(durationMinutes) * 60 * 1000);
+
+    return {
+      display: `${formatToCustomDateTime(start)} - ${
+        formatToCustomDateTime(end).split(" ")[1] || "??:??"
+      }`,
+      startISO: start.toISOString(),
+    };
+  }, []);
+
+  // ── LIVE PREVIEW UPDATER ───────────────────────────────────────
   useEffect(() => {
-    if (interviewType === "instant") {
-      const start = new Date();
-      start.setMinutes(start.getMinutes() + 15);
-      const end = new Date(start);
-      end.setMinutes(end.getMinutes() + Number(formData.rounds.duration || 60));
-
-      setStartTime(start.toISOString());
-      setEndTime(end.toISOString());
-      const formattedStart = formatToCustomDateTime(start);
-      const formattedEnd = formatToCustomDateTime(end).split(" ")[1];
-      const newDateTime = `${formattedStart} - ${formattedEnd}`;
-
-      setCombinedDateTime(newDateTime);
-      setFormData((prev) => ({
-        ...prev,
-        rounds: {
-          ...prev.rounds,
-          dateTime: newDateTime,
-          interviewType: "instant",
-        },
-      }));
+    // Only run when instant is selected
+    if (interviewType !== "instant") {
+      if (instantIntervalRef.current) {
+        clearInterval(instantIntervalRef.current);
+        instantIntervalRef.current = null;
+      }
+      setLiveInstantDisplay("");
+      return;
     }
-  }, [interviewType, formData.rounds.duration]);
+
+    // Start refreshing every 30 seconds
+    const updateLiveTime = () => {
+      const { display } = calculateInstantTimes(
+        Number(formData.rounds.duration) || 60
+      );
+      setLiveInstantDisplay(display);
+    };
+
+    updateLiveTime(); // First run immediately
+
+    instantIntervalRef.current = setInterval(updateLiveTime, 30 * 1000);
+
+    // Cleanup
+    return () => {
+      if (instantIntervalRef.current) {
+        clearInterval(instantIntervalRef.current);
+        instantIntervalRef.current = null;
+      }
+    };
+  }, [interviewType, formData.rounds.duration, calculateInstantTimes]);
 
   useEffect(() => {
     if (interviewType === "scheduled" && scheduledDate) {
@@ -2345,26 +2427,36 @@ const MockSchedulelater = () => {
       const end = new Date(now);
       end.setMinutes(end.getMinutes() + Number(formData.rounds.duration || 60));
 
+      // Force immediate recalculation
+      const { startISO, endISO, formattedDisplay } = calculateInstantTimes(
+        formData.rounds.duration || 60
+      );
       // Format the datetime for display
-      const formattedStart = formatToCustomDateTime(now);
-      const formattedEnd = formatToCustomDateTime(end).split(" ")[1];
-      const newDateTime = `${formattedStart} - ${formattedEnd}`;
+      // const formattedStart = formatToCustomDateTime(now);
+      // const formattedEnd = formatToCustomDateTime(end).split(" ")[1];
+      // const newDateTime = `${formattedStart} - ${formattedEnd}`;
 
       // Update all datetime states
-      setStartTime(now.toISOString());
-      setEndTime(end.toISOString());
-      setCombinedDateTime(newDateTime);
+      // setStartTime(now.toISOString());
+      // setEndTime(end.toISOString());
+      // setCombinedDateTime(newDateTime);
+      // setInstantEndTime(formattedEnd);
+      // setInstantStartTime(formattedStart);
+
+      // setInstantStartTime(startISO);
+      // setInstantEndTime(endISO);
+      setCombinedDateTime(formattedDisplay);
 
       // Update form data
       setFormData((prev) => ({
         ...prev,
         rounds: {
           ...prev.rounds,
-          dateTime: newDateTime,
+          dateTime: formattedDisplay,
           interviewType: "instant",
         },
       }));
-
+      setScheduledDate(""); // clear scheduled date
       // Show instant interview info
       notify.info("Instant interview scheduled for 15 minutes from now");
     } else if (type === "scheduled") {
@@ -2629,6 +2721,9 @@ const MockSchedulelater = () => {
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveSkill(index)}
+                                    disabled={shouldDisable(
+                                      "removeInterviewerBtn"
+                                    )}
                                     className="ml-1 text-custom-blue hover:text-custom-blue/80"
                                     aria-label={`Remove ${skillName}`}
                                   >
@@ -3291,10 +3386,13 @@ const MockSchedulelater = () => {
                               <p className="text-sm text-custom-blue">
                                 Interview will start at{" "}
                                 <span className="font-medium">
-                                  {new Date(startTime).toLocaleTimeString([], {
+                                  {/* {combinedDateTime || "Calculating..."} */}
+                                  {liveInstantDisplay || "Calculating..."}{" "}
+                                  {/* ← NEW */}
+                                  {/* {new Date(startTime).toLocaleTimeString([], {
                                     hour: "2-digit",
                                     minute: "2-digit",
-                                  })}
+                                  })} */}
                                 </span>
                                 {/* {" "}
                                                                     and end at{" "}
@@ -3449,7 +3547,7 @@ const MockSchedulelater = () => {
                                           )
                                         }
                                         disabled={shouldDisable(
-                                          "clearInterviewersBtn"
+                                          "removeInterviewerBtn"
                                         )}
                                         className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
                                         title="Remove interviewer"
