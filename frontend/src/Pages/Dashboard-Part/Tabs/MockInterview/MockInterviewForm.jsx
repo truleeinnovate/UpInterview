@@ -35,9 +35,9 @@ import DescriptionField from "../../../../Components/FormFields/DescriptionField
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 
 import { notify } from "../../../../services/toastService.js";
-import axios from "axios";
-import { config } from "../../../../config.js";
-import { createMeeting } from "../../../../utils/meetingPlatforms.js";
+// import axios from "axios";
+// import { config } from "../../../../config.js";
+// import { createMeeting } from "../../../../utils/meetingPlatforms.js";
 import { useVideoSettingsQuery } from "../../../../apiHooks/VideoDetail.js";
 import DateChangeConfirmationModal from "../Interview-New/components/DateChangeConfirmationModal.jsx";
 
@@ -83,8 +83,13 @@ const MockSchedulelater = () => {
     loadCurrentRoles,
     isCurrentRolesFetching,
   } = useMasterData({}, pageType);
-  const { saveMockInterview, saveMockRound, isMutationLoading } =
-    useMockInterviews();
+  const {
+    saveMockInterview,
+    updateMockRound,
+    createMockRound,
+    saveMockRound,
+    isMutationLoading,
+  } = useMockInterviews();
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -113,7 +118,7 @@ const MockSchedulelater = () => {
       instructions: "",
       interviewType: "",
       interviewers: [],
-      status: "Draft",
+      status: "",
       dateTime: "",
     },
   });
@@ -138,14 +143,7 @@ const MockSchedulelater = () => {
   const [showDateChangeConfirmation, setShowDateChangeConfirmation] =
     useState(false);
   const [pendingDateChange, setPendingDateChange] = useState(null); // { type: 'interviewType' | 'scheduledDate' | 'duration', value: any }
-  // const [selectedSkill, setSelectedSkill] = useState("");
-  // const [selectedExp, setSelectedExp] = useState("");
-  // const [selectedLevel, setSelectedLevel] = useState("");
-  // const [editingIndex, setEditingIndex] = useState(null);
-  // const [isModalOpen, setIsModalOpen] = useState(false);
   const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
-  // const [currentStep, setCurrentStep] = useState(0);
-  // const [searchTerm, setSearchTerm] = useState("");
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
   // Add this helper function at the top with other state declarations
@@ -261,7 +259,8 @@ const MockSchedulelater = () => {
         // fieldName === "candidateName" ||
         fieldName === "higherQualification" ||
         fieldName === "jobDescription" ||
-        fieldName === "roundTitle"
+        fieldName === "roundTitle" ||
+        fieldName === "resume"
 
         // fieldName === "sequence" ||
         // fieldName === "questions"
@@ -395,7 +394,7 @@ const MockSchedulelater = () => {
         // Rest of your form population...
         setSelectedMeetingPlatform(round.meetPlatform || "Google Meet");
 
-        setStatus(data.status || "Draft");
+        setStatus(round.status);
 
         setFormData({
           ...formData, // preserve other fields if needed
@@ -1256,7 +1255,7 @@ const MockSchedulelater = () => {
         scheduledDate: newScheduledDate,
         combinedDateTime: newCombinedDateTime,
         startTime: newStartTime,
-        endTime: newEndTime,
+        // endTime: newEndTime,
       });
     }, 100);
 
@@ -1271,73 +1270,272 @@ const MockSchedulelater = () => {
   };
 
   // Page 2: Save round + create meeting
-  const handleSubmit = async (e) => {
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   setShowSkillValidation(true);
+  //   const { formIsValid, newErrors } = validatemockForm(
+  //     formData,
+  //     formData.skills,
+  //     errors
+  //   );
+  //   setErrors(newErrors);
+
+  //   if (!formIsValid) {
+  //     scrollToFirstError(newErrors, fieldRefs);
+  //     notify.error("Please fix the form errors before submitting");
+  //     return;
+  //   }
+
+  //   if (externalInterviewers.length === 0) {
+  //     notify.error("At least one interviewer must be selected");
+  //     return;
+  //   }
+
+  //   setIsSubmitting(true);
+
+  //   const mockId = mockEdit ? id : createdMockInterviewId;
+  //   if (!mockId) {
+  //     notify.error("Please save candidate details first");
+  //     setIsSubmitting(false);
+  //     return;
+  //   }
+
+  //   const existingRoundId = mockEdit ? formData.rounds.id : null;
+
+  //   try {
+  //     // Step 1: Save/Update Round
+  //     let updateType = "FULL_UPDATE";
+
+  //     const roundResponse = await saveMockRound({
+  //       mockInterviewId: mockId,
+  //       round: {
+  //         roundTitle: formData.rounds.roundTitle || "Technical Round",
+  //         interviewMode: formData.rounds.interviewMode || "Virtual",
+  //         interviewType: interviewType,
+  //         duration: formData.rounds.duration || "60",
+  //         instructions: formData.rounds.instructions || "",
+  //         dateTime: combinedDateTime,
+  //         selectedInterviewers: externalInterviewers,
+  //         maxHourlyRate: externalMaxHourlyRate,
+  //       },
+  //       roundId: existingRoundId,
+  //     });
+
+  //     const savedRound = roundResponse.data?.round;
+
+  //     const newStatus =
+  //       roundResponse?.savedRound?.status ||
+  //       roundResponse?.updatedRound?.status;
+  //     if (newStatus) {
+  //       setStatus(newStatus);
+  //     }
+  //     const generateMeetingLink = roundResponse.generateMeetingLink === true;
+  //     console.log("generateMeetingLink", generateMeetingLink);
+
+  //     // Step 2: Create & Save Meeting Link (for Mock Interviews)
+  //     if (generateMeetingLink && formData.rounds.interviewMode === "Virtual") {
+  //       let meetingLink = null;
+
+  //       try {
+  //         setIsMeetingCreationLoading(true);
+  //         setMeetingCreationProgress("Creating meeting link...");
+
+  //         const { createMeeting } = await import(
+  //           "../../../../utils/meetingPlatforms.js"
+  //         );
+
+  //         // Common payload fields (same as real interviews)
+  //         const commonPayload = {
+  //           roundTitle: savedRound.roundTitle,
+  //           instructions: savedRound.instructions || "",
+  //           combinedDateTime: savedRound.dateTime || combinedDateTime,
+  //           duration: savedRound.duration || formData.rounds.duration,
+  //           selectedInterviewers:
+  //             savedRound.interviewers || externalInterviewers,
+  //         };
+
+  //         if (selectedMeetingPlatform === "google-meet") {
+  //           meetingLink = await createMeeting(
+  //             "googlemeet",
+  //             commonPayload,
+  //             (progress) => setMeetingCreationProgress(progress)
+  //           );
+  //         } else if (selectedMeetingPlatform === "zoom") {
+  //           console.log("🟣 Creating Zoom meeting for Mock Interview...");
+  //           console.log("🟣 combinedDateTime:", combinedDateTime);
+
+  //           const formattedStartTime = formatStartTimeForZoom(combinedDateTime);
+
+  //           if (!formattedStartTime) {
+  //             throw new Error("Invalid start time for Zoom meeting");
+  //           }
+
+  //           const zoomPayload = {
+  //             topic: savedRound.roundTitle || "Mock Interview Round",
+  //             duration: Number(savedRound.duration || "60"),
+  //             type: 2, // scheduled meeting
+  //             start_time: formattedStartTime,
+  //             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  //             settings: {
+  //               join_before_host: true,
+  //               host_video: false,
+  //               participant_video: false,
+  //             },
+  //           };
+
+  //           meetingLink = await createMeeting(
+  //             "zoommeet",
+  //             { payload: zoomPayload },
+  //             (progress) => setMeetingCreationProgress(progress)
+  //           );
+  //         } else if (selectedMeetingPlatform === "platform") {
+  //           // VideoSDK / other
+  //           meetingLink = await createMeeting(
+  //             "videosdk",
+  //             commonPayload,
+  //             (progress) => setMeetingCreationProgress(progress)
+  //           );
+  //         }
+
+  //         if (meetingLink) {
+  //           setMeetingCreationProgress("Saving meeting link...");
+
+  //           // Save meeting link using mock-specific PATCH
+  //           await saveMockRound({
+  //             mockInterviewId: mockId,
+  //             roundId: savedRound._id,
+  //             updateType: "MEETING_LINK_ONLY",
+  //             round: {
+  //               // ← keep nested
+  //               meetingId:
+  //                 meetingLink?.join_url ||
+  //                 meetingLink?.start_url ||
+  //                 meetingLink?.hangoutLink ||
+  //                 meetingLink,
+  //               meetPlatform: selectedMeetingPlatform,
+  //             },
+  //           });
+
+  //           setMeetingCreationProgress("Meeting link saved successfully!");
+  //         }
+  //       } catch (err) {
+  //         console.error("Meeting creation failed:", err);
+  //         notify.warn(
+  //           "Round saved successfully, but meeting link could not be created."
+  //         );
+  //         setMeetingCreationProgress("Meeting creation failed");
+  //       } finally {
+  //         setIsMeetingCreationLoading(false);
+  //       }
+  //     }
+
+  //     notify.success(
+  //       mockEdit ? "Mock interview updated!" : "Mock interview scheduled!"
+  //     );
+  //     navigate("/mock-interview");
+
+  //     // Reset form...
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //     notify.error(
+  //       error.response?.data?.message || "Failed to save mock interview"
+  //     );
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  // Page 2: Save round + create meeting (improved & replicated structure)
+  const handleSubmit = async (e, type = "", overrides = {}) => {
     e.preventDefault();
 
-    setShowSkillValidation(true);
-    const { formIsValid, newErrors } = validatemockForm(
-      formData,
-      formData.skills,
-      errors
-    );
-    setErrors(newErrors);
-
-    if (!formIsValid) {
-      scrollToFirstError(newErrors, fieldRefs);
-      notify.error("Please fix the form errors before submitting");
-      return;
-    }
-
-    if (externalInterviewers.length === 0) {
-      notify.error("At least one interviewer must be selected");
-      return;
-    }
-
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
-    const mockId = mockEdit ? id : createdMockInterviewId;
-    if (!mockId) {
-      notify.error("Please save candidate details first");
-      setIsSubmitting(false);
-      return;
-    }
-
-    const existingRoundId = mockEdit ? formData.rounds.id : null;
-
     try {
-      // Step 1: Save/Update Round
-      let updateType = "FULL_UPDATE";
+      setShowSkillValidation(true);
+      const { formIsValid, newErrors } = validatemockForm(
+        formData,
+        formData.skills,
+        errors
+      );
+      setErrors(newErrors);
 
-      const roundResponse = await saveMockRound({
-        mockInterviewId: mockId,
-        round: {
-          roundTitle: formData.rounds.roundTitle || "Technical Round",
-          interviewMode: formData.rounds.interviewMode || "Virtual",
-          interviewType: interviewType,
-          duration: formData.rounds.duration || "60",
-          instructions: formData.rounds.instructions || "",
-          dateTime: combinedDateTime,
-          selectedInterviewers: externalInterviewers,
-          maxHourlyRate: externalMaxHourlyRate,
-        },
-        roundId: existingRoundId,
-      });
-
-      const savedRound = roundResponse.data?.round;
-
-      const newStatus =
-        roundResponse?.savedRound?.status ||
-        roundResponse?.updatedRound?.status;
-      if (newStatus) {
-        setStatus(newStatus);
+      if (!formIsValid) {
+        scrollToFirstError(newErrors, fieldRefs);
+        notify.error("Please fix the form errors before submitting");
+        return;
       }
-      const generateMeetingLink = roundResponse.generateMeetingLink === true;
-      console.log("generateMeetingLink", generateMeetingLink);
 
-      // Step 2: Create & Save Meeting Link (for Mock Interviews)
+      if (externalInterviewers.length === 0) {
+        notify.error("At least one interviewer must be selected");
+        return;
+      }
+
+      const mockId = mockEdit ? id : createdMockInterviewId;
+      if (!mockId) {
+        notify.error("Please save candidate details first");
+        return;
+      }
+
+      const existingRoundId = mockEdit ? formData.rounds.id : null;
+
+      // Use override values if provided (from date change confirmation)
+      const effectiveInterviewType = overrides.interviewType || interviewType;
+      const effectiveCombinedDateTime =
+        overrides.combinedDateTime || combinedDateTime;
+
+      // Determine update type
+      let updateType = "FULL_UPDATE";
+      if (type === "confirmClearinterviwers") {
+        updateType = "CLEAR_INTERVIEWERS";
+      }
+
+      // Prepare round payload
+      const roundPayload = {
+        roundTitle: formData.rounds.roundTitle || "Technical Round",
+        interviewMode: formData.rounds.interviewMode || "Virtual",
+        interviewType: effectiveInterviewType,
+        duration: formData.rounds.duration || "60",
+        instructions: formData.rounds.instructions || "",
+        dateTime: effectiveCombinedDateTime,
+        selectedInterviewers: externalInterviewers,
+        maxHourlyRate: externalMaxHourlyRate,
+      };
+
+      let roundResponse;
+
+      if (existingRoundId) {
+        // UPDATE existing round
+        roundResponse = await updateMockRound({
+          mockInterviewId: mockId,
+          round: roundPayload,
+          roundId: existingRoundId,
+          updateType,
+        });
+      } else {
+        // CREATE new round
+        roundResponse = await createMockRound({
+          mockInterviewId: mockId,
+          round: roundPayload,
+        });
+      }
+
+      const savedRound = roundResponse?.data?.round || roundResponse?.round;
+      if (!savedRound) {
+        throw new Error("Failed to save round");
+      }
+
+      // Update local status if returned
+      const newStatus = savedRound?.status;
+      if (newStatus) setStatus(newStatus);
+
+      const generateMeetingLink = roundResponse?.generateMeetingLink === true;
+
+      // Step 2: Create & Save Meeting Link (only if backend allows)
       if (generateMeetingLink && formData.rounds.interviewMode === "Virtual") {
         let meetingLink = null;
-
         try {
           setIsMeetingCreationLoading(true);
           setMeetingCreationProgress("Creating meeting link...");
@@ -1346,14 +1544,12 @@ const MockSchedulelater = () => {
             "../../../../utils/meetingPlatforms.js"
           );
 
-          // Common payload fields (same as real interviews)
           const commonPayload = {
             roundTitle: savedRound.roundTitle,
             instructions: savedRound.instructions || "",
-            combinedDateTime: savedRound.dateTime || combinedDateTime,
+            combinedDateTime: savedRound.dateTime || effectiveCombinedDateTime,
             duration: savedRound.duration || formData.rounds.duration,
-            selectedInterviewers:
-              savedRound.interviewers || externalInterviewers,
+            selectedInterviewers: externalInterviewers,
           };
 
           if (selectedMeetingPlatform === "google-meet") {
@@ -1363,19 +1559,16 @@ const MockSchedulelater = () => {
               (progress) => setMeetingCreationProgress(progress)
             );
           } else if (selectedMeetingPlatform === "zoom") {
-            console.log("🟣 Creating Zoom meeting for Mock Interview...");
-            console.log("🟣 combinedDateTime:", combinedDateTime);
-
-            const formattedStartTime = formatStartTimeForZoom(combinedDateTime);
-
-            if (!formattedStartTime) {
-              throw new Error("Invalid start time for Zoom meeting");
-            }
+            const formattedStartTime = formatStartTimeForZoom(
+              effectiveCombinedDateTime
+            );
+            if (!formattedStartTime)
+              throw new Error("Invalid start time for Zoom");
 
             const zoomPayload = {
               topic: savedRound.roundTitle || "Mock Interview Round",
               duration: Number(savedRound.duration || "60"),
-              type: 2, // scheduled meeting
+              type: 2,
               start_time: formattedStartTime,
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
               settings: {
@@ -1391,7 +1584,6 @@ const MockSchedulelater = () => {
               (progress) => setMeetingCreationProgress(progress)
             );
           } else if (selectedMeetingPlatform === "platform") {
-            // VideoSDK / other
             meetingLink = await createMeeting(
               "videosdk",
               commonPayload,
@@ -1402,13 +1594,12 @@ const MockSchedulelater = () => {
           if (meetingLink) {
             setMeetingCreationProgress("Saving meeting link...");
 
-            // Save meeting link using mock-specific PATCH
-            await saveMockRound({
+            // Save meeting link (use updateMockRound)
+            await updateMockRound({
               mockInterviewId: mockId,
               roundId: savedRound._id,
               updateType: "MEETING_LINK_ONLY",
               round: {
-                // ← keep nested
                 meetingId:
                   meetingLink?.join_url ||
                   meetingLink?.start_url ||
@@ -1422,28 +1613,25 @@ const MockSchedulelater = () => {
           }
         } catch (err) {
           console.error("Meeting creation failed:", err);
-          notify.warn(
-            "Round saved successfully, but meeting link could not be created."
-          );
+          notify.warn("Round saved, but meeting link could not be created.");
           setMeetingCreationProgress("Meeting creation failed");
         } finally {
           setIsMeetingCreationLoading(false);
         }
       }
 
+      // Success
       notify.success(
         mockEdit ? "Mock interview updated!" : "Mock interview scheduled!"
       );
       navigate("/mock-interview");
-
-      // Reset form...
     } catch (error) {
-      console.error("Error:", error);
-      notify.error(
-        error.response?.data?.message || "Failed to save mock interview"
-      );
+      console.error("Mock Interview Submit Error:", error);
+      const backendMsg = error.response?.data?.message;
+      notify.error(backendMsg || "Failed to save mock interview round");
     } finally {
       setIsSubmitting(false);
+      setMeetingCreationProgress("");
     }
   };
 
@@ -3403,9 +3591,9 @@ const MockSchedulelater = () => {
               setPendingDateChange(null);
             }}
             onConfirm={handleConfirmDateChange}
-            selectedInterviewType={selectedInterviewType}
+            selectedInterviewType={"External"}
             status={status}
-            combinedDateTime={combinedDateTime} // your formatted date string
+            combinedDateTime={combinedDateTime || scheduledDate} // your formatted date string
           />
         </div>
       )}

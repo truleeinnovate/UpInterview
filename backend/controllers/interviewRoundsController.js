@@ -829,6 +829,12 @@ const updateInterviewRound = async (req, res) => {
       // &&
       // hasselectedInterviewers  // ← cleared (selectedInterviewers empty or not sent)
     ) {
+      if (existingRound.status === "InProgress") {
+        return res
+          .status(400)
+          .json({ message: "Cannot reschedule in-progress round" });
+      }
+
       // PROTECT: Check if accepted (should always be true, but safe)
 
       // Auto reschedule settlement process - pay interviewer based on policy before resetting
@@ -1457,7 +1463,7 @@ const updateInterviewRoundStatus = async (req, res) => {
           rescheduleReason: reasonCode || null,
         };
 
-        smartUpdate = buildSmartRoundUpdate({
+        smartUpdate = await buildSmartRoundUpdate({
           existingRound,
           body: smartBody,
           actingAsUserId,
@@ -1476,7 +1482,7 @@ const updateInterviewRoundStatus = async (req, res) => {
         rescheduleReason: reasonCode || null,
       };
 
-      smartUpdate = buildSmartRoundUpdate({
+      smartUpdate = await buildSmartRoundUpdate({
         existingRound,
         body: smartBody,
         actingAsUserId,
@@ -1903,6 +1909,7 @@ async function buildSmartRoundUpdate({
       )) ||
     (changes.statusChanged && body.status)
   ) {
+    changes.statusChanged && body.status;
     update.$set.previousAction = existingRound.currentAction || null;
     update.$set.currentAction = body.status; // || existingRound.status;
     update.$set.currentActionReason = body.rescheduleReason || "time_changed";
@@ -1914,6 +1921,8 @@ async function buildSmartRoundUpdate({
       comment: body.comments,
     });
   }
+
+  console.log("update update update", update);
 
   /* ============= CLEANUP ============= */
 

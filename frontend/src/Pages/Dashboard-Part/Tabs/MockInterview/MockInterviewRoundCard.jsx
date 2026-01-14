@@ -109,6 +109,8 @@ const MoockRoundCard = ({
       console.log("payload", round?._id);
       console.log("payload", mockinterview?._id);
 
+      console.log("payload", payload);
+
       // Add cancellation / NoShow reason if provided
       if (
         (newStatus === "Cancelled" ||
@@ -116,7 +118,7 @@ const MoockRoundCard = ({
           newStatus === "Skipped") &&
         reasonValue
       ) {
-        payload.cancellationReason = reasonValue;
+        payload.reasonCode = reasonValue;
         payload.comment = comment || null;
       }
 
@@ -612,7 +614,7 @@ const MoockRoundCard = ({
               <div className="mt-6 flex gap-3 whitespace-nowrap min-w-max justify-end">
                 {/* Reschedule */}
                 {permissions.canReschedule &&
-                  round.interviewerType === "external" &&
+                  // round.interviewerType === "external" &&
                   round?.interviewType.toLowerCase() !== "instant" && (
                     <button
                       onClick={() =>
