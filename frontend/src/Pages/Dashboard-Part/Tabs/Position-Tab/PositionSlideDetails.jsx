@@ -420,9 +420,9 @@ const PositionSlideDetails = () => {
                   {/* Hiring Team Column */}
                   <div className="bg-gray-50 rounded-lg p-5 shadow-sm">
                     <h4 className="font-semibold text-gray-800 mb-4">Hiring Team</h4>
-                    <div className="space-y-3">
-                      {/* Static Hiring Team members */}
-                      <div className="flex items-center gap-3">
+                    {/* <div className="space-y-3"> */}
+                    {/* Static Hiring Team members */}
+                    {/* <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold">
                           M
                         </div>
@@ -446,7 +446,10 @@ const PositionSlideDetails = () => {
                           David Chen <span className="text-gray-500 font-normal">(Senior Developer)</span>
                         </p>
                       </div>
-                    </div>
+                    </div> */}
+                    <p className="text-gray-400 italic text-sm">
+                      No Hiring Team assigned
+                    </p>
                   </div>
                 </div>
               </div>

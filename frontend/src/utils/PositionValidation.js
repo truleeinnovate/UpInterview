@@ -118,6 +118,11 @@ export const validateForm = (formData, entries, rounds) => {
     formIsValid = false;
   }
 
+  if (!formData.requirements || !formData.requirements.trim()) {
+    errors.requirements = "Requirements are required";
+    formIsValid = false;
+  }
+
   // Skills validation: ignore entirely empty rows, validate only rows where any field is filled
   const filledEntries = (entries || []).filter(
     (e) => (e?.skill && e.skill !== "") || (e?.expertise && e.expertise !== "") || (e?.requirement_level && e.requirement_level !== "")
