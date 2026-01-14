@@ -2019,23 +2019,12 @@ router.get(
             {
               $lookup: {
                 from: "tenantcompanies",
-                let: { companyId: "$companyname" },
-                pipeline: [
-                  {
-                    $match: {
-                      $expr: {
-                        $and: [
-                          { $eq: [{ $type: "$$companyId" }, "objectId"] },
-                          { $eq: ["$_id", "$$companyId"] }
-                        ]
-                      }
-                    }
-                  },
-                  { $project: { name: 1, industry: 1 } }
-                ],
+                localField: "companyname",
+                foreignField: "_id",
                 as: "companyInfo"
               }
-            },
+            }
+            ,
             // Also handle the case where companyname is a string (legacy data)
             {
               $addFields: {
@@ -2047,13 +2036,14 @@ router.get(
                       $cond: {
                         if: { $eq: [{ $type: "$companyname" }, "string"] },
                         then: { name: "$companyname", _id: null },
-                        else: "$companyname"
+                        else: null
                       }
                     }
                   }
                 }
               }
-            },
+            }
+            ,
             { $unset: "companyInfo" },
             // Lookup interviewers for rounds
             {
@@ -2442,27 +2432,27 @@ router.get(
             {
               $lookup: {
                 from: "resume",
-                let: { candidateId: "$_id" },
-                pipeline: [
-                  {
-                    $match: {
-                      $expr: {
-                        $and: [
-                          { $eq: ["$candidateId", "$$candidateId"] },
-                          { $eq: ["$isActive", true] }
-                        ]
-                      }
-                    }
-                  }
-                ],
+                localField: "_id",
+                foreignField: "candidateId",
                 as: "activeResume"
               }
-            },
+            }
+            ,
             // Unwind resume (preserveNullAndEmptyArrays for candidates without resume)
             {
-              $unwind: {
-                path: "$activeResume",
-                preserveNullAndEmptyArrays: true
+              $addFields: {
+                activeResume: {
+                  $filter: {
+                    input: "$activeResume",
+                    as: "r",
+                    cond: { $eq: ["$$r.isActive", true] }
+                  }
+                }
+              }
+            },
+            {
+              $addFields: {
+                activeResume: { $arrayElemAt: ["$activeResume", 0] }
               }
             },
             // Add computed fields with fallback to legacy data

@@ -62,6 +62,7 @@ import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLette
 import TemplateDetail from "../../../../InteviewTemplates/TemplateDetail.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 // import FeeConfirmationModal from '../components/FeeConfirmationModal.js';
+import { formatDateTime } from "../../../../../utils/dateFormatter.js";
 
 const InterviewDetail = () => {
   const { id } = useParams();
@@ -467,14 +468,6 @@ const InterviewDetail = () => {
     });
   });
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
   // cancle interviwe popup
 
   const handleStatusChange = (newStatus) => {
@@ -818,7 +811,7 @@ const InterviewDetail = () => {
                   {/* v1.0.4 ------------------------------------------------------------------------------------------------------> */}
                 </div>
                 <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                  Created on {formatDate(interview?.createdAt)}
+                  Created on {formatDateTime(interview?.createdAt)}
                 </p>
               </div>
             </div>
