@@ -128,16 +128,27 @@ exports.createCandidate = async (req, res) => {
 
     // Generate logs for success
     const responseData = {
-      success: true,
-      message: "Candidate created successfully",
-      code: 201,
-      data: {
-        candidateId: candidate._id,
-        tenantId: candidate.tenantId,
-        ownerId: candidate.ownerId,
-        createdAt: candidate.createdAt,
-        updatedAt: candidate.updatedAt,
-      },
+      id: candidate._id,
+      FirstName: candidate.FirstName,
+      LastName: candidate.LastName,
+      Email: candidate.Email,
+      Phone: candidate.Phone,
+      CountryCode: candidate.CountryCode,
+      Date_Of_Birth: candidate.Date_Of_Birth,
+      Gender: candidate.Gender,
+      HigherQualification: candidate.HigherQualification,
+      UniversityCollege: candidate.UniversityCollege,
+      CurrentExperience: candidate.CurrentExperience,
+      RelevantExperience: candidate.RelevantExperience,
+      CurrentRole: candidate.CurrentRole,
+      skills: candidate.skills,
+      // resume: candidate.resume,
+      externalId: candidate.externalId,
+      tenantId: candidate.tenantId,
+      ownerId: candidate.ownerId,
+      createdBy: candidate.createdBy,
+      createdAt: candidate.createdAt,
+      updatedAt: candidate.updatedAt,
     };
 
     res.locals.logData = {
@@ -439,17 +450,29 @@ exports.bulkCreateCandidates = async (req, res) => {
     const result = await Candidate.insertMany(candidates, { ordered: false });
 
     // Generate logs for success
-    const responseData = {
-      success: true,
-      message: "Bulk candidates created successfully",
-      code: 201,
-      data: {
-        created: result.length,
-        total: req.body.length,
-        tenantId: tenantId,
-        createdAt: new Date(),
-      },
-    };
+    const responseData = result.map(candidate => ({
+      id: candidate._id,
+      FirstName: candidate.FirstName,
+      LastName: candidate.LastName,
+      Email: candidate.Email,
+      Phone: candidate.Phone,
+      CountryCode: candidate.CountryCode,
+      Date_Of_Birth: candidate.Date_Of_Birth,
+      Gender: candidate.Gender,
+      HigherQualification: candidate.HigherQualification,
+      UniversityCollege: candidate.UniversityCollege,
+      CurrentExperience: candidate.CurrentExperience,
+      RelevantExperience: candidate.RelevantExperience,
+      CurrentRole: candidate.CurrentRole,
+      skills: candidate.skills,
+      // resume: candidate.resume,
+      externalId: candidate.externalId,
+      tenantId: candidate.tenantId,
+      ownerId: candidate.ownerId,
+      createdBy: candidate.createdBy,
+      createdAt: candidate.createdAt,
+      updatedAt: candidate.updatedAt,
+    }));
 
     res.locals.logData = {
       ownerId: userId,
@@ -674,17 +697,22 @@ exports.bulkCreatePositions = async (req, res) => {
     const result = await Position.insertMany(positions, { ordered: false });
 
     // Generate logs for success
-    const responseData = {
-      success: true,
-      message: "Bulk positions created successfully",
-      code: 201,
-      data: {
-        created: result.length,
-        total: req.body.length,
-        tenantId: req.tenantId || "external_tenant",
-        createdAt: new Date(),
-      },
-    };
+    const responseData = result.map(position => ({
+      id: position._id,
+      title: position.title,
+      companyname: position.companyname,
+      jobDescription: position.jobDescription,
+      minexperience: position.minexperience,
+      maxexperience: position.maxexperience,
+      Location: position.Location,
+      skills: position.skills,
+      externalId: position.externalId,
+      tenantId: position.tenantId,
+      ownerId: position.ownerId,
+      createdBy: position.createdBy,
+      createdAt: position.createdAt,
+      updatedAt: position.updatedAt,
+    }));
 
     res.locals.logData = {
       ownerId: req.user?._id || "external_api",
@@ -873,17 +901,20 @@ exports.createPosition = async (req, res) => {
 
     // Generate logs for success
     const responseData = {
-      success: true,
-      message: "Position created successfully",
-      code: 201,
-      data: {
-        positionId: position._id,
-        title: position.title,
-        tenantId: position.tenantId,
-        ownerId: position.ownerId,
-        createdAt: position.createdAt,
-        updatedAt: position.updatedAt,
-      },
+      id: position._id,
+      title: position.title,
+      companyname: position.companyname,
+      jobDescription: position.jobDescription,
+      minexperience: position.minexperience,
+      maxexperience: position.maxexperience,
+      Location: position.Location,
+      skills: position.skills,
+      externalId: position.externalId,
+      tenantId: position.tenantId,
+      ownerId: position.ownerId,
+      createdBy: position.createdBy,
+      createdAt: position.createdAt,
+      updatedAt: position.updatedAt,
     };
 
     res.locals.logData = {
