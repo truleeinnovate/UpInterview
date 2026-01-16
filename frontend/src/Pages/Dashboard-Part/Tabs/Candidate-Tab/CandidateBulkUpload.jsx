@@ -22,7 +22,6 @@ const CandidateBulkUpload = ({ onClose }) => {
   const orgId = tokenPayload?.tenantId;
 
   const downloadTemplate = () => {
-
     const headers = [
       "FirstName",
       "LastName",
@@ -31,8 +30,6 @@ const CandidateBulkUpload = ({ onClose }) => {
       "CountryCode",
       "Date_Of_Birth",
       "Gender",
-      "ownerId",
-      "tenantId",
       "HigherQualification",
       "UniversityCollege",
       "CurrentExperience",
@@ -52,8 +49,6 @@ const CandidateBulkUpload = ({ onClose }) => {
       '"+91"',
       "15-08-2000",
       "Male",
-      "",
-      "",
       "Bachlore of Engineering (BE/BTech)",
       "Example University",
       "2",
@@ -179,7 +174,7 @@ const CandidateBulkUpload = ({ onClose }) => {
       const { formIsValid, newErrors } = validateCandidateForm(
         formattedData,
         skills,
-        {}
+        {},
       );
 
       return {
@@ -230,7 +225,13 @@ const CandidateBulkUpload = ({ onClose }) => {
     }
   };
 
-  const previewHeaders = csvData.length > 0 ? Object.keys(csvData[0].data) : [];
+  // const previewHeaders = csvData.length > 0 ? Object.keys(csvData[0].data) : [];
+  const previewHeaders =
+    csvData.length > 0
+      ? Object.keys(csvData[0].data).filter(
+          (h) => h !== "ownerId" && h !== "tenantId",
+        )
+      : [];
 
   return (
     <SidebarPopup title="Bulk Upload Candidates" onClose={onClose}>
