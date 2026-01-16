@@ -368,7 +368,7 @@ const CompanyEditProfile = () => {
         //   { ...formData.regionalOffice, type: "Regional Office" },
         // ],
         offices: [
-          { ...formData.headquarters, type: "headquarters" },
+          { ...formData.headquarters, type: "headquarters", isDefault: true },
           ...formData.regionalOffices.map((office) => ({
             ...office,
             type: "regionalOffice",
