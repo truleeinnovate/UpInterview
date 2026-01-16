@@ -341,8 +341,6 @@ const updatePosition = async (req, res) => {
       return res.status(404).json({ message: "Position not found" });
     }
 
-    // No webhook trigger here anymore; webhooks are now driven by interview/assessment/feedback events.
-
     await updatedPosition.save();
 
     const formatValue = (val) => {

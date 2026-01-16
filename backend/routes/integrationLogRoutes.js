@@ -8,6 +8,7 @@ const {
   deleteIntegrationLog,
   getAllIntegrationLogs, // SUPER ADMIN added by Ashok
   getIntegrationById,
+  getIntegrationLogsByTenantAndOwner, // New function for tenant/owner specific logs
 } = require("../controllers/integrationLogController");
 
 // v1.0.0 <------------------------------------------------------------------------------
@@ -27,6 +28,9 @@ router.post("/", createIntegrationLog);
 
 // Delete integration log
 router.delete("/:id", deleteIntegrationLog);
+
+// Get integration logs by tenantId and ownerId (must come before /:id)
+router.get("/by-tenant-owner", getIntegrationLogsByTenantAndOwner);
 
 // SUPER ADMIN added by Ashok ---------------------------------------------
 // SUPER ADMIN Get integration log by ID added by Ashok

@@ -307,3 +307,74 @@ exports.getIntegrationById = async (req, res) => {
 };
 
 // -------------------------------------------------------------->
+
+// Get integration logs by tenantId and ownerId
+exports.getIntegrationLogsByTenantAndOwner = async (req, res) => {
+  try {
+    const { tenantId, ownerId } = req.query;
+    const { page = 1, limit = 50, search, status, severity } = req.query;
+    
+    // Validate required parameters
+    if (!tenantId || !ownerId) {
+      return res.status(400).json({
+        success: false,
+        message: "tenantId and ownerId are required",
+      });
+    }
+
+    const skip = (page - 1) * limit;
+
+    // Build query
+    let query = {
+      tenantId: tenantId,
+      ownerId: ownerId
+    };
+
+    // Add search filter if provided
+    if (search) {
+      query.$or = [
+        { logId: { $regex: search, $options: "i" } },
+        { processName: { $regex: search, $options: "i" } },
+        { status: { $regex: search, $options: "i" } },
+        { message: { $regex: search, $options: "i" } },
+        { integrationName: { $regex: search, $options: "i" } },
+        { flowType: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Add status filter if provided
+    if (status) {
+      query.status = status;
+    }
+
+    // Add severity filter if provided
+    if (severity) {
+      query.severity = severity;
+    }
+
+    const [logs, total] = await Promise.all([
+      IntegrationLog.find(query)
+        .sort({ timeStamp: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      IntegrationLog.countDocuments(query),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: logs,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching integration logs",
+      error: error.message,
+    });
+  }
+};

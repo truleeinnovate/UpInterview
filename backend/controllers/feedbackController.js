@@ -170,6 +170,7 @@ const createFeedback = async (req, res) => {
     await feedbackInstance.save();
 
     // Trigger webhook for feedback submission only (not for drafts)
+    // webhooks creation part of feed back this is used in account settings hrms sidebar tab in webhooks tab
     if (feedbackInstance.status === "submitted") {
       try {
         const webhookPayload = {
@@ -186,23 +187,16 @@ const createFeedback = async (req, res) => {
           event: "feedback.created",
         };
 
-        console.log(
-          `[FEEDBACK WEBHOOK] Triggering creation webhook for feedback ${feedbackInstance._id} with status: ${feedbackInstance.status}`
-        );
         await triggerWebhook(
           EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
           webhookPayload,
           tenantId
-        );
-        console.log(
-          `[FEEDBACK WEBHOOK] Creation webhook sent successfully for feedback ${feedbackInstance._id}`
         );
       } catch (webhookError) {
         console.error(
           "[FEEDBACK WEBHOOK] Error triggering feedback creation webhook:",
           webhookError
         );
-        // Continue execution even if webhook fails
       }
     }
 
@@ -917,6 +911,7 @@ const updateFeedback = async (req, res) => {
     }
 
     // Trigger webhook for feedback status update if status changed to submitted
+    // webhooks updation part of feed back this is used in account settings hrms sidebar tab in webhooks tab
     if (updatedFeedback.status === "submitted") {
       try {
         const webhookPayload = {
@@ -949,7 +944,6 @@ const updateFeedback = async (req, res) => {
           "[FEEDBACK WEBHOOK] Error triggering feedback status update webhook:",
           webhookError
         );
-        // Continue execution even if webhook fails
       }
     }
 

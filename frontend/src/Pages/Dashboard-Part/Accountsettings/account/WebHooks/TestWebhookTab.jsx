@@ -14,24 +14,9 @@ const TestWebhookTab = () => {
     { id: 'candidate.status_updated', label: 'Candidate Status Updated' },
     { id: 'candidates.bulk_created', label: 'Candidates Bulk Created' },
     { id: 'positions.bulk_created', label: 'Positions Bulk Created' },
-    { id: 'application.submitted', label: 'Application Submitted' },
-    { id: 'application.status_updated', label: 'Application Status Updated' },
-    { id: 'interview.scheduled', label: 'Interview Scheduled' },
-    { id: 'interview.updated', label: 'Interview Updated' },
-    { id: 'interview.cancelled', label: 'Interview Cancelled' },
-    { id: 'interview.rescheduled', label: 'Interview Rescheduled' },
-    { id: 'interview.feedback_submitted', label: 'Interview Feedback Submitted' },
-    { id: 'offer.created', label: 'Offer Created' },
-    { id: 'offer.accepted', label: 'Offer Accepted' },
-    { id: 'offer.rejected', label: 'Offer Rejected' },
-    { id: 'offer.withdrawn', label: 'Offer Withdrawn' },
-    { id: 'offer.status_updated', label: 'Offer Status Updated' },
     { id: 'position.created', label: 'Position Created' },
     { id: 'position.updated', label: 'Position Updated' },
-    { id: 'position.closed', label: 'Position Closed' },
-    { id: 'department.created', label: 'Department Created' },
-    { id: 'interviewer.added', label: 'Interviewer Added' },
-    { id: 'candidate.note_added', label: 'Candidate Note Added' }
+    { id: 'position.closed', label: 'Position Closed' }
   ];
 
   const samplePayloads = {
@@ -82,22 +67,6 @@ const TestWebhookTab = () => {
       total_created: 2,
       total_errors: 0
     },
-    'application.submitted': {
-      id: 'application_789',
-      candidate_id: 'candidate_123',
-      position_id: 'position_456',
-      status: 'submitted',
-      applied_date: '2024-01-15'
-    },
-    'application.status_updated': {
-      application: {
-        id: 'application_789',
-        candidate_id: 'candidate_123',
-        position_id: 'position_456'
-      },
-      oldStatus: 'submitted',
-      newStatus: 'reviewing'
-    },
     'candidate.status_updated': {
       candidate: {
         id: 'candidate_123',
@@ -107,190 +76,41 @@ const TestWebhookTab = () => {
       oldStatus: 'new',
       newStatus: 'screening'
     },
-    'interview.scheduled': {
-      id: 'interview_456',
-      candidate_id: 'candidate_123',
-      interviewer: 'Jane Smith',
-      date: '2024-01-15',
-      time: '14:00',
-      type: 'technical',
-      location: 'Conference Room A'
-    },
-    'interview.cancelled': {
-      interview: {
-        id: 'interview_456',
-        candidate_id: 'candidate_123',
-        date: '2024-01-15',
-        time: '14:00'
-      },
-      reason: 'Candidate unavailable'
-    },
-    'interview.rescheduled': {
-      interview: {
-        id: 'interview_456',
-        candidate_id: 'candidate_123',
-        old_date: '2024-01-15',
-        new_date: '2024-01-16',
-        time: '14:00'
-      }
-    },
-    'interview.feedback_submitted': {
-      interview: {
-        id: 'interview_456',
-        candidate_id: 'candidate_123'
-      },
-      feedback: {
-        id: 'feedback_101',
-        rating: 4,
-        comments: 'Strong technical skills, good communication',
-        recommendation: 'proceed',
-        skills_assessment: {
-          technical: 4,
-          communication: 5,
-          problem_solving: 4
-        }
-      }
-    },
-    'offer.created': {
-      id: 'offer_202',
-      candidate_id: 'candidate_123',
-      position_id: 'position_456',
-      salary: 120000,
-      currency: 'USD',
-      start_date: '2024-02-01',
-      benefits: ['health_insurance', 'dental', '401k'],
-      status: 'pending'
-    },
-    'offer.accepted': {
-      offer: {
-        id: 'offer_202',
-        candidate_id: 'candidate_123',
-        position_id: 'position_456',
-        salary: 120000,
-        status: 'accepted'
-      },
-      oldStatus: 'pending',
-      newStatus: 'accepted',
-      accepted_date: '2024-01-20'
-    },
-    'offer.rejected': {
-      offer: {
-        id: 'offer_202',
-        candidate_id: 'candidate_123',
-        position_id: 'position_456',
-        status: 'rejected'
-      },
-      oldStatus: 'pending',
-      newStatus: 'rejected',
-      rejection_reason: 'Accepted another offer'
-    },
-    'offer.withdrawn': {
-      offer: {
-        id: 'offer_202',
-        candidate_id: 'candidate_123',
-        position_id: 'position_456',
-        status: 'withdrawn'
-      },
-      oldStatus: 'pending',
-      newStatus: 'withdrawn',
-      withdrawal_reason: 'Position no longer available'
-    },
-    'offer.status_updated': {
-      offer: {
-        id: 'offer_202',
-        candidate_id: 'candidate_123',
-        position_id: 'position_456',
-        salary: 125000,
-        status: 'negotiating'
-      },
-      oldStatus: 'pending',
-      newStatus: 'negotiating',
-      updated_by: 'candidate',
-      negotiation_notes: 'Candidate requested salary increase'
-    },
-    'interview.updated': {
-      interview: {
-        id: 'interview_456',
-        candidate_id: 'candidate_123',
-        status: 'completed',
-        actual_start_time: '2024-01-15T14:05:00Z',
-        actual_end_time: '2024-01-15T15:30:00Z'
-      },
-      oldInterview: {
-        status: 'scheduled'
-      },
-      changes: ['status', 'actual_start_time', 'actual_end_time']
-    },
     'position.created': {
       id: 'position_789',
       title: 'Senior Software Engineer',
+      companyname: 'UpInterview',
+      jobDescription: 'Looking for experienced backend engineer',
+      minexperience: 3,
+      maxexperience: 7,
+      Location: 'Remote',
+      jobtype: 'Full-time',
       department: 'Engineering',
-      location: 'Remote',
-      salary_range: {
-        min: 120000,
-        max: 160000,
-        currency: 'USD'
-      },
-      requirements: ['5+ years experience', 'React', 'Node.js'],
-      status: 'active',
-      created_by: 'hiring_manager'
+      createdby: 'hr_manager'
     },
     'position.updated': {
       position: {
         id: 'position_789',
         title: 'Senior Software Engineer',
-        status: 'on_hold'
+        status: 'updated'
       },
       oldPosition: {
-        status: 'active'
+        title: 'Software Engineer',
+        minexperience: 2
       },
-      changes: ['status'],
-      updated_by: 'hr_manager',
-      reason: 'Budget review pending'
+      changes: ['title', 'minexperience']
     },
     'position.closed': {
       position: {
         id: 'position_789',
         title: 'Senior Software Engineer',
-        status: 'closed',
-        filled_by: 'candidate_123'
+        department: 'Engineering',
+        location: 'Remote'
       },
-      closure_reason: 'position_filled',
+      oldStatus: 'active',
+      newStatus: 'closed',
       closed_by: 'hiring_manager',
-      applications_count: 45,
-      interviews_conducted: 12
-    },
-    'department.created': {
-      id: 'dept_101',
-      name: 'Data Science',
-      manager: 'Dr. Sarah Chen',
-      description: 'Machine learning and data analytics',
-      budget: 1500000,
-      headcount_limit: 25,
-      created_by: 'ceo'
-    },
-    'interviewer.added': {
-      id: 'interviewer_202',
-      name: 'Mike Johnson',
-      email: 'mike.johnson@company.com',
-      department: 'Engineering',
-      title: 'Tech Lead',
-      specialties: ['System Design', 'Python', 'AWS'],
-      added_by: 'hr_manager'
-    },
-    'candidate.note_added': {
-      note: {
-        id: 'note_303',
-        candidate_id: 'candidate_123',
-        content: 'Candidate showed exceptional problem-solving skills during technical discussion',
-        type: 'interview_note',
-        created_by: 'interviewer_202'
-      },
-      candidate: {
-        id: 'candidate_123',
-        name: 'John Doe',
-        email: 'john.doe@example.com'
-      }
+      closure_reason: 'Position filled'
     }
   };
 
