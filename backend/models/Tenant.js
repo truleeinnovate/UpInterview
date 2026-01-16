@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - Added Country code
+// v1.0.1 - Ashok - Added isDefault field at offices object
 
 const mongoose = require("mongoose");
 
@@ -81,6 +82,7 @@ const TenantSchema = new mongoose.Schema(
         zip: { type: String },
         countryCode: { type: String },
         phone: { type: String },
+        isDefault: { type: Boolean, default: false },
       },
     ],
     subdomain: { type: String },
