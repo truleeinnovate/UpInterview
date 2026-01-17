@@ -173,10 +173,10 @@ const QuestionBankForm = ({
       ? ["Interview Questions"]
       : []), //<----v1.0.7------
     "MCQ",
-    "Short",
-    "Long",
-    "Programming",
-    "Number",
+    // "Short",
+    // "Long",
+    // "Programming",
+    // "Number",
     "Boolean",
   ];
 
