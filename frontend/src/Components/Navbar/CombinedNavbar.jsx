@@ -122,7 +122,7 @@ const CombinedNavbar = React.memo(() => {
 
       if (
         refsToCheck.every(
-          (ref) => ref.current && !ref.current.contains(event.target)
+          (ref) => ref.current && !ref.current.contains(event.target),
         )
       ) {
         closeAllDropdowns();
@@ -178,11 +178,11 @@ const CombinedNavbar = React.memo(() => {
   // Toggle functions
   const toggleAssessmentDropdown = () =>
     closeAllDropdowns(
-      dropdownState.assessmentDropdown ? null : "assessmentDropdown"
+      dropdownState.assessmentDropdown ? null : "assessmentDropdown",
     );
   const toggleInterviewDropdown = () =>
     closeAllDropdowns(
-      dropdownState.interviewDropdown ? null : "interviewDropdown"
+      dropdownState.interviewDropdown ? null : "interviewDropdown",
     );
   const toggleMoreDropdown = () =>
     closeAllDropdowns(dropdownState.moreDropdown ? null : "moreDropdown");
@@ -205,7 +205,7 @@ const CombinedNavbar = React.memo(() => {
     closeAllDropdowns(dropdownState.profileDropdown ? null : "profileDropdown");
   const toggleNotification = () =>
     closeAllDropdowns(
-      dropdownState.isNotificationOpen ? null : "isNotificationOpen"
+      dropdownState.isNotificationOpen ? null : "isNotificationOpen",
     );
   const toggleSidebar = () =>
     setDropdownState((prev) => ({
@@ -455,6 +455,11 @@ const CombinedNavbar = React.memo(() => {
           path: "/companies",
           label: "Companies",
           permissionKey: "Companies.ViewTab",
+        },
+        {
+          path: "/interviewer-tags",
+          label: "Interviewer Tags",
+          permissionKey: "InterviewerTags.ViewTab",
         },
       ];
     }
@@ -894,7 +899,7 @@ const CombinedNavbar = React.memo(() => {
                               }`}
                           />
                           {getRequestsDropdownItems().some((item) =>
-                            isActive(item.path)
+                            isActive(item.path),
                           ) && (
                               <div className="absolute bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                             )}
@@ -921,7 +926,7 @@ const CombinedNavbar = React.memo(() => {
                                     >
                                       {label}
                                     </NavLink>
-                                  )
+                                  ),
                               )}
                             </div>
                           </div>
@@ -1095,7 +1100,7 @@ const CombinedNavbar = React.memo(() => {
                           <ChevronDown className="h-5 w-5" />
                         )}
                         {getMoreDropdownItems().some((item) =>
-                          isActive(item.path)
+                          isActive(item.path),
                         ) && (
                             <div
                               className={`absolute ${userType === "superAdmin"
@@ -1358,43 +1363,46 @@ const CombinedNavbar = React.memo(() => {
                     {(enhancedCheckPermission("Analytics") ||
                       enhancedCheckPermission("SupportDesk") ||
                       enhancedCheckPermission("QuestionBank") ||
-                      enhancedCheckPermission("Companies")) && (
-                        <div
-                          className="relative h-full flex items-center"
-                          ref={moreRef}
-                        >
-                          <button
-                            className={`flex items-center h-full relative px-1 ${isActive("/analytics") ||
-                              isActive("/support-desk") ||
-                              isActive("/question-bank")
+                      enhancedCheckPermission("Companies") ||
+                      enhancedCheckPermission("InterviewerTags")) && (
+                      <div
+                        className="relative h-full flex items-center"
+                        ref={moreRef}
+                      >
+                        <button
+                          className={`flex items-center h-full relative px-1 ${
+                            isActive("/analytics") ||
+                            isActive("/support-desk") ||
+                            isActive("/question-bank")
                               ? "text-custom-blue font-bold"
                               : "text-gray-600 hover:text-custom-blue"
-                              }`}
-                            onClick={toggleMoreDropdown}
-                          >
-                            More
-                            {dropdownState.moreDropdown ? (
-                              <ChevronUp className="h-5 w-5" />
-                            ) : (
-                              <ChevronDown className="h-5 w-5" />
-                            )}
-                            {(isActive("/analytics") ||
-                              isActive("/support-desk") ||
-                              isActive("/feedback") ||
-                              isActive("/question-bank") ||
-                              isActive("/companies")) && (
-                                <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
-                              )}
-                          </button>
-                          {dropdownState.moreDropdown && (
-                            <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-                              <div className="space-y-1">
-                                {[
-                                  ...(enhancedCheckPermission("Analytics")
-                                    ? [{ to: "/analytics", label: "Analytics" }]
-                                    : []),
-                                  ...(enhancedCheckPermission("QuestionBank")
-                                    ? [
+                          }`}
+                          onClick={toggleMoreDropdown}
+                        >
+                          More
+                          {dropdownState.moreDropdown ? (
+                            <ChevronUp className="h-5 w-5" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5" />
+                          )}
+                          {(isActive("/analytics") ||
+                            isActive("/support-desk") ||
+                            isActive("/feedback") ||
+                            isActive("/question-bank") ||
+                            isActive("/companies") ||
+                            isActive("/interviewer-tags")) && (
+                            <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                          )}
+                        </button>
+                        {dropdownState.moreDropdown && (
+                          <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                            <div className="space-y-1">
+                              {[
+                                ...(enhancedCheckPermission("Analytics")
+                                  ? [{ to: "/analytics", label: "Analytics" }]
+                                  : []),
+                                ...(enhancedCheckPermission("QuestionBank")
+                                  ? [
                                       {
                                         to: "/question-bank",
                                         label: "Question Bank",
@@ -1411,14 +1419,23 @@ const CombinedNavbar = React.memo(() => {
                                         label: "Support Desk",
                                       },
                                     ]
-                                    : []),
-                                  ...(enhancedCheckPermission("Companies")
-                                    ? [{ to: "/companies", label: "Companies" }]
-                                    : []),
-                                ].map(({ to, label }) => (
-                                  <NavLink
-                                    key={to}
-                                    className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to)
+                                  : []),
+                                ...(enhancedCheckPermission("Companies")
+                                  ? [{ to: "/companies", label: "Companies" }]
+                                  : []),
+                                ...(enhancedCheckPermission("InterviewerTags")
+                                  ? [
+                                      {
+                                        to: "/interviewer-tags",
+                                        label: "Interviewer Tags",
+                                      },
+                                    ]
+                                  : []),
+                              ].map(({ to, label }) => (
+                                <NavLink
+                                  key={to}
+                                  className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
+                                    isActive(to)
                                       ? "bg-gray-100 text-custom-blue"
                                       : ""
                                       }`}
@@ -1485,7 +1502,7 @@ const CombinedNavbar = React.memo(() => {
                     )}
 
                     {getRequestsDropdownItems().filter((item) =>
-                      enhancedCheckPermission(item.permissionKey)
+                      enhancedCheckPermission(item.permissionKey),
                     ).length > 0 && (
                         <div className="relative" ref={requestsRef}>
                           <button
