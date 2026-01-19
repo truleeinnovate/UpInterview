@@ -25,6 +25,7 @@ const {
 // const InterviewQuestions = require("../models/InterviewQuestions");
 // const Interview = require("../models/Interview");
 
+// create feedback api
 const createFeedback = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Create Feedback";
@@ -170,6 +171,11 @@ const createFeedback = async (req, res) => {
 
     await feedbackInstance.save();
 
+    //  Update interview round status
+    if (feedbackInstance.status === "submitted") {
+      await updateInterviewRoundFeedbackStatus(interviewRoundId);
+    }
+
     // Trigger webhook for feedback submission only (not for drafts)
     // webhooks creation part of feed back this is used in account settings hrms sidebar tab in webhooks tab
     if (feedbackInstance.status === "submitted") {
@@ -205,9 +211,10 @@ const createFeedback = async (req, res) => {
     let resolvedInterviewId = null;
     try {
       if (interviewRoundId) {
-        const roundDoc = await InterviewRounds.findById(
-          interviewRoundId
-        ).select("interviewId");
+        const roundDoc =
+          await InterviewRounds.findById(interviewRoundId).select(
+            "interviewId"
+          );
         resolvedInterviewId = roundDoc?.interviewId || null;
       }
     } catch (e) {
@@ -314,6 +321,273 @@ const createFeedback = async (req, res) => {
   }
 };
 
+//  update Feedback api
+const updateFeedback = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Update Feedback";
+
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Feedback ID is required",
+      });
+    }
+
+    // Validate input using Joi schema
+    // const {
+    //   isValid,
+    //   errors,
+    //   value: validatedData,
+    // } = validateUpdateFeedback(req.body);
+
+    // if (!isValid) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Validation failed",
+    //     errors,
+    //   });
+    // }
+
+    // Apply additional business rule validations if updating to submit
+    // if (
+    //   validatedData.type === "submit" ||
+    //   validatedData.status === "submitted"
+    // ) {
+    //   const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
+    //   if (businessRuleErrors) {
+    //     return res.status(400).json({
+    //       success: false,
+    //       message: "Validation failed",
+    //       errors: businessRuleErrors,
+    //     });
+    //   }
+    // }
+
+    const updateData = req.body; //validatedData;
+
+    console.log("Update Data Received:", updateData);
+
+    // Preserve original questionFeedback from request for interviewer question processing
+    const originalQuestionFeedback = Array.isArray(req.body?.questionFeedback)
+      ? req.body.questionFeedback
+      : [];
+
+    // Normalize questionFeedback.questionId on updates (stringify IDs)
+    if (
+      updateData.questionFeedback &&
+      Array.isArray(updateData.questionFeedback)
+    ) {
+      updateData.questionFeedback = updateData.questionFeedback.map(
+        (feedback) => {
+          const raw = feedback?.questionId;
+          let normalizedId = "";
+          if (typeof raw === "string") normalizedId = raw;
+          else if (raw && typeof raw === "object")
+            normalizedId = raw.questionId || raw._id || raw.id || "";
+          return {
+            ...feedback,
+            questionId: normalizedId,
+          };
+        }
+      );
+    }
+
+    // Find and update the feedback
+    let updatedFeedback = await FeedbackModel.findByIdAndUpdate(
+      id,
+      updateData,
+      {
+        new: true, // Return the updated document
+        runValidators: true, // Run schema validators
+      }
+    )
+      .populate("candidateId", "FirstName LastName Email Phone")
+      .populate("interviewerId", "FirstName LastName Email Phone")
+      .populate("positionId", "title companyname")
+      .lean();
+
+    if (!updatedFeedback) {
+      return res.status(404).json({
+        success: false,
+        message: "Feedback not found",
+      });
+    }
+
+    // Fetch Resume data for candidate (skills, experience, etc. moved from Candidate)
+    if (updatedFeedback.candidateId?._id) {
+      const activeResume = await Resume.findOne({
+        candidateId: updatedFeedback.candidateId._id,
+        isActive: true,
+      })
+        .select("skills CurrentExperience CurrentRole ImageData")
+        .lean();
+
+      if (activeResume) {
+        updatedFeedback.candidateId = {
+          ...updatedFeedback.candidateId,
+          skills: activeResume.skills,
+          CurrentExperience: activeResume.CurrentExperience,
+          CurrentRole: activeResume.CurrentRole,
+          ImageData: activeResume.ImageData,
+        };
+      }
+    }
+
+    // When updating, also ensure newly added interviewer questions are persisted
+    // in SelectedInterviewQuestion collection (mirrors createFeedback behavior)
+    if (originalQuestionFeedback && originalQuestionFeedback.length > 0) {
+      const interviewRoundId = updatedFeedback.interviewRoundId;
+      const tenantId = updatedFeedback.tenantId;
+      const ownerId = updatedFeedback.ownerId;
+      const interviewerId = updatedFeedback.interviewerId;
+
+      let resolvedInterviewId = null;
+      try {
+        if (interviewRoundId) {
+          const roundDoc =
+            await InterviewRounds.findById(interviewRoundId).select(
+              "interviewId"
+            );
+          resolvedInterviewId = roundDoc?.interviewId || null;
+        }
+      } catch (e) {
+        console.warn(
+          "Unable to resolve interviewId during feedback update:",
+          interviewRoundId,
+          e?.message
+        );
+      }
+
+      if (interviewRoundId && ownerId) {
+        for (let i = 0; i < originalQuestionFeedback.length; i++) {
+          const original = originalQuestionFeedback[i]?.questionId;
+
+          // Only process interviewer-added questions sent as full objects
+          if (original && typeof original === "object") {
+            const actual = original.snapshot || original;
+            const normalizedQuestionId =
+              original.questionId || original._id || original.id || "";
+
+            if (!normalizedQuestionId) continue;
+
+            const src = original.source || actual.source || "custom";
+            const mand = original.mandatory || actual.mandatory || "false";
+
+            // Align SelectedInterviewQuestion.ownerId with interviewerId when available
+            const questionOwnerId =
+              (interviewerId && interviewerId.toString()) ||
+              (ownerId && ownerId.toString()) ||
+              "";
+
+            const exists = await InterviewQuestions.findOne({
+              roundId: interviewRoundId,
+              ownerId: questionOwnerId,
+              questionId: normalizedQuestionId,
+              addedBy: "interviewer",
+            }).lean();
+
+            if (!exists) {
+              const doc = new InterviewQuestions({
+                interviewId: resolvedInterviewId,
+                roundId: interviewRoundId,
+                order: i + 1,
+                mandatory: mand,
+                tenantId: tenantId || "",
+                ownerId: questionOwnerId,
+                questionId: normalizedQuestionId,
+                source: src,
+                snapshot: actual || {},
+                addedBy: "interviewer",
+              });
+
+              await doc.save();
+            }
+          }
+        }
+      }
+    }
+
+    // Trigger webhook for feedback status update if status changed to submitted
+    if (updatedFeedback.status === "submitted") {
+      //  Update interview round status
+      await updateInterviewRoundFeedbackStatus(
+        updatedFeedback.interviewRoundId
+      );
+
+      //if (updateData.status && updatedFeedback) {
+      try {
+        const webhookPayload = {
+          feedbackId: updatedFeedback._id,
+          feedbackCode: updatedFeedback.feedbackCode,
+          tenantId: updatedFeedback.tenantId,
+          ownerId: updatedFeedback.ownerId,
+          interviewRoundId: updatedFeedback.interviewRoundId,
+          candidateId: updatedFeedback.candidateId,
+          positionId: updatedFeedback.positionId,
+          interviewerId: updatedFeedback.interviewerId,
+          status: updatedFeedback.status,
+          updatedAt: updatedFeedback.updatedAt,
+          event: "feedback.status.updated",
+        };
+
+        console.log(
+          `[FEEDBACK WEBHOOK] Triggering status update webhook for feedback ${updatedFeedback._id} with status: ${updatedFeedback.status}`
+        );
+        await triggerWebhook(
+          EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
+          webhookPayload,
+          updatedFeedback.tenantId
+        );
+        console.log(
+          `[FEEDBACK WEBHOOK] Status update webhook sent successfully for feedback ${updatedFeedback._id}`
+        );
+      } catch (webhookError) {
+        console.error(
+          "[FEEDBACK WEBHOOK] Error triggering feedback status update webhook:",
+          webhookError
+        );
+        // Continue execution even if webhook fails
+      }
+    }
+
+    res.locals.logData = {
+      tenantId: updatedFeedback.tenantId?.toString() || "",
+      ownerId: updatedFeedback.ownerId?.toString() || "",
+      processName: "Update Feedback",
+      requestBody: req.body,
+      status: "success",
+      message: "Feedback updated successfully",
+      responseBody: updatedFeedback,
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Feedback updated successfully",
+      data: updatedFeedback,
+    });
+  } catch (error) {
+    console.error("Error updating feedback:", error);
+
+    res.locals.logData = {
+      tenantId: req.body?.tenantId || "",
+      ownerId: req.body?.ownerId || "",
+      processName: "Update Feedback",
+      requestBody: req.body,
+      status: "error",
+      message: error.message,
+    };
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update feedback",
+      error: error.message,
+    });
+  }
+};
+
 const getfeedbackById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -412,10 +686,7 @@ const getFeedbackByRoundId = async (req, res) => {
     let candidatePosition = await CandidatePosition.findOne({
       interviewId: interviewRound.interviewId,
     })
-      .populate(
-        "candidateId",
-        "FirstName LastName Email Phone"
-      )
+      .populate("candidateId", "FirstName LastName Email Phone")
       .populate(
         "positionId",
         "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary"
@@ -444,7 +715,10 @@ const getFeedbackByRoundId = async (req, res) => {
       candidateIds.push(candidatePosition.candidateId._id);
     }
     feedbacks.forEach((fb) => {
-      if (fb.candidateId?._id && !candidateIds.some(id => String(id) === String(fb.candidateId._id))) {
+      if (
+        fb.candidateId?._id &&
+        !candidateIds.some((id) => String(id) === String(fb.candidateId._id))
+      ) {
         candidateIds.push(fb.candidateId._id);
       }
     });
@@ -453,7 +727,9 @@ const getFeedbackByRoundId = async (req, res) => {
       const resumes = await Resume.find({
         candidateId: { $in: candidateIds },
         isActive: true,
-      }).select("candidateId skills CurrentExperience CurrentRole ImageData").lean();
+      })
+        .select("candidateId skills CurrentExperience CurrentRole ImageData")
+        .lean();
 
       const resumeMap = {};
       resumes.forEach((r) => {
@@ -722,11 +998,15 @@ const getCandidateByRoundId = async (req, res) => {
       const activeResume = await Resume.findOne({
         candidateId: candidate._id,
         isActive: true,
-      }).select("skills CurrentExperience CurrentRole ImageData").lean();
+      })
+        .select("skills CurrentExperience CurrentRole ImageData")
+        .lean();
 
       if (activeResume) {
         // Convert Mongoose document to plain object if needed
-        const candidateObj = candidate.toObject ? candidate.toObject() : candidate;
+        const candidateObj = candidate.toObject
+          ? candidate.toObject()
+          : candidate;
         candidate = {
           ...candidateObj,
           skills: activeResume.skills,
@@ -773,235 +1053,6 @@ const getFeedbackRoundId = async (req, res) => {
       return res.status(404).json({ message: "Round not found" });
     }
 
-    // 2. Get Interview, Candidate, Position details
-    const interview = await Interview.findById(round.interviewId)
-      .populate("candidateId")
-      .populate("positionId");
-
-    if (!interview) {
-      return res.status(404).json({ message: "Interview not found" });
-    }
-
-    // 3. Get Feedbacks (important: cast roundId to ObjectId)
-    const feedbacks = await FeedbackModel.find({
-      interviewRoundId: objectRoundId,
-    })
-      .populate("interviewerId") // gives contact details
-      .populate("candidateId")
-      .populate("positionId");
-
-    // 4. Prepare response
-    const response = {
-      success: true,
-      message: feedbacks.length
-        ? "Feedback found"
-        : "No feedback submitted yet",
-      interviewRound: round,
-      candidate: interview.candidateId,
-      position: interview.positionId,
-      interviewers: round.interviewers || [],
-      feedbacks,
-      interviewQuestions: {
-        preselectedQuestions: round.preselectedQuestions || [],
-        interviewerAddedQuestions: round.interviewerAddedQuestions || [],
-      },
-    };
-
-    res.json(response);
-  } catch (error) {
-    console.error("Error fetching round details:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-const updateFeedback = async (req, res) => {
-  res.locals.loggedByController = true;
-  res.locals.processName = "Update Feedback";
-
-  try {
-    const { id } = req.params;
-
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: "Feedback ID is required",
-      });
-    }
-
-    // Validate input using Joi schema
-    // const {
-    //   isValid,
-    //   errors,
-    //   value: validatedData,
-    // } = validateUpdateFeedback(req.body);
-
-    // if (!isValid) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Validation failed",
-    //     errors,
-    //   });
-    // }
-
-    // Apply additional business rule validations if updating to submit
-    // if (
-    //   validatedData.type === "submit" ||
-    //   validatedData.status === "submitted"
-    // ) {
-    //   const businessRuleErrors = validateFeedbackBusinessRules(validatedData);
-    //   if (businessRuleErrors) {
-    //     return res.status(400).json({
-    //       success: false,
-    //       message: "Validation failed",
-    //       errors: businessRuleErrors,
-    //     });
-    //   }
-    // }
-
-    const updateData = req.body; //validatedData;
-
-    console.log("Update Data Received:", updateData);
-
-    // Preserve original questionFeedback from request for interviewer question processing
-    const originalQuestionFeedback = Array.isArray(req.body?.questionFeedback)
-      ? req.body.questionFeedback
-      : [];
-
-    // Normalize questionFeedback.questionId on updates (stringify IDs)
-    if (
-      updateData.questionFeedback &&
-      Array.isArray(updateData.questionFeedback)
-    ) {
-      updateData.questionFeedback = updateData.questionFeedback.map(
-        (feedback) => {
-          const raw = feedback?.questionId;
-          let normalizedId = "";
-          if (typeof raw === "string") normalizedId = raw;
-          else if (raw && typeof raw === "object")
-            normalizedId = raw.questionId || raw._id || raw.id || "";
-          return {
-            ...feedback,
-            questionId: normalizedId,
-          };
-        }
-      );
-    }
-
-    // Find and update the feedback
-    let updatedFeedback = await FeedbackModel.findByIdAndUpdate(
-      id,
-      updateData,
-      {
-        new: true, // Return the updated document
-        runValidators: true, // Run schema validators
-      }
-    )
-      .populate(
-        "candidateId",
-        "FirstName LastName Email Phone"
-      )
-      .populate("interviewerId", "FirstName LastName Email Phone")
-      .populate("positionId", "title companyname")
-      .lean();
-
-    if (!updatedFeedback) {
-      return res.status(404).json({
-        success: false,
-        message: "Feedback not found",
-      });
-    }
-
-    // Fetch Resume data for candidate (skills, experience, etc. moved from Candidate)
-    if (updatedFeedback.candidateId?._id) {
-      const activeResume = await Resume.findOne({
-        candidateId: updatedFeedback.candidateId._id,
-        isActive: true,
-      }).select("skills CurrentExperience CurrentRole ImageData").lean();
-
-      if (activeResume) {
-        updatedFeedback.candidateId = {
-          ...updatedFeedback.candidateId,
-          skills: activeResume.skills,
-          CurrentExperience: activeResume.CurrentExperience,
-          CurrentRole: activeResume.CurrentRole,
-          ImageData: activeResume.ImageData,
-        };
-      }
-    }
-
-    // When updating, also ensure newly added interviewer questions are persisted
-    // in SelectedInterviewQuestion collection (mirrors createFeedback behavior)
-    if (originalQuestionFeedback && originalQuestionFeedback.length > 0) {
-      const interviewRoundId = updatedFeedback.interviewRoundId;
-      const tenantId = updatedFeedback.tenantId;
-      const ownerId = updatedFeedback.ownerId;
-      const interviewerId = updatedFeedback.interviewerId;
-
-      let resolvedInterviewId = null;
-      try {
-        if (interviewRoundId) {
-          const roundDoc = await InterviewRounds.findById(
-            interviewRoundId
-          ).select("interviewId");
-          resolvedInterviewId = roundDoc?.interviewId || null;
-        }
-      } catch (e) {
-        console.warn(
-          "Unable to resolve interviewId during feedback update:",
-          interviewRoundId,
-          e?.message
-        );
-      }
-
-      if (interviewRoundId && ownerId) {
-        for (let i = 0; i < originalQuestionFeedback.length; i++) {
-          const original = originalQuestionFeedback[i]?.questionId;
-
-          // Only process interviewer-added questions sent as full objects
-          if (original && typeof original === "object") {
-            const actual = original.snapshot || original;
-            const normalizedQuestionId =
-              original.questionId || original._id || original.id || "";
-
-            if (!normalizedQuestionId) continue;
-
-            const src = original.source || actual.source || "custom";
-            const mand = original.mandatory || actual.mandatory || "false";
-
-            // Align SelectedInterviewQuestion.ownerId with interviewerId when available
-            const questionOwnerId =
-              (interviewerId && interviewerId.toString()) ||
-              (ownerId && ownerId.toString()) ||
-              "";
-
-            const exists = await InterviewQuestions.findOne({
-              roundId: interviewRoundId,
-              ownerId: questionOwnerId,
-              questionId: normalizedQuestionId,
-              addedBy: "interviewer",
-            }).lean();
-
-            if (!exists) {
-              const doc = new InterviewQuestions({
-                interviewId: resolvedInterviewId,
-                roundId: interviewRoundId,
-                order: i + 1,
-                mandatory: mand,
-                tenantId: tenantId || "",
-                ownerId: questionOwnerId,
-                questionId: normalizedQuestionId,
-                source: src,
-                snapshot: actual || {},
-                addedBy: "interviewer",
-              });
-
-              await doc.save();
-            }
-          }
-        }
-      }
-    }
-
     // Trigger webhook for feedback status update if status changed to submitted
     // webhooks updation part of feed back this is used in account settings hrms sidebar tab in webhooks tab
     if (updatedFeedback.status === "submitted") {
@@ -1040,38 +1091,35 @@ const updateFeedback = async (req, res) => {
       }
     }
 
-    res.locals.logData = {
-      tenantId: updatedFeedback.tenantId?.toString() || "",
-      ownerId: updatedFeedback.ownerId?.toString() || "",
-      processName: "Update Feedback",
-      requestBody: req.body,
-      status: "success",
-      message: "Feedback updated successfully",
-      responseBody: updatedFeedback,
-    };
+    // 3. Get Feedbacks (important: cast roundId to ObjectId)
+    const feedbacks = await FeedbackModel.find({
+      interviewRoundId: objectRoundId,
+    })
+      .populate("interviewerId") // gives contact details
+      .populate("candidateId")
+      .populate("positionId");
 
-    return res.status(200).json({
+    // 4. Prepare response
+    const response = {
       success: true,
-      message: "Feedback updated successfully",
-      data: updatedFeedback,
-    });
-  } catch (error) {
-    console.error("Error updating feedback:", error);
-
-    res.locals.logData = {
-      tenantId: req.body?.tenantId || "",
-      ownerId: req.body?.ownerId || "",
-      processName: "Update Feedback",
-      requestBody: req.body,
-      status: "error",
-      message: error.message,
+      message: feedbacks.length
+        ? "Feedback found"
+        : "No feedback submitted yet",
+      interviewRound: round,
+      candidate: interview.candidateId,
+      position: interview.positionId,
+      interviewers: round.interviewers || [],
+      feedbacks,
+      interviewQuestions: {
+        preselectedQuestions: round.preselectedQuestions || [],
+        interviewerAddedQuestions: round.interviewerAddedQuestions || [],
+      },
     };
 
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update feedback",
-      error: error.message,
-    });
+    res.json(response);
+  } catch (error) {
+    console.error("Error fetching round details:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -1089,8 +1137,8 @@ const validateFeedback = async (req, res) => {
       errors,
       value: validatedData,
     } = isUpdate
-        ? validateUpdateFeedback(req.body)
-        : validateCreateFeedback(req.body);
+      ? validateUpdateFeedback(req.body)
+      : validateCreateFeedback(req.body);
 
     if (!isValid) {
       return res.status(400).json({
@@ -1126,6 +1174,36 @@ const validateFeedback = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+// helper function to get feedback by contactId and roundId
+
+const updateInterviewRoundFeedbackStatus = async (interviewRoundId) => {
+  if (!interviewRoundId) return;
+
+  // 1. Get interview round
+  const round = await InterviewRounds.findById(interviewRoundId).lean();
+  if (!round) return;
+
+  const interviewerIds = round.interviewers || [];
+  if (interviewerIds.length === 0) return;
+
+  // 2. Count submitted feedbacks
+  const submittedCount = await FeedbackModel.countDocuments({
+    interviewRoundId,
+    interviewerId: { $in: interviewerIds },
+    status: "submitted",
+  });
+
+  // 3. Update round status
+  const newStatus =
+    submittedCount === interviewerIds.length
+      ? "FeedbackSubmitted"
+      : "FeedbackPending";
+
+  await InterviewRounds.findByIdAndUpdate(interviewRoundId, {
+    status: newStatus,
+  });
 };
 
 module.exports = {
