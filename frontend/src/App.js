@@ -50,27 +50,26 @@ import VideoSdkPanel from "./VideoSDK1/VideoSdkPanel.js";
 
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
 const SelectProfession = lazy(() => import("./Pages/Login-Part/Individual-3"));
-const ProfileWizard = lazy(() =>
-  import("./Pages/Login-Part/Individual-4/Individual-4")
+const ProfileWizard = lazy(
+  () => import("./Pages/Login-Part/Individual-4/Individual-4"),
 );
-const OrganizationSignUp = lazy(() =>
-  import("./Pages/Login-Part/OrganizationSignUp")
+const OrganizationSignUp = lazy(
+  () => import("./Pages/Login-Part/OrganizationSignUp"),
 );
-const OrganizationLogin = lazy(() =>
-  import("./Pages/Login-Part/OrganizationLogin")
+const OrganizationLogin = lazy(
+  () => import("./Pages/Login-Part/OrganizationLogin"),
 );
-const SubscriptionPlan = lazy(() =>
-  import("./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan")
+const SubscriptionPlan = lazy(
+  () => import("./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan"),
 );
 const LinkedInCallback = lazy(() => import("./Components/LinkedInCallback"));
 const OAuthCallback = lazy(() => import("./Components/OAuthCallback"));
-const CardDetails = lazy(() =>
-  import("./Pages/Login-Part/SubscriptionPlans/CardDetails")
+const CardDetails = lazy(
+  () => import("./Pages/Login-Part/SubscriptionPlans/CardDetails"),
 );
-const SubscriptionCardDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/Subscription/subscriptionCardDetails.jsx"
-  )
+const SubscriptionCardDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/Subscription/subscriptionCardDetails.jsx"),
 );
 const ForgetPassword = lazy(() => import("./Pages/Login-Part/ForgetPassword"));
 const ResetPassword = lazy(() => import("./Pages/Login-Part/ResetPassword"));
@@ -85,360 +84,353 @@ const ResetPassword = lazy(() => import("./Pages/Login-Part/ResetPassword"));
 // import { config } from "./config.js";
 
 //  Video Call Application Components
-const VideoCallLanding = lazy(() =>
-  import("./Pages/CustomVideoCall/Landing.jsx")
+const VideoCallLanding = lazy(
+  () => import("./Pages/CustomVideoCall/Landing.jsx"),
 );
 const VideoSDKDashboard1 = lazy(() => import("./VideoSDK1/Dashboard"));
 const FullScreenPanel = lazy(() => import("./VideoSDK1/FullScreenPanel.jsx"));
 
-const VideoCallJoinRoom = lazy(() =>
-  import("./Pages/CustomVideoCall/JoinRoom.jsx")
+const VideoCallJoinRoom = lazy(
+  () => import("./Pages/CustomVideoCall/JoinRoom.jsx"),
 );
 const VideoCallRoom = lazy(() => import("./Pages/CustomVideoCall/Room.jsx"));
 // v1.0.5 ------------------------------>
 
-const Home = lazy(() =>
-  import("./Pages/Dashboard-Part/Dashboard/Home/Home.jsx")
+const Home = lazy(
+  () => import("./Pages/Dashboard-Part/Dashboard/Home/Home.jsx"),
 );
-const OutsourceInterviewerRequest = lazy(() =>
-  import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
+const OutsourceInterviewerRequest = lazy(
+  () =>
+    import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx"),
 );
-const OrganizationRequest = lazy(() =>
-  import("./Pages/SuperAdmin-Part/OrganizationRequest/OrganizationRequest.jsx")
-);
-
-const EnterpriseContactSale = lazy(() =>
-  import(
-    "./Pages/SuperAdmin-Part/EnterpriseContactSale/EnterpriseContactSale.jsx"
-  )
+const OrganizationRequest = lazy(
+  () =>
+    import("./Pages/SuperAdmin-Part/OrganizationRequest/OrganizationRequest.jsx"),
 );
 
-const CandidateTab = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate")
-);
-const CandidateTabDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/360MainContent.jsx"
-  )
-);
-const AddCandidateForm = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm")
-);
-const CandidateDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails"
-  )
-);
-const CandidateFullscreen = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen"
-  )
-);
-const Position = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position")
-);
-const PositionForm = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form")
-);
-const PositionSlideDetails = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails")
-);
-const RoundFormPosition = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx"
-  )
-);
-const MockInterview = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterview")
-);
-const MockInterviewDetails = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails")
-);
-const MockSchedulelater = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm")
-);
-const InterviewList = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList")
-);
-const InterviewDetail = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail")
-);
-const InterviewForm = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm")
-);
-const RoundForm = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm")
-);
-const QuestionBank = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank")
-);
-const Assessment = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment")
-);
-const AssessmentForm = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment"
-  )
-);
-const AssessmentDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails"
-  )
-);
-const AssessmentTest = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest")
-);
-const ScheduleAssessment = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssessment")
-);
-const ScheduleAssDetails = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssDetails")
-);
-const SubscriptionPlansPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/Subscription-Plans/Plans.jsx")
+const EnterpriseContactSale = lazy(
+  () =>
+    import("./Pages/SuperAdmin-Part/EnterpriseContactSale/EnterpriseContactSale.jsx"),
 );
 
-const PlatformWalletPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/Wallet/PlatformWalletPage.jsx")
+const CandidateTab = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate"),
+);
+const CandidateTabDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/360MainContent.jsx"),
+);
+const AddCandidateForm = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm"),
+);
+const CandidateDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails"),
+);
+const CandidateFullscreen = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen"),
+);
+const Position = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position"),
+);
+const PositionForm = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form"),
+);
+const PositionSlideDetails = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails"),
+);
+const RoundFormPosition = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx"),
+);
+const MockInterview = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterview"),
+);
+const MockInterviewDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails"),
+);
+const MockSchedulelater = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm"),
+);
+const InterviewList = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList"),
+);
+const InterviewDetail = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail"),
+);
+const InterviewForm = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm"),
+);
+const RoundForm = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm"),
+);
+const QuestionBank = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank"),
+);
+const Assessment = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment"),
+);
+const AssessmentForm = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment"),
+);
+const AssessmentDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails"),
+);
+const AssessmentTest = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest"),
+);
+const ScheduleAssessment = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssessment"),
+);
+const ScheduleAssDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssDetails"),
+);
+const SubscriptionPlansPage = lazy(
+  () => import("./Pages/SuperAdmin-Part/Subscription-Plans/Plans.jsx"),
+);
+
+const PlatformWalletPage = lazy(
+  () => import("./Pages/SuperAdmin-Part/Wallet/PlatformWalletPage.jsx"),
 );
 
 // Feedback Components
-const FeedbackTab = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback.jsx")
+const FeedbackTab = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback.jsx"),
 );
-const FeedbackFormModel = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Feedback/FeedbackFormModel.jsx")
+const FeedbackFormModel = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Feedback/FeedbackFormModel.jsx"),
 );
 
-const Companies = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Companies/Companies.jsx")
+const Companies = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Companies/Companies.jsx"),
 );
-const CompanyDetails = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Companies/CompanyDetails.jsx")
+const CompanyDetails = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Companies/CompanyDetails.jsx"),
 );
-const CompanyForm = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Companies/CompanyForm.jsx")
+const CompanyForm = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Companies/CompanyForm.jsx"),
+);
+
+const InterviewerTags = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerTags.jsx"),
+);
+const InterviewerTagsDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerDetails.jsx"),
+);
+const InterviewerTagsForm = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerTagsForm.jsx"),
 );
 
 // Code Editor
-const CodeEditor = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/CodeEditor/Editor.jsx")
+const CodeEditor = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/CodeEditor/Editor.jsx"),
 );
-const WhiteBoard = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/CodeEditor/Whiteboard.jsx")
-);
-
-const MyProfile = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx"
-  )
-);
-const BasicDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx"
-  )
-);
-const BasicDetailsEditPage = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx"
-  )
-);
-const AdvancedDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails.jsx"
-  )
-);
-const EditAdvacedDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails.jsx"
-  )
-);
-const InterviewUserDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails.jsx"
-  )
-);
-const EditInterviewDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails"
-  )
-);
-const AvailabilityUser = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser"
-  )
-);
-const EditAvailabilityDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails"
-  )
-);
-const CompanyProfile = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile"
-  )
-);
-const CompanyEditProfile = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit"
-  )
-);
-const Subscription = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription"
-  )
-);
-const Wallet = lazy(() =>
-  import("./Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet")
-);
-const WalletBalancePopup = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup"
-  )
-);
-const WalletTransactionPopup = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup"
-  )
-);
-const Security = lazy(() =>
-  import("./Pages/Dashboard-Part/Accountsettings/account/Security")
-);
-const NotificationsDetails = lazy(() =>
-  import("./Pages/Dashboard-Part/Accountsettings/account/Notifications")
-);
-const Usage = lazy(() =>
-  import("./Pages/Dashboard-Part/Accountsettings/account/Usage")
-);
-const InterviewerGroups = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups"
-  )
-);
-const InterviewerGroupFormPopup = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup"
-  )
-);
-const InterviewGroupDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails"
-  )
-);
-const UsersLayout = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout"
-  )
-);
-const UserForm = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm"
-  )
-);
-const UserProfileDetails = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails"
-  )
-);
-const EmailTemplate = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate"
-  )
-);
-const Role = lazy(() =>
-  import("./Pages/Dashboard-Part/Accountsettings/account/Roles/Role")
-);
-const RoleFormPopup = lazy(() =>
-  import("./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup")
-);
-const RoleView = lazy(() =>
-  import("./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleView.jsx")
+const WhiteBoard = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/CodeEditor/Whiteboard.jsx"),
 );
 
-const Sharing = lazy(() =>
-  import("./Pages/Dashboard-Part/Accountsettings/account/Sharing")
+const MyProfile = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx"),
 );
-const DomainManagement = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement"
-  )
+const BasicDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx"),
 );
-const Webhooks = lazy(() =>
-  import("./Pages/Dashboard-Part/Accountsettings/integrations/Webhooks")
+const BasicDetailsEditPage = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx"),
 );
-const HrmsAtsApi = lazy(() =>
-  import("./Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi")
+const AdvancedDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails.jsx"),
+);
+const EditAdvacedDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails.jsx"),
+);
+const InterviewUserDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails.jsx"),
+);
+const EditInterviewDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails"),
+);
+const AvailabilityUser = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser"),
+);
+const EditAvailabilityDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails"),
+);
+const CompanyProfile = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile"),
+);
+const CompanyEditProfile = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit"),
+);
+const Subscription = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription"),
+);
+const Wallet = lazy(
+  () => import("./Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet"),
+);
+const WalletBalancePopup = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup"),
+);
+const WalletTransactionPopup = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup"),
+);
+const Security = lazy(
+  () => import("./Pages/Dashboard-Part/Accountsettings/account/Security"),
+);
+const NotificationsDetails = lazy(
+  () => import("./Pages/Dashboard-Part/Accountsettings/account/Notifications"),
+);
+const Usage = lazy(
+  () => import("./Pages/Dashboard-Part/Accountsettings/account/Usage"),
+);
+const InterviewerGroups = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups"),
+);
+const InterviewerGroupFormPopup = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup"),
+);
+const InterviewGroupDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails"),
+);
+const UsersLayout = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout"),
+);
+const UserForm = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm"),
+);
+const UserProfileDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails"),
+);
+const EmailTemplate = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate"),
+);
+const Role = lazy(
+  () => import("./Pages/Dashboard-Part/Accountsettings/account/Roles/Role"),
+);
+const RoleFormPopup = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup"),
+);
+const RoleView = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleView.jsx"),
+);
+
+const Sharing = lazy(
+  () => import("./Pages/Dashboard-Part/Accountsettings/account/Sharing"),
+);
+const DomainManagement = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement"),
+);
+const Webhooks = lazy(
+  () => import("./Pages/Dashboard-Part/Accountsettings/integrations/Webhooks"),
+);
+const HrmsAtsApi = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi"),
 );
 // v1.0.6 <-----------------------------------------------------------------------------
-const SettingsIntegrations = lazy(() =>
-  import(
-    "./Pages/Dashboard-Part/Accountsettings/account/WebHooks/MainContent.jsx"
-  )
+const SettingsIntegrations = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Accountsettings/account/WebHooks/MainContent.jsx"),
 );
 // v1.0.6 ----------------------------------------------------------------------------->
-const InterviewTemplates = lazy(() =>
-  import("../src/Pages/InteviewTemplates/InterviewTemplates")
+const InterviewTemplates = lazy(
+  () => import("../src/Pages/InteviewTemplates/InterviewTemplates"),
 );
-const TemplateDetail = lazy(() =>
-  import("../src/Pages/InteviewTemplates/TemplateDetail")
+const TemplateDetail = lazy(
+  () => import("../src/Pages/InteviewTemplates/TemplateDetail"),
 );
-const RoundFormTemplate = lazy(() =>
-  import("../src/Pages/InteviewTemplates/RoundForm")
+const RoundFormTemplate = lazy(
+  () => import("../src/Pages/InteviewTemplates/RoundForm"),
 );
-const InterviewTemplateForm = lazy(() =>
-  import("../src/Pages/InteviewTemplates/InterviewTemplateForm")
+const InterviewTemplateForm = lazy(
+  () => import("../src/Pages/InteviewTemplates/InterviewTemplateForm"),
 );
-const SupportDesk = lazy(() =>
-  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk")
+const SupportDesk = lazy(
+  () => import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk"),
 );
-const SuperSupportDetails = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/SupportDesk/SuperSupportDetails.jsx")
+const SuperSupportDetails = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/SupportDesk/SuperSupportDetails.jsx"),
 );
-const SupportForm = lazy(() =>
-  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportForm")
+const SupportForm = lazy(
+  () => import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportForm"),
 );
-const SupportViewPage = lazy(() =>
-  import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage")
+const SupportViewPage = lazy(
+  () => import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage"),
 );
-const InterviewRequest = lazy(() =>
-  import("./Pages/Interview-Request/InterviewRequest.jsx")
+const InterviewRequest = lazy(
+  () => import("./Pages/Interview-Request/InterviewRequest.jsx"),
 );
-const WithdrawalRequests = lazy(() =>
-  import("./Pages/Withdrawal-Request/WithdrawalRequests.jsx")
+const WithdrawalRequests = lazy(
+  () => import("./Pages/Withdrawal-Request/WithdrawalRequests.jsx"),
 );
-const Task = lazy(() =>
-  import("./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx")
+const Task = lazy(
+  () => import("./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx"),
 );
 const VerifyEmail = lazy(() => import("./VerifyWorkEmail.jsx"));
 
 // v1.0.5 <--------------------------------------------------------------------------------
 const AnalyticsLayout = lazy(() => import("./Components/Analytics/Layout.jsx"));
-const AnalyticsDashboard = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Analytics/Dashboard.jsx")
+const AnalyticsDashboard = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Analytics/Dashboard.jsx"),
 );
-const AnalyticsReports = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Analytics/Reports.jsx")
+const AnalyticsReports = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Analytics/Reports.jsx"),
 );
-const AnalyticsReportDetail = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Analytics/ReportDetail.jsx")
+const AnalyticsReportDetail = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Analytics/ReportDetail.jsx"),
 );
-const AnalyticsTrends = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Analytics/Trends.jsx")
+const AnalyticsTrends = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Analytics/Trends.jsx"),
 );
 // v1.0.5 -------------------------------------------------------------------------------->
 
 // Super Admin Lazy-loaded components
-const SuperAdminDashboard = lazy(() =>
-  import("./Pages/SuperAdmin-Part/Dashboard.jsx")
+const SuperAdminDashboard = lazy(
+  () => import("./Pages/SuperAdmin-Part/Dashboard.jsx"),
 );
-const TenantsPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/TenantsPage.jsx")
+const TenantsPage = lazy(
+  () => import("./Pages/SuperAdmin-Part/TenantsPage.jsx"),
 );
-const AddTenantForm = lazy(() =>
-  import("./Pages/SuperAdmin-Part/Tenant/AddTenantForm.jsx")
+const AddTenantForm = lazy(
+  () => import("./Pages/SuperAdmin-Part/Tenant/AddTenantForm.jsx"),
 );
-const TenantDetailsPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/TenantDetailsPage.jsx")
+const TenantDetailsPage = lazy(
+  () => import("./Pages/SuperAdmin-Part/TenantDetailsPage.jsx"),
 );
 // const CandidatesPage = lazy(() =>
 //     import("./Pages/SuperAdmin-Part/CandidatesPage.jsx")
@@ -453,17 +445,19 @@ const TenantDetailsPage = lazy(() =>
 //     import("./Pages/SuperAdmin-Part/AssessmentsPage.jsx")
 // );
 
-const OutsourceInterviewersPage = lazy(() =>
-  import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx")
+const OutsourceInterviewersPage = lazy(
+  () =>
+    import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx"),
 );
-const InterviewerRequestsPage = lazy(() =>
-  import("./Pages/Interview-Request/InterviewRequest.jsx")
+const InterviewerRequestsPage = lazy(
+  () => import("./Pages/Interview-Request/InterviewRequest.jsx"),
 );
-const BillingPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/BillingPage.jsx")
+const BillingPage = lazy(
+  () => import("./Pages/SuperAdmin-Part/BillingPage.jsx"),
 );
-const AddInvoiceForm = lazy(() =>
-  import("./Components/SuperAdminComponents/Billing/Invoice/AddInvoiceForm.jsx")
+const AddInvoiceForm = lazy(
+  () =>
+    import("./Components/SuperAdminComponents/Billing/Invoice/AddInvoiceForm.jsx"),
 );
 // const SupportTicketsPage = lazy(() =>
 //     import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk")
@@ -471,64 +465,68 @@ const AddInvoiceForm = lazy(() =>
 // const AddSupportForm = lazy(() =>
 //     import("./Pages/SuperAdmin-Part/Support/AddSupportForm.jsx")
 // );
-const SettingsPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/SettingsPage.jsx")
+const SettingsPage = lazy(
+  () => import("./Pages/SuperAdmin-Part/SettingsPage.jsx"),
 );
-const InternalLogsPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/InternalLogsPage.jsx")
+const InternalLogsPage = lazy(
+  () => import("./Pages/SuperAdmin-Part/InternalLogsPage.jsx"),
 );
-const IntegrationsPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/IntegrationsPage.jsx")
+const IntegrationsPage = lazy(
+  () => import("./Pages/SuperAdmin-Part/IntegrationsPage.jsx"),
 );
-const ContactProfileDetails = lazy(() =>
-  import(
-    "./Components/SuperAdminComponents/TenantDetails/Contact/ContactProfileDetails.jsx"
-  )
+const ContactProfileDetails = lazy(
+  () =>
+    import("./Components/SuperAdminComponents/TenantDetails/Contact/ContactProfileDetails.jsx"),
 );
 
 // v1.0.9 <-------------------------------------------------------------------------------
 // v1.0.8 <-------------------------------------------------------------------------------
 // v1.0.7 <-------------------------------------------------------------------------------
-const InterviewerRatesPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/InterviewerRates/InterviewerRatesPage.jsx")
+const InterviewerRatesPage = lazy(
+  () =>
+    import("./Pages/SuperAdmin-Part/InterviewerRates/InterviewerRatesPage.jsx"),
 );
-const Interviewers = lazy(() =>
-  import("./Pages/SuperAdmin-Part/Interviews/Interviews.jsx")
+const Interviewers = lazy(
+  () => import("./Pages/SuperAdmin-Part/Interviews/Interviews.jsx"),
 );
-const MasterData = lazy(() =>
-  import("./Pages/SuperAdmin-Part/MasterData/MasterData.jsx")
+const MasterData = lazy(
+  () => import("./Pages/SuperAdmin-Part/MasterData/MasterData.jsx"),
 );
-const MasterTable = lazy(() =>
-  import("./Pages/SuperAdmin-Part/MasterData/MasterTable/MasterTable.jsx")
+const MasterTable = lazy(
+  () =>
+    import("./Pages/SuperAdmin-Part/MasterData/MasterTable/MasterTable.jsx"),
 );
 // v2.0.0 <------------------------------------------------------------------
-const QuestionBankManager = lazy(() =>
-  import("./Pages/SuperAdmin-Part/QuestionBankManager/QuestionBankManager.jsx")
+const QuestionBankManager = lazy(
+  () =>
+    import("./Pages/SuperAdmin-Part/QuestionBankManager/QuestionBankManager.jsx"),
 );
-const ContactUsPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/ContactUs/ContactUsPage.jsx")
+const ContactUsPage = lazy(
+  () => import("./Pages/SuperAdmin-Part/ContactUs/ContactUsPage.jsx"),
 );
-const ContactUsViewPage = lazy(() =>
-  import("./Pages/SuperAdmin-Part/ContactUs/ContactUsViewPage.jsx")
+const ContactUsViewPage = lazy(
+  () => import("./Pages/SuperAdmin-Part/ContactUs/ContactUsViewPage.jsx"),
 );
-const InterviewPolicy = lazy(() =>
-  import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicy.jsx")
+const InterviewPolicy = lazy(
+  () => import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicy.jsx"),
 );
-const InterviewPolicyDetails = lazy(() =>
-  import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicyDetails.jsx")
+const InterviewPolicyDetails = lazy(
+  () =>
+    import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicyDetails.jsx"),
 );
-const InterviewPolicyForm = lazy(() =>
-  import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicyForm.jsx")
+const InterviewPolicyForm = lazy(
+  () =>
+    import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicyForm.jsx"),
 );
 
-const RegionalTax = lazy(() =>
-  import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTax.jsx")
+const RegionalTax = lazy(
+  () => import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTax.jsx"),
 );
-const RegionalTaxForm = lazy(() =>
-  import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTaxForm.jsx")
+const RegionalTaxForm = lazy(
+  () => import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTaxForm.jsx"),
 );
-const RegionalTaxDetails = lazy(() =>
-  import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTaxDetails.jsx")
+const RegionalTaxDetails = lazy(
+  () => import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTaxDetails.jsx"),
 );
 // v2.0.0 <------------------------------------------------------------------
 // v1.0.7 ------------------------------------------------------------------------------->
@@ -1187,6 +1185,19 @@ const MainAppRoutes = ({
                 <Route path="edit/:id" element={<CompanyForm mode="Edit" />} />
               </Route>
             )}
+            {hasPermission("InterviewerTags") && (
+              <Route path="/interviewer-tags" element={<InterviewerTags />}>
+                <Route
+                  path="new"
+                  element={<InterviewerTagsForm mode="Create" />}
+                />
+                <Route path="view/:id" element={<InterviewerTagsDetails />} />
+                <Route
+                  path="edit/:id"
+                  element={<InterviewerTagsForm mode="Edit" />}
+                />
+              </Route>
+            )}
 
             {/* Support Desk Admin*/}
             {hasPermission("SupportDesk") && (
@@ -1617,7 +1628,7 @@ const App = () => {
       (path) =>
         location.pathname === path ||
         location.pathname.startsWith(path + "/") ||
-        (path.endsWith("*") && location.pathname.startsWith(path.slice(0, -1)))
+        (path.endsWith("*") && location.pathname.startsWith(path.slice(0, -1))),
     );
   }, [location.pathname]);
 

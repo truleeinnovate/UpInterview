@@ -122,7 +122,7 @@ const CombinedNavbar = React.memo(() => {
 
       if (
         refsToCheck.every(
-          (ref) => ref.current && !ref.current.contains(event.target)
+          (ref) => ref.current && !ref.current.contains(event.target),
         )
       ) {
         closeAllDropdowns();
@@ -178,11 +178,11 @@ const CombinedNavbar = React.memo(() => {
   // Toggle functions
   const toggleAssessmentDropdown = () =>
     closeAllDropdowns(
-      dropdownState.assessmentDropdown ? null : "assessmentDropdown"
+      dropdownState.assessmentDropdown ? null : "assessmentDropdown",
     );
   const toggleInterviewDropdown = () =>
     closeAllDropdowns(
-      dropdownState.interviewDropdown ? null : "interviewDropdown"
+      dropdownState.interviewDropdown ? null : "interviewDropdown",
     );
   const toggleMoreDropdown = () =>
     closeAllDropdowns(dropdownState.moreDropdown ? null : "moreDropdown");
@@ -205,7 +205,7 @@ const CombinedNavbar = React.memo(() => {
     closeAllDropdowns(dropdownState.profileDropdown ? null : "profileDropdown");
   const toggleNotification = () =>
     closeAllDropdowns(
-      dropdownState.isNotificationOpen ? null : "isNotificationOpen"
+      dropdownState.isNotificationOpen ? null : "isNotificationOpen",
     );
   const toggleSidebar = () =>
     setDropdownState((prev) => ({
@@ -450,6 +450,11 @@ const CombinedNavbar = React.memo(() => {
           path: "/companies",
           label: "Companies",
           permissionKey: "Companies.ViewTab",
+        },
+        {
+          path: "/interviewer-tags",
+          label: "Interviewer Tags",
+          permissionKey: "InterviewerTags.ViewTab",
         },
       ];
     }
@@ -887,7 +892,7 @@ const CombinedNavbar = React.memo(() => {
                         <button
                           className={`h-[52px] flex items-center relative transition-colors duration-300 ${
                             getRequestsDropdownItems().some((item) =>
-                              isActive(item.path)
+                              isActive(item.path),
                             )
                               ? "text-custom-blue font-bold"
                               : "text-gray-600 hover:text-custom-blue"
@@ -901,7 +906,7 @@ const CombinedNavbar = React.memo(() => {
                             }`}
                           />
                           {getRequestsDropdownItems().some((item) =>
-                            isActive(item.path)
+                            isActive(item.path),
                           ) && (
                             <div className="absolute bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                           )}
@@ -929,7 +934,7 @@ const CombinedNavbar = React.memo(() => {
                                     >
                                       {label}
                                     </NavLink>
-                                  )
+                                  ),
                               )}
                             </div>
                           </div>
@@ -1101,7 +1106,7 @@ const CombinedNavbar = React.memo(() => {
                             : ""
                         } ${
                           getMoreDropdownItems().some((item) =>
-                            isActive(item.path)
+                            isActive(item.path),
                           )
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
@@ -1121,7 +1126,7 @@ const CombinedNavbar = React.memo(() => {
                           <ChevronDown className="h-5 w-5" />
                         )}
                         {getMoreDropdownItems().some((item) =>
-                          isActive(item.path)
+                          isActive(item.path),
                         ) && (
                           <div
                             className={`absolute ${
@@ -1161,8 +1166,8 @@ const CombinedNavbar = React.memo(() => {
                                       ? "text-custom-blue font-bold"
                                       : "bg-gray-100 text-custom-blue"
                                     : userType === "superAdmin"
-                                    ? "text-gray-700 hover:text-custom-blue"
-                                    : ""
+                                      ? "text-gray-700 hover:text-custom-blue"
+                                      : ""
                                 }`}
                                 onClick={(e) => {
                                   e.preventDefault();
@@ -1259,7 +1264,7 @@ const CombinedNavbar = React.memo(() => {
                             <div className="space-y-1">
                               {[
                                 ...(enhancedCheckPermission(
-                                  "InterviewTemplates"
+                                  "InterviewTemplates",
                                 )
                                   ? [
                                       {
@@ -1339,7 +1344,7 @@ const CombinedNavbar = React.memo(() => {
                             <div className="space-y-1">
                               {[
                                 ...(enhancedCheckPermission(
-                                  "AssessmentTemplates"
+                                  "AssessmentTemplates",
                                 )
                                   ? [
                                       {
@@ -1383,7 +1388,8 @@ const CombinedNavbar = React.memo(() => {
                     {(enhancedCheckPermission("Analytics") ||
                       enhancedCheckPermission("SupportDesk") ||
                       enhancedCheckPermission("QuestionBank") ||
-                      enhancedCheckPermission("Companies")) && (
+                      enhancedCheckPermission("Companies") ||
+                      enhancedCheckPermission("InterviewerTags")) && (
                       <div
                         className="relative h-full flex items-center"
                         ref={moreRef}
@@ -1408,7 +1414,8 @@ const CombinedNavbar = React.memo(() => {
                             isActive("/support-desk") ||
                             isActive("/feedback") ||
                             isActive("/question-bank") ||
-                            isActive("/companies")) && (
+                            isActive("/companies") ||
+                            isActive("/interviewer-tags")) && (
                             <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                           )}
                         </button>
@@ -1440,6 +1447,14 @@ const CombinedNavbar = React.memo(() => {
                                   : []),
                                 ...(enhancedCheckPermission("Companies")
                                   ? [{ to: "/companies", label: "Companies" }]
+                                  : []),
+                                ...(enhancedCheckPermission("InterviewerTags")
+                                  ? [
+                                      {
+                                        to: "/interviewer-tags",
+                                        label: "Interviewer Tags",
+                                      },
+                                    ]
                                   : []),
                               ].map(({ to, label }) => (
                                 <NavLink
@@ -1514,13 +1529,13 @@ const CombinedNavbar = React.memo(() => {
                     )}
 
                     {getRequestsDropdownItems().filter((item) =>
-                      enhancedCheckPermission(item.permissionKey)
+                      enhancedCheckPermission(item.permissionKey),
                     ).length > 0 && (
                       <div className="relative" ref={requestsRef}>
                         <button
                           className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
                             getRequestsDropdownItems().some((item) =>
-                              isActive(item.path)
+                              isActive(item.path),
                             )
                               ? "bg-gray-100 text-custom-blue font-bold"
                               : "text-gray-600 hover:bg-gray-100"
@@ -1556,7 +1571,7 @@ const CombinedNavbar = React.memo(() => {
                                   >
                                     {label}
                                   </NavLink>
-                                )
+                                ),
                             )}
                           </div>
                         )}
@@ -1699,7 +1714,7 @@ const CombinedNavbar = React.memo(() => {
                         <button
                           className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
                             getMoreDropdownItems().some((item) =>
-                              isActive(item.path)
+                              isActive(item.path),
                             )
                               ? "bg-gray-100 text-custom-blue font-bold"
                               : "text-gray-600 hover:bg-gray-100"
