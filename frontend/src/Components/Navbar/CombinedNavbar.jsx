@@ -112,13 +112,13 @@ const CombinedNavbar = React.memo(() => {
         userType === "superAdmin"
           ? [moreRef, outlineRef, notificationRef, profileRef, requestsRef] // Make sure requestsRef is included
           : [
-              assessmentRef,
-              interviewRef,
-              moreRef,
-              outlineRef,
-              notificationRef,
-              profileRef,
-            ];
+            assessmentRef,
+            interviewRef,
+            moreRef,
+            outlineRef,
+            notificationRef,
+            profileRef,
+          ];
 
       if (
         refsToCheck.every(
@@ -332,6 +332,11 @@ const CombinedNavbar = React.memo(() => {
           path: "/interviews",
           label: "Interviews",
           permissionKey: "Interviews.ViewTab",
+        },
+        {
+          path: "/interviewers",
+          label: "Interviewers",
+          permissionKey: "Interviewers.ViewTab",
         },
         {
           path: "/mock-interview",
@@ -608,27 +613,27 @@ const CombinedNavbar = React.memo(() => {
         {[
           ...(checkPermission("Billing")
             ? [
-                {
-                  // For pure super admin, go to the admin billing page.
-                  // For all effective / normal users, go to the user billing tab.
-                  to:
-                    userType === "superAdmin"
-                      ? "/admin-billing"
-                      : "/billing-details",
-                  label: "Billing",
-                  icon: <CreditCard className="h-5 w-5" />,
-                },
-              ]
+              {
+                // For pure super admin, go to the admin billing page.
+                // For all effective / normal users, go to the user billing tab.
+                to:
+                  userType === "superAdmin"
+                    ? "/admin-billing"
+                    : "/billing-details",
+                label: "Billing",
+                icon: <CreditCard className="h-5 w-5" />,
+              },
+            ]
             : []),
           ...(checkPermission("Wallet")
             ? [
-                {
-                  // For super admin, show platform wallet; for others, regular wallet
-                  to: userType === "superAdmin" ? "/admin-wallet" : "/wallet",
-                  label: userType === "superAdmin" ? "Wallet" : "My Wallet",
-                  icon: <Wallet className="h-5 w-5" />,
-                },
-              ]
+              {
+                // For super admin, show platform wallet; for others, regular wallet
+                to: userType === "superAdmin" ? "/admin-wallet" : "/wallet",
+                label: userType === "superAdmin" ? "Wallet" : "My Wallet",
+                icon: <Wallet className="h-5 w-5" />,
+              },
+            ]
             : []),
         ].map(({ to, label, icon }, index) => (
           <NavLink
@@ -735,11 +740,10 @@ const CombinedNavbar = React.memo(() => {
               />
             ) : (
               <UserCircle
-                className={`cursor-pointer ${
-                  dropdownState.profileDropdown
-                    ? "text-custom-blue h-5 w-5"
-                    : "text-black h-5 w-5"
-                }`}
+                className={`cursor-pointer ${dropdownState.profileDropdown
+                  ? "text-custom-blue h-5 w-5"
+                  : "text-black h-5 w-5"
+                  }`}
               />
             )}
             {dropdownState.profileDropdown && (
@@ -749,9 +753,8 @@ const CombinedNavbar = React.memo(() => {
           {dropdownState.profileDropdown && profileDropdownContent}
         </div>
       ),
-      className: `text-xl border rounded-md h-10 w-10 ${
-        singleContact?.imageData?.path ? "p-1" : "p-2"
-      }`,
+      className: `text-xl border rounded-md h-10 w-10 ${singleContact?.imageData?.path ? "p-1" : "p-2"
+        }`,
       isActive: dropdownState.profileDropdown,
     },
   ];
@@ -791,27 +794,24 @@ const CombinedNavbar = React.memo(() => {
     <>
       {/* <------------------------------- v1.0.0 */}
       <div
-        className={`bg-white fixed top-0 left-0 right-0 z-50 shadow-sm ${
-          userType === "superAdmin" ? "border-b border-gray-200" : ""
-        }`}
+        className={`bg-white fixed top-0 left-0 right-0 z-50 shadow-sm ${userType === "superAdmin" ? "border-b border-gray-200" : ""
+          }`}
       >
         <div className="mx-auto relative">
           <div
-            className={`flex justify-between items-center ${
-              userType === "superAdmin"
-                ? "px-2 py-1"
-                : "border-gray-100 p-3 sm:px-4"
-            }`}
+            className={`flex justify-between items-center ${userType === "superAdmin"
+              ? "px-2 py-1"
+              : "border-gray-100 p-3 sm:px-4"
+              }`}
           >
             {/* v1.0.0  ----------------------> */}
             {/* Mobile menu button and logo */}
             <div className="flex items-center">
               <button
-                className={`${
-                  userType === "superAdmin"
-                    ? "lg:hidden xl:hidden 2xl:hidden"
-                    : "sidebar-icon12 mr-2 lg:hidden xl:hidden 2xl:hidden"
-                }`}
+                className={`${userType === "superAdmin"
+                  ? "lg:hidden xl:hidden 2xl:hidden"
+                  : "sidebar-icon12 mr-2 lg:hidden xl:hidden 2xl:hidden"
+                  }`}
                 onClick={
                   userType === "superAdmin" ? toggleSidebar : toggleSidebar
                 }
@@ -832,18 +832,16 @@ const CombinedNavbar = React.memo(() => {
 
             {/* Desktop navigation */}
             <nav
-              className={`hidden lg:flex xl:flex 2xl:flex ${
-                userType === "superAdmin"
-                  ? "justify-center flex-1"
-                  : "items-center justify-center flex-1"
-              }`}
+              className={`hidden lg:flex xl:flex 2xl:flex ${userType === "superAdmin"
+                ? "justify-center flex-1"
+                : "items-center justify-center flex-1"
+                }`}
             >
               <div
-                className={`flex items-center ${
-                  userType === "superAdmin"
-                    ? "gap-x-6 max-w-5xl h-full"
-                    : "space-x-8 max-w-3xl"
-                }`}
+                className={`flex items-center ${userType === "superAdmin"
+                  ? "gap-x-6 max-w-5xl h-full"
+                  : "space-x-8 max-w-3xl"
+                  }`}
               >
                 {/* Super Admin Navigation */}
                 {userType === "superAdmin" && (
@@ -851,15 +849,13 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Tenants") && (
                       <NavLink
                         to="/tenants"
-                        className={`${
-                          userType === "superAdmin"
-                            ? "h-[52px] flex items-center relative"
-                            : "h-full flex items-center relative px-1"
-                        } ${
-                          isActive("/tenants")
+                        className={`${userType === "superAdmin"
+                          ? "h-[52px] flex items-center relative"
+                          : "h-full flex items-center relative px-1"
+                          } ${isActive("/tenants")
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -869,11 +865,10 @@ const CombinedNavbar = React.memo(() => {
                         Tenants
                         {isActive("/tenants") && (
                           <div
-                            className={`absolute ${
-                              userType === "superAdmin"
-                                ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
-                                : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
-                            }`}
+                            className={`absolute ${userType === "superAdmin"
+                              ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
+                              : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
+                              }`}
                           ></div>
                         )}
                       </NavLink>
@@ -885,26 +880,24 @@ const CombinedNavbar = React.memo(() => {
                         ref={requestsRef}
                       >
                         <button
-                          className={`h-[52px] flex items-center relative transition-colors duration-300 ${
-                            getRequestsDropdownItems().some((item) =>
-                              isActive(item.path)
-                            )
-                              ? "text-custom-blue font-bold"
-                              : "text-gray-600 hover:text-custom-blue"
-                          }`}
+                          className={`h-[52px] flex items-center relative transition-colors duration-300 ${getRequestsDropdownItems().some((item) =>
+                            isActive(item.path)
+                          )
+                            ? "text-custom-blue font-bold"
+                            : "text-gray-600 hover:text-custom-blue"
+                            }`}
                           onClick={toggleRequestsDropdown}
                         >
                           Requests
                           <ChevronDown
-                            className={`h-5 w-5 ml-1 transition-transform duration-300 ease-in-out ${
-                              dropdownState.requestsDropdown ? "rotate-180" : ""
-                            }`}
+                            className={`h-5 w-5 ml-1 transition-transform duration-300 ease-in-out ${dropdownState.requestsDropdown ? "rotate-180" : ""
+                              }`}
                           />
                           {getRequestsDropdownItems().some((item) =>
                             isActive(item.path)
                           ) && (
-                            <div className="absolute bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"></div>
-                          )}
+                              <div className="absolute bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                            )}
                         </button>
 
                         {dropdownState.requestsDropdown && (
@@ -916,11 +909,10 @@ const CombinedNavbar = React.memo(() => {
                                     <NavLink
                                       key={path}
                                       to={path}
-                                      className={`h-[42px] flex items-center px-4 relative ${
-                                        isActive(path)
-                                          ? "text-custom-blue font-bold"
-                                          : "text-gray-700 hover:text-custom-blue"
-                                      }`}
+                                      className={`h-[42px] flex items-center px-4 relative ${isActive(path)
+                                        ? "text-custom-blue font-bold"
+                                        : "text-gray-700 hover:text-custom-blue"
+                                        }`}
                                       onClick={(e) => {
                                         e.preventDefault();
                                         closeAllDropdowns();
@@ -940,15 +932,13 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("SupportDesk") && (
                       <NavLink
                         to="/support-desk"
-                        className={`${
-                          userType === "superAdmin"
-                            ? "h-[52px] flex items-center relative"
-                            : "h-full flex items-center relative px-1"
-                        } ${
-                          isActive("/support-desk")
+                        className={`${userType === "superAdmin"
+                          ? "h-[52px] flex items-center relative"
+                          : "h-full flex items-center relative px-1"
+                          } ${isActive("/support-desk")
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -958,11 +948,10 @@ const CombinedNavbar = React.memo(() => {
                         Support Desk
                         {isActive("/support-desk") && (
                           <div
-                            className={`absolute ${
-                              userType === "superAdmin"
-                                ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
-                                : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
-                            }`}
+                            className={`absolute ${userType === "superAdmin"
+                              ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
+                              : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
+                              }`}
                           ></div>
                         )}
                       </NavLink>
@@ -971,15 +960,13 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Billing") && (
                       <NavLink
                         to="/admin-billing"
-                        className={`${
-                          userType === "superAdmin"
-                            ? "h-[52px] flex items-center relative"
-                            : "h-full flex items-center relative px-1"
-                        } ${
-                          isActive("/admin-billing")
+                        className={`${userType === "superAdmin"
+                          ? "h-[52px] flex items-center relative"
+                          : "h-full flex items-center relative px-1"
+                          } ${isActive("/admin-billing")
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -989,11 +976,10 @@ const CombinedNavbar = React.memo(() => {
                         Billing
                         {isActive("/admin-billing") && (
                           <div
-                            className={`absolute ${
-                              userType === "superAdmin"
-                                ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
-                                : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
-                            }`}
+                            className={`absolute ${userType === "superAdmin"
+                              ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
+                              : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
+                              }`}
                           ></div>
                         )}
                       </NavLink>
@@ -1001,15 +987,13 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("InternalLogs") && (
                       <NavLink
                         to="/internal-logs"
-                        className={`${
-                          userType === "superAdmin"
-                            ? "h-[52px] flex items-center relative"
-                            : "h-full flex items-center relative px-1"
-                        } ${
-                          isActive("/internal-logs")
+                        className={`${userType === "superAdmin"
+                          ? "h-[52px] flex items-center relative"
+                          : "h-full flex items-center relative px-1"
+                          } ${isActive("/internal-logs")
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1019,11 +1003,10 @@ const CombinedNavbar = React.memo(() => {
                         Internal Logs
                         {isActive("/internal-logs") && (
                           <div
-                            className={`absolute ${
-                              userType === "superAdmin"
-                                ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
-                                : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
-                            }`}
+                            className={`absolute ${userType === "superAdmin"
+                              ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
+                              : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
+                              }`}
                           ></div>
                         )}
                       </NavLink>
@@ -1031,15 +1014,13 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Interviews") && (
                       <NavLink
                         to="/admin-interviews"
-                        className={`${
-                          userType === "superAdmin"
-                            ? "h-[52px] flex items-center relative"
-                            : "h-full flex items-center relative px-1"
-                        } ${
-                          isActive("/admin-interviews")
+                        className={`${userType === "superAdmin"
+                          ? "h-[52px] flex items-center relative"
+                          : "h-full flex items-center relative px-1"
+                          } ${isActive("/admin-interviews")
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1049,11 +1030,10 @@ const CombinedNavbar = React.memo(() => {
                         Interviews
                         {isActive("/admin-interviews") && (
                           <div
-                            className={`absolute ${
-                              userType === "superAdmin"
-                                ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
-                                : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
-                            }`}
+                            className={`absolute ${userType === "superAdmin"
+                              ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
+                              : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
+                              }`}
                           ></div>
                         )}
                       </NavLink>
@@ -1061,15 +1041,13 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("QuestionBankManager") && (
                       <NavLink
                         to="/question-bank-manager"
-                        className={`${
-                          userType === "superAdmin"
-                            ? "h-[52px] flex items-center relative"
-                            : "h-full flex items-center relative px-1"
-                        } ${
-                          isActive("/question-bank-manager")
+                        className={`${userType === "superAdmin"
+                          ? "h-[52px] flex items-center relative"
+                          : "h-full flex items-center relative px-1"
+                          } ${isActive("/question-bank-manager")
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
-                        }`}
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1079,11 +1057,10 @@ const CombinedNavbar = React.memo(() => {
                         Question Bank
                         {isActive("/question-bank-manager") && (
                           <div
-                            className={`absolute ${
-                              userType === "superAdmin"
-                                ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
-                                : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
-                            }`}
+                            className={`absolute ${userType === "superAdmin"
+                              ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
+                              : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
+                              }`}
                           ></div>
                         )}
                       </NavLink>
@@ -1095,25 +1072,22 @@ const CombinedNavbar = React.memo(() => {
                       ref={moreRef}
                     >
                       <button
-                        className={`${
-                          userType === "superAdmin"
-                            ? "h-[52px] flex items-center relative transition-colors duration-300"
-                            : ""
-                        } ${
-                          getMoreDropdownItems().some((item) =>
+                        className={`${userType === "superAdmin"
+                          ? "h-[52px] flex items-center relative transition-colors duration-300"
+                          : ""
+                          } ${getMoreDropdownItems().some((item) =>
                             isActive(item.path)
                           )
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
-                        }`}
+                          }`}
                         onClick={toggleMoreDropdown}
                       >
                         More
                         {userType === "superAdmin" ? (
                           <ChevronDown
-                            className={`h-5 w-5 ml-1 transition-transform duration-300 ease-in-out ${
-                              dropdownState.moreDropdown ? "rotate-180" : ""
-                            }`}
+                            className={`h-5 w-5 ml-1 transition-transform duration-300 ease-in-out ${dropdownState.moreDropdown ? "rotate-180" : ""
+                              }`}
                           />
                         ) : dropdownState.moreDropdown ? (
                           <ChevronUp className="h-5 w-5" />
@@ -1123,22 +1097,20 @@ const CombinedNavbar = React.memo(() => {
                         {getMoreDropdownItems().some((item) =>
                           isActive(item.path)
                         ) && (
-                          <div
-                            className={`absolute ${
-                              userType === "superAdmin"
+                            <div
+                              className={`absolute ${userType === "superAdmin"
                                 ? "bottom-[-4px] left-0 right-0 h-[3px] bg-custom-blue"
                                 : "bottom-[-17px] left-0 right-0 h-[3px] bg-custom-blue"
-                            }`}
-                          ></div>
-                        )}
+                                }`}
+                            ></div>
+                          )}
                       </button>
                       {dropdownState.moreDropdown && (
                         <div
-                          className={`absolute ${
-                            userType === "superAdmin"
-                              ? "left-0 top-10 z-50 w-60 bg-white rounded-md shadow-lg border ring-black transform transition-all duration-300 ease-in-out origin-top p-2 pr-6"
-                              : "top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border"
-                          }`}
+                          className={`absolute ${userType === "superAdmin"
+                            ? "left-0 top-10 z-50 w-60 bg-white rounded-md shadow-lg border ring-black transform transition-all duration-300 ease-in-out origin-top p-2 pr-6"
+                            : "top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border"
+                            }`}
                         >
                           <div
                             className={
@@ -1151,19 +1123,17 @@ const CombinedNavbar = React.memo(() => {
                               <NavLink
                                 key={path}
                                 to={path}
-                                className={`${
-                                  userType === "superAdmin"
-                                    ? "h-[42px] flex items-center px-4 relative"
-                                    : "block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md"
-                                } ${
-                                  isActive(path)
+                                className={`${userType === "superAdmin"
+                                  ? "h-[42px] flex items-center px-4 relative"
+                                  : "block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md"
+                                  } ${isActive(path)
                                     ? userType === "superAdmin"
                                       ? "text-custom-blue font-bold"
                                       : "bg-gray-100 text-custom-blue"
                                     : userType === "superAdmin"
-                                    ? "text-gray-700 hover:text-custom-blue"
-                                    : ""
-                                }`}
+                                      ? "text-gray-700 hover:text-custom-blue"
+                                      : ""
+                                  }`}
                                 onClick={(e) => {
                                   e.preventDefault();
                                   closeAllDropdowns();
@@ -1186,11 +1156,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Candidates") && (
                       <NavLink
                         to="/candidate"
-                        className={`h-full flex items-center relative px-1 ${
-                          isActive("/candidate")
-                            ? "text-custom-blue font-bold"
-                            : "text-gray-600 hover:text-custom-blue"
-                        }`}
+                        className={`h-full flex items-center relative px-1 ${isActive("/candidate")
+                          ? "text-custom-blue font-bold"
+                          : "text-gray-600 hover:text-custom-blue"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1207,11 +1176,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Positions") && (
                       <NavLink
                         to="/position"
-                        className={`h-full flex items-center relative px-1 ${
-                          isActive("/position")
-                            ? "text-custom-blue font-bold"
-                            : "text-gray-600 hover:text-custom-blue"
-                        }`}
+                        className={`h-full flex items-center relative px-1 ${isActive("/position")
+                          ? "text-custom-blue font-bold"
+                          : "text-gray-600 hover:text-custom-blue"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1227,243 +1195,248 @@ const CombinedNavbar = React.memo(() => {
 
                     {(enhancedCheckPermission("Interviews") ||
                       enhancedCheckPermission("MockInterviews") ||
+                      enhancedCheckPermission("Interviewers") ||
                       enhancedCheckPermission("InterviewTemplates")) && (
-                      <div
-                        className="relative h-full flex items-center"
-                        ref={interviewRef}
-                      >
-                        <button
-                          className={`flex items-center h-full relative px-1 ${
-                            isActive("/interviews") ||
-                            isActive("/mock-interview") ||
-                            isActive("/interview-templates")
+                        <div
+                          className="relative h-full flex items-center"
+                          ref={interviewRef}
+                        >
+                          <button
+                            className={`flex items-center h-full relative px-1 ${isActive("/interviews") ||
+                              isActive("/mock-interview") ||
+                              isActive("/interviewers") ||
+                              isActive("/interview-templates")
                               ? "text-custom-blue font-bold"
                               : "text-gray-600 hover:text-custom-blue"
-                          }`}
-                          onClick={toggleInterviewDropdown}
-                        >
-                          Interviews
-                          {dropdownState.interviewDropdown ? (
-                            <ChevronUp className="h-5 w-5" />
-                          ) : (
-                            <ChevronDown className="h-5 w-5" />
-                          )}
-                          {(isActive("/interviews") ||
-                            isActive("/mock-interview") ||
-                            isActive("/interview-templates")) && (
-                            <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
-                          )}
-                        </button>
-                        {dropdownState.interviewDropdown && (
-                          <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-                            <div className="space-y-1">
-                              {[
-                                ...(enhancedCheckPermission(
-                                  "InterviewTemplates"
-                                )
-                                  ? [
+                              }`}
+                            onClick={toggleInterviewDropdown}
+                          >
+                            Interviews
+                            {dropdownState.interviewDropdown ? (
+                              <ChevronUp className="h-5 w-5" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5" />
+                            )}
+                            {(isActive("/interviews") ||
+                              isActive("/mock-interview") ||
+                              isActive("/interviewers") ||
+                              isActive("/interview-templates")) && (
+                                <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                              )}
+                          </button>
+                          {dropdownState.interviewDropdown && (
+                            <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                              <div className="space-y-1">
+                                {[
+                                  ...(enhancedCheckPermission(
+                                    "InterviewTemplates"
+                                  )
+                                    ? [
                                       {
                                         to: "/interview-templates",
                                         label: "Interview Templates",
                                       },
                                     ]
-                                  : []),
-                                ...(enhancedCheckPermission("Interviews")
-                                  ? [
+                                    : []),
+                                  ...(enhancedCheckPermission("Interviews")
+                                    ? [
                                       {
                                         to: "/interviews",
                                         label: "Interviews",
                                       },
                                     ]
-                                  : []),
-                                ...(enhancedCheckPermission("MockInterviews")
-                                  ? [
+                                    : []),
+                                  ...(enhancedCheckPermission("MockInterviews")
+                                    ? [
                                       {
                                         to: "/mock-interview",
                                         label: "Mock Interviews",
                                       },
                                     ]
-                                  : []),
-                              ].map(({ to, label }) => (
-                                <NavLink
-                                  key={to}
-                                  className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
-                                    isActive(to)
+                                    : []),
+                                  ...(enhancedCheckPermission("Interviewers")
+                                    ? [
+                                      {
+                                        to: "/interviewers",
+                                        label: "Interviewers",
+                                      },
+                                    ]
+                                    : []),
+                                ].map(({ to, label }) => (
+                                  <NavLink
+                                    key={to}
+                                    className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to)
                                       ? "bg-gray-100 text-custom-blue"
                                       : ""
-                                  }`}
-                                  to={to}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    closeAllDropdowns();
-                                    navigate(to);
-                                  }}
-                                >
-                                  {label}
-                                </NavLink>
-                              ))}
+                                      }`}
+                                    to={to}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      closeAllDropdowns();
+                                      navigate(to);
+                                    }}
+                                  >
+                                    {label}
+                                  </NavLink>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
+                        </div>
+                      )}
 
                     {(enhancedCheckPermission("AssessmentTemplates") ||
                       enhancedCheckPermission("Assessments")) && (
-                      <div
-                        className="relative h-full flex items-center"
-                        ref={assessmentRef}
-                      >
-                        <button
-                          className={`flex items-center h-full relative px-1 ${
-                            isActive("/assessments") ||
-                            isActive("/assessment-templates")
+                        <div
+                          className="relative h-full flex items-center"
+                          ref={assessmentRef}
+                        >
+                          <button
+                            className={`flex items-center h-full relative px-1 ${isActive("/assessments") ||
+                              isActive("/assessment-templates")
                               ? "text-custom-blue font-bold"
                               : "text-gray-600 hover:text-custom-blue"
-                          }`}
-                          onClick={toggleAssessmentDropdown}
-                        >
-                          Assessments
-                          {dropdownState.assessmentDropdown ? (
-                            <ChevronUp className="h-5 w-5" />
-                          ) : (
-                            <ChevronDown className="h-5 w-5" />
-                          )}
-                          {(isActive("/assessments") ||
-                            isActive("/assessment-templates")) && (
-                            <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
-                          )}
-                        </button>
-                        {dropdownState.assessmentDropdown && (
-                          <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-                            <div className="space-y-1">
-                              {[
-                                ...(enhancedCheckPermission(
-                                  "AssessmentTemplates"
-                                )
-                                  ? [
+                              }`}
+                            onClick={toggleAssessmentDropdown}
+                          >
+                            Assessments
+                            {dropdownState.assessmentDropdown ? (
+                              <ChevronUp className="h-5 w-5" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5" />
+                            )}
+                            {(isActive("/assessments") ||
+                              isActive("/assessment-templates")) && (
+                                <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                              )}
+                          </button>
+                          {dropdownState.assessmentDropdown && (
+                            <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                              <div className="space-y-1">
+                                {[
+                                  ...(enhancedCheckPermission(
+                                    "AssessmentTemplates"
+                                  )
+                                    ? [
                                       {
                                         to: "/assessment-templates",
                                         label: "Assessment Templates",
                                       },
                                     ]
-                                  : []),
-                                ...(enhancedCheckPermission("Assessments")
-                                  ? [
+                                    : []),
+                                  ...(enhancedCheckPermission("Assessments")
+                                    ? [
                                       {
                                         to: "/assessments",
                                         label: "Assessments",
                                       },
                                     ]
-                                  : []),
-                              ].map(({ to, label }) => (
-                                <NavLink
-                                  key={to}
-                                  className={`block px-3 py-2 whitespace-nowrap hover:bg-gray-100 hover:text-custom-blue rounded-md ${
-                                    isActive(to)
+                                    : []),
+                                ].map(({ to, label }) => (
+                                  <NavLink
+                                    key={to}
+                                    className={`block px-3 py-2 whitespace-nowrap hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to)
                                       ? "bg-gray-100 text-custom-blue"
                                       : ""
-                                  }`}
-                                  to={to}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    closeAllDropdowns();
-                                    navigate(to);
-                                  }}
-                                >
-                                  {label}
-                                </NavLink>
-                              ))}
+                                      }`}
+                                    to={to}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      closeAllDropdowns();
+                                      navigate(to);
+                                    }}
+                                  >
+                                    {label}
+                                  </NavLink>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
+                        </div>
+                      )}
 
                     {(enhancedCheckPermission("Analytics") ||
                       enhancedCheckPermission("SupportDesk") ||
                       enhancedCheckPermission("QuestionBank") ||
                       enhancedCheckPermission("Companies")) && (
-                      <div
-                        className="relative h-full flex items-center"
-                        ref={moreRef}
-                      >
-                        <button
-                          className={`flex items-center h-full relative px-1 ${
-                            isActive("/analytics") ||
-                            isActive("/support-desk") ||
-                            isActive("/question-bank")
+                        <div
+                          className="relative h-full flex items-center"
+                          ref={moreRef}
+                        >
+                          <button
+                            className={`flex items-center h-full relative px-1 ${isActive("/analytics") ||
+                              isActive("/support-desk") ||
+                              isActive("/question-bank")
                               ? "text-custom-blue font-bold"
                               : "text-gray-600 hover:text-custom-blue"
-                          }`}
-                          onClick={toggleMoreDropdown}
-                        >
-                          More
-                          {dropdownState.moreDropdown ? (
-                            <ChevronUp className="h-5 w-5" />
-                          ) : (
-                            <ChevronDown className="h-5 w-5" />
-                          )}
-                          {(isActive("/analytics") ||
-                            isActive("/support-desk") ||
-                            isActive("/feedback") ||
-                            isActive("/question-bank") ||
-                            isActive("/companies")) && (
-                            <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
-                          )}
-                        </button>
-                        {dropdownState.moreDropdown && (
-                          <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
-                            <div className="space-y-1">
-                              {[
-                                ...(enhancedCheckPermission("Analytics")
-                                  ? [{ to: "/analytics", label: "Analytics" }]
-                                  : []),
-                                ...(enhancedCheckPermission("QuestionBank")
-                                  ? [
+                              }`}
+                            onClick={toggleMoreDropdown}
+                          >
+                            More
+                            {dropdownState.moreDropdown ? (
+                              <ChevronUp className="h-5 w-5" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5" />
+                            )}
+                            {(isActive("/analytics") ||
+                              isActive("/support-desk") ||
+                              isActive("/feedback") ||
+                              isActive("/question-bank") ||
+                              isActive("/companies")) && (
+                                <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                              )}
+                          </button>
+                          {dropdownState.moreDropdown && (
+                            <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                              <div className="space-y-1">
+                                {[
+                                  ...(enhancedCheckPermission("Analytics")
+                                    ? [{ to: "/analytics", label: "Analytics" }]
+                                    : []),
+                                  ...(enhancedCheckPermission("QuestionBank")
+                                    ? [
                                       {
                                         to: "/question-bank",
                                         label: "Question Bank",
                                       },
                                     ]
-                                  : []),
-                                ...(enhancedCheckPermission("Feedback")
-                                  ? [{ to: "/feedback", label: "Feedback" }]
-                                  : []),
-                                ...(enhancedCheckPermission("SupportDesk")
-                                  ? [
+                                    : []),
+                                  ...(enhancedCheckPermission("Feedback")
+                                    ? [{ to: "/feedback", label: "Feedback" }]
+                                    : []),
+                                  ...(enhancedCheckPermission("SupportDesk")
+                                    ? [
                                       {
                                         to: "/support-desk",
                                         label: "Support Desk",
                                       },
                                     ]
-                                  : []),
-                                ...(enhancedCheckPermission("Companies")
-                                  ? [{ to: "/companies", label: "Companies" }]
-                                  : []),
-                              ].map(({ to, label }) => (
-                                <NavLink
-                                  key={to}
-                                  className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
-                                    isActive(to)
+                                    : []),
+                                  ...(enhancedCheckPermission("Companies")
+                                    ? [{ to: "/companies", label: "Companies" }]
+                                    : []),
+                                ].map(({ to, label }) => (
+                                  <NavLink
+                                    key={to}
+                                    className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${isActive(to)
                                       ? "bg-gray-100 text-custom-blue"
                                       : ""
-                                  }`}
-                                  to={to}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    closeAllDropdowns();
-                                    navigate(to);
-                                  }}
-                                >
-                                  {label}
-                                </NavLink>
-                              ))}
+                                      }`}
+                                    to={to}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      closeAllDropdowns();
+                                      navigate(to);
+                                    }}
+                                  >
+                                    {label}
+                                  </NavLink>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
+                        </div>
+                      )}
                   </>
                 )}
               </div>
@@ -1474,9 +1447,8 @@ const CombinedNavbar = React.memo(() => {
               {icons.map(({ key, ref, content, className, isActive }) => (
                 <div
                   key={key}
-                  className={`${className} ${
-                    isActive ? "text-custom-blue" : "text-black"
-                  }`}
+                  className={`${className} ${isActive ? "text-custom-blue" : "text-black"
+                    }`}
                   ref={ref}
                 >
                   {content}
@@ -1497,11 +1469,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Tenants") && (
                       <NavLink
                         to="/tenants"
-                        className={`block px-4 py-3 rounded-md ${
-                          isActive("/tenants")
-                            ? "bg-gray-100 text-custom-blue font-bold"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`block px-4 py-3 rounded-md ${isActive("/tenants")
+                          ? "bg-gray-100 text-custom-blue font-bold"
+                          : "text-gray-600 hover:bg-gray-100"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1516,61 +1487,58 @@ const CombinedNavbar = React.memo(() => {
                     {getRequestsDropdownItems().filter((item) =>
                       enhancedCheckPermission(item.permissionKey)
                     ).length > 0 && (
-                      <div className="relative" ref={requestsRef}>
-                        <button
-                          className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
-                            getRequestsDropdownItems().some((item) =>
+                        <div className="relative" ref={requestsRef}>
+                          <button
+                            className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${getRequestsDropdownItems().some((item) =>
                               isActive(item.path)
                             )
                               ? "bg-gray-100 text-custom-blue font-bold"
                               : "text-gray-600 hover:bg-gray-100"
-                          }`}
-                          onClick={toggleRequestsDropdown}
-                        >
-                          <span>Requests</span>
-                          {dropdownState.requestsDropdown ? (
-                            <ChevronUp className="h-5 w-5" />
-                          ) : (
-                            <ChevronDown className="h-5 w-5" />
-                          )}
-                        </button>
-                        {dropdownState.requestsDropdown && (
-                          <div className="mt-1 ml-4 space-y-1">
-                            {getRequestsDropdownItems().map(
-                              ({ path, label, permissionKey }) =>
-                                enhancedCheckPermission(permissionKey) && (
-                                  <NavLink
-                                    key={path}
-                                    to={path}
-                                    className={`block px-4 py-2 rounded-md ${
-                                      isActive(path)
+                              }`}
+                            onClick={toggleRequestsDropdown}
+                          >
+                            <span>Requests</span>
+                            {dropdownState.requestsDropdown ? (
+                              <ChevronUp className="h-5 w-5" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5" />
+                            )}
+                          </button>
+                          {dropdownState.requestsDropdown && (
+                            <div className="mt-1 ml-4 space-y-1">
+                              {getRequestsDropdownItems().map(
+                                ({ path, label, permissionKey }) =>
+                                  enhancedCheckPermission(permissionKey) && (
+                                    <NavLink
+                                      key={path}
+                                      to={path}
+                                      className={`block px-4 py-2 rounded-md ${isActive(path)
                                         ? "bg-gray-100 text-custom-blue"
                                         : "text-gray-600 hover:bg-gray-100"
-                                    }`}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      closeAllDropdowns();
-                                      toggleSidebar();
-                                      navigate(path);
-                                    }}
-                                  >
-                                    {label}
-                                  </NavLink>
-                                )
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                                        }`}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        closeAllDropdowns();
+                                        toggleSidebar();
+                                        navigate(path);
+                                      }}
+                                    >
+                                      {label}
+                                    </NavLink>
+                                  )
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                     {enhancedCheckPermission("InterviewRequest") && (
                       <NavLink
                         to="/interviewer-requests"
-                        className={`block px-4 py-3 rounded-md ${
-                          isActive("/interviewer-requests")
-                            ? "bg-gray-100 text-custom-blue font-bold"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`block px-4 py-3 rounded-md ${isActive("/interviewer-requests")
+                          ? "bg-gray-100 text-custom-blue font-bold"
+                          : "text-gray-600 hover:bg-gray-100"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1585,11 +1553,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("OutsourceInterviewerRequest") && (
                       <NavLink
                         to="/outsource-interviewers"
-                        className={`block px-4 py-3 rounded-md ${
-                          isActive("/outsource-interviewers")
-                            ? "bg-gray-100 text-custom-blue font-bold"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`block px-4 py-3 rounded-md ${isActive("/outsource-interviewers")
+                          ? "bg-gray-100 text-custom-blue font-bold"
+                          : "text-gray-600 hover:bg-gray-100"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1604,11 +1571,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("SupportDesk") && (
                       <NavLink
                         to="/support-desk"
-                        className={`block px-4 py-3 rounded-md ${
-                          isActive("/support-desk")
-                            ? "bg-gray-100 text-custom-blue font-bold"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`block px-4 py-3 rounded-md ${isActive("/support-desk")
+                          ? "bg-gray-100 text-custom-blue font-bold"
+                          : "text-gray-600 hover:bg-gray-100"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1623,11 +1589,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Billing") && (
                       <NavLink
                         to="/admin-billing"
-                        className={`block px-4 py-3 rounded-md ${
-                          isActive("/admin-billing")
-                            ? "bg-gray-100 text-custom-blue font-bold"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`block px-4 py-3 rounded-md ${isActive("/admin-billing")
+                          ? "bg-gray-100 text-custom-blue font-bold"
+                          : "text-gray-600 hover:bg-gray-100"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1641,11 +1606,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("InternalLogs") && (
                       <NavLink
                         to="/internal-logs"
-                        className={`block px-4 py-3 rounded-md ${
-                          isActive("/internal-logs")
-                            ? "bg-gray-100 text-custom-blue font-bold"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`block px-4 py-3 rounded-md ${isActive("/internal-logs")
+                          ? "bg-gray-100 text-custom-blue font-bold"
+                          : "text-gray-600 hover:bg-gray-100"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1660,11 +1624,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Interviews") && (
                       <NavLink
                         to="/admin-interviews"
-                        className={`block px-4 py-3 rounded-md ${
-                          isActive("/admin-interviews")
-                            ? "bg-gray-100 text-custom-blue font-bold"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`block px-4 py-3 rounded-md ${isActive("/admin-interviews")
+                          ? "bg-gray-100 text-custom-blue font-bold"
+                          : "text-gray-600 hover:bg-gray-100"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1679,11 +1642,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("QuestionBankManager") && (
                       <NavLink
                         to="/question-bank-manager"
-                        className={`block px-4 py-3 rounded-md ${
-                          isActive("/question-bank-manager")
-                            ? "bg-gray-100 text-custom-blue font-bold"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`block px-4 py-3 rounded-md ${isActive("/question-bank-manager")
+                          ? "bg-gray-100 text-custom-blue font-bold"
+                          : "text-gray-600 hover:bg-gray-100"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1697,13 +1659,12 @@ const CombinedNavbar = React.memo(() => {
                     {getMoreDropdownItems().length > 0 && (
                       <div className="relative" ref={moreRef}>
                         <button
-                          className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
-                            getMoreDropdownItems().some((item) =>
-                              isActive(item.path)
-                            )
-                              ? "bg-gray-100 text-custom-blue font-bold"
-                              : "text-gray-600 hover:bg-gray-100"
-                          }`}
+                          className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${getMoreDropdownItems().some((item) =>
+                            isActive(item.path)
+                          )
+                            ? "bg-gray-100 text-custom-blue font-bold"
+                            : "text-gray-600 hover:bg-gray-100"
+                            }`}
                           onClick={toggleMoreDropdown}
                         >
                           <span>More</span>
@@ -1720,11 +1681,10 @@ const CombinedNavbar = React.memo(() => {
                               <NavLink
                                 key={path}
                                 to={path}
-                                className={`block px-4 py-2 rounded-md ${
-                                  isActive(path)
-                                    ? "bg-gray-100 text-custom-blue"
-                                    : "text-gray-600 hover:bg-gray-100"
-                                }`}
+                                className={`block px-4 py-2 rounded-md ${isActive(path)
+                                  ? "bg-gray-100 text-custom-blue"
+                                  : "text-gray-600 hover:bg-gray-100"
+                                  }`}
                                 onClick={(e) => {
                                   e.preventDefault();
                                   closeAllDropdowns();
@@ -1748,11 +1708,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Candidates") && (
                       <NavLink
                         to="/candidate"
-                        className={`block px-4 py-3 rounded-md ${
-                          isActive("/candidate")
-                            ? "bg-gray-100 text-custom-blue font-bold"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`block px-4 py-3 rounded-md ${isActive("/candidate")
+                          ? "bg-gray-100 text-custom-blue font-bold"
+                          : "text-gray-600 hover:bg-gray-100"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1767,11 +1726,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Positions") && (
                       <NavLink
                         to="/position"
-                        className={`block px-4 py-3 rounded-md ${
-                          isActive("/position")
-                            ? "bg-gray-100 text-custom-blue font-bold"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                        className={`block px-4 py-3 rounded-md ${isActive("/position")
+                          ? "bg-gray-100 text-custom-blue font-bold"
+                          : "text-gray-600 hover:bg-gray-100"
+                          }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
@@ -1786,203 +1744,197 @@ const CombinedNavbar = React.memo(() => {
                     {(enhancedCheckPermission("Interviews") ||
                       enhancedCheckPermission("MockInterviews") ||
                       enhancedCheckPermission("InterviewTemplates")) && (
-                      <div className="relative" ref={interviewRef}>
-                        <button
-                          className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
-                            isActive("/interviews") ||
-                            isActive("/mock-interview") ||
-                            isActive("/interview-templates")
+                        <div className="relative" ref={interviewRef}>
+                          <button
+                            className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/interviews") ||
+                              isActive("/mock-interview") ||
+                              isActive("/interview-templates")
                               ? "bg-gray-100 text-custom-blue font-bold"
                               : "text-gray-600 hover:bg-gray-100"
-                          }`}
-                          onClick={toggleInterviewDropdown}
-                        >
-                          <span>Interviews</span>
-                          {dropdownState.interviewDropdown ? (
-                            <ChevronUp className="h-5 w-5" />
-                          ) : (
-                            <ChevronDown className="h-5 w-5" />
-                          )}
-                        </button>
-                        {dropdownState.interviewDropdown && (
-                          <div className="mt-1 ml-4 space-y-1">
-                            {[
-                              ...(enhancedCheckPermission("InterviewTemplates")
-                                ? [
+                              }`}
+                            onClick={toggleInterviewDropdown}
+                          >
+                            <span>Interviews</span>
+                            {dropdownState.interviewDropdown ? (
+                              <ChevronUp className="h-5 w-5" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5" />
+                            )}
+                          </button>
+                          {dropdownState.interviewDropdown && (
+                            <div className="mt-1 ml-4 space-y-1">
+                              {[
+                                ...(enhancedCheckPermission("InterviewTemplates")
+                                  ? [
                                     {
                                       to: "/interview-templates",
                                       label: "Interview Templates",
                                     },
                                   ]
-                                : []),
-                              ...(enhancedCheckPermission("Interviews")
-                                ? [
+                                  : []),
+                                ...(enhancedCheckPermission("Interviews")
+                                  ? [
                                     {
                                       to: "/interviews",
                                       label: "Interviews",
                                     },
                                   ]
-                                : []),
-                              ...(enhancedCheckPermission("MockInterviews")
-                                ? [
+                                  : []),
+                                ...(enhancedCheckPermission("MockInterviews")
+                                  ? [
                                     {
                                       to: "/mock-interview",
                                       label: "Mock Interviews",
                                     },
                                   ]
-                                : []),
-                            ].map(({ to, label }) => (
-                              <NavLink
-                                key={to}
-                                className={`block px-4 py-2 rounded-md ${
-                                  isActive(to)
+                                  : []),
+                              ].map(({ to, label }) => (
+                                <NavLink
+                                  key={to}
+                                  className={`block px-4 py-2 rounded-md ${isActive(to)
                                     ? "bg-gray-100 text-custom-blue"
                                     : "text-gray-600 hover:bg-gray-100"
-                                }`}
-                                to={to}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  closeAllDropdowns();
-                                  toggleSidebar();
-                                  navigate(to);
-                                }}
-                              >
-                                {label}
-                              </NavLink>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                                    }`}
+                                  to={to}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    closeAllDropdowns();
+                                    toggleSidebar();
+                                    navigate(to);
+                                  }}
+                                >
+                                  {label}
+                                </NavLink>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                     {(enhancedCheckPermission("AssessmentTemplates") ||
                       enhancedCheckPermission("Assessments")) && (
-                      <div className="relative" ref={assessmentRef}>
-                        <button
-                          className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
-                            isActive("/assessments") ||
-                            isActive("/assessment-templates")
+                        <div className="relative" ref={assessmentRef}>
+                          <button
+                            className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/assessments") ||
+                              isActive("/assessment-templates")
                               ? "bg-gray-100 text-custom-blue font-bold"
                               : "text-gray-600 hover:bg-gray-100"
-                          }`}
-                          onClick={toggleAssessmentDropdown}
-                        >
-                          <span>Assessments</span>
-                          {dropdownState.assessmentDropdown ? (
-                            <ChevronUp className="h-5 w-5" />
-                          ) : (
-                            <ChevronDown className="h-5 w-5" />
-                          )}
-                        </button>
-                        {dropdownState.assessmentDropdown && (
-                          <div className="mt-1 ml-4 space-y-1">
-                            {[
-                              ...(enhancedCheckPermission("AssessmentTemplates")
-                                ? [
+                              }`}
+                            onClick={toggleAssessmentDropdown}
+                          >
+                            <span>Assessments</span>
+                            {dropdownState.assessmentDropdown ? (
+                              <ChevronUp className="h-5 w-5" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5" />
+                            )}
+                          </button>
+                          {dropdownState.assessmentDropdown && (
+                            <div className="mt-1 ml-4 space-y-1">
+                              {[
+                                ...(enhancedCheckPermission("AssessmentTemplates")
+                                  ? [
                                     {
                                       to: "/assessment-templates",
                                       label: "Assessment Templates",
                                     },
                                   ]
-                                : []),
-                              ...(enhancedCheckPermission("Assessments")
-                                ? [{ to: "/assessments", label: "Assessments" }]
-                                : []),
-                            ].map(({ to, label }) => (
-                              <NavLink
-                                key={to}
-                                className={`block px-4 py-2 rounded-md ${
-                                  isActive(to)
+                                  : []),
+                                ...(enhancedCheckPermission("Assessments")
+                                  ? [{ to: "/assessments", label: "Assessments" }]
+                                  : []),
+                              ].map(({ to, label }) => (
+                                <NavLink
+                                  key={to}
+                                  className={`block px-4 py-2 rounded-md ${isActive(to)
                                     ? "bg-gray-100 text-custom-blue"
                                     : "text-gray-600 hover:bg-gray-100"
-                                }`}
-                                to={to}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  closeAllDropdowns();
-                                  toggleSidebar();
-                                  navigate(to);
-                                }}
-                              >
-                                {label}
-                              </NavLink>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                                    }`}
+                                  to={to}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    closeAllDropdowns();
+                                    toggleSidebar();
+                                    navigate(to);
+                                  }}
+                                >
+                                  {label}
+                                </NavLink>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                     {(enhancedCheckPermission("Analytics") ||
                       enhancedCheckPermission("SupportDesk") ||
                       enhancedCheckPermission("Feedback") ||
                       enhancedCheckPermission("QuestionBank")) && (
-                      <div className="relative" ref={moreRef}>
-                        <button
-                          className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
-                            isActive("/analytics") ||
-                            isActive("/support-desk") ||
-                            isActive("/feedback") ||
-                            isActive("/question-bank")
+                        <div className="relative" ref={moreRef}>
+                          <button
+                            className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/analytics") ||
+                              isActive("/support-desk") ||
+                              isActive("/feedback") ||
+                              isActive("/question-bank")
                               ? "bg-gray-100 text-custom-blue font-bold"
                               : "text-gray-600 hover:bg-gray-100"
-                          }`}
-                          onClick={toggleMoreDropdown}
-                        >
-                          <span>More</span>
-                          {dropdownState.moreDropdown ? (
-                            <ChevronUp className="h-5 w-5" />
-                          ) : (
-                            <ChevronDown className="h-5 w-5" />
-                          )}
-                        </button>
-                        {dropdownState.moreDropdown && (
-                          <div className="mt-1 ml-4 space-y-1">
-                            {[
-                              ...(enhancedCheckPermission("Analytics")
-                                ? [{ to: "/analytics", label: "Analytics" }]
-                                : []),
-                              ...(enhancedCheckPermission("QuestionBank")
-                                ? [
+                              }`}
+                            onClick={toggleMoreDropdown}
+                          >
+                            <span>More</span>
+                            {dropdownState.moreDropdown ? (
+                              <ChevronUp className="h-5 w-5" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5" />
+                            )}
+                          </button>
+                          {dropdownState.moreDropdown && (
+                            <div className="mt-1 ml-4 space-y-1">
+                              {[
+                                ...(enhancedCheckPermission("Analytics")
+                                  ? [{ to: "/analytics", label: "Analytics" }]
+                                  : []),
+                                ...(enhancedCheckPermission("QuestionBank")
+                                  ? [
                                     {
                                       to: "/question-bank",
                                       label: "Question Bank",
                                     },
                                   ]
-                                : []),
-                              ...(enhancedCheckPermission("Feedback")
-                                ? [{ to: "/feedback", label: "Feedback" }]
-                                : []),
-                              ...(enhancedCheckPermission("SupportDesk")
-                                ? [
+                                  : []),
+                                ...(enhancedCheckPermission("Feedback")
+                                  ? [{ to: "/feedback", label: "Feedback" }]
+                                  : []),
+                                ...(enhancedCheckPermission("SupportDesk")
+                                  ? [
                                     {
                                       to: "/support-desk",
                                       label: "Support Desk",
                                     },
                                   ]
-                                : []),
-                            ].map(({ to, label }) => (
-                              <NavLink
-                                key={to}
-                                className={`block px-4 py-2 rounded-md ${
-                                  isActive(to)
+                                  : []),
+                              ].map(({ to, label }) => (
+                                <NavLink
+                                  key={to}
+                                  className={`block px-4 py-2 rounded-md ${isActive(to)
                                     ? "bg-gray-100 text-custom-blue"
                                     : "text-gray-600 hover:bg-gray-100"
-                                }`}
-                                to={to}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  closeAllDropdowns();
-                                  toggleSidebar();
-                                  navigate(to);
-                                }}
-                              >
-                                {label}
-                              </NavLink>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                                    }`}
+                                  to={to}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    closeAllDropdowns();
+                                    toggleSidebar();
+                                    navigate(to);
+                                  }}
+                                >
+                                  {label}
+                                </NavLink>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                   </>
                 )}
               </div>

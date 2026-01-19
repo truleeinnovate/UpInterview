@@ -1,7 +1,7 @@
-const Group = require("../models/InterviewerGroup");
+const Team = require("../models/MyTeams");
 
-// Get all groups for a tenant (legacy, returns full list)
-const getAllGroups = async (req, res) => {
+// Get all teams for a tenant (legacy, returns full list)
+const getAllTeams = async (req, res) => {
   try {
     const tenantId = req.query.tenantId;
 
@@ -9,33 +9,48 @@ const getAllGroups = async (req, res) => {
       return res.status(400).json({ error: "tenantId is required" });
     }
 
-    const groups = await Group.find({ tenantId }).populate({
-      path: "users",
-      model: "Contacts",
-      select: "firstName lastName _id",
-    });
+    const teams = await Team.find({ tenantId })
+      .populate({
+        path: "member_ids",
+        model: "Contacts",
+        select: "firstName lastName _id",
+      })
+      .populate({
+        path: "lead_id",
+        model: "Contacts",
+        select: "firstName lastName _id",
+      });
 
-    const formattedGroups = groups.map((group) => ({
-      _id: group._id,
-      name: group.name,
-      numberOfUsers: group.numberOfUsers,
-      tenantId: group.tenantId,
-      description: group.description,
-      status: group.status,
-      usersNames: group.users.map((user) =>
+    const formattedTeams = teams.map((team) => ({
+      _id: team._id,
+      name: team.name,
+      description: team.description,
+      department: team.department,
+      lead_id: team.lead_id?._id,
+      leadName: team.lead_id
+        ? `${team.lead_id.firstName || ""} ${team.lead_id.lastName || ""}`.trim()
+        : null,
+      numberOfUsers: team.numberOfUsers,
+      tenantId: team.tenantId,
+      is_active: team.is_active,
+      color: team.color,
+      // Backward compatibility
+      status: team.is_active ? "active" : "inactive",
+      usersNames: team.member_ids?.map((user) =>
         `${user.firstName || ""} ${user.lastName || ""}`.trim()
-      ),
-      userIds: group.users.map((user) => user._id),
+      ) || [],
+      userIds: team.member_ids?.map((user) => user._id) || [],
+      member_ids: team.member_ids?.map((user) => user._id) || [],
     }));
 
-    res.status(200).json(formattedGroups);
+    res.status(200).json(formattedTeams);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Paginated & filterable list for interviewer groups (used by /groups)
-const getPaginatedGroups = async (req, res) => {
+// Paginated & filterable list for teams (used by /groups)
+const getPaginatedTeams = async (req, res) => {
   try {
     const tenantId = req.query.tenantId;
 
@@ -54,14 +69,22 @@ const getPaginatedGroups = async (req, res) => {
 
     const baseFilter = { tenantId };
 
+    // Handle status filter - convert to is_active boolean
     if (statusParam) {
       const statusArray = statusParam
         .split(",")
-        .map((s) => s.trim())
+        .map((s) => s.trim().toLowerCase())
         .filter(Boolean);
 
       if (statusArray.length > 0) {
-        baseFilter.status = { $in: statusArray };
+        // Convert 'active'/'inactive' to boolean values
+        const activeFilter = [];
+        if (statusArray.includes("active")) activeFilter.push(true);
+        if (statusArray.includes("inactive")) activeFilter.push(false);
+
+        if (activeFilter.length > 0) {
+          baseFilter.is_active = { $in: activeFilter };
+        }
       }
     }
 
@@ -71,15 +94,24 @@ const getPaginatedGroups = async (req, res) => {
       const searchRegex = new RegExp(search, "i");
       query = {
         ...baseFilter,
-        $or: [{ name: searchRegex }, { description: searchRegex }],
+        $or: [
+          { name: searchRegex },
+          { description: searchRegex },
+          { department: searchRegex }
+        ],
       };
     }
 
-    const totalItems = await Group.countDocuments(query);
+    const totalItems = await Team.countDocuments(query);
 
-    const groups = await Group.find(query)
+    const teams = await Team.find(query)
       .populate({
-        path: "users",
+        path: "member_ids",
+        model: "Contacts",
+        select: "firstName lastName _id",
+      })
+      .populate({
+        path: "lead_id",
         model: "Contacts",
         select: "firstName lastName _id",
       })
@@ -87,17 +119,26 @@ const getPaginatedGroups = async (req, res) => {
       .skip(page * limit)
       .limit(limit);
 
-    const formattedGroups = groups.map((group) => ({
-      _id: group._id,
-      name: group.name,
-      numberOfUsers: group.numberOfUsers,
-      tenantId: group.tenantId,
-      description: group.description,
-      status: group.status,
-      usersNames: group.users.map((user) =>
+    const formattedTeams = teams.map((team) => ({
+      _id: team._id,
+      name: team.name,
+      description: team.description,
+      department: team.department,
+      lead_id: team.lead_id?._id,
+      leadName: team.lead_id
+        ? `${team.lead_id.firstName || ""} ${team.lead_id.lastName || ""}`.trim()
+        : null,
+      numberOfUsers: team.numberOfUsers,
+      tenantId: team.tenantId,
+      is_active: team.is_active,
+      color: team.color,
+      // Backward compatibility
+      status: team.is_active ? "active" : "inactive",
+      usersNames: team.member_ids?.map((user) =>
         `${user.firstName || ""} ${user.lastName || ""}`.trim()
-      ),
-      userIds: group.users.map((user) => user._id),
+      ) || [],
+      userIds: team.member_ids?.map((user) => user._id) || [],
+      member_ids: team.member_ids?.map((user) => user._id) || [],
     }));
 
     const totalPages = totalItems > 0 ? Math.ceil(totalItems / limit) : 0;
@@ -112,7 +153,7 @@ const getPaginatedGroups = async (req, res) => {
     };
 
     res.status(200).json({
-      data: formattedGroups,
+      data: formattedTeams,
       pagination,
     });
   } catch (error) {
@@ -120,66 +161,73 @@ const getPaginatedGroups = async (req, res) => {
   }
 };
 
-const createGroup = async (req, res) => {
+const createTeam = async (req, res) => {
   res.locals.loggedByController = true;
-  res.locals.processName = "Create Interviewer Group";
+  res.locals.processName = "Create Team";
 
   try {
-    const { name, users, description, status, tenantId } = req.body;
-    // name, users, description, status, tenantId
+    const {
+      name,
+      description,
+      department,
+      lead_id,
+      member_ids,
+      users, // Backward compatibility
+      is_active,
+      status, // Backward compatibility
+      color,
+      tenantId
+    } = req.body;
 
     // Validate required fields
     if (!name) {
-      return res.status(400).json({ error: "Group name is required" });
+      return res.status(400).json({ error: "Team name is required" });
     }
     if (!tenantId) {
       return res.status(400).json({ error: "tenantId is required" });
     }
-    const group = new Group({
-      // name, users
+
+    // Handle backward compatibility: use member_ids if provided, otherwise use users
+    const memberList = member_ids || users || [];
+
+    // Handle backward compatibility: convert status to is_active
+    let activeStatus = is_active;
+    if (activeStatus === undefined && status !== undefined) {
+      activeStatus = status === "active";
+    }
+    if (activeStatus === undefined) {
+      activeStatus = true; // Default to active
+    }
+
+    const team = new Team({
       name,
-      users,
       description,
-      status,
+      department,
+      lead_id,
+      member_ids: memberList,
+      is_active: activeStatus,
+      color: color || "Teal",
       tenantId,
     });
-    const savedGroup = await group.save();
 
-    // Populate the users data after saving
-    // const populatedGroup = await Group.findById(group._id)
-    //     .populate({
-    //         path: 'Contacts',
-    //         select: 'firstName lastName _id'
-    //         // select: 'UserName _id'  // Added _id to get user IDs
-    //     });
-
-    // Format response to match frontend expectations
-    // const formattedGroup = {
-    //     _id: populatedGroup._id, // Include group ID
-    //     name: populatedGroup.name,
-    //     numberOfUsers: populatedGroup.numberOfUsers,
-    //     usersNames: group.users.map(user => `${user.firstName || ''} ${user.lastName || ''}`.trim()), // ✅ Combined full name
-    //     // usersNames: populatedGroup.users.map(user => user.UserName), // Array of usernames
-    //     userIds: populatedGroup.users.map(user => user._id)// Add user IDs
-    // };
+    const savedTeam = await team.save();
 
     res.locals.logData = {
-      tenantId: savedGroup.tenantId?.toString() || tenantId || "",
+      tenantId: savedTeam.tenantId?.toString() || tenantId || "",
       ownerId: req.body?.ownerId || "",
-      processName: "Create Interviewer Group",
+      processName: "Create Team",
       requestBody: req.body,
       status: "success",
-      message: "Interviewer group created successfully",
-      responseBody: savedGroup,
+      message: "Team created successfully",
+      responseBody: savedTeam,
     };
 
-    res.status(201).json("Group Created Successfully!");
+    res.status(201).json("Team Created Successfully!");
   } catch (error) {
-    // Do not log manual 4xx validation responses above
     res.locals.logData = {
       tenantId: req.body?.tenantId || "",
       ownerId: req.body?.ownerId || "",
-      processName: "Create Interviewer Group",
+      processName: "Create Team",
       requestBody: req.body,
       status: "error",
       message: error.message,
@@ -189,54 +237,83 @@ const createGroup = async (req, res) => {
   }
 };
 
-// update group api call
-
-const updateGroup = async (req, res) => {
+// Update team
+const updateTeam = async (req, res) => {
   res.locals.loggedByController = true;
-  res.locals.processName = "Update Interviewer Group";
+  res.locals.processName = "Update Team";
 
   try {
     const { id } = req.params;
-    const { name, users, description, status } = req.body;
+    const {
+      name,
+      description,
+      department,
+      lead_id,
+      member_ids,
+      users, // Backward compatibility
+      is_active,
+      status, // Backward compatibility
+      color
+    } = req.body;
 
     // Validate required fields
     if (!name) {
-      return res.status(400).json({ error: "Group name is required" });
+      return res.status(400).json({ error: "Team name is required" });
     }
 
-    // Find and update the group
-    const updatedGroup = await Group.findByIdAndUpdate(
+    // Handle backward compatibility: use member_ids if provided, otherwise use users
+    const memberList = member_ids || users;
+
+    // Handle backward compatibility: convert status to is_active
+    let activeStatus = is_active;
+    if (activeStatus === undefined && status !== undefined) {
+      activeStatus = status === "active";
+    }
+
+    const updateData = {
+      name,
+      description,
+      department,
+      lead_id,
+      color,
+    };
+
+    // Only update if provided
+    if (memberList !== undefined) {
+      updateData.member_ids = memberList;
+      updateData.numberOfUsers = memberList.length;
+    }
+    if (activeStatus !== undefined) {
+      updateData.is_active = activeStatus;
+    }
+
+    // Find and update the team
+    const updatedTeam = await Team.findByIdAndUpdate(
       id,
-      {
-        name,
-        users,
-        description,
-        status,
-        numberOfUsers: users ? users.length : undefined, // Update count if users changed
-      },
+      updateData,
       { new: true } // Return the updated document
     );
 
-    if (!updatedGroup) {
-      return res.status(404).json({ error: "Group not found" });
+    if (!updatedTeam) {
+      return res.status(404).json({ error: "Team not found" });
     }
 
     res.locals.logData = {
-      tenantId: updatedGroup.tenantId?.toString() || "",
+      tenantId: updatedTeam.tenantId?.toString() || "",
       ownerId: req.body?.ownerId || "",
-      processName: "Update Interviewer Group",
+      processName: "Update Team",
       requestBody: req.body,
       status: "success",
-      message: "Interviewer group updated successfully",
-      responseBody: updatedGroup,
+      message: "Team updated successfully",
+      responseBody: updatedTeam,
     };
 
-    res.status(200).json("Group Updated Successfully!");
+    res.status(200).json("Team Updated Successfully!");
   } catch (error) {
     res.locals.logData = {
       tenantId: req.body?.tenantId || "",
       ownerId: req.body?.ownerId || "",
-      processName: "Update Interviewer Group",
+      processName: "Update Team",
       requestBody: req.body,
       status: "error",
       message: error.message,
@@ -246,34 +323,59 @@ const updateGroup = async (req, res) => {
   }
 };
 
-// Get single group by ID
-const getGroupById = async (req, res) => {
+// Get single team by ID
+const getTeamById = async (req, res) => {
   try {
-    const group = await Group.findById(req.params.id).populate({
-      // path: 'Contacts',
-      path: "users", // This is the field in your schema
-      model: "Contacts", // Optional: explicitly tells Mongoose the model to use
-      select: "firstName lastName _id",
-      // select: 'UserName _id'  // Added _id to get user IDs
-    });
-    // .populate('users', 'name email');
-    // const groups = await Group.find({ tenantId })
-    //         .populate({
-    //             path: 'Contacts',
-    //              select: 'firstName lastName _id'
-    //             // select: 'UserName _id'  // Added _id to get user IDs
-    //         });
+    const team = await Team.findById(req.params.id)
+      .populate({
+        path: "member_ids",
+        model: "Contacts",
+        select: "firstName lastName _id",
+      })
+      .populate({
+        path: "lead_id",
+        model: "Contacts",
+        select: "firstName lastName _id",
+      });
 
-    if (!group) {
+    if (!team) {
       return res.status(404).json({
         success: false,
-        error: "Group not found",
+        error: "Team not found",
       });
     }
 
+    // Format response with backward compatibility
+    const formattedTeam = {
+      _id: team._id,
+      name: team.name,
+      description: team.description,
+      department: team.department,
+      lead_id: team.lead_id?._id,
+      leadName: team.lead_id
+        ? `${team.lead_id.firstName || ""} ${team.lead_id.lastName || ""}`.trim()
+        : null,
+      leadDetails: team.lead_id,
+      member_ids: team.member_ids?.map((user) => user._id) || [],
+      members: team.member_ids || [],
+      numberOfUsers: team.numberOfUsers,
+      tenantId: team.tenantId,
+      is_active: team.is_active,
+      color: team.color,
+      // Backward compatibility
+      status: team.is_active ? "active" : "inactive",
+      users: team.member_ids || [],
+      usersNames: team.member_ids?.map((user) =>
+        `${user.firstName || ""} ${user.lastName || ""}`.trim()
+      ) || [],
+      userIds: team.member_ids?.map((user) => user._id) || [],
+      createdAt: team.createdAt,
+      updatedAt: team.updatedAt,
+    };
+
     res.status(200).json({
       success: true,
-      data: group,
+      data: formattedTeam,
     });
   } catch (error) {
     res.status(500).json({
@@ -283,10 +385,18 @@ const getGroupById = async (req, res) => {
   }
 };
 
+// Export with both old and new names for backward compatibility
 module.exports = {
-  createGroup,
-  getAllGroups,
-  getPaginatedGroups,
-  getGroupById,
-  updateGroup,
+  // New names
+  createTeam,
+  getAllTeams,
+  getPaginatedTeams,
+  getTeamById,
+  updateTeam,
+  // Old names (backward compatibility)
+  createGroup: createTeam,
+  getAllGroups: getAllTeams,
+  getPaginatedGroups: getPaginatedTeams,
+  getGroupById: getTeamById,
+  updateGroup: updateTeam,
 };
