@@ -448,8 +448,6 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       });
 
       const baseUrl = `${config.REACT_APP_API_URL_FRONTEND}/join-meeting`;
-      // const meetingLink = round.meetingId;
-      // const encryptedMeetingLink = encryptData(meetingLink);
       const encryptedRoundId = encryptData(roundId);
 
 
@@ -549,11 +547,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           // )}&interviewertoken=${encodeURIComponent(
           //   encryptedInterviewerId
           // )}&owner=${encodeURIComponent(encryptedOwnerId)}`;
-          const interviewerLink = `${baseUrl}?interviewer=true&round=${encodeURIComponent(
-            encryptedRoundId
-          )}&interviewertoken=${encodeURIComponent(
-            encryptedInterviewerId
-          )}&owner=${encodeURIComponent(encryptedOwnerId)}`;
+          const interviewerLink = `${baseUrl}?interviewer=true&round=${encodeURIComponent(encryptedRoundId)}&interviewertoken=${encodeURIComponent(encryptedInterviewerId)}&owner=${encodeURIComponent(encryptedOwnerId)}${type ? `&type=${type}` : ''}`;
           emailBody = emailBody.replace("{{meetingLink}}", interviewerLink);
           // } else {
           //   emailBody = emailBody.replace(
@@ -626,11 +620,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         // )}&schedulertoken=${encodeURIComponent(
         //   encryptedSchedulerId
         // )}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
-        const schedulerLink = `${baseUrl}?scheduler=true&round=${encodeURIComponent(
-          encryptedRoundId
-        )}&schedulertoken=${encodeURIComponent(
-          encryptedSchedulerId
-        )}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}`;
+        const schedulerLink = `${baseUrl}?scheduler=true&round=${encodeURIComponent(encryptedRoundId)}&schedulertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}${type ? `&type=${type}` : ''}`;
         emailBody = emailBody.replace(/{{meetingLink}}/g, schedulerLink);
         // } else {
         //   emailBody = emailBody.replace(

@@ -1,10 +1,10 @@
 // v1.0.0 - Ashok - Improved responsiveness
-
 import React from "react";
 import PropTypes from "prop-types";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import RoundCard from "./RoundCard";
 import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
+import { createJoinMeetingUrl } from "./joinMeeting";
 
 const SingleRoundView = ({
   rounds,
@@ -15,7 +15,7 @@ const SingleRoundView = ({
   onEditRound,
   onChangeRound,
 }) => {
-  console.log("SINGLE ROUND CARDS =======================================> ", rounds);
+
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
 
@@ -53,6 +53,11 @@ const SingleRoundView = ({
   if (!currentRound) {
     return <div className="text-center py-8">No round selected</div>;
   }
+  const handleJoinMeeting = (round) => {
+    const joinUrl = createJoinMeetingUrl(round, interviewData);
+    if (!joinUrl) return;
+    window.open(joinUrl, "_blank");
+  };
 
   return (
     <div className="space-y-4">
@@ -126,6 +131,20 @@ const SingleRoundView = ({
                 {currentRound?.meetPlatform && currentRound?.roundTitle !== "Assessment" && (
                   <MeetPlatformBadge platform={currentRound?.meetPlatform} />
                 )}
+                {(currentRound?.status === "Scheduled" ||
+                  currentRound?.status === "Rescheduled" ||
+                  currentRound?.status === "InProgress") && (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();      // ⛔ stop toggle
+                        handleJoinMeeting(currentRound); // ✅ join only
+                      }}
+                      className="cursor-pointer text-custom-blue hover:underline font-medium"
+                    >
+                      Join meeting
+                    </span>
+
+                  )}
               </div>
             </div>
           </div>

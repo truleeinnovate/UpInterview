@@ -3,10 +3,10 @@
 // v1.0.2 - Ashok - Improved responsiveness
 
 import { useState, useEffect } from "react";
-
 import RoundCard from "./RoundCard";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
+import { createJoinMeetingUrl } from "./joinMeeting";
 
 // import { useAssessments } from "../../../../../apiHooks/useAssessments";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
@@ -18,10 +18,7 @@ const VerticalRoundsView = ({
   onEditRound,
   onInitiateAction,
 }) => {
-  console.log(
-    "VERTICAL ROUND CARDS =======================================> ",
-    rounds
-  );
+
 
   // const { useScheduledAssessments } = useScheduleAssessments();
   // const { scheduleData } = useScheduleAssessments();
@@ -144,6 +141,12 @@ const VerticalRoundsView = ({
     }
   }
 
+  const handleJoinMeeting = (round) => {
+    const joinUrl = createJoinMeetingUrl(round, interviewData);
+    if (!joinUrl) return;
+    window.open(joinUrl, "_blank");
+  };
+
   return (
     <div className="space-y-4">
       {sortedRounds.map((round, index) => {
@@ -190,7 +193,23 @@ const VerticalRoundsView = ({
                       {capitalizeFirstLetter(round?.interviewMode)}
                     </span>
                     {round?.meetPlatform && round?.roundTitle !== "Assessment" && (
-                      <MeetPlatformBadge platform={round?.meetPlatform} />
+                      <div className="flex items-center gap-2">
+                        <MeetPlatformBadge platform={round?.meetPlatform} />
+                        {(round?.status === "Scheduled" ||
+                          round?.status === "Rescheduled" ||
+                          round?.status === "InProgress") && (
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation();      // ⛔ stop toggle
+                                handleJoinMeeting(round); // ✅ join only
+                              }}
+                              className="cursor-pointer text-custom-blue hover:underline font-medium"
+                            >
+                              Join meeting
+                            </span>
+
+                          )}
+                      </div>
                     )}
                   </div>
                 </div>
