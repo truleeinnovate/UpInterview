@@ -463,7 +463,11 @@ const createInterview = async (req, res) => {
       const position = await Position.findById(positionId).lean();
 
       // Check if application already exists
-      const existingApp = await Application.findOne({ candidateId, positionId, tenantId: orgId });
+      const existingApp = await Application.findOne({
+        candidateId,
+        positionId,
+        tenantId: orgId,
+      });
 
       if (!existingApp) {
         // Generate applicationNumber explicitly (findOneAndUpdate doesn't trigger pre-save hooks)
@@ -486,7 +490,10 @@ const createInterview = async (req, res) => {
           ownerId: userId,
           createdBy: userId,
         });
-        console.log('[INTERVIEW] Application created with number:', applicationNumber);
+        console.log(
+          "[INTERVIEW] Application created with number:",
+          applicationNumber
+        );
       } else {
         // Update existing application with interview reference if needed
         if (!existingApp.interviewId) {
@@ -496,10 +503,13 @@ const createInterview = async (req, res) => {
             currentStage: "Interview Created",
           });
         }
-        console.log('[INTERVIEW] Application already exists for candidate:', candidateId);
+        console.log(
+          "[INTERVIEW] Application already exists for candidate:",
+          candidateId
+        );
       }
     } catch (appError) {
-      console.error('[INTERVIEW] Error creating Application:', appError);
+      console.error("[INTERVIEW] Error creating Application:", appError);
       // Continue execution even if Application creation fails
     }
 
@@ -630,10 +640,7 @@ const updateInterview = async (req, res) => {
     }
 
     // Update currentReason if provided
-    if (
-      currentReason &&
-      currentReason !== existingInterview.currentReason
-    ) {
+    if (currentReason && currentReason !== existingInterview.currentReason) {
       interviewData.currentReason = currentReason;
     }
 
@@ -2297,26 +2304,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-        from: "mockinterviews",
-        localField: "mockInterviewId",
-        foreignField: "_id",
-        as: "mainInterview",
-      }
+          from: "mockinterviews",
+          localField: "mockInterviewId",
+          foreignField: "_id",
+          as: "mainInterview",
+        }
       : {
-        from: "interviews",
-        localField: "interviewId",
-        foreignField: "_id",
-        as: "mainInterview",
-      };
+          from: "interviews",
+          localField: "interviewId",
+          foreignField: "_id",
+          as: "mainInterview",
+        };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2338,23 +2345,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-          {
-            $addFields: {
-              mainTenantIdNormalized: {
-                $cond: [
-                  {
-                    $and: [
-                      { $ne: ["$mainInterview.tenantId", null] },
-                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                    ],
-                  },
-                  { $toObjectId: "$mainInterview.tenantId" },
-                  null,
-                ],
+            {
+              $addFields: {
+                mainTenantIdNormalized: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $ne: ["$mainInterview.tenantId", null] },
+                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                      ],
+                    },
+                    { $toObjectId: "$mainInterview.tenantId" },
+                    null,
+                  ],
+                },
               },
             },
-          },
-        ]
+          ]
         : []),
       // Lookup tenant for organization info
       {
@@ -2776,8 +2783,8 @@ const getInterviewDataforOrg = async (req, res) => {
 
     const { interviewId, roundId } = req.query;
 
-    console.log("Received interviewId:", interviewId);
-    console.log("Received roundId:", roundId);
+    // console.log("Received interviewId:", interviewId);
+    // console.log("Received roundId:", roundId  );
 
     // ❌ Both not allowed (extra safety)
     if (interviewId && roundId) {
@@ -2941,7 +2948,9 @@ const getInterviewDataforOrg = async (req, res) => {
         const resumes = await Resume.find({
           candidateId: { $in: candIds },
           isActive: true,
-        }).select("candidateId CurrentRole skills CurrentExperience ImageData").lean();
+        })
+          .select("candidateId CurrentRole skills CurrentExperience ImageData")
+          .lean();
 
         const resumeMap = {};
         resumes.forEach((r) => {
@@ -3017,6 +3026,7 @@ const getInterviewDataforOrg = async (req, res) => {
     });
   }
 };
+
 // Export all controller functions
 module.exports = {
   createInterview,

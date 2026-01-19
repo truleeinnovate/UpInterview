@@ -64,7 +64,12 @@ const saveInterviewRound = async (req, res) => {
       );
       console.log("validation", validation);
       console.log("round?.interviewers.length", round?.interviewers);
-      if (!validation.isValid && round?.interviewers.length > 0) {
+      if (
+        !validation.isValid
+        // &&
+        // (round?.interviewers.length > 0 ||
+        // round?.selectedInterviewers.length > 0)
+      ) {
         return res.status(400).json({
           success: false,
           message: validation.message,
@@ -348,9 +353,8 @@ const saveInterviewRound = async (req, res) => {
     // Enrich logging context with parent interview identifiers when possible
     let parentInterviewForLog = null;
     try {
-      parentInterviewForLog = await Interview.findById(interviewId).select(
-        "tenantId ownerId"
-      );
+      parentInterviewForLog =
+        await Interview.findById(interviewId).select("tenantId ownerId");
     } catch (e) {
       // Ignore enrichment errors for logging
     }
@@ -424,6 +428,31 @@ const updateInterviewRound = async (req, res) => {
       message: "Interview ID, Round ID, and round data are required.",
     });
   }
+
+  // ==================== ADD PARALLEL SCHEDULING VALIDATION HERE ====================
+  // Only validate for new rounds (not updates - roundId would be present for updates)
+  if (!roundId) {
+    const validation = await validateRoundCreationBasedOnParallelScheduling(
+      interviewId,
+      false,
+      roundId
+    );
+    console.log("validation", validation);
+    console.log("round?.interviewers.length", round?.interviewers);
+    if (
+      !validation.isValid &&
+      (round?.interviewers.length > 0 || round?.selectedInterviewers.length > 0)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: validation.message,
+        code: validation.code,
+        details: validation.activeRound || validation.latestRoundOutcome,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+  // ==================== END VALIDATION ====================
 
   if (round.interviewers) {
     round.interviewers = await processInterviewers(round.interviewers);
@@ -1695,7 +1724,7 @@ const updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => { } }), locals: {} }
+        { status: () => ({ json: () => {} }), locals: {} }
       );
     }
 
@@ -2017,7 +2046,7 @@ async function handleInterviewerRequestFlow({
           isMockInterview: false,
         },
       },
-      { status: () => ({ json: () => { } }), locals: {} }
+      { status: () => ({ json: () => {} }), locals: {} }
     );
   }
 
@@ -2036,7 +2065,7 @@ async function handleInterviewerRequestFlow({
           type: "interview",
         },
       },
-      { status: () => ({ json: () => { } }), locals: {} }
+      { status: () => ({ json: () => {} }), locals: {} }
     );
     console.log(
       "Outsource interview request emails sent successfully",
@@ -2076,7 +2105,7 @@ async function handleInternalRoundEmails({
       },
     },
     {
-      status: () => ({ json: () => { } }),
+      status: () => ({ json: () => {} }),
       locals: {},
     }
   );
@@ -2364,6 +2393,114 @@ const triggerInterviewRoundStatusUpdated = async (
 };
 
 // Common validation function for both POST and PATCH APIs Healper fucntion
+// const validateRoundCreationBasedOnParallelScheduling = async (
+//   interviewId,
+//   isNewRound = true,
+//   roundId = null
+// ) => {
+//   try {
+//     const interview = await Interview.findById(interviewId).lean();
+//     if (!interview) {
+//       return { isValid: false, message: "Interview not found" };
+//     }
+
+//     // Check if allowParallelScheduling is false
+//     if (!interview.allowParallelScheduling) {
+//       // Find all existing rounds for this interview
+//       const existingRounds = await InterviewRounds.find({
+//         interviewId,
+//         status: { $nin: ["Completed", "Cancelled", "Skipped", "Rejected"] },
+//       });
+
+//       // ✅ in-memory sort (safe for Cosmos)
+//       existingRounds.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+
+//       if (existingRounds.length > 0) {
+//         // Check if any round has NO or STRONG_NO outcome
+//         const hasNegativeOutcomeRound = existingRounds.some((round) =>
+//           ["NO", "STRONG_NO"].includes(round.roundOutcome)
+//         );
+
+//         if (hasNegativeOutcomeRound) {
+//           // For new round creation - block it
+//           if (isNewRound) {
+//             return {
+//               isValid: false,
+//               message:
+//                 "Cannot create new round. A previous round has negative outcome (NO/STRONG_NO) and parallel scheduling is disabled.",
+//               code: "PARALLEL_SCHEDULING_DISABLED_NEGATIVE_OUTCOME",
+//             };
+//           }
+
+//           // For updating existing round to scheduled/rescheduled status
+//           if (roundId) {
+//             // Check if this is the round with negative outcome
+//             const currentRoundIndex = existingRounds.findIndex(
+//               (r) => r._id.toString() === roundId.toString()
+//             );
+//             const currentRound = existingRounds[currentRoundIndex];
+
+//             // If current round has negative outcome, prevent scheduling/rescheduling
+//             if (
+//               currentRound &&
+//               ["NO", "STRONG_NO"].includes(currentRound.roundOutcome)
+//             ) {
+//               return {
+//                 isValid: false,
+//                 message:
+//                   "Cannot schedule/reschedule this round. It has negative outcome (NO/STRONG_NO) and parallel scheduling is disabled.",
+//                 code: "NEGATIVE_OUTCOME_NO_SCHEDULING",
+//               };
+//             }
+//           }
+//         }
+
+//         // Additional check: If any round is in Scheduled/Rescheduled status and parallel scheduling is false
+//         // This prevents creating new rounds when previous ones are still active
+//         const hasActiveScheduledRound = existingRounds.some((round) =>
+//           ["Scheduled", "Rescheduled", "RequestSent", "InProgress"].includes(
+//             round.status
+//           )
+//         );
+
+//         if (hasActiveScheduledRound && isNewRound) {
+//           // Find the active round
+//           const activeRound = existingRounds.find((round) =>
+//             ["Scheduled", "Rescheduled", "RequestSent", "InProgress"].includes(
+//               round.status
+//             )
+//           );
+
+//           return {
+//             isValid: false,
+//             message: `Cannot create new round. Round "${
+//               activeRound.roundTitle || "#" + activeRound.sequence
+//             }" is currently ${activeRound.status.toLowerCase()} and parallel scheduling is disabled.`,
+//             activeRound: {
+//               sequence: activeRound.sequence,
+//               roundTitle: activeRound.roundTitle,
+//               status: activeRound.status,
+//             },
+//             code: "ACTIVE_ROUND_EXISTS_NO_PARALLEL",
+//           };
+//         }
+//       }
+//     }
+
+//     return { isValid: true };
+//   } catch (error) {
+//     console.error(
+//       "Error in validateRoundCreationBasedOnParallelScheduling:",
+//       error
+//     );
+//     return {
+//       isValid: false,
+//       message: "Validation error",
+//       error: error.message,
+//     };
+//   }
+// };
+
 const validateRoundCreationBasedOnParallelScheduling = async (
   interviewId,
   isNewRound = true,
@@ -2375,98 +2512,105 @@ const validateRoundCreationBasedOnParallelScheduling = async (
       return { isValid: false, message: "Interview not found" };
     }
 
-    // Check if allowParallelScheduling is false
-    if (!interview.allowParallelScheduling) {
-      // Find all existing rounds for this interview
-      const existingRounds = await InterviewRounds.find({
-        interviewId,
-        status: { $nin: ["Completed", "Cancelled", "Skipped", "Rejected"] },
-      });
+    // Parallel scheduling ON → no restriction
+    if (interview.allowParallelScheduling) {
+      return { isValid: true };
+    }
 
-      // ✅ in-memory sort (safe for Cosmos)
-      existingRounds.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+    // Fetch all rounds for interview
+    const rounds = await InterviewRounds.find({ interviewId }).lean();
 
+    if (!rounds.length) {
+      return { isValid: true };
+    }
 
-      if (existingRounds.length > 0) {
-        // Check if any round has NO or STRONG_NO outcome
-        const hasNegativeOutcomeRound = existingRounds.some((round) =>
-          ["NO", "STRONG_NO"].includes(round.roundOutcome)
-        );
+    // --------------------------------------------------
+    // RULE 3: NO / STRONG_NO → HARD STOP
+    // --------------------------------------------------
+    const hasNegativeOutcome = rounds.some((r) =>
+      ["NO", "STRONG_NO"].includes(r.roundOutcome)
+    );
 
-        if (hasNegativeOutcomeRound) {
-          // For new round creation - block it
-          if (isNewRound) {
-            return {
-              isValid: false,
-              message:
-                "Cannot create new round. A previous round has negative outcome (NO/STRONG_NO) and parallel scheduling is disabled.",
-              code: "PARALLEL_SCHEDULING_DISABLED_NEGATIVE_OUTCOME",
-            };
-          }
+    if (hasNegativeOutcome) {
+      return {
+        isValid: false,
+        message:
+          "Cannot create or schedule rounds. A previous round has outcome NO or STRONG_NO.",
+        code: "NEGATIVE_OUTCOME_BLOCK",
+      };
+    }
 
-          // For updating existing round to scheduled/rescheduled status
-          if (roundId) {
-            // Check if this is the round with negative outcome
-            const currentRoundIndex = existingRounds.findIndex(
-              (r) => r._id.toString() === roundId.toString()
-            );
-            const currentRound = existingRounds[currentRoundIndex];
+    // --------------------------------------------------
+    // RULE 1: New round → all must be Evaluated or Skipped
+    // --------------------------------------------------
+    if (isNewRound) {
+      const hasActiveRound = rounds.some(
+        (r) =>
+          ![
+            "Evaluated",
+            "Skipped",
+            "Rescheduled",
+            "RequestSent",
+            "Scheduled",
+          ].includes(r.status)
+      );
 
-            // If current round has negative outcome, prevent scheduling/rescheduling
-            if (
-              currentRound &&
-              ["NO", "STRONG_NO"].includes(currentRound.roundOutcome)
-            ) {
-              return {
-                isValid: false,
-                message:
-                  "Cannot schedule/reschedule this round. It has negative outcome (NO/STRONG_NO) and parallel scheduling is disabled.",
-                code: "NEGATIVE_OUTCOME_NO_SCHEDULING",
-              };
-            }
-          }
-        }
+      if (hasActiveRound) {
+        return {
+          isValid: false,
+          message:
+            "Cannot create new round. All previous rounds must be evaluated or skipped when parallel scheduling is disabled.",
+          code: "ACTIVE_ROUND_EXISTS",
+        };
+      }
+    }
 
-        // Additional check: If any round is in Scheduled/Rescheduled status and parallel scheduling is false
-        // This prevents creating new rounds when previous ones are still active
-        const hasActiveScheduledRound = existingRounds.some((round) =>
-          ["Scheduled", "Rescheduled", "RequestSent", "InProgress"].includes(
-            round.status
-          )
-        );
+    // --------------------------------------------------
+    // RULE 2: Only ONE Draft allowed
+    // --------------------------------------------------
+    if (isNewRound) {
+      const draftCount = rounds.filter((r) => r.status === "Draft").length;
 
-        if (hasActiveScheduledRound && isNewRound) {
-          // Find the active round
-          const activeRound = existingRounds.find((round) =>
-            ["Scheduled", "Rescheduled", "RequestSent", "InProgress"].includes(
-              round.status
-            )
-          );
+      if (draftCount >= 1) {
+        return {
+          isValid: false,
+          message:
+            "Only one draft round is allowed when all rounds are evaluated or skipped.",
+          code: "ONLY_ONE_DRAFT_ALLOWED",
+        };
+      }
+    }
 
-          return {
-            isValid: false,
-            message: `Cannot create new round. Round "${activeRound.roundTitle || "#" + activeRound.sequence
-              }" is currently ${activeRound.status.toLowerCase()} and parallel scheduling is disabled.`,
-            activeRound: {
-              sequence: activeRound.sequence,
-              roundTitle: activeRound.roundTitle,
-              status: activeRound.status,
-            },
-            code: "ACTIVE_ROUND_EXISTS_NO_PARALLEL",
-          };
-        }
+    // --------------------------------------------------
+    // RULE 3 (PATCH): Block schedule / reschedule / request
+    // --------------------------------------------------
+    if (!isNewRound && roundId) {
+      const currentRound = rounds.find(
+        (r) => r._id.toString() === roundId.toString()
+      );
+
+      if (
+        currentRound &&
+        ["NO", "STRONG_NO"].includes(currentRound.roundOutcome)
+      ) {
+        return {
+          isValid: false,
+          message:
+            "Cannot schedule or reschedule this round due to NO or STRONG_NO outcome.",
+          code: "NEGATIVE_OUTCOME_NO_SCHEDULING",
+        };
       }
     }
 
     return { isValid: true };
   } catch (error) {
     console.error(
-      "Error in validateRoundCreationBasedOnParallelScheduling:",
+      "validateRoundCreationBasedOnParallelScheduling error:",
       error
     );
     return {
       isValid: false,
-      message: "Validation error",
+      message: "Parallel scheduling validation failed",
       error: error.message,
     };
   }

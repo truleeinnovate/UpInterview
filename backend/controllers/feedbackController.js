@@ -678,20 +678,30 @@ const getFeedbackByRoundId = async (req, res) => {
         .json({ success: false, message: "Interview round not found" });
     }
 
-    const interviewSection = await Interview.findOne({
-      _id: interviewRound.interviewId,
-    });
+    // const interviewSection = await Interview.findOne({
+    //   _id: interviewRound.interviewId,
+    // });
 
-    // Fetch CandidatePosition
-    let candidatePosition = await CandidatePosition.findOne({
-      interviewId: interviewRound.interviewId,
-    })
+    const interviewSection = await Interview.findById(
+      interviewRound.interviewId
+    )
       .populate("candidateId", "FirstName LastName Email Phone")
       .populate(
         "positionId",
         "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary"
       )
       .lean();
+
+    // Fetch CandidatePosition
+    // let candidatePosition = await CandidatePosition.findOne({
+    //   interviewId: interviewRound.interviewId,
+    // })
+    //   .populate("candidateId", "FirstName LastName Email Phone")
+    //   .populate(
+    //     "positionId",
+    //     "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary"
+    //   )
+    //   .lean();
 
     // Fetch Feedback
     const feedbackQuery = { interviewRoundId: roundId };
@@ -711,8 +721,8 @@ const getFeedbackByRoundId = async (req, res) => {
 
     // Fetch Resume data for candidate (skills, experience, etc. moved from Candidate)
     const candidateIds = [];
-    if (candidatePosition?.candidateId?._id) {
-      candidateIds.push(candidatePosition.candidateId._id);
+    if (interviewSection?.candidateId?._id) {
+      candidateIds.push(interviewSection?.candidateId._id);
     }
     feedbacks.forEach((fb) => {
       if (
@@ -737,11 +747,11 @@ const getFeedbackByRoundId = async (req, res) => {
       });
 
       // Merge Resume data into candidatePosition.candidateId
-      if (candidatePosition?.candidateId?._id) {
-        const resume = resumeMap[String(candidatePosition.candidateId._id)];
+      if (interviewSection?.candidateId?._id) {
+        const resume = resumeMap[String(interviewSection.candidateId._id)];
         if (resume) {
-          candidatePosition.candidateId = {
-            ...candidatePosition.candidateId,
+          interviewSection.candidateId = {
+            ...interviewSection.candidateId,
             skills: resume.skills,
             CurrentExperience: resume.CurrentExperience,
             CurrentRole: resume.CurrentRole,
@@ -831,8 +841,8 @@ const getFeedbackByRoundId = async (req, res) => {
 
     // Build position data
     let positionData = null;
-    if (candidatePosition?.positionId) {
-      positionData = candidatePosition.positionId.toObject();
+    if (interviewSection?.positionId) {
+      positionData = interviewSection.positionId.toObject();
     } else if (feedbacks.length > 0 && feedbacks[0].positionId) {
       positionData = feedbacks[0].positionId.toObject();
     }
@@ -864,7 +874,7 @@ const getFeedbackByRoundId = async (req, res) => {
         candidateJoined: interviewRound.candidateJoined || false,
         interviewerJoined: interviewRound.interviewerJoined || false,
       },
-      candidate: candidatePosition?.candidateId || null,
+      candidate: interviewSection?.candidateId || null,
       position: positionData,
       interviewers: interviewRound.interviewers || [],
       feedbacks: feedbacksMerged || [],
