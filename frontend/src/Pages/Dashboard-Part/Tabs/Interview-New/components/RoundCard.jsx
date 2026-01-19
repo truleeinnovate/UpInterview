@@ -983,7 +983,6 @@ const RoundCard = ({
       canNoShow: true,
       canSkipped: false,
       canEvaluated: true,
-      canFeedbackPending: false,
     },
     Rescheduled: {
       canEdit: true,
@@ -998,7 +997,6 @@ const RoundCard = ({
       canNoShow: true,
       canSkipped: false,
       canEvaluated: false,
-      canFeedbackPending: false,
     },
     Completed: {
       canEdit: false,
@@ -1007,7 +1005,7 @@ const RoundCard = ({
       canReschedule: false,
       canCancel: false,
       canComplete: false,
-      canFeedback: true,
+      canFeedback: false,
       canResendLink: false,
       canShareLink: false,
       canNoShow: false,
@@ -1095,7 +1093,6 @@ const RoundCard = ({
       canNoShow: false,
       canSkipped: false,
       canEvaluated: false,
-      canFeedbackPending: false,
     },
     Evaluated: {
       canEdit: false,
@@ -1110,7 +1107,6 @@ const RoundCard = ({
       canNoShow: false,
       canSkipped: false,
       canEvaluated: false,
-      canFeedbackPending: false,
     },
     FeedbackPending: {
       canEdit: false,
@@ -1125,7 +1121,20 @@ const RoundCard = ({
       canNoShow: false,
       canSkipped: false,
       canEvaluated: false,
-      canFeedbackPending: false,
+    },
+      FeedbackSubmitted: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      canEvaluated: true,
     },
   };
 
@@ -1904,17 +1913,6 @@ const RoundCard = ({
                         <ClipboardList className="h-4 w-4 mr-1" /> Evaluated
                       </button>
                     )}
-
-                  {/* Feedback Pending */}
-                  {/* {permissions.canFeedbackPending &&
-                    round.roundTitle !== "Assessment" && (
-                      <button
-                        onClick={() => handleActionClick("FeedbackPending")}
-                        className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
-                      >
-                        <Hourglass className="h-4 w-4 mr-1" /> Feedback Pending
-                      </button>
-                    )} */}
 
                   {/* Cancel */}
                   {permissions.canCancel &&
