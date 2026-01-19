@@ -138,18 +138,18 @@ const positionValidationSchema = Joi.object({
     "string.empty": "Title cannot be empty",
   }),
   // companyname: Joi.string().optional().allow(null, ""),
-  companyname: Joi.string()
-    .custom((value, helpers) => {
-      if (!mongoose.Types.ObjectId.isValid(value)) {
-        return helpers.error("any.invalid");
-      }
-      return value;
-    })
-    .required()
-    .messages({
-      "any.invalid": "Company must be a valid ObjectId",
-      "any.required": "Company is required",
-    }),
+  // companyname: Joi.string()
+  //   .custom((value, helpers) => {
+  //     if (!mongoose.Types.ObjectId.isValid(value)) {
+  //       return helpers.error("any.invalid");
+  //     }
+  //     return value;
+  //   })
+  //   .required()
+  //   .messages({
+  //     "any.invalid": "Company must be a valid ObjectId",
+  //     "any.required": "Company is required",
+  //   }),
 
   // companyname: Joi.string().required().messages({
   //   "any.required": "Company Name is required",

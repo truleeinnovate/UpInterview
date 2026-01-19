@@ -1,11 +1,18 @@
 // v1.0.0 - Ashok - Improved responsiveness
+// v1.0.1 - Ashok - Added Bulk upload button (used in candidates)
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Plus } from 'lucide-react';
-import { Button } from '../../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button';
+import React from "react";
+import { motion } from "framer-motion";
+import { Plus, Upload } from "lucide-react";
+import { Button } from "../../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
 
-const Header = ({ title, onAddClick, addButtonText = 'Add New', canCreate }) => {
+const Header = ({
+  title,
+  onAddClick,
+  addButtonText = "Add New",
+  canCreate,
+  onBulkUploadClick,
+}) => {
   return (
     <motion.div
       className="flex justify-between items-center py-4"
@@ -16,10 +23,10 @@ const Header = ({ title, onAddClick, addButtonText = 'Add New', canCreate }) => 
       {/* v1.0.0 <------------------------------------------------------------------------ */}
       {/* <h1 className="text-2xl font-semibold text-custom-blue"> */}
       <h1 className="sm:text-xl md:text-xl lg:text-2xl xl:text-2xl 2xl:text-2xl font-semibold text-custom-blue">
-      {/* v1.0.0 ------------------------------------------------------------------------> */}
+        {/* v1.0.0 ------------------------------------------------------------------------> */}
         {title}
       </h1>
-      {canCreate && (
+      {/* {canCreate && (
         <Button
           onClick={onAddClick}
           size="sm"
@@ -28,7 +35,32 @@ const Header = ({ title, onAddClick, addButtonText = 'Add New', canCreate }) => 
           <Plus className="h-4 w-4 mr-1" />
           {addButtonText}
         </Button>
-      )}
+      )} */}
+      <div className="flex items-center gap-2">
+        {/* Render Bulk Upload button only if the prop is passed */}
+        {onBulkUploadClick && (
+          <Button
+            onClick={onBulkUploadClick}
+            size="sm"
+            variant="outline"
+            className="border-custom-blue text-custom-blue hover:bg-custom-blue/10"
+          >
+            <Upload className="h-4 w-4 mr-1" />
+            Bulk Upload
+          </Button>
+        )}
+
+        {canCreate && (
+          <Button
+            onClick={onAddClick}
+            size="sm"
+            className="bg-custom-blue hover:bg-custom-blue/90 text-white"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            {addButtonText}
+          </Button>
+        )}
+      </div>
     </motion.div>
   );
 };

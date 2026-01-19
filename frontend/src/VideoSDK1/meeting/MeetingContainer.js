@@ -1,6 +1,4 @@
-// v1.0.0 - Ashok - Added prop isMeetingSidePanel to QuestionBank to handle style and alignments
-
-// MeetingContainer.js (Updated PiP strip: Single-column vertical stack, full-width videos with equal height)
+// MeetingContainer.js (Updated PiP strip: Horizontal top strip during presentation)
 import React, { useState, useEffect, useRef, createRef, memo } from "react";
 import {
   Constants,
@@ -286,37 +284,6 @@ export function MeetingContainer({
     },
   });
 
-  // UPDATED: Participant PiP Strip Component (Single-column vertical stack, full-width videos)
-  const ParticipantPiPStrip = ({ participantIds, height }) => {
-    if (participantIds.length === 0) return null;
-
-    const numParticipants = participantIds.length;
-    const videoHeight = `calc(100% / ${numParticipants})`; // Equal height split
-
-    return (
-      <div className="w-full h-full bg-gray-800 border-l border-gray-600 flex flex-col p-2">
-        <div className="text-xs text-gray-400 mb-2 text-center">
-          Participants
-        </div>
-        <div className="flex flex-col gap-2 flex-1 overflow-y-auto">
-          {participantIds.map((participantId) => (
-            <div
-              key={`pip-${participantId}`}
-              className="w-full relative flex-shrink-0"
-              style={{
-                height: videoHeight,
-                minHeight: "120px", // Minimum for visibility, like laptop preview size
-              }}
-            >
-              <ParticipantView participantId={participantId} />
-              <ParticipantMicStream participantId={participantId} />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   // Navigation items configuration
   const getNavigationItems = () => {
     return [
@@ -454,19 +421,25 @@ export function MeetingContainer({
                 <div className="flex flex-col h-full w-full">
                   <div className="flex-1 overflow-hidden">
                     {isPresenting ? (
-                      <div className="flex h-full">
-                        {/* NEW: Main presentation area - 80% left */}
-                        <div className="w-4/5 h-full relative">
-                          <PresenterView
-                            height={containerHeight - bottomBarHeight}
-                          />
+                      <div className="flex flex-col h-full">
+                        {/* Horizontal PiP Participants - Top strip below navbar */}
+                        <div className="h-32 bg-gray-800 border-b border-gray-600 flex flex-row gap-2 overflow-x-auto p-2">
+                          {Array.from(uniqueParticipants).map((participantId) => (
+                            <div
+                              key={`pip-${participantId}`}
+                              className="relative flex-shrink-0 h-full"
+                              style={{
+                                width: "320px", // Fixed width for each participant
+                              }}
+                            >
+                              <ParticipantView participantId={participantId} />
+                              <ParticipantMicStream participantId={participantId} />
+                            </div>
+                          ))}
                         </div>
-                        {/* UPDATED: PiP Participants - 20% right, vertical stack */}
-                        <div className="w-1/5 h-full border-l border-gray-600">
-                          <ParticipantPiPStrip
-                            participantIds={Array.from(uniqueParticipants)}
-                            height={containerHeight - bottomBarHeight}
-                          />
+                        {/* Main presentation area */}
+                        <div className="flex-1 relative">
+                          <PresenterView height={containerHeight - bottomBarHeight - 128} /> {/* Adjust for h-32 (~128px) */}
                         </div>
                       </div>
                     ) : (

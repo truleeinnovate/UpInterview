@@ -3,12 +3,13 @@
 
 import { useEffect, useState } from "react";
 import { GlobeAltIcon } from "@heroicons/react/24/outline";
-import { MapPin, Globe } from "lucide-react";
+import { MapPin, Globe, CheckCircle2 } from "lucide-react";
 import Cookies from "js-cookie";
 import { BrandingSection } from "./BrandingSection";
 import { Outlet, useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { useOrganization } from "../../../../../apiHooks/useOrganization";
+import classNames from "classnames";
 
 // Loading Skeleton for Basic Info Section
 const BasicInfoSkeleton = () => {
@@ -199,7 +200,11 @@ const OfficeLocationsSection = ({ companyProfile, isLoading }) => {
           {validOffices.map((office) => (
             <div key={office._id} className="border p-4 rounded-lg">
               <div className="flex justify-between items-start">
-                <h4 className="font-medium">{office?.type === "regionalOffice" ? "Regional Office" : "Headquarters"}</h4>
+                <h4 className="font-medium">
+                  {office?.type === "regionalOffice"
+                    ? "Regional Office"
+                    : "Headquarters"}
+                </h4>
                 <div className="flex items-center gap-1">
                   <span className="text-sm text-gray-500">
                     {office?.countryCode}
@@ -228,6 +233,91 @@ const OfficeLocationsSection = ({ companyProfile, isLoading }) => {
     // v1.0.0 ------------------------------------------------------------------>
   );
 };
+
+// It is the correct one it shows current selected address
+// const OfficeLocationsSection = ({ companyProfile, isLoading }) => {
+//   if (isLoading) {
+//     return <OfficeLocationsSkeleton />;
+//   }
+
+//   const validOffices = Array.isArray(companyProfile?.offices)
+//     ? companyProfile.offices.filter(
+//         (office) =>
+//           office.address?.trim() &&
+//           office.city?.trim() &&
+//           office.state?.trim() &&
+//           office.country?.trim() &&
+//           office.phone?.trim() &&
+//           office.zip?.trim()
+//       )
+//     : [];
+
+//   return (
+//     <div className="bg-white p-6 rounded-lg shadow">
+//       <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium mb-4">
+//         Office Locations
+//       </h3>
+//       {validOffices.length > 0 ? (
+//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
+//           {validOffices.map((office) => (
+//             <div
+//               key={office._id}
+//               className={classNames(
+//                 "relative border p-4 rounded-lg transition-all duration-200",
+//                 // Conditional styling for the default address
+//                 office.isDefault
+//                   ? "border-custom-blue bg-blue-50/30 ring-1 ring-custom-blue shadow-md"
+//                   : "border-gray-200 hover:border-gray-300 shadow-sm"
+//               )}
+//             >
+//               {/* Default Badge */}
+//               {office.isDefault && (
+//                 <div className="absolute -top-2 -right-2 flex items-center gap-1 bg-custom-blue text-white px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm">
+//                   <CheckCircle2 className="w-3 h-3" />
+//                   DEFAULT
+//                 </div>
+//               )}
+
+//               <div className="flex justify-between items-start">
+//                 <h4
+//                   className={classNames(
+//                     "font-medium",
+//                     office.isDefault ? "text-custom-blue" : "text-gray-900"
+//                   )}
+//                 >
+//                   {office?.type === "regionalOffice"
+//                     ? "Regional Office"
+//                     : "Headquarters"}
+//                 </h4>
+//                 <div className="flex items-center gap-1">
+//                   <span className="text-sm text-gray-500">
+//                     {office?.countryCode}
+//                   </span>
+//                   <span className="text-sm text-gray-500">{office.phone}</span>
+//                 </div>
+//               </div>
+
+//               <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+//                 <span className="font-semibold block text-gray-800">
+//                   {office.address}
+//                 </span>
+//                 {office.city}, {office.state} {office.zip}
+//                 <br />
+//                 {office.country}
+//               </p>
+//             </div>
+//           ))}
+//         </div>
+//       ) : (
+//         <div className="text-center py-8">
+//           <p className="text-gray-500 text-sm italic">
+//             No valid office locations found.
+//           </p>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
 
 const CompanyProfile = () => {
   // const { organizationsLoading, organizationData } = useCustomContext();

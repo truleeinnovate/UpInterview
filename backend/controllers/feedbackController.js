@@ -177,6 +177,7 @@ const createFeedback = async (req, res) => {
     }
 
     // Trigger webhook for feedback submission only (not for drafts)
+    // webhooks creation part of feed back this is used in account settings hrms sidebar tab in webhooks tab
     if (feedbackInstance.status === "submitted") {
       try {
         const webhookPayload = {
@@ -193,23 +194,16 @@ const createFeedback = async (req, res) => {
           event: "feedback.created",
         };
 
-        console.log(
-          `[FEEDBACK WEBHOOK] Triggering creation webhook for feedback ${feedbackInstance._id} with status: ${feedbackInstance.status}`
-        );
         await triggerWebhook(
           EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
           webhookPayload,
           tenantId
-        );
-        console.log(
-          `[FEEDBACK WEBHOOK] Creation webhook sent successfully for feedback ${feedbackInstance._id}`
         );
       } catch (webhookError) {
         console.error(
           "[FEEDBACK WEBHOOK] Error triggering feedback creation webhook:",
           webhookError
         );
-        // Continue execution even if webhook fails
       }
     }
 
@@ -1059,13 +1053,42 @@ const getFeedbackRoundId = async (req, res) => {
       return res.status(404).json({ message: "Round not found" });
     }
 
-    // 2. Get Interview, Candidate, Position details
-    const interview = await Interview.findById(round.interviewId)
-      .populate("candidateId")
-      .populate("positionId");
+    // Trigger webhook for feedback status update if status changed to submitted
+    // webhooks updation part of feed back this is used in account settings hrms sidebar tab in webhooks tab
+    if (updatedFeedback.status === "submitted") {
+      //if (updateData.status && updatedFeedback) {
+      try {
+        const webhookPayload = {
+          feedbackId: updatedFeedback._id,
+          feedbackCode: updatedFeedback.feedbackCode,
+          tenantId: updatedFeedback.tenantId,
+          ownerId: updatedFeedback.ownerId,
+          interviewRoundId: updatedFeedback.interviewRoundId,
+          candidateId: updatedFeedback.candidateId,
+          positionId: updatedFeedback.positionId,
+          interviewerId: updatedFeedback.interviewerId,
+          status: updatedFeedback.status,
+          updatedAt: updatedFeedback.updatedAt,
+          event: "feedback.status.updated",
+        };
 
-    if (!interview) {
-      return res.status(404).json({ message: "Interview not found" });
+        console.log(
+          `[FEEDBACK WEBHOOK] Triggering status update webhook for feedback ${updatedFeedback._id} with status: ${updatedFeedback.status}`
+        );
+        await triggerWebhook(
+          EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
+          webhookPayload,
+          updatedFeedback.tenantId
+        );
+        console.log(
+          `[FEEDBACK WEBHOOK] Status update webhook sent successfully for feedback ${updatedFeedback._id}`
+        );
+      } catch (webhookError) {
+        console.error(
+          "[FEEDBACK WEBHOOK] Error triggering feedback status update webhook:",
+          webhookError
+        );
+      }
     }
 
     // 3. Get Feedbacks (important: cast roundId to ObjectId)

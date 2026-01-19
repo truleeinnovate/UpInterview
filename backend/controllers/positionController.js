@@ -76,7 +76,7 @@ const createPosition = async (req, res) => {
     // Map request body to schema fields
     const positionData = {
       title: req.body.title || "",
-      companyname: req.body.companyname || "",
+      companyname: req.body.companyname,
       jobDescription: req.body.jobDescription || "",
       requirements: req.body.requirements || "",
       minexperience: req.body.minexperience || undefined,
@@ -96,6 +96,7 @@ const createPosition = async (req, res) => {
       createdBy: req.body.ownerId, // Fixed: use req.body.ownerId instead of undefined ownerId
       positionCode, // Custom code added
       status: req.body.status,
+      employmentType: req.body.employmentType
     };
 
     // Handle rounds if template exists
@@ -258,6 +259,7 @@ const updatePosition = async (req, res) => {
         ? updateFields.externalId
         : currentPosition.externalId,
       status: updateFields.status ?? currentPosition.status,
+      employmentType: updateFields.employmentType ?? currentPosition.employmentType,
       updatedBy: ownerId,
     };
 
@@ -349,8 +351,6 @@ const updatePosition = async (req, res) => {
     if (!updatedPosition) {
       return res.status(404).json({ message: "Position not found" });
     }
-
-    // No webhook trigger here anymore; webhooks are now driven by interview/assessment/feedback events.
 
     await updatedPosition.save();
 
