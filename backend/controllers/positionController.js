@@ -96,6 +96,7 @@ const createPosition = async (req, res) => {
       createdBy: req.body.ownerId, // Fixed: use req.body.ownerId instead of undefined ownerId
       positionCode, // Custom code added
       status: req.body.status,
+      employmentType: req.body.employmentType
     };
 
     // Handle rounds if template exists
@@ -258,6 +259,7 @@ const updatePosition = async (req, res) => {
         ? updateFields.externalId
         : currentPosition.externalId,
       status: updateFields.status ?? currentPosition.status,
+      employmentType: updateFields.employmentType ?? currentPosition.employmentType,
       updatedBy: ownerId,
     };
 

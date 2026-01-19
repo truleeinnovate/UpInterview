@@ -94,6 +94,18 @@ const VideoCallJoinRoom = lazy(
   () => import("./Pages/CustomVideoCall/JoinRoom.jsx"),
 );
 const VideoCallRoom = lazy(() => import("./Pages/CustomVideoCall/Room.jsx"));
+
+// Interviewers
+const InterviewersList = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Interviewers/Interviewers")
+);
+const CreateInterviewer = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Interviewers/CreateInterviewer")
+);
+const InterviewerDetails = lazy(() =>
+  import("./Pages/Dashboard-Part/Tabs/Interviewers/InterviewerDetails")
+);
+
 // v1.0.5 ------------------------------>
 
 const Home = lazy(
@@ -793,6 +805,21 @@ const MainAppRoutes = ({
               </>
             )}
 
+            {hasPermission("Interviewers") && (
+              <>
+                <Route path="/interviewers" element={<InterviewersList />} />
+                {hasPermission("Interviewers", "Create") && (
+                  <Route path="/interviewers/new" element={<><CreateInterviewer /> <InterviewersList /></>} />
+                )}
+                {hasPermission("Interviewers", "View") && (
+                  <Route path="/interviewers/:id" element={<><InterviewerDetails /><InterviewersList /></>} />
+                )}
+                {hasPermission("Interviewers", "Edit") && (
+                  <Route path="/interviewers/:id/edit" element={<><CreateInterviewer /><InterviewersList /></>} />
+                )}
+              </>
+            )}
+
             {/* Question Bank */}
             {hasPermission("QuestionBank") && (
               <Route path="/question-bank" element={<QuestionBank />} />
@@ -953,22 +980,22 @@ const MainAppRoutes = ({
                   <Route path="documents" element={<DocumentsSection />} />
                 </Route>
               )}
-              {organization && hasPermission("InterviewerGroups") && (
+              {organization && hasPermission("MyTeams") && (
                 <Route
-                  path="interviewer-groups"
+                  path="my-teams"
                   element={<InterviewerGroups />}
                 >
                   <Route index element={null} />
                   <Route
-                    path="interviewer-group-form"
+                    path="team-form"
                     element={<InterviewerGroupFormPopup />}
                   />
                   <Route
-                    path="interviewer-group-edit-form/:id"
+                    path="team-edit/:id"
                     element={<InterviewerGroupFormPopup />}
                   />
                   <Route
-                    path="interviewer-group-details/:id"
+                    path="team-details/:id"
                     element={<InterviewGroupDetails />}
                   />
                 </Route>

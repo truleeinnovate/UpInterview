@@ -264,6 +264,9 @@ const RoundFormInterviews = () => {
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [internalInterviewers, setInternalInterviewers] = useState([]);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
+  // Add near: const [combinedDateTime, setCombinedDateTime] = useState("");
+  const [liveInstantDisplay, setLiveInstantDisplay] = useState(""); // Live UI preview only
+  const instantIntervalRef = useRef(null); // Better than state for interval control
 
   // Add this helper function at the top with other state declarations
   const [isScheduleOrRescheduleInHistory, setIsScheduleOrRescheduleInHistory] =
@@ -335,19 +338,6 @@ const RoundFormInterviews = () => {
       // setTemplate(interview?.templateId || null)
     }
   }, [interview, data]);
-
-  // useEffect(() => {
-  //   if (
-  //     selectedInterviewType === "External" &&
-  //     externalInterviewers.length > 0
-  //   ) {
-  //     setStatus("RequestSent");
-  //   } else if (selectedInterviewType !== "External") {
-  //     internalInterviewers.length > 0
-  //       ? setStatus("Scheduled")
-  //       : setStatus("Draft");
-  //   }
-  // }, [selectedInterviewType, externalInterviewers, internalInterviewers]);
 
   //<-----v1.0.4----
   // Helper: format a Date to 'YYYY-MM-DDTHH:mm' for <input type="datetime-local"/>
@@ -518,6 +508,57 @@ const RoundFormInterviews = () => {
     }
   }, [interviewType]);
   //-----v1.0.4---->
+
+  // Add this new function (better than your current logic)
+  const calculateInstantTimes = useCallback(
+    (durationMinutes = 60) => {
+      const now = new Date();
+      const start = new Date(now.getTime() + 15 * 60 * 1000); // +15 min
+      start.setSeconds(0, 0);
+      start.setMilliseconds(0);
+
+      const end = new Date(
+        start.getTime() + Number(durationMinutes) * 60 * 1000
+      );
+
+      const formattedStart = formatDateTime(start, true); // Your existing function
+      const formattedEnd = formatDateTime(end, false);
+
+      return {
+        display: `${formattedStart} - ${formattedEnd}`,
+        startISO: start.toISOString(),
+      };
+    },
+    [formatDateTime]
+  ); // Assuming you have formatDateTime defined
+
+  // ── LIVE PREVIEW UPDATER FOR INSTANT ───────────────────────────────────────
+  useEffect(() => {
+    if (interviewType !== "instant") {
+      if (instantIntervalRef.current) {
+        clearInterval(instantIntervalRef.current);
+        instantIntervalRef.current = null;
+      }
+      setLiveInstantDisplay("");
+      return;
+    }
+
+    const updateLiveTime = () => {
+      const { display } = calculateInstantTimes(Number(duration) || 60);
+      setLiveInstantDisplay(display);
+    };
+
+    updateLiveTime(); // Immediate first update
+
+    instantIntervalRef.current = setInterval(updateLiveTime, 30 * 1000); // Refresh every 30s
+
+    return () => {
+      if (instantIntervalRef.current) {
+        clearInterval(instantIntervalRef.current);
+        instantIntervalRef.current = null;
+      }
+    };
+  }, [interviewType, duration, calculateInstantTimes]);
 
   const handleAddQuestionToRound = (question) => {
     if (question && question.questionId && question.snapshot) {
@@ -1664,6 +1705,24 @@ const RoundFormInterviews = () => {
     }
 
     setIsSubmitting(true);
+
+    let finalDateTime = combinedDateTime; // Default
+
+    // ── FRESH CALCULATION FOR INSTANT ───────────────────────────────
+    if (interviewType === "instant") {
+      const { display } = calculateInstantTimes(Number(duration) || 60);
+      finalDateTime = display;
+
+      // Update form state just for submission
+      setCombinedDateTime(finalDateTime);
+
+      // Optional: Update startTime/endTime for consistency
+      const { startISO } = calculateInstantTimes(Number(duration) || 60);
+      setStartTime(startISO);
+
+      // Tiny delay for React batching
+      await new Promise((r) => setTimeout(r, 50));
+    }
 
     try {
       let updateType = "FULL_UPDATE";
@@ -3222,10 +3281,14 @@ const RoundFormInterviews = () => {
                               <p className="text-sm text-custom-blue">
                                 Interview will start at{" "}
                                 <span className="font-medium">
-                                  {new Date(startTime).toLocaleTimeString([], {
+                                  <span className="font-medium">
+                                    {liveInstantDisplay || "Calculating..."}
+                                  </span>
+
+                                  {/* {new Date(startTime).toLocaleTimeString([], {
                                     hour: "2-digit",
                                     minute: "2-digit",
-                                  })}
+                                  })} */}
                                 </span>
                                 {/* {" "}
                                 and end at{" "}

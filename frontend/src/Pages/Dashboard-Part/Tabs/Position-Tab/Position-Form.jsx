@@ -176,6 +176,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     Location: "",
     externalId: "",
     status: "opened",
+    employmentType: "full_time",
   });
   const [isEdit, setIsEdit] = useState(false);
   const navigate = useNavigate();
@@ -344,6 +345,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       externalId: selectedPosition?.externalId || "",
       template: selectedTemplate || {},
       status: selectedPosition?.status || "opened",
+      employmentType: selectedPosition?.employmentType || "",
     });
 
     // 3. Map Skills
@@ -368,6 +370,26 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     value: s,
     label: capitalizeFirstLetter(s),
   }));
+  function formatEmploymentType(type) {
+    if (!type) return "";
+
+    return type
+      .split("_")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+
+  // Employment type options (usually put this outside the component)
+  const employmentTypeOptions = [
+    "full_time",
+    "part_time",
+    "contract",
+    "internship",
+  ].map(value => ({
+    value: value,
+    label: formatEmploymentType(value),
+  }));
+
 
   // const openStatusModal = (row) => {
   //   setStatusTargetRow(row);
@@ -802,6 +824,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       rounds: dataToSubmit?.template?.rounds || [],
       type: dataToSubmit?.template?.type || "",
       status: dataToSubmit?.status || "",
+      employmentType: dataToSubmit?.employmentType || "",
       // rounds: dataToSubmit.rounds || [],
       // rounds: dataToSubmit?.template?.rounds || [],
     };
@@ -1398,6 +1421,93 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="text-sm font-semibold mb-1">
+                          Employment Type
+                        </h3>
+                        <div>
+                          <DropdownSelect
+                            value={employmentTypeOptions.find(
+                              opt => opt.value === formData.employmentType
+                            )}
+                            onChange={(selected) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                employmentType: selected?.value || "",
+                              }));
+                            }}
+                            options={employmentTypeOptions}
+                          />
+                        </div>
+                        {/* <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={closeStatusModal}
+                            className="px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-700"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={confirmStatusUpdate}
+                            disabled={
+                              isMutationLoading ||
+                              (statusTargetRow &&
+                                updatingStatusId === statusTargetRow._id)
+                            }
+                            className="px-3 py-1.5 text-sm rounded bg-custom-blue text-white disabled:opacity-50"
+                          >
+                            Update
+                          </button>
+                        </div> */}
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-semibold mb-1">
+                          Change Status
+                        </h3>
+                        <div>
+                          <DropdownSelect
+                            value={statusOptions.find(
+                              (opt) => opt.value === formData.status
+                            )} // match current selection
+                            onChange={(selected) => {
+                              formData.status = selected.value;
+                              setFormData({ ...formData });
+
+                            }} // update state with value
+                            // options={statusOptions}
+                            options={statusOptions.map((option) => ({
+                              ...option,
+                              label: capitalizeFirstLetter(option.label),
+                            }))}
+                          />
+                        </div>
+                        {/* <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={closeStatusModal}
+                            className="px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-700"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={confirmStatusUpdate}
+                            disabled={
+                              isMutationLoading ||
+                              (statusTargetRow &&
+                                updatingStatusId === statusTargetRow._id)
+                            }
+                            className="px-3 py-1.5 text-sm rounded bg-custom-blue text-white disabled:opacity-50"
+                          >
+                            Update
+                          </button>
+                        </div> */}
+                      </div>
+                    </div>
+
                     {/* Experience */}
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
                       <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
@@ -1486,7 +1596,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                     </div>
                     {/* </div> */}
 
-                         {/* Select Template */}
+                    {/* Select Template */}
                     <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                       <div>
                         <DropdownWithSearchField
@@ -1574,50 +1684,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             ×
                           </button>
                         )}
-                      </div>
-
-                      <div>
-                        <h3 className="text-sm font-semibold mb-1">
-                          Change Status
-                        </h3>
-                        <div>
-                          <DropdownSelect
-                            value={statusOptions.find(
-                              (opt) => opt.value === formData.status
-                            )} // match current selection
-                            onChange={(selected) => {
-                              formData.status = selected.value;
-                              setFormData({ ...formData });
-
-                            }} // update state with value
-                            // options={statusOptions}
-                            options={statusOptions.map((option) => ({
-                              ...option,
-                              label: capitalizeFirstLetter(option.label),
-                            }))}
-                          />
-                        </div>
-                        {/* <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={closeStatusModal}
-                            className="px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-700"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="button"
-                            onClick={confirmStatusUpdate}
-                            disabled={
-                              isMutationLoading ||
-                              (statusTargetRow &&
-                                updatingStatusId === statusTargetRow._id)
-                            }
-                            className="px-3 py-1.5 text-sm rounded bg-custom-blue text-white disabled:opacity-50"
-                          >
-                            Update
-                          </button>
-                        </div> */}
                       </div>
                     </div>
 
@@ -1823,7 +1889,7 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
                       />
                     </div>
 
-               
+
 
                     {/* v1.0.2 ---------------------------------------------------> */}
                     <DescriptionField
@@ -1844,7 +1910,7 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
 
                     {/* External ID Field - Only show for organization users */}
                     {isOrganization && (
-                      <div className="grid grid-cols-2 sm:grid-cols-1">
+                      <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                         <div>
                           <div className="flex items-center gap-2 mb-1 relative">
                             <label className="text-sm font-medium text-gray-700">

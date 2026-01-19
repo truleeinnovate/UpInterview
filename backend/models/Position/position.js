@@ -69,6 +69,7 @@ const positionSchema = new mongoose.Schema(
     // EmployementType:String,
     NoofPositions: Number,
     status: { type: String, enum: ["draft", "opened", "closed", "hold", "cancelled"], default: "draft" },
+    employmentType: { type: String },
     Location: String,
     // workMode:String,
 
