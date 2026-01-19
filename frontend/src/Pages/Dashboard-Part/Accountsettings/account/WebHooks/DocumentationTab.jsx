@@ -3,6 +3,7 @@ import { Copy, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
 
 const DocumentationTab = () => {
   const [expandedEndpoints, setExpandedEndpoints] = useState({});
+  const [expandedGetEndpoints, setExpandedGetEndpoints] = useState({});
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -10,6 +11,13 @@ const DocumentationTab = () => {
 
   const toggleEndpoint = (index) => {
     setExpandedEndpoints(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  const toggleGetEndpoint = (index) => {
+    setExpandedGetEndpoints(prev => ({
       ...prev,
       [index]: !prev[index]
     }));
@@ -775,94 +783,110 @@ const DocumentationTab = () => {
           <h4 className="text-lg font-medium text-gray-900 mb-4">
             GET Endpoints
           </h4>
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Candidates GET Endpoint */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-800">
-                  GET
-                </span>
-                <code className="text-sm font-mono">
-                  /api/external/candidates
-                </code>
+            <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <div
+                className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => toggleGetEndpoint(0)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-800">
+                      GET
+                    </span>
+                    <code className="text-sm font-mono">
+                      /api/external/candidates
+                    </code>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-600 text-sm">
+                      Fetch candidate data using email, upId, or externalId
+                    </span>
+                    {expandedGetEndpoints[0] ? (
+                      <ChevronDown className="w-4 h-4 text-gray-500" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-gray-500" />
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <p className="text-gray-700 mb-4">
-                External systems can fetch candidate data from our SAS
-                application using a single REST endpoint. You can query the
-                candidate using any one of the supported unique identifiers:
-                email, upId, or externalId.
-              </p>
+              {expandedGetEndpoints[0] && (
+                <div className="border-t border-gray-200 p-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">
+                        Query Parameters (Any one or a combination)
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="font-medium text-gray-900 mb-1">email</p>
+                          <p className="text-gray-600 mb-2">Fetch by email address</p>
+                          <code>/api/external/candidates?email=example@gmail.com</code>
+                        </div>
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="font-medium text-gray-900 mb-1">upId</p>
+                          <p className="text-gray-600 mb-2">Fetch by internal ID</p>
+                          <code>/api/external/candidates?upId=12345</code>
+                        </div>
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="font-medium text-gray-900 mb-1">externalId</p>
+                          <p className="text-gray-600 mb-2">Fetch by external system ID</p>
+                          <code>/api/external/candidates?externalId=XYZ-001</code>
+                        </div>
+                      </div>
+                    </div>
 
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">
-                    Query Parameters (Any one or a combination)
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <code>
-                        /api/external/candidates?email=example@gmail.com
-                      </code>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">
+                        Examples
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Fetch by Email
+                          </p>
+                          <code>
+                            GET /api/external/candidates?email=test@gmail.com
+                          </code>
+                        </div>
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Fetch by upId
+                          </p>
+                          <code>
+                            GET
+                            /api/external/candidates?upId=6579ab23dfc0123a4c16bc11
+                          </code>
+                        </div>
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Fetch by External ID
+                          </p>
+                          <code>
+                            GET /api/external/candidates?externalId=HRMS-0945
+                          </code>
+                        </div>
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Fetch by Multiple Filters
+                          </p>
+                          <code>
+                            GET
+                            /api/external/candidates?email=test@gmail.com&externalId=HRMS-0945
+                          </code>
+                        </div>
+                      </div>
                     </div>
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <code>/api/external/candidates?upId=12345</code>
-                    </div>
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <code>/api/external/candidates?externalId=XYZ-001</code>
-                    </div>
-                  </div>
-                </div>
 
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">
-                    Examples
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <p className="text-xs text-gray-600 mb-1">
-                        Fetch by Email
-                      </p>
-                      <code>
-                        GET /api/external/candidates?email=test@gmail.com
-                      </code>
-                    </div>
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <p className="text-xs text-gray-600 mb-1">
-                        Fetch by upId
-                      </p>
-                      <code>
-                        GET
-                        /api/external/candidates?upId=6579ab23dfc0123a4c16bc11
-                      </code>
-                    </div>
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <p className="text-xs text-gray-600 mb-1">
-                        Fetch by External ID
-                      </p>
-                      <code>
-                        GET /api/external/candidates?externalId=HRMS-0945
-                      </code>
-                    </div>
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <p className="text-xs text-gray-600 mb-1">
-                        Fetch by Multiple Filters
-                      </p>
-                      <code>
-                        GET
-                        /api/external/candidates?email=test@gmail.com&externalId=HRMS-0945
-                      </code>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">
-                    Response Body
-                  </h4>
-                  <div className="bg-gray-100 p-3 rounded text-sm">
-                    <pre>
-                      {`{
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">
+                        Response Body
+                      </h4>
+                      <div className="bg-green-50 p-3 rounded text-sm">
+                        <pre>
+                          {`{
   "success": true,
   "message": "Candidates retrieved successfully",
   "code": 200,
@@ -896,86 +920,104 @@ const DocumentationTab = () => {
     "retrievedAt": "2025-12-03T11:30:25.211Z"
   }
 }`}
-                    </pre>
+                        </pre>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Positions GET Endpoint */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-800">
-                  GET
-                </span>
-                <code className="text-sm font-mono">
-                  /api/external/positions
-                </code>
+            <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <div
+                className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => toggleGetEndpoint(1)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-800">
+                      GET
+                    </span>
+                    <code className="text-sm font-mono">
+                      /api/external/positions
+                    </code>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-600 text-sm">
+                      Fetch position data using upId or externalId
+                    </span>
+                    {expandedGetEndpoints[1] ? (
+                      <ChevronDown className="w-4 h-4 text-gray-500" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-gray-500" />
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <p className="text-gray-700 mb-4">
-                External systems can fetch position data from our SAS
-                application using a single REST endpoint. You can query the
-                position using any one of the supported unique identifiers: upId
-                or externalId.
-              </p>
+              {expandedGetEndpoints[1] && (
+                <div className="border-t border-gray-200 p-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">
+                        Query Parameters (Any one or a combination)
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="font-medium text-gray-900 mb-1">upId</p>
+                          <p className="text-gray-600 mb-2">Fetch by internal ID</p>
+                          <code>/api/external/positions?upId=12345</code>
+                        </div>
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="font-medium text-gray-900 mb-1">externalId</p>
+                          <p className="text-gray-600 mb-2">Fetch by external system ID</p>
+                          <code>/api/external/positions?externalId=POS-001</code>
+                        </div>
+                      </div>
+                    </div>
 
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">
-                    Query Parameters (Any one or a combination)
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <code>/api/external/positions?upId=12345</code>
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">
+                        Examples
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Fetch by upId
+                          </p>
+                          <code>
+                            GET
+                            /api/external/positions?upId=6579ab23dfc0123a4c16bc11
+                          </code>
+                        </div>
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Fetch by External ID
+                          </p>
+                          <code>
+                            GET /api/external/positions?externalId=HRMS-POS-001
+                          </code>
+                        </div>
+                        <div className="bg-gray-100 p-3 rounded text-sm">
+                          <p className="text-xs text-gray-600 mb-1">
+                            Fetch by Multiple Filters
+                          </p>
+                          <code>
+                            GET
+                            /api/external/positions?upId=6579ab23dfc0123a4c16bc11&externalId=HRMS-POS-001
+                          </code>
+                        </div>
+                      </div>
                     </div>
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <code>/api/external/positions?externalId=POS-001</code>
-                    </div>
-                  </div>
-                </div>
 
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">
-                    Examples
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <p className="text-xs text-gray-600 mb-1">
-                        Fetch by upId
-                      </p>
-                      <code>
-                        GET
-                        /api/external/positions?upId=6579ab23dfc0123a4c16bc11
-                      </code>
-                    </div>
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <p className="text-xs text-gray-600 mb-1">
-                        Fetch by External ID
-                      </p>
-                      <code>
-                        GET /api/external/positions?externalId=HRMS-POS-001
-                      </code>
-                    </div>
-                    <div className="bg-gray-100 p-3 rounded text-sm">
-                      <p className="text-xs text-gray-600 mb-1">
-                        Fetch by Multiple Filters
-                      </p>
-                      <code>
-                        GET
-                        /api/external/positions?upId=6579ab23dfc0123a4c16bc11&externalId=HRMS-POS-001
-                      </code>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">
-                    Response Body
-                  </h4>
-                  <div className="bg-gray-100 p-3 rounded text-sm">
-                    <pre>
-                      {`{
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">
+                        Response Body
+                      </h4>
+                      <div className="bg-green-50 p-3 rounded text-sm">
+                        <pre>
+                          {`{
   "success": true,
   "message": "Positions retrieved successfully",
   "code": 200,
@@ -1001,13 +1043,16 @@ const DocumentationTab = () => {
     "retrievedAt": "2025-12-03T11:30:25.211Z"
   }
 }`}
-                    </pre>
+                        </pre>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
+
 
         {/* POST Endpoints */}
         <div>
@@ -1027,13 +1072,12 @@ const DocumentationTab = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded ${
-                          endpoint.method === "POST"
-                            ? "bg-green-100 text-green-800"
-                            : endpoint.method === "PUT"
+                        className={`px-2 py-1 text-xs font-medium rounded ${endpoint.method === "POST"
+                          ? "bg-green-100 text-green-800"
+                          : endpoint.method === "PUT"
                             ? "bg-brand-100 text-brand-800"
                             : "bg-gray-100 text-gray-800"
-                        }`}
+                          }`}
                       >
                         {endpoint.method}
                       </span>
@@ -1074,7 +1118,7 @@ const DocumentationTab = () => {
                       </div>
 
                       {endpoint.response && (
-                        <>
+                        <React.Fragment>
                           <div>
                             <h4 className="text-sm font-medium text-gray-900 mb-2">
                               Status Code
@@ -1099,7 +1143,7 @@ const DocumentationTab = () => {
                               <pre>{JSON.stringify(endpoint.response, null, 2)}</pre>
                             </div>
                           </div>
-                        </>
+                        </React.Fragment>
                       )}
                     </div>
                   </div>
@@ -1263,7 +1307,7 @@ const DocumentationTab = () => {
       </section>
 
       {/* Support */}
-      <section>
+      <section className="mb-12">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Support</h3>
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <p className="text-gray-700 mb-4">
