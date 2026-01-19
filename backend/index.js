@@ -129,6 +129,9 @@ const feedbackRoute = require("./routes/feedbackRoute.js");
 const usageRoutes = require("./routes/usageRoutes.js");
 const organizationRequestRoutes = require("./routes/organizationRequestRoutes.js");
 const bandwidthRoutes = require("./routes/bandwidthRoutes.js");
+const interviewerRoutes = require("./routes/interviewerRoutes.js");
+const interviewerTagRoutes = require("./routes/interviewerTagRoutes.js");
+const interviewerGroupRoutes = require("./routes/interviewerGroupRoutes.js");
 
 // Standard middleware with increased payload limit for bulk operations
 app.use(bodyParser.json({ limit: "50mb" }));
@@ -484,6 +487,9 @@ app.use("/feedback", feedbackRoute);
 app.use("/usage", usageRoutes);
 app.use("/organization-requests", organizationRequestRoutes);
 app.use("/bandwidth", bandwidthRoutes);
+app.use("/interviewers", interviewerRoutes);
+app.use("/interviewer-tags", interviewerTagRoutes);
+app.use("/interviewer-groups", interviewerGroupRoutes);
 
 const port = process.env.PORT || 5000;
 
@@ -1215,6 +1221,13 @@ app.use("/mockinterview", mockInterviewRoutes);
 
 const groupsRoutes = require("./routes/interviewerGroupRoutes");
 app.use("/groups", groupsRoutes);
+
+// Interviewer panel routes
+// const interviewerRoutes = require("./routes/interviewerRoutes");
+// const interviewerTagRoutes = require("./routes/interviewerTagRoutes");
+// app.use("/interviewers", interviewerRoutes);
+// app.use("/interviewer-tags", interviewerTagRoutes);
+
 
 app.get("/org-users", async (req, res) => {
   try {

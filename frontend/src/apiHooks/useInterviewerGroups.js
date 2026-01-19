@@ -9,12 +9,12 @@ const getTenantId = () => {
   return authToken ? JSON.parse(atob(authToken.split('.')[1])).tenantId : null;
 };
 
-// Legacy hook: fetch all groups for a tenant (no pagination)
-export const useGroupsQuery = () => {
+// Legacy hook: fetch all teams for a tenant (no pagination)
+export const useTeamsQuery = () => {
   const tenantId = getTenantId();
 
   return useQuery({
-    queryKey: ['groups', tenantId],
+    queryKey: ['teams', tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
 
@@ -28,7 +28,7 @@ export const useGroupsQuery = () => {
       if (response.data && Array.isArray(response.data)) {
         return response.data;
       } else {
-        console.error("Invalid groups data format:", response.data);
+        console.error("Invalid teams data format:", response.data);
         return [];
       }
     },
@@ -38,8 +38,11 @@ export const useGroupsQuery = () => {
   });
 };
 
-// Paginated & filterable groups hook (used by InterviewerGroups list)
-export const usePaginatedGroups = ({
+// Backward compatibility alias
+export const useGroupsQuery = useTeamsQuery;
+
+// Paginated & filterable teams hook (used by My Teams list)
+export const usePaginatedTeams = ({
   page = 0,
   limit,
   search = '',
@@ -56,7 +59,7 @@ export const usePaginatedGroups = ({
   if (status) queryParams.append('status', status);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['groups-paginated', tenantId, page, limit, search, status],
+    queryKey: ['teams-paginated', tenantId, page, limit, search, status],
     queryFn: async () => {
       if (!tenantId) {
         return {
@@ -83,6 +86,8 @@ export const usePaginatedGroups = ({
   });
 
   return {
+    teams: data?.data || [],
+    // Backward compatibility
     groups: data?.data || [],
     pagination:
       data?.pagination || {
@@ -100,148 +105,195 @@ export const usePaginatedGroups = ({
   };
 };
 
-// Create group mutation
-export const useCreateGroup = () => {
+// Backward compatibility alias
+export const usePaginatedGroups = usePaginatedTeams;
+
+// Create team mutation
+export const useCreateTeam = () => {
   const queryClient = useQueryClient();
   const tenantId = getTenantId();
 
   return useMutation({
-    mutationFn: async (groupData) => {
+    mutationFn: async (teamData) => {
       const response = await axios.post(`${config.REACT_APP_API_URL}/groups`, {
-        ...groupData,
+        ...teamData,
         tenantId,
       });
       return response.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries(['teams']);
+      queryClient.invalidateQueries(['teams-paginated']);
+      // Backward compatibility
       queryClient.invalidateQueries(['groups']);
       queryClient.invalidateQueries(['groups-paginated']);
     },
     onError: (error) => {
-      console.error("Error creating group:", error);
+      console.error("Error creating team:", error);
       throw error;
     },
   });
 };
 
-// Update group mutation
-export const useUpdateGroup = () => {
+// Backward compatibility alias
+export const useCreateGroup = useCreateTeam;
+
+// Update team mutation
+export const useUpdateTeam = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ groupId, groupData }) => {
+    mutationFn: async ({ teamId, teamData, groupId, groupData }) => {
+      // Support both new and old field names
+      const id = teamId || groupId;
+      const data = teamData || groupData;
+
       const response = await axios.patch(
-        `${config.REACT_APP_API_URL}/groups/update/${groupId}`,
-        groupData
+        `${config.REACT_APP_API_URL}/groups/update/${id}`,
+        data
       );
       return response.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries(['teams']);
+      queryClient.invalidateQueries(['teams-paginated']);
+      queryClient.invalidateQueries(['team']);
+      // Backward compatibility
       queryClient.invalidateQueries(['groups']);
       queryClient.invalidateQueries(['groups-paginated']);
+      queryClient.invalidateQueries(['group']);
     },
     onError: (error) => {
-      console.error("Error updating group:", error);
+      console.error("Error updating team:", error);
       throw error;
     },
   });
 };
 
-// Delete group mutation
-export const useDeleteGroup = () => {
+// Backward compatibility alias
+export const useUpdateGroup = useUpdateTeam;
+
+// Delete team mutation
+export const useDeleteTeam = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (groupId) => {
+    mutationFn: async (teamId) => {
       const response = await axios.delete(
-        `${config.REACT_APP_API_URL}/groups/delete/${groupId}`
+        `${config.REACT_APP_API_URL}/groups/delete/${teamId}`
       );
       return response.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries(['teams']);
+      queryClient.invalidateQueries(['teams-paginated']);
+      // Backward compatibility
       queryClient.invalidateQueries(['groups']);
       queryClient.invalidateQueries(['groups-paginated']);
     },
     onError: (error) => {
-      console.error("Error deleting group:", error);
+      console.error("Error deleting team:", error);
       throw error;
     },
   });
 };
 
-// Add member to group mutation
-export const useAddGroupMember = () => {
+// Backward compatibility alias
+export const useDeleteGroup = useDeleteTeam;
+
+// Add member to team mutation
+export const useAddTeamMember = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ groupId, memberData }) => {
+    mutationFn: async ({ teamId, memberData, groupId }) => {
+      const id = teamId || groupId;
       const response = await axios.post(
-        `${config.REACT_APP_API_URL}/groups/${groupId}/members`,
+        `${config.REACT_APP_API_URL}/groups/${id}/members`,
         memberData
       );
       return response.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries(['teams']);
+      queryClient.invalidateQueries(['teams-paginated']);
+      // Backward compatibility
       queryClient.invalidateQueries(['groups']);
       queryClient.invalidateQueries(['groups-paginated']);
     },
     onError: (error) => {
-      console.error("Error adding group member:", error);
+      console.error("Error adding team member:", error);
       throw error;
     },
   });
 };
 
-// Remove member from group mutation
-export const useRemoveGroupMember = () => {
+// Backward compatibility alias
+export const useAddGroupMember = useAddTeamMember;
+
+// Remove member from team mutation
+export const useRemoveTeamMember = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ groupId, memberId }) => {
+    mutationFn: async ({ teamId, memberId, groupId }) => {
+      const id = teamId || groupId;
       const response = await axios.delete(
-        `${config.REACT_APP_API_URL}/groups/${groupId}/members/${memberId}`
+        `${config.REACT_APP_API_URL}/groups/${id}/members/${memberId}`
       );
       return response.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries(['teams']);
+      queryClient.invalidateQueries(['teams-paginated']);
+      // Backward compatibility
       queryClient.invalidateQueries(['groups']);
       queryClient.invalidateQueries(['groups-paginated']);
     },
     onError: (error) => {
-      console.error("Error removing group member:", error);
+      console.error("Error removing team member:", error);
       throw error;
     },
   });
 };
 
-// Fetch group by ID
-export const useGroupById = (groupId) => {
+// Backward compatibility alias
+export const useRemoveGroupMember = useRemoveTeamMember;
+
+// Fetch team by ID
+export const useTeamById = (teamId) => {
   return useQuery({
-    queryKey: ['group', groupId],
+    queryKey: ['team', teamId],
     queryFn: async () => {
-      if (!groupId) return null;
-      
+      if (!teamId) return null;
+
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/groups/${groupId}`
+        `${config.REACT_APP_API_URL}/groups/${teamId}`
       );
       return response.data;
     },
-    enabled: !!groupId,
+    enabled: !!teamId,
   });
 };
 
-// Fetch group members
-export const useGroupMembers = (groupId) => {
+// Backward compatibility alias
+export const useGroupById = useTeamById;
+
+// Fetch team members
+export const useTeamMembers = (teamId) => {
   return useQuery({
-    queryKey: ['group-members', groupId],
+    queryKey: ['team-members', teamId],
     queryFn: async () => {
-      if (!groupId) return [];
-      
+      if (!teamId) return [];
+
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/groups/${groupId}/members`
+        `${config.REACT_APP_API_URL}/groups/${teamId}/members`
       );
       return response.data;
     },
-    enabled: !!groupId,
+    enabled: !!teamId,
   });
 };
+
+// Backward compatibility alias
+export const useGroupMembers = useTeamMembers;

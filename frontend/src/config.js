@@ -28,12 +28,12 @@ export const config = {
   REACT_APP_GOOGLE_CLIENT_ID: process.env.REACT_APP_GOOGLE_CLIENT_ID,
   REACT_APP_GOOGLE_REDIRECT_URI: process.env.REACT_APP_GOOGLE_REDIRECT_URI,
   REACT_APP_GOOGLE_SCOPES: process.env.REACT_APP_GOOGLE_SCOPES,
-  
+
   REACT_APP_SUPPORT_PHONE_NUMBER: process.env.REACT_APP_SUPPORT_PHONE_NUMBER || "+91 9019723366",
-  
-//   REACT_APP_SUPABASE_URL: process.env.REACT_APP_SUPABASE_URL,
-//   REACT_APP_SUPABASE_ANON_KEY: process.env.REACT_APP_SUPABASE_ANON_KEY,
-//   REACT_APP_VIDEOSDK_API_KEY: process.env.REACT_APP_VIDEOSDK_API_KEY,
+
+  //   REACT_APP_SUPABASE_URL: process.env.REACT_APP_SUPABASE_URL,
+  //   REACT_APP_SUPABASE_ANON_KEY: process.env.REACT_APP_SUPABASE_ANON_KEY,
+  //   REACT_APP_VIDEOSDK_API_KEY: process.env.REACT_APP_VIDEOSDK_API_KEY,
 
 
   // interviewrequest expire dynamic hours
@@ -43,8 +43,8 @@ export const config = {
   SCHEDULED_SLA_RULES: [
     { minHoursLeft: 48, acceptHours: 24 },
     { minHoursLeft: 24, acceptHours: 12 },
-    { minHoursLeft: 6,  acceptHours: 6 },
-    { minHoursLeft: 2,  acceptHours: 2 }
+    { minHoursLeft: 6, acceptHours: 6 },
+    { minHoursLeft: 2, acceptHours: 2 }
   ],
 
   DEFAULT_ACCEPT_HOURS: 2

@@ -66,7 +66,7 @@ const AccountSettingsSidebar = () => {
 
   const organizationNavigation = [
     { name: "Users", icon: UsersIcon, id: "users" },
-    { name: "Interviewer Groups", icon: UserGroupIcon, id: "interviewer-groups" },
+    { name: "My Teams", icon: UserGroupIcon, id: "my-teams" },
     { name: "Roles", icon: UserIcon, id: "roles" },
     { name: "Video Calling", icon: VideoCameraIcon, id: "video-calling-settings" },
   ];
@@ -108,7 +108,7 @@ const AccountSettingsSidebar = () => {
     "email-settings": "Notification",
     usage: "Usage",
     users: "Users",
-    "interviewer-groups": "InterviewerGroups",
+    "my-teams": "MyTeams",
     roles: "Roles",
     sharing: "Sharing",
     "sub-domain": "Subdomain",
@@ -118,7 +118,7 @@ const AccountSettingsSidebar = () => {
   // Filter navigation based on user type and permissions using useCallback
   const filterNavigation = useCallback(() => {
     if (!isInitialized && !getCachedPermissions()) {
-    //   console.log('🎯 Sidebar: No permissions available, returning empty navigation');
+      //   console.log('🎯 Sidebar: No permissions available, returning empty navigation');
       return [];
     }
 
@@ -129,7 +129,7 @@ const AccountSettingsSidebar = () => {
           if (userType === "superAdmin") {
             const superAdminItems = ["my-profile", "roles", "users"];
             if (!superAdminItems.includes(item.id)) {
-            //   console.log(`🎯 SuperAdmin filtering out ${item.id}: not in super admin items list`);
+              //   console.log(`🎯 SuperAdmin filtering out ${item.id}: not in super admin items list`);
               return false;
             }
 
@@ -146,10 +146,10 @@ const AccountSettingsSidebar = () => {
           }
 
           const hasPermission = checkPermission(permissionKey);
-        //   console.log(`🎯 Non-super admin ${item.id}:`, { permissionKey, hasPermission });
+          //   console.log(`🎯 Non-super admin ${item.id}:`, { permissionKey, hasPermission });
 
           if (
-            ["profile", "users", "sub-domain", "roles", "interviewer-groups", "sharing"].includes(item.id)
+            ["profile", "users", "sub-domain", "roles", "my-teams", "sharing"].includes(item.id)
           ) {
             return organization && hasPermission;
           }
@@ -181,17 +181,17 @@ const AccountSettingsSidebar = () => {
   }, [navigate, organization, userType]);
 
   // Debug initialization state
-//   useEffect(() => {
-//     console.log('🎯 Sidebar Initialization:', {
-//       authToken: !!authToken,
-//       userType,
-//       isInitialized,
-//       loading,
-//       organization,
-//       activeTab,
-//       location: location.pathname,
-//     });
-//   }, [authToken, userType, isInitialized, loading, organization, activeTab, location.pathname]);
+  //   useEffect(() => {
+  //     console.log('🎯 Sidebar Initialization:', {
+  //       authToken: !!authToken,
+  //       userType,
+  //       isInitialized,
+  //       loading,
+  //       organization,
+  //       activeTab,
+  //       location: location.pathname,
+  //     });
+  //   }, [authToken, userType, isInitialized, loading, organization, activeTab, location.pathname]);
 
   // Redirect to appropriate tab on initial load
   useEffect(() => {
@@ -206,7 +206,7 @@ const AccountSettingsSidebar = () => {
     }
 
     if (location.pathname === "/account-settings/my-profile") {
-    //   console.log('🎯 Sidebar: Redirecting to /account-settings/my-profile/basic');
+      //   console.log('🎯 Sidebar: Redirecting to /account-settings/my-profile/basic');
       navigate("/account-settings/my-profile/basic", { replace: true });
     }
   }, [location.pathname, navigate, organization, userType]);
