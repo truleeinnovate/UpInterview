@@ -285,13 +285,13 @@ const PositionSlideDetails = () => {
                   <Edit className="h-4 w-4 mr-1.5" />
                   Edit Position
                 </Link>
-                {/* <button
-                  onClick={() => navigate(`/candidates/upload?positionId=${position?._id}`)}
+                <button
+                  onClick={() => navigate(`/position/view-details/${id}/upload-resumes`)}
                   className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                 >
                   <Plus className="h-4 w-4 mr-1.5" />
                   Upload Resumes
-                </button> */}
+                </button>
                 <button
                   onClick={() => setShowAddCandidateModal(true)}
                   className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
@@ -552,7 +552,10 @@ const PositionSlideDetails = () => {
                         </span>
                         <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
                           <span className="truncate max-w-full">
-                            {skill.expertise}
+                            {skill.experience === '0-1' ? 'Beginner (0–1 years)' :
+                              skill.experience === '1-3' ? 'Intermediate (1–3 years)' :
+                                skill.experience === '3-5' ? 'Advanced (3–5 years)' :
+                                  skill.experience === '5+' ? 'Expert (5+ years)' : skill.experience || 'N/A'}
                           </span>
                         </span>
                         <span className="flex justify-center px-3 py-1.5 w-full items-center bg-white text-custom-blue rounded-full text-sm font-medium border border-blue-200">
@@ -744,6 +747,8 @@ const PositionSlideDetails = () => {
             </div>
           </Modal>
         )}
+
+
       </div>
     </div>
     // v1.0.4 ---------------------------------------------------------------->

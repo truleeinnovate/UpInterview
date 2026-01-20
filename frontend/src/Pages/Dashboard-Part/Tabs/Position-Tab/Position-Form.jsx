@@ -410,6 +410,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     const formattedSkills =
       selectedPosition?.skills?.map((skill) => ({
         skill: skill.skill || "",
+        experience: skill.experience || "",
         expertise: skill.expertise || "",
         requirement_level: skill.requirement_level || "REQUIRED",
         _id: skill._id || "",
@@ -554,10 +555,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       if (!exists) {
         const selectedTitleLabel = selectedTemplate.title
           ? selectedTemplate.title.charAt(0).toUpperCase() +
-            selectedTemplate.title.slice(1)
+          selectedTemplate.title.slice(1)
           : selectedTemplate.type
             ? selectedTemplate.type.charAt(0).toUpperCase() +
-              selectedTemplate.type.slice(1)
+            selectedTemplate.type.slice(1)
             : "Unnamed Template";
 
         baseOptions.push({
@@ -582,7 +583,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
               >
                 {selectedTemplate.type
                   ? selectedTemplate.type.charAt(0).toUpperCase() +
-                    selectedTemplate.type.slice(1)
+                  selectedTemplate.type.slice(1)
                   : ""}
               </span>
             </div>
@@ -651,7 +652,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           // If either is empty, clear cross-field errors
           if (
             next.minexperience ===
-              "Min Experience cannot be greater than Max" ||
+            "Min Experience cannot be greater than Max" ||
             next.minexperience === "Min and Max Experience cannot be equal"
           )
             next.minexperience = "";
@@ -702,7 +703,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           } else {
             if (
               next.minsalary ===
-                "Minimum Salary cannot be greater than Maximum" ||
+              "Minimum Salary cannot be greater than Maximum" ||
               next.minsalary === "Minimum and Maximum Salary cannot be equal"
             )
               next.minsalary = "";
@@ -727,10 +728,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry,
       );
       setEntries(updatedEntries);
@@ -868,10 +869,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       externalId: dataToSubmit.externalId || undefined,
       // Filter out empty skill rows - only include rows where at least one field has a value
       skills: entries
-        .filter((entry) => entry.skill || entry.expertise)
+        .filter((entry) => entry.skill || entry.experience)
         .map((entry) => ({
           skill: entry.skill,
-          expertise: entry.expertise,
+          experience: entry.experience,
           requirement_level: entry.requirement_level || "REQUIRED",
         })),
       additionalNotes: dataToSubmit.additionalNotes,
@@ -968,8 +969,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save position",
+        error.message ||
+        "Failed to save position",
       );
 
       if (error.response && error.response.status === 400) {
@@ -1614,7 +1615,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           max={1000000000}
                           label="Min Salary (Annual)"
                           name="minSalary"
-                          // required={formData.maxSalary ? true : false}
+                        // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
                           value={formData.maxSalary}
@@ -1625,7 +1626,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           error={errors.maxsalary}
                           label="Max Salary (Annual)"
                           name="maxSalary"
-                          // required={formData.minSalary ? true : false}
+                        // required={formData.minSalary ? true : false}
                         />
                       </div>
                     </div>
@@ -1642,7 +1643,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         max={100}
                         label="No. of Positions"
                         name="NoofPositions"
-                        // required
+                      // required
                       />
 
                       <div>
@@ -1724,7 +1725,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             const resolvedTemplate =
                               fromList ||
                               (selectedTemplate &&
-                              selectedTemplate._id === templateId
+                                selectedTemplate._id === templateId
                                 ? selectedTemplate
                                 : null);
 

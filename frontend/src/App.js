@@ -156,6 +156,10 @@ const RoundFormPosition = lazy(
   () =>
     import("./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx"),
 );
+const ResumeUploadPage = lazy(
+  () =>
+    import("./Pages/Dashboard-Part/Tabs/Position-Tab/ResumeUploadPopup.jsx"),
+);
 const MockInterview = lazy(
   () => import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterview"),
 );
@@ -754,6 +758,12 @@ const MainAppRoutes = ({
               <Route
                 path="/position/view-details/:id/rounds/:roundId"
                 element={<RoundFormPosition />}
+              />
+            )}
+            {hasPermission("Positions") && (
+              <Route
+                path="/position/view-details/:id/upload-resumes"
+                element={<ResumeUploadPage />}
               />
             )}
 

@@ -50,6 +50,7 @@ const positionSchema = new mongoose.Schema(
     skills: [
       {
         skill: String,
+        experience: String,
         expertise: String,
         requirement_level: {
           type: String,
