@@ -18,6 +18,10 @@ const {
   validateUpdateFeedback,
   validateFeedbackBusinessRules,
 } = require("../validations/feedbackValidation");
+const {
+  MockInterviewRound,
+} = require("../models/Mockinterview/mockinterviewRound.js");
+const { MockInterview } = require("../models/Mockinterview/mockinterview.js");
 
 // const mongoose = require("mongoose");
 // const FeedbackModel = require("../models/InterviewFeedback");
@@ -95,7 +99,7 @@ const createFeedback = async (req, res) => {
             dislikeReason: (rawQuestion && rawQuestion.whyDislike) || "",
           },
         };
-      }
+      },
     );
 
     // Check if feedback already exists
@@ -197,12 +201,12 @@ const createFeedback = async (req, res) => {
         await triggerWebhook(
           EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
           webhookPayload,
-          tenantId
+          tenantId,
         );
       } catch (webhookError) {
         console.error(
           "[FEEDBACK WEBHOOK] Error triggering feedback creation webhook:",
-          webhookError
+          webhookError,
         );
       }
     }
@@ -213,7 +217,7 @@ const createFeedback = async (req, res) => {
       if (interviewRoundId) {
         const roundDoc =
           await InterviewRounds.findById(interviewRoundId).select(
-            "interviewId"
+            "interviewId",
           );
         resolvedInterviewId = roundDoc?.interviewId || null;
       }
@@ -221,7 +225,7 @@ const createFeedback = async (req, res) => {
       console.warn(
         "Unable to resolve interviewId:",
         interviewRoundId,
-        e?.message
+        e?.message,
       );
     }
 
@@ -391,7 +395,7 @@ const updateFeedback = async (req, res) => {
             ...feedback,
             questionId: normalizedId,
           };
-        }
+        },
       );
     }
 
@@ -402,7 +406,7 @@ const updateFeedback = async (req, res) => {
       {
         new: true, // Return the updated document
         runValidators: true, // Run schema validators
-      }
+      },
     )
       .populate("candidateId", "FirstName LastName Email Phone")
       .populate("interviewerId", "FirstName LastName Email Phone")
@@ -449,7 +453,7 @@ const updateFeedback = async (req, res) => {
         if (interviewRoundId) {
           const roundDoc =
             await InterviewRounds.findById(interviewRoundId).select(
-              "interviewId"
+              "interviewId",
             );
           resolvedInterviewId = roundDoc?.interviewId || null;
         }
@@ -457,7 +461,7 @@ const updateFeedback = async (req, res) => {
         console.warn(
           "Unable to resolve interviewId during feedback update:",
           interviewRoundId,
-          e?.message
+          e?.message,
         );
       }
 
@@ -514,7 +518,7 @@ const updateFeedback = async (req, res) => {
     if (updatedFeedback.status === "submitted") {
       //  Update interview round status
       await updateInterviewRoundFeedbackStatus(
-        updatedFeedback.interviewRoundId
+        updatedFeedback.interviewRoundId,
       );
 
       //if (updateData.status && updatedFeedback) {
@@ -534,20 +538,20 @@ const updateFeedback = async (req, res) => {
         };
 
         console.log(
-          `[FEEDBACK WEBHOOK] Triggering status update webhook for feedback ${updatedFeedback._id} with status: ${updatedFeedback.status}`
+          `[FEEDBACK WEBHOOK] Triggering status update webhook for feedback ${updatedFeedback._id} with status: ${updatedFeedback.status}`,
         );
         await triggerWebhook(
           EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
           webhookPayload,
-          updatedFeedback.tenantId
+          updatedFeedback.tenantId,
         );
         console.log(
-          `[FEEDBACK WEBHOOK] Status update webhook sent successfully for feedback ${updatedFeedback._id}`
+          `[FEEDBACK WEBHOOK] Status update webhook sent successfully for feedback ${updatedFeedback._id}`,
         );
       } catch (webhookError) {
         console.error(
           "[FEEDBACK WEBHOOK] Error triggering feedback status update webhook:",
-          webhookError
+          webhookError,
         );
         // Continue execution even if webhook fails
       }
@@ -652,7 +656,12 @@ const getAllFeedback = async (req, res) => {
 const getFeedbackByRoundId = async (req, res) => {
   try {
     const { roundId } = req.params;
-    const { interviewerId } = req.query;
+    const { interviewerId, interviewType } = req.query;
+    const isMockInterview = interviewType === "mockinterview";
+    // console.log("roundId", roundId);
+
+    // console.log("interviewerId", interviewerId);
+    // console.log("interviewType", interviewType);
 
     // Validate roundId
     if (!mongoose.Types.ObjectId.isValid(roundId)) {
@@ -666,11 +675,20 @@ const getFeedbackByRoundId = async (req, res) => {
         .json({ success: false, message: "Invalid interviewer ID" });
     }
 
+    const RoundModel = isMockInterview ? MockInterviewRound : InterviewRounds;
+
     // Fetch InterviewRound
-    const interviewRound = await InterviewRounds.findById(roundId).populate(
+    const interviewRound = await RoundModel.findById(roundId).populate(
       "interviewers",
-      "FirstName LastName Email Phone"
+      "FirstName LastName Email Phone",
     );
+
+    // console.log("interviewRound interviewRound", interviewRound);
+
+    // const interviewRound = await InterviewRounds.findById(roundId).populate(
+    //   "interviewers",
+    //   "FirstName LastName Email Phone",
+    // );
 
     if (!interviewRound) {
       return res
@@ -682,16 +700,21 @@ const getFeedbackByRoundId = async (req, res) => {
     //   _id: interviewRound.interviewId,
     // });
 
-    const interviewSection = await Interview.findById(
-      interviewRound.interviewId
-    )
-      .populate("candidateId", "FirstName LastName Email Phone")
-      .populate(
-        "positionId",
-        "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary"
-      )
-      .lean();
+    let interviewSection = null;
 
+    if (isMockInterview) {
+      interviewSection = await MockInterview.findById(
+        interviewRound.mockInterviewId,
+      ).lean();
+    } else {
+      interviewSection = await Interview.findById(interviewRound.interviewId)
+        .populate("candidateId", "FirstName LastName Email Phone")
+        .populate(
+          "positionId",
+          "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary",
+        )
+        .lean();
+    }
     // Fetch CandidatePosition
     // let candidatePosition = await CandidatePosition.findOne({
     //   interviewId: interviewRound.interviewId,
@@ -713,7 +736,7 @@ const getFeedbackByRoundId = async (req, res) => {
       .populate("candidateId", "FirstName LastName Email Phone ownerId")
       .populate(
         "positionId",
-        "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary"
+        "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary",
       )
       .populate("interviewerId", "FirstName LastName Email Phone")
       .populate("ownerId", "firstName lastName email")
@@ -835,16 +858,18 @@ const getFeedbackByRoundId = async (req, res) => {
 
     if (interviewerId) {
       interviewerAddedQuestions = interviewerAddedQuestions.filter(
-        (q) => q.ownerId?.toString() === interviewerId
+        (q) => q.ownerId?.toString() === interviewerId,
       );
     }
 
     // Build position data
     let positionData = null;
-    if (interviewSection?.positionId) {
-      positionData = interviewSection.positionId.toObject();
-    } else if (feedbacks.length > 0 && feedbacks[0].positionId) {
-      positionData = feedbacks[0].positionId.toObject();
+    if (!isMockInterview) {
+      if (interviewSection?.positionId) {
+        positionData = interviewSection.positionId;
+      } else if (feedbacks.length > 0 && feedbacks[0].positionId) {
+        positionData = feedbacks[0].positionId;
+      }
     }
 
     // Final response
@@ -902,12 +927,13 @@ const getFeedbackByRoundId = async (req, res) => {
 // to get contact type of org or individual and datetime feedback by contactId and roundId
 const getFeedbackByContactIdRoundId = async (req, res) => {
   try {
-    const { contactId, roundId } = req.query;
+    const { contactId, roundId, interviewType } = req.query;
 
-    if (!contactId || !roundId) {
-      return res
-        .status(400)
-        .json({ error: "contactId and roundId are required" });
+    console.log("req.query", req.query);
+    if (!contactId || !roundId || !interviewType) {
+      return res.status(400).json({
+        error: "contactId and roundId and interviewType are required",
+      });
     }
 
     // 1. Get the contact
@@ -929,8 +955,16 @@ const getFeedbackByContactIdRoundId = async (req, res) => {
     //   return res.status(403).json({ error: "Owner mismatch between contact and tenant" });
     // }
 
+    // 3. Get round mock interview and interview round
+    let round = null;
+    if (interviewType === "mockinterview") {
+      round = await MockInterviewRound.findById(roundId);
+    } else {
+      round = await InterviewRounds.findById(roundId);
+    }
+
     // 3. Get round dateTime
-    const round = await InterviewRounds.findById(roundId);
+
     if (!round) {
       return res.status(404).json({ error: "Interview round not found" });
     }
@@ -1083,20 +1117,20 @@ const getFeedbackRoundId = async (req, res) => {
         };
 
         console.log(
-          `[FEEDBACK WEBHOOK] Triggering status update webhook for feedback ${updatedFeedback._id} with status: ${updatedFeedback.status}`
+          `[FEEDBACK WEBHOOK] Triggering status update webhook for feedback ${updatedFeedback._id} with status: ${updatedFeedback.status}`,
         );
         await triggerWebhook(
           EVENT_TYPES.FEEDBACK_STATUS_UPDATED,
           webhookPayload,
-          updatedFeedback.tenantId
+          updatedFeedback.tenantId,
         );
         console.log(
-          `[FEEDBACK WEBHOOK] Status update webhook sent successfully for feedback ${updatedFeedback._id}`
+          `[FEEDBACK WEBHOOK] Status update webhook sent successfully for feedback ${updatedFeedback._id}`,
         );
       } catch (webhookError) {
         console.error(
           "[FEEDBACK WEBHOOK] Error triggering feedback status update webhook:",
-          webhookError
+          webhookError,
         );
       }
     }

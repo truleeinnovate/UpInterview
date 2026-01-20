@@ -95,7 +95,7 @@ const FeedbackForm = ({
   // Extract URL data once
   const urlData = useMemo(
     () => extractUrlData(location.search),
-    [location.search]
+    [location.search],
   );
 
   // Feedback query (existing)
@@ -103,10 +103,11 @@ const FeedbackForm = ({
     data: feedbackDatas,
     isLoading: feedbackLoading,
     isError: feedbackError,
-  } = useFeedbackData(
-    !urlData.isCandidate ? urlData.interviewRoundId : null,
-    !urlData.isCandidate ? urlData.interviewerId : null
-  );
+  } = useFeedbackData({
+    roundId: !urlData.isCandidate ? urlData.interviewRoundId : null,
+    interviewerId: !urlData.isCandidate ? urlData.interviewerId : null,
+    interviewType: !urlData.isCandidate ? urlData.interviewType : null,
+  });
 
   // console.log("feedbackDatas", feedbackDatas);
 
@@ -117,8 +118,11 @@ const FeedbackForm = ({
   // console.log("feedbackData", feedbackDatas);
 
   // const feedbackData = React.useMemo(() => locationFeedback || {}, [locationFeedback]);
-  const feedbackId = feedbackData?._id || 
-    (Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0 ? feedbackData.feedbacks[0]?._id : null);
+  const feedbackId =
+    feedbackData?._id ||
+    (Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0
+      ? feedbackData.feedbacks[0]?._id
+      : null);
 
   const skillsData = feedbackData.skills || [];
 
@@ -139,14 +143,14 @@ const FeedbackForm = ({
   const [overallRating, setOverallRating] = useState(
     isEditMode || isViewMode || isAddMode
       ? overallImpressionTabData?.overallRating
-      : 0
+      : 0,
   );
 
   // Fixed: Proper initialization for communication rating with proper fallbacks
   const [communicationRating, setCommunicationRating] = useState(
     isEditMode || isViewMode || isAddMode
       ? overallImpressionTabData?.communicationRating
-      : 0
+      : 0,
   );
   // console.log("skillsData", overallImpressionTabData);
 
@@ -166,14 +170,14 @@ const FeedbackForm = ({
   const [recommendation, setRecommendation] = useState(
     isEditMode || isViewMode || isAddMode
       ? overallImpressionTabData.recommendation || "Maybe"
-      : "Maybe"
+      : "Maybe",
   );
 
   // General comments uses feedbackData.generalComments directly
   const [comments, setComments] = useState(
     isEditMode || isViewMode || isAddMode
       ? feedbackData?.generalComments || ""
-      : ""
+      : "",
   );
 
   // Merge answered and newly added
@@ -191,12 +195,12 @@ const FeedbackForm = ({
             const existingId =
               existingQ.questionId || existingQ._id || existingQ.id;
             return existingId === newId;
-          }
+          },
         );
         const isAddedByInterviewer =
           (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
         return isNotDuplicate && isAddedByInterviewer;
-      }
+      },
     );
 
     // const newlyAddedQuestions = (interviewerSectionData || []).filter(newQ => {
@@ -269,7 +273,7 @@ const FeedbackForm = ({
           // Merge answer data
           if (feedback.candidateAnswer) {
             const mappedType = fromBackendAnswerType(
-              feedback.candidateAnswer.answerType
+              feedback.candidateAnswer.answerType,
             );
             if (!question.isAnswered && mappedType) {
               question.isAnswered = mappedType;
@@ -447,7 +451,7 @@ const FeedbackForm = ({
         acc[k] = r;
         return acc;
       },
-      {}
+      {},
     );
 
     // console.log("overlayMap",overlayMap);
@@ -588,7 +592,7 @@ const FeedbackForm = ({
         });
       } else {
         console.warn(
-          "setInterviewerSectionData is not a function, cannot add question to round"
+          "setInterviewerSectionData is not a function, cannot add question to round",
         );
       }
     }
@@ -599,7 +603,7 @@ const FeedbackForm = ({
 
     // Remove question from interviewer section data
     setInterviewerSectionData((prev) =>
-      prev.filter((q) => (q.questionId || q.id) !== questionId)
+      prev.filter((q) => (q.questionId || q.id) !== questionId),
     );
 
     // Add to removed question IDs
@@ -666,7 +670,7 @@ const FeedbackForm = ({
         return prev.map((q) =>
           (q.questionId || q.id) === questionId
             ? { ...q, note: notes, notesBool: true }
-            : q
+            : q,
         );
       }
       // add minimal overlay so UI updates immediately
@@ -707,7 +711,7 @@ const FeedbackForm = ({
                 // Clear note when toggling off
                 note: !q.notesBool ? q.note : "",
               }
-            : q
+            : q,
         );
       }
       return [...prev, { questionId: id, notesBool: true }];
@@ -735,7 +739,7 @@ const FeedbackForm = ({
         return prev.map((q) =>
           (q.questionId || q.id) === questionId
             ? { ...q, isAnswered: value }
-            : q
+            : q,
         );
       }
       return [...prev, { questionId, isAnswered: value }];
@@ -752,7 +756,7 @@ const FeedbackForm = ({
         return prev.map((q) =>
           (q.questionId || q.id) === questionId
             ? { ...q, whyDislike: value, isLiked: "disliked" }
-            : q
+            : q,
         );
       }
       return [...prev, { questionId, whyDislike: value, isLiked: "disliked" }];
@@ -812,7 +816,7 @@ const FeedbackForm = ({
                 isLiked: q.isLiked === "liked" ? "" : "liked",
                 whyDislike: "", // Clear dislike reason when liking
               }
-            : q
+            : q,
         );
       }
 
@@ -854,7 +858,7 @@ const FeedbackForm = ({
                     onChange={(e) => {
                       onChangeDislikeRadioInput(
                         each.questionId || each.id,
-                        e.target.value
+                        e.target.value,
                       );
                     }}
                   />
@@ -921,7 +925,7 @@ const FeedbackForm = ({
                   onChange={(e) =>
                     onChangeRadioInput(
                       each.questionId || each.id,
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   className="whitespace-nowrap"
@@ -933,7 +937,7 @@ const FeedbackForm = ({
                   {option}
                 </label>
               </span>
-            )
+            ),
           )}
         </div>
       </div>
@@ -1166,13 +1170,13 @@ const FeedbackForm = ({
               Authorization: `Bearer ${authToken}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (!validationResponse.data.success) {
           console.log(
             "❌ Backend validation failed",
-            validationResponse.data.errors
+            validationResponse.data.errors,
           );
           // Update error state with backend errors
           if (validationResponse.data.errors) {
@@ -1188,7 +1192,7 @@ const FeedbackForm = ({
         // If backend validation fails, continue with frontend validation only
         console.warn(
           "Backend validation unavailable, proceeding with frontend validation only",
-          validationError
+          validationError,
         );
       }
 
@@ -1229,7 +1233,7 @@ const FeedbackForm = ({
               onError: (error) => {
                 alert("Failed to update feedback: " + error.message);
               },
-            }
+            },
           );
         } else {
           alert("No feedback ID found, cannot update.");
@@ -1388,16 +1392,16 @@ const FeedbackForm = ({
                   notify.success("Feedback saved as draft successfully!");
                 } else {
                   notify.error(
-                    "Failed to save feedback as draft: " + data.message
+                    "Failed to save feedback as draft: " + data.message,
                   );
                 }
               },
               onError: (error) => {
                 notify.error(
-                  "Failed to save feedback as draft: " + error.message
+                  "Failed to save feedback as draft: " + error.message,
                 );
               },
-            }
+            },
           );
         } else {
           notify.error("No feedback ID found, cannot save draft.");
@@ -1488,7 +1492,7 @@ const FeedbackForm = ({
                 window.open(
                   feedbackDatas?.interviewRound?.meetingId,
                   // decodedData.meetLink,
-                  "_blank"
+                  "_blank",
                 )
               }
               className="text-sm bg-custom-blue hover:bg-custom-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
@@ -1541,7 +1545,7 @@ const FeedbackForm = ({
               <div className="flex items-center">
                 {renderStarRating(
                   communicationRating,
-                  handleCommunicationRatingChange
+                  handleCommunicationRatingChange,
                 )}
                 <span className="ml-2 text-sm text-gray-600">
                   {communicationRating}/5
@@ -1617,7 +1621,7 @@ const FeedbackForm = ({
                       />
                       <div className="flex items-center">
                         {renderStarRating(skill.rating, (rating) =>
-                          handleSkillChange(index, "rating", rating)
+                          handleSkillChange(index, "rating", rating),
                         )}
                         <span className="ml-2 text-sm text-gray-600">
                           {skill.rating}/5
@@ -1738,7 +1742,9 @@ const FeedbackForm = ({
                           }`}
                           onClick={() =>
                             handleLikeToggle(
-                              question.questionId || question.id || question._id
+                              question.questionId ||
+                                question.id ||
+                                question._id,
                             )
                           }
                           disabled={!isViewMode}
@@ -1754,7 +1760,9 @@ const FeedbackForm = ({
                           style={{ cursor: "pointer" }}
                           onClick={() =>
                             handleDislikeToggle(
-                              question.questionId || question.id || question._id
+                              question.questionId ||
+                                question.id ||
+                                question._id,
                             )
                           }
                           disabled={!isViewMode}
@@ -1858,7 +1866,9 @@ const FeedbackForm = ({
                           className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
                           onClick={() =>
                             onClickAddNote(
-                              question.questionId || question.id || question._id
+                              question.questionId ||
+                                question.id ||
+                                question._id,
                             )
                           }
                         >
@@ -1872,7 +1882,7 @@ const FeedbackForm = ({
                           }`}
                           onClick={() =>
                             handleLikeToggle(
-                              question.questionId || question._id
+                              question.questionId || question._id,
                             )
                           }
                         >
@@ -1887,7 +1897,7 @@ const FeedbackForm = ({
                           style={{ cursor: "pointer" }}
                           onClick={() =>
                             handleDislikeToggle(
-                              question.questionId || question._id
+                              question.questionId || question._id,
                             )
                           }
                         >
@@ -1919,7 +1929,7 @@ const FeedbackForm = ({
                                 onChange={(e) =>
                                   onChangeInterviewQuestionNotes(
                                     question.questionId || question.id,
-                                    e.target.value.slice(0, 250)
+                                    e.target.value.slice(0, 250),
                                   )
                                 }
                                 placeholder="Add your note here"

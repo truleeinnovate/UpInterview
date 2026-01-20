@@ -25,6 +25,10 @@ import { extractUrlData } from "../../apiHooks/useVideoCall";
 import { useLocation } from "react-router-dom";
 import { useInterviews } from "../../apiHooks/useInterviews";
 import { config } from "../../config";
+import {
+  useMockInterviewById,
+  useUpdateRoundStatus,
+} from "../../apiHooks/useMockInterviews";
 const CandidateView = () =>
   // {
   // onBack,
@@ -55,20 +59,48 @@ const CandidateView = () =>
     // const navigate = useNavigate();
 
     const { useInterviewDetails, updateRoundStatus } = useInterviews();
+    // mock interview
+    const updateMockRoundStatus = useUpdateRoundStatus();
 
     // Extract URL data once
     const urlData = useMemo(
       () => extractUrlData(location.search),
-      [location.search]
+      [location.search],
     );
 
-    const { data, isLoading } = useInterviewDetails({
-      roundId: urlData.interviewRoundId,
+    const isMockInterview = urlData?.interviewType === "mockinterview";
+
+    // const { data, isLoading } = useInterviewDetails({
+    //   roundId: urlData.interviewRoundId,
+    // });
+
+    // ✅ ALWAYS call hooks
+    // In CandidateView.jsx, fix the hooks usage:
+    const {
+      mockInterview: mockinterview,
+      isMockLoading,
+      isError: isMockError,
+    } = useMockInterviewById({
+      mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+      enabled: isMockInterview,
     });
 
-    const candidateData = data?.candidateId || {};
-    const positionData = data?.positionId || {};
-    const interviewRoundData = data?.rounds[0] || {};
+    const {
+      data: interviewData,
+      isLoading: isInterviewLoading,
+      isError: interviewError,
+    } = useInterviewDetails({
+      roundId: !isMockInterview ? urlData.interviewRoundId : null,
+      enabled: !isMockInterview,
+    });
+    // console.log("interviewData", interviewData);
+    // console.log("mockinterview", mockinterview);
+
+    const candidateData = interviewData?.candidateId || mockinterview || {};
+    const positionData = isMockInterview ? interviewData?.positionId : {};
+    const interviewRoundData =
+      interviewData?.rounds[0] || mockinterview?.rounds[0] || {};
+    // console.log("interviewRoundData", interviewRoundData);
 
     // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
     const parseCustomDateTime = (dateTimeStr) => {
@@ -100,7 +132,7 @@ const CandidateView = () =>
 
       // Parse start and end times
       const { start: interviewStart, end: interviewEnd } = parseCustomDateTime(
-        interviewRoundData.dateTime
+        interviewRoundData.dateTime,
       );
       if (!interviewStart || !interviewEnd) return;
 
@@ -175,13 +207,11 @@ const CandidateView = () =>
 
               if (videoTracks.length > 0) {
                 videoTrackRef.current = videoTracks[0];
-                setVideoTrack(videoTracks[0]);
               }
 
               if (audioTracks.length > 0) {
                 audioTrackRef.current = audioTracks[0];
                 audioTrackRef.current.enabled = micOn;
-                setAudioTrack(audioTracks[0]);
               }
             }
           }
@@ -225,7 +255,6 @@ const CandidateView = () =>
         micStreamRef.current = null;
       };
     }, [webcamOn, micOn, interviewRoundData?.meetPlatform]);
-
     // Toggle microphone
     const toggleMic = async () => {
       try {
@@ -287,6 +316,7 @@ const CandidateView = () =>
 
     // handling candidate joined or not functionlity
     const handleCandidateEnterMeeting = async () => {
+      let response = null;
       const payload = {
         role: "Candidate",
         userId: candidateData?._id,
@@ -295,9 +325,16 @@ const CandidateView = () =>
         // action: interviewRoundData?.status,
       };
 
-      // console.log("Candidate enter meeting payload:", payload);
-      const response = await updateRoundStatus(payload);
-
+      if (urlData?.interviewType === "mockinterview") {
+        response = await updateMockRoundStatus.mutateAsync({
+          mockInterviewId: mockinterview?._id,
+          roundId: interviewRoundData?._id,
+          payload,
+        });
+      } else {
+        // console.log("Candidate enter meeting payload:", payload);
+        response = await updateRoundStatus(payload);
+      }
       // console.log("Candidate enter meeting response:", response);
 
       if (response?.success === true) {
@@ -418,7 +455,7 @@ const CandidateView = () =>
                     <div className="mt-3">
                       {(() => {
                         const { start, end } = parseCustomDateTime(
-                          interviewRoundData?.dateTime
+                          interviewRoundData?.dateTime,
                         );
                         const now = new Date();
                         const diffMs = start - now;
@@ -437,17 +474,17 @@ const CandidateView = () =>
                         } else if (diffMs > fifteenMinutes) {
                           // Within 12 hours but not yet in 15 min window
                           text = `Interview is scheduled (starts in ${Math.floor(
-                            diffHours
+                            diffHours,
                           )}h ${Math.floor(diffMinutes % 60)}m)`;
                           color = "text-blue-600 bg-blue-100";
-                        // } else if (diffMs > 0 && diffMs <= fifteenMinutes) {
-                        //   // 15 minutes before start
-                        //   text = "Interview started, please join";
-                        //   color = "text-green-600 bg-green-100";
+                          // } else if (diffMs > 0 && diffMs <= fifteenMinutes) {
+                          //   // 15 minutes before start
+                          //   text = "Interview started, please join";
+                          //   color = "text-green-600 bg-green-100";
                         } else if (now >= start && now <= end) {
                           // During interview
                           const minsLeft = Math.floor(
-                            (end - now) / (1000 * 60)
+                            (end - now) / (1000 * 60),
                           );
                           text = `Interview in progress (ends in ${minsLeft}m)`;
                           color = "text-green-600 bg-green-100";
@@ -527,7 +564,7 @@ const CandidateView = () =>
                           <p className="sm:text-sm md:text-sm text-base font-semibold text-gray-900">
                             {formatToLocalTime(
                               interviewRoundData?.dateTime,
-                              "start-only"
+                              "start-only",
                             )}
                             {/* {getTimeUntilInterview(feedbackData?.round?.dateTime)} */}
                           </p>

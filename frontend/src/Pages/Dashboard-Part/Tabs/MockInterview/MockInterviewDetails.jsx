@@ -45,7 +45,9 @@ import { useRef } from "react";
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
-  const { mockInterview: mockinterview, isLoading } = useMockInterviewById(id);
+  const { mockInterview: mockinterview, isLoading } = useMockInterviewById({
+    mockInterviewId: id,
+  });
 
   const navigate = useNavigate();
 
@@ -95,7 +97,7 @@ const MockInterviewDetails = () => {
       setCandidate(mockinterview || null);
       const roundsData = mockinterview?.rounds;
       setRounds(
-        Array.isArray(roundsData) ? roundsData : roundsData ? [roundsData] : []
+        Array.isArray(roundsData) ? roundsData : roundsData ? [roundsData] : [],
       );
     }
   }, [mockinterview]);
@@ -210,7 +212,7 @@ const MockInterviewDetails = () => {
     newStatus,
     reasonValue = null,
     comment = null,
-    roundOutcome = null
+    roundOutcome = null,
   ) => {
     // For cancellation/no-show, we need to ensure we pass a reason
     if ((newStatus === "Cancelled" || newStatus === "NoShow") && !reasonValue) {
@@ -398,7 +400,7 @@ const MockInterviewDetails = () => {
         "Evaluated",
         reason,
         comment || null,
-        roundOutcome
+        roundOutcome,
       );
       setEvaluatedReasonModalOpen(false);
     } catch (error) {
@@ -454,8 +456,8 @@ const MockInterviewDetails = () => {
   const normalizedRounds = Array.isArray(rounds)
     ? rounds
     : rounds
-    ? [rounds]
-    : [];
+      ? [rounds]
+      : [];
 
   console.log(mockinterview);
 
@@ -1107,13 +1109,13 @@ const MockInterviewDetails = () => {
                                   <div className="flex items-center mt-1 text-sm text-gray-600">
                                     <span className="mr-2">
                                       {capitalizeFirstLetter(
-                                        round?.interviewType
+                                        round?.interviewType,
                                       )}
                                     </span>
                                     <span>•</span>
                                     <span className="mx-2">
                                       {capitalizeFirstLetter(
-                                        round?.interviewMode
+                                        round?.interviewMode,
                                       )}
                                     </span>
                                     <span className="mr-2">•</span>
@@ -1186,14 +1188,14 @@ const MockInterviewDetails = () => {
                   {completedReasonModalOpen
                     ? "Complete"
                     : selectedReasonModalOpen
-                    ? "Select"
-                    : confirmAction === "Skipped"
-                    ? "mark as Skipped"
-                    : confirmAction === "FeedbackPending"
-                    ? "mark as Feedback Pending"
-                    : confirmAction === "Scheduled"
-                    ? "mark as Scheduled"
-                    : "Reject"}{" "}
+                      ? "Select"
+                      : confirmAction === "Skipped"
+                        ? "mark as Skipped"
+                        : confirmAction === "FeedbackPending"
+                          ? "mark as Feedback Pending"
+                          : confirmAction === "Scheduled"
+                            ? "mark as Scheduled"
+                            : "Reject"}{" "}
                   this round?
                 </h3>
                 <div className="flex justify-end space-x-3">
@@ -1221,7 +1223,7 @@ const MockInterviewDetails = () => {
                 </div>
               </div>
             </div>,
-            document.body
+            document.body,
             // v1.0.5 -------------------------------------------------------------------------------->
           )}
 
@@ -1338,7 +1340,7 @@ const MockInterviewDetails = () => {
                 </div>
               </div>
             </div>,
-            document.body
+            document.body,
             // v1.0.5 ------------------------------------------------------------------------------------------>
           )}
 
