@@ -19,7 +19,7 @@ import {
   useTeamsQuery,
   useUpdateTeam,
 } from "../../../../../apiHooks/useInterviewerGroups";
-import { UserGroupIcon } from "@heroicons/react/24/outline";
+import { UserGroupIcon, UsersIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 
 // Team color options with hex values
 const TEAM_COLORS = [
@@ -169,7 +169,7 @@ const TeamFormPopup = () => {
   };
 
   const title = id ? "Edit Team" : "Create Team";
-  const subtitle = id ? "Update your interviewer team" : "Create a new interviewer team";
+  const selectedColorHex = TEAM_COLORS.find(c => c.value === formData.color)?.hex || "#14b8a6";
 
   return (
     <SidebarPopup
@@ -182,112 +182,25 @@ const TeamFormPopup = () => {
         </div>
       )}
 
-      <div className="sm:p-0 p-6 mb-10">
-        <p className="text-gray-500 text-sm mb-6">{subtitle}</p>
-
+      <div className="sm:p-0 p-4 mb-10">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Team Information Section */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <UserGroupIcon className="h-5 w-5 text-gray-600" />
-              <h3 className="text-lg font-medium">Team Information</h3>
-            </div>
 
-            <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-              {/* Team Name */}
-              <InputField
-                label="Team Name"
-                type="text"
-                name="name"
-                id="name"
-                placeholder="Frontend Team"
-                value={formData.name}
-                error={formErrors.name}
-                onChange={handleInputChange}
-                required
-              />
-
-              {/* Department */}
-              <DropdownWithSearchField
-                label="Department"
-                name="department"
-                options={DEPARTMENT_OPTIONS}
-                value={formData.department}
-                onChange={handleInputChange}
-                placeholder="Select Department"
-              />
-
-              {/* Team Lead */}
-              <div>
-                <DropdownWithSearchField
-                  label="Team Lead"
-                  name="lead_id"
-                  options={leadOptions}
-                  value={formData.lead_id}
-                  onChange={handleInputChange}
-                  placeholder="Select team lead"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Note: Team lead will be automatically added as a team member.
-                </p>
+          {/* Header with Active Toggle */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: selectedColorHex + '20' }}
+              >
+                <UserGroupIcon className="h-5 w-5" style={{ color: selectedColorHex }} />
               </div>
-
-              {/* Team Color */}
               <div>
-                {/* Label and circles on same line */}
-                <div className="flex items-center gap-2 mb-1">
-                  <label className="text-sm font-medium text-gray-700">
-                    Team Color
-                  </label>
-                  {(() => {
-                    const selectedColor = TEAM_COLORS.find(c => c.value === formData.color) || TEAM_COLORS[0];
-                    const otherColors = TEAM_COLORS.filter(c => c.value !== formData.color).slice(0, 2);
-                    const displayColors = [selectedColor, ...otherColors];
-
-                    return displayColors.map((colorOpt) => (
-                      <button
-                        key={colorOpt.value}
-                        type="button"
-                        onClick={() =>
-                          setFormData((prev) => ({ ...prev, color: colorOpt.value }))
-                        }
-                        className={`w-5 h-5 rounded-full border-2 transition-all ${formData.color === colorOpt.value
-                          ? "border-gray-700 ring-2 ring-offset-1 ring-gray-400"
-                          : "border-gray-200 hover:border-gray-400"
-                          }`}
-                        style={{ backgroundColor: colorOpt.hex }}
-                        title={colorOpt.label}
-                      />
-                    ));
-                  })()}
-                </div>
-                {/* Dropdown */}
-                <DropdownWithSearchField
-                  name="color"
-                  options={TEAM_COLORS.map(c => ({ value: c.value, label: c.label }))}
-                  value={formData.color}
-                  onChange={handleInputChange}
-                  placeholder="Select color"
-                />
+                <h3 className="text-lg font-semibold text-gray-900">Team Details</h3>
+                <p className="text-sm text-gray-500">Configure your team settings</p>
               </div>
             </div>
-
-            {/* Description - Full Width */}
-            <div className="mt-4">
-              <DescriptionField
-                label="Description"
-                name="description"
-                id="description"
-                placeholder="Describe the team's focus and responsibilities..."
-                value={formData.description}
-                onChange={handleInputChange}
-                error={formErrors.description}
-                rows={3}
-              />
-            </div>
-
-            {/* Active Team Toggle */}
-            <div className="mt-4 flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Active</span>
               <button
                 type="button"
                 onClick={() =>
@@ -304,43 +217,136 @@ const TeamFormPopup = () => {
                     }`}
                 />
               </button>
-              <span className="text-sm font-medium text-gray-700">Active team</span>
             </div>
           </div>
 
+          {/* Team Name & Color Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-1 gap-4">
+            <InputField
+              label="Team Name"
+              type="text"
+              name="name"
+              id="name"
+              placeholder="e.g. Frontend Engineers"
+              value={formData.name}
+              error={formErrors.name}
+              onChange={handleInputChange}
+              required
+            />
+
+            {/* Team Color Picker */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Team Color
+              </label>
+              <div className="flex items-center gap-2 h-[42px] px-3 border border-gray-300 rounded-lg bg-white">
+                {TEAM_COLORS.map((colorOpt) => (
+                  <button
+                    key={colorOpt.value}
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, color: colorOpt.value }))
+                    }
+                    className={`w-6 h-6 rounded-full transition-all flex-shrink-0 ${formData.color === colorOpt.value
+                      ? "ring-2 ring-offset-1 ring-gray-400 scale-110"
+                      : "hover:scale-105"
+                      }`}
+                    style={{ backgroundColor: colorOpt.hex }}
+                    title={colorOpt.label}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Department & Team Lead Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-1 gap-4">
+            <DropdownWithSearchField
+              label="Department"
+              name="department"
+              options={DEPARTMENT_OPTIONS}
+              value={formData.department}
+              onChange={handleInputChange}
+              placeholder="Select department"
+            />
+
+            <div>
+              <DropdownWithSearchField
+                label="Team Lead"
+                name="lead_id"
+                options={leadOptions}
+                value={formData.lead_id}
+                onChange={handleInputChange}
+                placeholder="Select team lead"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Auto-added as team member
+              </p>
+            </div>
+          </div>
+
+          {/* Description */}
+          <DescriptionField
+            label="Description"
+            name="description"
+            id="description"
+            placeholder="Describe the team's focus, responsibilities, and expertise areas..."
+            value={formData.description}
+            onChange={handleInputChange}
+            error={formErrors.description}
+            rows={3}
+          />
+
           {/* Team Members Section */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-2">
-              <UserGroupIcon className="h-5 w-5 text-gray-600" />
-              <h3 className="text-lg font-medium">Team Members</h3>
+          <div className="pt-2">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <UsersIcon className="h-5 w-5 text-gray-600" />
+                <h3 className="text-lg font-semibold text-gray-900">Team Members</h3>
+              </div>
+              <span className="text-sm font-medium px-3 py-1 rounded-full bg-custom-blue/10 text-custom-blue">
+                {formData.member_ids?.length || 0} selected
+              </span>
             </div>
             <p className="text-sm text-gray-500 mb-4">
-              Select interviewers to add to this team. Team members can be assigned to interviews collectively.
+              Select team members who can be assigned to interviews together
             </p>
 
             {formErrors.members && (
               <p className="text-red-500 text-sm mb-3">{formErrors.members}</p>
             )}
 
-            {/* Member cards grid */}
-            <div className="max-h-80 overflow-y-auto">
+            {/* Member Grid */}
+            <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-xl p-3 bg-gray-50">
               {memberOptions.length > 0 ? (
-                <div className="grid sm:grid-cols-1 grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-2">
                   {memberOptions.map((member) => {
                     const isChecked = formData.member_ids.includes(member.value);
                     const initial = (member.label?.charAt(0) || "?").toUpperCase();
-                    const colors = ["bg-teal-600", "bg-blue-600", "bg-purple-600", "bg-pink-600", "bg-orange-600", "bg-green-600"];
+                    const colors = ["bg-teal-500", "bg-blue-500", "bg-purple-500", "bg-pink-500", "bg-orange-500", "bg-green-500"];
                     const colorIndex = (member.label?.charCodeAt(0) || 0) % colors.length;
                     const avatarColor = colors[colorIndex];
 
                     return (
                       <label
                         key={member.value}
-                        className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${isChecked
-                          ? "border-custom-blue bg-custom-blue/5"
-                          : "border-gray-200 bg-white hover:border-gray-300"
+                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${isChecked
+                          ? "bg-white border-2 border-custom-blue shadow-sm"
+                          : "bg-white border border-transparent hover:border-gray-200"
                           }`}
                       >
+                        <div className="relative">
+                          <div className={`w-9 h-9 rounded-full ${avatarColor} flex items-center justify-center text-white font-semibold text-sm`}>
+                            {initial}
+                          </div>
+                          {isChecked && (
+                            <CheckCircleIcon className="absolute -bottom-1 -right-1 w-4 h-4 text-custom-blue bg-white rounded-full" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 text-sm truncate">{member.label}</div>
+                          <div className="text-xs text-gray-500 truncate">{member.role}</div>
+                        </div>
                         <input
                           type="checkbox"
                           checked={isChecked}
@@ -348,39 +354,29 @@ const TeamFormPopup = () => {
                             setFormData((prev) => {
                               const currentIds = prev.member_ids || [];
                               const newIds = isChecked
-                                ? currentIds.filter((id) => id !== member.value)
+                                ? currentIds.filter((memberId) => memberId !== member.value)
                                 : [...currentIds, member.value];
                               return { ...prev, member_ids: newIds };
                             });
                           }}
-                          className="h-4 w-4 rounded border-gray-300 accent-custom-blue focus:ring-custom-blue"
+                          className="hidden"
                         />
-                        <div className={`w-9 h-9 rounded-full ${avatarColor} flex items-center justify-center text-white font-semibold text-sm flex-shrink-0`}>
-                          {initial}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 truncate">{member.label}</div>
-                          <div className="text-xs text-gray-500 truncate">{member.role}</div>
-                        </div>
                       </label>
                     );
                   })}
                 </div>
               ) : (
-                <div className="p-8 text-center text-gray-500 bg-white rounded-lg border border-gray-200">
-                  No interviewers found
+                <div className="p-8 text-center text-gray-500">
+                  <UsersIcon className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <p>No team members available</p>
+                  <p className="text-xs mt-1">Add interviewers first to build your team</p>
                 </div>
               )}
             </div>
-
-            {/* Show selected count */}
-            <p className="text-sm text-gray-500 mt-2">
-              {formData.member_ids?.length || 0} members selected
-            </p>
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-3 pt-2">
+          <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
               onClick={() => navigate(`/account-settings/my-teams`)}

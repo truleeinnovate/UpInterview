@@ -344,7 +344,7 @@ const PositionSlideDetails = () => {
                         <Briefcase className="w-4 h-4 text-custom-blue mt-0.5" />
                         <div>
                           <p className="text-sm text-gray-500">Employment Type</p>
-                          <p className="font-medium text-gray-800">{position?.employmentType || "Full-time"}</p>
+                          <p className="font-medium text-gray-800">{position?.employmentType ? position.employmentType.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') : "N/A"}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
