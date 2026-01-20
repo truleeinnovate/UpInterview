@@ -10,6 +10,13 @@ const validatePhoneNumber = (phone) => {
   return re.test(String(phone));
 };
 
+const validateLinkedInUrl = (url) => {
+  if (!url) return true;
+
+  const re = /^https?:\/\/(www\.)?linkedin\.com\/.*$/i;
+  return re.test(String(url).trim());
+};
+
 const getErrorMessage = (field, value, formData) => {
   const messages = {
     FirstName: "First Name is required",
@@ -29,6 +36,7 @@ const getErrorMessage = (field, value, formData) => {
     invalidPhone: "Invalid Phone number",
     CurrentRole: "Current Role is required",
     // Technology: "Technology is required",
+    linkedInUrl: "Invalid Linkedin url",
   };
 
   if (!value) {
@@ -41,6 +49,9 @@ const getErrorMessage = (field, value, formData) => {
 
   if (field === "Phone" && !validatePhoneNumber(value)) {
     return messages.invalidPhone;
+  }
+  if (field === "linkedInUrl" && !validateLinkedInUrl(value)) {
+    return messages.linkedInUrl;
   }
   if (field === "Technology" && !value) {
     return messages.Technology;
@@ -127,7 +138,7 @@ const validateCandidateForm = (formData, entries, errors) => {
     ];
     invalidRows.forEach(({ index, missingFields }) => {
       messages.push(
-        `Row ${index + 1}: Please fill in ${missingFields.join(", ")}`
+        `Row ${index + 1}: Please fill in ${missingFields.join(", ")}`,
       );
     });
     newErrors.skills = messages.join("; ");

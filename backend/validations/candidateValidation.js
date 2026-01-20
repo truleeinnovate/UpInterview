@@ -76,7 +76,7 @@ const candidateValidationSchema = Joi.object({
         skill: Joi.string().required(),
         experience: Joi.string().required(),
         expertise: Joi.string().required(),
-      })
+      }),
     )
     .min(1)
     .required()
@@ -85,6 +85,15 @@ const candidateValidationSchema = Joi.object({
       "any.required": "Skills are required",
     }),
   externalId: Joi.string().optional().allow("", null),
+  linkedInUrl: Joi.string()
+    .uri({ scheme: ["http", "https"] })
+    .pattern(/^https?:\/\/(www\.)?linkedin\.com\/.*$/)
+    .optional()
+    .allow("", null)
+    .messages({
+      "string.uri": "Invalid LinkedIn URL",
+      "string.pattern.base": "Please enter a valid LinkedIn profile URL",
+    }),
 });
 
 // 🔹 Add custom validation for RelevantExperience <= CurrentExperience
@@ -119,7 +128,7 @@ const validateCandidateData = (data) => {
 // For PATCH (partial updates) → same rules but all fields optional
 const candidateUpdateSchema = candidateValidationSchema.fork(
   Object.keys(candidateValidationSchema.describe().keys),
-  (schema) => schema.optional()
+  (schema) => schema.optional(),
 );
 
 module.exports = { validateCandidateData, candidateUpdateSchema };

@@ -11,15 +11,16 @@ import {
   Eye,
   Pencil,
 } from "lucide-react";
-import Header from "../../../../../Components/Shared/Header/Header";
-import { usePermissions } from "../../../../../Context/PermissionsContext";
-import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField";
+import Header from "../../../../Components/Shared/Header/Header";
+import { usePermissions } from "../../../../Context/PermissionsContext";
+import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import {
   useInterviewerTags,
   useDeleteInterviewerTag,
-} from "../../../../../apiHooks/InterviewerTags/useInterviewerTags";
-import { notify } from "../../../../../services/toastService";
+} from "../../../../apiHooks/InterviewerTags/useInterviewerTags";
+import { notify } from "../../../../services/toastService";
 import { createPortal } from "react-dom";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const InterviewerTags = () => {
   const navigate = useNavigate();
@@ -76,15 +77,15 @@ const InterviewerTags = () => {
   }, {});
 
   const handleCreateTag = (team) => {
-    navigate(`/account-settings/interviewer-tags/tag-form`);
+    navigate(`/interviewer-tags/tag-form`);
   };
 
   const handleViewTag = (team) => {
-    navigate(`/account-settings/interviewer-tags/tag-details/${team._id}`);
+    navigate(`/interviewer-tags/tag-details/${team._id}`);
   };
 
   const handleEditTag = (team) => {
-    navigate(`/account-settings/interviewer-tags/tag-edit/${team._id}`);
+    navigate(`/interviewer-tags/tag-edit/${team._id}`);
   };
 
   const handleDeleteTag = (team) => {
@@ -94,21 +95,39 @@ const InterviewerTags = () => {
 
   return (
     <>
-      <div className="p-4 max-w-7xl mx-auto mb-8">
+      <div className="px-8 p-6 mb-8">
         {/* Info Banner */}
-        <div className="bg-[rgb(33,121,137)]/5 border border-[rgb(33,121,137)]/20 rounded-lg p-4 flex gap-3">
-          <Info className="h-5 w-5 text-[rgb(33,121,137)] flex-shrink-0" />
-          <div className="text-sm text-slate-700">
-            <strong className="text-[rgb(33,121,137)]">Interviewer Tags</strong>
+        <div className="bg-teal-50 border border-teal-200 p-4 rounded-lg sm:mt-6 flex gap-3">
+          <div className="flex-shrink-0">
+            <svg
+              className="h-5 w-5 text-teal-600"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <p className="text-sm text-gray-700">
+            <strong className="font-semibold text-teal-700">
+              Interviewer Tags
+            </strong>{" "}
             are the recommended way to categorize and match interviewers to
-            specific interview rounds...
+            specific interview rounds. Tags represent expertise areas like
+            skills, certifications, experience levels, or languages. When
+            setting up interview templates or positions, you can specify which
+            tags are required for each round, and the system will automatically
+            suggest matching interviewers. teams alongside{" "}
             <div className="mt-2 flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-              <span>
-                <strong>Best for:</strong> Granular expertise matching...
-              </span>
+              <strong>Best for:</strong> Granular expertise matching, flexible
+              interviewer assignment, cross-functional interview panels
             </div>
-          </div>
+          </p>
         </div>
 
         {/* Header */}
@@ -228,10 +247,10 @@ const InterviewerTags = () => {
                             </h3>
                             {tag.description && (
                               <p
-                                title={tag?.description}
+                                title={capitalizeFirstLetter(tag?.description)}
                                 className="text-sm text-slate-500 mt-0.5 truncate max-w-[200px]"
                               >
-                                {tag.description}
+                                {capitalizeFirstLetter(tag.description)}
                               </p>
                             )}
                           </div>
@@ -279,7 +298,7 @@ const InterviewerTags = () => {
                       <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Users className="w-4 h-4 text-slate-400" />
-                          <span>{getInterviewerCount(tag)} interviewers</span>
+                          <span>{getInterviewerCount(tag)} Interviewers</span>
                         </div>
                         <span
                           className={`text-xs font-bold px-2 py-0.5 rounded-full ${

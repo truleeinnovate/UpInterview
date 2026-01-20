@@ -236,15 +236,15 @@ const CompanyForm = lazy(
 
 const InterviewerTags = lazy(
   () =>
-    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewerTags/InterviewerTags.jsx"),
+    import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerTags.jsx"),
 );
 const InterviewerTagDetails = lazy(
   () =>
-    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewerTags/InterviewerTagDetails.jsx"),
+    import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerTagDetails.jsx"),
 );
 const InterviewerTagsForm = lazy(
   () =>
-    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewerTags/InterviewerTagsForm.jsx"),
+    import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerTagsForm.jsx"),
 );
 
 // Code Editor
@@ -325,15 +325,15 @@ const Usage = lazy(
 );
 const InterviewerGroups = lazy(
   () =>
-    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroups"),
+    import("./Pages/Dashboard-Part/Tabs/InterviewGroups/InterviewerGroups.jsx"),
 );
 const InterviewerGroupFormPopup = lazy(
   () =>
-    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewerGroupFormPopup"),
+    import("./Pages/Dashboard-Part/Tabs/InterviewGroups/InterviewerGroupFormPopup.jsx"),
 );
 const InterviewGroupDetails = lazy(
   () =>
-    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewGroups/InterviewGroupDetails"),
+    import("./Pages/Dashboard-Part/Tabs/InterviewGroups/InterviewGroupDetails.jsx"),
 );
 const UsersLayout = lazy(
   () =>
@@ -1013,37 +1013,6 @@ const MainAppRoutes = ({
                   <Route path="documents" element={<DocumentsSection />} />
                 </Route>
               )}
-              {hasPermission("MyTeams") && (
-                <Route path="my-teams" element={<InterviewerGroups />}>
-                  <Route index element={null} />
-                  <Route
-                    path="team-form"
-                    element={<InterviewerGroupFormPopup />}
-                  />
-                  <Route
-                    path="team-edit/:id"
-                    element={<InterviewerGroupFormPopup />}
-                  />
-                  <Route
-                    path="team-details/:id"
-                    element={<InterviewGroupDetails />}
-                  />
-                </Route>
-              )}
-              {hasPermission("InterviewerTags") && (
-                <Route path="interviewer-tags" element={<InterviewerTags />}>
-                  <Route index element={null} />
-                  <Route
-                    path="tag-form"
-                    element={<InterviewerTagsForm />}
-                  />
-                  <Route
-                    path="tag-edit/:id"
-                    element={<InterviewerTagsForm />}
-                  />
-                  <Route path="tag-details/:id" element={<InterviewerTagDetails />} />
-                </Route>
-              )}
               {hasPermission("Users") && (
                 <Route path="users" element={<UsersLayout />}>
                   {hasPermission("Users", "Create") && (
@@ -1254,6 +1223,36 @@ const MainAppRoutes = ({
                 <Route path="new" element={<CompanyForm mode="Create" />} />
                 <Route path="view/:id" element={<CompanyDetails />} />
                 <Route path="edit/:id" element={<CompanyForm mode="Edit" />} />
+              </Route>
+            )}
+
+            {hasPermission("MyTeams") && (
+              <Route path="/my-teams" element={<InterviewerGroups />}>
+                <Route index element={null} />
+                <Route
+                  path="team-form"
+                  element={<InterviewerGroupFormPopup />}
+                />
+                <Route
+                  path="team-edit/:id"
+                  element={<InterviewerGroupFormPopup />}
+                />
+                <Route
+                  path="team-details/:id"
+                  element={<InterviewGroupDetails />}
+                />
+              </Route>
+            )}
+
+            {hasPermission("InterviewerTags") && (
+              <Route path="/interviewer-tags" element={<InterviewerTags />}>
+                <Route index element={null} />
+                <Route path="tag-form" element={<InterviewerTagsForm />} />
+                <Route path="tag-edit/:id" element={<InterviewerTagsForm />} />
+                <Route
+                  path="tag-details/:id"
+                  element={<InterviewerTagDetails />}
+                />
               </Route>
             )}
 
