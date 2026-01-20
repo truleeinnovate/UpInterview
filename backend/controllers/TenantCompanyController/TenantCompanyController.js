@@ -20,27 +20,84 @@ const { TenantCompany } = require("../../models/TenantCompany/TenantCompany");
 //   }
 // };
 
+// const createCompany = async (req, res) => {
+//   try {
+//     const { name, industry, tenantId, status } = req.body;
+
+//     if (!tenantId) {
+//       return res.status(400).json({ message: "tenantId is required." });
+//     }
+
+//     const newCompany = new TenantCompany({
+//       name,
+//       industry,
+//       tenantId,
+//       status: status || "active",
+//     });
+
+//     const savedCompany = await newCompany.save();
+//     res.status(201).json(savedCompany);
+//   } catch (error) {
+//     res
+//       .status(400)
+//       .json({ message: "Error creating company", error: error.message });
+//   }
+// };
+
 const createCompany = async (req, res) => {
   try {
-    const { name, industry, tenantId, status } = req.body;
+    // 1. Destructure all fields from the schema
+    const {
+      name,
+      industry,
+      tenantId,
+      status,
+      website,
+      primaryContactName,
+      primaryContactEmail,
+      description,
+    } = req.body;
 
+    // 2. Validation
     if (!tenantId) {
       return res.status(400).json({ message: "tenantId is required." });
     }
 
+    if (!name) {
+      return res.status(400).json({ message: "Company name is required." });
+    }
+
+    // 3. Optional: Check for existing company with same name under this tenant
+    const existingCompany = await TenantCompany.findOne({ name, tenantId });
+    if (existingCompany) {
+      return res
+        .status(409)
+        .json({
+          message: "A company with this name already exists for your account.",
+        });
+    }
+
+    // 4. Create new instance with all schema fields
     const newCompany = new TenantCompany({
       name,
       industry,
       tenantId,
       status: status || "active",
+      website,
+      primaryContactName,
+      primaryContactEmail,
+      description,
     });
 
     const savedCompany = await newCompany.save();
+
+    // 5. Success response
     res.status(201).json(savedCompany);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error creating company", error: error.message });
+    res.status(400).json({
+      message: "Error creating company",
+      error: error.message,
+    });
   }
 };
 
@@ -146,7 +203,7 @@ const updateCompany = async (req, res) => {
     const updatedCompany = await TenantCompany.findOneAndUpdate(
       { _id: id, tenantId },
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedCompany) {

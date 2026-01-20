@@ -7,21 +7,23 @@ import KanbanView from "../../../../Components/Shared/KanbanCommon/KanbanCommon.
 import { Eye, Pencil, Trash2, MoreVertical } from "lucide-react";
 import { formatDateTime } from "../../../../utils/dateFormatter.js";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 import DeleteConfirmModal from "../../../Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
 import { notify } from "../../../../services/toastService.js";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import { useCompanies } from "../../../../apiHooks/TenantCompany/useTenantCompanies.js";
-import { useMasterData } from "../../../../apiHooks/useMasterData"; // Adjust path as needed
+import { useMasterData } from "../../../../apiHooks/useMasterData";
+import CompanyForm from "./CompanyForm.jsx";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
   const menuRef = useRef(null);
 
   const mainActions = kanbanActions.filter((a) =>
-    ["view", "edit"].includes(a.key)
+    ["view", "edit"].includes(a.key),
   );
   const overflowActions = kanbanActions.filter(
-    (a) => !["view", "edit"].includes(a.key)
+    (a) => !["view", "edit"].includes(a.key),
   );
 
   useEffect(() => {
@@ -99,6 +101,12 @@ const Companies = () => {
   const [companyToDelete, setCompanyToDelete] = useState(null);
   const [companies, setCompanies] = useState([]);
 
+  // ---------------------------------------------------------------------
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState("Create");
+  const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+  // --------------------------------------------------------------------
+
   const { industries } = useMasterData({}, "adminPortal");
   const { getAllCompanies, deleteCompany } = useCompanies();
 
@@ -134,7 +142,7 @@ const Companies = () => {
       result = result.filter(
         (c) =>
           c.name?.toLowerCase().includes(query) ||
-          c.industry?.toLowerCase().includes(query)
+          c.industry?.toLowerCase().includes(query),
       );
     }
 
@@ -144,7 +152,7 @@ const Companies = () => {
 
     if (selectedFilters.industry.length > 0) {
       result = result.filter((c) =>
-        selectedFilters.industry.includes(c.industry)
+        selectedFilters.industry.includes(c.industry),
       );
     }
 
@@ -158,7 +166,7 @@ const Companies = () => {
   const totalPages = Math.ceil(processedData.length / ITEMS_PER_PAGE);
   const paginatedData = processedData.slice(
     currentPage * ITEMS_PER_PAGE,
-    (currentPage + 1) * ITEMS_PER_PAGE
+    (currentPage + 1) * ITEMS_PER_PAGE,
   );
 
   const columns = [
@@ -187,9 +195,47 @@ const Companies = () => {
         </div>
       ),
     },
+
+    {
+      key: "primaryContactName",
+      header: "Primary Contact",
+      render: (val) => (
+        <span className="truncate max-w-[200px]">
+          {capitalizeFirstLetter(val) || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "primaryContactEmail",
+      header: "Contact Email",
+      render: (val) => (
+        <span className="truncate max-w-[240px]">{val || "-"}</span>
+      ),
+    },
+    {
+      key: "website",
+      header: "Website",
+      render: (val) => (
+        <span className="truncate max-w-[200px]">{val || "-"}</span>
+      ),
+    },
+    {
+      key: "description",
+      header: "Description",
+      render: (val) => (
+        <span className="block truncate max-w-[240px]">{val || "-"}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (val) => (
+        <span>{<StatusBadge status={capitalizeFirstLetter(val)} />}</span>
+      ),
+    },
     {
       key: "createdAt",
-      header: "Created Date",
+      header: "Created At",
       render: (value) => formatDateTime(value),
     },
   ];
@@ -205,7 +251,12 @@ const Companies = () => {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-500" />,
-      onClick: (row) => navigate(`edit/${row._id}`),
+      // onClick: (row) => navigate(`edit/${row._id}`),
+      onClick: (row) => {
+        setFormMode("Edit");
+        setSelectedCompanyId(row._id);
+        setIsFormOpen(true);
+      },
     },
     {
       key: "delete",
@@ -229,11 +280,21 @@ const Companies = () => {
     }
   };
 
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setSelectedCompanyId(null);
+  };
+
   return (
     <div className="w-full px-6 py-2">
       <Header
         title="Companies"
-        onAddClick={() => navigate("/companies/new")}
+        // onAddClick={() => navigate("/companies/new")}
+        onAddClick={() => {
+          setFormMode("Create");
+          setSelectedCompanyId(null);
+          setIsFormOpen(true);
+        }}
         addButtonText="Add Company"
         canCreate={true}
       />
@@ -335,6 +396,16 @@ const Companies = () => {
         title="Company"
         entityName={companyToDelete?.name}
       />
+
+      {/* --- RENDER THE FORM COMPONENT CONDITIONALLY --- */}
+      {isFormOpen && (
+        <CompanyForm
+          mode={formMode}
+          id={selectedCompanyId}
+          onClose={handleCloseForm}
+          onSuccess={fetchCompanies}
+        />
+      )}
 
       <Outlet />
     </div>
