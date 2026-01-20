@@ -5,9 +5,12 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
-import { useTeamsQuery, useTeamById } from "../../../../../apiHooks/useInterviewerGroups.js";
-import StatusBadge from "../../../../../Components/SuperAdminComponents/common/StatusBadge";
+import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+import {
+  useTeamsQuery,
+  useTeamById,
+} from "../../../../apiHooks/useInterviewerGroups.js";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { Users } from "lucide-react";
 
@@ -51,29 +54,33 @@ const TeamDetails = () => {
   }, [id, teams, teamData]);
 
   const colorConfig = TEAM_COLOR_MAP[selectedTeam.color] || TEAM_COLOR_MAP.Teal;
-  const isActive = selectedTeam.is_active !== undefined
-    ? selectedTeam.is_active
-    : selectedTeam.status === "active";
+  const isActive =
+    selectedTeam.is_active !== undefined
+      ? selectedTeam.is_active
+      : selectedTeam.status === "active";
 
   return (
     <SidebarPopup
       title="Team Details"
-      onClose={() => navigate("/account-settings/my-teams")}
+      onClose={() => navigate("/my-teams")}
       id={id}
       showEdit={true}
-      editPath="/account-settings/my-teams/team-edit"
+      editPath="/my-teams/team-edit"
     >
       <div className="sm:p-0 p-6">
         {/* Header Card with Team Icon */}
         <div className="bg-gray-50 rounded-xl p-5 mb-6">
           <div className="flex items-center gap-4">
-            <div className={`w-14 h-14 rounded-xl ${colorConfig.bg} flex items-center justify-center`}>
+            <div
+              className={`w-14 h-14 rounded-xl ${colorConfig.bg} flex items-center justify-center`}
+            >
               <UserGroupIcon className={`w-7 h-7 ${colorConfig.icon}`} />
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="text-xl font-semibold truncate">
                 {selectedTeam.name
-                  ? selectedTeam.name.charAt(0).toUpperCase() + selectedTeam.name.slice(1)
+                  ? selectedTeam.name.charAt(0).toUpperCase() +
+                    selectedTeam.name.slice(1)
                   : "Unnamed Team"}
               </h2>
               <p className="text-gray-500 truncate">
@@ -88,10 +95,13 @@ const TeamDetails = () => {
         <div className="space-y-6">
           {/* Description */}
           <div className="bg-white border border-gray-100 rounded-xl p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Description</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
+              Description
+            </p>
             <p className="text-gray-800">
               {selectedTeam.description
-                ? selectedTeam.description.charAt(0).toUpperCase() + selectedTeam.description.slice(1)
+                ? selectedTeam.description.charAt(0).toUpperCase() +
+                  selectedTeam.description.slice(1)
                 : "No description provided"}
             </p>
           </div>
@@ -100,7 +110,9 @@ const TeamDetails = () => {
           <div className="grid grid-cols-2 gap-4">
             {/* Department */}
             <div className="bg-white border border-gray-100 rounded-xl p-4">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Department</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
+                Department
+              </p>
               <p className="font-medium text-gray-900">
                 {selectedTeam.department || "Not assigned"}
               </p>
@@ -108,7 +120,9 @@ const TeamDetails = () => {
 
             {/* Team Color */}
             <div className="bg-white border border-gray-100 rounded-xl p-4">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Team Color</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
+                Team Color
+              </p>
               <div className="flex items-center gap-2">
                 <div
                   className="w-5 h-5 rounded-full"
@@ -122,7 +136,9 @@ const TeamDetails = () => {
 
             {/* Team Lead */}
             <div className="bg-white border border-gray-100 rounded-xl p-4 col-span-2">
-              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Team Lead</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">
+                Team Lead
+              </p>
               <p className="font-medium text-gray-900">
                 {selectedTeam.leadName || "No lead assigned"}
               </p>

@@ -456,6 +456,16 @@ const CombinedNavbar = React.memo(() => {
           label: "Companies",
           permissionKey: "Companies.ViewTab",
         },
+        {
+          path: "/my-teams",
+          label: "My Teams",
+          permissionKey: "Companies.MyTeams",
+        },
+        {
+          path: "/interviewer-tag",
+          label: "Interviewer Tag",
+          permissionKey: "Companies.InterviewerTag",
+        },
       ];
     }
   };
@@ -1424,7 +1434,9 @@ const CombinedNavbar = React.memo(() => {
                             isActive("/support-desk") ||
                             isActive("/feedback") ||
                             isActive("/question-bank") ||
-                            isActive("/companies")) && (
+                            isActive("/companies") || 
+                            isActive("/my-teams") || 
+                            isActive("/interviewer-tags")) && (
                             <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                           )}
                         </button>
@@ -1456,6 +1468,12 @@ const CombinedNavbar = React.memo(() => {
                                   : []),
                                 ...(enhancedCheckPermission("Companies")
                                   ? [{ to: "/companies", label: "Companies" }]
+                                  : []),
+                                ...(enhancedCheckPermission("MyTeams")
+                                  ? [{ to: "/my-teams", label: "My Teams" }]
+                                  : []),
+                                ...(enhancedCheckPermission("InterviewerTags")
+                                  ? [{ to: "/interviewer-tags", label: "Interviewer Tags" }]
                                   : []),
                               ].map(({ to, label }) => (
                                 <NavLink

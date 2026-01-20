@@ -6,12 +6,12 @@
 
 import Cookies from "js-cookie";
 import { Outlet, useNavigate } from "react-router-dom";
-import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
-import { usePaginatedTeams } from "../../../../../apiHooks/useInterviewerGroups";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import { usePaginatedTeams } from "../../../../apiHooks/useInterviewerGroups";
 import { useEffect, useRef, useState } from "react";
-import Toolbar from "../../../../../Components/Shared/Toolbar/Toolbar";
-import TableView from "../../../../../Components/Shared/Table/TableView";
-import KanbanView from "../../../../../Components/Shared/KanbanCommon/KanbanCommon";
+import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
+import TableView from "../../../../Components/Shared/Table/TableView";
+import KanbanView from "../../../../Components/Shared/KanbanCommon/KanbanCommon";
 import {
   ChevronDown,
   ChevronUp,
@@ -20,22 +20,38 @@ import {
   Pencil,
   Users,
 } from "lucide-react";
-import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
-import StatusBadge from "../../../../../Components/SuperAdminComponents/common/StatusBadge";
-import { getEmptyStateMessage } from "../../../../../utils/EmptyStateMessage/emptyStateMessage";
-import { FilterPopup } from "../../../../../Components/Shared/FilterPopup/FilterPopup";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
+import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage";
+import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
 
 // Team color map for icons
 const TEAM_COLOR_MAP = {
   Teal: { bg: "bg-teal-100", icon: "text-teal-600", border: "border-teal-200" },
   Blue: { bg: "bg-blue-100", icon: "text-blue-600", border: "border-blue-200" },
-  Purple: { bg: "bg-purple-100", icon: "text-purple-600", border: "border-purple-200" },
+  Purple: {
+    bg: "bg-purple-100",
+    icon: "text-purple-600",
+    border: "border-purple-200",
+  },
   Pink: { bg: "bg-pink-100", icon: "text-pink-600", border: "border-pink-200" },
-  Orange: { bg: "bg-orange-100", icon: "text-orange-600", border: "border-orange-200" },
-  Green: { bg: "bg-green-100", icon: "text-green-600", border: "border-green-200" },
+  Orange: {
+    bg: "bg-orange-100",
+    icon: "text-orange-600",
+    border: "border-orange-200",
+  },
+  Green: {
+    bg: "bg-green-100",
+    icon: "text-green-600",
+    border: "border-green-200",
+  },
   Red: { bg: "bg-red-100", icon: "text-red-600", border: "border-red-200" },
-  Yellow: { bg: "bg-yellow-100", icon: "text-yellow-600", border: "border-yellow-200" },
+  Yellow: {
+    bg: "bg-yellow-100",
+    icon: "text-yellow-600",
+    border: "border-yellow-200",
+  },
 };
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -43,10 +59,10 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const menuRef = useRef(null);
 
   const mainActions = kanbanActions.filter((a) =>
-    ["view", "edit"].includes(a.key)
+    ["view", "edit"].includes(a.key),
   );
   const overflowActions = kanbanActions.filter(
-    (a) => !["view", "edit"].includes(a.key)
+    (a) => !["view", "edit"].includes(a.key),
   );
 
   useEffect(() => {
@@ -62,7 +78,8 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
   return (
     <div ref={menuRef} className="flex items-center gap-2 relative">
       {mainActions.map((action) => {
-        const baseClasses = "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
+        const baseClasses =
+          "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
         const bgClass =
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
@@ -133,21 +150,26 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
 // Custom Kanban Card Component for Teams
 const TeamKanbanCard = ({ team, onView, onEdit }) => {
   const colorConfig = TEAM_COLOR_MAP[team.color] || TEAM_COLOR_MAP.Teal;
-  const isActive = team.is_active !== undefined ? team.is_active : team.status === "active";
+  const isActive =
+    team.is_active !== undefined ? team.is_active : team.status === "active";
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow cursor-pointer h-[180px] flex flex-col">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className={`w-10 h-10 rounded-lg ${colorConfig.bg} flex items-center justify-center flex-shrink-0`}>
+          <div
+            className={`w-10 h-10 rounded-lg ${colorConfig.bg} flex items-center justify-center flex-shrink-0`}
+          >
             <UserGroupIcon className={`w-5 h-5 ${colorConfig.icon}`} />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-gray-900 truncate">
               {capitalizeFirstLetter(team.name) || "Unnamed Team"}
             </h3>
-            <p className="text-sm text-gray-500 truncate">{team.department || "No department"}</p>
+            <p className="text-sm text-gray-500 truncate">
+              {team.department || "No department"}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
@@ -263,7 +285,7 @@ const MyTeams = () => {
     setTempSelectedStatus((prev) =>
       prev.includes(status)
         ? prev.filter((s) => s !== status)
-        : [...prev, status]
+        : [...prev, status],
     );
   };
 
@@ -290,11 +312,11 @@ const MyTeams = () => {
   };
 
   const handleViewTeam = (team) => {
-    navigate(`/account-settings/my-teams/team-details/${team._id}`);
+    navigate(`/my-teams/team-details/${team._id}`);
   };
 
   const handleEditTeam = (team) => {
-    navigate(`/account-settings/my-teams/team-edit/${team._id}`);
+    navigate(`/my-teams/team-edit/${team._id}`);
   };
 
   // Empty state message
@@ -306,7 +328,7 @@ const MyTeams = () => {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "teams"
+    "teams",
   );
 
   // Table Columns
@@ -318,7 +340,9 @@ const MyTeams = () => {
         const colorConfig = TEAM_COLOR_MAP[row.color] || TEAM_COLOR_MAP.Teal;
         return (
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-lg ${colorConfig.bg} flex items-center justify-center`}>
+            <div
+              className={`w-8 h-8 rounded-lg ${colorConfig.bg} flex items-center justify-center`}
+            >
               <UserGroupIcon className={`w-4 h-4 ${colorConfig.icon}`} />
             </div>
             <span
@@ -343,11 +367,7 @@ const MyTeams = () => {
     {
       key: "leadName",
       header: "Team Lead",
-      render: (value) => (
-        <span className="text-gray-600">
-          {value || "—"}
-        </span>
-      ),
+      render: (value) => <span className="text-gray-600">{value || "—"}</span>,
     },
     {
       key: "numberOfUsers",
@@ -390,7 +410,9 @@ const MyTeams = () => {
     {
       key: "department",
       header: "Department",
-      render: (value) => <span className="text-gray-500">{value || "No department"}</span>,
+      render: (value) => (
+        <span className="text-gray-500">{value || "No department"}</span>
+      ),
     },
     {
       key: "description",
@@ -440,7 +462,7 @@ const MyTeams = () => {
     <>
       <div>
         {/* Info Box */}
-        <div className="bg-teal-50 border border-teal-200 p-4 rounded-lg sm:mt-6 flex gap-3">
+        <div className="mx-6 mt-6 p-4 bg-teal-50 border border-teal-200 rounded-lg sm:mt-6 flex gap-3">
           <div className="flex-shrink-0">
             <svg
               className="h-5 w-5 text-teal-600"
@@ -456,17 +478,24 @@ const MyTeams = () => {
             </svg>
           </div>
           <p className="text-sm text-gray-700">
-            <span className="font-semibold text-teal-700">My Teams</span> allows you to organize interviewers into functional groups based on departments, projects, or hiring needs. Teams provide a higher-level organization structure, making it easy to assign interview responsibilities to entire groups and track team-based metrics. Use teams alongside <span className="font-semibold">Interviewer Tags</span> for maximum flexibility in matching interviewers to specific interview rounds.
+            <span className="font-semibold text-teal-700">My Teams</span> allows
+            you to organize interviewers into functional groups based on
+            departments, projects, or hiring needs. Teams provide a higher-level
+            organization structure, making it easy to assign interview
+            responsibilities to entire groups and track team-based metrics. Use
+            teams alongside{" "}
+            <span className="font-semibold">Interviewer Tags</span> for maximum
+            flexibility in matching interviewers to specific interview rounds.
           </p>
         </div>
 
         {/* Header */}
-        <div className="flex mb-2 mt-2 flex-row justify-between items-start sm:items-center gap-4">
+        <div className="mx-6 px-4 flex mb-2 mt-2 flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-bold">
             My Teams
           </h2>
           <button
-            onClick={() => navigate(`/account-settings/my-teams/team-form`)}
+            onClick={() => navigate(`/my-teams/team-form`)}
             className="text-sm px-4 py-2 bg-custom-blue text-white rounded-lg whitespace-nowrap hover:bg-custom-blue/90 transition-colors"
           >
             Create Team
@@ -474,7 +503,7 @@ const MyTeams = () => {
         </div>
 
         {/* Toolbar */}
-        <div>
+        <div className="mx-6 px-4">
           <Toolbar
             view={view}
             setView={setView}
@@ -509,7 +538,10 @@ const MyTeams = () => {
             {teamsLoading ? (
               <div className="grid sm:grid-cols-1 md:grid-cols-2 grid-cols-3 gap-4 mt-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 animate-pulse">
+                  <div
+                    key={i}
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 animate-pulse"
+                  >
                     <div className="flex items-start gap-3 mb-3">
                       <div className="w-10 h-10 rounded-lg bg-gray-200" />
                       <div className="flex-1">
@@ -530,10 +562,7 @@ const MyTeams = () => {
             ) : (
               <div className="grid sm:grid-cols-1 md:grid-cols-2 grid-cols-3 gap-4 mt-4">
                 {currentTeams.map((team) => (
-                  <div
-                    key={team._id}
-                    onClick={() => handleViewTeam(team)}
-                  >
+                  <div key={team._id} onClick={() => handleViewTeam(team)}>
                     <TeamKanbanCard
                       team={team}
                       onView={handleViewTeam}

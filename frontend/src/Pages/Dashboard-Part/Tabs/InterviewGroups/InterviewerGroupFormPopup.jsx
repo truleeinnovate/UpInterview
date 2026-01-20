@@ -4,22 +4,26 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Cookies from "js-cookie";
-import { validateTeamForm } from "../../../../../utils/InterviewGroupValidations";
-import useInterviewers from "../../../../../hooks/useInterviewers";
-import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import { validateTeamForm } from "../../../../utils/InterviewGroupValidations";
+import useInterviewers from "../../../../hooks/useInterviewers";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import {
   InputField,
   DescriptionField,
   DropdownWithSearchField,
-} from "../../../../../Components/FormFields";
-import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+} from "../../../../Components/FormFields";
+import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import {
   useCreateTeam,
   useTeamById,
   useTeamsQuery,
   useUpdateTeam,
-} from "../../../../../apiHooks/useInterviewerGroups";
-import { UserGroupIcon, UsersIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+} from "../../../../apiHooks/useInterviewerGroups";
+import {
+  UserGroupIcon,
+  UsersIcon,
+  CheckCircleIcon,
+} from "@heroicons/react/24/outline";
 
 // Team color options with hex values
 const TEAM_COLORS = [
@@ -86,7 +90,10 @@ const TeamFormPopup = () => {
           department: team.department || "",
           lead_id: team.lead_id || "",
           member_ids: (team.member_ids || team.userIds || []).map(String),
-          is_active: team.is_active !== undefined ? team.is_active : team.status === "active",
+          is_active:
+            team.is_active !== undefined
+              ? team.is_active
+              : team.status === "active",
           color: team.color || "Teal",
         });
       }
@@ -99,13 +106,20 @@ const TeamFormPopup = () => {
 
     if (interviewersArray.length > 0) {
       const options = interviewersArray
-        .filter((interviewer) =>
-          interviewer.type === "internal" || interviewer.roleLabel === "Admin"
+        .filter(
+          (interviewer) =>
+            interviewer.type === "internal" ||
+            interviewer.roleLabel === "Admin",
         )
         .map((interviewer) => ({
           value: String(interviewer?.contact?._id || interviewer?._id),
-          label: `${interviewer?.contact?.firstName || ""} ${interviewer?.contact?.lastName || ""}`.trim() || "Unknown",
-          role: interviewer?.roleLabel || interviewer?.contact?.CurrentRole || "Team Member",
+          label:
+            `${interviewer?.contact?.firstName || ""} ${interviewer?.contact?.lastName || ""}`.trim() ||
+            "Unknown",
+          role:
+            interviewer?.roleLabel ||
+            interviewer?.contact?.CurrentRole ||
+            "Team Member",
         }))
         .filter((opt) => opt.value);
 
@@ -169,12 +183,13 @@ const TeamFormPopup = () => {
   };
 
   const title = id ? "Edit Team" : "Create Team";
-  const selectedColorHex = TEAM_COLORS.find(c => c.value === formData.color)?.hex || "#14b8a6";
+  const selectedColorHex =
+    TEAM_COLORS.find((c) => c.value === formData.color)?.hex || "#14b8a6";
 
   return (
     <SidebarPopup
       title={title}
-      onClose={() => navigate(`/account-settings/my-teams`)}
+      onClose={() => navigate(`/my-teams`)}
     >
       {loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
@@ -184,19 +199,25 @@ const TeamFormPopup = () => {
 
       <div className="sm:p-0 p-4 mb-10">
         <form onSubmit={handleSubmit} className="space-y-6">
-
           {/* Header with Active Toggle */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: selectedColorHex + '20' }}
+                style={{ backgroundColor: selectedColorHex + "20" }}
               >
-                <UserGroupIcon className="h-5 w-5" style={{ color: selectedColorHex }} />
+                <UserGroupIcon
+                  className="h-5 w-5"
+                  style={{ color: selectedColorHex }}
+                />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Team Details</h3>
-                <p className="text-sm text-gray-500">Configure your team settings</p>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Team Details
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Configure your team settings
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -209,12 +230,14 @@ const TeamFormPopup = () => {
                     is_active: !prev.is_active,
                   }))
                 }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.is_active ? "bg-custom-blue" : "bg-gray-300"
-                  }`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  formData.is_active ? "bg-custom-blue" : "bg-gray-300"
+                }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.is_active ? "translate-x-6" : "translate-x-1"
-                    }`}
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    formData.is_active ? "translate-x-6" : "translate-x-1"
+                  }`}
                 />
               </button>
             </div>
@@ -245,12 +268,16 @@ const TeamFormPopup = () => {
                     key={colorOpt.value}
                     type="button"
                     onClick={() =>
-                      setFormData((prev) => ({ ...prev, color: colorOpt.value }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        color: colorOpt.value,
+                      }))
                     }
-                    className={`w-6 h-6 rounded-full transition-all flex-shrink-0 ${formData.color === colorOpt.value
-                      ? "ring-2 ring-offset-1 ring-gray-400 scale-110"
-                      : "hover:scale-105"
-                      }`}
+                    className={`w-6 h-6 rounded-full transition-all flex-shrink-0 ${
+                      formData.color === colorOpt.value
+                        ? "ring-2 ring-offset-1 ring-gray-400 scale-110"
+                        : "hover:scale-105"
+                    }`}
                     style={{ backgroundColor: colorOpt.hex }}
                     title={colorOpt.label}
                   />
@@ -302,7 +329,9 @@ const TeamFormPopup = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <UsersIcon className="h-5 w-5 text-gray-600" />
-                <h3 className="text-lg font-semibold text-gray-900">Team Members</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Team Members
+                </h3>
               </div>
               <span className="text-sm font-medium px-3 py-1 rounded-full bg-custom-blue/10 text-custom-blue">
                 {formData.member_ids?.length || 0} selected
@@ -321,22 +350,37 @@ const TeamFormPopup = () => {
               {memberOptions.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-2">
                   {memberOptions.map((member) => {
-                    const isChecked = formData.member_ids.includes(member.value);
-                    const initial = (member.label?.charAt(0) || "?").toUpperCase();
-                    const colors = ["bg-teal-500", "bg-blue-500", "bg-purple-500", "bg-pink-500", "bg-orange-500", "bg-green-500"];
-                    const colorIndex = (member.label?.charCodeAt(0) || 0) % colors.length;
+                    const isChecked = formData.member_ids.includes(
+                      member.value,
+                    );
+                    const initial = (
+                      member.label?.charAt(0) || "?"
+                    ).toUpperCase();
+                    const colors = [
+                      "bg-teal-500",
+                      "bg-blue-500",
+                      "bg-purple-500",
+                      "bg-pink-500",
+                      "bg-orange-500",
+                      "bg-green-500",
+                    ];
+                    const colorIndex =
+                      (member.label?.charCodeAt(0) || 0) % colors.length;
                     const avatarColor = colors[colorIndex];
 
                     return (
                       <label
                         key={member.value}
-                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${isChecked
-                          ? "bg-white border-2 border-custom-blue shadow-sm"
-                          : "bg-white border border-transparent hover:border-gray-200"
-                          }`}
+                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                          isChecked
+                            ? "bg-white border-2 border-custom-blue shadow-sm"
+                            : "bg-white border border-transparent hover:border-gray-200"
+                        }`}
                       >
                         <div className="relative">
-                          <div className={`w-9 h-9 rounded-full ${avatarColor} flex items-center justify-center text-white font-semibold text-sm`}>
+                          <div
+                            className={`w-9 h-9 rounded-full ${avatarColor} flex items-center justify-center text-white font-semibold text-sm`}
+                          >
                             {initial}
                           </div>
                           {isChecked && (
@@ -344,8 +388,12 @@ const TeamFormPopup = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 text-sm truncate">{member.label}</div>
-                          <div className="text-xs text-gray-500 truncate">{member.role}</div>
+                          <div className="font-medium text-gray-900 text-sm truncate">
+                            {member.label}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {member.role}
+                          </div>
                         </div>
                         <input
                           type="checkbox"
@@ -354,7 +402,9 @@ const TeamFormPopup = () => {
                             setFormData((prev) => {
                               const currentIds = prev.member_ids || [];
                               const newIds = isChecked
-                                ? currentIds.filter((memberId) => memberId !== member.value)
+                                ? currentIds.filter(
+                                    (memberId) => memberId !== member.value,
+                                  )
                                 : [...currentIds, member.value];
                               return { ...prev, member_ids: newIds };
                             });
@@ -369,7 +419,9 @@ const TeamFormPopup = () => {
                 <div className="p-8 text-center text-gray-500">
                   <UsersIcon className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                   <p>No team members available</p>
-                  <p className="text-xs mt-1">Add interviewers first to build your team</p>
+                  <p className="text-xs mt-1">
+                    Add interviewers first to build your team
+                  </p>
                 </div>
               )}
             </div>

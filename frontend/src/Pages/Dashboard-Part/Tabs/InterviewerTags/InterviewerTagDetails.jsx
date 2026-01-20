@@ -8,13 +8,17 @@ import {
   Palette,
   FileText,
 } from "lucide-react";
-import { useGetInterviewerTagById } from "../../../../../apiHooks/InterviewerTags/useInterviewerTags";
-import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
-import { formatDateTime } from "../../../../../utils/dateFormatter";
+import { useGetInterviewerTagById } from "../../../../apiHooks/InterviewerTags/useInterviewerTags";
+import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { formatDateTime } from "../../../../utils/dateFormatter";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 
 const InterviewerTagDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  useScrollLock(!!id);
 
   const { data: tag, isLoading, isError } = useGetInterviewerTagById(id);
 
@@ -87,7 +91,8 @@ const InterviewerTagDetails = () => {
                 <div className="flex items-start gap-3 text-slate-600">
                   <FileText className="w-4 h-4 mt-0.5" />
                   <span className="text-sm">
-                    {tag.description || "No description provided"}
+                    {capitalizeFirstLetter(tag.description) ||
+                      "No description provided"}
                   </span>
                 </div>
               </div>

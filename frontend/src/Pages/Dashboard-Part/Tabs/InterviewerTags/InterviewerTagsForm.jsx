@@ -313,14 +313,15 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save, Tags } from "lucide-react";
-import DropdownWithSearchField from "../../../../../Components/FormFields/DropdownWithSearchField";
+import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import {
   useCreateInterviewerTag,
   useUpdateInterviewerTag,
   useGetInterviewerTagById, // Added this hook to fetch real data
-} from "../../../../../apiHooks/InterviewerTags/useInterviewerTags";
-import { notify } from "../../../../../services/toastService";
-import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+} from "../../../../apiHooks/InterviewerTags/useInterviewerTags";
+import { notify } from "../../../../services/toastService";
+import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 
 const colorOptions = [
   { value: "#217989", label: "Teal" },
@@ -353,6 +354,8 @@ const InterviewerTagsForm = ({ mode }) => {
       enabled: isEditMode && !!id,
     },
   );
+
+  useScrollLock(true)
 
   const [formData, setFormData] = useState({
     name: "",

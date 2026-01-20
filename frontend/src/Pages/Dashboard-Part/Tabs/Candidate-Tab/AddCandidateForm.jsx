@@ -123,13 +123,13 @@ const AddCandidateForm = ({
   // Close tooltip when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showTooltip && !event.target.closest('.tooltip-container')) {
+      if (showTooltip && !event.target.closest(".tooltip-container")) {
         setShowTooltip(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showTooltip]);
 
   // Initialize with 3 default empty skill rows
@@ -193,6 +193,7 @@ const AddCandidateForm = ({
     CountryCode: "+91",
     skills: [],
     CurrentRole: "",
+    linkedInUrl: "",
     // Technology: "",
   });
   const [errors, setErrors] = useState({});
@@ -231,6 +232,7 @@ const AddCandidateForm = ({
         CurrentRole: selectedCandidate?.CurrentRole || "",
         CountryCode: selectedCandidate?.CountryCode || "",
         // Technology: selectedCandidate?.Technology || "",
+        linkedInUrl: selectedCandidate.linkedInUrl || "",
       });
 
       if (selectedCandidate.ImageData?.filename) {
@@ -264,7 +266,7 @@ const AddCandidateForm = ({
       }
       // Initialize allSelectedSkills with the skills from the candidate being edited
       setAllSelectedSkills(
-        selectedCandidate.skills?.map((skill) => skill.skill) || []
+        selectedCandidate.skills?.map((skill) => skill.skill) || [],
       );
       // setAllSelectedExperiences(selectedCandidate.skills?.map(skill => skill.experience) || []);
       // setAllSelectedExpertises(selectedCandidate.skills?.map(skill => skill.expertise) || []);
@@ -297,7 +299,7 @@ const AddCandidateForm = ({
       return;
     }
     const list = (colleges || []).map((c) =>
-      (c?.University_CollegeName || "").trim().toLowerCase()
+      (c?.University_CollegeName || "").trim().toLowerCase(),
     );
     const existsInList = list.includes(saved.toLowerCase());
     setIsCustomUniversity(!existsInList);
@@ -315,11 +317,11 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
-          : entry
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
+          : entry,
       );
       setEntries(updatedEntries);
       setEditingIndex(null);
@@ -485,12 +487,12 @@ const AddCandidateForm = ({
       [name]: errorMessage,
       ...(name === "CurrentExperience" && formData.RelevantExperience
         ? {
-          RelevantExperience: getErrorMessage(
-            "RelevantExperience",
-            formData.RelevantExperience,
-            nextFormData
-          ),
-        }
+            RelevantExperience: getErrorMessage(
+              "RelevantExperience",
+              formData.RelevantExperience,
+              nextFormData,
+            ),
+          }
         : {}),
     }));
   };
@@ -519,6 +521,7 @@ const AddCandidateForm = ({
       CurrentRole: "",
       CountryCode: "+91",
       // Technology: "",
+      linkedInUrl: "",
     });
 
     setErrors({});
@@ -588,7 +591,7 @@ const AddCandidateForm = ({
     const { formIsValid, newErrors } = validateCandidateForm(
       formData,
       entries,
-      {} // always start fresh
+      {}, // always start fresh
     );
 
     if (!formIsValid) {
@@ -628,6 +631,7 @@ const AddCandidateForm = ({
       // Technology: formData.Technology,
       ownerId: userId,
       tenantId: orgId,
+      linkedInUrl: formData.linkedInUrl,
     };
 
     try {
@@ -728,8 +732,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save candidate"
+          error.message ||
+          "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -768,7 +772,7 @@ const AddCandidateForm = ({
 
   const genderOptionsRS = useMemo(
     () => genderOptions.map((g) => ({ value: g, label: g })),
-    []
+    [],
   );
 
   // const qualificationOptionsRS =
@@ -783,7 +787,7 @@ const AddCandidateForm = ({
         value: q?.QualificationName,
         label: q?.QualificationName,
       })) || [],
-    [qualifications]
+    [qualifications],
   );
 
   // const collegeOptionsRS = (
@@ -801,7 +805,7 @@ const AddCandidateForm = ({
           label: c?.University_CollegeName,
         })) || []
       ).concat([{ value: "__other__", label: "+ Others" }]),
-    [colleges]
+    [colleges],
   );
 
   // const roleOptionsRS =
@@ -813,7 +817,7 @@ const AddCandidateForm = ({
         value: r?.roleName,
         label: r?.roleLabel,
       })) || [],
-    [currentRoles]
+    [currentRoles],
   );
 
   return (
@@ -951,7 +955,7 @@ const AddCandidateForm = ({
                     // error={errors.Gender}
                     containerRef={fieldRefs.Gender}
                     label="Gender"
-                  // required
+                    // required
                   />
                 </div>
                 {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -981,6 +985,14 @@ const AddCandidateForm = ({
                     phoneRef={fieldRefs.Phone}
                     label="Phone"
                     required
+                  />
+                  <InputField
+                    value={formData.linkedInUrl}
+                    onChange={handleChange}
+                    label="LinkedIn URL"
+                    name="linkedInUrl"
+                    placeholder="https://linkedin.com/in/username"
+                    error={errors.linkedInUrl}
                   />
                 </div>
 
@@ -1138,26 +1150,36 @@ const AddCandidateForm = ({
                     setSelectedExp("");
                     setSelectedLevel("");
                   }}
-                  onAddMultipleSkills={(newSkillEntries, skillsToRemove = []) => {
+                  onAddMultipleSkills={(
+                    newSkillEntries,
+                    skillsToRemove = [],
+                  ) => {
                     setEntries((prevEntries) => {
                       let updatedEntries = [...prevEntries];
 
                       // First, handle skill removals
                       if (skillsToRemove.length > 0) {
                         // Count current skills with data
-                        const currentFilledSkills = updatedEntries.filter(e => e.skill).length;
-                        const remainingSkillsAfterRemoval = currentFilledSkills - skillsToRemove.length;
+                        const currentFilledSkills = updatedEntries.filter(
+                          (e) => e.skill,
+                        ).length;
+                        const remainingSkillsAfterRemoval =
+                          currentFilledSkills - skillsToRemove.length;
 
                         // If we still have 3+ skills after removal, remove rows entirely
                         if (remainingSkillsAfterRemoval >= 3) {
-                          updatedEntries = updatedEntries.filter(entry =>
-                            !skillsToRemove.includes(entry.skill)
+                          updatedEntries = updatedEntries.filter(
+                            (entry) => !skillsToRemove.includes(entry.skill),
                           );
                         } else {
                           // If we'd have less than 3, just clear the skill but keep rows
                           updatedEntries = updatedEntries.map((entry) => {
                             if (skillsToRemove.includes(entry.skill)) {
-                              return { skill: "", experience: "", expertise: "" };
+                              return {
+                                skill: "",
+                                experience: "",
+                                expertise: "",
+                              };
                             }
                             return entry;
                           });
@@ -1165,13 +1187,22 @@ const AddCandidateForm = ({
 
                         // Ensure we always have at least 3 rows
                         while (updatedEntries.length < 3) {
-                          updatedEntries.push({ skill: "", experience: "", expertise: "" });
+                          updatedEntries.push({
+                            skill: "",
+                            experience: "",
+                            expertise: "",
+                          });
                         }
                       }
 
                       // Then, add new skills - fill empty rows first
                       let skillIndex = 0;
-                      for (let i = 0; i < updatedEntries.length && skillIndex < newSkillEntries.length; i++) {
+                      for (
+                        let i = 0;
+                        i < updatedEntries.length &&
+                        skillIndex < newSkillEntries.length;
+                        i++
+                      ) {
                         if (!updatedEntries[i].skill) {
                           updatedEntries[i] = {
                             ...updatedEntries[i],
@@ -1182,7 +1213,10 @@ const AddCandidateForm = ({
                       }
 
                       // Add remaining skills as new rows
-                      while (skillIndex < newSkillEntries.length && updatedEntries.length < 10) {
+                      while (
+                        skillIndex < newSkillEntries.length &&
+                        updatedEntries.length < 10
+                      ) {
                         updatedEntries.push(newSkillEntries[skillIndex]);
                         skillIndex++;
                       }
@@ -1191,8 +1225,13 @@ const AddCandidateForm = ({
                     });
                     // Update allSelectedSkills
                     setAllSelectedSkills((prev) => {
-                      let updated = prev.filter(s => !skillsToRemove.includes(s));
-                      return [...updated, ...newSkillEntries.map((e) => e.skill)];
+                      let updated = prev.filter(
+                        (s) => !skillsToRemove.includes(s),
+                      );
+                      return [
+                        ...updated,
+                        ...newSkillEntries.map((e) => e.skill),
+                      ];
                     });
                   }}
                   onEditSkill={(index) => {
@@ -1204,7 +1243,9 @@ const AddCandidateForm = ({
                   onDeleteSkill={(index) => {
                     const entry = entries[index];
                     setAllSelectedSkills(
-                      allSelectedSkills.filter((skill) => skill !== entry.skill)
+                      allSelectedSkills.filter(
+                        (skill) => skill !== entry.skill,
+                      ),
                     );
                     setEntries(entries.filter((_, i) => i !== index));
                   }}
@@ -1289,8 +1330,9 @@ const AddCandidateForm = ({
                   type="button"
                   onClick={handleClose}
                   disabled={isMutationLoading}
-                  className={`sm:px-2 sm:py-1 md:px-2 md:py-1 lg:px-6 lg:py-2 xl:px-6 xl:py-2 2xl:px-6 2xl:py-2 sm:text-sm text-custom-blue border border-custom-blue rounded-lg transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                  className={`sm:px-2 sm:py-1 md:px-2 md:py-1 lg:px-6 lg:py-2 xl:px-6 xl:py-2 2xl:px-6 2xl:py-2 sm:text-sm text-custom-blue border border-custom-blue rounded-lg transition-colors ${
+                    isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
                   Cancel
                 </button>

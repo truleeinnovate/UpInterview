@@ -9,6 +9,7 @@ const candidateSchema = new mongoose.Schema(
     CountryCode: String,
     Date_Of_Birth: Date,
     Gender: String,
+    linkedInUrl: String,
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },

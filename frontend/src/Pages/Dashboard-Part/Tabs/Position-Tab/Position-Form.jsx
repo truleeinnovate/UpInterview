@@ -100,15 +100,27 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     return [...options, { value: "__other__", label: "+ Create New Company" }];
   }, [companiesList]);
 
+  // const handleIsCustomCompany = (val) => {
+  //   if (val === true) {
+  //     setIsCompanyModalOpen(true);
+  //     // We reset this so the dropdown doesn't stay in "Other" mode
+  //     // if the user cancels the company creation.
+  //     setIsCustomCompany(false);
+  //   } else {
+  //     setIsCustomCompany(false);
+  //   }
+  // };
+
   const handleIsCustomCompany = (val) => {
+    // If val is true, it means the "Other" option was selected
+    // or the custom state was triggered by the dropdown
     if (val === true) {
       setIsCompanyModalOpen(true);
-      // We reset this so the dropdown doesn't stay in "Other" mode
-      // if the user cancels the company creation.
-      setIsCustomCompany(false);
-    } else {
-      setIsCustomCompany(false);
+      // Don't immediately set this to false here if you rely on it
+      // to keep the dropdown in a specific state.
+      // However, for opening a modal, just the setter above is enough.
     }
+    setIsCustomCompany(val);
   };
 
   // --------------------------------------------------------------->
@@ -426,14 +438,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   }
 
   // Employment type options (usually put this outside the component)
-  const employmentTypeOptions = [
-    "full_time",
-    "part_time",
-    "contract",
-  ].map(value => ({
-    value: value,
-    label: formatEmploymentType(value),
-  }));
+  const employmentTypeOptions = ["full_time", "part_time", "contract"].map(
+    (value) => ({
+      value: value,
+      label: formatEmploymentType(value),
+    }),
+  );
 
   // const openStatusModal = (row) => {
   //   setStatusTargetRow(row);
@@ -595,6 +605,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   // Generic change handler for shared form fields + live cross-field validation
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // SPECIFIC FIX FOR COMPANY MODAL TRIGGER
+    if (name === "companyName" && value === "__other__") {
+      setIsCompanyModalOpen(true);
+      return; // Stop execution so "__other__" isn't saved as the actual name
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     setErrors((prev) => {
@@ -2084,7 +2101,7 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
           }}
         />
       )} */}
-      {isCompanyModalOpen && (
+      {/* {isCompanyModalOpen && (
         <CompanyForm
           mode="Create"
           onClose={() => setIsCompanyModalOpen(false)}
@@ -2103,6 +2120,28 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
               }
             }
             setIsCompanyModalOpen(false);
+          }}
+        />
+      )} */}
+      {isCompanyModalOpen && (
+        <CompanyForm
+          mode="Create"
+          onClose={() => {
+            setIsCompanyModalOpen(false);
+            setIsCustomCompany(false); // Reset the "Other" state on close
+          }}
+          onSuccess={async () => {
+            const updatedList = await fetchCompaniesData();
+            if (updatedList && updatedList.length > 0) {
+              // Find the newest company (assuming it's the first or filter by name)
+              const newCompany = updatedList[0];
+              setFormData((prev) => ({
+                ...prev,
+                companyName: newCompany._id,
+              }));
+            }
+            setIsCompanyModalOpen(false);
+            setIsCustomCompany(false);
           }}
         />
       )}

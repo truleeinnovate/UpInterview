@@ -58,6 +58,7 @@ const addCandidatePostCall = async (req, res) => {
       skills,
       PositionId,
       // Technology,
+      linkedInUrl,
     } = req.body;
 
     // Get ownerId and tenantId from request body
@@ -100,6 +101,7 @@ const addCandidatePostCall = async (req, res) => {
       ownerId,
       tenantId,
       createdBy: ownerId,
+      linkedInUrl,
     });
 
     await newCandidate.save();
