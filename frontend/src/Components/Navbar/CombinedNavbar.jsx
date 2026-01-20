@@ -1444,10 +1444,16 @@ const CombinedNavbar = React.memo(() => {
                           <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
                             <div className="space-y-1">
                               {[
-                                ...(enhancedCheckPermission("Analytics")
-                                  ? [{ to: "/analytics", label: "Analytics" }]
+                                ...(enhancedCheckPermission("MyTeams")
+                                  ? [{ to: "/my-teams", label: "My Teams" }]
                                   : []),
-                                ...(enhancedCheckPermission("QuestionBank")
+                                   ...(enhancedCheckPermission("InterviewerTags")
+                                  ? [{ to: "/interviewer-tags", label: "Interviewer Tags" }]
+                                  : []),
+                                    ...(enhancedCheckPermission("Companies")
+                                  ? [{ to: "/companies", label: "Companies" }]
+                                  : []),
+                                   ...(enhancedCheckPermission("QuestionBank")
                                   ? [
                                       {
                                         to: "/question-bank",
@@ -1455,6 +1461,10 @@ const CombinedNavbar = React.memo(() => {
                                       },
                                     ]
                                   : []),
+                                ...(enhancedCheckPermission("Analytics")
+                                  ? [{ to: "/analytics", label: "Analytics" }]
+                                  : []),
+                               
                                 ...(enhancedCheckPermission("Feedback")
                                   ? [{ to: "/feedback", label: "Feedback" }]
                                   : []),
@@ -1465,15 +1475,6 @@ const CombinedNavbar = React.memo(() => {
                                         label: "Support Desk",
                                       },
                                     ]
-                                  : []),
-                                ...(enhancedCheckPermission("Companies")
-                                  ? [{ to: "/companies", label: "Companies" }]
-                                  : []),
-                                ...(enhancedCheckPermission("MyTeams")
-                                  ? [{ to: "/my-teams", label: "My Teams" }]
-                                  : []),
-                                ...(enhancedCheckPermission("InterviewerTags")
-                                  ? [{ to: "/interviewer-tags", label: "Interviewer Tags" }]
                                   : []),
                               ].map(({ to, label }) => (
                                 <NavLink
@@ -1954,8 +1955,12 @@ const CombinedNavbar = React.memo(() => {
                         <button
                           className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
                             isActive("/analytics") ||
+
                             isActive("/support-desk") ||
                             isActive("/feedback") ||
+                            isActive("/companies") || 
+                            isActive("/my-teams") || 
+                            isActive("/interviewer-tags") ||
                             isActive("/question-bank")
                               ? "bg-gray-100 text-custom-blue font-bold"
                               : "text-gray-600 hover:bg-gray-100"
@@ -1972,28 +1977,39 @@ const CombinedNavbar = React.memo(() => {
                         {dropdownState.moreDropdown && (
                           <div className="mt-1 ml-4 space-y-1">
                             {[
-                              ...(enhancedCheckPermission("Analytics")
-                                ? [{ to: "/analytics", label: "Analytics" }]
-                                : []),
-                              ...(enhancedCheckPermission("QuestionBank")
-                                ? [
-                                    {
-                                      to: "/question-bank",
-                                      label: "Question Bank",
-                                    },
-                                  ]
-                                : []),
-                              ...(enhancedCheckPermission("Feedback")
-                                ? [{ to: "/feedback", label: "Feedback" }]
-                                : []),
-                              ...(enhancedCheckPermission("SupportDesk")
-                                ? [
-                                    {
-                                      to: "/support-desk",
-                                      label: "Support Desk",
-                                    },
-                                  ]
-                                : []),
+
+                              ...(enhancedCheckPermission("MyTeams")
+                                  ? [{ to: "/my-teams", label: "My Teams" }]
+                                  : []),
+                                   ...(enhancedCheckPermission("InterviewerTags")
+                                  ? [{ to: "/interviewer-tags", label: "Interviewer Tags" }]
+                                  : []),
+                                    ...(enhancedCheckPermission("Companies")
+                                  ? [{ to: "/companies", label: "Companies" }]
+                                  : []),
+                                   ...(enhancedCheckPermission("QuestionBank")
+                                  ? [
+                                      {
+                                        to: "/question-bank",
+                                        label: "Question Bank",
+                                      },
+                                    ]
+                                  : []),
+                                ...(enhancedCheckPermission("Analytics")
+                                  ? [{ to: "/analytics", label: "Analytics" }]
+                                  : []),
+                               
+                                ...(enhancedCheckPermission("Feedback")
+                                  ? [{ to: "/feedback", label: "Feedback" }]
+                                  : []),
+                                ...(enhancedCheckPermission("SupportDesk")
+                                  ? [
+                                      {
+                                        to: "/support-desk",
+                                        label: "Support Desk",
+                                      },
+                                    ]
+                                  : []),
                             ].map(({ to, label }) => (
                               <NavLink
                                 key={to}

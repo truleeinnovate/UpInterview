@@ -199,50 +199,6 @@ const TeamFormPopup = () => {
 
       <div className="sm:p-0 p-4 mb-10">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Header with Active Toggle */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: selectedColorHex + "20" }}
-              >
-                <UserGroupIcon
-                  className="h-5 w-5"
-                  style={{ color: selectedColorHex }}
-                />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Team Details
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Configure your team settings
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Active</span>
-              <button
-                type="button"
-                onClick={() =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    is_active: !prev.is_active,
-                  }))
-                }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  formData.is_active ? "bg-custom-blue" : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    formData.is_active ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
-
           {/* Team Name & Color Row */}
           <div className="grid grid-cols-2 sm:grid-cols-1 gap-4">
             <InputField
@@ -323,6 +279,30 @@ const TeamFormPopup = () => {
             error={formErrors.description}
             rows={3}
           />
+
+              <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Active</span>
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    is_active: !prev.is_active,
+                  }))
+                }
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  formData.is_active ? "bg-custom-blue" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    formData.is_active ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
 
           {/* Team Members Section */}
           <div className="pt-2">

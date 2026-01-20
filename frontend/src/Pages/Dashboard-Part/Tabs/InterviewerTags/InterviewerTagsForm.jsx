@@ -424,18 +424,12 @@ const InterviewerTagsForm = ({ mode }) => {
 
   return (
     <SidebarPopup
-      title={isEditMode ? "Update tag details" : "Create a new interviewer tag"}
+      title={isEditMode ? "Update tag details" : "Create Interviewer Tag"}
       onClose={() => navigate(-1)}
     >
       <div className="mt-4 space-y-6 mb-12">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-center gap-2 font-semibold text-slate-900">
-                <Tags className="w-5 h-5 text-[#217989]" />
-                Tag Information
-              </div>
-            </div>
 
             <div className="p-6 space-y-6">
               <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
@@ -572,7 +566,6 @@ const InterviewerTagsForm = ({ mode }) => {
               }
               className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-[#217989] hover:bg-[#1c6473] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
-              <Save className="w-4 h-4" />
               {createTagMutation.isLoading || updateTagMutation.isLoading
                 ? "Saving..."
                 : isEditMode
