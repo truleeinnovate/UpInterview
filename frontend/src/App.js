@@ -96,14 +96,14 @@ const VideoCallJoinRoom = lazy(
 const VideoCallRoom = lazy(() => import("./Pages/CustomVideoCall/Room.jsx"));
 
 // Interviewers
-const InterviewersList = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Interviewers/Interviewers")
+const InterviewersList = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Interviewers/Interviewers"),
 );
-const CreateInterviewer = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Interviewers/CreateInterviewer")
+const CreateInterviewer = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Interviewers/CreateInterviewer"),
 );
-const InterviewerDetails = lazy(() =>
-  import("./Pages/Dashboard-Part/Tabs/Interviewers/InterviewerDetails")
+const InterviewerDetails = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Interviewers/InterviewerDetails"),
 );
 
 // v1.0.5 ------------------------------>
@@ -232,15 +232,15 @@ const CompanyForm = lazy(
 
 const InterviewerTags = lazy(
   () =>
-    import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerTags.jsx"),
+    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewerTags/InterviewerTags.jsx"),
 );
-const InterviewerTagsDetails = lazy(
+const InterviewerTagDetails = lazy(
   () =>
-    import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerDetails.jsx"),
+    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewerTags/InterviewerDetails.jsx"),
 );
 const InterviewerTagsForm = lazy(
   () =>
-    import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerTagsForm.jsx"),
+    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewerTags/InterviewerTagsForm.jsx"),
 );
 
 // Code Editor
@@ -809,13 +809,36 @@ const MainAppRoutes = ({
               <>
                 <Route path="/interviewers" element={<InterviewersList />} />
                 {hasPermission("Interviewers", "Create") && (
-                  <Route path="/interviewers/new" element={<><CreateInterviewer /> <InterviewersList /></>} />
+                  <Route
+                    path="/interviewers/new"
+                    element={
+                      <>
+                        <CreateInterviewer /> <InterviewersList />
+                      </>
+                    }
+                  />
                 )}
                 {hasPermission("Interviewers", "View") && (
-                  <Route path="/interviewers/:id" element={<><InterviewerDetails /><InterviewersList /></>} />
+                  <Route
+                    path="/interviewers/:id"
+                    element={
+                      <>
+                        <InterviewerDetails />
+                        <InterviewersList />
+                      </>
+                    }
+                  />
                 )}
                 {hasPermission("Interviewers", "Edit") && (
-                  <Route path="/interviewers/:id/edit" element={<><CreateInterviewer /><InterviewersList /></>} />
+                  <Route
+                    path="/interviewers/:id/edit"
+                    element={
+                      <>
+                        <CreateInterviewer />
+                        <InterviewersList />
+                      </>
+                    }
+                  />
                 )}
               </>
             )}
@@ -980,11 +1003,8 @@ const MainAppRoutes = ({
                   <Route path="documents" element={<DocumentsSection />} />
                 </Route>
               )}
-              {organization && hasPermission("MyTeams") && (
-                <Route
-                  path="my-teams"
-                  element={<InterviewerGroups />}
-                >
+              {hasPermission("MyTeams") && (
+                <Route path="my-teams" element={<InterviewerGroups />}>
                   <Route index element={null} />
                   <Route
                     path="team-form"
@@ -998,6 +1018,20 @@ const MainAppRoutes = ({
                     path="team-details/:id"
                     element={<InterviewGroupDetails />}
                   />
+                </Route>
+              )}
+              {hasPermission("InterviewerTags") && (
+                <Route path="interviewer-tags" element={<InterviewerTags />}>
+                  <Route index element={null} />
+                  <Route
+                    path="tag-form"
+                    element={<InterviewerTagsForm mode="Create" />}
+                  />
+                  <Route
+                    path="tag-edit/:id"
+                    element={<InterviewerTagsForm mode="Edit" />}
+                  />
+                  <Route path="tag-details/:id" element={<InterviewerTagDetails />} />
                 </Route>
               )}
               {hasPermission("Users") && (
@@ -1210,19 +1244,6 @@ const MainAppRoutes = ({
                 <Route path="new" element={<CompanyForm mode="Create" />} />
                 <Route path="view/:id" element={<CompanyDetails />} />
                 <Route path="edit/:id" element={<CompanyForm mode="Edit" />} />
-              </Route>
-            )}
-            {hasPermission("InterviewerTags") && (
-              <Route path="/interviewer-tags" element={<InterviewerTags />}>
-                <Route
-                  path="new"
-                  element={<InterviewerTagsForm mode="Create" />}
-                />
-                <Route path="view/:id" element={<InterviewerTagsDetails />} />
-                <Route
-                  path="edit/:id"
-                  element={<InterviewerTagsForm mode="Edit" />}
-                />
               </Route>
             )}
 

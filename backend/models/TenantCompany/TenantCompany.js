@@ -7,8 +7,18 @@ const TenantCompanySchema = new mongoose.Schema(
     name: { type: String },
     industry: { type: String },
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+      required: true,
+    },
+    website: { type: String },
+    primaryContactName: { type: String },
+    primaryContactEmail: { type: String },
+    description: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const TenantCompany = mongoose.model("TenantCompany", TenantCompanySchema);

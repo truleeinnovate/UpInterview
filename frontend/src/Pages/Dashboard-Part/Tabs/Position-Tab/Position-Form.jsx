@@ -39,6 +39,8 @@ import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/c
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 // v1.0.1 ---------------------------------------------------------------------------->
 import { useCompanies } from "../../../../apiHooks/TenantCompany/useTenantCompanies.js"; // Add this import
+import CompanyForm from "../Companies/CompanyForm.jsx";
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 
 const PositionForm = ({ mode, onClose, isModal = false }) => {
   // <---------------------------------------------------------------
@@ -46,12 +48,22 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     useCompanies();
   const [companiesList, setCompaniesList] = useState([]);
 
+  // const fetchCompaniesData = async () => {
+  //   try {
+  //     const data = await getAllCompanies();
+  //     setCompaniesList(data || []);
+  //   } catch (error) {
+  //     console.error("Failed to fetch companies:", error);
+  //   }
+  // };
   const fetchCompaniesData = async () => {
     try {
       const data = await getAllCompanies();
       setCompaniesList(data || []);
+      return data || [];
     } catch (error) {
       console.error("Failed to fetch companies:", error);
+      return [];
     }
   };
 
@@ -61,12 +73,44 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
   // Company Options: Purely from the new hook, no "Other"
   // Find this block and update it
+  // const companyOptionsRS = useMemo(() => {
+  //   return (companiesList || []).map((c) => ({
+  //     value: c?._id, // Store the MongoDB ID as the value
+  //     label: c?.name, // Show the Name as the label in the UI
+  //   }));
+  // }, [companiesList]);
+
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const [isCustomCompany, setIsCustomCompany] = useState(false);
+  useScrollLock(isCompanyModalOpen);
+
   const companyOptionsRS = useMemo(() => {
-    return (companiesList || []).map((c) => ({
-      value: c?._id, // Store the MongoDB ID as the value
-      label: c?.name, // Show the Name as the label in the UI
-    }));
+    // const options = (companiesList || []).map((c) => ({
+    //   value: c?._id,
+    //   label: c?.name,
+    // }));
+    const options = (companiesList || [])
+      .filter((c) => c?.status === "active")
+      .map((c) => ({
+        value: c?._id,
+        label: c?.name,
+      }));
+
+    // Add the "Other" trigger which is supported by your Dropdown component
+    return [...options, { value: "__other__", label: "+ Create New Company" }];
   }, [companiesList]);
+
+  const handleIsCustomCompany = (val) => {
+    if (val === true) {
+      setIsCompanyModalOpen(true);
+      // We reset this so the dropdown doesn't stay in "Other" mode
+      // if the user cancels the company creation.
+      setIsCustomCompany(false);
+    } else {
+      setIsCustomCompany(false);
+    }
+  };
+
   // --------------------------------------------------------------->
   const { isMutationLoading, addOrUpdatePosition } = usePositions({
     limit: 1,
@@ -117,17 +161,19 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   } = useMasterData({}, pageType);
 
   const { id } = useParams();
-  const { position: selectedPosition, isLoading: isPositionLoading } = usePositionById(id);
+  const { position: selectedPosition, isLoading: isPositionLoading } =
+    usePositionById(id);
   console.log(
     "SELECTED POSITION ===============================> ",
-    selectedPosition
+    selectedPosition,
   );
 
   // Fetch the position's linked interview template by id instead of
   // relying on the paginated/filtered templatesData list.
-  const { data: selectedTemplate, isLoading: isTemplateLoading } = useInterviewtemplateDetails(
-    selectedPosition?.templateId?._id || selectedPosition?.templateId
-  );
+  const { data: selectedTemplate, isLoading: isTemplateLoading } =
+    useInterviewtemplateDetails(
+      selectedPosition?.templateId?._id || selectedPosition?.templateId,
+    );
   const location = useLocation();
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
   const userId = tokenPayload?.userId;
@@ -359,7 +405,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
     setEntries(formattedSkills);
     setAllSelectedSkills(
-      selectedPosition?.skills?.map((skill) => skill.skill) || []
+      selectedPosition?.skills?.map((skill) => skill.skill) || [],
     );
 
     // 4. Mark as initialized so it doesn't overwrite user changes on re-renders
@@ -375,7 +421,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
     return type
       .split("_")
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   }
 
@@ -388,7 +434,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     value: value,
     label: formatEmploymentType(value),
   }));
-
 
   // const openStatusModal = (row) => {
   //   setStatusTargetRow(row);
@@ -458,12 +503,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         return 0;
       })
       .map((t) => {
-        const titleLabel =
-          t.title
-            ? t.title.charAt(0).toUpperCase() + t.title.slice(1)
-            : t.type
-              ? t.type.charAt(0).toUpperCase() + t.type.slice(1)
-              : "Unnamed Template";
+        const titleLabel = t.title
+          ? t.title.charAt(0).toUpperCase() + t.title.slice(1)
+          : t.type
+            ? t.type.charAt(0).toUpperCase() + t.type.slice(1)
+            : "Unnamed Template";
 
         return {
           value: t._id,
@@ -495,17 +539,16 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     // even if it's not in the current templatesData page.
     if (selectedTemplate && selectedTemplate._id) {
       const exists = baseOptions.some(
-        (opt) => opt.value === selectedTemplate._id
+        (opt) => opt.value === selectedTemplate._id,
       );
       if (!exists) {
-        const selectedTitleLabel =
-          selectedTemplate.title
-            ? selectedTemplate.title.charAt(0).toUpperCase() +
+        const selectedTitleLabel = selectedTemplate.title
+          ? selectedTemplate.title.charAt(0).toUpperCase() +
             selectedTemplate.title.slice(1)
-            : selectedTemplate.type
-              ? selectedTemplate.type.charAt(0).toUpperCase() +
+          : selectedTemplate.type
+            ? selectedTemplate.type.charAt(0).toUpperCase() +
               selectedTemplate.type.slice(1)
-              : "Unnamed Template";
+            : "Unnamed Template";
 
         baseOptions.push({
           value: selectedTemplate._id,
@@ -529,7 +572,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
               >
                 {selectedTemplate.type
                   ? selectedTemplate.type.charAt(0).toUpperCase() +
-                  selectedTemplate.type.slice(1)
+                    selectedTemplate.type.slice(1)
                   : ""}
               </span>
             </div>
@@ -591,7 +634,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           // If either is empty, clear cross-field errors
           if (
             next.minexperience ===
-            "Min Experience cannot be greater than Max" ||
+              "Min Experience cannot be greater than Max" ||
             next.minexperience === "Min and Max Experience cannot be equal"
           )
             next.minexperience = "";
@@ -642,7 +685,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           } else {
             if (
               next.minsalary ===
-              "Minimum Salary cannot be greater than Maximum" ||
+                "Minimum Salary cannot be greater than Maximum" ||
               next.minsalary === "Minimum and Maximum Salary cannot be equal"
             )
               next.minsalary = "";
@@ -667,11 +710,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
-          : entry
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
+          : entry,
       );
       setEntries(updatedEntries);
       setEditingIndex(null);
@@ -732,7 +775,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     e,
     actionType = "",
     skipValidation = false,
-    updatedData = null
+    updatedData = null,
   ) => {
     if (e) {
       e.preventDefault();
@@ -768,7 +811,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const { formIsValid, newErrors } = validateForm(
         dataToSubmit,
         entries || [],
-        dataToSubmit.rounds || []
+        dataToSubmit.rounds || [],
       );
 
       if (!formIsValid) {
@@ -828,7 +871,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // rounds: dataToSubmit?.template?.rounds || [],
     };
 
-
     try {
       // let response;
       // if (isEdit && positionId) {
@@ -849,7 +891,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         data: basicdetails,
       });
       // Updated Successfully
-
 
       if (response.status === "success") {
         notify.success("Position added successfully");
@@ -910,8 +951,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save position"
+          error.message ||
+          "Failed to save position",
       );
 
       if (error.response && error.response.status === 400) {
@@ -1276,7 +1317,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const filteredLocations = locations?.filter((location) =>
     location.LocationName?.toString()
       .toLowerCase()
-      .includes(locationSearchTerm.toLowerCase())
+      .includes(locationSearchTerm.toLowerCase()),
   );
 
   return (
@@ -1406,6 +1447,17 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           onMenuOpen={loadCompanies}
                           loading={isCompaniesFetching}
                         /> */}
+                        {/* <DropdownWithSearchField
+                          value={formData.companyName}
+                          options={companyOptionsRS}
+                          onChange={handleChange}
+                          containerRef={fieldRefs.companyname}
+                          label="Company Name"
+                          name="companyName"
+                          onMenuOpen={fetchCompaniesData}
+                          loading={isCompaniesFetchingAction}
+                          placeholder="Select Company"
+                        /> */}
                         <DropdownWithSearchField
                           value={formData.companyName}
                           options={companyOptionsRS}
@@ -1413,6 +1465,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           containerRef={fieldRefs.companyname}
                           label="Company Name"
                           name="companyName"
+                          isCustomName={isCustomCompany}
+                          setIsCustomName={handleIsCustomCompany} // Custom toggle handler
                           onMenuOpen={fetchCompaniesData}
                           loading={isCompaniesFetchingAction}
                           placeholder="Select Company"
@@ -1428,10 +1482,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         <div>
                           <DropdownSelect
                             value={employmentTypeOptions.find(
-                              opt => opt.value === formData.employmentType
+                              (opt) => opt.value === formData.employmentType,
                             )}
                             onChange={(selected) => {
-                              setFormData(prev => ({
+                              setFormData((prev) => ({
                                 ...prev,
                                 employmentType: selected?.value || "",
                               }));
@@ -1469,12 +1523,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         <div>
                           <DropdownSelect
                             value={statusOptions.find(
-                              (opt) => opt.value === formData.status
+                              (opt) => opt.value === formData.status,
                             )} // match current selection
                             onChange={(selected) => {
                               formData.status = selected.value;
                               setFormData({ ...formData });
-
                             }} // update state with value
                             // options={statusOptions}
                             options={statusOptions.map((option) => ({
@@ -1544,7 +1597,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           max={1000000000}
                           label="Min Salary (Annual)"
                           name="minSalary"
-                        // required={formData.maxSalary ? true : false}
+                          // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
                           value={formData.maxSalary}
@@ -1555,7 +1608,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           error={errors.maxsalary}
                           label="Max Salary (Annual)"
                           name="maxSalary"
-                        // required={formData.minSalary ? true : false}
+                          // required={formData.minSalary ? true : false}
                         />
                       </div>
                     </div>
@@ -1572,7 +1625,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         max={100}
                         label="No. of Positions"
                         name="NoofPositions"
-                      // required
+                        // required
                       />
 
                       <div>
@@ -1615,7 +1668,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
                             // Otherwise create a styled version
                             const template = templatesData?.find(
-                              (t) => t._id === option.value
+                              (t) => t._id === option.value,
                             );
                             if (!template) return option.label;
 
@@ -1648,13 +1701,13 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             const templateId = e.target.value;
 
                             const fromList = (templatesData || []).find(
-                              (t) => t._id === templateId
+                              (t) => t._id === templateId,
                             );
 
                             const resolvedTemplate =
                               fromList ||
                               (selectedTemplate &&
-                                selectedTemplate._id === templateId
+                              selectedTemplate._id === templateId
                                 ? selectedTemplate
                                 : null);
 
@@ -1757,7 +1810,12 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
                           setEntries((prevEntries) => {
                             const newEntries = [
                               ...prevEntries,
-                              { skill: "", experience: "", expertise: "", requirement_level: "REQUIRED" },
+                              {
+                                skill: "",
+                                experience: "",
+                                expertise: "",
+                                requirement_level: "REQUIRED",
+                              },
                             ];
                             // Only set editing index if callback is provided
                             if (
@@ -1772,26 +1830,38 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
                           setSelectedExp("");
                           setSelectedLevel("");
                         }}
-                        onAddMultipleSkills={(newSkillEntries, skillsToRemove = []) => {
+                        onAddMultipleSkills={(
+                          newSkillEntries,
+                          skillsToRemove = [],
+                        ) => {
                           setEntries((prevEntries) => {
                             let updatedEntries = [...prevEntries];
 
                             // First, handle skill removals
                             if (skillsToRemove.length > 0) {
                               // Count current skills with data
-                              const currentFilledSkills = updatedEntries.filter(e => e.skill).length;
-                              const remainingSkillsAfterRemoval = currentFilledSkills - skillsToRemove.length;
+                              const currentFilledSkills = updatedEntries.filter(
+                                (e) => e.skill,
+                              ).length;
+                              const remainingSkillsAfterRemoval =
+                                currentFilledSkills - skillsToRemove.length;
 
                               // If we still have 3+ skills after removal, remove rows entirely
                               if (remainingSkillsAfterRemoval >= 3) {
-                                updatedEntries = updatedEntries.filter(entry =>
-                                  !skillsToRemove.includes(entry.skill)
+                                updatedEntries = updatedEntries.filter(
+                                  (entry) =>
+                                    !skillsToRemove.includes(entry.skill),
                                 );
                               } else {
                                 // If we'd have less than 3, just clear the skill but keep rows
                                 updatedEntries = updatedEntries.map((entry) => {
                                   if (skillsToRemove.includes(entry.skill)) {
-                                    return { skill: "", experience: "", expertise: "", requirement_level: "REQUIRED" };
+                                    return {
+                                      skill: "",
+                                      experience: "",
+                                      expertise: "",
+                                      requirement_level: "REQUIRED",
+                                    };
                                   }
                                   return entry;
                                 });
@@ -1799,25 +1869,40 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
 
                               // Ensure we always have at least 3 rows
                               while (updatedEntries.length < 3) {
-                                updatedEntries.push({ skill: "", experience: "", expertise: "", requirement_level: "REQUIRED" });
+                                updatedEntries.push({
+                                  skill: "",
+                                  experience: "",
+                                  expertise: "",
+                                  requirement_level: "REQUIRED",
+                                });
                               }
                             }
 
                             // Then, add new skills - fill empty rows first
                             let skillIndex = 0;
-                            for (let i = 0; i < updatedEntries.length && skillIndex < newSkillEntries.length; i++) {
+                            for (
+                              let i = 0;
+                              i < updatedEntries.length &&
+                              skillIndex < newSkillEntries.length;
+                              i++
+                            ) {
                               if (!updatedEntries[i].skill) {
                                 updatedEntries[i] = {
                                   ...updatedEntries[i],
                                   skill: newSkillEntries[skillIndex].skill,
-                                  requirement_level: newSkillEntries[skillIndex].requirement_level || "REQUIRED",
+                                  requirement_level:
+                                    newSkillEntries[skillIndex]
+                                      .requirement_level || "REQUIRED",
                                 };
                                 skillIndex++;
                               }
                             }
 
                             // Add remaining skills as new rows
-                            while (skillIndex < newSkillEntries.length && updatedEntries.length < 10) {
+                            while (
+                              skillIndex < newSkillEntries.length &&
+                              updatedEntries.length < 10
+                            ) {
                               updatedEntries.push(newSkillEntries[skillIndex]);
                               skillIndex++;
                             }
@@ -1826,8 +1911,13 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
                           });
                           // Update allSelectedSkills
                           setAllSelectedSkills((prev) => {
-                            let updated = prev.filter(s => !skillsToRemove.includes(s));
-                            return [...updated, ...newSkillEntries.map((e) => e.skill)];
+                            let updated = prev.filter(
+                              (s) => !skillsToRemove.includes(s),
+                            );
+                            return [
+                              ...updated,
+                              ...newSkillEntries.map((e) => e.skill),
+                            ];
                           });
                         }}
                         onEditSkill={(index) => {
@@ -1840,8 +1930,8 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
                           const entry = entries[index];
                           setAllSelectedSkills(
                             allSelectedSkills.filter(
-                              (skill) => skill !== entry.skill
-                            )
+                              (skill) => skill !== entry.skill,
+                            ),
                           );
                           setEntries(entries.filter((_, i) => i !== index));
                         }}
@@ -1887,8 +1977,6 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
                         onOpenSkills={loadSkills}
                       />
                     </div>
-
-
 
                     {/* v1.0.2 ---------------------------------------------------> */}
                     <DescriptionField
@@ -1983,6 +2071,41 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
           )}
         </div>
       </div>
+
+      {/* New Company Modal */}
+
+      {/* {isCompanyModalOpen && (
+        <CompanyForm
+          mode="Create"
+          onClose={() => setIsCompanyModalOpen(false)}
+          onSuccess={() => {
+            fetchCompaniesData();
+            setIsCompanyModalOpen(false);
+          }}
+        />
+      )} */}
+      {isCompanyModalOpen && (
+        <CompanyForm
+          mode="Create"
+          onClose={() => setIsCompanyModalOpen(false)}
+          onSuccess={async () => {
+            const updatedList = await fetchCompaniesData();
+            if (updatedList && updatedList.length > 0) {
+              const newCompany = updatedList[0];
+
+              setFormData((prev) => ({
+                ...prev,
+                companyName: newCompany._id,
+              }));
+
+              if (errors.companyName) {
+                setErrors((prev) => ({ ...prev, companyName: "" }));
+              }
+            }
+            setIsCompanyModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };

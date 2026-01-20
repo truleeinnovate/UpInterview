@@ -6,7 +6,10 @@ import Cookies from "js-cookie";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import SidebarProfile from "./account/Sidebar";
-import { usePermissions, getCachedPermissions } from "../../../Context/PermissionsContext";
+import {
+  usePermissions,
+  getCachedPermissions,
+} from "../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../utils/permissionUtils";
 import AuthCookieManager from "../../../utils/AuthCookieManager/AuthCookieManager";
 import {
@@ -26,6 +29,7 @@ import {
   ArrowsRightLeftIcon,
   VideoCameraIcon,
 } from "@heroicons/react/24/outline";
+import { Tag } from "lucide-react";
 
 const AccountSettingsSidebar = () => {
   const { checkPermission, isInitialized, loading } = usePermissionCheck();
@@ -39,7 +43,9 @@ const AccountSettingsSidebar = () => {
 
   // Extract active tab from URL
   const pathParts = location.pathname.split("/");
-  const activeTab = pathParts.includes("my-profile") ? "my-profile" : pathParts[2] || "profile";
+  const activeTab = pathParts.includes("my-profile")
+    ? "my-profile"
+    : pathParts[2] || "profile";
 
   // Decode auth token to check for organization
   const authToken = Cookies.get("authToken");
@@ -61,14 +67,18 @@ const AccountSettingsSidebar = () => {
   const securityNavigation = [
     { name: "Security", icon: KeyIcon, id: "security" },
     { name: "Usage", icon: ChartBarIcon, id: "usage" },
-
   ];
 
   const organizationNavigation = [
     { name: "Users", icon: UsersIcon, id: "users" },
     { name: "My Teams", icon: UserGroupIcon, id: "my-teams" },
+    { name: "Interviewer Tags", icon: Tag, id: "interviewer-tags" },
     { name: "Roles", icon: UserIcon, id: "roles" },
-    { name: "Video Calling", icon: VideoCameraIcon, id: "video-calling-settings" },
+    {
+      name: "Video Calling",
+      icon: VideoCameraIcon,
+      id: "video-calling-settings",
+    },
   ];
 
   const settingsNavigation = [
@@ -109,6 +119,7 @@ const AccountSettingsSidebar = () => {
     usage: "Usage",
     users: "Users",
     "my-teams": "MyTeams",
+    "interviewer-tags": "InterviewerTags",
     roles: "Roles",
     sharing: "Sharing",
     "sub-domain": "Subdomain",
@@ -146,10 +157,21 @@ const AccountSettingsSidebar = () => {
           }
 
           const hasPermission = checkPermission(permissionKey);
-          //   console.log(`🎯 Non-super admin ${item.id}:`, { permissionKey, hasPermission });
+          console.log(`🎯 Non-super admin ${item.id}:`, {
+            permissionKey,
+            hasPermission,
+          });
 
           if (
-            ["profile", "users", "sub-domain", "roles", "my-teams", "sharing"].includes(item.id)
+            [
+              "profile",
+              "users",
+              "sub-domain",
+              "roles",
+              "my-teams",
+              "interviewer-tags",
+              "sharing",
+            ].includes(item.id)
           ) {
             return organization && hasPermission;
           }
@@ -168,17 +190,24 @@ const AccountSettingsSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
   }, []);
 
-  const handleTabChange = useCallback((tabId) => {
-    // console.log('🎯 Sidebar: Navigating to tab:', tabId);
-    if (tabId === "my-profile") {
-      navigate("/account-settings/my-profile/basic");
-      setIsSidebarOpen(true);
-    } else if (tabId === "profile" && organization && userType !== "superAdmin") {
-      navigate("/account-settings/profile");
-    } else {
-      navigate(`/account-settings/${tabId}`);
-    }
-  }, [navigate, organization, userType]);
+  const handleTabChange = useCallback(
+    (tabId) => {
+      // console.log('🎯 Sidebar: Navigating to tab:', tabId);
+      if (tabId === "my-profile") {
+        navigate("/account-settings/my-profile/basic");
+        setIsSidebarOpen(true);
+      } else if (
+        tabId === "profile" &&
+        organization &&
+        userType !== "superAdmin"
+      ) {
+        navigate("/account-settings/profile");
+      } else {
+        navigate(`/account-settings/${tabId}`);
+      }
+    },
+    [navigate, organization, userType],
+  );
 
   // Debug initialization state
   //   useEffect(() => {
@@ -236,7 +265,11 @@ const AccountSettingsSidebar = () => {
         activeTab={activeTab}
         filteredNavigation={filteredNavigation}
         userType={userType}
-        permissions={userType === "superAdmin" ? superAdminPermissions : effectivePermissions}
+        permissions={
+          userType === "superAdmin"
+            ? superAdminPermissions
+            : effectivePermissions
+        }
       />
 
       <div className="flex-1 flex flex-col relative">
