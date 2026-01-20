@@ -236,7 +236,7 @@ const InterviewerTags = lazy(
 );
 const InterviewerTagDetails = lazy(
   () =>
-    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewerTags/InterviewerDetails.jsx"),
+    import("./Pages/Dashboard-Part/Accountsettings/account/InterviewerTags/InterviewerTagDetails.jsx"),
 );
 const InterviewerTagsForm = lazy(
   () =>
@@ -1025,11 +1025,11 @@ const MainAppRoutes = ({
                   <Route index element={null} />
                   <Route
                     path="tag-form"
-                    element={<InterviewerTagsForm mode="Create" />}
+                    element={<InterviewerTagsForm />}
                   />
                   <Route
                     path="tag-edit/:id"
-                    element={<InterviewerTagsForm mode="Edit" />}
+                    element={<InterviewerTagsForm />}
                   />
                   <Route path="tag-details/:id" element={<InterviewerTagDetails />} />
                 </Route>

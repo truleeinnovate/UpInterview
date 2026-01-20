@@ -6,8 +6,10 @@ import {
     useCreateInterviewer,
     useUpdateInterviewer,
     useInterviewerById,
-    useInterviewerTags
 } from '../../../../apiHooks/useInterviewers';
+import {
+    useInterviewerTags
+} from '../../../../apiHooks/InterviewerTags/useInterviewerTags';
 import { usePaginatedTeams, useUpdateTeam } from '../../../../apiHooks/useInterviewerGroups';
 import useInterviewersHook from '../../../../hooks/useInterviewers';
 import { notify } from '../../../../services/toastService';
