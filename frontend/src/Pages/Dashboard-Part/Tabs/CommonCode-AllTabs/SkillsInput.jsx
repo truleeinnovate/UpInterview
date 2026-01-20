@@ -57,6 +57,14 @@ const SkillsField = forwardRef(
       "10+ Years",
     ];
 
+    // Experience options for Position form - shows friendly labels, saves numeric values
+    const positionExperienceOptions = [
+      { value: "0-1", label: "Beginner (0–1 years)" },
+      { value: "1-3", label: "Intermediate (1–3 years)" },
+      { value: "3-5", label: "Advanced (3–5 years)" },
+      { value: "5+", label: "Expert (5+ years)" },
+    ];
+
     // Requirement Level options - backend stores value, frontend shows label
     const requirementLevelOptions = [
       { value: "REQUIRED", label: "Must-Have" },
@@ -132,7 +140,7 @@ const SkillsField = forwardRef(
 
       entries.forEach((entry, index) => {
         const isCompleteRow =
-          entry.skill && (showRequirementLevel || entry.experience) && entry.expertise;
+          entry.skill && entry.experience && (showRequirementLevel || entry.expertise);
         const hasAnyValue = entry.skill || entry.experience || entry.expertise;
 
         // First 3 rows are mandatory
@@ -148,10 +156,10 @@ const SkillsField = forwardRef(
               if (!entry.skill) {
                 errors.skill = true;
               }
-              if (!showRequirementLevel && !entry.experience) {
+              if (!entry.experience) {
                 errors.experience = true;
               }
-              if (!entry.expertise) {
+              if (!showRequirementLevel && !entry.expertise) {
                 errors.expertise = true;
               }
 
@@ -168,10 +176,10 @@ const SkillsField = forwardRef(
             if (!entry.skill) {
               errors.skill = true;
             }
-            if (!showRequirementLevel && !entry.experience) {
+            if (!entry.experience) {
               errors.experience = true;
             }
-            if (!entry.expertise) {
+            if (!showRequirementLevel && !entry.expertise) {
               errors.expertise = true;
             }
 
@@ -488,14 +496,18 @@ const SkillsField = forwardRef(
                         <span className="text-red-500 text-xs mt-1">Skill required</span>
                       )} */}
                     </div>
-                    {!showRequirementLevel && <div className="px-1">
+                    <div className="px-1">
                       <DropdownSelect
-                        options={experienceOptionsRS}
+                        options={showRequirementLevel ? positionExperienceOptions : experienceOptionsRS}
                         isSearchable={false}
                         value={
-                          experienceOptionsRS.find(
-                            (o) => o.value === entry.experience
-                          ) || null
+                          showRequirementLevel
+                            ? positionExperienceOptions.find(
+                              (o) => o.value === entry.experience
+                            ) || null
+                            : experienceOptionsRS.find(
+                              (o) => o.value === entry.experience
+                            ) || null
                         }
                         onChange={(opt) => {
                           if (onUpdateEntry) {
@@ -514,8 +526,8 @@ const SkillsField = forwardRef(
                           Experience required
                         </span>
                       )}
-                    </div>}
-                    <div className="px-1">
+                    </div>
+                    {!showRequirementLevel && <div className="px-1">
                       <DropdownSelect
                         options={expertiseOptionsRS}
                         isSearchable={false}
@@ -541,7 +553,7 @@ const SkillsField = forwardRef(
                           Expertise required
                         </span>
                       )}
-                    </div>
+                    </div>}
                     {showRequirementLevel && (
                       <div className="px-1">
                         <DropdownSelect

@@ -125,7 +125,7 @@ export const validateForm = (formData, entries, rounds) => {
 
   // Skills validation: ignore entirely empty rows, validate only rows where any field is filled
   const filledEntries = (entries || []).filter(
-    (e) => (e?.skill && e.skill !== "") || (e?.expertise && e.expertise !== "") || (e?.requirement_level && e.requirement_level !== "")
+    (e) => (e?.skill && e.skill !== "") || (e?.experience && e.experience !== "") || (e?.requirement_level && e.requirement_level !== "")
   );
   if (filledEntries.length === 0) {
     errors.skills = "At least one skill must be selected";
@@ -135,7 +135,7 @@ export const validateForm = (formData, entries, rounds) => {
     const invalidEntries = filledEntries.map((entry, index) => {
       const missingFields = [];
       if (!entry.skill) missingFields.push('skill');
-      if (!entry.expertise) missingFields.push('expertise');
+      if (!entry.experience) missingFields.push('experience');
       if (!entry.requirement_level) missingFields.push('requirement_level');
 
       return missingFields.length > 0
