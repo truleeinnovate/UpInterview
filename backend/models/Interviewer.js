@@ -11,21 +11,23 @@ const ratingBreakdownSchema = new Schema({
 }, { _id: false });
 
 const interviewerSchema = new Schema({
-    full_name: {
-        type: String,
-        required: true,
-        trim: true
-    },
-    email: {
-        type: String,
-        required: true,
-        trim: true,
-        lowercase: true
-    },
+    // NOTE: full_name, email, title, department, avatar_url are fetched from user_id (Contact)
+    // full_name: {
+    //     type: String,
+    //     required: true,
+    //     trim: true
+    // },
+    // email: {
+    //     type: String,
+    //     required: true,
+    //     trim: true,
+    //     lowercase: true
+    // },
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Users',
-        description: 'Link to User entity if internal'
+        ref: 'Contacts',
+        required: true,
+        description: 'Link to Contact entity - name/email fetched from here'
     },
     interviewer_type: {
         type: String,
@@ -33,18 +35,18 @@ const interviewerSchema = new Schema({
         default: 'internal',
         description: 'Whether internal employee or outsourced'
     },
-    title: {
-        type: String,
-        trim: true
-    },
-    department: {
-        type: String,
-        trim: true
-    },
-    avatar_url: {
-        type: String,
-        description: 'Profile picture URL'
-    },
+    // title: {
+    //     type: String,
+    //     trim: true
+    // },
+    // department: {
+    //     type: String,
+    //     trim: true
+    // },
+    // avatar_url: {
+    //     type: String,
+    //     description: 'Profile picture URL'
+    // },
     tag_ids: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'InterviewerTag'

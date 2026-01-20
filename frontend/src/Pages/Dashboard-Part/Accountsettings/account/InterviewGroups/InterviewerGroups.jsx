@@ -202,7 +202,7 @@ const MyTeams = () => {
   const navigate = useNavigate();
 
   // State for Toolbar Features
-  const [view, setView] = useState("kanban"); // Default to kanban view for teams
+  const [view, setView] = useState("table"); // Default to kanban view for teams
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
 

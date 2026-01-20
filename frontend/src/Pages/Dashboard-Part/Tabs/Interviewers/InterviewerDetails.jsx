@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    ArrowLeft,
     Pencil,
     Trash2,
     Mail,
@@ -10,22 +9,113 @@ import {
     Calendar,
     Users,
     CreditCard,
-    Star
+    Star,
+    Power
 } from 'lucide-react';
+import SidebarPopup from '../../../../Components/Shared/SidebarPopup/SidebarPopup';
 import { useInterviewerById, useDeleteInterviewer, useToggleInterviewerActive } from '../../../../apiHooks/useInterviewers';
-import StatusBadge from '../../../../Components/SuperAdminComponents/common/StatusBadge';
 import { capitalizeFirstLetter } from '../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter';
 
-const DetailRow = ({ icon: Icon, label, value }) => {
+// Helper for Grid Items
+const GridItem = ({ icon: Icon, label, value }) => {
     if (!value) return null;
     return (
-        <div className="flex items-start gap-3 p-3">
-            <div className="mt-1">
-                <Icon size={18} className="text-gray-400" />
+        <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0 text-gray-500 border border-gray-100">
+                <Icon size={20} />
             </div>
             <div>
-                <p className="text-sm font-medium text-gray-500">{label}</p>
-                <p className="text-base text-gray-900 font-medium">{value}</p>
+                <p className="text-xs font-medium text-gray-500 mb-0.5">{label}</p>
+                <p className="text-base font-semibold text-gray-900">{value}</p>
+            </div>
+        </div>
+    );
+};
+
+export const InterviewerDetailsContent = ({ interviewer }) => {
+    // Get display values
+    let displayEmail = interviewer.email;
+    let displayName = interviewer.full_name;
+
+    if (interviewer.interviewer_type === 'internal' && interviewer.user_id && typeof interviewer.user_id === 'object') {
+        const user = interviewer.user_id;
+        if (user.firstName || user.lastName) {
+            displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+        }
+        if (user.email) displayEmail = user.email;
+    }
+
+    return (
+        <div className="p-1 pb-20">
+            <div className="space-y-6 pt-4 px-2">
+                {/* Contact Information Card */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h3 className="text-base font-semibold text-gray-900 mb-6">Contact Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+                        <GridItem
+                            icon={Mail}
+                            label="Email Address"
+                            value={displayEmail}
+                        />
+                        <GridItem
+                            icon={Users}
+                            label="Assigned Team"
+                            value={interviewer.team_id?.name || 'No Team Assigned'}
+                        />
+                        {interviewer.user_id && (
+                            <GridItem
+                                icon={CreditCard}
+                                label="Linked Account"
+                                value={`${displayName}`}
+                            />
+                        )}
+                    </div>
+                </div>
+
+                {/* Professional Details Card */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h3 className="text-base font-semibold text-gray-900 mb-6">Professional Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+                        <GridItem
+                            icon={interviewer.interviewer_type === 'internal' ? Building : Briefcase}
+                            label={interviewer.interviewer_type === 'internal' ? 'Department' : 'Company'}
+                            value={interviewer.interviewer_type === 'internal' ? interviewer.department : interviewer.external_company}
+                        />
+
+                        <GridItem
+                            icon={Star}
+                            label="Overall Rating"
+                            value={interviewer.user_id.rating ? `${interviewer.user_id.rating.toFixed(1)} / 5.0` : 'N/A'}
+                        />
+
+                        <GridItem
+                            icon={Calendar}
+                            label="Availability"
+                            value={`${interviewer.max_interviews_per_week} Interviews/Week`}
+                        />
+
+                        {interviewer.interviewer_type === 'external' && (
+                            <GridItem icon={CreditCard} label="Hourly Rate" value={`$${interviewer.hourly_rate}`} />
+                        )}
+                    </div>
+
+                    {/* Tags Section */}
+                    {interviewer.tag_ids && interviewer.tag_ids.length > 0 && (
+                        <div className="mt-8 pt-6 border-t border-gray-100">
+                            <p className="text-xs font-medium text-gray-500 mb-3">Expertise & Skills</p>
+                            <div className="flex flex-wrap gap-2">
+                                {interviewer.tag_ids.map((tag, idx) => (
+                                    <span
+                                        key={idx}
+                                        className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-50 text-gray-700 border border-gray-200"
+                                    >
+                                        {tag.name}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -58,200 +148,58 @@ const InterviewerDetails = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="max-w-5xl mx-auto p-8 animate-pulse">
-                <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
-                <div className="h-64 bg-gray-200 rounded-xl mb-6"></div>
-                <div className="grid grid-cols-2 gap-6">
-                    <div className="h-48 bg-gray-200 rounded-xl"></div>
-                    <div className="h-48 bg-gray-200 rounded-xl"></div>
-                </div>
-            </div>
-        );
+    if (isLoading) return null; // Or a loading spinner handled by SidebarPopup content if strictly needed, but null prevents flash
+
+    if (isError || !interviewer) return null; // Error handling usually at page level or retry
+
+    // Prepare Header Elements
+    let displayName = interviewer.full_name;
+    let displayEmail = interviewer.email;
+    if (interviewer.interviewer_type === 'internal' && interviewer.user_id && typeof interviewer.user_id === 'object') {
+        const user = interviewer.user_id;
+        if (user.firstName || user.lastName) {
+            displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+        }
+        if (user.email) displayEmail = user.email;
     }
 
-    if (isError || !interviewer) {
-        return (
-            <div className="p-8 text-center">
-                <p className="text-red-500 mb-4">Error loading interviewer details.</p>
-                <button
-                    onClick={() => navigate('/interviewers')}
-                    className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
-                >
-                    Go Back
-                </button>
-            </div>
-        );
-    }
+    const titleRight = (
+        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ml-2 ${interviewer.is_active
+            ? 'bg-green-50 text-green-700 border-green-200'
+            : 'bg-gray-100 text-gray-600 border-gray-200'
+            }`}>
+            {interviewer.is_active ? 'Active' : 'Inactive'}
+        </span>
+    );
+
+    const subTitle = (
+        <span className="flex items-center gap-2">
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${interviewer.interviewer_type === 'internal'
+                ? 'bg-purple-50 text-purple-700 border border-purple-100'
+                : 'bg-orange-50 text-orange-700 border border-orange-100'
+                }`}>
+                {capitalizeFirstLetter(interviewer.interviewer_type)}
+            </span>
+            <span className="text-gray-300">•</span>
+            <span>{displayEmail || '-'}</span>
+        </span>
+    );
+
 
     return (
-        <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => navigate('/interviewers')}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                    >
-                        <ArrowLeft size={20} className="text-gray-600" />
-                    </button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                            {interviewer.full_name}
-                            <StatusBadge status={interviewer.is_active ? 'Active' : 'Inactive'} />
-                        </h1>
-                        <p className="text-sm text-gray-500 flex items-center gap-2 mt-1">
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${interviewer.interviewer_type === 'internal'
-                                ? 'bg-purple-100 text-purple-700'
-                                : 'bg-orange-100 text-orange-700'
-                                }`}>
-                                {capitalizeFirstLetter(interviewer.interviewer_type)}
-                            </span>
-                            <span>•</span>
-                            <span>{interviewer.email}</span>
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex gap-3">
-                    <button
-                        onClick={handleToggleActive}
-                        className={`px-4 py-2 text-sm font-medium border rounded-lg transition-colors ${interviewer.is_active
-                            ? 'border-red-200 text-red-700 hover:bg-red-50'
-                            : 'border-green-200 text-green-700 hover:bg-green-50'
-                            }`}
-                    >
-                        {interviewer.is_active ? 'Deactivate' : 'Activate'}
-                    </button>
-                    <button
-                        onClick={handleEdit}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                        <Pencil size={18} />
-                        <span>Edit</span>
-                    </button>
-                    <button
-                        onClick={handleDelete}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-100 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                    >
-                        <Trash2 size={18} />
-                    </button>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Main Info Card */}
-                <div className="md:col-span-2 space-y-6">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Profile Information</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <DetailRow icon={Briefcase} label="Job Title" value={interviewer.title} />
-                            <DetailRow
-                                icon={Building}
-                                label={interviewer.interviewer_type === 'internal' ? 'Department' : 'Company'}
-                                value={interviewer.interviewer_type === 'internal' ? interviewer.department : interviewer.external_company}
-                            />
-                            <DetailRow icon={Mail} label="Email" value={interviewer.email} />
-                            <DetailRow
-                                icon={Users}
-                                label="Assigned Team"
-                                value={interviewer.team_id?.name}
-                            />
-                            {interviewer.user_id && (
-                                <div className="col-span-2">
-                                    <DetailRow
-                                        icon={Users}
-                                        label="Linked User Account"
-                                        value={`${interviewer.user_id.full_name} (${interviewer.user_id.email})`}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Expertise & Availability</h2>
-                        <div className="space-y-4">
-                            <div>
-                                <p className="text-sm font-medium text-gray-500 mb-2">Tags</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {interviewer.tag_ids && interviewer.tag_ids.length > 0 ? (
-                                        interviewer.tag_ids.map((tag, idx) => (
-                                            <span
-                                                key={idx}
-                                                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                                                style={{
-                                                    backgroundColor: `${tag.color || '#94a3b8'}20`,
-                                                    color: tag.color || '#94a3b8',
-                                                    border: `1px solid ${tag.color || '#94a3b8'}40`
-                                                }}
-                                            >
-                                                {tag.name}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <span className="text-gray-400 italic">No tags assigned</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                                <DetailRow
-                                    icon={Calendar}
-                                    label="Max Interviews/Week"
-                                    value={interviewer.max_interviews_per_week}
-                                />
-
-                                {interviewer.interviewer_type === 'external' && (
-                                    <>
-                                        <DetailRow
-                                            icon={CreditCard}
-                                            label="Hourly Rate"
-                                            value={`$${interviewer.hourly_rate || '0.00'}`}
-                                        />
-                                        <DetailRow
-                                            icon={Calendar}
-                                            label="Contract End Date"
-                                            value={interviewer.contract_end_date ? new Date(interviewer.contract_end_date).toLocaleDateString() : '-'}
-                                        />
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Sidebar Stats */}
-                <div className="space-y-6">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Performance</h2>
-
-                        <div className="text-center mb-6">
-                            <div className="inline-flex items-center justify-center width-20 height-20 rounded-full bg-yellow-50 p-4 mb-2">
-                                <span className="text-4xl font-bold text-yellow-500">
-                                    {interviewer.overall_rating ? interviewer.overall_rating.toFixed(1) : 'N/A'}
-                                </span>
-                            </div>
-                            <p className="text-sm text-gray-500">Overall Rating</p>
-                        </div>
-
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-gray-600">Interviews Conducted</span>
-                                <span className="font-semibold">{interviewer.interviews_conducted || 0}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-gray-600">Hire Success</span>
-                                <span className="font-semibold">
-                                    {interviewer.rating_breakdown?.hire_success_rate ? `${interviewer.rating_breakdown.hire_success_rate}%` : 'N/A'}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <SidebarPopup
+            isOpen={true}
+            onClose={() => navigate('/interviewers')}
+            width="w-full sm:w-[500px] md:w-[600px] lg:w-[700px]"
+            title={displayName || 'Unknown'}
+            titleRight={titleRight}
+            subTitle={subTitle}
+            showEdit={true}
+            onEdit={handleEdit}
+            id={id}
+        >
+            <InterviewerDetailsContent interviewer={interviewer} />
+        </SidebarPopup>
     );
 };
 

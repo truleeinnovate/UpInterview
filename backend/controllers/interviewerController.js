@@ -64,7 +64,7 @@ const getAllInterviewers = async (req, res) => {
         const interviewers = await Interviewer.find(filter)
             .populate('tag_ids', 'name color category')
             .populate('team_id', 'name color')
-            .populate('user_id', 'full_name email')
+            .populate('user_id', 'firstName lastName email currentRole imageData rating')
             .sort({ _id: -1 })
             .skip(skip)
             .limit(limitNum)
@@ -105,7 +105,8 @@ const getAllInterviewersData = async (req, res) => {
         const interviewers = await Interviewer.find(filter)
             .populate('tag_ids', 'name color category')
             .populate('team_id', 'name color')
-            .sort('full_name')
+            .populate('user_id', 'firstName lastName email currentRole imageData rating')
+            .sort({ _id: -1 })
             .lean();
 
         res.status(200).json(interviewers);
@@ -128,7 +129,7 @@ const getInterviewerById = async (req, res) => {
         const interviewer = await Interviewer.findOne({ _id: id, tenantId })
             .populate('tag_ids', 'name color category description')
             .populate('team_id', 'name color description department')
-            .populate('user_id', 'full_name email role')
+            .populate('user_id', 'firstName lastName email currentRole imageData rating')
             .lean();
 
         if (!interviewer) {
@@ -153,42 +154,34 @@ const createInterviewer = async (req, res) => {
         }
 
         const {
-            full_name,
-            email,
             user_id,
             interviewer_type,
-            title,
-            department,
-            avatar_url,
             tag_ids,
             team_id,
             is_active,
             specializations,
             max_interviews_per_week,
+            // External interviewer fields (for future use)
             external_company,
             hourly_rate,
             contract_end_date
         } = req.body;
 
-        // Validate required fields
-        if (!full_name || !email) {
-            return res.status(400).json({ message: 'Full name and email are required' });
+        // Validate required fields - user_id is required
+        if (!user_id) {
+            return res.status(400).json({ message: 'User ID is required to create an interviewer' });
         }
 
-        // Check if email already exists for this tenant
-        const existingInterviewer = await Interviewer.findOne({ email, tenantId });
+        // Check if interviewer already exists for this user_id and tenant
+        const existingInterviewer = await Interviewer.findOne({ user_id, tenantId });
         if (existingInterviewer) {
-            return res.status(400).json({ message: 'An interviewer with this email already exists' });
+            return res.status(400).json({ message: 'An interviewer already exists for this user' });
         }
 
-        // Prepare interviewer data
+        // Prepare interviewer data - name/email/title/department/avatar come from user_id (Contact)
         const interviewerData = {
-            full_name,
-            email,
+            user_id,
             interviewer_type: interviewer_type || 'internal',
-            title,
-            department,
-            avatar_url,
             tag_ids: tag_ids || [],
             team_id: team_id || null,
             is_active: is_active !== undefined ? is_active : true,
@@ -198,10 +191,8 @@ const createInterviewer = async (req, res) => {
             ownerId
         };
 
-        // Add type-specific fields
-        if (interviewer_type === 'internal' && user_id) {
-            interviewerData.user_id = user_id;
-        } else if (interviewer_type === 'external') {
+        // Add external interviewer fields (for future use)
+        if (interviewer_type === 'external') {
             interviewerData.external_company = external_company;
             interviewerData.hourly_rate = hourly_rate;
             interviewerData.contract_end_date = contract_end_date;
@@ -214,6 +205,7 @@ const createInterviewer = async (req, res) => {
         const populatedInterviewer = await Interviewer.findById(newInterviewer._id)
             .populate('tag_ids', 'name color category')
             .populate('team_id', 'name color')
+            .populate('user_id', 'firstName lastName email currentRole imageData rating')
             .lean();
 
         res.status(201).json({
