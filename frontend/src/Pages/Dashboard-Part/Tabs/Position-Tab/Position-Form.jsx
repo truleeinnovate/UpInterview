@@ -244,7 +244,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const [hasMovedToRounds, setHasMovedToRounds] = useState(false);
   const [currentStage, setCurrentStage] = useState("basic");
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
-  const STATUS_OPTIONS = ["opened", "closed", "hold", "cancelled"];
+  const STATUS_OPTIONS = ["opened", "closed", "hold"];
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -430,8 +430,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     "full_time",
     "part_time",
     "contract",
-    "internship",
-  ].map((value) => ({
+  ].map(value => ({
     value: value,
     label: formatEmploymentType(value),
   }));

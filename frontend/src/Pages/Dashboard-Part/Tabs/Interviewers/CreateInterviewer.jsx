@@ -1,53 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-    ArrowLeft,
-    Save,
-    User,
-    Mail,
-    Briefcase,
-    Building,
-    CreditCard,
-    Calendar,
-    Tag as TagIcon
-} from 'lucide-react';
+import Cookies from 'js-cookie';
+import { decodeJwt } from '../../../../utils/AuthCookieManager/jwtDecode';
 import {
     useCreateInterviewer,
     useUpdateInterviewer,
     useInterviewerById,
-    useAllInterviewers,
     useInterviewerTags
 } from '../../../../apiHooks/useInterviewers';
-import { usePaginatedTeams } from '../../../../apiHooks/useInterviewerGroups';
-import { useUsers } from '../../../../apiHooks/useUsers';
-import SidebarPopup from '../../../../Components/Shared/SidebarPopup/SidebarPopup';
+import { usePaginatedTeams, useUpdateTeam } from '../../../../apiHooks/useInterviewerGroups';
+import useInterviewersHook from '../../../../hooks/useInterviewers';
+import { notify } from '../../../../services/toastService';
 
-const InputField = ({ label, name, value, onChange, error, type = "text", placeholder, required, disabled }) => (
-    <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-            {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        <div className="relative rounded-md shadow-sm">
-            <input
-                type={type}
-                name={name}
-                value={value}
-                onChange={onChange}
-                className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm px-3 py-2 border ${error ? 'border-red-500' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                placeholder={placeholder}
-                disabled={disabled}
-                required={required}
-            />
-        </div>
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-    </div>
-);
+// Common Form Components
+import SidebarPopup from '../../../../Components/Shared/SidebarPopup/SidebarPopup';
+import InfoGuide from '../CommonCode-AllTabs/InfoCards';
+import InputField from '../../../../Components/FormFields/InputField';
+import DropdownWithSearchField from '../../../../Components/FormFields/DropdownWithSearchField';
 
 const CreateInterviewer = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const isEditMode = !!id;
 
+    // Get tenant from token
+    const authToken = Cookies.get('authToken');
+    const tokenPayload = decodeJwt(authToken);
+    const tenantId = tokenPayload?.tenantId;
+    const ownerId = tokenPayload?.userId;
+
+    // Form state
     const [formData, setFormData] = useState({
         full_name: '',
         email: '',
@@ -55,7 +37,7 @@ const CreateInterviewer = () => {
         title: '',
         department: '',
         external_company: '',
-        user_id: '',
+        user_id: '', // This will store contact._id
         team_id: '',
         is_active: true,
         max_interviews_per_week: 5,
@@ -64,19 +46,51 @@ const CreateInterviewer = () => {
         contract_end_date: ''
     });
 
+    // Selected user data
+    const [selectedUserData, setSelectedUserData] = useState(null);
+
+    // Team validation state
+    const [userAlreadyInTeam, setUserAlreadyInTeam] = useState(false);
+    const [selectedTeamData, setSelectedTeamData] = useState(null);
+
     const [errors, setErrors] = useState({});
 
     // API Hooks
     const createMutation = useCreateInterviewer();
     const updateMutation = useUpdateInterviewer();
+    const updateTeamMutation = useUpdateTeam();
     const { data: interviewerData, isLoading: isLoadingInterviewer } = useInterviewerById(id);
-    const { data: teamsData } = usePaginatedTeams({ limit: 100 });
+    const { teams, isLoading: teamsLoading } = usePaginatedTeams({ limit: 100 });
     const { data: tagsData } = useInterviewerTags({ active_only: true });
-    const { data: usersData } = useUsers();
+
+    // Use the hook to get internal users
+    const { interviewers: internalUsers, loading: usersLoading } = useInterviewersHook();
+
+    const teamsArray = teams || [];
+    const tags = tagsData || [];
 
     // Load data for edit mode
     useEffect(() => {
         if (isEditMode && interviewerData) {
+            console.log('Edit mode - interviewerData:', interviewerData);
+
+            // Get the user_id value - could be object with _id or just string
+            let userId = interviewerData.user_id?._id || interviewerData.user_id || '';
+
+            // If user_id is null but we have email, try to find matching user
+            if (!userId && interviewerData.email && internalUsers.length > 0) {
+                const matchingUser = internalUsers.find(u =>
+                    u?.contact?.Email?.toLowerCase() === interviewerData.email.toLowerCase() ||
+                    u?.contact?.email?.toLowerCase() === interviewerData.email.toLowerCase()
+                );
+                if (matchingUser) {
+                    userId = matchingUser.contact?._id || matchingUser._id;
+                    console.log('Found user by email match:', matchingUser);
+                }
+            }
+
+            console.log('Edit mode - resolved userId:', userId);
+
             setFormData({
                 full_name: interviewerData.full_name || '',
                 email: interviewerData.email || '',
@@ -84,16 +98,84 @@ const CreateInterviewer = () => {
                 title: interviewerData.title || '',
                 department: interviewerData.department || '',
                 external_company: interviewerData.external_company || '',
-                user_id: interviewerData.user_id?._id || '',
-                team_id: interviewerData.team_id?._id || '',
-                is_active: interviewerData.is_active,
+                user_id: userId,
+                team_id: interviewerData.team_id?._id || interviewerData.team_id || '',
+                is_active: interviewerData.is_active !== undefined ? interviewerData.is_active : true,
                 max_interviews_per_week: interviewerData.max_interviews_per_week || 5,
-                tag_ids: interviewerData.tag_ids?.map(t => t._id) || [],
+                tag_ids: interviewerData.tag_ids?.map(t => t._id || t) || [],
                 hourly_rate: interviewerData.hourly_rate || '',
                 contract_end_date: interviewerData.contract_end_date ? new Date(interviewerData.contract_end_date).toISOString().split('T')[0] : ''
             });
+
+            // If user is linked, find and set user data
+            if (userId && internalUsers.length > 0) {
+                console.log('Looking for user in internalUsers. Available contacts:',
+                    internalUsers.map(u => ({ contact_id: u?.contact?._id, _id: u?._id }))
+                );
+
+                const linkedUser = internalUsers.find(u =>
+                    (u?.contact?._id === userId) || (u?._id === userId)
+                );
+
+                console.log('Found linkedUser:', linkedUser);
+                if (linkedUser) {
+                    setSelectedUserData(linkedUser);
+                }
+            }
         }
-    }, [isEditMode, interviewerData]);
+    }, [isEditMode, interviewerData, internalUsers]);
+
+    // Update selected user data when user_id changes
+    useEffect(() => {
+        if (formData.user_id && formData.interviewer_type === 'internal') {
+            // Handle case where user_id might be an object (if fetched from backend) or string (if selected from dropdown)
+            const userId = typeof formData.user_id === 'object' ? formData.user_id._id : formData.user_id;
+
+            const selectedUser = internalUsers.find(u =>
+                (u?.contact?._id === userId) || (u?._id === userId)
+            );
+            if (selectedUser) {
+                setSelectedUserData(selectedUser);
+                const contact = selectedUser.contact || selectedUser;
+                const fullName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim();
+                setFormData(prev => ({
+                    ...prev,
+                    full_name: fullName || prev.full_name,
+                    email: contact.Email || contact.email || prev.email
+                }));
+            }
+        } else if (!formData.user_id && formData.interviewer_type === 'internal') {
+            setSelectedUserData(null);
+            if (!isEditMode) {
+                setFormData(prev => ({
+                    ...prev,
+                    full_name: '',
+                    email: ''
+                }));
+            }
+        }
+    }, [formData.user_id, formData.interviewer_type, internalUsers, isEditMode]);
+
+    // Check if user is already in selected team
+    useEffect(() => {
+        if (formData.team_id && formData.user_id) {
+            const selectedTeam = teamsArray.find(t => t._id === formData.team_id);
+            setSelectedTeamData(selectedTeam);
+
+            if (selectedTeam) {
+                // Check if user's contact._id is in team's member_ids
+                const memberIds = selectedTeam.member_ids || [];
+                const isInTeam = memberIds.some(memberId => {
+                    const memberIdStr = memberId?._id || memberId;
+                    return memberIdStr === formData.user_id;
+                });
+                setUserAlreadyInTeam(isInTeam);
+            }
+        } else {
+            setUserAlreadyInTeam(false);
+            setSelectedTeamData(null);
+        }
+    }, [formData.team_id, formData.user_id, teamsArray]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -113,7 +195,6 @@ const CreateInterviewer = () => {
             }));
         }
 
-        // Clear error when user types
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: null }));
         }
@@ -121,284 +202,297 @@ const CreateInterviewer = () => {
 
     const validate = () => {
         const newErrors = {};
-        if (!formData.full_name.trim()) newErrors.full_name = 'Full name is required';
-        if (!formData.email.trim()) newErrors.email = 'Email is required';
-        else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
+
+        // For internal type, only user_id is required
+        if (formData.interviewer_type === 'internal' && !formData.user_id) {
+            newErrors.user_id = 'Please select a user account';
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const onSubmit = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
 
         try {
+            // Build payload - only save user_id, not email/name (those come from user)
+            const payload = {
+                user_id: formData.user_id,
+                interviewer_type: formData.interviewer_type,
+                team_id: formData.team_id || null,
+                is_active: formData.is_active,
+                max_interviews_per_week: formData.max_interviews_per_week,
+                tag_ids: formData.tag_ids,
+                tenantId,
+                ownerId
+            };
+
+            // If team is selected and user is NOT already in team, add user to team
+            if (formData.team_id && !userAlreadyInTeam && selectedTeamData) {
+                const currentMembers = (selectedTeamData.member_ids || []).map(m => m?._id || m);
+                const updatedMembers = [...currentMembers, formData.user_id];
+
+                await updateTeamMutation.mutateAsync({
+                    teamId: formData.team_id,
+                    teamData: {
+                        ...selectedTeamData,
+                        member_ids: updatedMembers
+                    }
+                });
+            }
+
             if (isEditMode) {
-                await updateMutation.mutateAsync({ id, data: formData });
+                await updateMutation.mutateAsync({ id, data: payload });
+                notify.success('Interviewer updated successfully');
             } else {
-                await createMutation.mutateAsync(formData);
+                await createMutation.mutateAsync(payload);
+                notify.success('Interviewer created successfully');
             }
             navigate('/interviewers');
         } catch (error) {
             console.error('Error saving interviewer:', error);
-            // Handle error (show toast)
+            notify.error(error.response?.data?.message || 'Failed to save interviewer');
         }
     };
 
-    const teams = teamsData?.data || [];
-    const tags = tagsData || [];
-    const users = usersData?.data || usersData || [];
+    const handleClose = () => {
+        navigate('/interviewers');
+    };
+
+    const teamOptions = teamsArray.map(team => ({ value: team._id, label: team.name }));
+
+    // Build user options - store contact._id as value
+    const userOptions = internalUsers
+        .filter(user => user.type === 'internal' || user.roleLabel === 'Admin')
+        .map(user => ({
+            value: user?.contact?._id || user?._id, // Store contact._id
+            label: `${user?.contact?.firstName || ''} ${user?.contact?.lastName || ''}`.trim() || user?.contact?.Email || 'Unknown',
+            email: user?.contact?.Email || '',
+            currentRole: user?.contact?.CurrentRole || user?.roleLabel || ''
+        }))
+        .filter(opt => opt.value);
+
+    const isUserLinked = formData.interviewer_type === 'internal' && formData.user_id && selectedUserData;
 
     if (isEditMode && isLoadingInterviewer) {
-        return <div className="p-8 text-center text-gray-500">Loading interviewer details...</div>;
+        return (
+            <SidebarPopup title="Loading..." onClose={handleClose}>
+                <div className="p-8 text-center text-gray-500">Loading interviewer details...</div>
+            </SidebarPopup>
+        );
     }
 
     return (
-
         <SidebarPopup
             title={isEditMode ? 'Edit Interviewer' : 'Add New Interviewer'}
-            onClose={() => navigate('/interviewers')}
-            width="w-[600px]"
+            onClose={handleClose}
         >
-            <div className="p-6">
-                <p className="text-sm text-gray-500 mb-6">
-                    {isEditMode ? 'Update interviewer details and assignments' : 'Create a new interviewer profile'}
-                </p>
+            <InfoGuide
+                title="Interviewer Profile Guidelines"
+                items={[
+                    <><span className="font-medium">Internal:</span> Select an existing user to add as interviewer</>,
+                    <><span className="font-medium">Team:</span> Assign to teams for better organization</>,
+                    <><span className="font-medium">Tags:</span> Add skill tags to match with candidates</>,
+                ]}
+            />
 
-                <form onSubmit={onSubmit} className="space-y-6">
-                    {/* Basic Information Card */}
-                    <div className="bg-gray-50 rounded-xl p-6">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                            <User size={18} className="text-custom-blue" />
-                            Basic Information
-                        </h2>
+            <div className="sm:p-0 p-4 mb-10">
+                <div className="space-y-4">
+                    <div className='flex items-center justify-between'>
+                        <h4 className="text-lg font-semibold text-gray-800">Basic Information</h4>
+                        {/* Active Toggle */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">Active</span>
+                            <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, is_active: !prev.is_active }))}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.is_active ? 'bg-custom-blue' : 'bg-gray-300'}`}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+                    </div>
+                    {/* Interviewer Type */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Interviewer Type
+                        </label>
+                        <div className="flex gap-6">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="interviewer_type"
+                                    value="internal"
+                                    checked={formData.interviewer_type === 'internal'}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 text-custom-blue focus:ring-custom-blue"
+                                />
+                                <span className="text-sm text-gray-700">Internal (Employee)</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-not-allowed opacity-50">
+                                <input
+                                    type="radio"
+                                    name="interviewer_type"
+                                    value="external"
+                                    disabled
+                                    className="w-4 h-4 text-gray-400"
+                                />
+                                <span className="text-sm text-gray-400">External (Coming Soon)</span>
+                            </label>
+                        </div>
+                    </div>
 
-                        <div className="grid grid-cols-1 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Interviewer Type
-                                </label>
-                                <div className="flex gap-4">
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="interviewer_type"
-                                            value="internal"
-                                            checked={formData.interviewer_type === 'internal'}
-                                            onChange={handleChange}
-                                            className="w-4 h-4 text-custom-blue focus:ring-custom-blue"
-                                        />
-                                        <span className="text-sm text-gray-700">Internal (Employee)</span>
-                                    </label>
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="interviewer_type"
-                                            value="external"
-                                            checked={formData.interviewer_type === 'external'}
-                                            onChange={handleChange}
-                                            className="w-4 h-4 text-custom-blue focus:ring-custom-blue"
-                                        />
-                                        <span className="text-sm text-gray-700">External</span>
-                                    </label>
+                    {/* Link to User Account */}
+                    {formData.interviewer_type === 'internal' && (
+                        <DropdownWithSearchField
+                            value={formData.user_id}
+                            options={userOptions}
+                            onChange={handleChange}
+                            label="Link to User Account"
+                            name="user_id"
+                            placeholder={usersLoading ? "Loading users..." : "Select a user..."}
+                            required
+                            error={errors.user_id}
+                        />
+                    )}
+
+                    {/* User Details - Read Only */}
+                    {isUserLinked && (() => {
+                        const contact = selectedUserData?.contact || selectedUserData;
+                        return (
+                            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                                <p className="text-sm text-gray-500 mb-2">User details (read-only)</p>
+                                <div className="grid grid-cols-2 sm:grid-cols-1 gap-4">
+                                    <InputField
+                                        value={contact?.firstName || ''}
+                                        label="First Name"
+                                        name="firstName"
+                                        disabled
+                                        readOnly
+                                    />
+                                    <InputField
+                                        value={contact?.lastName || ''}
+                                        label="Last Name"
+                                        name="lastName"
+                                        disabled
+                                        readOnly
+                                    />
                                 </div>
+                                <InputField
+                                    value={contact?.Email || contact?.email || ''}
+                                    label="Email"
+                                    name="userEmail"
+                                    disabled
+                                    readOnly
+                                />
+                                {(contact?.CurrentRole || selectedUserData?.roleLabel) && (
+                                    <InputField
+                                        value={contact?.CurrentRole || selectedUserData?.roleLabel || ''}
+                                        label="Current Role"
+                                        name="currentRole"
+                                        disabled
+                                        readOnly
+                                    />
+                                )}
                             </div>
+                        );
+                    })()}
 
-                            {formData.interviewer_type === 'internal' && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Link to User Account
-                                    </label>
-                                    <select
-                                        name="user_id"
-                                        value={formData.user_id}
-                                        onChange={handleChange}
-                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm px-3 py-2 border"
-                                    >
-                                        <option value="">Select a user...</option>
-                                        {users.map(user => (
-                                            <option key={user._id} value={user._id}>
-                                                {user.firstName} {user.lastName} ({user.email})
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        Linking to a user account allows them to log in and view their interviews.
-                                    </p>
+                    {/* Professional Details */}
+                    <h4 className="text-lg font-semibold text-gray-800 pt-4">Professional Details</h4>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                        <div>
+                            <DropdownWithSearchField
+                                value={formData.team_id}
+                                options={teamOptions}
+                                onChange={handleChange}
+                                label="Assign to Team"
+                                name="team_id"
+                                placeholder="Select a team..."
+                            />
+                            {/* Team membership status message */}
+                            {formData.team_id && formData.user_id && (
+                                <div className={`mt-2 p-2 rounded text-sm ${userAlreadyInTeam
+                                    ? 'bg-green-50 text-green-700 border border-green-200'
+                                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+                                    }`}>
+                                    {userAlreadyInTeam
+                                        ? '✓ User is already a member of this team'
+                                        : '+ User will be added to this team when saved'
+                                    }
                                 </div>
                             )}
-                            <div className="grid grid-cols-2 gap-4">
-                                <InputField
-                                    label="Full Name"
-                                    name="full_name"
-                                    value={formData.full_name}
-                                    onChange={handleChange}
-                                    error={errors.full_name}
-                                    required
-                                    placeholder="e.g. John Doe"
-                                />
+                        </div>
+                        <InputField
+                            value={formData.max_interviews_per_week}
+                            onChange={handleChange}
+                            label="Max Interviews / Week"
+                            name="max_interviews_per_week"
+                            type="number"
+                            placeholder="5"
+                        />
+                    </div>
 
-                                <InputField
-                                    label="Email Address"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    error={errors.email}
-                                    type="email"
-                                    required
-                                    placeholder="e.g. john@example.com"
-                                />
-
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <InputField
-                                    label="Job Title"
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={handleChange}
-                                    placeholder="e.g. Senior Eng."
-                                />
-
-                                {formData.interviewer_type === 'internal' ? (
-                                    <InputField
-                                        label="Department"
-                                        name="department"
-                                        value={formData.department}
-                                        onChange={handleChange}
-                                        placeholder="e.g. Engineering"
-                                    />
-                                ) : (
-                                    <InputField
-                                        label="Company"
-                                        name="external_company"
-                                        value={formData.external_company}
-                                        onChange={handleChange}
-                                        placeholder="e.g. Agency Name"
-                                    />
+                    {/* Tags */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Tags (Skills, Levels, etc.)
+                        </label>
+                        <div className="border rounded-lg p-4 bg-gray-50 min-h-[80px]">
+                            <div className="flex flex-wrap gap-2">
+                                {tags.map(tag => (
+                                    <label
+                                        key={tag._id}
+                                        className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm cursor-pointer transition-colors border ${formData.tag_ids.includes(tag._id)
+                                            ? 'bg-blue-50 border-blue-200 text-blue-700'
+                                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            name="tag_ids"
+                                            value={tag._id}
+                                            checked={formData.tag_ids.includes(tag._id)}
+                                            onChange={handleChange}
+                                            className="hidden"
+                                        />
+                                        {tag.name}
+                                    </label>
+                                ))}
+                                {tags.length === 0 && (
+                                    <p className="text-sm text-gray-400">No tags available.</p>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Professional Details */}
-                    <div className="bg-gray-50 rounded-xl p-6">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                            <Briefcase size={18} className="text-custom-blue" />
-                            Professional Details
-                        </h2>
-
-                        <div className="grid grid-cols-1 gap-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Assign to Team
-                                    </label>
-                                    <select
-                                        name="team_id"
-                                        value={formData.team_id}
-                                        onChange={handleChange}
-                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue sm:text-sm px-3 py-2 border"
-                                    >
-                                        <option value="">Select a team...</option>
-                                        {teams.map(team => (
-                                            <option key={team._id} value={team._id}>
-                                                {team.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <InputField
-                                    label="Max Interviews / Week"
-                                    name="max_interviews_per_week"
-                                    value={formData.max_interviews_per_week}
-                                    onChange={handleChange}
-                                    type="number"
-                                    placeholder="5"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Tags (Skills, Levels, etc.)
-                                </label>
-                                <div className="border rounded-md p-3 min-h-[80px] bg-white">
-                                    <div className="flex flex-wrap gap-2">
-                                        {tags.map(tag => (
-                                            <label
-                                                key={tag._id}
-                                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs cursor-pointer transition-colors border ${formData.tag_ids.includes(tag._id)
-                                                    ? 'bg-blue-50 border-blue-200 text-blue-700'
-                                                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
-                                                    }`}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    name="tag_ids"
-                                                    value={tag._id}
-                                                    checked={formData.tag_ids.includes(tag._id)}
-                                                    onChange={handleChange}
-                                                    className="hidden"
-                                                />
-                                                {tag.name}
-                                            </label>
-                                        ))}
-                                        {tags.length === 0 && (
-                                            <p className="text-sm text-gray-400">No tags available.</p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {formData.interviewer_type === 'external' && (
-                                <>
-                                    <div className="border-t border-gray-200 my-2"></div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <InputField
-                                            label="Hourly Rate"
-                                            name="hourly_rate"
-                                            value={formData.hourly_rate}
-                                            onChange={handleChange}
-                                            type="number"
-                                            placeholder="0.00"
-                                        />
-
-                                        <InputField
-                                            label="Contract End Date"
-                                            name="contract_end_date"
-                                            value={formData.contract_end_date}
-                                            onChange={handleChange}
-                                            type="date"
-                                        />
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Footer Actions */}
-                    <div className="flex justify-end gap-3 pt-4">
+                    {/* Form Actions */}
+                    <div className="flex justify-end space-x-3 pt-6">
                         <button
                             type="button"
-                            onClick={() => navigate('/interviewers')}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                            onClick={handleClose}
+                            className="text-sm font-semibold px-6 py-2.5 text-gray-700 hover:bg-gray-100 border border-gray-300 rounded-lg transition-colors"
                         >
                             Cancel
                         </button>
                         <button
-                            type="submit"
+                            type="button"
+                            onClick={handleSubmit}
                             disabled={createMutation.isLoading || updateMutation.isLoading}
-                            className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/90 disabled:opacity-50"
+                            className="text-sm font-semibold px-6 py-2.5 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors disabled:opacity-50 flex items-center gap-2"
                         >
-                            <Save size={18} />
-                            {isEditMode ? 'Update' : 'Create'}
+                            {(createMutation.isLoading || updateMutation.isLoading) && (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            )}
+                            {isEditMode ? 'Update Interviewer' : 'Create Interviewer'}
                         </button>
                     </div>
-                </form>
-            </div >
-        </SidebarPopup >
+                </div>
+            </div>
+        </SidebarPopup>
     );
 };
 
