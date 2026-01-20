@@ -476,7 +476,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         // const candidateUrl = `${baseUrl}?candidate=true&meeting=${encodeURIComponent(
         //   encryptedMeetingLink
         // )}&round=${encodeURIComponent(encryptedRoundId)}`;
-        const candidateUrl = `${baseUrl}?candidate=true&round=${encodeURIComponent(encryptedRoundId)}`;
+        const candidateUrl = `${baseUrl}?candidate=true&round=${encodeURIComponent(encryptedRoundId)}${type ? `&type=${type}` : ';'}`;
         emailBody = emailBody.replace(/{{meetingLink}}/g, candidateUrl);
         // } else {
         //   emailBody = emailBody.replace(
