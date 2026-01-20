@@ -320,8 +320,7 @@ import {
   useGetInterviewerTagById, // Added this hook to fetch real data
 } from "../../../../../apiHooks/InterviewerTags/useInterviewerTags";
 import { notify } from "../../../../../services/toastService";
-
-const createPageUrl = (page) => `/${page.toLowerCase()}`;
+import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 
 const colorOptions = [
   { value: "#217989", label: "Teal" },
@@ -421,180 +420,166 @@ const InterviewerTagsForm = ({ mode }) => {
   }
 
   return (
-    <div className="px-[8%] sm:px-[5%] md:px-[5%] mt-4 space-y-6 mb-12">
-      {/* Header */}
-      <div className="flex flex-col items-start justify-start gap-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="group flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-slate-500 group-hover:text-slate-900 transition-colors" />
-          <span className="text-sm tracking-tight">
-            Back to Interviewer Tags
-          </span>
-        </button>
-
-        <div>
-          <p className="text-xl font-bold text-slate-900 tracking-tight mt-1">
-            {isEditMode ? "Update tag details" : "Create a new interviewer tag"}
-          </p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-100">
-            <div className="flex items-center gap-2 font-semibold text-slate-900">
-              <Tags className="w-5 h-5 text-[#217989]" />
-              Tag Information
-            </div>
-          </div>
-
-          <div className="p-6 space-y-6">
-            <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
-              {/* Tag Name */}
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-slate-700 mb-1"
-                >
-                  Tag Name <span className="ml-1 text-red-500">*</span>
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  required
-                  className="w-full h-10 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#217989] transition-all"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="React Expert"
-                />
-              </div>
-
-              {/* Category */}
-              <div>
-                <DropdownWithSearchField
-                  label="Category"
-                  name="category"
-                  options={categoryOptions}
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                  placeholder="Select or search category"
-                  isSearchable={true}
-                />
+    <SidebarPopup
+      title={isEditMode ? "Update tag details" : "Create a new interviewer tag"}
+      onClose={() => navigate(-1)}
+    >
+      <div className="mt-4 space-y-6 mb-12">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white overflow-hidden">
+            <div className="p-6">
+              <div className="flex items-center gap-2 font-semibold text-slate-900">
+                <Tags className="w-5 h-5 text-[#217989]" />
+                Tag Information
               </div>
             </div>
 
-            {/* Color Grid */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-700">
-                Tag Color
-              </label>
-              <div className="flex flex-wrap gap-1">
-                {colorOptions.map((color) => (
-                  <button
-                    key={color.value}
-                    type="button"
-                    className={`w-20 h-20 rounded-md border-2 transition-all ${
-                      formData.color === color.value
-                        ? "border-slate-900 shadow-md"
-                        : "border-transparent hover:scale-105"
-                    }`}
-                    style={{ backgroundColor: color.value }}
-                    onClick={() =>
-                      setFormData({ ...formData, color: color.value })
+            <div className="p-6 space-y-6">
+              <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+                {/* Tag Name */}
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    Tag Name <span className="ml-1 text-red-500">*</span>
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    required
+                    className="w-full h-10 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#217989] transition-all"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
                     }
-                    title={color.label}
+                    placeholder="React Expert"
                   />
-                ))}
+                </div>
+
+                {/* Category */}
+                <div>
+                  <DropdownWithSearchField
+                    label="Category"
+                    name="category"
+                    options={categoryOptions}
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                    placeholder="Select or search category"
+                    isSearchable={true}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Description */}
-            <div className="space-y-2">
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-slate-700"
-              >
-                Description
-              </label>
-              <textarea
-                id="description"
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#217989] transition-all"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Describe what this tag represents..."
-                rows={3}
-              />
-            </div>
+              {/* Color Grid */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">
+                  Tag Color
+                </label>
+                <div className="flex flex-wrap gap-1">
+                  {colorOptions.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      className={`w-16 h-16 rounded-md border-2 transition-all ${
+                        formData.color === color.value
+                          ? "border-slate-900 shadow-md"
+                          : "border-transparent hover:scale-105"
+                      }`}
+                      style={{ backgroundColor: color.value }}
+                      onClick={() =>
+                        setFormData({ ...formData, color: color.value })
+                      }
+                      title={color.label}
+                    />
+                  ))}
+                </div>
+              </div>
 
-            {/* Active Switch */}
-            <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={formData.is_active}
+              {/* Description */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium text-slate-700"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#217989] transition-all"
+                  value={formData.description}
                   onChange={(e) =>
-                    setFormData({ ...formData, is_active: e.target.checked })
+                    setFormData({ ...formData, description: e.target.value })
                   }
+                  placeholder="Describe what this tag represents..."
+                  rows={3}
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#217989]"></div>
-                <span className="ml-3 text-sm font-medium text-slate-700">
-                  Active tag
-                </span>
-              </label>
-            </div>
+              </div>
 
-            {/* Preview Section */}
-            <div className="pt-4 border-t border-slate-100">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-                Preview
-              </label>
-              <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 rounded-lg">
-                <div
-                  className="w-6 h-6 rounded-full shadow-sm"
-                  style={{ backgroundColor: formData.color }}
-                />
-                <span className="font-semibold text-slate-900">
-                  {formData.name || "Tag Name"}
-                </span>
+              {/* Active Switch */}
+              <div className="flex items-center gap-3 pt-4">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={formData.is_active}
+                    onChange={(e) =>
+                      setFormData({ ...formData, is_active: e.target.checked })
+                    }
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#217989]"></div>
+                  <span className="ml-3 text-sm font-medium text-slate-700">
+                    Active tag
+                  </span>
+                </label>
+              </div>
+
+              {/* Preview Section */}
+              <div className="pt-4">
+                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
+                  Preview
+                </label>
+                <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 rounded-lg">
+                  <div
+                    className="w-6 h-6 rounded-full shadow-sm"
+                    style={{ backgroundColor: formData.color }}
+                  />
+                  <span className="font-semibold text-slate-900">
+                    {formData.name || "Tag Name"}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Form Actions */}
-        <div className="flex justify-end gap-4">
-          <Link
-            to={createPageUrl("InterviewerTags")}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-          >
-            Cancel
-          </Link>
-          <button
-            type="submit"
-            disabled={
-              createTagMutation.isLoading || updateTagMutation.isLoading
-            }
-            className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-[#217989] hover:bg-[#1c6473] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-          >
-            <Save className="w-4 h-4" />
-            {createTagMutation.isLoading || updateTagMutation.isLoading
-              ? "Saving..."
-              : isEditMode
-                ? "Update Tag"
-                : "Create Tag"}
-          </button>
-        </div>
-      </form>
-    </div>
+          {/* Form Actions */}
+          <div className="flex justify-end gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="px-4 py-2 text-sm border font-medium text-slate-700 bg-white rounded-md hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={
+                createTagMutation.isLoading || updateTagMutation.isLoading
+              }
+              className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-[#217989] hover:bg-[#1c6473] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              <Save className="w-4 h-4" />
+              {createTagMutation.isLoading || updateTagMutation.isLoading
+                ? "Saving..."
+                : isEditMode
+                  ? "Update Tag"
+                  : "Create Tag"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </SidebarPopup>
   );
 };
 
