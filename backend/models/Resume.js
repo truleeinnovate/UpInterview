@@ -25,6 +25,18 @@ const resumeSchema = new mongoose.Schema(
             },
         ],
 
+        // Added for dynamic parsing
+        certifications: [String],
+        languages: [String],
+        projects: [
+            {
+                title: String,
+                description: String,
+                technologies: [String],
+                url: String
+            }
+        ],
+
         ImageData: {
             filename: String,
             path: String,

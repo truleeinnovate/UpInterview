@@ -1,28 +1,29 @@
-// v1.2.0 - Resume Screening Controller (Preview-Only Mode)
-// For now: Parse + Analyze + Return Results (NO database saves)
-// Database saving will be implemented in a separate "Proceed" step later
+// v1.3.0 - Resume Screening Controller
+// Preview mode: Parse + Analyze + Return Results (NO saves)
+// Proceed mode: Save to ScreeningResult + Application schemas
 
 const { parseResume } = require("../utils/resumeParser");
 const { screenResumeWithSystem } = require("../services/resumeScreening/systemScreeningService");
 const { screenResumeWithAI } = require("../services/resumeScreening/aiScreeningService");
 const { Position } = require("../models/Position/position");
+const { ScreeningResult } = require("../models/ScreeningResult");
+const { Application } = require("../models/Application");
+const { Resume } = require("../models/Resume");
 
 /**
  * Screen one or more resumes (PREVIEW ONLY - No Database Saves)
- * Handles file upload, parsing, and screening analysis.
- * Returns results for display in the frontend table.
+ * Returns results with full metadata for display in the frontend table.
  */
 exports.screenResume = async (req, res) => {
     try {
-        const { positionId, method } = req.body;
+        const { positionId, screeningMethod } = req.body;
         const files = req.files;
 
-        // userId and tenantId from authenticated user (via authContextMiddleware)
         const { actingAsUserId, actingAsTenantId } = res.locals.auth || {};
         const tenantId = actingAsTenantId;
+        const userId = actingAsUserId;
 
-        // Fallback for method if undefined (default to system)
-        const methodToUse = method || 'system';
+        const methodToUse = screeningMethod || 'system';
 
         if (!files || files.length === 0) {
             return res.status(400).json({
@@ -38,7 +39,6 @@ exports.screenResume = async (req, res) => {
             });
         }
 
-        // Get Position for screening comparison
         const position = await Position.findById(positionId);
         if (!position) {
             return res.status(404).json({
@@ -52,10 +52,9 @@ exports.screenResume = async (req, res) => {
         const results = [];
         const errors = [];
 
-        // Process each file
         for (const file of files) {
             try {
-                // 1. Parse Resume (extract text and data)
+                // 1. Parse Resume
                 const parsedData = await parseResume(file.buffer, file.originalname);
 
                 if (!parsedData) {
@@ -66,7 +65,6 @@ exports.screenResume = async (req, res) => {
                     continue;
                 }
 
-                // 2. Prepare resume data for screening
                 const resumeData = {
                     name: parsedData.name || 'Unknown Candidate',
                     email: parsedData.email || '',
@@ -77,91 +75,120 @@ exports.screenResume = async (req, res) => {
                     rawText: parsedData.fullText || ''
                 };
 
-                // 3. Run Screening Analysis (AI or System) - NO DATABASE SAVE
-                let screeningResult = {
+                // 2. Run Screening Analysis (AI or System)
+                let metadata = {
                     score: 0,
                     skillMatch: 0,
+                    experienceMatch: 0,
                     matchedSkills: [],
                     missingSkills: [],
-                    insights: { strengths: [], concerns: [], summary: '' }
+                    screeningNotes: '',
+                    aiRecommendation: '',
+                    strengths: [],
+                    concerns: [],
+                    summary: '',
+                    method: methodToUse
                 };
+
+                let recommendation = 'HOLD';
 
                 if (methodToUse === 'ai_assistant' || methodToUse === 'ai_claude') {
                     // AI Screening
+                    console.log(`Using AI screening method: ${methodToUse}`);
                     const aiResult = await screenResumeWithAI(resumeData, position);
                     if (aiResult.success) {
-                        screeningResult = {
+                        metadata = {
                             score: aiResult.data.score || 0,
                             skillMatch: aiResult.data.skillMatch || 0,
+                            experienceMatch: aiResult.data.experienceMatch || 0,
                             matchedSkills: aiResult.data.matchedSkills || [],
                             missingSkills: aiResult.data.missingSkills || [],
-                            insights: {
-                                strengths: aiResult.data.strengths || [],
-                                concerns: aiResult.data.weaknesses || [],
-                                summary: aiResult.data.summary || ''
-                            },
-                            recommendation: aiResult.data.recommendation || 'REVIEW'
+                            screeningNotes: aiResult.data.summary || '',
+                            aiRecommendation: aiResult.data.recommendation || 'REVIEW',
+                            strengths: aiResult.data.strengths || [],
+                            concerns: aiResult.data.weaknesses || [],
+                            summary: aiResult.data.summary || '',
+                            method: 'AI',
+
+                            // New Parsed Data
+                            languages: aiResult.data.languages || [],
+                            certifications: aiResult.data.certifications || [],
+                            projects: aiResult.data.projects || [],
+                            workHistory: aiResult.data.workHistory || [],
+                            extractedProfile: aiResult.data.extractedProfile || {}
                         };
+                        recommendation = aiResult.data.recommendation === 'PROCEED' ? 'PROCEED' :
+                            aiResult.data.recommendation === 'REJECT' ? 'REJECT' : 'HOLD';
                     } else {
-                        console.warn("AI Screening failed:", aiResult.error);
-                        // Fallback to system screening
+                        console.warn("AI Screening failed, falling back to system:", aiResult.error);
+                        // Fallback to system
                         const systemResult = await screenResumeWithSystem(resumeData, position);
                         if (systemResult.success) {
-                            screeningResult = {
-                                score: systemResult.scoringResult.score || 0,
-                                skillMatch: systemResult.scoringResult.skillMatch === 'High' ? 90 :
-                                    systemResult.scoringResult.skillMatch === 'Medium' ? 70 : 40,
-                                matchedSkills: systemResult.scoringResult.matchedSkills?.map(s => s.skill || s) || [],
-                                missingSkills: systemResult.scoringResult.missingRequiredSkills || [],
-                                insights: systemResult.insights,
-                                recommendation: systemResult.scoringResult.score >= 80 ? 'PROCEED' :
-                                    systemResult.scoringResult.score >= 40 ? 'HOLD' : 'REJECT'
-                            };
+                            metadata = buildSystemMetadata(systemResult);
+                            recommendation = getRecommendation(metadata.score);
                         }
                     }
                 } else {
-                    // System Screening (Manual Calculation)
+                    // System Screening
                     const systemResult = await screenResumeWithSystem(resumeData, position);
                     if (systemResult.success) {
-                        screeningResult = {
-                            score: systemResult.scoringResult.score || 0,
-                            skillMatch: systemResult.scoringResult.skillMatch === 'High' ? 90 :
-                                systemResult.scoringResult.skillMatch === 'Medium' ? 70 : 40,
-                            matchedSkills: systemResult.scoringResult.matchedSkills?.map(s => s.skill || s) || [],
-                            missingSkills: systemResult.scoringResult.missingRequiredSkills || [],
-                            insights: systemResult.insights,
-                            recommendation: systemResult.scoringResult.score >= 80 ? 'PROCEED' :
-                                systemResult.scoringResult.score >= 40 ? 'HOLD' : 'REJECT'
-                        };
+                        metadata = buildSystemMetadata(systemResult);
+                        recommendation = getRecommendation(metadata.score);
                     } else {
-                        screeningResult.insights.summary = systemResult.error || 'Screening could not be completed';
-                        screeningResult.insights.concerns.push(systemResult.error || 'Position may not have skills defined');
+                        metadata.screeningNotes = systemResult.error || 'Screening could not be completed';
+                        metadata.concerns.push(systemResult.error || 'Position may not have skills defined');
                     }
                 }
 
-                // 4. Build result object for frontend (NO IDs since nothing saved)
+                // 3. Build result object with full metadata
                 results.push({
-                    id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Temporary ID
+                    id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     fileName: file.originalname,
-                    matchStatus: 'new_candidate', // Always new since not checking DB
-                    matchPercentage: screeningResult.score,
-                    skillMatch: screeningResult.skillMatch,
-                    experienceScore: 0, // Placeholder
+                    matchStatus: 'new_candidate',
+
+                    // Screening Scores
+                    matchPercentage: metadata.score,
+                    skillMatch: metadata.skillMatch,
+                    experienceMatch: metadata.experienceMatch,
+
+                    // Candidate Info
                     candidateName: resumeData.name,
                     candidateEmail: resumeData.email,
                     candidatePhone: resumeData.phone,
-                    parsedSkills: resumeData.skills, // Skills extracted from resume
+
+                    // Parsed Data
+                    parsedSkills: resumeData.skills,
                     parsedExperience: resumeData.experience,
                     parsedEducation: resumeData.education,
+
+                    // Screening Details (metadata)
                     screeningResult: {
-                        summary: screeningResult.insights?.summary || '',
-                        strengths: screeningResult.insights?.strengths || [],
-                        concerns: screeningResult.insights?.concerns || [],
-                        matchedSkills: screeningResult.matchedSkills,
-                        missingSkills: screeningResult.missingSkills,
-                        recommendation: screeningResult.recommendation || 'REVIEW'
+                        summary: metadata.summary,
+                        strengths: metadata.strengths,
+                        concerns: metadata.concerns,
+                        matchedSkills: metadata.matchedSkills,
+                        missingSkills: metadata.missingSkills,
+                        recommendation: recommendation,
+                        screeningNotes: metadata.screeningNotes,
+                        aiRecommendation: metadata.aiRecommendation,
+                        method: metadata.method
                     },
-                    // Store raw file buffer for later save (if needed)
+
+                    // Full metadata object for saving later (includes candidate details)
+                    metadata: {
+                        ...metadata,
+                        candidate: {
+                            name: resumeData.name,
+                            email: resumeData.email,
+                            phone: resumeData.phone,
+                            skills: resumeData.skills,
+                            experience: resumeData.experience,
+                            education: resumeData.education
+                        }
+                    },
+                    recommendation: recommendation,
+
+                    // Store file data for later save
                     _fileBuffer: file.buffer.toString('base64'),
                     _originalName: file.originalname,
                     _mimeType: file.mimetype
@@ -181,7 +208,6 @@ exports.screenResume = async (req, res) => {
             results,
             errors,
             message: `Analyzed ${results.length} resumes successfully. ${errors.length} errors.`,
-            // Flag to indicate this is preview-only (not saved yet)
             previewOnly: true
         });
 
@@ -195,24 +221,214 @@ exports.screenResume = async (req, res) => {
 };
 
 /**
- * Create candidates from screening results (TO BE IMPLEMENTED LATER)
- * This will be called when user clicks "Proceed" to save the data.
+ * Save selected candidates when "Proceed Selected" is clicked
+ * Creates: ScreeningResult + Application records
  */
 exports.createCandidatesFromScreening = async (req, res) => {
     try {
-        const { candidates, positionId } = req.body;
+        const { selectedResults, positionId } = req.body;
 
-        // TODO: Implement actual saving logic when user requests
-        // 1. Create Candidate records
-        // 2. Save Resume records
-        // 3. Create ScreeningResult records
-        // 4. Create Application records
+        const { actingAsUserId, actingAsTenantId } = res.locals.auth || {};
+        const tenantId = actingAsTenantId;
+        const userId = actingAsUserId;
+
+        if (!selectedResults || selectedResults.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: "No results selected"
+            });
+        }
+
+        if (!positionId) {
+            return res.status(400).json({
+                success: false,
+                error: "Position ID is required"
+            });
+        }
+
+        if (!tenantId) {
+            return res.status(401).json({
+                success: false,
+                error: "Authentication failed: Tenant ID missing"
+            });
+        }
+
+        console.log(`Saving ${selectedResults.length} screening results for position ${positionId}`);
+
+        const savedResults = [];
+        const savedApplications = [];
+        const saveErrors = [];
+
+        for (const result of selectedResults) {
+            try {
+                // Import Candidate model
+                const { Candidate } = require("../models/candidate");
+
+                // 1. Find or Create Candidate
+                let candidate = null;
+
+                // Try to find by email first
+                if (result.candidateEmail) {
+                    candidate = await Candidate.findOne({
+                        email: result.candidateEmail.toLowerCase(),
+                        tenantId: tenantId
+                    });
+                }
+
+                if (!candidate) {
+                    // Create new candidate
+                    candidate = new Candidate({
+                        tenantId: tenantId,
+                        name: result.candidateName || 'Unknown',
+                        email: result.candidateEmail?.toLowerCase() || '',
+                        phone: result.candidatePhone || '',
+                        source: 'Resume Upload',
+                        status: 'New',
+                        ownerId: userId,
+                        createdBy: userId
+                    });
+                    await candidate.save();
+                    console.log(`Created new candidate: ${candidate._id}`);
+                }
+
+                // 2. Create Resume record
+                let resume = await Resume.findOne({ candidateId: candidate._id }).sort({ createdAt: -1 });
+
+                if (!resume) {
+                    resume = new Resume({
+                        candidateId: candidate._id,
+                        fileUrl: 'memory://buffer',
+                        resume: {
+                            filename: result.fileName,
+                            uploadDate: new Date()
+                        },
+                        skills: result.metadata?.matchedSkills?.map(s => ({
+                            skill: s,
+                            experience: '0',
+                            expertise: 'Beginner'
+                        })) || [],
+
+                        // New fields
+                        certifications: result.metadata?.certifications || [],
+                        languages: result.metadata?.languages || [],
+                        projects: result.metadata?.projects || [],
+
+                        // Updated profile data
+                        CurrentExperience: result.metadata?.extractedProfile?.experienceYears || 0,
+                        HigherQualification: result.metadata?.extractedProfile?.education || '',
+
+                        source: 'UPLOAD',
+                        isActive: true
+                    });
+                    await resume.save();
+                    console.log(`Created new resume: ${resume._id}`);
+                }
+
+                const resumeId = resume._id;
+                const candidateId = candidate._id;
+
+                // 2. Create ScreeningResult
+                const screeningData = {
+                    resumeId: resumeId,
+                    positionId: positionId,
+                    tenantId: tenantId,
+                    metadata: result.metadata || {
+                        score: result.matchPercentage || 0,
+                        skillMatch: result.skillMatch || 0,
+                        experienceMatch: result.experienceMatch || 0,
+                        matchedSkills: result.screeningResult?.matchedSkills || [],
+                        missingSkills: result.screeningResult?.missingSkills || [],
+                        screeningNotes: result.screeningResult?.screeningNotes || '',
+                        strengths: result.screeningResult?.strengths || [],
+                        concerns: result.screeningResult?.concerns || [],
+                        summary: result.screeningResult?.summary || '',
+                        method: result.screeningResult?.method || 'SYSTEM'
+                    },
+                    recommendation: result.recommendation || 'HOLD',
+                    screenedBy: result.screeningResult?.method || 'SYSTEM',
+                    screenedAt: new Date(),
+                    ownerId: userId,
+                    createdBy: userId
+                };
+
+                // Check if screening result already exists for this resume-position pair
+                let screeningResult = await ScreeningResult.findOne({
+                    resumeId: resumeId,
+                    positionId: positionId
+                });
+
+                if (screeningResult) {
+                    // Update existing
+                    Object.assign(screeningResult, screeningData);
+                    await screeningResult.save();
+                } else {
+                    // Create new
+                    screeningResult = new ScreeningResult(screeningData);
+                    await screeningResult.save();
+                }
+
+                savedResults.push(screeningResult);
+
+                // 3. Create Application
+                const applicationData = {
+                    tenantId: tenantId,
+                    positionId: positionId,
+                    candidateId: candidateId,
+                    status: 'SCREENED',
+                    screeningScore: result.matchPercentage || 0,
+                    screeningDecision: result.recommendation || 'HOLD',
+                    ownerId: userId,
+                    createdBy: userId
+                };
+
+                // Check if application already exists
+                let application = await Application.findOne({
+                    candidateId: candidateId,
+                    positionId: positionId
+                });
+
+                if (application) {
+                    // Update existing
+                    application.status = 'SCREENED';
+                    application.screeningScore = applicationData.screeningScore;
+                    application.screeningDecision = applicationData.screeningDecision;
+                    application.updatedBy = userId;
+                    await application.save();
+                } else {
+                    // Create new
+                    application = new Application(applicationData);
+                    await application.save();
+                }
+
+                savedApplications.push(application);
+
+            } catch (saveError) {
+                console.error(`Error saving result for ${result.fileName}:`, saveError);
+                saveErrors.push({
+                    fileName: result.fileName,
+                    error: saveError.message
+                });
+            }
+        }
 
         res.json({
             success: true,
-            message: "Save functionality will be implemented in next phase",
-            processedCount: candidates?.length || 0
+            message: `Saved ${savedResults.length} screening results and ${savedApplications.length} applications.`,
+            screeningResults: savedResults.map(sr => ({
+                id: sr._id,
+                resumeId: sr.resumeId,
+                positionId: sr.positionId,
+                recommendation: sr.recommendation
+            })),
+            applications: savedApplications.map(app => ({
+                id: app._id,
+                applicationNumber: app.applicationNumber,
+                candidateId: app.candidateId,
+                status: app.status
+            })),
+            errors: saveErrors
         });
+
     } catch (error) {
         console.error("Create candidates error:", error);
         res.status(500).json({
@@ -222,6 +438,35 @@ exports.createCandidatesFromScreening = async (req, res) => {
     }
 };
 
+// Helper function to build metadata from system screening result
+function buildSystemMetadata(systemResult) {
+    const score = systemResult.scoringResult?.score || 0;
+    const skillMatchLevel = systemResult.scoringResult?.skillMatch;
+    const skillMatchNum = skillMatchLevel === 'High' ? 90 :
+        skillMatchLevel === 'Medium' ? 70 : 40;
+
+    return {
+        score: score,
+        skillMatch: skillMatchNum,
+        experienceMatch: 0, // System doesn't calculate experience match yet
+        matchedSkills: systemResult.scoringResult?.matchedSkills?.map(s => s.skill || s) || [],
+        missingSkills: systemResult.scoringResult?.missingRequiredSkills || [],
+        screeningNotes: systemResult.insights?.summary || '',
+        aiRecommendation: '',
+        strengths: systemResult.insights?.strengths || [],
+        concerns: systemResult.insights?.concerns || [],
+        summary: systemResult.insights?.summary || '',
+        method: 'SYSTEM'
+    };
+}
+
+// Helper function to determine recommendation based on score
+function getRecommendation(score) {
+    if (score >= 80) return 'PROCEED';
+    if (score >= 40) return 'HOLD';
+    return 'REJECT';
+}
+
 exports.getScreeningStatus = async (req, res) => {
-    res.json({ status: "active", service: "Resume Screening Service v1.2 (Preview Mode)" });
+    res.json({ status: "active", service: "Resume Screening Service v1.3" });
 };

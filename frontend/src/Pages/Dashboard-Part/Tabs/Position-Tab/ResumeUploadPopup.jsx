@@ -166,22 +166,34 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                 file_name: result.fileName,
                 candidate_name: result.candidateName || 'Unknown',
                 candidate_email: result.candidateEmail || '',
-                match_percentage: result.matchPercentage || null,
+                candidate_phone: result.candidatePhone || '',
+                match_percentage: result.matchPercentage ?? null,
                 match_status: result.matchStatus || 'new_candidate',
                 existing_candidate_id: result.existingCandidateId || null,
-                skill_match: result.skillMatch || null,
-                experience_score: result.experienceScore || null,
+                skill_match: result.skillMatch ?? null,
+                experience_match: result.experienceMatch ?? null,
                 screening_status: result.screeningStatus || 'screened',
+
+                // Parsed data from resume (all skills, not just matched)
+                parsed_skills: result.parsedSkills || [],
+                parsed_experience: result.parsedExperience || null,
+                parsed_education: result.parsedEducation || null,
+
+                // Screening result
                 screening_result: result.screeningResult ? {
                     summary: result.screeningResult.summary || '',
                     strengths: result.screeningResult.strengths || [],
                     gaps: result.screeningResult.gaps || result.screeningResult.concerns || [],
                     extracted_skills: result.screeningResult.extractedSkills || result.screeningResult.matchedSkills || [],
                     experience_years: result.screeningResult.experienceYears || null,
-                    education: result.education || 'Not specified',
+                    education: result.screeningResult.education || 'Not specified',
                     recommendation: result.screeningResult.recommendation || 'Consider for review',
                     missingSkills: result.screeningResult.missingSkills || [],
-                } : null
+                    method: result.screeningResult.method
+                } : null,
+
+                // Pass through the full metadata from backend
+                metadata: result.metadata
             }));
 
             setProcessingProgress(100);
@@ -221,15 +233,50 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                 body: JSON.stringify({
                     positionId,
                     selectedResults: selectedResults.map(r => ({
+                        // IDs
+                        resumeId: r.resumeId || null,
+                        candidateId: r.candidateId || null,
+
+                        // File info
                         fileName: r.file_name,
+
+                        // Candidate info
                         candidateName: r.candidate_name,
                         candidateEmail: r.candidate_email,
-                        candidatePhone: '',
-                        skills: r.screening_result?.extracted_skills || [],
-                        experience: r.screening_result?.experience_years ? `${r.screening_result.experience_years} years` : null,
-                        education: r.screening_result?.education,
-                        matchStatus: r.match_status,
-                        existingCandidateId: r.existing_candidate_id,
+                        candidatePhone: r.candidate_phone || '',
+
+                        // Screening scores
+                        matchPercentage: r.match_percentage || 0,
+                        skillMatch: r.skill_match || 0,
+                        experienceMatch: r.experience_match || 0,
+
+                        // Recommendation
+                        recommendation: r.screening_result?.recommendation || 'HOLD',
+
+                        // Use the full metadata from backend (already has candidate details)
+                        metadata: r.metadata || {
+                            score: r.match_percentage || 0,
+                            skillMatch: r.skill_match || 0,
+                            experienceMatch: r.experience_match || 0,
+                            matchedSkills: r.screening_result?.extracted_skills || [],
+                            missingSkills: r.screening_result?.missingSkills || [],
+                            screeningNotes: r.screening_result?.summary || '',
+                            strengths: r.screening_result?.strengths || [],
+                            concerns: r.screening_result?.gaps || [],
+                            summary: r.screening_result?.summary || '',
+                            method: r.screening_result?.method,
+                            candidate: {
+                                name: r.candidate_name,
+                                email: r.candidate_email,
+                                phone: r.candidate_phone || '',
+                                skills: r.parsed_skills || [],
+                                experience: r.parsed_experience,
+                                education: r.parsed_education
+                            }
+                        },
+
+                        // Screening result object
+                        screeningResult: r.screening_result
                     })),
                 }),
                 credentials: 'include',
@@ -238,13 +285,18 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
             const data = await response.json();
 
             if (!response.ok || !data.success) {
-                console.error('Failed to create candidates:', data);
+                console.error('Failed to save screening results:', data);
+                alert(`Failed to save: ${data.error || 'Unknown error'}`);
+            } else {
+                console.log('Saved successfully:', data);
+                alert(`Successfully saved ${data.screeningResults?.length || 0} screening results and ${data.applications?.length || 0} applications.`);
             }
 
             setIsProceedLoading(false);
             handleClose();
         } catch (error) {
-            console.error('Error creating candidates:', error);
+            console.error('Error saving screening results:', error);
+            alert(`Error: ${error.message}`);
             setIsProceedLoading(false);
             handleClose();
         }
@@ -862,7 +914,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                             {result.skill_match !== undefined && result.skill_match !== null ? `${result.skill_match}%` : '—'}
                                                         </td>
                                                         <td className="p-3 text-center text-sm text-gray-600">
-                                                            {result.experience_score !== undefined && result.experience_score !== null ? `${result.experience_score}%` : '—'}
+                                                            {result.experience_match !== undefined && result.experience_match !== null ? `${result.experience_match}%` : '—'}
                                                         </td>
                                                         <td className="p-3">
                                                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
