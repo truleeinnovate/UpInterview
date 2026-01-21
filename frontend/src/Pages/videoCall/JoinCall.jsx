@@ -20,6 +20,7 @@ import {
   useSchedulerRoundDetails,
 } from "../../apiHooks/useVideoCall";
 import { useInterviews } from "../../apiHooks/useInterviews";
+import { useMockInterviewById } from "../../apiHooks/useMockInterviews";
 
 function JoinMeeting() {
   const location = useLocation();
@@ -33,13 +34,15 @@ function JoinMeeting() {
   const [authError, setAuthError] = useState(null);
   const [authType, setAuthType] = useState(null);
 
-  // console.log("JoinMeeting rendered", authType);
-
   // Extract URL data once
   const urlData = useMemo(
     () => extractUrlData(location.search),
-    [location.search]
+    [location.search],
   );
+
+  // console.log("JoinMeeting rendered", authType);
+
+  const isMockInterview = urlData?.interviewType === "mockinterview";
 
   // console.log("location.search", urlData);
 
@@ -66,14 +69,19 @@ function JoinMeeting() {
     isError: preAuthError,
   } = useContactDetails(
     !urlData.isCandidate ? urlData?.interviewerId : null,
-    !urlData.isCandidate ? urlData?.interviewRoundId : null
+    !urlData.isCandidate ? urlData?.interviewRoundId : null,
+    urlData?.interviewType,
   );
 
   // console.log("contactData", contactData);
 
   // Scheduler query
   const { data: schedulerData, isLoading: schedulerLoading } =
-    useSchedulerRoundDetails(urlData.interviewRoundId, urlData.isSchedule);
+    useSchedulerRoundDetails(
+      !isMockInterview && urlData.interviewRoundId,
+      !isMockInterview && urlData.isSchedule,
+      // urlData?.interviewType,
+    );
 
   // Candidate query
   // const {
@@ -84,17 +92,54 @@ function JoinMeeting() {
   //   urlData.isCandidate ? urlData.interviewRoundId : null
   // );
 
-  // useInterviews
+  // // useInterviews
 
- const { data, isLoading } = useInterviewDetails(
-    {roundId: urlData.interviewRoundId}
-  );
+  // const data = null;
+  // if (urlData?.interviewType === "mockintervieew") {
+  //   const { mockInterview, isMockLoading } = useMockInterviewById(
+  //     urlData.interviewRoundId,
+  //   );
+  // } else {
+  //   const { data, isLoading } = useInterviewDetails({
+  //     roundId: urlData.interviewRoundId,
+  //   });
+  // }
 
-  console.log('data11', data);
+  /* -----------------------------
+     INTERVIEW DATA (IMPORTANT FIX)
+  ------------------------------ */
 
-  const candidateData = data;
+  // ✅ ALWAYS call hooks
+  const {
+    mockInterview,
+    isMockLoading,
+    isError: isMockError,
+  } = useMockInterviewById({
+    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+    enabled: isMockInterview, // ✅ THIS LINE
+    // mockInterviewId: null,
+  });
+
+  const {
+    data: interviewData,
+    isLoading: isInterviewLoading,
+    isError: interviewError,
+  } = useInterviewDetails({
+    roundId: !isMockInterview ? urlData.interviewRoundId : null,
+    enabled: !isMockInterview,
+  });
+
+  // console.log("mockInterview", mockInterview);
+
+  // const candidateData = data;
+  // ✅ Select final data
+  const candidateData = isMockInterview ? mockInterview : interviewData;
+  const isLoading = isMockInterview ? isMockLoading : isInterviewLoading;
+  const error = isMockInterview ? isMockError : interviewError;
 
   // setAuthType(contactData.tenant?.type || "organization");
+
+  console.log("candidateData", candidateData);
 
   console.log("candidateData11", candidateData?.tenant);
 
@@ -103,10 +148,13 @@ function JoinMeeting() {
     data: feedbackData,
     isLoading: feedbackLoading,
     isError: feedbackError,
-  } = useFeedbackData(
-    !isAuthChecking && !urlData.isCandidate ? urlData.interviewRoundId : null,
-    !isAuthChecking && !urlData.isCandidate ? urlData.interviewerId : null
-  );
+  } = useFeedbackData({
+    roundId:
+      !isAuthChecking && !urlData.isCandidate ? urlData.interviewRoundId : null,
+    interviewerId:
+      !isAuthChecking && !urlData.isCandidate ? urlData.interviewerId : null,
+    interviewType: !urlData.isCandidate ? urlData.interviewType : null,
+  });
 
   // === 1. Better handling of contactData (including API-level errors) ===
   useEffect(() => {
@@ -160,7 +208,7 @@ function JoinMeeting() {
       if (feedbackData.feedbacks?.length) {
         const matched = feedbackData.feedbacks
           .filter(
-            (fb) => fb.interviewerId?._id?.toString() === urlData.interviewerId
+            (fb) => fb.interviewerId?._id?.toString() === urlData.interviewerId,
           )
           .map((fb) => ({
             ...fb,
@@ -214,7 +262,7 @@ function JoinMeeting() {
       const decryptedOwnerId = decryptParam(encryptedOwnerId);
       if (!decryptedOwnerId) {
         setAuthError(
-          "Invalid meeting link: unable to decrypt owner information"
+          "Invalid meeting link: unable to decrypt owner information",
         );
         setIsAuthChecking(false);
         return false;

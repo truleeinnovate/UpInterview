@@ -13,6 +13,10 @@ import {
 import { useInterviews } from "../../apiHooks/useInterviews";
 import { extractUrlData } from "../../apiHooks/useVideoCall";
 import { useLocation } from "react-router-dom";
+import {
+  useMockInterviewById,
+  useUpdateRoundStatus,
+} from "../../apiHooks/useMockInterviews";
 
 const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // Determine which sections to show based on roleInfo
@@ -22,6 +26,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   const { updateRoundStatus, useInterviewDetails } = useInterviews();
 
   const location = useLocation();
+
+  // console.log("round",round);
+  // const { addOrUpdateMockInterview } = useMockInterviews();
+  const updateMockRoundStatus = useUpdateRoundStatus();
 
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
@@ -43,56 +51,53 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // Extract URL data once
   const urlData = useMemo(
     () => extractUrlData(location.search),
-    [location.search]
+    [location.search],
   );
+  const isMockInterview = urlData?.interviewType === "mockinterview";
+  console.log("isMockInterview", isMockInterview);
+  // const { data, isLoading } = useInterviewDetails({
+  //   roundId: urlData.interviewRoundId,
+  // });
 
-  console.log("urlData in RoleSelector:", urlData);
-
-  const { data, isLoading } = useInterviewDetails({
-    roundId: urlData.interviewRoundId,
+  // ✅ ALWAYS call hooks
+  const {
+    mockInterview: mockinterview,
+    isMockLoading,
+    isError: isMockError,
+  } = useMockInterviewById({
+    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+    enabled: isMockInterview, // ✅ THIS LINE
+    // mockInterviewId: null,
   });
 
-  console.log("data 22 from roleselector", data);
+  const {
+    data: interviewData,
+    isLoading: isInterviewLoading,
+    isError: interviewError,
+  } = useInterviewDetails({
+    roundId: !isMockInterview ? urlData.interviewRoundId : null,
+    enabled: !isMockInterview,
+  });
 
-  // const candidateData = data;
+  const interviewRoundData =
+    interviewData?.rounds[0] || mockinterview?.rounds[0] || {};
 
-  // const candidateData = data?.candidateId || {};
-  // const positionData = data?.positionId || {};
-  const interviewRoundData = data?.rounds[0] || {};
-
-  console.log("interviewRoundData", interviewRoundData);
-
-  // console.log("Feedback Data in RoleSelector:", feedbackData);
+  console.log("interviewRoundData:", interviewRoundData);
 
   const currentStatus = interviewRoundData?.status;
 
   const isFinalStatus = ["InProgress", "Scheduled", "Rescheduled"].includes(
-    currentStatus
+    currentStatus,
   );
-
-  console.log("Current Status:", interviewRoundData);
 
   // Function to update interview status to "in-progress"
   const updateInterviewStatus = async (role) => {
     try {
+      console.log("Updating status...", role);
       setIsUpdatingStatus(true);
+      const normalizedRole = role?.toLowerCase() || "";
 
-      // Prepare the payload to update status to "in-progress"
-      // const payload = {
-      //   interviewId: feedbackData?.interviewRound?.interviewId,
-      //   round: {
-      //     status: "InProgress",
-      //     startedAt: new Date(), // Add timestamp when interview started
-      //   },
-      //   roundId: feedbackData?.interviewRound?._id,
-      //   isEditing: true,
-      // };
-
-      // const response = await axios.post(
-      //   `${config.REACT_APP_API_URL}/interview/save-round`,
-      //   payload
-      // );
-      const response = await updateRoundStatus({
+      const payload = {
         roundId: interviewRoundData?._id,
         interviewId: interviewRoundData?.interviewId,
         action: "InProgress",
@@ -100,10 +105,25 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
         userId: urlData?.interviewerId,
         History_Type: "Histoy_Handling",
         joined:
-          (role === "Interviewer" && true) || (role === "Scheduler" && true),
-      });
+          (normalizedRole === "interviewer" && true) ||
+          (normalizedRole === "scheduler" && true),
+      };
 
+      let response;
+
+      if (urlData?.interviewType === "mockinterview") {
+        response = await updateMockRoundStatus.mutateAsync({
+          mockInterviewId: mockinterview?._id,
+          roundId: interviewRoundData?._id,
+          payload,
+        });
+      } else {
+        response = await updateRoundStatus(payload);
+      }
+
+      console.log("response", response);
       return response;
+
       // console.log("Status update response:", response);
 
       // toast.success("Interview marked as in progress", {});
@@ -162,7 +182,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
     // Parse start and end times from the interview data
     const { start: interviewStart, end: interviewEnd } = parseCustomDateTime(
-      interviewRoundData?.dateTime
+      interviewRoundData?.dateTime,
     );
     if (!interviewStart || !interviewEnd) return;
 
@@ -358,7 +378,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
         <div className="text-center mb-6">
           {console.log(
             "interviewRoundData?.meetPlatform near video preview ",
-            interviewRoundData?.meetPlatform
+            interviewRoundData?.meetPlatform,
           )}
           {interviewRoundData?.meetPlatform === "platform" ? (
             <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden mb-8 max-w-2xl mx-auto">
@@ -472,7 +492,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                       .split(" ")[0]
                       .split("-")
                       .reverse()
-                      .join("-")
+                      .join("-"),
                   ).toLocaleDateString("en-US", {
                     weekday: "long",
                     year: "numeric",
@@ -592,7 +612,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                     window.open(currentUrl.toString(), "_blank");
                   } else {
                     handleRoleSelect(
-                      urlData?.isInterviewer ? "interviewer" : "scheduler"
+                      urlData?.isInterviewer ? "interviewer" : "scheduler",
                     );
                   }
                 }}

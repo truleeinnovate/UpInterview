@@ -5,14 +5,17 @@ const mockInterviewController = require("../controllers/mockInterviewController"
 const loggingService = require("../middleware/loggingService");
 
 // GET: Single mock interview with rounds by id
-router.get("/:id", mockInterviewController.getMockInterviewDetails);
+router.get(
+  "/mockinterview-details",
+  mockInterviewController.getMockInterviewDetails,
+);
 
 // POST: Create mock interview
 router.post(
   "/create",
   loggingService.internalLoggingMiddleware,
   loggingService.FeedsMiddleware,
-  mockInterviewController.createMockInterview
+  mockInterviewController.createMockInterview,
 );
 
 // PATCH: Update mock interview
@@ -20,20 +23,20 @@ router.patch(
   "/updateMockInterview/:id",
   loggingService.internalLoggingMiddleware,
   loggingService.FeedsMiddleware,
-  mockInterviewController.updateMockInterview
+  mockInterviewController.updateMockInterview,
 );
 //create and update round
 router.post(
   "/:mockInterviewId/round",
   loggingService.internalLoggingMiddleware,
   loggingService.FeedsMiddleware,
-  mockInterviewController.createMockInterviewRound
+  mockInterviewController.createMockInterviewRound,
 ); // Create round
 router.patch(
   "/:mockInterviewId/round/:roundId",
   loggingService.internalLoggingMiddleware,
   loggingService.FeedsMiddleware,
-  mockInterviewController.updateMockInterviewRound
+  mockInterviewController.updateMockInterviewRound,
 ); // Update round
 
 // POST: Validate mock interview data (for frontend validation)
@@ -43,7 +46,7 @@ router.patch(
   "/:mockInterviewId/round/:roundId/status",
   // loggingService.internalLoggingMiddleware,
   // loggingService.FeedsMiddleware,
-  mockInterviewController.updateInterviewRoundStatus
+  mockInterviewController.updateInterviewRoundStatus,
 );
 
 module.exports = router;

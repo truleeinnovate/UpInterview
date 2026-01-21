@@ -53,7 +53,7 @@ export const useMockInterviews = (params = {}) => {
         const filteredInterviews = await fetchFilterData(
           "mockinterview",
           effectivePermissions,
-          apiParams
+          apiParams,
         );
         // console.log("filteredInterviews", filteredInterviews);
         return filteredInterviews;
@@ -153,7 +153,7 @@ export const useMockInterviews = (params = {}) => {
 
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round`,
-        payload
+        payload,
       );
 
       return response.data;
@@ -192,7 +192,7 @@ export const useMockInterviews = (params = {}) => {
 
       const response = await axios.patch(
         `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}`,
-        payload
+        payload,
       );
 
       return response.data;
@@ -281,31 +281,48 @@ export const useMockInterviews = (params = {}) => {
   };
 };
 
-export const useMockInterviewById = (mockInterviewId) => {
+export const useMockInterviewById = ({
+  mockInterviewId,
+  mockInterviewRoundId,
+  enabled: enabledOverride,
+}) => {
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.MockInterviews?.View;
 
+  const isEnabled =
+    typeof enabledOverride === "boolean"
+      ? enabledOverride
+      : !!mockInterviewId || (!!mockInterviewRoundId && !!hasViewPermission);
+
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["mockinterview", mockInterviewId],
+    queryKey: ["mockinterview", mockInterviewId, mockInterviewRoundId],
     queryFn: async () => {
-      if (!mockInterviewId) return null;
+      // if (!mockInterviewId || !mockInterviewRoundId) return null;
+      // { interviewId: id }
 
       const authToken = Cookies.get("authToken");
       if (!authToken) throw new Error("No auth token");
 
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}`,
+        `${config.REACT_APP_API_URL}/mockinterview/mockinterview-details`,
+        // ${mockInterviewId}`,
+        {
+          params: mockInterviewId
+            ? { mockInterviewId }
+            : { mockInterviewRoundId },
+        },
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
           withCredentials: true,
-        }
+        },
       );
 
       return response.data?.data || null;
     },
-    enabled: !!mockInterviewId && !!hasViewPermission,
+    enabled: isEnabled,
+    // !!mockInterviewId || (!!mockInterviewRoundId && !!hasViewPermission),
     retry: 1,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes cache
@@ -331,7 +348,7 @@ export const useUpdateRoundStatus = () => {
       return (
         await axios.patch(
           `${config.REACT_APP_API_URL}/mockinterview/${mockInterviewId}/round/${roundId}/status`,
-          payload
+          payload,
           // {
           //   headers: {
           //     Authorization: `Bearer ${authToken}`,

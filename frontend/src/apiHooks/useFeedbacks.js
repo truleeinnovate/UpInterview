@@ -18,7 +18,7 @@ export const useFeedbacks = (filters = {}) => {
       const data = await fetchFilterData(
         "feedback",
         effectivePermissions,
-        params
+        params,
       );
 
       return data;
@@ -41,7 +41,7 @@ export const useCreateFeedback = () => {
     mutationFn: async (feedbackData) => {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/feedback/create`,
-        feedbackData
+        feedbackData,
       );
       return response.data;
     },
@@ -68,7 +68,7 @@ export const useUpdateFeedback = () => {
     mutationFn: async ({ feedbackId, feedbackData }) => {
       const response = await axios.put(
         `${process.env.REACT_APP_API_URL}/feedback/${feedbackId}`,
-        feedbackData
+        feedbackData,
       );
       return response.data;
     },
@@ -83,7 +83,7 @@ export const useUpdateFeedback = () => {
   });
 };
 
-export const useFeedbackData = (roundId, interviewerId) => {
+export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
   return useQuery({
     queryKey: ["feedbackData", roundId, interviewerId],
     queryFn: async () => {
@@ -92,23 +92,39 @@ export const useFeedbackData = (roundId, interviewerId) => {
       }
 
       // Build URL with query parameters
-      let url = `${process.env.REACT_APP_API_URL}/feedback/round/${roundId}`;
-      if (interviewerId) {
-        url += `?interviewerId=${interviewerId}`;
-      }
+      // let url = `${process.env.REACT_APP_API_URL}/feedback/round/${roundId}`;
+      // if (interviewerId) {
+      //   url += `?interviewerId=${(interviewerId, interviewType)}`;
+      //   // url += `?interviewType=${interviewType}`;
+      // }
 
-      const response = await axios.get(url, {
-        headers: {
-          "Content-Type": "application/json",
-          // 'Authorization': `Bearer ${Cookies.get('authToken')}`
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/feedback/round/${roundId}`,
+        {
+          params: {
+            interviewerId,
+            interviewType,
+          },
         },
-      });
+      );
+
+      // {
+      //     params: mockInterviewId
+      //       ? { mockInterviewId }
+      //       : { mockInterviewRoundId },
+      //   },
+      // const response = await axios.get(url, {
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     // 'Authorization': `Bearer ${Cookies.get('authToken')}`
+      //   },
+      // });
 
       if (response.data.success) {
         return response.data.data;
       } else {
         throw new Error(
-          response.data.message || "Failed to fetch feedback data"
+          response.data.message || "Failed to fetch feedback data",
         );
       }
     },

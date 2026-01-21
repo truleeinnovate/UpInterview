@@ -122,28 +122,86 @@ const InterviewRequest = require("../models/InterviewRequest.js");
 // };
 
 exports.getMockInterviewDetails = async (req, res) => {
-  const { id } = req.params;
-
   try {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid mock interview ID" });
+    const { mockInterviewId, mockInterviewRoundId } = req.query;
+
+    console.log(
+      "req.query mockInterviewId",
+      mockInterviewId,
+      mockInterviewRoundId,
+    );
+
+    // ❌ Both not allowed
+    if (mockInterviewId && mockInterviewRoundId) {
+      return res.status(400).json({
+        message: "Send only mockInterviewId or mockInterviewRoundId, not both",
+      });
     }
 
-    // 1. Fetch main mock interview document
-    const mockInterview = await MockInterview.findById(id)
+    let finalMockInterviewId;
+    let isFromRound = false;
+
+    /* ------------------------------------------------
+       1️⃣ Resolve mockInterviewId
+    ------------------------------------------------ */
+
+    if (mockInterviewId) {
+      if (!mongoose.Types.ObjectId.isValid(mockInterviewId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid mockInterviewId",
+        });
+      }
+      finalMockInterviewId = mockInterviewId;
+    } else if (mockInterviewRoundId) {
+      if (!mongoose.Types.ObjectId.isValid(mockInterviewRoundId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid mockInterviewRoundId",
+        });
+      }
+
+      const round = await MockInterviewRound.findById(mockInterviewRoundId)
+        .select("mockInterviewId")
+        .lean();
+
+      if (!round) {
+        return res.status(404).json({
+          success: false,
+          message: "Mock interview round not found",
+        });
+      }
+
+      finalMockInterviewId = round.mockInterviewId;
+      isFromRound = true; // 🔥 important flag
+    } else {
+      return res.status(400).json({
+        message: "mockInterviewId or mockInterviewRoundId is required",
+      });
+    }
+
+    /* ------------------------------------------------
+       2️⃣ Fetch Mock Interview
+    ------------------------------------------------ */
+
+    const mockInterview = await MockInterview.findById(finalMockInterviewId)
       .select("-__v")
       .lean();
 
     if (!mockInterview) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Mock interview not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Mock interview not found",
+      });
     }
 
-    // 2. Fetch the single round (if exists) with populated interviewers
-    const round = await MockInterviewRound.findOne({ mockInterviewId: id })
+    /* ------------------------------------------------
+       3️⃣ Fetch Rounds
+    ------------------------------------------------ */
+
+    const rounds = await MockInterviewRound.find({
+      mockInterviewId: finalMockInterviewId,
+    })
       .populate({
         path: "interviewers",
         model: "Contacts",
@@ -151,12 +209,21 @@ exports.getMockInterviewDetails = async (req, res) => {
       })
       .lean();
 
-    // 3. Fetch pending outsource requests — only if round exists
-    let pendingOutsourceRequests = [];
+    const filteredRounds = isFromRound
+      ? rounds.filter((r) => String(r._id) === String(mockInterviewRoundId))
+      : rounds;
 
-    if (round) {
-      pendingOutsourceRequests = await InterviewRequest.find({
-        roundId: round._id,
+    /* ------------------------------------------------
+       4️⃣ Fetch Interview Requests (ONLY if NOT round-based)
+    ------------------------------------------------ */
+
+    let pendingRequestMap = {};
+
+    if (!isFromRound) {
+      const roundIds = filteredRounds.map((r) => r._id);
+
+      const pendingRequests = await InterviewRequest.find({
+        roundId: { $in: roundIds },
         status: "inprogress",
       })
         .populate({
@@ -164,39 +231,137 @@ exports.getMockInterviewDetails = async (req, res) => {
           select: "firstName lastName email",
         })
         .lean();
+
+      pendingRequests.forEach((req) => {
+        const key = String(req.roundId);
+        if (!pendingRequestMap[key]) pendingRequestMap[key] = [];
+        pendingRequestMap[key].push(req);
+      });
     }
 
-    // 4. Build enriched round (pending requests only here)
-    const enrichedRound = round
-      ? {
-          ...round,
-          interviewers: round.interviewers || [],
-          questions: [], // Mock has no questions
-          pendingOutsourceRequests, // ← only here, per round
-          scheduledAssessment: null, // Mock never has this
-        }
-      : null;
+    /* ------------------------------------------------
+       5️⃣ Build Final Rounds
+    ------------------------------------------------ */
 
-    // 5. Final clean response — NO pending requests at root level
-    const responseData = {
-      ...mockInterview,
-      // Rounds array (empty or with 1 enriched round)
-      rounds: enrichedRound ? [enrichedRound] : [],
-    };
+    const fullRounds = filteredRounds.map((round) => ({
+      ...round,
+      interviewers: round.interviewers || [],
+      questions: [], // Mock has no questions
+      pendingOutsourceRequests: isFromRound
+        ? [] // ❌ explicitly empty
+        : pendingRequestMap[String(round._id)] || [],
+      scheduledAssessment: null,
+    }));
+
+    /* ------------------------------------------------
+       6️⃣ Final Response
+    ------------------------------------------------ */
 
     return res.json({
       success: true,
-      data: responseData,
+      data: {
+        ...mockInterview,
+        rounds: fullRounds,
+      },
     });
   } catch (error) {
-    console.error("Error fetching mock interview details:", error);
+    console.error("Mock Interview Fetch Failed:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch mock interview details",
+      message: "Server error",
       error: error.message,
     });
   }
 };
+
+// exports.getMockInterviewDetails = async (req, res) => {
+//   // const { id } = req.params;
+
+//   const { mockInterviewId, mockInterviewRoundId } = req.query;
+
+//   // ❌ Both not allowed (extra safety)
+//   if (mockInterviewId && mockInterviewRoundId) {
+//     return res.status(400).json({
+//       message: "Send only mock InterviewId or mock Interview RoundId, not both",
+//     });
+//   }
+
+//   let finalMockInterviewId;
+//   let isFromRound = false;
+
+//   try {
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Invalid mock interview ID" });
+//     }
+
+//     // 1. Fetch main mock interview document
+//     const mockInterview = await MockInterview.findById(id)
+//       .select("-__v")
+//       .lean();
+
+//     if (!mockInterview) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Mock interview not found" });
+//     }
+
+//     // 2. Fetch the single round (if exists) with populated interviewers
+//     const round = await MockInterviewRound.findOne({ mockInterviewId: id })
+//       .populate({
+//         path: "interviewers",
+//         model: "Contacts",
+//         select: "firstName lastName email Name profilePicture",
+//       })
+//       .lean();
+
+//     // 3. Fetch pending outsource requests — only if round exists
+//     let pendingOutsourceRequests = [];
+
+//     if (round) {
+//       pendingOutsourceRequests = await InterviewRequest.find({
+//         roundId: round._id,
+//         status: "inprogress",
+//       })
+//         .populate({
+//           path: "interviewerId",
+//           select: "firstName lastName email",
+//         })
+//         .lean();
+//     }
+
+//     // 4. Build enriched round (pending requests only here)
+//     const enrichedRound = round
+//       ? {
+//           ...round,
+//           interviewers: round.interviewers || [],
+//           questions: [], // Mock has no questions
+//           pendingOutsourceRequests, // ← only here, per round
+//           scheduledAssessment: null, // Mock never has this
+//         }
+//       : null;
+
+//     // 5. Final clean response — NO pending requests at root level
+//     const responseData = {
+//       ...mockInterview,
+//       // Rounds array (empty or with 1 enriched round)
+//       rounds: enrichedRound ? [enrichedRound] : [],
+//     };
+
+//     return res.json({
+//       success: true,
+//       data: responseData,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching mock interview details:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch mock interview details",
+//       error: error.message,
+//     });
+//   }
+// };
 
 // Only creates the MockInterview (candidate details) - NO ROUNDS
 exports.createMockInterview = async (req, res) => {
@@ -231,7 +396,7 @@ exports.createMockInterview = async (req, res) => {
     const mockInterviewCode = await generateUniqueId(
       "MINT",
       MockInterview,
-      "mockInterviewCode"
+      "mockInterviewCode",
     );
 
     // Create mock interview - ONLY candidate/core data
@@ -466,7 +631,7 @@ exports.updateMockInterview = async (req, res) => {
       const updatedMockInterview = await MockInterview.findByIdAndUpdate(
         mockId,
         { $set: updatePayload },
-        { new: true }
+        { new: true },
       );
 
       console.log("updatedMockInterview", updatedMockInterview);
@@ -653,7 +818,7 @@ exports.createMockInterviewRound = async (req, res) => {
         historyUpdate,
         {
           new: true,
-        }
+        },
       );
     }
 
@@ -739,7 +904,7 @@ exports.updateMockInterviewRound = async (req, res) => {
       const updatedRound = await MockInterviewRound.findByIdAndUpdate(
         roundId,
         updateOps,
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       return res.status(200).json({
@@ -808,7 +973,7 @@ exports.updateMockInterviewRound = async (req, res) => {
 
       await InterviewRequest.updateMany(
         { roundId: existingRound._id, status: "inprogress" },
-        { status: "withdrawn", respondedAt: new Date() }
+        { status: "withdrawn", respondedAt: new Date() },
       );
 
       try {
@@ -816,7 +981,7 @@ exports.updateMockInterviewRound = async (req, res) => {
       } catch (refundError) {
         console.error(
           "[saveInterviewRound] Error refunding selection hold:",
-          refundError
+          refundError,
         );
         // Continue - don't block status update
       }
@@ -839,7 +1004,7 @@ exports.updateMockInterviewRound = async (req, res) => {
 
         await InterviewRequest.updateMany(
           { roundId: existingRound._id, status: "accepted" },
-          { status: "cancelled", respondedAt: new Date() }
+          { status: "cancelled", respondedAt: new Date() },
         );
 
         // Send cancellation email
@@ -888,12 +1053,12 @@ exports.updateMockInterviewRound = async (req, res) => {
           });
           console.log(
             "[saveInterviewRound] Auto-settlement for rescheduled round:",
-            existingRound._id
+            existingRound._id,
           );
         } catch (settlementError) {
           console.error(
             "[saveInterviewRound] Auto-settlement error for rescheduled round:",
-            settlementError
+            settlementError,
           );
           // Continue with reschedule even if settlement fails
         }
@@ -924,7 +1089,7 @@ exports.updateMockInterviewRound = async (req, res) => {
             },
           });
           console.log(
-            "Cancellation emails sent for cancelled outsource interviewer"
+            "Cancellation emails sent for cancelled outsource interviewer",
           );
         } catch (emailError) {
           console.error("Failed to send cancellation emails:", emailError);
@@ -1021,7 +1186,7 @@ exports.updateMockInterviewRound = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     // Create new requests if needed
@@ -1138,8 +1303,6 @@ exports.updateInterviewRoundStatus = async (req, res) => {
         .json({ success: false, message: "Mock interview not found" });
     }
 
-    console.log("payload", req.body);
-
     // Check if round exists
     const round = await MockInterviewRound.findById(roundId);
     if (!round) {
@@ -1161,6 +1324,8 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     } = req.body; // reasonCode = your selected reason, comment = "Other" text, cancellationReason = specific cancellation reason
 
     const isParticipantUpdate = req.body?.role || req.body?.joined;
+
+    console.log("req.body", req.body);
 
     // console.log("req.body", req.body);
 
@@ -1215,9 +1380,9 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     }
 
     // ===== SAFE PARTICIPANT UPSERT (NO DUPLICATES, NO FAIL) =====
-    // ===== SAFE PARTICIPANT UPSERT (NO DUPLICATES, NO FAIL) =====
     if (isParticipantUpdate) {
       const { role, userId, joined } = req.body;
+      newStatus = action;
 
       const status = joined ? "Joined" : "Not_Joined";
       const joinedAt = joined ? new Date() : null;
@@ -1237,7 +1402,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
             "participants.$.joinedAt": joinedAt,
           },
         },
-        { new: true }
+        { new: true },
       );
 
       // If participant doesn't exist, add it
@@ -1248,7 +1413,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
         updatedRound = await MockInterviewRound.findByIdAndUpdate(
           roundId,
           { $push: { participants: participantData } },
-          { new: true }
+          { new: true },
         );
       }
 
@@ -1271,7 +1436,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
       // Special handling: only create history if conditions are met
       const participants = existingRound.participants || [];
       const isHistoryHandled = participants.some(
-        (p) => p.role === "Interviewer" || p.role === "Scheduler"
+        (p) => p.role.tolowerCase() === "interviewer" || p.role === "scheduler",
       );
 
       if (!isHistoryHandled && action === "InProgress") {
@@ -1335,19 +1500,19 @@ exports.updateInterviewRoundStatus = async (req, res) => {
           });
           console.log(
             "[updateInterviewRoundStatus] Auto-settlement completed for round:",
-            existingRound._id
+            existingRound._id,
           );
         } catch (settlementError) {
           console.error(
             "[updateInterviewRoundStatus] Auto-settlement error:",
-            settlementError
+            settlementError,
           );
           // Continue with status update even if settlement fails
         }
       } else {
         console.log(
           "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
-          existingRound._id
+          existingRound._id,
         );
       }
     }
@@ -1364,12 +1529,12 @@ exports.updateInterviewRoundStatus = async (req, res) => {
 
           console.log(
             "[updateInterviewRoundStatus] Auto-settlement for cancelled round:",
-            existingRound._id
+            existingRound._id,
           );
         } catch (settlementError) {
           console.error(
             "[updateInterviewRoundStatus] Auto-settlement error for cancelled round:",
-            settlementError
+            settlementError,
           );
         }
         // Continue with status update even if settlement fails
@@ -1384,7 +1549,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
       if (hasAccepted > 0) {
         await InterviewRequest.updateMany(
           { roundId: existingRound._id, status: "accepted" },
-          { status: "cancelled", respondedAt: new Date() }
+          { status: "cancelled", respondedAt: new Date() },
         );
       }
 
@@ -1459,7 +1624,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     if (Object.keys(extraUpdate.$set).length > 0) {
       finalUpdate = mergeUpdates(
         smartUpdate || { $set: {}, $push: { history: [] } },
-        extraUpdate
+        extraUpdate,
       );
     }
 
@@ -1482,7 +1647,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     )
       .populate("mockInterviewId", "title candidateName")
       .populate("interviewers", "firstName lastName email");
@@ -1498,7 +1663,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => {} }), locals: {} }
+        { status: () => ({ json: () => {} }), locals: {} },
       );
     }
 

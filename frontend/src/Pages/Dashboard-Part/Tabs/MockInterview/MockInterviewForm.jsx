@@ -93,7 +93,9 @@ const MockSchedulelater = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { mockInterview, isMockLoading } = useMockInterviewById(id);
+  const { mockInterview, isMockLoading } = useMockInterviewById({
+    mockInterviewId: id,
+  });
   const {
     data,
     // isLoading,
@@ -393,7 +395,7 @@ const MockSchedulelater = () => {
             (h) =>
               h.action === "Scheduled" ||
               h.action === "Rescheduled" ||
-              h.action === "RequestSent"
+              h.action === "RequestSent",
           );
           setIsScheduleOrRescheduleInHistory(hasScheduleOrReschedule);
         }
@@ -440,13 +442,13 @@ const MockSchedulelater = () => {
               const year = parsedStartTime.getFullYear();
               const month = String(parsedStartTime.getMonth() + 1).padStart(
                 2,
-                "0"
+                "0",
               );
               const day = String(parsedStartTime.getDate()).padStart(2, "0");
               const hours = String(parsedStartTime.getHours()).padStart(2, "0");
               const minutes = String(parsedStartTime.getMinutes()).padStart(
                 2,
-                "0"
+                "0",
               );
 
               const datetimeLocalValue = `${year}-${month}-${day}T${hours}:${minutes}`;
@@ -465,7 +467,7 @@ const MockSchedulelater = () => {
             if (startTime) {
               const endTime = calculateEndTime(
                 startTime.toISOString(),
-                round.duration || "60"
+                round.duration || "60",
               );
               setEndTime(endTime);
             }
@@ -476,7 +478,7 @@ const MockSchedulelater = () => {
         // Skills handling...
         const skillStrings =
           data.skills?.map((s) =>
-            typeof s === "object" ? s.skill || s.SkillName || s : s
+            typeof s === "object" ? s.skill || s.SkillName || s : s,
           ) || [];
 
         const skillObjects =
@@ -540,7 +542,7 @@ const MockSchedulelater = () => {
 
       if (localDate < minFuture) {
         console.warn(
-          "⚠️ Scheduled time is in the past, adjusting to 5 minutes from now"
+          "⚠️ Scheduled time is in the past, adjusting to 5 minutes from now",
         );
         const adjustedDate = new Date(now.getTime() + 5 * 60 * 1000);
         const formatted = adjustedDate
@@ -1141,7 +1143,7 @@ const MockSchedulelater = () => {
 
     console.log(
       "Confirming date/time change in Mock Interview:",
-      pendingDateChange
+      pendingDateChange,
     );
 
     // ────────────────────────────────────────────────────────────────
@@ -1154,7 +1156,7 @@ const MockSchedulelater = () => {
       setHasManuallyClearedInterviewers(true);
 
       notify.warning(
-        "Date/time changed → All outsourced interviewers cleared."
+        "Date/time changed → All outsourced interviewers cleared.",
       );
     }
 
@@ -1465,7 +1467,7 @@ const MockSchedulelater = () => {
     // ── FRESH CALCULATION FOR INSTANT ───────────────────────────────
     if (interviewType === "instant") {
       const { display } = calculateInstantTimes(
-        Number(formData.rounds.duration) || 60
+        Number(formData.rounds.duration) || 60,
       );
       finalDateTime = display;
 
@@ -1490,7 +1492,7 @@ const MockSchedulelater = () => {
       const { formIsValid, newErrors } = validatemockForm(
         formData,
         formData.skills,
-        errors
+        errors,
       );
       setErrors(newErrors);
 
@@ -1572,9 +1574,8 @@ const MockSchedulelater = () => {
           setIsMeetingCreationLoading(true);
           setMeetingCreationProgress("Creating meeting link...");
 
-          const { createMeeting } = await import(
-            "../../../../utils/meetingPlatforms.js"
-          );
+          const { createMeeting } =
+            await import("../../../../utils/meetingPlatforms.js");
 
           const commonPayload = {
             roundTitle: savedRound.roundTitle,
@@ -1588,11 +1589,11 @@ const MockSchedulelater = () => {
             meetingLink = await createMeeting(
               "googlemeet",
               commonPayload,
-              (progress) => setMeetingCreationProgress(progress)
+              (progress) => setMeetingCreationProgress(progress),
             );
           } else if (selectedMeetingPlatform === "zoom") {
             const formattedStartTime = formatStartTimeForZoom(
-              effectiveCombinedDateTime
+              effectiveCombinedDateTime,
             );
             if (!formattedStartTime)
               throw new Error("Invalid start time for Zoom");
@@ -1613,13 +1614,13 @@ const MockSchedulelater = () => {
             meetingLink = await createMeeting(
               "zoommeet",
               { payload: zoomPayload },
-              (progress) => setMeetingCreationProgress(progress)
+              (progress) => setMeetingCreationProgress(progress),
             );
           } else if (selectedMeetingPlatform === "platform") {
             meetingLink = await createMeeting(
               "videosdk",
               commonPayload,
-              (progress) => setMeetingCreationProgress(progress)
+              (progress) => setMeetingCreationProgress(progress),
             );
           }
 
@@ -1654,7 +1655,7 @@ const MockSchedulelater = () => {
 
       // Success
       notify.success(
-        mockEdit ? "Mock interview updated!" : "Mock interview scheduled!"
+        mockEdit ? "Mock interview updated!" : "Mock interview scheduled!",
       );
       navigate("/mock-interview");
     } catch (error) {
@@ -1875,13 +1876,13 @@ const MockSchedulelater = () => {
   useEffect(() => {
     const calculatedEndTime = calculateEndTime(
       startTime,
-      formData.rounds.duration
+      formData.rounds.duration,
     );
     setEndTime(calculatedEndTime);
     setDateTime(
       `${formatDate(selectedDate)} ${formatTime(
-        startTime
-      )} - ${calculatedEndTime}`
+        startTime,
+      )} - ${calculatedEndTime}`,
     );
   }, [startTime, formData.rounds.duration, selectedDate]);
 
@@ -1898,7 +1899,7 @@ const MockSchedulelater = () => {
     setStartTime(selectedStartTime);
     const calculatedEndTime = calculateEndTime(
       selectedStartTime,
-      formData.rounds.duration
+      formData.rounds.duration,
     );
     setEndTime(calculatedEndTime);
   };
@@ -1906,13 +1907,13 @@ const MockSchedulelater = () => {
   const handleConfirm = () => {
     const calculatedEndTime = calculateEndTime(
       startTime,
-      formData.rounds.duration
+      formData.rounds.duration,
     );
     setEndTime(calculatedEndTime);
     setDateTime(
       `${formatDate(selectedDate)} ${formatTime(
-        startTime
-      )} - ${calculatedEndTime}`
+        startTime,
+      )} - ${calculatedEndTime}`,
     );
   };
 
@@ -2013,7 +2014,7 @@ const MockSchedulelater = () => {
         });
       }
     },
-    [interviewType, scheduledDate]
+    [interviewType, scheduledDate],
   );
 
   // Fixed useEffect with proper dependencies
@@ -2099,7 +2100,7 @@ const MockSchedulelater = () => {
     // Start refreshing every 30 seconds
     const updateLiveTime = () => {
       const { display } = calculateInstantTimes(
-        Number(formData.rounds.duration) || 60
+        Number(formData.rounds.duration) || 60,
       );
       setLiveInstantDisplay(display);
     };
@@ -2193,7 +2194,7 @@ const MockSchedulelater = () => {
     // Ensure no duplicates and append new interviewers
     const uniqueInterviewers = interviewers.filter(
       (newInterviewer) =>
-        !externalInterviewers.some((i) => i.id === newInterviewer.id)
+        !externalInterviewers.some((i) => i.id === newInterviewer.id),
     );
 
     setSelectedInterviewType("External");
@@ -2207,7 +2208,7 @@ const MockSchedulelater = () => {
         lastName: i.lastName || i.contact?.lastName || "",
         email: i.email || i.contact?.email || "",
         contact: i.contact || i, // keep full object
-      })
+      }),
     );
 
     console.log("normalized", normalized);
@@ -2220,7 +2221,7 @@ const MockSchedulelater = () => {
   const handleRemoveExternalInterviewer = (interviewerId) => {
     setExternalInterviewers((prev) => {
       const updatedInterviewers = prev.filter(
-        (i) => i.id !== interviewerId && i._id !== interviewerId
+        (i) => i.id !== interviewerId && i._id !== interviewerId,
       );
 
       // Reset selectedInterviewType if no interviewers are left
@@ -2429,7 +2430,7 @@ const MockSchedulelater = () => {
 
       // Force immediate recalculation
       const { startISO, endISO, formattedDisplay } = calculateInstantTimes(
-        formData.rounds.duration || 60
+        formData.rounds.duration || 60,
       );
       // Format the datetime for display
       // const formattedStart = formatToCustomDateTime(now);
@@ -2633,8 +2634,8 @@ const MockSchedulelater = () => {
                               ?.filter(
                                 (skill) =>
                                   !allSelectedSkills.some(
-                                    (s) => s.SkillName === skill.SkillName
-                                  )
+                                    (s) => s.SkillName === skill.SkillName,
+                                  ),
                               )
                               .map((skill) => ({
                                 value: skill.SkillName,
@@ -2681,7 +2682,7 @@ const MockSchedulelater = () => {
                                     // Find and clear the input
                                     const selectInput =
                                       fieldRefs.skills.current.querySelector(
-                                        "input"
+                                        "input",
                                       );
                                     if (selectInput) {
                                       selectInput.value = "";
@@ -2722,7 +2723,7 @@ const MockSchedulelater = () => {
                                     type="button"
                                     onClick={() => handleRemoveSkill(index)}
                                     disabled={shouldDisable(
-                                      "removeInterviewerBtn"
+                                      "removeInterviewerBtn",
                                     )}
                                     className="ml-1 text-custom-blue hover:text-custom-blue/80"
                                     aria-label={`Remove ${skillName}`}
@@ -3345,7 +3346,7 @@ const MockSchedulelater = () => {
                                     setTimeout(
                                       () =>
                                         updateTimes(formData?.rounds?.duration),
-                                      1000
+                                      1000,
                                     );
                                   }
                                 }}
@@ -3504,7 +3505,7 @@ const MockSchedulelater = () => {
                                 <button
                                   type="button"
                                   disabled={shouldDisable(
-                                    "clearInterviewersBtn"
+                                    "clearInterviewersBtn",
                                   )}
                                   onClick={handleClearAllInterviewers}
                                   className="text-sm text-red-600 hover:text-red-800 flex items-center"
@@ -3543,11 +3544,11 @@ const MockSchedulelater = () => {
                                         type="button"
                                         onClick={() =>
                                           handleRemoveExternalInterviewer(
-                                            interviewer._id
+                                            interviewer._id,
                                           )
                                         }
                                         disabled={shouldDisable(
-                                          "removeInterviewerBtn"
+                                          "removeInterviewerBtn",
                                         )}
                                         className="text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100"
                                         title="Remove interviewer"

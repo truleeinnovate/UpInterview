@@ -8,6 +8,7 @@ export const decryptParam = (param) => {
   if (!param) return null;
   try {
     const decoded = decodeURIComponent(param);
+
     return decryptData(decoded);
   } catch (error) {
     console.error("Error decrypting param:", error);
@@ -24,7 +25,19 @@ export const extractUrlData = (search) => {
   // const meetLink = decryptParam(params.get("meeting"));
   const roundData = decryptParam(params.get("round"));
   const token = params.get("interviewertoken") || params.get("schedulertoken");
+  const interviewType = params.get("type");
   const interviewerId = decryptParam(token);
+
+  // console.log("Extracted URL data:", {
+  //   isSchedule,
+  //   isCandidate,
+  //   isInterviewer,
+  //   // meetLink,
+  //   roundData,
+  //   interviewType,
+
+  //   interviewerId,
+  // });
 
   return {
     isSchedule,
@@ -32,6 +45,7 @@ export const extractUrlData = (search) => {
     isInterviewer,
     // meetLink,
     // roundData,
+    interviewType,
     interviewRoundId: roundData || "",
     interviewerId: interviewerId || "",
   };
@@ -66,15 +80,15 @@ export const extractUrlData = (search) => {
 // };
 
 // Custom hook for pre-auth contact details
-export const useContactDetails = (contactId, roundId) => {
+export const useContactDetails = (contactId, roundId, interviewType) => {
   return useQuery({
     queryKey: ["contactDetails", contactId, roundId],
     queryFn: async () => {
       const res = await axios.get(
         `${config.REACT_APP_API_URL}/feedback/contact-details`,
         {
-          params: { contactId, roundId },
-        }
+          params: { contactId, roundId, interviewType },
+        },
       );
       if (res.status !== 200) {
         throw new Error(res.data?.error || "Error fetching contact details");
@@ -86,12 +100,16 @@ export const useContactDetails = (contactId, roundId) => {
 };
 
 // Custom hook for scheduler round details
-export const useSchedulerRoundDetails = (roundId, isSchedule) => {
+export const useSchedulerRoundDetails = (
+  roundId,
+  isSchedule,
+  // interviewType,
+) => {
   return useQuery({
     queryKey: ["schedulerRound", roundId],
     queryFn: async () => {
       const res = await axios.get(
-        `${config.REACT_APP_API_URL}/feedback/round/${roundId}`
+        `${config.REACT_APP_API_URL}/feedback/round/${roundId}`,
       );
       if (!res.data?.success) {
         throw new Error(res.data?.message || "Error fetching round details");

@@ -19,9 +19,9 @@ const {
   computeInterviewPricingForAccept,
 } = require("../utils/interviewWalletUtil");
 //this will create agenda when round schedule based on round date time more than 20 mins interviwer or candidate no joined means it will update no show
-const { scheduleOrRescheduleNoShow } = require("../services/interviews/roundNoShowScheduler");
-
-
+const {
+  scheduleOrRescheduleNoShow,
+} = require("../services/interviews/roundNoShowScheduler");
 
 // each interviwer send one request
 
@@ -55,7 +55,7 @@ exports.createRequest = async (req, res) => {
       "INT-RQST",
       InterviewRequest,
       "customRequestId",
-      tenantId
+      tenantId,
     );
 
     const newRequest = new InterviewRequest({
@@ -151,13 +151,23 @@ exports.getAllRequests = async (req, res) => {
             from: "resume",
             let: { candId: "$candidateId" },
             pipeline: [
-              { $match: { $expr: { $eq: ["$candidateId", "$$candId"] }, isActive: true } },
+              {
+                $match: {
+                  $expr: { $eq: ["$candidateId", "$$candId"] },
+                  isActive: true,
+                },
+              },
               { $project: { skills: 1 } },
             ],
             as: "candidateResume",
           },
         },
-        { $unwind: { path: "$candidateResume", preserveNullAndEmptyArrays: true } },
+        {
+          $unwind: {
+            path: "$candidateResume",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
         // Lookup interviewer
         {
           $lookup: {
@@ -167,11 +177,13 @@ exports.getAllRequests = async (req, res) => {
             as: "interviewerId",
           },
         },
-        { $unwind: { path: "$interviewerId", preserveNullAndEmptyArrays: true } },
+        {
+          $unwind: { path: "$interviewerId", preserveNullAndEmptyArrays: true },
+        },
         // Project only needed fields
         {
           $addFields: {
-            "candidateId": { skills: "$candidateResume.skills" },
+            candidateId: { skills: "$candidateResume.skills" },
           },
         },
         { $project: { candidateResume: 0 } },
@@ -190,9 +202,9 @@ exports.getAllRequests = async (req, res) => {
 
     const statusValues = statusParam
       ? statusParam
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : [];
 
     const pipeline = [
@@ -335,7 +347,7 @@ exports.updateRequestStatus = async (req, res) => {
     let isAccepted = false;
     request.interviewerId = request.interviewerId.map((interviewer) => {
       const updatedInterviewer = interviewerIds.find(
-        (i) => String(i.id) === String(interviewer.id)
+        (i) => String(i.id) === String(interviewer.id),
       );
       if (updatedInterviewer) {
         interviewer.status = updatedInterviewer.status;
@@ -415,11 +427,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       roundDetails = mockRound
         ? {
-          roundTitle: mockRound.roundTitle,
-          interviewType: mockRound.interviewType,
-          duration: mockRound.duration,
-          dateTime: mockRound.dateTime,
-        }
+            roundTitle: mockRound.roundTitle,
+            interviewType: mockRound.interviewType,
+            duration: mockRound.duration,
+            dateTime: mockRound.dateTime,
+          }
         : null;
     } else {
       // Fetch from InterviewRounds collection
@@ -430,11 +442,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       roundDetails = interviewRound
         ? {
-          roundTitle: interviewRound.roundTitle,
-          interviewType: interviewRound.interviewType,
-          duration: interviewRound.duration,
-          dateTime: interviewRound.dateTime,
-        }
+            roundTitle: interviewRound.roundTitle,
+            interviewType: interviewRound.interviewType,
+            duration: interviewRound.duration,
+            dateTime: interviewRound.dateTime,
+          }
         : null;
     }
   }
@@ -449,11 +461,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       candidateDetails = contact
         ? {
-          id: contact._id,
-          name: `${contact.firstName} ${contact.lastName}`,
-          email: contact.email,
-          phone: contact.phone,
-        }
+            id: contact._id,
+            name: `${contact.firstName} ${contact.lastName}`,
+            email: contact.email,
+            phone: contact.phone,
+          }
         : null;
     }
   } else {
@@ -465,11 +477,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       candidateDetails = candidate
         ? {
-          id: candidate._id,
-          name: `${candidate.FirstName} ${candidate.LastName}`,
-          email: candidate.Email,
-          phone: candidate.Phone,
-        }
+            id: candidate._id,
+            name: `${candidate.FirstName} ${candidate.LastName}`,
+            email: candidate.Email,
+            phone: candidate.Phone,
+          }
         : null;
     }
   }
@@ -483,12 +495,12 @@ const formatInterviewRequest = async (request) => {
       .lean();
     positionDetails = position
       ? {
-        id: position._id,
-        title: position.title,
-        description: position.description,
-        location: position.location,
-        companyname: position.companyname, // Added to match frontend
-      }
+          id: position._id,
+          title: position.title,
+          description: position.description,
+          location: position.location,
+          companyname: position.companyname, // Added to match frontend
+        }
       : null;
   }
 
@@ -568,7 +580,7 @@ exports.getInterviewRequests = async (req, res) => {
 
     // Format all requests using the shared function
     const formattedRequests = await Promise.all(
-      requests.map(formatInterviewRequest)
+      requests.map(formatInterviewRequest),
     );
 
     res.status(200).json(formattedRequests);
@@ -628,7 +640,7 @@ exports.acceptInterviewRequest = async (req, res) => {
     //schedule only update for 1 st time from second time rescheduled will update
     // Decide schedule action based on history
     const hasScheduledOnce = round.history?.some(
-      (h) => h.action === "Scheduled"
+      (h) => h.action === "Scheduled",
     );
     // console.log("roundhasScheduledOnce", round);
     const scheduleAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
@@ -687,11 +699,9 @@ exports.acceptInterviewRequest = async (req, res) => {
           {
             new: true,
             runValidators: true,
-          }
+          },
         );
       }
-
-
 
       // round.interviewers.push(contactId);
       // round.status = scheduleAction;
@@ -726,14 +736,14 @@ exports.acceptInterviewRequest = async (req, res) => {
         _id: { $ne: requestId }, // Don't update the accepted request
         status: { $ne: "withdrawn" }, // Only update if not already withdrawn
       },
-      { status: "withdrawn", updatedAt: new Date() }
+      { status: "withdrawn", updatedAt: new Date() },
     );
 
     // Update the status of the accepted request
     await InterviewRequest.findByIdAndUpdate(
       requestId,
       { status: "accepted" },
-      { new: true }
+      { new: true },
     );
 
     // Fetch contact for interviewer rates and expertise
@@ -756,11 +766,8 @@ exports.acceptInterviewRequest = async (req, res) => {
       });
     }
 
-    const {
-      durationInMinutes,
-      totalAmount,
-      appliedDiscountPercentage,
-    } = pricingResult;
+    const { durationInMinutes, totalAmount, appliedDiscountPercentage } =
+      pricingResult;
 
     const acceptWalletResult = await applyAcceptInterviewWalletFlow({
       request,
@@ -778,7 +785,8 @@ exports.acceptInterviewRequest = async (req, res) => {
       });
     }
 
-    const { wallet: updatedWallet, transaction: savedTransaction } = acceptWalletResult;
+    const { wallet: updatedWallet, transaction: savedTransaction } =
+      acceptWalletResult;
 
     // ================== INTERVIEWER WALLET HOLD (PENDING PAYOUT) ==================
     // Mirror the final interviewer amount as a hold in the interviewer's wallet so
@@ -843,22 +851,23 @@ exports.acceptInterviewRequest = async (req, res) => {
 
     const successResponse = {
       success: true,
-      message: `${request.isMockInterview ? "Mock i" : "I"
-        }nterview request accepted; funds held and emails processed`,
+      message: `${
+        request.isMockInterview ? "Mock i" : "I"
+      }nterview request accepted; funds held and emails processed`,
       wallet: {
         balance: updatedWallet?.balance,
         holdAmount: updatedWallet?.holdAmount,
       },
       transaction: savedTransaction
         ? {
-          _id: transactionId,
-          type: savedTransaction.type,
-          amount: savedTransaction.amount,
-          description: savedTransaction.description,
-          relatedInvoiceId: savedTransaction.relatedInvoiceId,
-          status: savedTransaction.status,
-          metadata: savedTransaction.metadata,
-        }
+            _id: transactionId,
+            type: savedTransaction.type,
+            amount: savedTransaction.amount,
+            description: savedTransaction.description,
+            relatedInvoiceId: savedTransaction.relatedInvoiceId,
+            status: savedTransaction.status,
+            metadata: savedTransaction.metadata,
+          }
         : null,
       appliedDiscount: request.isMockInterview
         ? appliedDiscountPercentage
@@ -908,13 +917,20 @@ exports.getSingleInterviewRequest = async (req, res) => {
           from: "resume",
           let: { candId: "$candidateId" },
           pipeline: [
-            { $match: { $expr: { $eq: ["$candidateId", "$$candId"] }, isActive: true } },
+            {
+              $match: {
+                $expr: { $eq: ["$candidateId", "$$candId"] },
+                isActive: true,
+              },
+            },
             { $project: { skills: 1 } },
           ],
           as: "candidateResume",
         },
       },
-      { $unwind: { path: "$candidateResume", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$candidateResume", preserveNullAndEmptyArrays: true },
+      },
       // Lookup interviewer
       {
         $lookup: {
@@ -928,7 +944,7 @@ exports.getSingleInterviewRequest = async (req, res) => {
       // Add skills to candidateId object
       {
         $addFields: {
-          "candidateId": { skills: "$candidateResume.skills" },
+          candidateId: { skills: "$candidateResume.skills" },
         },
       },
       { $project: { candidateResume: 0 } },
