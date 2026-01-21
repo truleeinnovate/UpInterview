@@ -656,7 +656,9 @@ const MainAppRoutes = ({
   }, [effectivePermissions, superAdminPermissions]);
 
   const showLogo = showLogoPaths.includes(location.pathname);
-  const shouldRenderNavbar = !noNavbarPaths.includes(location.pathname);
+  // Hide navbar for specific paths (including dynamic routes like upload-resumes)
+  const isUploadResumesPage = location.pathname.includes('/upload-resumes');
+  const shouldRenderNavbar = !noNavbarPaths.includes(location.pathname) && !isUploadResumesPage;
 
   // Permission check function
   const hasPermission = (objectName, permissionType = "ViewTab") => {
