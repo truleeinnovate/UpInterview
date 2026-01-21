@@ -43,33 +43,34 @@ const useAutoSaveFeedback = ({
   const prepareFeedbackPayload = useCallback(() => {
     return {
       type: "draft",
-      tenantId: tenantId || "",
-      ownerId: ownerId || "",
-      interviewRoundId: interviewRoundId || "",
-      candidateId: candidateId || "",
-      positionId: positionId || "",
-      interviewerId: interviewerId || "",
+      tenantId: tenantId || undefined,
+      ownerId: ownerId || undefined,
+      interviewRoundId: interviewRoundId || undefined,
+      candidateId: candidateId || undefined,
+      positionId: positionId || undefined,
+      interviewerId: interviewerId || undefined,
       skills:
-        skillRatings.length > 0 &&
-        skillRatings.map((skill) => ({
-          skillName: skill.skill,
-          rating: skill.rating,
-          note: skill.comments || "",
-        })),
+        skillRatings.length > 0
+          ? skillRatings.map((skill) => ({
+              skillName: skill.skill,
+              rating: skill.rating,
+              note: skill.comments || "",
+            }))
+          : undefined,
       questionFeedback: [
         // Interviewer section questions
         ...(interviewerSectionData || []).map((question) => ({
           questionId: question,
           candidateAnswer: {
             answerType: toBackendAnswerType(
-              question.isAnswered || "Not Answered"
+              question.isAnswered || "Not Answered",
             ),
             submittedAnswer: "",
           },
           interviewerFeedback: {
             liked: question.isLiked || "none",
-            note: question.note || "",
-            dislikeReason: question.whyDislike || "",
+            note: question.note || undefined,
+            dislikeReason: question.whyDislike || undefined,
           },
         })),
         // Preselected questions responses
@@ -80,14 +81,14 @@ const useAutoSaveFeedback = ({
               : response?.questionId || response?.id || response?._id || "",
           candidateAnswer: {
             answerType: toBackendAnswerType(
-              response.isAnswered || "Not Answered"
+              response.isAnswered || "Not Answered",
             ),
             submittedAnswer: "",
           },
           interviewerFeedback: {
             liked: response.isLiked || "none",
-            note: response.note || "",
-            dislikeReason: response.whyDislike || "",
+            note: response.note || undefined,
+            dislikeReason: response.whyDislike || undefined,
           },
         })),
       ],

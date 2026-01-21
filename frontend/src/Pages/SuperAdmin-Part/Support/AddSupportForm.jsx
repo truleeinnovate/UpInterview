@@ -22,6 +22,7 @@ import { Minimize, Expand, ChevronDown, X } from "lucide-react";
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
 import { useCandidates } from "../../../apiHooks/useCandidates";
 import PhoneField from "../../../Components/FormFields/PhoneField";
+import { config } from "../../../config";
 
 // Reusable CustomDropdown Component
 const CustomDropdown = ({
@@ -731,7 +732,7 @@ const AddSupportForm = ({ mode }) => {
                       />
                     ) : id && formData?.ImageData?.path ? (
                       <img
-                        src={`http://localhost:5000/${formData.ImageData.path}`}
+                        src={`${config.REACT_APP_API_URL}/${formData.ImageData.path}`}
                         alt={formData.FirstName || "Candidate"}
                         onError={(e) => {
                           e.target.src = "/default-profile.png";

@@ -12,13 +12,13 @@ const ApplicationSchema = new mongoose.Schema(
         },
         tenantId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Organization",
+            ref: "Tenant",
             required: true,
             index: true,
         },
         companyId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Organization",
+            ref: "TenantCompany",
         },
         positionId: {
             type: mongoose.Schema.Types.ObjectId,

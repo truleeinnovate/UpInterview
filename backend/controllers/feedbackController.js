@@ -658,10 +658,10 @@ const getFeedbackByRoundId = async (req, res) => {
     const { roundId } = req.params;
     const { interviewerId, interviewType } = req.query;
     const isMockInterview = interviewType === "mockinterview";
-    // console.log("roundId", roundId);
+    console.log("roundId", roundId);
 
-    // console.log("interviewerId", interviewerId);
-    // console.log("interviewType", interviewType);
+    console.log("interviewerId", interviewerId);
+    console.log("interviewType", interviewType);
 
     // Validate roundId
     if (!mongoose.Types.ObjectId.isValid(roundId)) {
@@ -1171,6 +1171,7 @@ const getFeedbackRoundId = async (req, res) => {
 const validateFeedback = async (req, res) => {
   try {
     const { type } = req.body;
+    console.log("req.body validateFeedback", req.body);
 
     // Determine which validation to use based on operation type
     const isUpdate = req.params.operation === "update";

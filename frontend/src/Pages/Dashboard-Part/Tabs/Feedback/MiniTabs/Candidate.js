@@ -19,8 +19,10 @@ import {
   extractUrlData,
   // useCandidateDetails,
 } from "../../../../../apiHooks/useVideoCall";
-import { useEffect } from "react";
+
 import { useFeedbackData } from "../../../../../apiHooks/useFeedbacks";
+import { useMockInterviewById } from "../../../../../apiHooks/useMockInterviews";
+import { useInterviews } from "../../../../../apiHooks/useInterviews";
 // import { Users, Video, LogOut, User, MessageSquare, FileText } from 'lucide-react';
 const CandidateMiniTab = ({
   selectedData: propsSelecteData,
@@ -31,47 +33,46 @@ const CandidateMiniTab = ({
   const location = useLocation();
   const feedback = location.state?.feedback || {};
 
+  const { useInterviewDetails } = useInterviews();
+
   // Extract URL data once
   const urlData = useMemo(
     () => extractUrlData(location.search),
-    [location.search]
+    [location.search],
   );
 
-  const decodedData = propsDecodedData || urlData;
+  const isMockInterview = urlData?.interviewType === "mockinterview";
 
-  // useEffect(() => {
-  //   if (!decodedData) return;
-
-  //   const effectiveIsInterviewer =
-  //     decodedData.isInterviewer || decodedData.isSchedule;
-  //   const roleInfo = {
-  //     isCandidate: decodedData.isCandidate,
-  //     isInterviewer: effectiveIsInterviewer,
-  //     hasRolePreference: decodedData.isCandidate || effectiveIsInterviewer,
-  //   };
-  //   // setUrlRoleInfo(roleInfo);
-  // }, [decodedData]);
-
-  // Candidate query
-  // Feedback query (existing)
+  // ✅ ALWAYS call hooks
   const {
-    data: feedbackData,
-    isLoading: feedbackLoading,
-    isError: feedbackError,
-  } = useFeedbackData(
-    !urlData.isCandidate ? urlData.interviewRoundId : null,
-    !urlData.isCandidate ? urlData.interviewerId : null
-  );
+    mockInterview,
+    isMockLoading,
+    isError: isMockError,
+  } = useMockInterviewById({
+    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+    enabled: isMockInterview, // ✅ THIS LINE
+    // mockInterviewId: null,
+  });
+
+  const {
+    data: interviewData,
+    isLoading: isInterviewLoading,
+    isError: interviewError,
+  } = useInterviewDetails({
+    roundId: !isMockInterview ? urlData.interviewRoundId : null,
+    enabled: !isMockInterview,
+  });
 
   const candidateData =
-    propsSelecteData?.candidate || feedbackData?.candidate
-      ? propsSelecteData?.candidate || feedbackData?.candidate
+    propsSelecteData?.candidate || interviewData?.candidateId || mockInterview
+      ? propsSelecteData?.candidate ||
+        interviewData?.candidateId ||
+        mockInterview
       : feedback.candidateId || {};
   const positionData =
-    propsSelecteData?.position || feedbackData?.position
-      ? propsSelecteData?.position || feedbackData?.position
+    propsSelecteData?.position || interviewData?.positionId
+      ? propsSelecteData?.position || interviewData?.positionId
       : feedback.positionId || {};
-  const interviewRoundData = feedback.interviewRoundId || {};
 
   const [expandedSections, setExpandedSections] = useState({
     skills: true,
@@ -87,17 +88,35 @@ const CandidateMiniTab = ({
   };
 
   // Mock position data since it's not in the candidate object
-  const position = {
-    title: positionData.title,
-    //department: "Engineering"
-  };
+  // const position = {
+  //   title: positionData.title,
+  //   //department: "Engineering"
+  // };
 
-  // Use candidate data directly
-  const candidateDetails = {
-    skills: candidateData.skills || [],
-    certificates: candidateData.certificates || [],
-    projects: candidateData.projects || [],
-  };
+  // // Use candidate data directly
+  // const candidateDetails = {
+  //   skills: candidateData.skills || [],
+  //   certificates: candidateData.certificates || [],
+  //   projects: candidateData.projects || [],
+  // };
+
+  const meetingId =
+    interviewData?.rounds[0]?.meetingId ||
+    mockInterview?.rounds[0]?.meetingId ||
+    "";
+
+  const isLoading = isInterviewLoading || isMockLoading;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 border-4 border-custom-blue border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm text-gray-500">Loading candidate details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     // v1.0.0 <-----------------------------------------------------------
@@ -111,9 +130,10 @@ const CandidateMiniTab = ({
             <button
               onClick={() =>
                 window.open(
-                  feedbackData?.interviewRound?.meetingId,
+                  meetingId,
+                  // interviewData?.interviewRound?.meetingId,
                   // decodedData.meetLink
-                  "_blank"
+                  "_blank",
                 )
               }
               className="text-sm bg-custom-blue hover:bg-custom-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
@@ -139,26 +159,39 @@ const CandidateMiniTab = ({
         <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
           <div>
             <p className="text-sm font-medium text-gray-500">Name</p>
-            <p className="text-gray-900">{candidateData?.FirstName}</p>
+            <p className="text-gray-900">
+              {candidateData?.FirstName || candidateData?.LastName
+                ? candidateData?.FirstName + " " + candidateData?.LastName
+                : candidateData?.candidateName}
+            </p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Experience</p>
             <p className="text-gray-900">
               {candidateData?.CurrentExperience
                 ? candidateData?.CurrentExperience + " years"
-                : "Not Available"}
+                : candidateData?.currentExperience + " years"}
             </p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">
-              Position Applied
-            </p>
-            <p className="text-gray-900">{position?.title}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Department</p>
-            <p className="text-gray-900">{position?.department || "Unknown"}</p>
-          </div>
+
+          {!isMockInterview && (
+            <>
+              <div>
+                <p className="text-sm font-medium text-gray-500">
+                  Position Applied
+                </p>
+                <p className="text-gray-900">{positionData?.title}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">
+                  Company Name
+                </p>
+                <p className="text-gray-900">
+                  {positionData?.companyname || "Not Available"}
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
       {/* v1.0.0 -----------------------------------------------------------------> */}
@@ -188,32 +221,36 @@ const CandidateMiniTab = ({
 
         {expandedSections.skills && (
           <div className="mt-4 space-y-3">
-            {candidateDetails.skills.map((skill, index) => (
+            {candidateData.skills.map((skill, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
               >
                 <div>
                   <p className="sm:text-sm font-medium text-gray-900">
-                    {skill.skill}
+                    {skill.skill || skill}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    {skill.experience} experience
-                  </p>
+                  {!isMockInterview && (
+                    <p className="text-sm text-gray-500">
+                      {skill.experience} experience
+                    </p>
+                  )}
                 </div>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    skill.expertise === "Expert"
-                      ? "bg-green-100 text-green-800"
-                      : skill.expertise === "Advanced"
-                      ? "bg-blue-100 text-blue-800"
-                      : skill.expertise === "Basic"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {skill.expertise}
-                </span>
+                {!isMockInterview && (
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      skill.expertise === "Expert"
+                        ? "bg-green-100 text-green-800"
+                        : skill.expertise === "Advanced"
+                          ? "bg-blue-100 text-blue-800"
+                          : skill.expertise === "Basic"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {skill.expertise}
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -247,7 +284,7 @@ const CandidateMiniTab = ({
 
         {expandedSections.certificates && (
           <div className="mt-4 space-y-3">
-            {candidateDetails.certificates.map((cert, index) => (
+            {candidateData.certificates.map((cert, index) => (
               <div key={index} className="p-3 bg-gray-50 rounded-md">
                 <p className="font-medium text-gray-900">{cert.name}</p>
                 <p className="text-sm text-gray-500">
@@ -285,7 +322,7 @@ const CandidateMiniTab = ({
 
         {expandedSections.projects && (
           <div className="mt-4 space-y-4">
-            {candidateDetails.projects.map((project, index) => (
+            {candidateData?.projects.map((project, index) => (
               <div key={index} className="p-4 bg-gray-50 rounded-md">
                 <h4 className="font-medium text-gray-900">{project.name}</h4>
                 <p className="text-sm text-gray-600 mt-1">

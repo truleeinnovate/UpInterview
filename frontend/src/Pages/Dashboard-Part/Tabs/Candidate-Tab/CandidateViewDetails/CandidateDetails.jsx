@@ -504,9 +504,125 @@ import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock"
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import ActivityComponent from "../../../Tabs/CommonCode-AllTabs/Activity";
-import PositionForm from "../../Position-Tab/Position-Form.jsx";
+import ApplyPositionPopup from "./ApplyPositionPopup.jsx";
+import { useApplicationsByCandidate } from "../../../../../apiHooks/useApplications";
 import Breadcrumb from "../../../Tabs/CommonCode-AllTabs/Breadcrumb.jsx";
 import { Button } from "../../../../../Components/Buttons/Button.jsx";
+import { Loader2 } from "lucide-react";
+
+// Applications Tab Component
+const ApplicationsTab = ({ candidateId }) => {
+  const { applications, isLoading } = useApplicationsByCandidate(candidateId);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getStatusBadgeClass = (status) => {
+    const statusClasses = {
+      APPLIED: "bg-blue-100 text-blue-800",
+      SCREENED: "bg-purple-100 text-purple-800",
+      INTERVIEWING: "bg-yellow-100 text-yellow-800",
+      OFFERED: "bg-green-100 text-green-800",
+      HIRED: "bg-emerald-100 text-emerald-800",
+      REJECTED: "bg-red-100 text-red-800",
+      WITHDRAWN: "bg-gray-100 text-gray-800",
+    };
+    return statusClasses[status] || "bg-gray-100 text-gray-800";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-custom-blue" />
+      </div>
+    );
+  }
+
+  if (!applications || applications.length === 0) {
+    return (
+      <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+        <Briefcase className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <p className="text-lg font-medium text-gray-500">
+          No Applications Found
+        </p>
+        <p className="text-sm text-gray-400 mt-2">
+          Click "Apply Position" to create an application for this candidate.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Position
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Application #
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Stage
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Applied Date
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {applications.map((application) => (
+              <tr key={application._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">
+                    {application.positionId?.title || "N/A"}
+                  </div>
+                  {application.positionId?.companyname?.companyName && (
+                    <div className="text-sm text-gray-500">
+                      {application.positionId.companyname.companyName}
+                    </div>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="text-sm text-gray-600">
+                    {application.applicationNumber || "N/A"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(
+                      application.status
+                    )}`}
+                  >
+                    {application.status || "N/A"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {application.currentStage || "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatDate(application.createdAt)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 
 const CandidateDetails = ({ mode, candidateId, onClose }) => {
   const navigate = useNavigate();
@@ -518,7 +634,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
   const id = candidateId || params?.id;
   const { candidate: fetchedCandidate, isLoading } = useCandidateById(id);
 
-  const [showPositionModal, setShowPositionModal] = useState(false);
+  const [showApplyPositionPopup, setShowApplyPositionPopup] = useState(false);
 
   useScrollLock(!!id);
 
@@ -553,14 +669,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
     );
   }
 
-  const handlePositionCreated = (newPosition) => {
-    setShowPositionModal(false);
-    if (newPosition && newPosition._id) {
-      // setPositionId(newPosition._id);
-      // setPositionError("");
-    }
-    // The position data will be automatically refreshed by the usePositions hook
-  };
+
 
   const breadcrumbItems = [
     {
@@ -687,8 +796,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                           <p className="font-medium text-gray-800">
                             {candidate?.Date_Of_Birth
                               ? new Date(
-                                  candidate.Date_Of_Birth,
-                                ).toLocaleDateString()
+                                candidate.Date_Of_Birth,
+                              ).toLocaleDateString()
                               : "N/A"}
                           </p>
                         </div>
@@ -865,12 +974,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
             )}
 
             {activeTab === "Applications" && (
-              <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                <Briefcase className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium text-gray-500">
-                  No Applications Found
-                </p>
-              </div>
+              <ApplicationsTab candidateId={candidate?._id} />
             )}
 
             {activeTab === "Feeds" && (
@@ -880,20 +984,14 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
         </div>
       </div>
 
-      {showPositionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Modal Container */}
-          <div className="relative w-full rounded-lg overflow-hidden">
-            {/* Scrollable Content */}
-            <div className="overflow-y-auto max-h-[100vh]">
-              <PositionForm
-                mode="new"
-                onClose={handlePositionCreated}
-                isModal={true}
-              />
-            </div>
-          </div>
-        </div>
+      {showApplyPositionPopup && (
+        <ApplyPositionPopup
+          candidate={candidate}
+          onClose={() => setShowApplyPositionPopup(false)}
+          onSuccess={() => {
+            // Optionally show success toast or refresh data
+          }}
+        />
       )}
     </div>
   );

@@ -16,7 +16,7 @@ const { Candidate } = require("../models/candidate.js");
 const interviewQuestions = require("../models/Interview/selectedInterviewQuestion.js");
 const { Position } = require("../models/Position/position.js");
 const Wallet = require("../models/WalletTopup");
-const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+const { generateUniqueId, generateApplicationNumber } = require("../services/uniqueIdGeneratorService");
 const {
   WALLET_BUSINESS_TYPES,
   createWalletTransaction,
@@ -470,20 +470,27 @@ const createInterview = async (req, res) => {
       });
 
       if (!existingApp) {
-        // Generate applicationNumber explicitly (findOneAndUpdate doesn't trigger pre-save hooks)
-        const applicationNumber = await generateUniqueId(
-          "APPNUM",
-          Application,
-          "applicationNumber",
+        // Get candidate for application number generation
+        const candidate = await Candidate.findById(candidateId).lean();
+
+        // Generate applicationNumber using the new format: NAME-TECH-YEAR-0001
+        const applicationNumber = await generateApplicationNumber(
+          candidate,
+          position,
           orgId
         );
+
+        // Validate companyId - only use if it's a valid ObjectId, not a string
+        const companyId = position?.companyname && mongoose.Types.ObjectId.isValid(position.companyname)
+          ? position.companyname
+          : null;
 
         await Application.create({
           applicationNumber,
           candidateId,
           positionId,
           tenantId: orgId,
-          companyId: position?.companyname || null,
+          companyId,
           interviewId: interview._id,
           status: "INTERVIEWING",
           currentStage: "Interview Created",
@@ -2304,26 +2311,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-          from: "mockinterviews",
-          localField: "mockInterviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        }
+        from: "mockinterviews",
+        localField: "mockInterviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      }
       : {
-          from: "interviews",
-          localField: "interviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        };
+        from: "interviews",
+        localField: "interviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2345,23 +2352,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-            {
-              $addFields: {
-                mainTenantIdNormalized: {
-                  $cond: [
-                    {
-                      $and: [
-                        { $ne: ["$mainInterview.tenantId", null] },
-                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                      ],
-                    },
-                    { $toObjectId: "$mainInterview.tenantId" },
-                    null,
-                  ],
-                },
+          {
+            $addFields: {
+              mainTenantIdNormalized: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ["$mainInterview.tenantId", null] },
+                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                    ],
+                  },
+                  { $toObjectId: "$mainInterview.tenantId" },
+                  null,
+                ],
               },
             },
-          ]
+          },
+        ]
         : []),
       // Lookup tenant for organization info
       {
