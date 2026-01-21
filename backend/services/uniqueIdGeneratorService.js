@@ -469,11 +469,49 @@ async function getMaxExistingNumber(
   return maxNumber;
 }
 
+/**
+ * Generate application number in format: NAME-TECH-YEAR-0001
+ * - NAME: First 5 characters of candidate first name (uppercase)
+ * - TECH: First 3 characters of position title (uppercase)
+ * - YEAR: Current year
+ * - 0001: Sequential number at tenant level (4 digits, padded)
+ *
+ * @param {Object} candidate - Candidate object with FirstName field
+ * @param {Object} position - Position object with title field
+ * @param {ObjectId} tenantId - Tenant ID for scoping the sequence
+ * @returns {Promise<string>} The generated application number
+ */
+async function generateApplicationNumber(candidate, position, tenantId) {
+  // Get first 5 chars of candidate first name (uppercase)
+  const candidateName = (candidate?.FirstName || "UNKN")
+    .replace(/[^a-zA-Z]/g, "") // Remove non-alphabetic characters
+    .substring(0, 5)
+    .toUpperCase()
+    .padEnd(5, "X"); // Pad with X if less than 5 chars
+
+  // Get first 3 chars of position title (uppercase)
+  const techCode = (position?.title || "POS")
+    .replace(/[^a-zA-Z]/g, "") // Remove non-alphabetic characters
+    .substring(0, 3)
+    .toUpperCase()
+    .padEnd(3, "X"); // Pad with X if less than 3 chars
+
+  // Get current year
+  const currentYear = new Date().getFullYear();
+
+  // Get the next sequential number for this tenant using the sequence counter
+  const nextSeq = await getNextSequence("APP", tenantId, 1, 4);
+  const sequenceNumber = String(nextSeq).padStart(4, "0");
+
+  return `${candidateName}-${techCode}-${currentYear}-${sequenceNumber}`;
+}
+
 module.exports = {
   generateUniqueId,
   validateUniqueId,
   extractNumberFromId,
   getConfig,
   configurePrefix,
+  generateApplicationNumber,
   ENTITY_CONFIG,
 };

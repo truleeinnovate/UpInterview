@@ -495,6 +495,11 @@ app.use("/interviewer-groups", interviewerGroupRoutes);
 const resumeScreeningRoutes = require("./routes/resumeScreeningRoutes");
 app.use("/api/resume-screening", resumeScreeningRoutes);
 
+// Application Routes
+const applicationRoutes = require("./routes/applicationRoutes");
+app.use("/application", applicationRoutes);
+
+
 const port = process.env.PORT || 5000;
 
 // Start the server only after MongoDB is connected
