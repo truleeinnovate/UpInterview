@@ -52,6 +52,10 @@ const InterviewsMiniTabComponent = ({
   useScrollLock(true);
   const [interviewMiniTab, setInterviewMiniTab] = useState(1);
 
+  console.log("interviewData interviewData", interviewData);
+
+  const meetingId = interviewData?.interviewRound?.meetingId;
+
   const handleTabChange = (tab) => {
     setInterviewMiniTab(tab);
   };
@@ -118,9 +122,10 @@ const InterviewsMiniTabComponent = ({
             <button
               onClick={() =>
                 window.open(
+                  meetingId,
                   // decodedData.meetLink
-                  interviewData?.meetingId,
-                  "_blank"
+                  // interviewData?.meetingId,
+                  "_blank",
                 )
               }
               className="text-sm bg-custom-blue hover:bg-custom-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
