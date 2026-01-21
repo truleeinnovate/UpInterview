@@ -35,8 +35,9 @@ const DropdownWithSearchField = forwardRef(
       autoComplete,
       onInputChange,
       onMenuScrollToBottom,
+      emptyMessage,
     },
-    ref
+    ref,
   ) => {
     const inputRef = useRef(null);
 
@@ -118,15 +119,62 @@ const DropdownWithSearchField = forwardRef(
     }
 
     // Custom NoOptionsMessage component
+    // const NoOptionsMessage = (props) => {
+    //   const { inputValue, allowCreateOnEnter } = props.selectProps;
+    //   const showCreateHint =
+    //     allowCreateOnEnter && inputValue && inputValue.trim().length > 0;
+
+    //   if (inputValue) {
+    //     return (
+    //       <RSComponents.NoOptionsMessage {...props}>
+    //         <div className="p-2 text-sm text-gray-500">
+    //           No results found for "{inputValue}"
+    //         </div>
+    //       </RSComponents.NoOptionsMessage>
+    //     );
+    //   }
+
+    //   return (
+    //     <RSComponents.NoOptionsMessage {...props}>
+    //       <div className="p-2 text-sm text-gray-500">
+    //         {inputValue ? (
+    //           <span>
+    //             No {label ? label.toLowerCase() : "items"} found for "
+    //             {inputValue}".
+    //             {showCreateHint && (
+    //               <span>
+    //                 {" "}
+    //                 Press{" "}
+    //                 <kbd className="px-1 py-0.5 bg-gray-100 border rounded text-xs">
+    //                   Enter
+    //                 </kbd>{" "}
+    //                 to add it as a new {label ? label.toLowerCase() : "item"}.
+    //               </span>
+    //             )}
+    //           </span>
+    //         ) : (
+    //           <span>
+    //             Start typing to search {label ? label.toLowerCase() : "items"}
+    //             ...
+    //           </span>
+    //         )}
+    //       </div>
+    //     </RSComponents.NoOptionsMessage>
+    //   );
+    // };
+
+    // Custom NoOptionsMessage component
     const NoOptionsMessage = (props) => {
-      const { inputValue, allowCreateOnEnter } = props.selectProps;
+      const { inputValue, allowCreateOnEnter, options, emptyMessage } =
+        props.selectProps;
       const showCreateHint =
         allowCreateOnEnter && inputValue && inputValue.trim().length > 0;
 
-      return (
-        <RSComponents.NoOptionsMessage {...props}>
-          <div className="p-2 text-sm text-gray-500">
-            {inputValue ? (
+      // 1. If user is searching (typing), show search results status
+      if (inputValue) {
+        return (
+          <RSComponents.NoOptionsMessage {...props}>
+            <div className="p-2 text-sm text-gray-500">
               <span>
                 No {label ? label.toLowerCase() : "items"} found for "
                 {inputValue}".
@@ -137,20 +185,42 @@ const DropdownWithSearchField = forwardRef(
                     <kbd className="px-1 py-0.5 bg-gray-100 border rounded text-xs">
                       Enter
                     </kbd>{" "}
-                    to add it as a new {label ? label.toLowerCase() : "item"}.
+                    to add it.
                   </span>
                 )}
               </span>
-            ) : (
-              <span>
-                Start typing to search {label ? label.toLowerCase() : "items"}
-                ...
-              </span>
-            )}
+            </div>
+          </RSComponents.NoOptionsMessage>
+        );
+      }
+
+      // 2. If dropdown is open and there are NO options in the list at all
+      // We check if options array is empty or null
+      const hasNoOptions = !options || options.length === 0;
+
+      if (hasNoOptions) {
+        return (
+          <RSComponents.NoOptionsMessage {...props}>
+            <div className="p-2 text-sm text-gray-500">
+              {/* Use the emptyMessage prop if provided, otherwise a default */}
+              {emptyMessage
+                ? emptyMessage
+                : `No ${label ? label.toLowerCase() : "options"} available`}
+            </div>
+          </RSComponents.NoOptionsMessage>
+        );
+      }
+
+      // 3. Fallback: If there ARE options but user hasn't typed yet, show the hint
+      return (
+        <RSComponents.NoOptionsMessage {...props}>
+          <div className="p-2 text-sm text-gray-500">
+            Start typing to search {label ? label.toLowerCase() : "items"}...
           </div>
         </RSComponents.NoOptionsMessage>
       );
     };
+
     componentsMap.NoOptionsMessage = NoOptionsMessage;
 
     const handleKeyDown = (e) => {
@@ -258,6 +328,7 @@ const DropdownWithSearchField = forwardRef(
               onMenuScrollToBottom={onMenuScrollToBottom}
               closeMenuOnScroll={false}
               isLoading={loading}
+              emptyMessage={emptyMessage}
             />
           </div>
         ) : (
@@ -302,7 +373,7 @@ const DropdownWithSearchField = forwardRef(
         {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
       </div>
     );
-  }
+  },
 );
 
 export default DropdownWithSearchField;

@@ -318,7 +318,7 @@ const updateCandidatePatchCall = async (req, res) => {
     }
 
     // Separate candidate fields and resume fields
-    const candidateFields = ['FirstName', 'LastName', 'Email', 'Phone', 'CountryCode', 'Date_Of_Birth', 'Gender', 'externalId'];
+    const candidateFields = ['FirstName', 'LastName', 'Email', 'Phone', 'CountryCode', 'Date_Of_Birth', 'Gender', 'externalId', 'linkedInUrl'];
     const resumeFields = ['HigherQualification', 'UniversityCollege', 'CurrentExperience', 'RelevantExperience', 'CurrentRole', 'skills', 'ImageData', 'resume', 'source'];
 
     const candidateUpdateData = { updatedBy: ownerId };

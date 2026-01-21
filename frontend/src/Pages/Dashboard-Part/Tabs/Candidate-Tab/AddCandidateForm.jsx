@@ -55,6 +55,7 @@ import DropdownWithSearchField from "../../../../Components/FormFields/DropdownW
 import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
 import InputField from "../../../../Components/FormFields/InputField";
 import { logger } from "../../../../utils/logger";
+import { Button } from "../../../../Components/Buttons/Button";
 
 // v1.0.3 ----------------------------------------------------------------->
 
@@ -467,6 +468,14 @@ const AddCandidateForm = ({
     }
     setSelectedResume(null);
   };
+
+  const validateLinkedIn = (url) => {
+    if (!url) return "";
+    const regex =
+      /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/;
+    return regex.test(url) ? "" : "Please enter a valid LinkedIn profile URL";
+  };
+
   // -------------------------------------------------------------------------->
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -474,6 +483,10 @@ const AddCandidateForm = ({
     const nextFormData = { ...formData, [name]: value };
     let errorMessage = getErrorMessage(name, value, nextFormData);
 
+    // linkedInUrl validation
+    if (name === "linkedInUrl") {
+      errorMessage = validateLinkedIn(value);
+    }
     if (name === "CurrentExperience" || name === "RelevantExperience") {
       if (!/^\d*$/.test(value)) {
         return;
@@ -593,6 +606,20 @@ const AddCandidateForm = ({
       entries,
       {}, // always start fresh
     );
+
+    // linkedInUrl validation
+    const linkedInError = validateLinkedIn(formData.linkedInUrl);
+    if (linkedInError) {
+      newErrors.linkedInUrl = linkedInError;
+    }
+
+    if (!formIsValid || linkedInError) {
+      // Check both
+      setErrors(newErrors);
+      setActiveButton(null);
+      scrollToFirstError(newErrors, fieldRefs);
+      return;
+    }
 
     if (!formIsValid) {
       setErrors(newErrors);
@@ -1326,21 +1353,24 @@ const AddCandidateForm = ({
               {/* v1.0.8 <----------------------------------- */}
               <div className="flex justify-end gap-3">
                 {/* v1.0.8 <----------------------------------- */}
-                <button
+                <Button
+                  variant="outline"
                   type="button"
                   onClick={handleClose}
                   disabled={isMutationLoading}
-                  className={`sm:px-2 sm:py-1 md:px-2 md:py-1 lg:px-6 lg:py-2 xl:px-6 xl:py-2 2xl:px-6 2xl:py-2 sm:text-sm text-custom-blue border border-custom-blue rounded-lg transition-colors ${
+                  className={`text-custom-blue border border-custom-blue transition-colors ${
                     isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
                   Cancel
-                </button>
+                </Button>
 
                 <LoadingButton
                   onClick={handleSubmit}
                   isLoading={isMutationLoading && activeButton === "save"}
-                  loadingText={id ? "Updating..." : "Saving..."}
+                  loadingText={
+                    id ? "Updating..." : "Saving..."
+                  }
                 >
                   {id ? "Update" : "Save"}
                 </LoadingButton>
@@ -1350,8 +1380,9 @@ const AddCandidateForm = ({
                     onClick={(e) => handleSubmit(e, true)}
                     isLoading={isMutationLoading && activeButton === "add"}
                     loadingText="Adding..."
+                    className="flex items-center"
                   >
-                    <FaPlus className="w-5 h-5 mr-1 sm:hidden" /> Add Candidate
+                    <FaPlus className="w-4 h-4 sm:hidden mr-1" /> Add Candidate
                   </LoadingButton>
                 )}
               </div>

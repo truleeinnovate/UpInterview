@@ -313,7 +313,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save, Tags } from "lucide-react";
-import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import {
   useCreateInterviewerTag,
   useUpdateInterviewerTag,
@@ -322,6 +321,12 @@ import {
 import { notify } from "../../../../services/toastService";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+import ToggleSwitch from "../../../../Components/Buttons/ToggleButton";
+import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
+import InputField from "../../../../Components/FormFields/InputField";
+import DescriptionField from "../../../../Components/FormFields/DescriptionField";
+import { Button } from "../../../../Components/Buttons/Button";
+import LoadingButton from "../../../../Components/LoadingButton";
 
 const colorOptions = [
   { value: "#217989", label: "Teal" },
@@ -343,7 +348,8 @@ const InterviewerTagsForm = ({ mode }) => {
   const { id } = useParams();
   const isEditMode = mode === "edit" || !!id;
 
-  // 1. Mutations and Queries
+  const [errors, setErrors] = useState({});
+
   const createTagMutation = useCreateInterviewerTag();
   const updateTagMutation = useUpdateInterviewerTag();
 
@@ -355,7 +361,7 @@ const InterviewerTagsForm = ({ mode }) => {
     },
   );
 
-  useScrollLock(true)
+  useScrollLock(true);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -387,8 +393,27 @@ const InterviewerTagsForm = ({ mode }) => {
     }
   }, [existingTag, isEditMode]);
 
+  const validate = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Tag name is required";
+    }
+
+    if (!formData.category) {
+      newErrors.category = "Please select a category";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validate()) {
+      return;
+    }
 
     const mutationOptions = {
       onSuccess: () => {
@@ -430,29 +455,24 @@ const InterviewerTagsForm = ({ mode }) => {
       <div className="mt-4 space-y-6 mb-12">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white overflow-hidden">
-
             <div className="p-6 space-y-6">
               <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
                 {/* Tag Name */}
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                  >
-                    Tag Name <span className="ml-1 text-red-500">*</span>
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    required
-                    className="w-full h-10 px-3 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#217989] transition-all"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
+                <InputField
+                  label="Tag Name"
+                  name="name"
+                  value={formData.name}
+                  required={true}
+                  error={errors.name}
+                  placeholder="Ex. React Expert"
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value });
+
+                    if (errors.name) {
+                      setErrors({ ...errors, name: "" });
                     }
-                    placeholder="React Expert"
-                  />
-                </div>
+                  }}
+                />
 
                 {/* Category */}
                 <div>
@@ -461,9 +481,16 @@ const InterviewerTagsForm = ({ mode }) => {
                     name="category"
                     options={categoryOptions}
                     value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
+                    required={true}
+                    error={errors.category}
+                    onChange={(e) => {
+                      setFormData({ ...formData, category: e.target.value });
+
+                      // Clear error
+                      if (errors.category) {
+                        setErrors({ ...errors, category: "" });
+                      }
+                    }}
                     placeholder="Select or search category"
                     isSearchable={true}
                   />
@@ -496,7 +523,7 @@ const InterviewerTagsForm = ({ mode }) => {
               </div>
 
               {/* Description */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <label
                   htmlFor="description"
                   className="block text-sm font-medium text-slate-700"
@@ -513,25 +540,31 @@ const InterviewerTagsForm = ({ mode }) => {
                   placeholder="Describe what this tag represents..."
                   rows={3}
                 />
-              </div>
+              </div> */}
+
+              {/* Integrated Description Field */}
+              <DescriptionField
+                label="Description"
+                name="description"
+                value={formData.description}
+                placeholder="Describe what this tag represents..."
+                rows={4}
+                maxLength={500}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                error={errors.description}
+              />
 
               {/* Active Switch */}
-              <div className="flex items-center gap-3 pt-4">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={formData.is_active}
-                    onChange={(e) =>
-                      setFormData({ ...formData, is_active: e.target.checked })
-                    }
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#217989]"></div>
-                  <span className="ml-3 text-sm font-medium text-slate-700">
-                    Active tag
-                  </span>
-                </label>
-              </div>
+              <ToggleSwitch
+                label="Status"
+                value={formData.is_active}
+                onChange={(val) => setFormData({ ...formData, is_active: val })}
+                activeText="Active"
+                inactiveText="Inactive"
+                textPosition="right"
+              />
 
               {/* Preview Section */}
               <div className="pt-4">
@@ -553,25 +586,26 @@ const InterviewerTagsForm = ({ mode }) => {
 
           {/* Form Actions */}
           <div className="flex justify-end gap-4">
-            <button
+            <Button
+              variant="outline"
               onClick={() => navigate(-1)}
-              className="px-4 py-2 text-sm border font-medium text-slate-700 bg-white rounded-md hover:bg-slate-50 transition-colors"
+              className="text-sm font-medium text-slate-700"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <LoadingButton
               type="submit"
               disabled={
                 createTagMutation.isLoading || updateTagMutation.isLoading
               }
-              className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-[#217989] hover:bg-[#1c6473] rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              className="flex items-center gap-2"
             >
               {createTagMutation.isLoading || updateTagMutation.isLoading
                 ? "Saving..."
                 : isEditMode
                   ? "Update Tag"
                   : "Create Tag"}
-            </button>
+            </LoadingButton>
           </div>
         </form>
       </div>
