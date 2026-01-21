@@ -3,7 +3,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { notify } from "../services/toastService";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 // Get auth headers
 const getAuthHeaders = () => {
