@@ -38,6 +38,121 @@ import { usePositionById } from "../../../../apiHooks/usePositions";
 import Breadcrumb from "../../Tabs/CommonCode-AllTabs/Breadcrumb";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
+import { useApplicationsByPosition } from "../../../../apiHooks/useApplications";
+import { Loader2 } from "lucide-react";
+
+// Applications Tab Component for Position
+const PositionApplicationsTab = ({ positionId }) => {
+  const { applications, isLoading } = useApplicationsByPosition(positionId);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getStatusBadgeClass = (status) => {
+    const statusClasses = {
+      APPLIED: "bg-blue-100 text-blue-800",
+      SCREENED: "bg-purple-100 text-purple-800",
+      INTERVIEWING: "bg-yellow-100 text-yellow-800",
+      OFFERED: "bg-green-100 text-green-800",
+      HIRED: "bg-emerald-100 text-emerald-800",
+      REJECTED: "bg-red-100 text-red-800",
+      WITHDRAWN: "bg-gray-100 text-gray-800",
+    };
+    return statusClasses[status] || "bg-gray-100 text-gray-800";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-custom-blue" />
+      </div>
+    );
+  }
+
+  if (!applications || applications.length === 0) {
+    return (
+      <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 my-6">
+        <Briefcase className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <p className="text-lg font-medium text-gray-500">
+          No Applications Found
+        </p>
+        <p className="text-sm text-gray-400 mt-2">
+          Candidates who apply for this position will appear here.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden my-6">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Candidate
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Application #
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Stage
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Applied Date
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {applications.map((application) => (
+              <tr key={application._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">
+                    {application.candidateId?.FirstName || ""} {application.candidateId?.LastName || "N/A"}
+                  </div>
+                  {application.candidateId?.Email && (
+                    <div className="text-sm text-gray-500">
+                      {application.candidateId.Email}
+                    </div>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="text-sm text-gray-600">
+                    {application.applicationNumber || "N/A"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(
+                      application.status
+                    )}`}
+                  >
+                    {application.status || "N/A"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {application.currentStage || "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatDate(application.createdAt)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
 
 Modal.setAppElement("#root");
 
@@ -234,7 +349,7 @@ const PositionSlideDetails = () => {
         {/* Tabs Navigation */}
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-            {["Overview", "Candidates", "Applications", "Interviews", "Activity Feed"].map((tab) => (
+            {["Overview", "Candidates", "Applications", "Interviews", "Feeds"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -710,10 +825,7 @@ const PositionSlideDetails = () => {
 
         {/* Applications Tab */}
         {activeTab === "Applications" && (
-          <div className="bg-white rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Applications</h3>
-            <p className="text-gray-500">Applications for this position will appear here.</p>
-          </div>
+          <PositionApplicationsTab positionId={id} />
         )}
 
         {/* Interviews Tab */}
@@ -724,7 +836,7 @@ const PositionSlideDetails = () => {
           </div>
         )}
         {/* v1.0.5 <------------------------------- */}
-        {activeTab === "Activity Feed" && (
+        {activeTab === "Feeds" && (
           <div className="sm:p-0 p-6">
             <Activity parentId={id} />
           </div>
