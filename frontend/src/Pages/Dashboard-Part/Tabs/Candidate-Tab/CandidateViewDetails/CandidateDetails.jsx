@@ -602,7 +602,7 @@ const ApplicationsTab = ({ candidateId }) => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(
-                      application.status
+                      application.status,
                     )}`}
                   >
                     {application.status || "N/A"}
@@ -622,7 +622,6 @@ const ApplicationsTab = ({ candidateId }) => {
     </div>
   );
 };
-
 
 const CandidateDetails = ({ mode, candidateId, onClose }) => {
   const navigate = useNavigate();
@@ -668,8 +667,6 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
       </div>
     );
   }
-
-
 
   const breadcrumbItems = [
     {
@@ -764,7 +761,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                     </Button>
                     <Button
                       title="Apply Position"
-                      onClick={() => setShowPositionModal(true)}
+                      onClick={() => setShowApplyPositionPopup(true)}
                       className="inline-flex items-center border text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
                     >
                       <Plus className="h-4 w-4 mr-1" />
@@ -796,8 +793,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                           <p className="font-medium text-gray-800">
                             {candidate?.Date_Of_Birth
                               ? new Date(
-                                candidate.Date_Of_Birth,
-                              ).toLocaleDateString()
+                                  candidate.Date_Of_Birth,
+                                ).toLocaleDateString()
                               : "N/A"}
                           </p>
                         </div>
