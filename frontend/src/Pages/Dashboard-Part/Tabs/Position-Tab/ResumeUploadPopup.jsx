@@ -12,6 +12,7 @@ import {
 import { usePositionById } from '../../../../apiHooks/usePositions';
 import Breadcrumb from '../../Tabs/CommonCode-AllTabs/Breadcrumb';
 import DropdownSelect from '../../../../Components/Dropdowns/DropdownSelect';
+import { config } from '../../../../config';
 
 const MAX_FILES = 20;
 
@@ -134,7 +135,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                 ?.split('=')[1];
 
             // Call the backend API
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/resume-screening/screen`, {
+            const response = await fetch(`${config.REACT_APP_API_URL}/api/resume-screening/screen`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -212,7 +213,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                 .find(row => row.startsWith('authToken='))
                 ?.split('=')[1];
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/resume-screening/create-candidates`, {
+            const response = await fetch(`${config.REACT_APP_API_URL}/api/resume-screening/create-candidates`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
