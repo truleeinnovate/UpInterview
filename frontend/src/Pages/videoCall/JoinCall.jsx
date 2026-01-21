@@ -44,7 +44,7 @@ function JoinMeeting() {
 
   const isMockInterview = urlData?.interviewType === "mockinterview";
 
-  // console.log("location.search", urlData);
+  console.log("location.search", urlData);
 
   useEffect(() => {
     setDecodedData(urlData);

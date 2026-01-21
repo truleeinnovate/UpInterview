@@ -33,6 +33,8 @@ import DropdownSelect from "../../Components/Dropdowns/DropdownSelect.jsx";
 import { notify } from "../../services/toastService.js";
 import { extractUrlData } from "../../apiHooks/useVideoCall.js";
 import useAutoSaveFeedback from "../../apiHooks/useAutoSaveFeedback.js";
+import { useInterviews } from "../../apiHooks/useInterviews.js";
+import { useMockInterviewById } from "../../apiHooks/useMockInterviews.js";
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -97,6 +99,7 @@ const FeedbackForm = ({
     () => extractUrlData(location.search),
     [location.search],
   );
+  const { useInterviewDetails } = useInterviews();
 
   // Feedback query (existing)
   const {
@@ -109,7 +112,33 @@ const FeedbackForm = ({
     interviewType: !urlData.isCandidate ? urlData.interviewType : null,
   });
 
-  // console.log("feedbackDatas", feedbackDatas);
+  const isMockInterview = urlData?.interviewType === "mockinterview";
+  console.log("isMockInterview", isMockInterview);
+  // const { data, isLoading } = useInterviewDetails({
+  //   roundId: urlData.interviewRoundId,
+  // });
+
+  // ✅ ALWAYS call hooks
+  const {
+    mockInterview: mockinterview,
+    isMockLoading,
+    isError: isMockError,
+  } = useMockInterviewById({
+    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+    enabled: isMockInterview, // ✅ THIS LINE
+    // mockInterviewId: null,
+  });
+
+  const {
+    data: interviewData,
+    isLoading: isInterviewLoading,
+    isError: interviewError,
+  } = useInterviewDetails({
+    roundId: !isMockInterview ? urlData.interviewRoundId : null,
+    enabled: !isMockInterview,
+  });
+
+  const candidateData = interviewData?.candidateId || mockinterview || {};
 
   const feedbackData = useMemo(() => {
     return locationFeedback || feedbackDatas || {};
@@ -543,8 +572,8 @@ const FeedbackForm = ({
     communicationRating,
     recommendation,
     comments,
-    candidateId: candidateId || decodedData?.candidateId,
-    positionId: positionId || decodedData?.positionId,
+    candidateId: candidateData?._id || undefined,
+    positionId: positionId || decodedData?.positionId || undefined,
     ownerId: currentOwnerId,
     feedbackId: autoSaveFeedbackId,
   });
@@ -1093,7 +1122,7 @@ const FeedbackForm = ({
         tenantId: currentTenantId || "",
         ownerId: currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
-        candidateId: candidateId || "",
+        candidateId: candidateData?._id || "",
         feedbackCode:
           feedbackDatas?.interviewRound?.interviewCode ||
           "" + "-" + feedbackDatas?.interviewRound?.sequence ||
@@ -1272,7 +1301,7 @@ const FeedbackForm = ({
         tenantId: currentTenantId || "",
         ownerId: currentOwnerId || "",
         interviewRoundId: interviewRoundId || "",
-        candidateId: candidateId || "",
+        candidateId: candidateData?._id || "",
         positionId: positionId || "",
         interviewerId: interviewerId || "",
         skills: skillRatings.map((skill) => ({

@@ -24,6 +24,10 @@ import { Button } from "../../../src/Pages/Dashboard-Part/Tabs/CommonCode-AllTab
 import { useMemo } from "react";
 import { extractUrlData } from "../../apiHooks/useVideoCall";
 import { useLocation } from "react-router-dom";
+import {
+  useMockInterviewById,
+  useUpdateRoundStatus,
+} from "../../apiHooks/useMockInterviews";
 const InterviewActions = ({
   // interviewData,
   isAddMode,
@@ -54,33 +58,63 @@ const InterviewActions = ({
   // Extract URL data once
   const urlData = useMemo(
     () => extractUrlData(location.search),
-    [location.search]
+    [location.search],
   );
 
-  const { data, isLoading } = useInterviewDetails({
-    roundId: urlData.interviewRoundId,
+  const isMockInterview = urlData?.interviewType === "mockinterview";
+
+  /* -----------------------------
+       INTERVIEW DATA (IMPORTANT FIX)
+    ------------------------------ */
+
+  // ✅ ALWAYS call hooks
+  const {
+    mockInterview,
+    isMockLoading,
+    isError: isMockError,
+  } = useMockInterviewById({
+    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+    enabled: isMockInterview, // ✅ THIS LINE
+    // mockInterviewId: null,
   });
+
+  const {
+    data: interview,
+    isLoading: isInterviewLoading,
+    isError: interviewError,
+  } = useInterviewDetails({
+    roundId: !isMockInterview ? urlData.interviewRoundId : null,
+    enabled: !isMockInterview,
+  });
+  // const { data, isLoading } = useInterviewDetails({
+  //   roundId: urlData.interviewRoundId,
+  // });
 
   // const candidateData = data?.candidateId || {};
   // const positionData = data?.positionId || {};
-  const interviewData = data?.rounds[0] || {};
-  const participants = interviewData?.participants || [];
+  const interviewData = interview?.rounds[0] || mockInterview?.rounds[0] || {};
+  const participants =
+    interview?.participants || mockInterview?.rounds[0]?.participants || [];
   const isCandidateJoined = participants.some(
-    (p) => p.role === "Candidate" && p.status === "Joined"
+    (p) => p.role === "Candidate" && p.status === "Joined",
   );
+
+  console.log("interviewData interviewData", mockInterview);
 
   // Function to check if a participant is interviewer Joined
   const isInterviewerJoined = (userId) =>
     participants.some(
       (p) =>
-        p.role === "Interviewer" && p.userId === userId && p.status === "Joined"
+        p.role === "Interviewer" &&
+        p.userId === userId &&
+        p.status === "Joined",
     );
 
   // Function to check if a participant is Scheduler Joined
   const isSchedulerJoined = (userId) =>
     participants.some(
       (p) =>
-        p.role === "Scheduler" && p.userId === userId && p.status === "Joined"
+        p.role === "Scheduler" && p.userId === userId && p.status === "Joined",
     );
 
   // Mock interview times for demonstration
@@ -134,14 +168,14 @@ const InterviewActions = ({
     "NoShow",
     "Cancelled",
   ].includes(currentStatus);
-
+  const updateMockRoundStatus = useUpdateRoundStatus();
   const isCompleted = currentStatus === "Completed"; // Keep if needed elsewhere
 
   const handleStatusChange = async (
     newStatus,
     reasonValue = null,
     comment = null,
-    type = null
+    type = null,
   ) => {
     // For cancellation/no-show, we need to ensure we pass a reason
     if ((newStatus === "Cancelled" || newStatus === "NoShow") && !reasonValue) {
@@ -165,8 +199,14 @@ const InterviewActions = ({
       };
 
       if (type === "CandidateJoined") {
-        payload.candidateJoined = type === "CandidateJoined" ? true : false;
+        payload.role = "Candidate";
+        payload.joined = true;
+        payload.userId =
+          interviewData?.candidateId?._id || mockInterview?.ownerId;
       } else if (type === "InterviewerJoined") {
+        payload.role = "Interviewer";
+        payload.joined = true;
+        payload.userId = urlData?.interviewerId;
         payload.interviewerJoined = type === "InterviewerJoined" ? true : false;
       }
 
@@ -184,7 +224,20 @@ const InterviewActions = ({
 
       console.log("payload payload", payload);
 
-      await updateRoundStatus(payload);
+      // await updateRoundStatus(payload);
+
+      let response;
+
+      if (isMockInterview) {
+        response = await updateMockRoundStatus.mutateAsync({
+          mockInterviewId: mockInterview?._id,
+          roundId: interviewData?._id,
+          payload,
+        });
+      } else {
+        response = await updateRoundStatus(payload);
+      }
+      console.log("response updateRoundStatus", response);
 
       // await updateRoundStatus({
       //   roundId: round?._id,
@@ -231,11 +284,6 @@ const InterviewActions = ({
     }
   };
 
-  // const openModal = (type, status = null) => {
-  //   setModal({ type, status });
-  //   setFormData({ reason: "", comments: "" });
-  // };
-
   const closeModal = () => {
     // setModal(null);
     setInterviewerJoinedReasonModalOpen(false);
@@ -259,7 +307,7 @@ const InterviewActions = ({
           interviewData?.interviewRound?.status,
           reason,
           comment || null,
-          "InterviewerJoined"
+          "InterviewerJoined",
         );
 
         setInterviewerJoinedReasonModalOpen(false);
@@ -271,7 +319,7 @@ const InterviewActions = ({
           interviewData?.interviewRound?.status,
           reason,
           comment || null,
-          "CandidateJoined"
+          "CandidateJoined",
         );
 
         setCandidateJoinedReasonModalOpen(false);
@@ -282,14 +330,6 @@ const InterviewActions = ({
     }
   };
 
-  // const getTimeUntilEnabled = (targetTime) => {
-  //   const diff = targetTime - currentTime;
-  //   if (diff <= 0) return null;
-  //   const minutes = Math.ceil(diff / (1000 * 60));
-  //   return `${minutes} min`;
-  // };
-
-  // const isCompleted = interviewData?.interviewRound?.status === "Completed";
   // v1.0.1 <------------------------------------------------
   const ActionCard = ({
     icon: Icon,
@@ -367,6 +407,19 @@ const InterviewActions = ({
     );
   };
   // v1.0.1 ------------------------------------------------>
+
+  const isLoading = isInterviewLoading || isMockLoading;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 border-4 border-custom-blue border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm text-gray-500">Loading candidate details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     // v1.0.1 <----------------------------------------------------------------------------
@@ -580,8 +633,8 @@ const InterviewActions = ({
                 {completedReasonModalOpen
                   ? "Are you sure you want to Complete this round?"
                   : interviewerJoinedReasonModalOpen
-                  ? "Are you sure Interviewer Joined?"
-                  : "Are you sure Candidate Joined?"}
+                    ? "Are you sure Interviewer Joined?"
+                    : "Are you sure Candidate Joined?"}
               </h3>
               <div className="flex justify-end space-x-3">
                 <Button
@@ -610,7 +663,7 @@ const InterviewActions = ({
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
           // v1.0.5 -------------------------------------------------------------------------------->
         )}
 
