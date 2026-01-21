@@ -6,6 +6,7 @@ import { useCandidates } from "../../../../apiHooks/useCandidates";
 import { validateCandidateForm } from "../../../../utils/CandidateValidation";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import LoadingButton from "../../../../Components/LoadingButton";
+import { Button } from "../../../../Components/Buttons/Button";
 import { notify } from "../../../../services/toastService";
 import { Upload, AlertCircle, CheckCircle2, Download } from "lucide-react";
 
@@ -445,13 +446,14 @@ const CandidateBulkUpload = ({ onClose }) => {
         )}
 
         <div className="mt-auto flex justify-end gap-3 pt-4 bg-white">
-          <button
+          <Button
+            variant="outline"
             onClick={onClose}
-            className="px-6 py-2 border rounded-lg hover:bg-gray-100 transition-colors"
+            className="border hover:bg-gray-100 transition-colors"
             disabled={isProcessing}
           >
             Cancel
-          </button>
+          </Button>
           <LoadingButton
             onClick={handleUpload}
             isLoading={isProcessing}

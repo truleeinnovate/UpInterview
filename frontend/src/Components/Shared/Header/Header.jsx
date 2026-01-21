@@ -4,7 +4,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Plus, Upload } from "lucide-react";
-import { Button } from "../../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
+// import { Button } from "../../../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
+import { Button } from "../../../Components/Buttons/Button";
 
 const Header = ({
   title,
@@ -43,7 +44,7 @@ const Header = ({
             onClick={onBulkUploadClick}
             size="sm"
             variant="outline"
-            className="border-custom-blue text-custom-blue hover:bg-custom-blue/10"
+            className="border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             <Upload className="h-4 w-4 mr-1" />
             Bulk Upload

@@ -10,12 +10,6 @@ const validatePhoneNumber = (phone) => {
   return re.test(String(phone));
 };
 
-const validateLinkedInUrl = (url) => {
-  if (!url) return true;
-
-  const re = /^https?:\/\/(www\.)?linkedin\.com\/.*$/i;
-  return re.test(String(url).trim());
-};
 
 const getErrorMessage = (field, value, formData) => {
   const messages = {
@@ -36,7 +30,6 @@ const getErrorMessage = (field, value, formData) => {
     invalidPhone: "Invalid Phone number",
     CurrentRole: "Current Role is required",
     // Technology: "Technology is required",
-    linkedInUrl: "Invalid Linkedin url",
   };
 
   if (!value) {
@@ -50,9 +43,7 @@ const getErrorMessage = (field, value, formData) => {
   if (field === "Phone" && !validatePhoneNumber(value)) {
     return messages.invalidPhone;
   }
-  if (field === "linkedInUrl" && !validateLinkedInUrl(value)) {
-    return messages.linkedInUrl;
-  }
+
   if (field === "Technology" && !value) {
     return messages.Technology;
   }
