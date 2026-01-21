@@ -503,6 +503,7 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import ActivityComponent from "../../../Tabs/CommonCode-AllTabs/Activity";
 import PositionForm from "../../Position-Tab/Position-Form.jsx";
+import Breadcrumb from "../../../Tabs/CommonCode-AllTabs/Breadcrumb.jsx";
 
 const CandidateDetails = ({ mode, candidateId, onClose }) => {
   const navigate = useNavigate();
@@ -558,8 +559,21 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
     // The position data will be automatically refreshed by the usePositions hook
   };
 
+
+  const breadcrumbItems = [
+    {
+      label: "Candidate",
+      path: "/candidate",
+    },
+    {
+      label: candidate?.title || "Candidate Details",
+      path: `/candidate/view-details/${id}`,
+      status: candidate?.status,
+    },
+  ];
+
   return (
-    <div className="fixed top-[66px] left-0 right-0 bottom-4 z-[100] bg-gray-50 flex flex-col overflow-hidden">
+    <div className="fixed top-[66px] left-0 right-0 bottom-0 z-[100] bg-gray-50 flex flex-col overflow-hidden">
       {/* Main Container - matching PositionSlideDetails max-width style */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 bg-white shadow-sm min-h-screen">
@@ -574,27 +588,9 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                 Back to {mode === "Interview" ? "Interview" : "Candidates"}
               </span>
             </button>
-
-            <div className="flex items-center gap-2">
-              <button
-                title="Edit Candidate"
-                onClick={() => navigate(`/candidate/edit/${candidate._id}`)}
-                className="inline-flex items-center sm:px-2 px-3 sm:py-1 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <Edit className="h-4 w-4 mr-1.5" />
-                Edit <span className="sm:hidden inline ml-1">Candidate</span>
-              </button>
-              <button
-                title="Apply Position"
-                onClick={() => setShowPositionModal(true)}
-                className="inline-flex items-center sm:px-2 px-3 sm:py-1 py-2 border shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Apply <span className="sm:hidden inline ml-1">Position</span>
-              </button>
-            </div>
           </div>
 
+          <div className="px-8">{<Breadcrumb items={breadcrumbItems} />}</div>
           {/* Tabs Navigation - Structured like PositionSlideDetails */}
           <div className="border-b border-gray-200 px-4 sm:px-0">
             <nav className="-mb-px flex space-x-8" aria-label="Tabs">
@@ -619,28 +615,52 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
             {activeTab === "Overview" && (
               <div className="space-y-8 animate-in fade-in duration-300">
                 {/* Profile Header Card */}
-                <div className="flex flex-col items-center gap-6 p-6 bg-gray-50/50 rounded-xl border border-gray-100">
-                  <div className="relative">
-                    {candidate?.ImageData ? (
-                      <img
-                        src={candidate?.ImageData?.path}
-                        alt={candidate?.FirstName}
-                        className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-sm"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 rounded-full bg-custom-blue flex items-center justify-center text-white text-4xl font-semibold shadow-sm">
-                        {candidate?.LastName?.charAt(0).toUpperCase() || "?"}
-                      </div>
-                    )}
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-6 p-6 rounded-xl">
+                    <div className="relative">
+                      {candidate?.ImageData ? (
+                        <img
+                          src={candidate?.ImageData?.path}
+                          alt={candidate?.FirstName}
+                          className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-sm"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-full bg-custom-blue flex items-center justify-center text-white text-lg font-semibold shadow-sm">
+                          {candidate?.LastName?.charAt(0).toUpperCase() || "?"}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center md:text-left">
+                      <h3 className="sm:text-md md:text-md lg:text-lg xl:text-2xl 2xl:text-2xl font-bold text-gray-900">
+                        {candidate?.FirstName} {candidate?.LastName}
+                      </h3>
+                      <p className="text-gray-600 font-medium mt-1">
+                        {candidate?.roleDetails?.roleLabel ||
+                          "Position Not Specified"}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-center md:text-left">
-                    <h3 className="sm:text-md md:text-md lg:text-lg xl:text-2xl 2xl:text-2xl font-bold text-gray-900">
-                      {candidate?.FirstName} {candidate?.LastName}
-                    </h3>
-                    <p className="text-gray-600 font-medium mt-1">
-                      {candidate?.roleDetails?.roleLabel ||
-                        "Position Not Specified"}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      title="Edit Candidate"
+                      onClick={() =>
+                        navigate(`/candidate/edit/${candidate._id}`)
+                      }
+                      className="inline-flex items-center sm:px-2 px-3 sm:py-1 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <Edit className="h-4 w-4 mr-1.5" />
+                      Edit
+                      <span className="sm:hidden inline ml-1">Candidate</span>
+                    </button>
+                    <button
+                      title="Apply Position"
+                      onClick={() => setShowPositionModal(true)}
+                      className="inline-flex items-center sm:px-2 px-3 sm:py-1 py-2 border shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
+                    >
+                      <Plus className="h-4 w-4 mr-1.5" />
+                      Apply
+                      <span className="sm:hidden inline ml-1">Position</span>
+                    </button>
                   </div>
                 </div>
                 <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
@@ -716,7 +736,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                         <Phone className="w-4 h-4 text-custom-blue mt-1" />
                         <div>
                           <p className="text-xs text-gray-500">Phone Number</p>
-                          <p className="font-medium text-gray-800">
+                          <p className="flex items-center gap-1 font-medium text-gray-800">
+                            <span>{candidate?.CountryCode}</span>
                             {candidate?.Phone || "N/A"}
                           </p>
                         </div>
