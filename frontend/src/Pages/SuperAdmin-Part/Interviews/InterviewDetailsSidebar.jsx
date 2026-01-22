@@ -313,7 +313,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
     setSettlementError(null);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/wallet/settle-interview`, {
+      const response = await fetch(`${config.REACT_APP_API_URL}/wallet/settle-interview`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

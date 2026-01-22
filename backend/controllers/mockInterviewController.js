@@ -1294,7 +1294,7 @@ exports.validateMockInterview = async (req, res) => {
 exports.updateInterviewRoundStatus = async (req, res) => {
   try {
     const { mockInterviewId, roundId } = req.params;
-    console.log("req.params", req.params);
+    console.log("req.params mockInterviewId", req.params);
     // Check if mock interview exists
     const interview = await MockInterview.findById(mockInterviewId);
     if (!interview) {
@@ -1436,7 +1436,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
       // Special handling: only create history if conditions are met
       const participants = existingRound.participants || [];
       const isHistoryHandled = participants.some(
-        (p) => p.role.tolowerCase() === "interviewer" || p.role === "scheduler",
+        (p) => p.role.toLowerCase() === "interviewer" || p.role === "scheduler",
       );
 
       if (!isHistoryHandled && action === "InProgress") {

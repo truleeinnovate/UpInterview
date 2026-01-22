@@ -24,6 +24,7 @@ import {
   UsersIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
+import ToggleSwitch from "../../../../Components/Buttons/ToggleButton";
 
 // Team color options with hex values
 const TEAM_COLORS = [
@@ -197,7 +198,7 @@ const TeamFormPopup = () => {
         await createTeam.mutateAsync(teamPayload);
       }
 
-      navigate("/account-settings/my-teams");
+      navigate("/my-teams");
     } catch (error) {
       console.error("Error saving team:", error);
       alert(`Failed to ${id ? "update" : "create"} team. Please try again.`);
@@ -211,10 +212,7 @@ const TeamFormPopup = () => {
     TEAM_COLORS.find((c) => c.value === formData.color)?.hex || "#14b8a6";
 
   return (
-    <SidebarPopup
-      title={title}
-      onClose={() => navigate(`/my-teams`)}
-    >
+    <SidebarPopup title={title} onClose={() => navigate(`/my-teams`)}>
       {loading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
@@ -239,10 +237,10 @@ const TeamFormPopup = () => {
 
             {/* Team Color Picker */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Team Color
               </label>
-              <div className="flex items-center gap-2 h-[42px] px-3 border border-gray-300 rounded-lg bg-white">
+              <div className="flex items-center gap-2 px-3 py-[9px] border border-gray-300 rounded-lg bg-white">
                 {TEAM_COLORS.map((colorOpt) => (
                   <button
                     key={colorOpt.value}
@@ -323,6 +321,21 @@ const TeamFormPopup = () => {
                 />
               </button>
             </div>
+          </div> */}
+          <div className="flex items-center justify-between">
+            <ToggleSwitch
+              label="Status"
+              value={formData.is_active}
+              activeText="Active"
+              inactiveText="Inactive"
+              color="custom-blue"
+              onChange={(checked) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  is_active: checked,
+                }))
+              }
+            />
           </div>
 
           {/* Team Members Section */}
@@ -431,7 +444,7 @@ const TeamFormPopup = () => {
           <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
-              onClick={() => navigate(`/account-settings/my-teams`)}
+              onClick={() => navigate(-1)}
               className="text-sm font-semibold px-6 py-2.5 text-gray-700 hover:bg-gray-100 border border-gray-300 rounded-lg transition-colors"
             >
               Cancel

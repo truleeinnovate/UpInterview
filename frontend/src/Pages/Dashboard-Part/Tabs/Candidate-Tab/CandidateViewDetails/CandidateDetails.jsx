@@ -494,6 +494,8 @@ import {
   Rss,
   ArrowLeft,
   Plus,
+  Clock,
+  Target,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -505,6 +507,7 @@ import ActivityComponent from "../../../Tabs/CommonCode-AllTabs/Activity";
 import ApplyPositionPopup from "./ApplyPositionPopup.jsx";
 import { useApplicationsByCandidate } from "../../../../../apiHooks/useApplications";
 import Breadcrumb from "../../../Tabs/CommonCode-AllTabs/Breadcrumb.jsx";
+import { Button } from "../../../../../Components/Buttons/Button.jsx";
 import { Loader2 } from "lucide-react";
 
 // Applications Tab Component
@@ -599,7 +602,7 @@ const ApplicationsTab = ({ candidateId }) => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(
-                      application.status
+                      application.status,
                     )}`}
                   >
                     {application.status || "N/A"}
@@ -619,7 +622,6 @@ const ApplicationsTab = ({ candidateId }) => {
     </div>
   );
 };
-
 
 const CandidateDetails = ({ mode, candidateId, onClose }) => {
   const navigate = useNavigate();
@@ -666,9 +668,6 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
     );
   }
 
-
-
-
   const breadcrumbItems = [
     {
       label: "Candidate",
@@ -682,7 +681,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
   ];
 
   return (
-    <div className="fixed top-[66px] left-0 right-0 bottom-0 z-[100] bg-gray-50 flex flex-col overflow-hidden">
+    <div className="fixed top-[62px] left-0 right-0 bottom-0 z-40 bg-gray-50 flex flex-col overflow-hidden">
       {/* Main Container - matching PositionSlideDetails max-width style */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 bg-white shadow-sm min-h-screen">
@@ -701,16 +700,17 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
 
           <div className="px-8">{<Breadcrumb items={breadcrumbItems} />}</div>
           {/* Tabs Navigation - Structured like PositionSlideDetails */}
-          <div className="border-b border-gray-200 px-4 sm:px-0">
+          <div className="mx-8 border-b border-gray-200 sm:px-0">
             <nav className="-mb-px flex space-x-8" aria-label="Tabs">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`${activeTab === tab.id
-                    ? "border-custom-blue text-custom-blue"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                  className={`${
+                    activeTab === tab.id
+                      ? "border-custom-blue text-custom-blue"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
                 >
                   {tab.name}
                 </button>
@@ -719,12 +719,12 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
           </div>
 
           {/* Tab Content Section */}
-          <div className="py-8 px-8 sm:px-0">
+          <div className="py-6 px-8 sm:px-0">
             {activeTab === "Overview" && (
-              <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="space-y-4 animate-in fade-in duration-300">
                 {/* Profile Header Card */}
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-6 p-6 rounded-xl">
+                <div className="flex items-start justify-between">
+                  <div className="flex gap-6 p-6">
                     <div className="relative">
                       {candidate?.ImageData ? (
                         <img
@@ -738,37 +738,36 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                         </div>
                       )}
                     </div>
-                    <div className="text-center md:text-left">
+                    <div className="text-left">
                       <h3 className="sm:text-md md:text-md lg:text-lg xl:text-2xl 2xl:text-2xl font-bold text-gray-900">
                         {candidate?.FirstName} {candidate?.LastName}
                       </h3>
                       <p className="text-gray-600 font-medium mt-1">
-                        {candidate?.roleDetails?.roleLabel ||
-                          "Position Not Specified"}
+                        {candidate?.roleDetails?.roleLabel || "Not Specified"}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
                       title="Edit Candidate"
                       onClick={() =>
                         navigate(`/candidate/edit/${candidate._id}`)
                       }
-                      className="inline-flex items-center sm:px-2 px-3 sm:py-1 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="inline-flex items-center border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                     >
-                      <Edit className="h-4 w-4 mr-1.5" />
+                      <Edit className="h-4 w-4 mr-1" />
                       Edit
                       <span className="sm:hidden inline ml-1">Candidate</span>
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       title="Apply Position"
                       onClick={() => setShowApplyPositionPopup(true)}
-                      className="inline-flex items-center sm:px-2 px-3 sm:py-1 py-2 border shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
+                      className="inline-flex items-center border text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
                     >
-                      <Plus className="h-4 w-4 mr-1.5" />
+                      <Plus className="h-4 w-4 mr-1" />
                       Apply
                       <span className="sm:hidden inline ml-1">Position</span>
-                    </button>
+                    </Button>
                   </div>
                 </div>
                 <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
@@ -794,9 +793,40 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                           <p className="font-medium text-gray-800">
                             {candidate?.Date_Of_Birth
                               ? new Date(
-                                candidate.Date_Of_Birth,
-                              ).toLocaleDateString()
+                                  candidate.Date_Of_Birth,
+                                ).toLocaleDateString()
                               : "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Briefcase className="w-4 h-4 text-custom-blue mt-1" />
+                        <div>
+                          <p className="text-xs text-gray-500">Current Role</p>
+                          <p className="font-medium text-gray-800">
+                            {candidate?.CurrentRole || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Clock className="w-4 h-4 text-custom-blue mt-1" />
+                        <div>
+                          <p className="text-xs text-gray-500">
+                            Total Experience
+                          </p>
+                          <p className="font-medium text-gray-800">
+                            {candidate?.CurrentExperience || 0} Years
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Target className="w-4 h-4 text-custom-blue mt-1" />
+                        <div>
+                          <p className="text-xs text-gray-500">
+                            Relevant Experience
+                          </p>
+                          <p className="font-medium text-gray-800">
+                            {candidate?.RelevantExperience || 0} Years
                           </p>
                         </div>
                       </div>
@@ -809,6 +839,16 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                       Contact Information
                     </h4>
                     <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <Phone className="w-4 h-4 text-custom-blue mt-1" />
+                        <div>
+                          <p className="text-xs text-gray-500">Phone Number</p>
+                          <p className="flex items-center gap-1 font-medium text-gray-800">
+                            <span>{candidate?.CountryCode}</span>
+                            {candidate?.Phone || "N/A"}
+                          </p>
+                        </div>
+                      </div>
                       <div className="flex items-start gap-3">
                         <Mail className="w-4 h-4 text-custom-blue mt-1" />
                         <div className="overflow-hidden">
@@ -834,19 +874,9 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                           <circle cx="4" cy="4" r="2" />
                         </svg>
                         <div>
-                          <p className="text-xs text-gray-500">LinkedIn</p>
+                          <p className="text-xs text-gray-500">LinkedIn Url</p>
                           <p className="font-medium text-gray-800">
                             {candidate?.linkedInUrl || "N/A"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <Phone className="w-4 h-4 text-custom-blue mt-1" />
-                        <div>
-                          <p className="text-xs text-gray-500">Phone Number</p>
-                          <p className="flex items-center gap-1 font-medium text-gray-800">
-                            <span>{candidate?.CountryCode}</span>
-                            {candidate?.Phone || "N/A"}
                           </p>
                         </div>
                       </div>
@@ -877,27 +907,28 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-3">
-                        <FileText className="w-5 h-5 text-custom-blue" />
-                        <div>
-                          <p className="text-xs text-gray-500">Resume</p>
-                          {candidate?.resume?.path ? (
-                            <a
-                              href={candidate.resume.path}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-sm text-blue-600 font-bold hover:underline"
-                            >
-                              View Document
-                            </a>
-                          ) : (
-                            <span className="text-sm text-gray-400">
-                              Not Provided
-                            </span>
-                          )}
-                        </div>
-                      </div>
                     </div>
+                  </div>
+                </div>
+                {/* Resume */}
+                <div className="flex gap-3 border border-gray-100 p-4 shadow-sm rounded-xl">
+                  <FileText className="w-5 h-5 text-custom-blue" />
+                  <div>
+                    <p className="text-sm text-gray-500">Resume</p>
+                    {candidate?.resume?.path ? (
+                      <a
+                        href={candidate.resume.path}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-custom-blue font-bold hover:underline"
+                      >
+                        View Document
+                      </a>
+                    ) : (
+                      <span className="text-sm text-gray-400">
+                        Not Provided
+                      </span>
+                    )}
                   </div>
                 </div>
                 {/* Skills Section - Standard List Style */}

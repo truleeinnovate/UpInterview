@@ -20,16 +20,13 @@ import {
   BellIcon,
   ChartBarIcon,
   WalletIcon,
-  UserGroupIcon,
   UserIcon,
   ShareIcon,
   UsersIcon,
   GlobeAltIcon,
-  CodeBracketIcon,
   ArrowsRightLeftIcon,
   VideoCameraIcon,
 } from "@heroicons/react/24/outline";
-import { Tag } from "lucide-react";
 
 const AccountSettingsSidebar = () => {
   const { checkPermission, isInitialized, loading } = usePermissionCheck();
@@ -71,8 +68,6 @@ const AccountSettingsSidebar = () => {
 
   const organizationNavigation = [
     { name: "Users", icon: UsersIcon, id: "users" },
-    { name: "My Teams", icon: UserGroupIcon, id: "my-teams" },
-    { name: "Interviewer Tags", icon: Tag, id: "interviewer-tags" },
     { name: "Roles", icon: UserIcon, id: "roles" },
     {
       name: "Video Calling",
@@ -118,8 +113,6 @@ const AccountSettingsSidebar = () => {
     "email-settings": "Notification",
     usage: "Usage",
     users: "Users",
-    "my-teams": "MyTeams",
-    "interviewer-tags": "InterviewerTags",
     roles: "Roles",
     sharing: "Sharing",
     "sub-domain": "Subdomain",
@@ -168,8 +161,6 @@ const AccountSettingsSidebar = () => {
               "users",
               "sub-domain",
               "roles",
-              "my-teams",
-              "interviewer-tags",
               "sharing",
             ].includes(item.id)
           ) {

@@ -7,6 +7,7 @@ import SuggesstedQuestions from "./SuggesstedQuestionsMain.jsx";
 import { Plus, XCircle } from "lucide-react";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../utils/permissionUtils";
+import { Button } from "../../../../Components/Buttons/Button.jsx";
 
 const QuestionBank = ({
   assessmentId,
@@ -133,23 +134,21 @@ const QuestionBank = ({
         {/*<---v1.0.0-----*/}
         {activeTab === "MyQuestionsList" && (
           <div className="flex items-center sm:mr-4">
-            <button
-              className={`bg-custom-blue text-white rounded-md transition-colors flex items-center gap-2 ${
-                isMeetingSidePanel
-                  ? "text-sm px-3 py-1"
-                  : "text-md  sm:text-sm px-4 py-2 "
+            <Button
+              className={`bg-custom-blue text-white rounded-md flex items-center gap-1 ${
+                isMeetingSidePanel ? "text-sm" : "text-sm"
               } `}
               onClick={toggleSidebar}
             >
-              <Plus className="sm:h-4 h-5 sm:w-4 w-5" /> Add
+              <Plus className="h-4 w-4" /> Add
               <span
                 className={`${
-                  isMeetingSidePanel ? "hidden" : "sm:hidden inline ml-1"
+                  isMeetingSidePanel ? "hidden" : "sm:hidden inline"
                 }`}
               >
                 Question
               </span>
-            </button>
+            </Button>
           </div>
         )}
       </div>

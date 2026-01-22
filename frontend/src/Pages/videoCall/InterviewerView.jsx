@@ -19,6 +19,10 @@ import InterviewActions from "./InterviewActions";
 import useAutoSaveFeedback from "../../apiHooks/useAutoSaveFeedback";
 import { decodeJwt } from "../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
+import { useMockInterviewById } from "../../apiHooks/useMockInterviews";
+import { extractUrlData } from "../../apiHooks/useVideoCall";
+import { useInterviews } from "../../apiHooks/useInterviews";
+import { useLocation } from "react-router-dom";
 
 const InterviewerView = ({
   onBack,
@@ -35,24 +39,50 @@ const InterviewerView = ({
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
-  console.log(
-    "selectedCandidate",
-    selectedCandidate,
-    isScheduler,
-    feedbackData
-  );
-
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const currentTenantId = tokenPayload?.tenantId;
   const currentOwnerId = tokenPayload?.userId;
 
+  const location = useLocation();
+  const locationFeedback = location.state?.feedback;
+
+  // Extract URL data once
+  const urlData = useMemo(
+    () => extractUrlData(location.search),
+    [location.search],
+  );
+
   // Inside InterviewerView component, add state to track feedbackId:
   // Add after other useState declarations (around line 50):
 
   const [autoSaveFeedbackId, setAutoSaveFeedbackId] = useState(
-    feedbackData?.feedbacks?._id || null
+    feedbackData?.feedbacks?._id || null,
   );
+  const { useInterviewDetails } = useInterviews();
+  const isMockInterview = urlData?.interviewType === "mockinterview";
+
+  // ✅ ALWAYS call hooks
+  const {
+    mockInterview: mockinterview,
+    isMockLoading,
+    isError: isMockError,
+  } = useMockInterviewById({
+    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+    enabled: isMockInterview, // ✅ THIS LINE
+    // mockInterviewId: null,
+  });
+
+  const {
+    data: interviewData,
+    isLoading: isInterviewLoading,
+    isError: interviewError,
+  } = useInterviewDetails({
+    roundId: !isMockInterview ? urlData.interviewRoundId : null,
+    enabled: !isMockInterview,
+  });
+
+  const candidateData = interviewData?.candidateId || mockinterview || {};
 
   // Question Bank State Management
   const initialQuestions = feedbackData?.questionFeedback || [];
@@ -87,8 +117,6 @@ const InterviewerView = ({
     });
   });
 
-  // console.log("interviewerSectionData", interviewerSectionData);
-
   // const [interviewerSectionData, setInterviewerSectionData] = useState( [...selectedCandidate.interviewData?.questionFeedback]);
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
@@ -108,13 +136,12 @@ const InterviewerView = ({
             existingQ.questionId || existingQ._id || existingQ.id;
           return existingId === newId;
         });
-      }
+      },
     );
 
     // Combine both for submission purposes
     return [...existingInterviewerQuestions, ...newlyAddedQuestions];
   }, [selectedCandidate, interviewerSectionData]);
-  // console.log("mergedQuestions", mergedQuestions);
 
   // // Preselected Questions Responses State Management
   // const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] = useState([]);
@@ -124,15 +151,11 @@ const InterviewerView = ({
     useState(() => {
       const preselectedQuestions =
         feedbackData?.interviewQuestions?.preselectedQuestions || [];
-      console.log(
-        "🔄 Initializing preselected questions:",
-        preselectedQuestions
-      );
 
       return preselectedQuestions.map((question) => {
         // Find existing feedback for this question
         const existingFeedback = feedbackData?.questionFeedback?.find(
-          (f) => f.questionId === (question.questionId || question._id)
+          (f) => f.questionId === (question.questionId || question._id),
         );
 
         return {
@@ -143,8 +166,8 @@ const InterviewerView = ({
             ? existingFeedback.candidateAnswer.answerType === "correct"
               ? "Fully Answered"
               : existingFeedback.candidateAnswer.answerType === "partial"
-              ? "Partially Answered"
-              : "Not Answered"
+                ? "Partially Answered"
+                : "Not Answered"
             : "Not Answered",
           isLiked: existingFeedback?.interviewerFeedback?.liked || "",
           whyDislike:
@@ -171,7 +194,7 @@ const InterviewerView = ({
       communicationRating: 0,
       recommendation: "Maybe",
       comments: "",
-      candidateId: selectedCandidate?.candidate?._id,
+      candidateId: candidateData?._id,
       positionId: selectedCandidate?.position?._id,
       ownerId: currentOwnerId,
       feedbackId: autoSaveFeedbackId,
@@ -211,18 +234,16 @@ const InterviewerView = ({
         });
       } else {
         console.warn(
-          "setInterviewerSectionData is not a function, cannot add question to round"
+          "setInterviewerSectionData is not a function, cannot add question to round",
         );
       }
     }
   };
 
   const handleRemoveQuestion = (questionId) => {
-    console.log("Removing question:", questionId);
-
     // Remove question from interviewer section data
     setInterviewerSectionData((prev) =>
-      prev.filter((q) => (q.questionId || q.id) !== questionId)
+      prev.filter((q) => (q.questionId || q.id) !== questionId),
     );
 
     // Add to removed question IDs
@@ -233,16 +254,12 @@ const InterviewerView = ({
   };
 
   const handleToggleMandatory = (questionId) => {
-    console.log("Toggling mandatory for question:", questionId);
-
     // Toggle mandatory status for the question
     setInterviewerSectionData((prev) => {
-      console.log("Previous state:", prev);
       const updated = prev.map((q) => {
         if ((q.questionId || q.id) === questionId) {
-          console.log("Found question to toggle:", q);
           const newMandatory = q.mandatory === "true" ? "false" : "true";
-          console.log("New mandatory value:", newMandatory);
+
           return {
             ...q,
             mandatory: newMandatory,
@@ -256,7 +273,6 @@ const InterviewerView = ({
         }
         return q;
       });
-      // console.log("Updated state:", updated);
 
       // Trigger auto-save after toggling mandatory
       setTimeout(() => autoSaveQuestions(), 500);
@@ -283,17 +299,12 @@ const InterviewerView = ({
   // Enhanced handler to update both response data and question data
   const enhancedHandlePreselectedQuestionResponse = useCallback(
     (questionId, updates) => {
-      console.log("🔄 Enhanced handler called with full question data:", {
-        questionId,
-        updates,
-      });
-
       setPreselectedQuestionsResponses((prev) => {
         const existingIndex = prev.findIndex(
           (response) =>
             response.questionId === questionId ||
             response.id === questionId ||
-            response._id === questionId
+            response._id === questionId,
         );
 
         let newResponses;
@@ -305,14 +316,14 @@ const InterviewerView = ({
                   ...response, // Preserve existing question data
                   ...updates, // Update response fields
                 }
-              : response
+              : response,
           );
         } else {
           // This shouldn't happen often, but handle it by finding the question data
           const preselectedQuestions =
             feedbackData?.interviewQuestions?.preselectedQuestions || [];
           const questionData = preselectedQuestions.find(
-            (q) => q.questionId === questionId || q._id === questionId
+            (q) => q.questionId === questionId || q._id === questionId,
           );
 
           newResponses = [
@@ -324,8 +335,6 @@ const InterviewerView = ({
             },
           ];
         }
-
-        console.log("📝 Updated preselectedQuestionsResponses:", newResponses);
 
         // Trigger auto-save after updating response
         setTimeout(() => autoSaveQuestions(), 500);
@@ -343,7 +352,7 @@ const InterviewerView = ({
       handlePreselectedQuestionResponse,
       feedbackData,
       autoSaveQuestions,
-    ]
+    ],
   );
 
   const tabs = [
@@ -353,8 +362,6 @@ const InterviewerView = ({
     { id: "feedback", label: "Feedback Form", icon: FileText },
     // { id: 'management', label: 'Feedback Management', icon: Users }
   ];
-
-  console.log("mergedQuestions", mergedQuestions);
 
   return (
     // v1.0.0 <------------------------------------------------------------------------------
