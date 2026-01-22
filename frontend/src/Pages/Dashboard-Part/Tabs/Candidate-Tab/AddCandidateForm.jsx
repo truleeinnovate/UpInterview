@@ -27,6 +27,9 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import {
   useCandidates,
   useCandidateById,
+  useValidateEmail,
+  useValidatePhone,
+  useValidateLinkedIn,
 } from "../../../../apiHooks/useCandidates";
 import LoadingButton from "../../../../Components/LoadingButton";
 import SkillsField from "../CommonCode-AllTabs/SkillsInput";
@@ -176,6 +179,7 @@ const AddCandidateForm = ({
     CurrentRole: useRef(null),
     skills: useRef(null),
     // Technology: useRef(null),
+    linkedInUrl: useRef(null),
   };
 
   // v1.0.3 --------------------------------------------------------------------------->
@@ -473,7 +477,7 @@ const AddCandidateForm = ({
     if (!url) return "";
     const regex =
       /^(https?:\/\/)?(www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?$/;
-    return regex.test(url) ? "" : "Please enter a valid LinkedIn profile URL";
+    return regex.test(url) ? "" : "Please enter a valid LinkedIn URL";
   };
 
   // -------------------------------------------------------------------------->
@@ -593,6 +597,9 @@ const AddCandidateForm = ({
   const handleSubmit = async (e, isAddCandidate = false) => {
     e.preventDefault();
 
+    // 1.uniqueness
+    const uniquenessFields = ["Email", "Phone", "linkedInUrl"];
+
     // Set which button was clicked
     setActiveButton(isAddCandidate ? "add" : "save");
 
@@ -607,12 +614,34 @@ const AddCandidateForm = ({
       {}, // always start fresh
     );
 
-    // linkedInUrl validation
+    // 2.uniqueness
+    let hasUniquenessConflict = false;
+    uniquenessFields.forEach((field) => {
+      if (
+        errors[field] &&
+        (errors[field].includes("exists") || errors[field].includes("in use"))
+      ) {
+        newErrors[field] = errors[field];
+        hasUniquenessConflict = true;
+      }
+    });
+
     const linkedInError = validateLinkedIn(formData.linkedInUrl);
     if (linkedInError) {
       newErrors.linkedInUrl = linkedInError;
     }
 
+    // 3.uniqueness
+    if (!formIsValid || linkedInError || hasUniquenessConflict) {
+      setErrors(newErrors);
+      setActiveButton(null);
+
+      // Navigate to the first error field (now includes Email/Phone conflicts)
+      scrollToFirstError(newErrors, fieldRefs);
+      return; // Stop here
+    }
+
+    // 4.uniqueness
     if (!formIsValid || linkedInError) {
       // Check both
       setErrors(newErrors);
@@ -847,6 +876,62 @@ const AddCandidateForm = ({
     [currentRoles],
   );
 
+  // ---------------------------------- Uniqueness checking ----------------------------------------
+  const emailCheck = useValidateEmail(formData.Email);
+  const phoneCheck = useValidatePhone(formData.Phone);
+  const linkedinCheck = useValidateLinkedIn(formData.linkedInUrl);
+
+  useEffect(() => {
+    if (id && formData.Email === selectedCandidate?.Email) return;
+
+    if (emailCheck.data?.exists) {
+      setErrors((prev) => ({
+        ...prev,
+        Email: "This email already exists.",
+      }));
+    } else if (emailCheck.data && !emailCheck.data.exists) {
+      setErrors((prev) => {
+        const { Email, ...rest } = prev;
+        return rest;
+      });
+    }
+  }, [emailCheck.data, formData.Email, selectedCandidate?.Email, id]);
+
+  useEffect(() => {
+    if (id && formData.Phone === selectedCandidate?.Phone) return;
+
+    if (phoneCheck.data?.exists) {
+      setErrors((prev) => ({ ...prev, Phone: "Phone number already exists." }));
+    } else if (phoneCheck.data && !phoneCheck.data.exists) {
+      setErrors((prev) => {
+        const { Phone, ...rest } = prev;
+        return rest;
+      });
+    }
+  }, [phoneCheck.data, formData.Phone, selectedCandidate?.Phone, id]);
+
+  useEffect(() => {
+    if (id && formData.linkedInUrl === selectedCandidate?.linkedInUrl) return;
+
+    if (linkedinCheck.data?.exists) {
+      setErrors((prev) => ({
+        ...prev,
+        linkedInUrl: "LinkedIn Url already exists.",
+      }));
+    } else if (linkedinCheck.data && !linkedinCheck.data.exists) {
+      setErrors((prev) => {
+        const { linkedInUrl, ...rest } = prev;
+        return rest;
+      });
+    }
+  }, [
+    linkedinCheck.data,
+    formData.linkedInUrl,
+    selectedCandidate?.linkedInUrl,
+    id,
+  ]);
+
+  // ---------------------------------- Uniqueness checking ----------------------------------------
   return (
     <>
       {/* v1.0.2 <------------------------------------------------------------------ */}
@@ -1016,6 +1101,7 @@ const AddCandidateForm = ({
                   <InputField
                     value={formData.linkedInUrl}
                     onChange={handleChange}
+                    inputRef={fieldRefs.linkedInUrl}
                     label="LinkedIn URL"
                     name="linkedInUrl"
                     placeholder="https://linkedin.com/in/username"
@@ -1368,9 +1454,7 @@ const AddCandidateForm = ({
                 <LoadingButton
                   onClick={handleSubmit}
                   isLoading={isMutationLoading && activeButton === "save"}
-                  loadingText={
-                    id ? "Updating..." : "Saving..."
-                  }
+                  loadingText={id ? "Updating..." : "Saving..."}
                 >
                   {id ? "Update" : "Save"}
                 </LoadingButton>

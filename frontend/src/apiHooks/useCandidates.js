@@ -7,6 +7,7 @@ import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
 import { config } from "../config";
 import { uploadFile } from "./imageApis";
+import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
 
 export const useCandidates = (filters = {}) => {
   const queryClient = useQueryClient();
@@ -28,7 +29,7 @@ export const useCandidates = (filters = {}) => {
       const data = await fetchFilterData(
         "candidate",
         effectivePermissions,
-        filters
+        filters,
       );
 
       // console.log("data data", data);
@@ -215,7 +216,7 @@ export const useCandidates = (filters = {}) => {
       }
 
       const response = await axios.delete(
-        `${config.REACT_APP_API_URL}/candidate/delete-candidate/${candidateId}`
+        `${config.REACT_APP_API_URL}/candidate/delete-candidate/${candidateId}`,
         // {
         //   headers: {
         //     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -235,7 +236,7 @@ export const useCandidates = (filters = {}) => {
         if (oldData.data && oldData.data.candidate) {
           // New structure: { data: { candidate: [...], total: X } }
           const filteredCandidates = oldData.data.candidate.filter(
-            (candidate) => candidate._id !== candidateId
+            (candidate) => candidate._id !== candidateId,
           );
           return {
             ...oldData,
@@ -284,7 +285,7 @@ export const useCandidates = (filters = {}) => {
       queryKey: ["candidate-positions", candidateId],
       queryFn: async () => {
         const response = await axios.get(
-          `${config.REACT_APP_API_URL}/candidateposition/candidate/${candidateId}`
+          `${config.REACT_APP_API_URL}/candidateposition/candidate/${candidateId}`,
         );
         // Backend returns { data: [...] }
         return response.data?.data || [];
@@ -325,12 +326,7 @@ export const useCandidateById = (candidateId) => {
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Candidates?.View;
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["candidate", candidateId],
     queryFn: async () => {
       const authToken = Cookies.get("authToken") ?? "";
@@ -341,7 +337,7 @@ export const useCandidateById = (candidateId) => {
             Authorization: `Bearer ${authToken}`,
           },
           withCredentials: true,
-        }
+        },
       );
       return response.data;
     },
@@ -359,4 +355,73 @@ export const useCandidateById = (candidateId) => {
     isError,
     error,
   };
+};
+
+// Validation hooks
+export const useValidateEmail = (email) => {
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const tenantId = tokenPayload?.tenantId;
+
+  return useQuery({
+    queryKey: ["validate-email", email, tenantId],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/candidate/check-email`,
+        {
+          params: { email, tenantId }, // tenantId injected here
+          headers: { Authorization: `Bearer ${authToken}` },
+        },
+      );
+      return response.data;
+    },
+    // Only enable if we have a valid email and a tenantId
+    enabled: !!tenantId && email?.length > 5 && email.includes("@"),
+    retry: false,
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useValidatePhone = (phone) => {
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const tenantId = tokenPayload?.tenantId;
+
+  return useQuery({
+    queryKey: ["validate-phone", phone, tenantId],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/candidate/check-phone`,
+        {
+          params: { phone, tenantId },
+          headers: { Authorization: `Bearer ${authToken}` },
+        },
+      );
+      return response.data;
+    },
+    enabled: !!tenantId && phone?.length >= 10,
+    retry: false,
+  });
+};
+
+export const useValidateLinkedIn = (url) => {
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  const tenantId = tokenPayload?.tenantId;
+
+  return useQuery({
+    queryKey: ["validate-linkedin", url, tenantId],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/candidate/check-linkedin`,
+        {
+          params: { url, tenantId },
+          headers: { Authorization: `Bearer ${authToken}` },
+        },
+      );
+      return response.data;
+    },
+    enabled: !!tenantId && !!url && url.includes("linkedin.com"),
+    retry: false,
+  });
 };
