@@ -134,10 +134,34 @@ const TeamFormPopup = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    if (name === "lead_id") {
+      setFormData((prev) => {
+        const oldLeadId = prev.lead_id;
+        let newMemberIds = [...(prev.member_ids || [])];
+
+        // Remove old lead from members
+        if (oldLeadId) {
+          newMemberIds = newMemberIds.filter((id) => id !== oldLeadId);
+        }
+
+        // Add new lead to members
+        if (value && !newMemberIds.includes(value)) {
+          newMemberIds.push(value);
+        }
+
+        return {
+          ...prev,
+          lead_id: value,
+          member_ids: newMemberIds,
+        };
+      });
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -229,11 +253,10 @@ const TeamFormPopup = () => {
                         color: colorOpt.value,
                       }))
                     }
-                    className={`w-6 h-6 rounded-full transition-all flex-shrink-0 ${
-                      formData.color === colorOpt.value
+                    className={`w-6 h-6 rounded-full transition-all flex-shrink-0 ${formData.color === colorOpt.value
                         ? "ring-2 ring-offset-1 ring-gray-400 scale-110"
                         : "hover:scale-105"
-                    }`}
+                      }`}
                     style={{ backgroundColor: colorOpt.hex }}
                     title={colorOpt.label}
                   />
@@ -280,7 +303,7 @@ const TeamFormPopup = () => {
             rows={3}
           />
 
-              <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Active</span>
               <button
@@ -291,14 +314,12 @@ const TeamFormPopup = () => {
                     is_active: !prev.is_active,
                   }))
                 }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  formData.is_active ? "bg-custom-blue" : "bg-gray-300"
-                }`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.is_active ? "bg-custom-blue" : "bg-gray-300"
+                  }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    formData.is_active ? "translate-x-6" : "translate-x-1"
-                  }`}
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.is_active ? "translate-x-6" : "translate-x-1"
+                    }`}
                 />
               </button>
             </div>
@@ -351,11 +372,10 @@ const TeamFormPopup = () => {
                     return (
                       <label
                         key={member.value}
-                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                          isChecked
+                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${isChecked
                             ? "bg-white border-2 border-custom-blue shadow-sm"
                             : "bg-white border border-transparent hover:border-gray-200"
-                        }`}
+                          }`}
                       >
                         <div className="relative">
                           <div
@@ -383,8 +403,8 @@ const TeamFormPopup = () => {
                               const currentIds = prev.member_ids || [];
                               const newIds = isChecked
                                 ? currentIds.filter(
-                                    (memberId) => memberId !== member.value,
-                                  )
+                                  (memberId) => memberId !== member.value,
+                                )
                                 : [...currentIds, member.value];
                               return { ...prev, member_ids: newIds };
                             });
