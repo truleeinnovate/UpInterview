@@ -523,7 +523,7 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
           <section className="space-y-4 pt-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-800">
-                Address Information
+                Address
               </h3>
             </div>
 
