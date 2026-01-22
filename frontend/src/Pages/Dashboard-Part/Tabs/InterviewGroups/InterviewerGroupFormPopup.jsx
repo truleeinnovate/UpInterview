@@ -252,8 +252,8 @@ const TeamFormPopup = () => {
                       }))
                     }
                     className={`w-6 h-6 rounded-full transition-all flex-shrink-0 ${formData.color === colorOpt.value
-                        ? "ring-2 ring-offset-1 ring-gray-400 scale-110"
-                        : "hover:scale-105"
+                      ? "ring-2 ring-offset-1 ring-gray-400 scale-110"
+                      : "hover:scale-105"
                       }`}
                     style={{ backgroundColor: colorOpt.hex }}
                     title={colorOpt.label}
@@ -321,7 +321,7 @@ const TeamFormPopup = () => {
                 />
               </button>
             </div>
-          </div> */}
+          </div>
           <div className="flex items-center justify-between">
             <ToggleSwitch
               label="Status"
@@ -386,8 +386,8 @@ const TeamFormPopup = () => {
                       <label
                         key={member.value}
                         className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${isChecked
-                            ? "bg-white border-2 border-custom-blue shadow-sm"
-                            : "bg-white border border-transparent hover:border-gray-200"
+                          ? "bg-white border-2 border-custom-blue shadow-sm"
+                          : "bg-white border border-transparent hover:border-gray-200"
                           }`}
                       >
                         <div className="relative">
