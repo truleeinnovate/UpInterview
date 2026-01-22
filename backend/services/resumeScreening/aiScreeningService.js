@@ -17,7 +17,7 @@ async function screenResumeWithAI(resumeData, positionRequirements) {
         const prompt = buildScreeningPrompt(resumeData, positionRequirements);
 
         const response = await anthropic.messages.create({
-            model: "claude-3-5-sonnet-20241022",
+            model: "claude-opus-4-20250514",
             max_tokens: 2000,
             messages: [
                 {
@@ -57,45 +57,65 @@ async function screenResumeWithAI(resumeData, positionRequirements) {
  * Build the screening prompt for Claude
  */
 function buildScreeningPrompt(resumeData, positionRequirements) {
+    // Get skills from position (could be in skills or targetSkills)
+    const positionSkills = positionRequirements.skills || positionRequirements.targetSkills || [];
+    const skillsList = positionSkills
+        .map((s) => `${s.skill || s.name || s} (${s.requirement_level || s.requirementLevel || "REQUIRED"})`)
+        .join(", ");
+
     return `You are an expert HR recruiter and technical hiring manager. Analyze this resume against the job requirements and provide a detailed assessment.
 
 ## RESUME DATA:
 - Name: ${resumeData.name || "Not provided"}
 - Email: ${resumeData.email || "Not provided"}
 - Phone: ${resumeData.phone || "Not provided"}
-- Skills: ${resumeData.skills
+- Skills Found in Resume: ${resumeData.skills
             ? resumeData.skills.join(", ")
             : "Not extracted"
         }
 - Experience: ${resumeData.experience || "Not specified"}
 - Education: ${resumeData.education || "Not specified"}
-- Resume Text: ${resumeData.resumeText || "Not available"}
+- Full Resume Text: ${resumeData.rawText || resumeData.resumeText || "Not available"}
 
 ## POSITION REQUIREMENTS:
 - Title: ${positionRequirements.title || "Not specified"}
-- Required Skills: ${positionRequirements.targetSkills
-            ? positionRequirements.targetSkills
-                .map((s) => `${s.skill || s.name} (${s.requirement_level || s.requirementLevel || "Required"})`)
-                .join(", ")
-            : "Not specified"
-        }
-- Description: ${positionRequirements.description || "Not provided"}
-- Experience Required: ${positionRequirements.experienceRequired || positionRequirements.minexperience || "Not specified"}
+- Required Skills: ${skillsList || "Not specified"}
+- Job Description: ${positionRequirements.jobDescription || positionRequirements.description || "Not provided"}
+- Experience Required: ${positionRequirements.minexperience ? `${positionRequirements.minexperience} years` : "Not specified"}
 
 ## INSTRUCTIONS:
 Analyze the resume and provide your assessment in the following JSON format. Be objective and thorough.
 
 \`\`\`json
 {
-  "score": <number 0-100>,
-  "skillMatch": "<High|Medium|Low>",
+  "score": <number 0-100, overall match percentage>,
+  "skillMatch": <number 0-100, percentage of required skills matched>,
+  "experienceMatch": <number 0-100, how well experience matches requirements>,
   "summary": "<2-3 sentence summary of the candidate>",
   "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
   "concerns": ["<concern 1>", "<concern 2>"],
   "matchedSkills": ["<skill 1>", "<skill 2>"],
   "missingSkills": ["<missing required skill 1>", "<missing required skill 2>"],
-  "experienceMatch": "<Exceeds|Meets|Below> requirements",
-  "recommendation": "<Highly Recommended|Recommended|Consider for Review|Not Recommended>"
+  "recommendation": "<PROCEED|HOLD|REJECT>",
+  "languages": ["<language 1>", "<language 2>"],
+  "certifications": ["<certification 1>", "<certification 2>"],
+  "projects": [
+    { "title": "<Project Title>", "desc": "<Brief description>" }
+  ],
+  "workHistory": [
+    { 
+      "role": "<Job Title>", 
+      "company": "<Company Name>", 
+      "duration": "<Dates>", 
+      "responsibilities": ["<Key responsibility 1>", "<Key responsibility 2>"] 
+    }
+  ],
+  "extractedProfile": {
+      "education": "<Highest Degree - University>",
+      "experienceYears": <number, total years>,
+      "currentRole": "<Current Role>",
+      "currentLocation": "<City, State>"
+  }
 }
 \`\`\`
 
@@ -113,41 +133,46 @@ function parseAIResponse(responseText) {
             const parsed = JSON.parse(jsonMatch[0]);
             return {
                 score: Math.min(100, Math.max(0, parsed.score || 0)),
-                skillMatch: parsed.skillMatch || "Low",
+                skillMatch: Math.min(100, Math.max(0, parsed.skillMatch || 0)),
+                experienceMatch: Math.min(100, Math.max(0, parsed.experienceMatch || 0)),
                 summary: parsed.summary || "",
                 strengths: parsed.strengths || [],
                 concerns: parsed.concerns || [],
                 matchedSkills: parsed.matchedSkills || [],
                 missingSkills: parsed.missingSkills || [],
-                experienceMatch: parsed.experienceMatch || "Unknown",
-                recommendation: parsed.recommendation || "Consider for Review",
+                recommendation: parsed.recommendation || "HOLD",
+                languages: parsed.languages || [],
+                certifications: parsed.certifications || [],
+                projects: parsed.projects || [],
+                workHistory: parsed.workHistory || [],
+                extractedProfile: parsed.extractedProfile || {}
             };
         }
 
         // Fallback if JSON parsing fails
         return {
             score: 50,
-            skillMatch: "Medium",
+            skillMatch: 50,
+            experienceMatch: 50,
             summary: "Unable to fully analyze resume",
             strengths: [],
             concerns: ["AI analysis incomplete"],
             matchedSkills: [],
             missingSkills: [],
-            experienceMatch: "Unknown",
-            recommendation: "Consider for Review",
+            recommendation: "HOLD",
         };
     } catch (error) {
         console.error("Error parsing AI response:", error);
         return {
             score: 50,
-            skillMatch: "Medium",
+            skillMatch: 50,
+            experienceMatch: 50,
             summary: "Error parsing AI analysis",
             strengths: [],
             concerns: ["AI analysis error"],
             matchedSkills: [],
             missingSkills: [],
-            experienceMatch: "Unknown",
-            recommendation: "Consider for Review",
+            recommendation: "HOLD",
         };
     }
 }

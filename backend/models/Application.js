@@ -40,6 +40,7 @@ const ApplicationSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: [
+                "New",
                 "APPLIED",
                 "SCREENED",
                 "INTERVIEWING",
@@ -48,7 +49,7 @@ const ApplicationSchema = new mongoose.Schema(
                 "REJECTED",
                 "WITHDRAWN",
             ],
-            default: "INTERVIEWING",
+            default: "New",
         },
         screeningScore: {
             type: Number,

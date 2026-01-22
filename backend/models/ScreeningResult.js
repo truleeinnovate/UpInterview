@@ -16,35 +16,21 @@ const ScreeningResultSchema = new mongoose.Schema(
             required: true,
             index: true,
         },
-        candidateId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Candidate",
-            index: true,
-        },
+        // candidateId: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: "Candidate",
+        //     index: true,
+        // },
         tenantId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Organization",
+            ref: "Tenant",
             required: true,
             index: true,
         },
 
-        // Screening Scores
-        score: {
-            type: Number,
-            min: 0,
-            max: 100,
+        metadata: {
+            type: Object,
         },
-        skillMatch: {
-            type: Number,
-            min: 0,
-            max: 100, // Percentage match
-        },
-        experienceMatch: {
-            type: Number,
-            min: 0,
-            max: 100, // Percentage match
-        },
-
         // Recommendation
         recommendation: {
             type: String,
@@ -52,16 +38,8 @@ const ScreeningResultSchema = new mongoose.Schema(
             required: true,
         },
 
-        // Additional screening details
-        matchedSkills: [{
-            type: String,
-        }],
-        missingSkills: [{
-            type: String,
-        }],
-        screeningNotes: {
-            type: String,
-        },
+
+        ats: { type: String },
 
         // Audit
         screenedAt: {
