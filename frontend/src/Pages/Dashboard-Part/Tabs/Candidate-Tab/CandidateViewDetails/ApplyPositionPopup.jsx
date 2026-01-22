@@ -100,6 +100,7 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
 
     const getStatusBadgeClass = (status) => {
         const statusClasses = {
+            NEW: "bg-blue-100 text-blue-800",
             APPLIED: "bg-blue-100 text-blue-800",
             SCREENED: "bg-purple-100 text-purple-800",
             INTERVIEWING: "bg-yellow-100 text-yellow-800",
