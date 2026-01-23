@@ -45,7 +45,7 @@ const CreateInterviewer = () => {
     title: "",
     department: "",
     external_company: "",
-    user_id: "", // This will store contact._id
+    contactId: "", // This will store contact._id
     team_id: "",
     is_active: true,
     max_interviews_per_week: 5,
@@ -84,18 +84,18 @@ const CreateInterviewer = () => {
     if (isEditMode && interviewerData) {
       console.log("Edit mode - interviewerData:", interviewerData);
 
-      // Get the user_id value - could be object with _id or just string
+      // Get the contactId value - could be object with _id or just string
       let userId =
-        interviewerData.user_id?._id || interviewerData.user_id || "";
+        interviewerData.contactId?._id || interviewerData.contactId || "";
 
       // If user_id is null but we have email, try to find matching user
       if (!userId && interviewerData.email && internalUsers.length > 0) {
         const matchingUser = internalUsers.find(
           (u) =>
             u?.contact?.Email?.toLowerCase() ===
-              interviewerData.email.toLowerCase() ||
+            interviewerData.email.toLowerCase() ||
             u?.contact?.email?.toLowerCase() ===
-              interviewerData.email.toLowerCase(),
+            interviewerData.email.toLowerCase(),
         );
         if (matchingUser) {
           userId = matchingUser.contact?._id || matchingUser._id;
@@ -112,7 +112,7 @@ const CreateInterviewer = () => {
         title: interviewerData.title || "",
         department: interviewerData.department || "",
         external_company: interviewerData.external_company || "",
-        user_id: userId,
+        contactId: userId,
         team_id: interviewerData.team_id?._id || interviewerData.team_id || "",
         is_active:
           interviewerData.is_active !== undefined
@@ -123,8 +123,8 @@ const CreateInterviewer = () => {
         hourly_rate: interviewerData.hourly_rate || "",
         contract_end_date: interviewerData.contract_end_date
           ? new Date(interviewerData.contract_end_date)
-              .toISOString()
-              .split("T")[0]
+            .toISOString()
+            .split("T")[0]
           : "",
       });
 
@@ -150,14 +150,14 @@ const CreateInterviewer = () => {
     }
   }, [isEditMode, interviewerData, internalUsers]);
 
-  // Update selected user data when user_id changes
+  // Update selected user data when contactId changes
   useEffect(() => {
-    if (formData.user_id && formData.interviewer_type === "internal") {
-      // Handle case where user_id might be an object (if fetched from backend) or string (if selected from dropdown)
+    if (formData.contactId && formData.interviewer_type === "internal") {
+      // Handle case where contactId might be an object (if fetched from backend) or string (if selected from dropdown)
       const userId =
-        typeof formData.user_id === "object"
-          ? formData.user_id._id
-          : formData.user_id;
+        typeof formData.contactId === "object"
+          ? formData.contactId._id
+          : formData.contactId;
 
       const selectedUser = internalUsers.find(
         (u) => u?.contact?._id === userId || u?._id === userId,
@@ -173,7 +173,7 @@ const CreateInterviewer = () => {
           email: contact.Email || contact.email || prev.email,
         }));
       }
-    } else if (!formData.user_id && formData.interviewer_type === "internal") {
+    } else if (!formData.contactId && formData.interviewer_type === "internal") {
       setSelectedUserData(null);
       if (!isEditMode) {
         setFormData((prev) => ({
@@ -183,11 +183,11 @@ const CreateInterviewer = () => {
         }));
       }
     }
-  }, [formData.user_id, formData.interviewer_type, internalUsers, isEditMode]);
+  }, [formData.contactId, formData.interviewer_type, internalUsers, isEditMode]);
 
   // Check if user is already in selected team
   useEffect(() => {
-    if (formData.team_id && formData.user_id) {
+    if (formData.team_id && formData.contactId) {
       const selectedTeam = teamsArray.find((t) => t._id === formData.team_id);
       setSelectedTeamData(selectedTeam);
 
@@ -196,7 +196,7 @@ const CreateInterviewer = () => {
         const memberIds = selectedTeam.member_ids || [];
         const isInTeam = memberIds.some((memberId) => {
           const memberIdStr = memberId?._id || memberId;
-          return memberIdStr === formData.user_id;
+          return memberIdStr === formData.contactId;
         });
         setUserAlreadyInTeam(isInTeam);
       }
@@ -204,7 +204,7 @@ const CreateInterviewer = () => {
       setUserAlreadyInTeam(false);
       setSelectedTeamData(null);
     }
-  }, [formData.team_id, formData.user_id, teamsArray]);
+  }, [formData.team_id, formData.contactId, teamsArray]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -235,9 +235,9 @@ const CreateInterviewer = () => {
   const validate = () => {
     const newErrors = {};
 
-    // For internal type, only user_id is required
-    if (formData.interviewer_type === "internal" && !formData.user_id) {
-      newErrors.user_id = "Please select a user account";
+    // For internal type, only contactId is required
+    if (formData.interviewer_type === "internal" && !formData.contactId) {
+      newErrors.contactId = "Please select a user account";
     }
 
     setErrors(newErrors);
@@ -249,16 +249,15 @@ const CreateInterviewer = () => {
     if (!validate()) return;
 
     try {
-      // Build payload - only save user_id, not email/name (those come from user)
+      // Build payload - only save contactId, not email/name (those come from user)
       const payload = {
-        user_id: formData.user_id,
+        contactId: formData.contactId,
         interviewer_type: formData.interviewer_type,
         team_id: formData.team_id || null,
         is_active: formData.is_active,
         max_interviews_per_week: formData.max_interviews_per_week,
         tag_ids: formData.tag_ids,
         tenantId,
-        ownerId,
       };
 
       // If team is selected and user is NOT already in team, add user to team
@@ -266,7 +265,7 @@ const CreateInterviewer = () => {
         const currentMembers = (selectedTeamData.member_ids || []).map(
           (m) => m?._id || m,
         );
-        const updatedMembers = [...currentMembers, formData.user_id];
+        const updatedMembers = [...currentMembers, formData.contactId];
 
         await updateTeamMutation.mutateAsync({
           teamId: formData.team_id,
@@ -318,7 +317,7 @@ const CreateInterviewer = () => {
 
   const isUserLinked =
     formData.interviewer_type === "internal" &&
-    formData.user_id &&
+    formData.contactId &&
     selectedUserData;
 
   if (isEditMode && isLoadingInterviewer) {
@@ -398,14 +397,14 @@ const CreateInterviewer = () => {
           {/* Link to User Account */}
           {/* {formData.interviewer_type === "internal" && ( */}
           <DropdownWithSearchField
-            value={formData.user_id}
+            value={formData.contactId}
             options={userOptions}
             onChange={handleChange}
             label="Select User"
-            name="user_id"
+            name="contactId"
             placeholder={usersLoading ? "Loading users..." : "Select a user..."}
             required
-            error={errors.user_id}
+            error={errors.contactId}
           />
           {/* )} */}
 
@@ -471,13 +470,12 @@ const CreateInterviewer = () => {
                 emptyMessage="Enter Team"
               />
               {/* Team membership status message */}
-              {formData.team_id && formData.user_id && (
+              {formData.team_id && formData.contactId && (
                 <div
-                  className={`mt-2 p-2 rounded text-sm ${
-                    userAlreadyInTeam
+                  className={`mt-2 p-2 rounded text-sm ${userAlreadyInTeam
                       ? "bg-green-50 text-green-700 border border-green-200"
                       : "bg-blue-50 text-blue-700 border border-blue-200"
-                  }`}
+                    }`}
                 >
                   {userAlreadyInTeam
                     ? "✓ User is already a member of this team"
@@ -542,11 +540,10 @@ const CreateInterviewer = () => {
                       className={`
                       relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
                       cursor-pointer transition-all duration-300 ease-in-out border-2
-                      ${
-                        isSelected
+                      ${isSelected
                           ? "bg-custom-blue border-custom-blue text-white shadow-lg shadow-blue-200"
                           : "bg-gray-50 border-custom-blue/30 text-custom-blue hover:bg-white hover:border-custom-blue hover:text-custom-blue hover:shadow-md"
-                      }
+                        }
                    `}
                     >
                       <input

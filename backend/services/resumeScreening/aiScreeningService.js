@@ -77,6 +77,8 @@ function buildScreeningPrompt(resumeData, positionRequirements) {
 - Education: ${resumeData.education || "Not specified"}
 - Full Resume Text: ${resumeData.rawText || resumeData.resumeText || "Not available"}
 
+NOTE: The 'Name', 'Email', and 'Phone' fields above are extracted via regex and may be incomplete or incorrect (e.g., 'Name' might missing). ALWAYS verify these against the 'Full Resume Text' and extract the most accurate details into the 'extractedProfile' section. Look for the candidate's name at the very top of the text.
+
 ## POSITION REQUIREMENTS:
 - Title: ${positionRequirements.title || "Not specified"}
 - Required Skills: ${skillsList || "Not specified"}
@@ -111,10 +113,14 @@ Analyze the resume and provide your assessment in the following JSON format. Be 
     }
   ],
   "extractedProfile": {
+      "name": "<Candidate Name>",
+      "email": "<Candidate Email>",
+      "phone": "<Candidate Phone>",
       "education": "<Highest Degree - University>",
       "experienceYears": <number, total years>,
       "currentRole": "<Current Role>",
-      "currentLocation": "<City, State>"
+      "currentLocation": "<City, State>",
+      "linkedIn": "<LinkedIn URL>"
   }
 }
 \`\`\`

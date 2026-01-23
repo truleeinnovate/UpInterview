@@ -37,8 +37,8 @@ export const InterviewerDetailsContent = ({ interviewer }) => {
     let displayEmail = interviewer.email;
     let displayName = interviewer.full_name;
 
-    if (interviewer.interviewer_type === 'internal' && interviewer.user_id && typeof interviewer.user_id === 'object') {
-        const user = interviewer.user_id;
+    if (interviewer.interviewer_type === 'internal' && interviewer.contactId && typeof interviewer.contactId === 'object') {
+        const user = interviewer.contactId;
         if (user.firstName || user.lastName) {
             displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
         }
@@ -62,7 +62,7 @@ export const InterviewerDetailsContent = ({ interviewer }) => {
                             label="Assigned Team"
                             value={interviewer.team_id?.name || 'No Team Assigned'}
                         />
-                        {interviewer.user_id && (
+                        {interviewer.contactId && (
                             <GridItem
                                 icon={CreditCard}
                                 label="Linked Account"
@@ -85,7 +85,7 @@ export const InterviewerDetailsContent = ({ interviewer }) => {
                         <GridItem
                             icon={Star}
                             label="Overall Rating"
-                            value={interviewer.user_id.rating ? `${interviewer.user_id.rating.toFixed(1)} / 5.0` : 'N/A'}
+                            value={interviewer.contactId.rating ? `${interviewer.contactId.rating.toFixed(1)} / 5.0` : 'N/A'}
                         />
 
                         <GridItem
@@ -155,8 +155,8 @@ const InterviewerDetails = () => {
     // Prepare Header Elements
     let displayName = interviewer.full_name;
     let displayEmail = interviewer.email;
-    if (interviewer.interviewer_type === 'internal' && interviewer.user_id && typeof interviewer.user_id === 'object') {
-        const user = interviewer.user_id;
+    if (interviewer.interviewer_type === 'internal' && interviewer.contactId && typeof interviewer.contactId === 'object') {
+        const user = interviewer.contactId;
         if (user.firstName || user.lastName) {
             displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
         }

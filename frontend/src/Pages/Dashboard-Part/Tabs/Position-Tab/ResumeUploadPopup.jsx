@@ -12,6 +12,7 @@ import {
 import { usePositionById } from '../../../../apiHooks/usePositions';
 import Breadcrumb from '../../Tabs/CommonCode-AllTabs/Breadcrumb';
 import DropdownSelect from '../../../../Components/Dropdowns/DropdownSelect';
+import CandidateViewer from '../../../../Components/CandidateViewer';
 import { config } from '../../../../config';
 
 const MAX_FILES = 20;
@@ -48,7 +49,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
     ];
 
     const [currentStep, setCurrentStep] = useState(1);
-    const [screeningMethod, setScreeningMethod] = useState('ai_claude');
+    const [screeningMethod, setScreeningMethod] = useState('system_internal');
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [screeningResults, setScreeningResults] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
@@ -74,6 +75,8 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
             file: file
         }));
         setUploadedFiles(prev => [...prev, ...newFiles]);
+        // Auto-select new files
+        setSelectedFileIds(prev => [...prev, ...newFiles.map(f => f.id)]);
     }, [uploadedFiles.length]);
 
     const removeFile = (fileId) => {
@@ -120,7 +123,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
             formData.append('screeningMethod', screeningMethod);
 
             uploadedFiles.forEach((fileObj) => {
-                if (fileObj.file) {
+                if (fileObj.file && selectedFileIds.includes(fileObj.id)) {
                     formData.append('resumes', fileObj.file);
                 }
             });
@@ -389,7 +392,11 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                         </div>
                                         <div className="min-w-0">
                                             <p className="font-medium text-gray-900 text-sm truncate">{step.name}</p>
-                                            <p className="text-xs text-gray-500 truncate">{step.description}</p>
+                                            <p className="text-xs text-gray-500 truncate">
+                                                {step.id === 2
+                                                    ? (screeningMethod === 'ai_claude' ? 'AI screening in progress' : 'System screening in progress')
+                                                    : step.description}
+                                            </p>
                                         </div>
                                     </div>
                                     {idx < STEPS.length - 1 && (
@@ -573,10 +580,10 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                         </button>
                                         <button
                                             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                            disabled={uploadedFiles.length === 0}
+                                            disabled={uploadedFiles.length === 0 || selectedFileIds.length === 0}
                                             onClick={() => setCurrentStep(2)}
                                         >
-                                            Continue to Screening
+                                            Continue to Screening ({selectedFileIds.length})
                                             <ChevronRight className="w-4 h-4" />
                                         </button>
                                     </div>
@@ -591,12 +598,20 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                     <>
                                         <div className="p-6">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-xl  flex items-center justify-center">
-                                                    <Sparkles className="w-6 h-6 animate-pulse" />
+                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${screeningMethod === 'ai_claude' ? 'bg-purple-100' : 'bg-blue-100'}`}>
+                                                    {screeningMethod === 'ai_claude' ? (
+                                                        <Sparkles className="w-6 h-6 animate-pulse text-purple-600" />
+                                                    ) : (
+                                                        <Cpu className="w-6 h-6 animate-pulse text-blue-600" />
+                                                    )}
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-lg font-semibold">AI Screening in Progress</h3>
-                                                    <p className="text-gray-600 text-sm">Analyzing resumes with advanced AI</p>
+                                                    <h3 className="text-lg font-semibold">
+                                                        {screeningMethod === 'ai_claude' ? 'AI Screening in Progress' : 'System Screening in Progress'}
+                                                    </h3>
+                                                    <p className="text-gray-600 text-sm">
+                                                        {screeningMethod === 'ai_claude' ? 'Analyzing resumes with advanced AI' : 'Analyzing resumes with system matching'}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -616,8 +631,8 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                         />
                                                         <defs>
                                                             <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                                <stop offset="0%" stopColor="#9333ea" />
-                                                                <stop offset="100%" stopColor="#6366f1" />
+                                                                <stop offset="0%" stopColor={screeningMethod === 'ai_claude' ? "#9333ea" : "#2563eb"} />
+                                                                <stop offset="100%" stopColor={screeningMethod === 'ai_claude' ? "#6366f1" : "#3b82f6"} />
                                                             </linearGradient>
                                                         </defs>
                                                     </svg>
@@ -629,8 +644,8 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                 {/* Current File */}
                                                 <div className="bg-gray-50 rounded-xl p-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                                                            <RotateCw className="w-5 h-5 text-purple-600 animate-spin" />
+                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${screeningMethod === 'ai_claude' ? 'bg-purple-100' : 'bg-blue-100'}`}>
+                                                            <RotateCw className={`w-5 h-5 animate-spin ${screeningMethod === 'ai_claude' ? 'text-purple-600' : 'text-blue-600'}`} />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-sm text-gray-500">Currently processing</p>
@@ -642,20 +657,20 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                 {/* Stats */}
                                                 <div className="grid grid-cols-3 gap-4">
                                                     <div className="text-center p-3 bg-emerald-50 rounded-xl">
-                                                        <p className="text-2xl font-bold text-emerald-600">{uploadedFiles.length}</p>
+                                                        <p className="text-2xl font-bold text-emerald-600">{selectedFileIds.length}</p>
                                                         <p className="text-xs text-emerald-700">Total Files</p>
                                                     </div>
-                                                    <div className="text-center p-3 bg-purple-50 rounded-xl">
-                                                        <p className="text-2xl font-bold text-purple-600">
-                                                            {Math.round((processingProgress / 100) * uploadedFiles.length)}
+                                                    <div className={`text-center p-3 rounded-xl ${screeningMethod === 'ai_claude' ? 'bg-purple-50' : 'bg-blue-50'}`}>
+                                                        <p className={`text-2xl font-bold ${screeningMethod === 'ai_claude' ? 'text-purple-600' : 'text-blue-600'}`}>
+                                                            {Math.round((processingProgress / 100) * selectedFileIds.length)}
                                                         </p>
-                                                        <p className="text-xs text-purple-700">Processed</p>
+                                                        <p className={`text-xs ${screeningMethod === 'ai_claude' ? 'text-purple-700' : 'text-blue-700'}`}>Processed</p>
                                                     </div>
-                                                    <div className="text-center p-3 bg-blue-50 rounded-xl">
-                                                        <p className="text-2xl font-bold text-blue-600">
-                                                            {uploadedFiles.length - Math.round((processingProgress / 100) * uploadedFiles.length)}
+                                                    <div className="text-center p-3 bg-gray-50 rounded-xl">
+                                                        <p className="text-2xl font-bold text-gray-600">
+                                                            {selectedFileIds.length - Math.round((processingProgress / 100) * selectedFileIds.length)}
                                                         </p>
-                                                        <p className="text-xs text-blue-700">Remaining</p>
+                                                        <p className="text-xs text-gray-700">Remaining</p>
                                                     </div>
                                                 </div>
 
@@ -689,7 +704,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                                 <Files className="w-5 h-5 text-blue-600" />
                                                             </div>
                                                             <div>
-                                                                <p className="text-2xl font-bold text-gray-900">{uploadedFiles.length}</p>
+                                                                <p className="text-2xl font-bold text-gray-900">{selectedFileIds.length}</p>
                                                                 <p className="text-sm text-gray-500">Resumes</p>
                                                             </div>
                                                         </div>
@@ -720,15 +735,15 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                         <p className="text-sm font-medium text-gray-700">Files to process</p>
                                                     </div>
                                                     <div className="max-h-40 overflow-y-auto p-2 space-y-1">
-                                                        {uploadedFiles.slice(0, 5).map((file) => (
+                                                        {uploadedFiles.filter(f => selectedFileIds.includes(f.id)).slice(0, 5).map((file) => (
                                                             <div key={file.id} className="flex items-center gap-2 px-2 py-1.5 text-sm">
                                                                 <FileText className="w-4 h-4 text-gray-400" />
                                                                 <span className="truncate text-gray-700">{file.name}</span>
                                                             </div>
                                                         ))}
-                                                        {uploadedFiles.length > 5 && (
+                                                        {selectedFileIds.length > 5 && (
                                                             <p className="px-2 py-1 text-sm text-gray-500">
-                                                                +{uploadedFiles.length - 5} more files
+                                                                +{selectedFileIds.length - 5} more files
                                                             </p>
                                                         )}
                                                     </div>
@@ -743,7 +758,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                         Back to Upload
                                                     </button>
                                                     <button
-                                                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-colors"
+                                                        className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white ${screeningMethod === 'ai_claude' ? 'bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-colors' : 'bg-custom-blue rounded-lg hover:bg-custom-blue/90 transition-colors'}`}
                                                         onClick={startScreening}
                                                     >
                                                         {screeningMethod === 'ai_claude' ? (
@@ -993,99 +1008,24 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                             </div>
                         )}
 
-                        {/* View Result Modal */}
+                        {/* View Result Modal - Replaced with CandidateViewer Sidebar */}
                         {viewingResult && (
-                            <div className="fixed inset-0 z-[60] flex items-center justify-center">
-                                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setViewingResult(null)} />
-                                <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto mx-4">
-                                    <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                                        <h3 className="flex items-center gap-2 font-semibold text-gray-900">
-                                            <FileText className="w-5 h-5 text-custom-blue" />
-                                            {viewingResult?.file_name}
-                                        </h3>
-                                        <button
-                                            onClick={() => setViewingResult(null)}
-                                            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                                        >
-                                            <X className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                    <div className="p-6">
-                                        {viewingResult?.screening_result ? (
-                                            <div className="space-y-4">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="bg-gray-50 rounded-lg p-3">
-                                                        <p className="text-sm text-gray-500">Match Score</p>
-                                                        <p className="text-2xl font-bold text-custom-blue">{viewingResult.match_percentage}%</p>
-                                                    </div>
-                                                    <div className="bg-gray-50 rounded-lg p-3">
-                                                        <p className="text-sm text-gray-500">Experience</p>
-                                                        <p className="text-2xl font-bold text-gray-900">{viewingResult.screening_result.experience_years} years</p>
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <h4 className="font-semibold text-gray-900 mb-2">Summary</h4>
-                                                    <p className="text-sm text-gray-700">{viewingResult.screening_result.summary}</p>
-                                                </div>
-
-                                                <div>
-                                                    <h4 className="font-semibold text-gray-900 mb-2">Extracted Skills</h4>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {viewingResult.screening_result.extracted_skills?.map((skill, idx) => (
-                                                            <span key={idx} className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                                                                {skill}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <h4 className="font-semibold text-emerald-700 mb-2">Strengths</h4>
-                                                        <ul className="space-y-1">
-                                                            {viewingResult.screening_result.strengths?.map((s, idx) => (
-                                                                <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
-                                                                    <Check className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                                                                    {s}
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-semibold text-amber-700 mb-2">Gaps</h4>
-                                                        <ul className="space-y-1">
-                                                            {viewingResult.screening_result.gaps?.map((g, idx) => (
-                                                                <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
-                                                                    <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-                                                                    {g}
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                </div>
-
-                                                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                                                    <p className="text-sm text-purple-700 font-medium">
-                                                        Recommendation: {viewingResult.screening_result.recommendation}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-8">
-                                                <AlertTriangle className="w-12 h-12 mx-auto text-amber-500 mb-3" />
-                                                <p className="text-gray-700 font-medium">Duplicate Resume</p>
-                                                <p className="text-sm text-gray-500 mt-1">This candidate already exists in the system</p>
-                                                {viewingResult?.existing_candidate_id && (
-                                                    <button className="mt-4 px-4 py-2 text-sm font-medium text-custom-blue bg-custom-blue/10 rounded-lg hover:bg-custom-blue/20 transition-colors">
-                                                        View Existing Candidate
-                                                    </button>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+                            <CandidateViewer
+                                candidate={viewingResult}
+                                position={fetchedPosition}
+                                onClose={() => setViewingResult(null)}
+                                onAction={(action, id) => {
+                                    // Handle actions from the sidebar
+                                    if (action === 'proceed') {
+                                        toggleSelect(id);
+                                        // Ideally we want to scroll to proceed button or highlight it
+                                    } else if (action === 'reject') {
+                                        discardResult(id);
+                                    }
+                                    // 'hold' currently doesn't have a specific logic in this localized state other than maybe untoggling
+                                    setViewingResult(null);
+                                }}
+                            />
                         )}
                     </div>
                 </div>
