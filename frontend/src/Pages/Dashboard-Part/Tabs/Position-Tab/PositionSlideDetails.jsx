@@ -315,11 +315,11 @@ const PositionCandidatesTab = ({ positionId, position }) => {
               </div>
             )}
           </div>
-          <div className="flex flex-col ml-3">
+          <div className="flex flex-col">
             <div title={`${row?.FirstName} ${row?.LastName}`}>
               <div
                 className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
-                onClick={() => navigate(`/dashboard/candidate-details/${row._id}`, { state: { from: "position" } })}
+                onClick={(e) => { e.stopPropagation(); handleView(row); }}
               >
                 {capitalizeFirstLetter(row?.FirstName) +
                   " " +
@@ -329,7 +329,7 @@ const PositionCandidatesTab = ({ positionId, position }) => {
             {row?.currentRoleLabel && (
               <div
                 title={capitalizeFirstLetter(row?.currentRoleLabel)}
-                className="text-xs cursor-default truncate max-w-[140px]"
+                className="text-xs text-gray-500 truncate max-w-[140px]"
               >
                 {capitalizeFirstLetter(row?.currentRoleLabel)}
               </div>
@@ -465,7 +465,7 @@ const PositionCandidatesTab = ({ positionId, position }) => {
 
   return (
     <>
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
         <TableView
           data={candidatesData}
           columns={tableColumns}
@@ -667,7 +667,7 @@ const PositionSlideDetails = () => {
       ) : (
         <>
           {/* v1.0.4 <------------------------------------------------------------------------------------------ */}
-          <div className="max-w-7xl mx-auto sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 bg-white shadow overflow-hidden sm:rounded-lg mb-4">
+          <div className="max-w-8xl mx-auto sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 bg-white shadow overflow-hidden sm:rounded-lg mb-4">
             {/* <-------------------------v1.0.0  */}
             {/* // <----- v1.0.1 - Ranjith - */}
             {/* Header */}
