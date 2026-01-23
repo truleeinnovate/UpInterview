@@ -478,7 +478,7 @@ function Activity({ parentId, parentId2, mode }) {
           // </div>
           <div className="space-y-4">
             {/* Step 1: Changed grid-cols-1 to a flex-wrap container */}
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-16">
               {Object.entries(metadata)
                 .filter(
                   ([key]) =>
