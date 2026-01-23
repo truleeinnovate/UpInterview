@@ -25,6 +25,7 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import ToggleSwitch from "../../../../Components/Buttons/ToggleButton";
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 
 // Team color options with hex values
 const TEAM_COLORS = [
@@ -79,6 +80,8 @@ const TeamFormPopup = () => {
   const tenantId = tokenPayload.tenantId;
 
   const [loading, setLoading] = useState(false);
+
+  useScrollLock(true);
 
   // Load existing team data for editing
   useEffect(() => {
@@ -301,27 +304,6 @@ const TeamFormPopup = () => {
             rows={3}
           />
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Active</span>
-              <button
-                type="button"
-                onClick={() =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    is_active: !prev.is_active,
-                  }))
-                }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.is_active ? "bg-custom-blue" : "bg-gray-300"
-                  }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.is_active ? "translate-x-6" : "translate-x-1"
-                    }`}
-                />
-              </button>
-            </div>
-          </div>
           <div className="flex items-center justify-between">
             <ToggleSwitch
               label="Status"

@@ -13,6 +13,7 @@ import {
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { Users } from "lucide-react";
+import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 
 // Team color map with hex values
 const TEAM_COLOR_MAP = {
@@ -33,6 +34,8 @@ const TeamDetails = () => {
   const { data: teamData } = useTeamById(id);
 
   const [selectedTeam, setSelectedTeam] = useState({});
+
+  useScrollLock(true);
 
   useEffect(() => {
     const fetchData = () => {
