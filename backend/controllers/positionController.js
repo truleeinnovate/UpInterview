@@ -29,7 +29,7 @@ const createPosition = async (req, res) => {
   // if standard — make rounds optional
   if (isStandardType) {
     schemaToUse = positionValidationSchema.fork(["rounds"], (field) =>
-      field.items(validateRoundDataStandard).optional()
+      field.items(validateRoundDataStandard).optional(),
     );
   }
 
@@ -70,7 +70,7 @@ const createPosition = async (req, res) => {
       "POS",
       Position,
       "positionCode",
-      tenantId
+      tenantId,
     );
 
     // Map request body to schema fields
@@ -96,7 +96,7 @@ const createPosition = async (req, res) => {
       createdBy: req.body.ownerId, // Fixed: use req.body.ownerId instead of undefined ownerId
       positionCode, // Custom code added
       status: req.body.status,
-      employmentType: req.body.employmentType
+      employmentType: req.body.employmentType,
     };
 
     // Handle rounds if template exists
@@ -113,16 +113,17 @@ const createPosition = async (req, res) => {
         // interviewers: round?.interviewers?.map((interviewer) => interviewer._id) || [],
         interviewers:
           round?.interviewers?.map(
-            (i) => (typeof i === "string" ? i : i._id) // FIX: ensure only ids stored
+            (i) => (typeof i === "string" ? i : i._id), // FIX: ensure only ids stored
           ) || [],
         assessmentId: round?.assessmentId || null,
         sequence: round?.sequence || 0,
         questions: round?.questions
           ? round.questions?.map((q) => ({
-            questionId: q.questionId,
-            snapshot: q.snapshot,
-          }))
+              questionId: q.questionId,
+              snapshot: q.snapshot,
+            }))
           : [],
+        ...round,
       }));
     } else {
       positionData.rounds = [];
@@ -201,7 +202,7 @@ const updatePosition = async (req, res) => {
   // interviewers when switching templates.
   if (isStandardType) {
     schemaToUse = positionPatchValidationSchema.fork(["rounds"], (field) =>
-      field.items(validateRoundDataStandard).optional()
+      field.items(validateRoundDataStandard).optional(),
     );
   }
 
@@ -255,11 +256,13 @@ const updatePosition = async (req, res) => {
         ? Number(updateFields.NoofPositions)
         : currentPosition.NoofPositions,
       Location: updateFields.Location || currentPosition.Location,
-      externalId: updateFields.externalId !== undefined
-        ? updateFields.externalId
-        : currentPosition.externalId,
+      externalId:
+        updateFields.externalId !== undefined
+          ? updateFields.externalId
+          : currentPosition.externalId,
       status: updateFields.status ?? currentPosition.status,
-      employmentType: updateFields.employmentType ?? currentPosition.employmentType,
+      employmentType:
+        updateFields.employmentType ?? currentPosition.employmentType,
       updatedBy: ownerId,
     };
 
@@ -281,10 +284,11 @@ const updatePosition = async (req, res) => {
         sequence: round.sequence || 0,
         questions: round.questions
           ? round.questions.map((q) => ({
-            questionId: q.questionId || null,
-            snapshot: q.snapshot || null,
-          }))
+              questionId: q.questionId || null,
+              snapshot: q.snapshot || null,
+            }))
           : [],
+        ...round,
       }));
     } else {
       // Keep existing rounds if template name hasn't changed
@@ -345,7 +349,7 @@ const updatePosition = async (req, res) => {
     const updatedPosition = await Position.findByIdAndUpdate(
       positionId,
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedPosition) {
@@ -381,7 +385,7 @@ const updatePosition = async (req, res) => {
       ({ fieldName, formattedOldValue, formattedNewValue }) => ({
         fieldName,
         message: `${fieldName} updated from '${formattedOldValue}' to '${formattedNewValue}'`,
-      })
+      }),
     );
 
     // Only set feedData and logData when there are actual changes
@@ -402,7 +406,7 @@ const updatePosition = async (req, res) => {
         fieldName,
         // message: `${fieldName} updated from '${oldValue}' to '${newValue}'`,
         message: `${fieldName} updated from '${formatValue(
-          oldValue
+          oldValue,
         )}' to '${formatValue(newValue)}'`,
       })),
       history: changes,
@@ -679,7 +683,7 @@ const saveInterviewRoundPosition = async (req, res) => {
     // Get the latest saved position to access the round with _id
     const updatedPosition = await Position.findById(positionId);
     const savedRound = updatedPosition.rounds.find(
-      (r) => r.sequence === newSequence && r.roundTitle === newRound.roundTitle
+      (r) => r.sequence === newSequence && r.roundTitle === newRound.roundTitle,
     );
 
     // Feed and log data
@@ -891,7 +895,7 @@ const updateInterviewRound = async (req, res) => {
 
     const { error } = validateRoundPatchData.validate(
       roundObjectForValidation,
-      { abortEarly: false }
+      { abortEarly: false },
     );
     if (error) {
       const errors = {};
@@ -923,7 +927,7 @@ const updateInterviewRound = async (req, res) => {
         Array.isArray(updates.interviewers)
       ) {
         newValue = updates.interviewers.map(
-          (id) => new mongoose.Types.ObjectId(id)
+          (id) => new mongoose.Types.ObjectId(id),
         );
         round[key] = newValue;
       } else {
@@ -952,7 +956,7 @@ const updateInterviewRound = async (req, res) => {
     // ---------- Reorder Rounds if Sequence Changed ----------
     if (updates.sequence !== undefined && updates.sequence !== round.sequence) {
       position.rounds = position.rounds.filter(
-        (r) => !r._id.equals(rawRoundId)
+        (r) => !r._id.equals(rawRoundId),
       );
       const desiredIndex = Math.max(updates.sequence - 1, 0);
       position.rounds.splice(desiredIndex, 0, round);
@@ -1038,7 +1042,7 @@ const deleteRound = async (req, res) => {
 
     // Find the index of the round to delete
     const roundIndex = position.rounds.findIndex(
-      (round) => round._id.toString() === roundId
+      (round) => round._id.toString() === roundId,
     );
     if (roundIndex === -1) {
       return res.status(404).json({ message: "Round not found" });

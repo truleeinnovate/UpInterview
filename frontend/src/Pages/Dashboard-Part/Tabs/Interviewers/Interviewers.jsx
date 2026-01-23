@@ -39,7 +39,6 @@ export const InterviewerCard = ({
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
-  console.log("interviewer", interviewer);
   React.useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
