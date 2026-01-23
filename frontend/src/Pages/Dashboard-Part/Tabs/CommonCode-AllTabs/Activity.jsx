@@ -100,7 +100,7 @@ function Activity({ parentId, parentId2, mode }) {
         console.log("PARENT ID ==================>", parentId);
         console.log(
           "RESPONSE FOR ASSESSMENT FEEDS ==================>",
-          response
+          response,
         );
 
         // Check if response has data
@@ -117,7 +117,7 @@ function Activity({ parentId, parentId2, mode }) {
             `${config.REACT_APP_API_URL}/feeds`,
             {
               params: { parentId: parentId2 },
-            }
+            },
           );
 
           // Ensure data is an array, fallback to empty array if undefined
@@ -133,7 +133,7 @@ function Activity({ parentId, parentId2, mode }) {
         console.error(
           "Error fetching feeds:",
           errorMessage,
-          err.response?.data
+          err.response?.data,
         );
         setError(`Failed to load feeds: ${errorMessage}`);
         setFeeds([]);
@@ -151,43 +151,42 @@ function Activity({ parentId, parentId2, mode }) {
       setError("No parent ID provided");
     }
   }, [parentId, parentId2]); // Add both to dependency array
-  console.log("ASSESSMENT FEEDS ===============================> :", feeds);
 
   // Filter feeds client-side
   const filteredFeeds = useMemo(() => {
     return feeds.filter(
-      (feed) => typeFilter === "all" || feed.feedType === typeFilter
+      (feed) => typeFilter === "all" || feed.feedType === typeFilter,
     );
   }, [feeds, typeFilter]);
 
-  const getFeedIcon = (type, action) => {
-    switch (type) {
-      case "info":
-        if (
-          action.name === "candidate_created" ||
-          action.name === "position_created"
-        ) {
-          return <UserPlus className="text-blue-500 h-4 w-4" />;
-        }
-        return <Info className="text-blue-500 h-4 w-4" />;
-      case "alert":
-        return <AlertTriangle className="text-red-500 h-4 w-4" />;
-      case "update":
-        switch (action.name) {
-          case "assessment_completed":
-            return <CheckCircle className="text-green-500 h-4 w-4" />;
-          case "interview_scheduled":
-            return <Calendar className="text-purple-500 h-4 w-4" />;
-          case "candidate_updated":
-          case "position_updated":
-            return <Edit className="text-orange-500 h-4 w-4" />;
-          default:
-            return <RefreshCw className="text-green-500 h-4 w-4" />;
-        }
-      default:
-        return <Info className="text-gray-500 h-4 w-4" />;
-    }
-  };
+  // const getFeedIcon = (type, action) => {
+  //   switch (type) {
+  //     case "info":
+  //       if (
+  //         action.name === "candidate_created" ||
+  //         action.name === "position_created"
+  //       ) {
+  //         return <UserPlus className="text-blue-500 h-4 w-4" />;
+  //       }
+  //       return <Info className="text-blue-500 h-4 w-4" />;
+  //     case "alert":
+  //       return <AlertTriangle className="text-red-500 h-4 w-4" />;
+  //     case "update":
+  //       switch (action.name) {
+  //         case "assessment_completed":
+  //           return <CheckCircle className="text-green-500 h-4 w-4" />;
+  //         case "interview_scheduled":
+  //           return <Calendar className="text-purple-500 h-4 w-4" />;
+  //         case "candidate_updated":
+  //         case "position_updated":
+  //           return <Edit className="text-orange-500 h-4 w-4" />;
+  //         default:
+  //           return <RefreshCw className="text-green-500 h-4 w-4" />;
+  //       }
+  //     default:
+  //       return <Info className="text-gray-500 h-4 w-4" />;
+  //   }
+  // };
 
   const getFeedTypeStyle = (type) => {
     switch (type) {
@@ -281,36 +280,37 @@ function Activity({ parentId, parentId2, mode }) {
     }
   };
 
-  const getFieldIcon = (fieldName) => {
-    switch (fieldName) {
-      case "status":
-        return <Tag className="text-gray-400" />;
-      case "expectedSalary":
-      case "minSalary":
-      case "maxSalary":
-        return <DollarSign className="text-gray-400" />;
-      case "email":
-      case "Email":
-        return <Mail className="text-gray-400" />;
-      case "location":
-      case "Location":
-        return <MapPin className="text-gray-400" />;
-      case "yearsOfExperience":
-      case "minexperience":
-      case "maxexperience":
-      case "CurrentExperience":
-      case "RelevantExperience":
-        return <Star className="text-gray-400 h-4 w-4" />;
-      case "skills":
-        return <Tag className="text-gray-400 h-4 w-4" />;
-      case "Phone":
-        return <Phone className="text-gray-400 h-4 w-4" />;
-      default:
-        return <Edit className="text-gray-400 h-4 w-4" />;
-    }
-  };
+  // const getFieldIcon = (fieldName) => {
+  //   switch (fieldName) {
+  //     case "status":
+  //       return <Tag className="text-gray-400" />;
+  //     case "expectedSalary":
+  //     case "minSalary":
+  //     case "maxSalary":
+  //       return <DollarSign className="text-gray-400" />;
+  //     case "email":
+  //     case "Email":
+  //       return <Mail className="text-gray-400" />;
+  //     case "location":
+  //     case "Location":
+  //       return <MapPin className="text-gray-400" />;
+  //     case "yearsOfExperience":
+  //     case "minexperience":
+  //     case "maxexperience":
+  //     case "CurrentExperience":
+  //     case "RelevantExperience":
+  //       return <Star className="text-gray-400 h-4 w-4" />;
+  //     case "skills":
+  //       return <Tag className="text-gray-400 h-4 w-4" />;
+  //     case "Phone":
+  //       return <Phone className="text-gray-400 h-4 w-4" />;
+  //     default:
+  //       return <Edit className="text-gray-400 h-4 w-4" />;
+  //   }
+  // };
 
   // NEW: Function to render skills in a beautiful way
+
   const renderSkills = (skills) => {
     if (!skills || !Array.isArray(skills)) return null;
 
@@ -403,12 +403,12 @@ function Activity({ parentId, parentId2, mode }) {
                       "tenantId",
 
                       "title",
-                    ].includes(key)
+                    ].includes(key),
                 )
                 .slice(0, 4)
                 .map(([key, value]) => (
                   <div key={key} className="flex items-center space-x-2">
-                    {getFieldIcon(key)}
+                    {/* {getFieldIcon(key)} */}
                     <span className="text-gray-600 capitalize sm:text-xs">
                       {key.replace(/([A-Z])/g, " $1").trim()}:
                     </span>
@@ -433,8 +433,52 @@ function Activity({ parentId, parentId2, mode }) {
         // Don't show update cases for Position Round parentObject
 
         return (
+          // <div className="space-y-4">
+          //   <div className="grid grid-cols-1 gap-4">
+          //     {Object.entries(metadata)
+          //       .filter(
+          //         ([key]) =>
+          //           ![
+          //             "round",
+          //             "rounds",
+          //             "tenantId",
+          //             "ownerId",
+          //             "CreatedBy",
+          //             "LastModifiedById",
+          //             "updatedBy",
+          //           ].includes(key)
+          //       )
+          //       .slice(0, 4)
+          //       .map(([key, value]) => (
+          //         <div key={key} className="flex items-center space-x-2 bg-red-500">
+          //           {/* {getFieldIcon(key)} */}
+          //           <span className="text-gray-600 capitalize sm:text-xs">
+          //             {key.replace(/([A-Z])/g, " $1").trim()}:
+          //           </span>
+          //           <span className="font-medium sm:text-xs">
+          //             {key === "skills" ? (
+          //               renderSkills(value)
+          //             ) : (
+          //               <ResponsiveText
+          //                 value={formatValue(key, value)}
+          //                 className="font-medium truncate sm:text-xs"
+          //               />
+          //             )}
+
+          //             {/* <ResponsiveText
+          //             value={formatValue(key, value)}
+          //             className="font-medium truncate"
+          //           /> */}
+
+          //             {/* {formatValue(key, value)} */}
+          //           </span>
+          //         </div>
+          //       ))}
+          //   </div>
+          // </div>
           <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
+            {/* Step 1: Changed grid-cols-1 to a flex-wrap container */}
+            <div className="flex flex-wrap gap-4">
               {Object.entries(metadata)
                 .filter(
                   ([key]) =>
@@ -446,32 +490,32 @@ function Activity({ parentId, parentId2, mode }) {
                       "CreatedBy",
                       "LastModifiedById",
                       "updatedBy",
-                    ].includes(key)
+                    ].includes(key),
                 )
                 .slice(0, 4)
                 .map(([key, value]) => (
-                  <div key={key} className="flex items-center space-x-2">
-                    {getFieldIcon(key)}
-                    <span className="text-gray-600 capitalize sm:text-xs">
+                  /* Step 2: Added flex-wrap and adjusted spacing */
+                  <div
+                    key={key}
+                    className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-fit max-w-full"
+                  >
+                    {/* Label: Added whitespace-nowrap to prevent the label itself from breaking */}
+                    <span className="text-gray-600 capitalize text-sm sm:text-xs whitespace-nowrap">
                       {key.replace(/([A-Z])/g, " $1").trim()}:
                     </span>
-                    <span className="font-medium sm:text-xs">
+
+                    {/* Value: Removed fixed wrapping span to let flex-wrap do the work */}
+                    <div className="font-medium text-sm sm:text-xs">
                       {key === "skills" ? (
                         renderSkills(value)
                       ) : (
                         <ResponsiveText
                           value={formatValue(key, value)}
-                          className="font-medium truncate sm:text-xs"
+                          /* Changed truncate to break-words so it flows to next line instead of cutting off */
+                          className="font-medium break-words"
                         />
                       )}
-
-                      {/* <ResponsiveText 
-                      value={formatValue(key, value)} 
-                      className="font-medium truncate" 
-                    /> */}
-
-                      {/* {formatValue(key, value)} */}
-                    </span>
+                    </div>
                   </div>
                 ))}
             </div>
@@ -491,8 +535,8 @@ function Activity({ parentId, parentId2, mode }) {
                 .filter(
                   ({ fieldName }) =>
                     !["round", "rounds", "updatedBy", "createdBy"].includes(
-                      fieldName
-                    )
+                      fieldName,
+                    ),
                 )
                 .map(
                   ({ fieldName, message }, index) =>
@@ -525,11 +569,11 @@ function Activity({ parentId, parentId2, mode }) {
                         ) : (
                           // Regular field comparison
                           <div className="flex sm:flex-col sm:items-start items-center sm:space-y-2 sm:space-x-0 space-x-2 ml-6">
-                            <span className="px-3 py-1.5 sm:text-xs rounded bg-white border border-gray-200 text-gray-600 min-w-[100px] text-center">
+                            <span className="px-3 py-1.5 text-xs rounded bg-white border border-gray-200 text-gray-600 min-w-[100px] text-center">
                               <ResponsiveText
                                 value={formatValue(
                                   fieldName,
-                                  feed?.history[index]?.oldValue
+                                  feed?.history[index]?.oldValue,
                                 )}
                               />
                             </span>
@@ -538,7 +582,7 @@ function Activity({ parentId, parentId2, mode }) {
                               <ResponsiveText
                                 value={formatValue(
                                   fieldName,
-                                  feed?.history[index]?.newValue
+                                  feed?.history[index]?.newValue,
                                 )}
                               />
                             </span>
@@ -559,7 +603,7 @@ function Activity({ parentId, parentId2, mode }) {
                           </span>
                         </div> */}
                       </div>
-                    )
+                    ),
                 )
             ) : (
               <div>No changes recorded</div>
@@ -633,8 +677,8 @@ function Activity({ parentId, parentId2, mode }) {
                               field.toLowerCase() ||
                             msg.message
                               ?.toLowerCase()
-                              .includes(field.toLowerCase())
-                        )
+                              .includes(field.toLowerCase()),
+                        ),
                     )
                     .map((msg, i) => (
                       <li key={i}>{msg.message}</li>
@@ -724,7 +768,7 @@ function Activity({ parentId, parentId2, mode }) {
                           <span className="font-medium">{score}%</span>
                         </div>
                       </div>
-                    )
+                    ),
                   )}
               </div>
               <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between text-sm text-gray-500">
@@ -830,9 +874,9 @@ function Activity({ parentId, parentId2, mode }) {
                   <div className="space-y-2">
                     <div className="flex sm:flex-col flex-row justify-between items-start gap-2">
                       <div className="flex items-center gap-4">
-                        <div className="bg-white rounded-full p-2 shadow-sm">
+                        {/* <div className="bg-white rounded-full p-2 shadow-sm">
                           {getFeedIcon(feed.feedType, feed?.action)}
-                        </div>
+                        </div> */}
                         <div className="min-w-0 flex-1">
                           <h4
                             className={`sm:text-xs font-medium ${styles.text} truncate`}
@@ -842,10 +886,10 @@ function Activity({ parentId, parentId2, mode }) {
                             feed?.action?.name === "position_created"
                               ? "Position Round Was Created"
                               : feed.parentObject === "Position" &&
-                                mode === "round" &&
-                                feed?.action?.name === "position_updated"
-                              ? "Position Round Was Updated"
-                              : feed?.action?.description}
+                                  mode === "round" &&
+                                  feed?.action?.name === "position_updated"
+                                ? "Position Round Was Updated"
+                                : feed?.action?.description}
                           </h4>
                           <div className="flex flex-wrap items-center mt-1 gap-2 text-sm text-gray-500">
                             <div className="flex items-center">
@@ -857,7 +901,7 @@ function Activity({ parentId, parentId2, mode }) {
                             <span className="hidden sm:inline">•</span>
                             <time className="sm:text-xs flex-shrink-0">
                               {formatDate(
-                                feed?.metadata?.changedAt || feed?.createdAt
+                                feed?.metadata?.changedAt || feed?.createdAt,
                               )}
                             </time>
                           </div>
