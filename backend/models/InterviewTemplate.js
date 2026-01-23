@@ -4,17 +4,19 @@ const mongoose = require("mongoose");
 // Interview Template Schema
 const InterviewTemplateSchema = new mongoose.Schema(
   {
-    // <------------------------------- v1.0.0 
+    // <------------------------------- v1.0.0
     interviewTemplateCode: { type: String },
     // ------------------------------ v1.0.0 >
     title: { type: String, required: true }, // Template title
     name: { type: String, required: true }, // Template name
     description: { type: String }, // Template purpose
-    bestFor: { type: String, maxlength: 50,
+    bestFor: {
+      type: String,
+      maxlength: 50,
       //  required: true
-       }, // Best for description, max 50 chars
-    format: { 
-      type: String, 
+    }, // Best for description, max 50 chars
+    format: {
+      type: String,
       // required: true,
       // enum: ["online", "hybrid", "offline"],
       // default: "online"
@@ -45,14 +47,15 @@ const InterviewTemplateSchema = new mongoose.Schema(
         selectedInterviewers: [{ type: String }],
         interviewerType: { type: String },
         selectedInterviewersType: { type: String }, // user or group
-        interviewerGroupId: { type: String },
-       
+        // interviewerGroupId: { type: String },
+        InterviewerTags: [
+          { type: mongoose.Schema.Types.ObjectId, ref: "InterviewerTag" },
+        ],
+        TeamsIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "MyTeams" }],
         interviewers: [
           { type: mongoose.Schema.Types.ObjectId, ref: "Contacts" },
         ],
-       
         sequence: Number,
-       
         questions: [
           {
             questionId: { type: mongoose.Schema.Types.Mixed, required: true },
@@ -69,7 +72,7 @@ const InterviewTemplateSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("InterviewTemplate", InterviewTemplateSchema);

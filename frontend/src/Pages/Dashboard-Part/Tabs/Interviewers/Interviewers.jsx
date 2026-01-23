@@ -29,16 +29,17 @@ import { usePermissions } from "../../../../Context/PermissionsContext";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 
 // Card Component for Kanban View
-const InterviewerCard = ({
+export const InterviewerCard = ({
   interviewer,
   onEdit,
   onDelete,
   onToggleActive,
   onView,
+  from,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
-
+  console.log("interviewer", interviewer);
   React.useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -50,7 +51,7 @@ const InterviewerCard = ({
   }, []);
 
   const isActive = interviewer.is_active;
-  console.log(interviewer);
+  // console.log(interviewer);
   // Get display values
   let displayName = interviewer.full_name;
   let displayEmail = interviewer.email;
@@ -71,7 +72,12 @@ const InterviewerCard = ({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow h-full flex flex-col justify-between">
+    <div
+      className={
+        from !== "outsource-interview" &&
+        `bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow h-full flex flex-col justify-between`
+      }
+    >
       <div>
         <div className="flex justify-between items-start mb-4">
           <div className="flex gap-4">
@@ -97,13 +103,17 @@ const InterviewerCard = ({
             </div>
           </div>
 
+          {/* Menu Button */}
+
           <div className="relative" ref={menuRef}>
-            <button
-              onClick={() => setShowMenu(!showMenu)}
-              className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600"
-            >
-              <MoreVertical size={18} />
-            </button>
+            {from !== "outsource-interview" && (
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600"
+              >
+                <MoreVertical size={18} />
+              </button>
+            )}
 
             {showMenu && (
               <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
@@ -189,27 +199,28 @@ const InterviewerCard = ({
           </div>
         </div>
       </div>
-
-      <div className="flex justify-between items-center pt-2 mt-auto">
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-10 h-5 flex items-center rounded-full p-1 duration-300 ease-in-out ${isActive ? "bg-black" : "bg-gray-300"}`}
-          >
+      {from !== "outsource-interview" && (
+        <div className="flex justify-between items-center pt-2 mt-auto">
+          <div className="flex items-center gap-2">
             <div
-              className={`bg-white w-3 h-3 rounded-full shadow-md transform duration-300 ease-in-out ${isActive ? "translate-x-5" : ""}`}
-            ></div>
+              className={`w-10 h-5 flex items-center rounded-full p-1 duration-300 ease-in-out ${isActive ? "bg-black" : "bg-gray-300"}`}
+            >
+              <div
+                className={`bg-white w-3 h-3 rounded-full shadow-md transform duration-300 ease-in-out ${isActive ? "translate-x-5" : ""}`}
+              ></div>
+            </div>
+            <span className="text-sm text-gray-600">Active</span>
           </div>
-          <span className="text-sm text-gray-600">Active</span>
-        </div>
 
-        <button
-          onClick={() => onView(interviewer._id)}
-          className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          <Eye size={14} />
-          View
-        </button>
-      </div>
+          <button
+            onClick={() => onView(interviewer?._id)}
+            className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <Eye size={14} />
+            View
+          </button>
+        </div>
+      )}
     </div>
   );
 };
