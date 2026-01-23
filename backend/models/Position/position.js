@@ -9,9 +9,11 @@ const roundSchema = new mongoose.Schema(
     interviewerType: String, // internal or external
     duration: Number,
     instructions: String,
-    // interviewerGroupName: { type: String },
-    interviewerGroupId: { type: String },
-
+    // interviewerGroupId: { type: String },
+    InterviewerTags: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "InterviewerTag" },
+    ],
+    TeamsIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "MyTeams" }],
     interviewerViewType: { type: String },
     selectedInterviewersType: { type: String },
     interviewers: [
@@ -31,7 +33,7 @@ const roundSchema = new mongoose.Schema(
   },
   {
     timestamps: true, // ⏱️ Automatically adds createdAt and updatedAt
-  }
+  },
 );
 
 const positionSchema = new mongoose.Schema(
@@ -46,7 +48,10 @@ const positionSchema = new mongoose.Schema(
     requirements: { type: String, required: true },
     minexperience: Number,
     maxexperience: Number,
-    templateId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewTemplate' },
+    templateId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "InterviewTemplate",
+    },
     skills: [
       {
         skill: String,
@@ -54,9 +59,9 @@ const positionSchema = new mongoose.Schema(
         expertise: String,
         requirement_level: {
           type: String,
-          enum: ['REQUIRED', 'PREFERRED', 'NICE_TO_HAVE', 'OPTIONAL'],
-          default: 'REQUIRED'
-        }
+          enum: ["REQUIRED", "PREFERRED", "NICE_TO_HAVE", "OPTIONAL"],
+          default: "REQUIRED",
+        },
       },
     ],
     additionalNotes: String,
@@ -69,7 +74,11 @@ const positionSchema = new mongoose.Schema(
     maxSalary: String,
     // EmployementType:String,
     NoofPositions: Number,
-    status: { type: String, enum: ["draft", "opened", "closed", "hold"], default: "draft" },
+    status: {
+      type: String,
+      enum: ["draft", "opened", "closed", "hold"],
+      default: "draft",
+    },
     employmentType: { type: String },
     Location: String,
     // workMode:String,
@@ -81,7 +90,7 @@ const positionSchema = new mongoose.Schema(
     // Mansoor: added external id for creating the external id only from the external hrms applications
     externalId: { type: String, sparse: true, index: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Position =

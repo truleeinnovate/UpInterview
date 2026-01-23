@@ -74,7 +74,7 @@ function RoundFormTemplates() {
     useInterviewtemplateDetails(id);
   const { data: tagsData = [] } = useInterviewerTags({ active_only: true });
   const { data: teamsData = [] } = useTeamsQuery();
-  const { data: interviewers = [] } = useAllInterviewers({ active_only: true });
+  // const { data: interviewers = [] } = useAllInterviewers({ active_only: true });
 
   const dropdownRef = useRef(null);
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
@@ -88,9 +88,6 @@ function RoundFormTemplates() {
   const [activeButton, setActiveButton] = useState(null); // 'save' or 'add' or null
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [selectedTeamIds, setSelectedTeamIds] = useState([]);
-
-  console.log("selectedTagIds RoundFormTemplates", selectedTagIds);
-  console.log("selectedTeamIds RoundFormTemplates", selectedTeamIds);
 
   const [formData, setFormData] = useState({
     roundTitle: "",
@@ -548,7 +545,7 @@ function RoundFormTemplates() {
     setFormData((prev) => ({
       ...prev,
       interviewers: prev.interviewers.filter((interviewer) => {
-        const userId = interviewer?.user_id?._id || interviewer?._id;
+        const userId = interviewer?.contactId?._id || interviewer?._id;
         return userId !== interviewerId;
       }),
       interviewerType:
@@ -892,8 +889,8 @@ function RoundFormTemplates() {
       // console.log("formData.interviewers", formData.interviewers);
       formattedInterviewers = formData.interviewers.map((interviewer) =>
         organization
-          ? interviewer?.user_id?._id || interviewer?._id
-          : interviewer?.user_id?._id || interviewer?._id,
+          ? interviewer?.contactId?._id || interviewer?._id
+          : interviewer?.contactId?._id || interviewer?._id,
       );
 
       // console.log("formattedInterviewers", formattedInterviewers);
@@ -942,8 +939,6 @@ function RoundFormTemplates() {
         //     : "", // added newly
         // interviewerViewType: isAssessment ? "" : formData.interviewerViewType,
       };
-
-      console.log("roundData roundData", roundData);
 
       // Only add assessmentId for Assessment rounds
       if (isAssessment && formData.assessmentTemplate?.assessmentId) {
@@ -1841,13 +1836,14 @@ function RoundFormTemplates() {
                                         <div className="flex items-center">
                                           <User className="h-4 w-4 text-blue-600 mr-2" />
                                           <span className="text-sm font-medium text-blue-900 truncate">
-                                            {`${interviewer?.user_id?.firstName || interviewer?.firstName || ""} ${
-                                              interviewer?.user_id?.lastName ||
+                                            {`${interviewer?.contactId?.firstName || interviewer?.firstName || ""} ${
+                                              interviewer?.contactId
+                                                ?.lastName ||
                                               interviewer?.lastName ||
                                               ""
                                             }`.trim() ||
                                               interviewer?.email ||
-                                              interviewer?.user_id?.email}
+                                              interviewer?.contactId?.email}
                                           </span>
                                         </div>
                                         <button
