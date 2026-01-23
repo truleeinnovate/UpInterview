@@ -398,7 +398,7 @@ const InternalInterviews = ({
     >
       <div className="flex flex-col h-full">
         {/* <------------------------------- v1.0.0  */}
-        <div className="flex w-full items-start justify-between bg-white px-3 py-3 border-b">
+        <div className="flex w-full items-start justify-between bg-white px-3 py-3">
           <div className="flex flex-col gap-3">
             {/* Left: Selected count */}
             <p className="text-sm text-gray-600">
