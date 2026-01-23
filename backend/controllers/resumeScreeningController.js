@@ -57,6 +57,51 @@ exports.screenResume = async (req, res) => {
                 // 1. Parse Resume
                 const parsedData = await parseResume(file.buffer, file.originalname);
 
+                if (!parsedData.name && (parsedData.fullText || parsedData.resumeText)) {
+                    const text = parsedData.fullText || parsedData.resumeText || '';
+
+                    const lines = text
+                        .split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0);
+
+                    if (lines.length > 0) {
+                        let possibleName = lines[0];
+
+                        const looksLikeName =
+                            possibleName.length >= 5 &&
+                            possibleName.length <= 60 &&
+                            !possibleName.includes('@') &&
+                            !possibleName.match(/^\+?\d/) &&
+                            !/\d{9,}/.test(possibleName) &&
+                            !possibleName.toLowerCase().includes('resume') &&
+                            !possibleName.toLowerCase().includes('cv') &&
+                            !possibleName.toLowerCase().match(/^(mr|ms|miss|mrs|dr|prof)/i);
+
+                        if (looksLikeName) {
+                            parsedData.name = possibleName;
+                            console.log("Name fallback applied (first line):", parsedData.name);
+                        }
+                        // Optional: second line fallback
+                        else if (lines.length >= 2) {
+                            possibleName = lines[1];
+                            if (possibleName.length >= 5 && possibleName.length <= 50 && !possibleName.includes('@')) {
+                                parsedData.name = possibleName;
+                                console.log("Name fallback applied (second line):", parsedData.name);
+                            }
+                        }
+                    }
+
+                    // Very last fallback — from filename
+                    if (!parsedData.name) {
+                        parsedData.name = file.originalname
+                            .replace(/\.[^/.]+$/, '')
+                            .replace(/_/g, ' ')
+                            .trim() || 'Candidate';
+                        console.log("Name fallback from filename:", parsedData.name);
+                    }
+                }
+
                 if (!parsedData) {
                     errors.push({
                         fileName: file.originalname,
@@ -166,6 +211,8 @@ exports.screenResume = async (req, res) => {
                     candidateName: finalName || 'Unknown Candidate',
                     candidateEmail: finalEmail,
                     candidatePhone: finalPhone,
+                    candidateCountryCode: metadata.extractedProfile?.countryCode || parsedData.countryCode || null,  // ← add this
+                    candidatePhoneNumber: metadata.extractedProfile?.phoneNumber || parsedData.phoneNumber || null,
 
                     // Parsed Data
                     parsedSkills: resumeData.skills,
@@ -195,6 +242,7 @@ exports.screenResume = async (req, res) => {
                             name: finalName,
                             email: finalEmail,
                             phone: finalPhone,
+                            countryCode: metadata.extractedProfile?.countryCode || parsedData.countryCode || null,
                             skills: resumeData.skills,
                             experience: finalExperience,
                             education: finalEducation
@@ -309,6 +357,7 @@ exports.createCandidatesFromScreening = async (req, res) => {
                         // name: result.candidateName || 'Unknown', // Removed legacy field if strictly using First/Last
                         Email: result.candidateEmail?.toLowerCase() || '',
                         Phone: result.candidatePhone || '',
+                        CountryCode: result.candidateCountryCode || '+91',
                         linkedInUrl: result.metadata?.linkedIn || result.candidateLinkedIn || '',
                         source: 'Resume Upload',
                         status: 'New',

@@ -28,7 +28,7 @@ async function parseResume(pdfBuffer, fileName, position = null) {
 
         const name = extractName(text, fileName);
         const email = extractEmail(text);
-        const phone = extractPhone(text);
+        const phoneObj = extractPhone(text);
         const skills = extractSkills(text);
         const experience = extractExperience(text);
         const education = extractEducation(text);
@@ -40,9 +40,11 @@ async function parseResume(pdfBuffer, fileName, position = null) {
 
         const parsedData = {
             success: true,
-            name,
+            name: name || null,
             email: email || (name ? `${name.toLowerCase().replace(/\s+/g, ".")}@email.com` : null),
-            phone: phone || "Not provided",
+            phone: phoneObj?.full || "Not provided",
+            countryCode: phoneObj?.countryCode || null,
+            phoneNumber: phoneObj?.number || null,
             linkedInUrl,
             experience: experience || calculateTotalExperience(workHistory) || "Not specified",
             education: education || "Not specified",
@@ -92,59 +94,177 @@ function extractEmail(text) {
  */
 function extractPhone(text) {
     const phonePatterns = [
-        /(?:phone|tel|mobile|cell):\s*([\+\d\s\-\(\)\.]+)/gi,
+        /(?:phone|tel|mobile|cell|contact):\s*([+\d\s\-\(\)\.]+)/gi,
         /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g,
         /\+?\d{1,3}[\s-]?\d{3}[\s-]?\d{3}[\s-]?\d{4}/g,
     ];
 
     for (const pattern of phonePatterns) {
-        const matches = text.match(pattern);
-        if (matches && matches.length > 0) {
-            const phone = matches[0].replace(/^(?:phone|tel|mobile|cell):\s*/gi, "").trim();
-            if (phone.replace(/\D/g, "").length >= 10) {
-                return phone;
+        const matches = [...text.matchAll(pattern)];
+        if (matches.length > 0) {
+            // Take the first valid-looking phone match
+            let fullPhone = matches[0][0]
+                .replace(/^(?:phone|tel|mobile|cell|contact):\s*/gi, "")
+                .trim()
+                .replace(/[^\d+]/g, '');  // remove all non-digits except +
+
+            if (fullPhone.length < 10) continue;
+
+            let countryCode = '';
+            let number = fullPhone;
+
+            // Priority 1: Indian numbers (very common in your data)
+            if (fullPhone.startsWith('+91') || fullPhone.startsWith('91')) {
+                countryCode = '+91';
+                number = fullPhone.replace(/^\+?91/, '');
+            }
+            // Priority 2: Starts with + followed by 1-3 digits
+            else if (fullPhone.startsWith('+')) {
+                // Try known short codes first (+1, +44, +91, etc.)
+                const shortCcPatterns = [/^\+91/, /^\+1/, /^\+44/, /^\+971/, /^\+20/, /^\+60/];
+                for (const ccPat of shortCcPatterns) {
+                    if (ccPat.test(fullPhone)) {
+                        countryCode = fullPhone.match(ccPat)[0];
+                        number = fullPhone.slice(countryCode.length);
+                        break;
+                    }
+                }
+
+                // If no short match, take 1-3 digits but only if remaining >=7 digits
+                if (!countryCode) {
+                    const ccMatch = fullPhone.match(/^\+(\d{1,3})(?=\d{7,})/);
+                    if (ccMatch) {
+                        countryCode = '+' + ccMatch[1];
+                        number = fullPhone.slice(countryCode.length);
+                    }
+                }
+            }
+
+            // Clean number: remove leading zeros
+            number = number.replace(/^0+/, '');
+
+            // Final validation
+            if (number.length >= 7 && number.length <= 15) {
+                return {
+                    full: (countryCode + number).replace(/^(\+)?/, ''), // clean full without extra +
+                    countryCode: countryCode || '+91',                 // default India
+                    number: number
+                };
             }
         }
     }
 
     return null;
 }
-
 /**
- * Extract candidate name from text
+ * Extract candidate name from text - balanced for fresher + professional resumes
  */
 function extractName(text, filename) {
-    const lines = text.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
+    if (!text) return null;
 
-    for (let i = 0; i < Math.min(5, lines.length); i++) {
-        const line = lines[i];
+    const lines = text.split("\n")
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
 
-        // Skip header lines
-        if (line.toLowerCase().includes("resume") || line.toLowerCase().includes("curriculum") || line.toLowerCase().includes("cv")) {
-            continue;
+    if (lines.length === 0) return null;
+
+    console.log("First few raw lines for name extraction:");
+    lines.slice(0, 4).forEach((l, i) => console.log(`  Line ${i + 1}: "${l}"`));
+
+    const header = lines[0];
+
+    // ───────────────────────────────────────────────
+    // Strategy 1: Aggressive cut for fresher-style resumes
+    // (name followed by Contact:/E-MAIL ID:/Objective:/DOB etc.)
+    // ───────────────────────────────────────────────
+    const fresherCutPatterns = [
+        /Contact:/i,
+        /E-?MAIL\s*ID?:/i,
+        /Email:/i,
+        /Phone:/i,
+        /Mobile:/i,
+        /Career\s+Objective/i,
+        /Objective:/i,
+        /Personal\s+Details/i,
+        /Date\s+of\s+Birth/i,
+        /DOB/i
+    ];
+
+    let namePart = header;
+    let usedStrategy = null;
+
+    for (const pattern of fresherCutPatterns) {
+        const match = header.match(pattern);
+        if (match && match.index > 5) {  // make sure there's something before the marker
+            namePart = header.substring(0, match.index).trim();
+            usedStrategy = `Fresher cut at "${match[0]}"`;
+            console.log(`${usedStrategy} → "${namePart}"`);
+            break;
         }
+    }
 
-        // Skip lines with email or phone
-        if (line.includes("@") || /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(line)) {
-            continue;
-        }
+    // ───────────────────────────────────────────────
+    // Strategy 2: Conservative split for professional resumes
+    // (name + title + Email: | Phone: | Location:)
+    // ───────────────────────────────────────────────
+    if (!usedStrategy) {
+        const proSeparators = [/Email:/i, /E-mail:/i, /\|/, /Phone:/i, /Location:/i];
 
-        // Look for name pattern
-        if (line.length > 3 && line.length < 60) {
-            const nameMatch = line.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
-            if (nameMatch) {
-                return nameMatch[0];
-            }
-
-            // All caps name
-            if (/^[A-Z\s]+$/.test(line) && line.split(/\s+/).length >= 2 && line.split(/\s+/).length <= 5) {
-                return line.split(/\s+/).map((word) => word.charAt(0) + word.slice(1).toLowerCase()).join(" ");
+        for (const sep of proSeparators) {
+            if (sep.test(header)) {
+                const parts = header.split(sep);
+                namePart = parts[0].trim();
+                usedStrategy = `Professional split at "${sep}"`;
+                console.log(`${usedStrategy} → "${namePart}"`);
+                break;
             }
         }
     }
 
-    // Fallback to filename - REMOVED to allow AI to find it from text if regex fails
-    // or to handle fallback in controller
+    // ───────────────────────────────────────────────
+    // Clean title / trailing junk from both strategies
+    // ───────────────────────────────────────────────
+    const titleCleanup = [
+        /\s+(Senior|Lead|Principal|Full\s*Stack|Software|Frontend|Backend|MERN|MERN\s+Stack|MEAN|Developer|Engineer|Architect|Manager|Consultant|Intern|Jr\.?|Sr\.?|with\s+\d+\+?\s*(years?|yrs?)).*$/i,
+        /\s+Developer\s+with.*$/i
+    ];
+
+    for (const pattern of titleCleanup) {
+        namePart = namePart.replace(pattern, '').trim();
+    }
+
+    // Final clean
+    namePart = namePart
+        .replace(/\s+/g, ' ')
+        .replace(/,$/, '')
+        .trim();
+
+    // ───────────────────────────────────────────────
+    // Validate - accept if looks like real name
+    // ───────────────────────────────────────────────
+    const words = namePart.split(/\s+/);
+    if (
+        namePart.length >= 6 &&
+        namePart.length <= 45 &&
+        /[A-Z]/.test(namePart) &&
+        !/\d{3,}/.test(namePart) &&
+        !namePart.includes('@') &&
+        !namePart.includes('http') &&
+        words.length >= 2 &&
+        words.length <= 5
+    ) {
+        // Proper title case
+        namePart = namePart
+            .toLowerCase()
+            .split(' ')
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ');
+
+        console.log(`Accepted name (${usedStrategy || 'fallback'}): "${namePart}"`);
+        return namePart;
+    }
+
+    console.log("No good name candidate after cleaning - will fallback to filename");
     return null;
 }
 
@@ -186,22 +306,54 @@ function extractSkills(text) {
  * Extract experience years from text
  */
 function extractExperience(text) {
-    const experiencePatterns = [
-        /(\d+)\+?\s*years?\s+(?:of\s+)?(?:professional\s+)?experience/i,
-        /experience:?\s*(\d+)\+?\s*years?/i,
-        /(\d+)\+?\s*yrs?\s+(?:of\s+)?experience/i,
-        /(?:over|more than)\s+(\d+)\s+years/i,
-        /(\d+)\+\s*years/i,
+    const patterns = [
+        // Direct mentions
+        /(\d{1,2})\+?\s*(?:\+)?\s*(years?|yrs?|year|yr)\s*(?:of\s+)?(?:experience|exp|professional\s+experience)/i,
+        /experience\s*(?:of\s*)?(\d{1,2})\+?\s*(years?|yrs?|year|yr)/i,
+        /(\d{1,2})\+?\s*(years?|yrs?|year|yr)\s*(?:\+)?\s*experience/i,
+        /(?:over|more than|approximately|around|about)\s+(\d{1,2})\s*(years?|yrs?|year|yr)/i,
+        /(\d{1,2})\s*(?:to|-)\s*(\d{1,2})\s*(years?|yrs?|year|yr)/i, // range like 5-8 years
+
+        // In sentence form
+        /with\s+(\d{1,2})\+?\s*(years?|yrs?|year|yr)\s*(?:of\s+)?experience/i,
+        /having\s+(\d{1,2})\+?\s*(years?|yrs?|year|yr)\s*(?:of\s+)?experience/i,
+        /(\d{1,2})\+?\s*years?\s+in\s+(?:development|it|software|industry)/i,
+
+        // From work history lines (common in fresher resumes)
+        /\((\d{4})\s*[-–—]\s*(?:present|current|now|\d{4})\)/gi,
     ];
 
-    for (const pattern of experiencePatterns) {
+    // First try keyword-based patterns
+    for (const pattern of patterns) {
         const match = text.match(pattern);
         if (match) {
-            const years = parseInt(match[1]);
-            if (years >= 0 && years <= 50) {
-                return `${years} years`;
+            if (match.length >= 3 && match[1] && match[2]) {
+                // Range like 2018 - 2023 → ~5 years
+                const start = parseInt(match[1]);
+                const end = match[2].toLowerCase().includes('present') ? new Date().getFullYear() : parseInt(match[2]);
+                if (end > start) return `${end - start} years`;
+            } else if (match[1]) {
+                const years = parseInt(match[1]);
+                if (years >= 0 && years <= 40) {
+                    return `${years} years`;
+                }
             }
         }
+    }
+
+    // Fallback: count years from date ranges in work history
+    const dateRangePattern = /(\d{4})\s*[-–—]\s*(\d{4}|present|current|now)/gi;
+    const matches = [...text.matchAll(dateRangePattern)];
+    if (matches.length > 0) {
+        let total = 0;
+        matches.forEach(m => {
+            const startYear = parseInt(m[1]);
+            let endYear = m[2].toLowerCase().includes('present') || m[2].toLowerCase().includes('current') || m[2].toLowerCase().includes('now')
+                ? new Date().getFullYear()
+                : parseInt(m[2]);
+            if (endYear > startYear) total += (endYear - startYear);
+        });
+        if (total > 0) return `${total} years`;
     }
 
     return null;
@@ -246,23 +398,42 @@ function calculateDurationInYears(durationStr) {
  * Extract education from text
  */
 function extractEducation(text) {
-    const educationPatterns = [
-        /(?:Bachelor|BS|BA|B\.S\.|B\.A\.|B\.Tech|B\.E\.)\s+(?:of\s+)?(?:Science|Arts|Technology|Engineering)?\s+(?:in\s+)?([A-Za-z\s]+?)(?:\n|,|\.|\d)/i,
-        /(?:Master|MS|MA|M\.S\.|M\.A\.|M\.Tech|M\.E\.)\s+(?:of\s+)?(?:Science|Arts|Technology|Engineering)?\s+(?:in\s+)?([A-Za-z\s]+?)(?:\n|,|\.|\d)/i,
-        /(?:PhD|Ph\.D\.)\s+(?:in\s+)?([A-Za-z\s]+?)(?:\n|,|\.|\d)/i,
-        /(?:Diploma)\s+(?:in\s+)?([A-Za-z\s]+?)(?:\n|,|\.|\d)/i,
-        /MBA/i,
+    const patterns = [
+        // Standard degrees
+        /(b\.?tech|b\.?e|bachelor\s*(?:of\s*)?(?:technology|engineering|science|computer\s*science|it))/i,
+        /(m\.?tech|m\.?e|master\s*(?:of\s*)?(?:technology|engineering|science|computer\s*science))/i,
+        /b\.?sc|bachelor\s*of\s*science/i,
+        /m\.?sc|master\s*of\s*science/i,
+        /b\.?a|bachelor\s*of\s*arts/i,
+        /m\.?a|master\s*of\s*arts/i,
+        /b\.?com|bachelor\s*of\s*commerce/i,
+        /mba|master\s*(?:of\s*)?business\s*administration/i,
+        /ph\.?d|doctorate/i,
+        /diploma/i,
+
+        // Indian common formats
+        /b\.?tech\s*\(?(?:cse|it|ece|eee|mech|civil)\)?/i,
+        /bachelor\s*of\s*technology\s*\(?(?:computer\s*science|information\s*technology)\)?/i,
+        /pursuing\s*b\.?tech/i,
+        /\d{4}\s*[-–]\s*\d{4}\s*(?:b\.?tech|m\.?tech|b\.?e|m\.?e)/i,
     ];
 
-    for (const pattern of educationPatterns) {
+    for (const pattern of patterns) {
         const match = text.match(pattern);
         if (match) {
-            if (pattern.source.includes("MBA")) {
-                return "MBA";
-            }
-            const degree = match[0].trim();
+            let degree = match[0].trim();
+            // Clean up
+            degree = degree.replace(/\s*\([^)]*\)/g, '').trim(); // remove (cse) etc.
             return degree.length < 100 ? degree : degree.substring(0, 100);
         }
+    }
+
+    // Fallback: look for any line with "b.tech", "mca", "degree" etc.
+    const fallbackLines = text.split('\n').filter(line => 
+        /b\.?tech|b\.?e|m\.?tech|mca|mba|degree|bachelor|master/i.test(line.toLowerCase())
+    );
+    if (fallbackLines.length > 0) {
+        return fallbackLines[0].trim().substring(0, 100);
     }
 
     return null;
@@ -425,9 +596,10 @@ function calculateTotalExperience(workHistory) {
     let totalYears = 0;
     workHistory.forEach(job => {
         if (job.duration) {
-            totalYears += calculateDurationInYears(job.duration);
+            const years = calculateDurationInYears(job.duration);
+            if (years > 0) totalYears += years;
         }
     });
 
-    return totalYears > 0 ? `${totalYears.toFixed(1)} years` : null;
+    return totalYears > 0 ? `${Math.round(totalYears)} years` : null;
 }
