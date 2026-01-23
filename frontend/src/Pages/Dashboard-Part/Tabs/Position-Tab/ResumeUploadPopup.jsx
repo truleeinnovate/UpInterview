@@ -171,6 +171,8 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                 candidate_name: result.candidateName || 'Unknown',
                 candidate_email: result.candidateEmail || '',
                 candidate_phone: result.candidatePhone || '',
+                candidate_country_code: result.candidateCountryCode || '', 
+                candidate_phone_number: result.candidatePhoneNumber || '',
                 match_percentage: result.matchPercentage ?? null,
                 match_status: result.matchStatus || 'new_candidate',
                 existing_candidate_id: result.existingCandidateId || null,
@@ -247,7 +249,9 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                         // Candidate info
                         candidateName: r.candidate_name,
                         candidateEmail: r.candidate_email,
-                        candidatePhone: r.candidate_phone || '',
+                        candidatePhone: r.candidate_phone_number || r.candidate_phone || '',
+                        candidateCountryCode: r.candidate_country_code || '+91',                 // default India
+
 
                         // Screening scores
                         matchPercentage: r.match_percentage || 0,
