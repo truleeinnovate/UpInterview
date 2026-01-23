@@ -46,6 +46,7 @@ import { Mail } from "lucide-react";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { formatDateTime } from "../../../../utils/dateFormatter";
 import CandidateViewer from "../../../../Components/CandidateViewer";
+import Candidate from "../Candidate-Tab/Candidate";
 
 import ApplicationView from "./ApplicationView";
 
@@ -241,24 +242,36 @@ const PositionCandidatesTab = ({ positionId, position }) => {
   const [viewingCandidate, setViewingCandidate] = useState(null);
 
   // Map applications to the structure expected by the table (flattening candidateId)
-  const candidatesData = applications.map(app => {
-    const candidate = app.candidateId || {};
-    return {
-      ...candidate,
-      _id: candidate._id,
-      applicationId: app._id,
-      applicationStatus: app.status,
-      applicationDate: app.createdAt,
-      applicationStatus: app.status,
-      applicationDate: app.createdAt,
-      screeningScore: app.screeningScore,
-      screeningDecision: app.screeningDecision,
-      screeningSummary: app.screeningSummary, // Assuming this might exist or we map it
+  const formattedCandidates = (apps) => {
+    return (Array.isArray(apps) ? apps : []).map((app) => {
+      const candidate = app.candidateId || {};
+      return {
+        // Properties expected by Candidate component
+        id: candidate._id,
+        _id: candidate._id,
+        FirstName: candidate.FirstName || "Unknown",
+        LastName: candidate.LastName || "",
+        Email: candidate.Email || "No email",
+        Phone: candidate.Phone || "N/A",
+        CountryCode: candidate.CountryCode || "",
+        HigherQualification: candidate.HigherQualification || "N/A",
+        CurrentExperience: candidate.CurrentExperience || "N/A",
+        skills: candidate.skills || [],
+        ImageData: candidate.ImageData || null,
+        currentRoleLabel: candidate.CurrentRole || "N/A", // Added specifically for Candidate component display
+        createdAt: app.createdAt, // Use application creation date for filters if needed
 
-      // Ensure skills is array
-      skills: Array.isArray(candidate.skills) ? candidate.skills : []
-    };
-  });
+        // Existing properties for local usage (CandidateViewer)
+        ...candidate,
+        applicationId: app._id,
+        applicationStatus: app.status,
+        applicationDate: app.createdAt,
+        screeningScore: app.screeningScore,
+        screeningDecision: app.screeningDecision,
+        screeningSummary: app.screeningSummary,
+      };
+    });
+  };
 
   const handleView = (row) => {
     // Map row data to CandidateViewer expected format
@@ -290,161 +303,6 @@ const PositionCandidatesTab = ({ positionId, position }) => {
     navigate(`/dashboard/candidate-details/${row._id}`, { state: { from: "position" } });
   };
 
-  const tableColumns = [
-    {
-      key: "name",
-      header: "Candidate Name",
-      render: (value, row) => (
-        <div
-          className="flex items-center"
-          title={`${row?.FirstName} ${row?.LastName}`}
-        >
-          <div className="h-8 w-8 flex-shrink-0">
-            {row?.ImageData ? (
-              <img
-                className="h-8 w-8 rounded-full object-cover"
-                src={row?.ImageData?.path || null}
-                alt={row?.FirstName || "Candidate"}
-                onError={(e) => {
-                  e.target.src = "/default-profile.png";
-                }}
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                {row.FirstName ? row.FirstName.charAt(0).toUpperCase() : "?"}
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col ml-3">
-            <div title={`${row?.FirstName} ${row?.LastName}`}>
-              <div
-                className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
-                onClick={() => navigate(`/dashboard/candidate-details/${row._id}`, { state: { from: "position" } })}
-              >
-                {capitalizeFirstLetter(row?.FirstName) +
-                  " " +
-                  capitalizeFirstLetter(row.LastName)}
-              </div>
-            </div>
-            {row?.currentRoleLabel && (
-              <div
-                title={capitalizeFirstLetter(row?.currentRoleLabel)}
-                className="text-xs cursor-default truncate max-w-[140px]"
-              >
-                {capitalizeFirstLetter(row?.currentRoleLabel)}
-              </div>
-            )}
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "Email",
-      header: "Email",
-      render: (value) => (
-        <div className="flex items-center gap-2" title={value}>
-          <Mail className="w-4 h-4 text-gray-500" />
-          <span className="truncate max-w-[140px] cursor-default" title={value}>
-            {value || "Not Provided"}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "Phone",
-      header: "Contact",
-      render: (value, row) => (row?.CountryCode ? row.CountryCode + " " : "") + (value || "Not Provided"),
-    },
-    {
-      key: "HigherQualification",
-      header: "Higher Qualification",
-      render: (value) => (
-        <span
-          className="block truncate max-w-[140px] cursor-default"
-          title={value}
-        >
-          {value || "Not Provided"}
-        </span>
-      ),
-    },
-    {
-      key: "CurrentExperience",
-      header: "Total Experience",
-      render: (value) => (
-        <span className="pl-8">{value || "Not Provided"}</span>
-      ),
-    },
-    {
-      key: "skills",
-      header: "Skills",
-      render: (value) => (
-        <div
-          className="flex flex-wrap gap-1 cursor-default"
-          title={value?.map((skill) => skill.skill || skill)?.join(", ")}
-        >
-          {value && value.length > 0 ? (
-            <>
-              {value.slice(0, 2).map((skill, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue rounded-full text-xs"
-                >
-                  {skill.skill || skill}
-                </span>
-              ))}
-              {value.length > 2 && (
-                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
-                  +{value.length - 2}
-                </span>
-              )}
-            </>
-          ) : (
-            <span className="text-gray-400 text-xs">No skills</span>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "applicationDate",
-      header: "Applied At",
-      render: (value) => formatDateTime(value),
-    },
-    {
-      key: "applicationStatus",
-      header: "Status",
-      render: (value) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${value === 'APPLIED' ? 'bg-blue-100 text-blue-800' :
-          value === 'SCREENED' ? 'bg-purple-100 text-purple-800' :
-            value === 'INTERVIEWING' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-gray-100 text-gray-800'
-          }`}>
-          {value || 'Active'}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      render: (_, row) => (
-        <div className="flex items-center gap-2">
-          <button
-            onClick={(e) => { e.stopPropagation(); handleView(row); }}
-            className="p-1.5 text-gray-500 hover:text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
-            title="View Screening"
-          >
-            <Eye size={16} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); handleProfile(row); }}
-            className="p-1.5 text-gray-500 hover:text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
-            title="View Profile"
-          >
-            <User size={16} />
-          </button>
-        </div>
-      )
-    }
-  ];
 
   if (isLoading) {
     return (
@@ -454,7 +312,7 @@ const PositionCandidatesTab = ({ positionId, position }) => {
     );
   }
 
-  if (candidatesData.length === 0) {
+  if (applications.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
         <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -465,10 +323,15 @@ const PositionCandidatesTab = ({ positionId, position }) => {
 
   return (
     <>
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <TableView
-          data={candidatesData}
-          columns={tableColumns}
+      <div className="overflow-hidden pt-2">
+        <Candidate
+          candidates={formattedCandidates(applications)}
+          isPositionView={true}
+          onCandidateClick={handleProfile}
+          extraActions={{
+            onScreeningView: handleView,
+            onProfileView: handleProfile
+          }}
         />
       </div>
 
@@ -667,7 +530,7 @@ const PositionSlideDetails = () => {
       ) : (
         <>
           {/* v1.0.4 <------------------------------------------------------------------------------------------ */}
-          <div className="max-w-7xl mx-auto sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 bg-white shadow overflow-hidden sm:rounded-lg mb-4">
+          <div className="max-w-8xl mx-auto sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 bg-white shadow overflow-hidden sm:rounded-lg mb-4">
             {/* <-------------------------v1.0.0  */}
             {/* // <----- v1.0.1 - Ranjith - */}
             {/* Header */}

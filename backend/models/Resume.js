@@ -76,6 +76,11 @@ const resumeSchema = new mongoose.Schema(
             default: Date.now,
         },
 
+        version: {
+            type: Number,
+            default: 1
+        },
+
         // Ownership fields
         ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
         tenantId: { type: mongoose.Schema.Types.ObjectId, ref: "Tenant" },

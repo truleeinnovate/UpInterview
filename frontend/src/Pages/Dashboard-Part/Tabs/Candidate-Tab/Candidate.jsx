@@ -164,7 +164,11 @@ function Candidate({
   onResendLink,
   isAssessmentView,
   resendLoading = {},
+  isPositionView,
+  extraActions,
+  onCandidateClick,
 }) {
+  const isEmbedded = isAssessmentView || isPositionView;
   // ------------------------------v1.0.1 >
   // <---------------------- v1.0.0
   // All hooks at the top
@@ -479,7 +483,7 @@ function Candidate({
     setFilterPopupOpen(false);
   };
 
-  const dataToUse = isAssessmentView ? candidates : candidateData;
+  const dataToUse = (isAssessmentView || isPositionView) ? candidates : candidateData;
 
   const handleApplyFilters = () => {
     const filters = {
@@ -710,7 +714,11 @@ function Candidate({
                 className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
                 // v1.0.9 ------------------------------------------------------------------------------>
                 onClick={
-                  () =>
+                  () => {
+                    if (onCandidateClick) {
+                      onCandidateClick(row);
+                      return;
+                    }
                     navigate(
                       isAssessmentView
                         ? `/assessment/${row?.assessmentId}/view-details/${row?._id}`
@@ -726,7 +734,7 @@ function Candidate({
                           : { from: "/candidate" },
                       }
                     )
-
+                  }
                   //  effectivePermissions.Candidates?.View && navigate(`view-details/${row._id}`)
                 }
               >
@@ -912,7 +920,13 @@ function Candidate({
           key: "view",
           label: "View Details",
           icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: (row) =>
+          onClick: (row) => {
+            if (isPositionView) {
+              navigate(`/candidate/view-details/${row._id}`, {
+                state: { from: "position" },
+              });
+              return;
+            }
             navigate(
               isAssessmentView
                 ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
@@ -926,7 +940,8 @@ function Candidate({
                   }
                   : { from: "/candidate" },
               }
-            ),
+            );
+          },
           // navigate(
           //   isAssessmentView
           //     ? `candidate-details/${row._id}`
@@ -943,6 +958,35 @@ function Candidate({
         },
       ]
       : []),
+
+    // <---------------------- New actions for Position View in Table
+    ...(isPositionView
+      ? [
+        {
+          key: "screening",
+          label: "Screening View",
+          icon: <Eye className="w-4 h-4 text-indigo-600" />,
+          onClick: (item) => {
+            if (extraActions?.onScreeningView) {
+              extraActions.onScreeningView(item);
+            }
+          },
+        },
+        {
+          key: "profile",
+          label: "Profile View",
+          icon: <CircleUser className="w-4 h-4 text-custom-blue" />,
+          onClick: (item) => {
+            if (extraActions?.onProfileView) {
+              extraActions.onProfileView(item);
+            }
+          },
+        },
+      ]
+      : []),
+    // ---------------------->
+
+
     ...(!isAssessmentView
       ? [
         {
@@ -957,7 +1001,7 @@ function Candidate({
               key: "edit",
               label: "Edit",
               icon: <Pencil className="w-4 h-4 text-green-600" />,
-              onClick: (row) => navigate(`edit/${row._id}`),
+              onClick: (row) => navigate(`/candidate/edit/${row._id}`),
             },
           ]
           : []),
@@ -977,6 +1021,7 @@ function Candidate({
           : []),
       ]
       : []),
+
     ...(isAssessmentView
       ? [
         // <-------------------------------v1.0.1
@@ -1263,16 +1308,33 @@ function Candidate({
           key: "view",
           label: "View Details",
           icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: (item, e) => {
-            isAssessmentView
-              ? navigate(`/${item?.assessmentId}/view-details/${item._id}`)
-              : navigate(`view-details/${item._id}`);
+          onClick: (row) => {
+            if (isPositionView) {
+              navigate(`/candidate/view-details/${row._id}`, {
+                state: { from: "position" },
+              });
+              return;
+            }
+            navigate(
+              isAssessmentView
+                ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
+                : // `/assessments/candidate-details/${row._id}`
+                `view-details/${row._id}`,
+              {
+                state: isAssessmentView
+                  ? {
+                    from: `/assessment-details/${row?.assessmentId}`,
+                    assessmentId: row?.assessmentId,
+                  }
+                  : { from: "/candidate" },
+              }
+            );
           },
         },
       ]
       : []),
 
-    // 360° View (only if not in assessment view)
+    // 360° View (only if not assessment view)
     ...(!isAssessmentView
       ? [
         {
@@ -1286,7 +1348,7 @@ function Candidate({
       ]
       : []),
 
-    // Edit (only if not in assessment view)
+    // Edit (only if not assessment view)
     ...(!isAssessmentView && effectivePermissions.Candidates?.Edit
       ? [
         {
@@ -1294,7 +1356,7 @@ function Candidate({
           label: "Edit",
           icon: <Pencil className="w-4 h-4 text-green-600" />,
           onClick: (item, e) => {
-            navigate(`edit/${item._id}`);
+            navigate(`/candidate/edit/${item._id}`);
           },
         },
       ]
@@ -1319,6 +1381,33 @@ function Candidate({
       ]
       : []),
 
+    // <---------------------- New actions for Position View
+    ...(isPositionView
+      ? [
+        {
+          key: "screening",
+          label: "Screening View",
+          icon: <Eye className="w-4 h-4 text-indigo-600" />,
+          onClick: (item) => {
+            if (extraActions?.onScreeningView) {
+              extraActions.onScreeningView(item);
+            }
+          },
+        },
+        {
+          key: "profile",
+          label: "Profile View",
+          icon: <CircleUser className="w-4 h-4 text-custom-blue" />,
+          onClick: (item) => {
+            if (extraActions?.onProfileView) {
+              extraActions.onProfileView(item);
+            }
+          },
+        },
+      ]
+      : []),
+    // ---------------------->
+
     // Delete
     ...(effectivePermissions.Candidates?.Delete
       ? [
@@ -1337,15 +1426,15 @@ function Candidate({
   // v1.0.8 ------------------------------------------------------------------------------>
 
   return (
-    <div className={isAssessmentView ? "" : "bg-background min-h-screen"}>
+    <div className={isEmbedded ? "" : "bg-background min-h-screen"}>
       <main
         className={
-          isAssessmentView
+          isEmbedded
             ? ""
             : "w-full px-9 py-2 sm:mt-20 md:mt-24 sm:px-2 lg:px-8 xl:px-8 2xl:px-8"
         }
       >
-        {!isAssessmentView && (
+        {!isEmbedded && (
           <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
             <main className="px-6">
               <div className="sm:px-0">
@@ -1380,7 +1469,7 @@ function Candidate({
         <main
           // v1.0.7 <----------------------------------------------------------
           className={
-            isAssessmentView
+            isEmbedded
               ? ""
               : "fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background"
           }
@@ -1401,7 +1490,7 @@ function Candidate({
                       loading={isLoading}
                       actions={tableActions}
                       emptyState={emptyStateMessage}
-                      autoHeight={isAssessmentView}
+                      autoHeight={isEmbedded}
                     />
                   </div>
                 ) : (
