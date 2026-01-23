@@ -109,32 +109,81 @@ const verifyPayment = async (req, res) => {
 
     // Verify signature based on payment type (subscription or order)
     const isSubscription = !!razorpay_subscription_id;
-    const body = isSubscription
+    const hasOrderId = !!razorpay_order_id;
+
+    // console.warn("Generating signature with:", {
+    //   isSubscription: isSubscription,
+    //   hasOrderId: hasOrderId,
+    //   id: isSubscription ? razorpay_subscription_id : razorpay_order_id,
+    //   order_id: razorpay_order_id,
+    //   payment_id: razorpay_payment_id,
+    //   secret: process.env.RAZORPAY_KEY_SECRET ? "***" : "MISSING",
+    // });
+
+    let body = isSubscription
       ? razorpay_payment_id + "|" + razorpay_subscription_id
       : razorpay_order_id + "|" + razorpay_payment_id;
 
-    const generated_signature = crypto
+    let generated_signature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body)
       .digest("hex");
 
-    if (generated_signature !== razorpay_signature) {
+    let signatureMatch = generated_signature === razorpay_signature;
+
+    // Fallback strategy: If subscription verification failed but we have an order ID, try the order format
+    if (!signatureMatch && isSubscription && hasOrderId) {
+      const body2 = razorpay_order_id + "|" + razorpay_payment_id;
+      const generated_signature2 = crypto
+        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .update(body2)
+        .digest("hex");
+
+      if (generated_signature2 === razorpay_signature) {
+        console.warn("Signature matched using Order ID format for subscription!");
+        signatureMatch = true;
+        body = body2; // Update body for logging/consistency
+      } else {
+        console.warn("Fallback Order Signature also failed:", {
+          generated: generated_signature2,
+          body_used: body2
+        });
+      }
+    }
+
+    if (!signatureMatch) {
       console.error("Signature verification failed", {
         generated: generated_signature,
         received: razorpay_signature,
+        body_used: body,
       });
 
+      // Fix for duplicate key error: Ensure transactionId is generated on upsert
+      const updateData = {
+        status: "failed",
+        notes: "Signature verification failed",
+        error: "Invalid payment signature",
+        signatureMatch: false,
+      };
+
+      const updateOptions = { new: true, upsert: true };
+
+      // Use $setOnInsert to generate transactionId only when creating a new document
+      // and $set for the other fields
       await Payment.findOneAndUpdate(
         isSubscription
           ? { subscriptionId: razorpay_subscription_id }
           : { razorpayOrderId: razorpay_order_id },
         {
-          status: "failed",
-          notes: "Signature verification failed",
-          error: "Invalid payment signature",
-          signatureMatch: false,
+          $set: updateData,
+          $setOnInsert: {
+            transactionId: generateTransactionId(),
+            paymentGateway: "razorpay",
+            paymentMethod: "unknown",
+            amount: 0 // Default amount if missing
+          }
         },
-        { new: true, upsert: true }
+        updateOptions
       );
 
       return res.status(400).json({
