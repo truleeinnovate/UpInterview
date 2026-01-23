@@ -67,7 +67,7 @@ const getAllInterviewers = async (req, res) => {
         "contactId",
         "firstName lastName email currentRole imageData rating",
       )
-      .sort({ _id: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum)
       .lean();
@@ -113,7 +113,7 @@ const getAllInterviewersData = async (req, res) => {
         "contactId",
         "firstName lastName email currentRole imageData rating",
       )
-      .sort({ _id: -1 })
+      .sort({ createdAt: -1 })
       .lean();
     console.log("interviewers---------------->", interviewers);
 
