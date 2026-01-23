@@ -1050,7 +1050,7 @@ const MainAppRoutes = ({
               <Route path="hrms-ats" element={<HrmsAtsApi />} />
               {/* v1.0.6 <----------------------------------------------------------------------------- */}
               <Route
-                path="hrms-ats-integrations-hub"
+                path="integration-hub"
                 element={<SettingsIntegrations />}
               />
               {/* v1.0.6 -----------------------------------------------------------------------------> */}

@@ -80,9 +80,9 @@ const AccountSettingsSidebar = () => {
 
   const integrationNavigation = [
     {
-      name: "HRMS ATS & Integrations",
+      name: "HRMS/ATS Integration",
       icon: ArrowsRightLeftIcon,
-      id: "hrms-ats-integrations-hub",
+      id: "integration-hub",
     },
   ];
 
@@ -112,7 +112,7 @@ const AccountSettingsSidebar = () => {
     roles: "Roles",
     sharing: "Sharing",
     "sub-domain": "Subdomain",
-    "hrms-ats-integrations-hub": "Integration",
+    "integration-hub": "Integration",
   };
 
   // Filter navigation based on user type and permissions using useCallback
