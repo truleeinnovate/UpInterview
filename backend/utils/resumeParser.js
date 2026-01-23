@@ -36,13 +36,15 @@ async function parseResume(pdfBuffer, fileName, position = null) {
         const certifications = extractCertifications(text);
         const summary = generateResumeSummary(text, skills, experience, position);
         const workHistory = extractWorkHistory(text);
+        const linkedInUrl = extractLinkedIn(text);
 
         const parsedData = {
             success: true,
             name,
-            email: email || `${name.toLowerCase().replace(/\s+/g, ".")}@email.com`,
+            email: email || (name ? `${name.toLowerCase().replace(/\s+/g, ".")}@email.com` : null),
             phone: phone || "Not provided",
-            experience: experience || "Not specified",
+            linkedInUrl,
+            experience: experience || calculateTotalExperience(workHistory) || "Not specified",
             education: education || "Not specified",
             currentCompany: currentCompany || "Not specified",
             skills,
@@ -141,18 +143,9 @@ function extractName(text, filename) {
         }
     }
 
-    // Fallback to filename
-    const fallbackName = filename
-        .replace(/\.pdf$/i, "")
-        .replace(/[_-]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
-        .split(" ")
-        .filter((word) => word.length > 0)
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(" ");
-
-    return fallbackName || "Unknown Candidate";
+    // Fallback to filename - REMOVED to allow AI to find it from text if regex fails
+    // or to handle fallback in controller
+    return null;
 }
 
 /**
@@ -215,13 +208,49 @@ function extractExperience(text) {
 }
 
 /**
+ * Extract LinkedIn URL from text
+ */
+function extractLinkedIn(text) {
+    const linkedInPattern = /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+\/?/i;
+    const match = text.match(linkedInPattern);
+    return match ? match[0] : null;
+}
+
+function calculateDurationInYears(durationStr) {
+    try {
+        const parts = durationStr.split(/[-–]|to/);
+        if (parts.length !== 2) return 0;
+
+        const parseDate = (str) => {
+            str = str.trim().toLowerCase();
+            if (str.includes('present') || str.includes('current') || str.includes('now')) return new Date();
+            const date = new Date(str);
+            return isNaN(date.getTime()) ? null : date;
+        };
+
+        const start = parseDate(parts[0]);
+        const end = parseDate(parts[1]);
+
+        if (start && end) {
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays / 365;
+        }
+    } catch (e) {
+        return 0;
+    }
+    return 0;
+}
+
+/**
  * Extract education from text
  */
 function extractEducation(text) {
     const educationPatterns = [
-        /(?:Bachelor|BS|BA|B\.S\.|B\.A\.)\s+(?:of\s+)?(?:Science|Arts)?\s+(?:in\s+)?([A-Za-z\s]+?)(?:\n|,|\.|\d)/i,
-        /(?:Master|MS|MA|M\.S\.|M\.A\.)\s+(?:of\s+)?(?:Science|Arts)?\s+(?:in\s+)?([A-Za-z\s]+?)(?:\n|,|\.|\d)/i,
+        /(?:Bachelor|BS|BA|B\.S\.|B\.A\.|B\.Tech|B\.E\.)\s+(?:of\s+)?(?:Science|Arts|Technology|Engineering)?\s+(?:in\s+)?([A-Za-z\s]+?)(?:\n|,|\.|\d)/i,
+        /(?:Master|MS|MA|M\.S\.|M\.A\.|M\.Tech|M\.E\.)\s+(?:of\s+)?(?:Science|Arts|Technology|Engineering)?\s+(?:in\s+)?([A-Za-z\s]+?)(?:\n|,|\.|\d)/i,
         /(?:PhD|Ph\.D\.)\s+(?:in\s+)?([A-Za-z\s]+?)(?:\n|,|\.|\d)/i,
+        /(?:Diploma)\s+(?:in\s+)?([A-Za-z\s]+?)(?:\n|,|\.|\d)/i,
         /MBA/i,
     ];
 
@@ -387,4 +416,18 @@ module.exports = {
     extractExperience,
     extractEducation,
     extractCertifications,
+    calculateTotalExperience
 };
+
+function calculateTotalExperience(workHistory) {
+    if (!workHistory || workHistory.length === 0) return null;
+
+    let totalYears = 0;
+    workHistory.forEach(job => {
+        if (job.duration) {
+            totalYears += calculateDurationInYears(job.duration);
+        }
+    });
+
+    return totalYears > 0 ? `${totalYears.toFixed(1)} years` : null;
+}

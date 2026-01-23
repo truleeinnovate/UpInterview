@@ -134,13 +134,24 @@ exports.screenResume = async (req, res) => {
                     if (systemResult.success) {
                         metadata = buildSystemMetadata(systemResult);
                         recommendation = getRecommendation(metadata.score);
+                        // For system, we rely on parsedData, so we don't have a separate extractedProfile
+                        metadata.extractedProfile = {};
                     } else {
                         metadata.screeningNotes = systemResult.error || 'Screening could not be completed';
                         metadata.concerns.push(systemResult.error || 'Position may not have skills defined');
+                        metadata.extractedProfile = {};
                     }
                 }
 
                 // 3. Build result object with full metadata
+
+                // Prioritize AI-extracted profile data if available
+                const finalName = metadata.extractedProfile?.name || resumeData.name || file.originalname.replace(/\.[^/.]+$/, ""); // Best effort name
+                const finalEmail = metadata.extractedProfile?.email || resumeData.email;
+                const finalPhone = metadata.extractedProfile?.phone || resumeData.phone;
+                const finalExperience = metadata.extractedProfile?.experienceYears ? `${metadata.extractedProfile.experienceYears} Years` : resumeData.experience;
+                const finalEducation = metadata.extractedProfile?.education || resumeData.education;
+
                 results.push({
                     id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     fileName: file.originalname,
@@ -152,14 +163,14 @@ exports.screenResume = async (req, res) => {
                     experienceMatch: metadata.experienceMatch,
 
                     // Candidate Info
-                    candidateName: resumeData.name,
-                    candidateEmail: resumeData.email,
-                    candidatePhone: resumeData.phone,
+                    candidateName: finalName || 'Unknown Candidate',
+                    candidateEmail: finalEmail,
+                    candidatePhone: finalPhone,
 
                     // Parsed Data
                     parsedSkills: resumeData.skills,
-                    parsedExperience: resumeData.experience,
-                    parsedEducation: resumeData.education,
+                    parsedExperience: finalExperience,
+                    parsedEducation: finalEducation,
 
                     // Screening Details (metadata)
                     screeningResult: {
@@ -171,19 +182,22 @@ exports.screenResume = async (req, res) => {
                         recommendation: recommendation,
                         screeningNotes: metadata.screeningNotes,
                         aiRecommendation: metadata.aiRecommendation,
-                        method: metadata.method
+                        method: metadata.method,
+                        experience_years: metadata.extractedProfile?.experienceYears || (typeof finalExperience === 'string' ? parseFloat(finalExperience) : 0),
+                        education: finalEducation,
+                        extracted_skills: metadata.matchedSkills.concat(metadata.missingSkills) // combine for display if needed
                     },
 
                     // Full metadata object for saving later (includes candidate details)
                     metadata: {
                         ...metadata,
                         candidate: {
-                            name: resumeData.name,
-                            email: resumeData.email,
-                            phone: resumeData.phone,
+                            name: finalName,
+                            email: finalEmail,
+                            phone: finalPhone,
                             skills: resumeData.skills,
-                            experience: resumeData.experience,
-                            education: resumeData.education
+                            experience: finalExperience,
+                            education: finalEducation
                         }
                     },
                     recommendation: recommendation,
@@ -276,12 +290,26 @@ exports.createCandidatesFromScreening = async (req, res) => {
                 }
 
                 if (!candidate) {
+                    // Split Name
+                    const fullName = result.candidateName || 'Unknown';
+                    const nameParts = fullName.trim().split(/\s+/);
+                    let firstName = fullName;
+                    let lastName = '';
+
+                    if (nameParts.length > 1) {
+                        lastName = nameParts.pop(); // Last word is last name
+                        firstName = nameParts.join(' '); // Remaining is first name
+                    }
+
                     // Create new candidate
                     candidate = new Candidate({
                         tenantId: tenantId,
-                        name: result.candidateName || 'Unknown',
-                        email: result.candidateEmail?.toLowerCase() || '',
-                        phone: result.candidatePhone || '',
+                        FirstName: firstName,
+                        LastName: lastName,
+                        // name: result.candidateName || 'Unknown', // Removed legacy field if strictly using First/Last
+                        Email: result.candidateEmail?.toLowerCase() || '',
+                        Phone: result.candidatePhone || '',
+                        linkedInUrl: result.metadata?.linkedIn || result.candidateLinkedIn || '',
                         source: 'Resume Upload',
                         status: 'New',
                         ownerId: userId,
@@ -292,7 +320,7 @@ exports.createCandidatesFromScreening = async (req, res) => {
                 }
 
                 // 2. Create Resume record
-                let resume = await Resume.findOne({ candidateId: candidate._id }).sort({ createdAt: -1 });
+                let resume = await Resume.findOne({ candidateId: candidate._id }).sort({ _id: -1 });
 
                 if (!resume) {
                     resume = new Resume({
@@ -316,6 +344,9 @@ exports.createCandidatesFromScreening = async (req, res) => {
                         // Updated profile data
                         CurrentExperience: result.metadata?.extractedProfile?.experienceYears || 0,
                         HigherQualification: result.metadata?.extractedProfile?.education || '',
+
+                        // Full Rich Metadata
+                        parsedJson: result.metadata?.extractedProfile || {},
 
                         source: 'UPLOAD',
                         isActive: true

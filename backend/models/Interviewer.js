@@ -23,7 +23,7 @@ const interviewerSchema = new Schema({
     //     trim: true,
     //     lowercase: true
     // },
-    user_id: {
+    contactId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Contacts',
         required: true,
@@ -101,10 +101,6 @@ const interviewerSchema = new Schema({
     tenantId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true
-    },
-    ownerId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Users'
     }
 }, {
     timestamps: true

@@ -40,7 +40,12 @@ import Breadcrumb from "../../Tabs/CommonCode-AllTabs/Breadcrumb";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { useApplicationsByPosition } from "../../../../apiHooks/useApplications";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, User } from "lucide-react";
+import TableView from "../../../../Components/Shared/Table/TableView";
+import { Mail } from "lucide-react";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { formatDateTime } from "../../../../utils/dateFormatter";
+import CandidateViewer from "../../../../Components/CandidateViewer";
 
 import ApplicationView from "./ApplicationView";
 
@@ -226,6 +231,261 @@ const PositionApplicationsTab = ({ positionId, onOpenApplication }) => {
         </table>
       </div>
     </div>
+  );
+};
+
+// Candidates Tab Component for Position
+const PositionCandidatesTab = ({ positionId, position }) => {
+  const { applications, isLoading } = useApplicationsByPosition(positionId);
+  const navigate = useNavigate();
+  const [viewingCandidate, setViewingCandidate] = useState(null);
+
+  // Map applications to the structure expected by the table (flattening candidateId)
+  const candidatesData = applications.map(app => {
+    const candidate = app.candidateId || {};
+    return {
+      ...candidate,
+      _id: candidate._id,
+      applicationId: app._id,
+      applicationStatus: app.status,
+      applicationDate: app.createdAt,
+      applicationStatus: app.status,
+      applicationDate: app.createdAt,
+      screeningScore: app.screeningScore,
+      screeningDecision: app.screeningDecision,
+      screeningSummary: app.screeningSummary, // Assuming this might exist or we map it
+
+      // Ensure skills is array
+      skills: Array.isArray(candidate.skills) ? candidate.skills : []
+    };
+  });
+
+  const handleView = (row) => {
+    // Map row data to CandidateViewer expected format
+    const viewerData = {
+      id: row._id,
+      candidate_name: `${row.FirstName} ${row.LastName}`,
+      candidate_email: row.Email,
+      candidate_phone: row.Phone,
+      match_percentage: row.screeningScore,
+
+      // Populate screening result if available, or fallback to parsed data
+      screening_result: {
+        recommendation: row.screeningDecision || 'Pending',
+        education: row.HigherQualification,
+        // Add other screening specific fields if available in application
+      },
+
+      parsed_experience: row.CurrentExperience ? `${row.CurrentExperience} years` : 'Not specified',
+      parsed_education: row.HigherQualification,
+      parsed_skills: row.skills.map(s => s.skill || s),
+
+      // Pass the full candidate/application object just in case
+      originalData: row
+    };
+    setViewingCandidate(viewerData);
+  };
+
+  const handleProfile = (row) => {
+    navigate(`/dashboard/candidate-details/${row._id}`, { state: { from: "position" } });
+  };
+
+  const tableColumns = [
+    {
+      key: "name",
+      header: "Candidate Name",
+      render: (value, row) => (
+        <div
+          className="flex items-center"
+          title={`${row?.FirstName} ${row?.LastName}`}
+        >
+          <div className="h-8 w-8 flex-shrink-0">
+            {row?.ImageData ? (
+              <img
+                className="h-8 w-8 rounded-full object-cover"
+                src={row?.ImageData?.path || null}
+                alt={row?.FirstName || "Candidate"}
+                onError={(e) => {
+                  e.target.src = "/default-profile.png";
+                }}
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
+                {row.FirstName ? row.FirstName.charAt(0).toUpperCase() : "?"}
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col ml-3">
+            <div title={`${row?.FirstName} ${row?.LastName}`}>
+              <div
+                className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
+                onClick={() => navigate(`/dashboard/candidate-details/${row._id}`, { state: { from: "position" } })}
+              >
+                {capitalizeFirstLetter(row?.FirstName) +
+                  " " +
+                  capitalizeFirstLetter(row.LastName)}
+              </div>
+            </div>
+            {row?.currentRoleLabel && (
+              <div
+                title={capitalizeFirstLetter(row?.currentRoleLabel)}
+                className="text-xs cursor-default truncate max-w-[140px]"
+              >
+                {capitalizeFirstLetter(row?.currentRoleLabel)}
+              </div>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "Email",
+      header: "Email",
+      render: (value) => (
+        <div className="flex items-center gap-2" title={value}>
+          <Mail className="w-4 h-4 text-gray-500" />
+          <span className="truncate max-w-[140px] cursor-default" title={value}>
+            {value || "Not Provided"}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "Phone",
+      header: "Contact",
+      render: (value, row) => (row?.CountryCode ? row.CountryCode + " " : "") + (value || "Not Provided"),
+    },
+    {
+      key: "HigherQualification",
+      header: "Higher Qualification",
+      render: (value) => (
+        <span
+          className="block truncate max-w-[140px] cursor-default"
+          title={value}
+        >
+          {value || "Not Provided"}
+        </span>
+      ),
+    },
+    {
+      key: "CurrentExperience",
+      header: "Total Experience",
+      render: (value) => (
+        <span className="pl-8">{value || "Not Provided"}</span>
+      ),
+    },
+    {
+      key: "skills",
+      header: "Skills",
+      render: (value) => (
+        <div
+          className="flex flex-wrap gap-1 cursor-default"
+          title={value?.map((skill) => skill.skill || skill)?.join(", ")}
+        >
+          {value && value.length > 0 ? (
+            <>
+              {value.slice(0, 2).map((skill, idx) => (
+                <span
+                  key={idx}
+                  className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue rounded-full text-xs"
+                >
+                  {skill.skill || skill}
+                </span>
+              ))}
+              {value.length > 2 && (
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
+                  +{value.length - 2}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-gray-400 text-xs">No skills</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "applicationDate",
+      header: "Applied At",
+      render: (value) => formatDateTime(value),
+    },
+    {
+      key: "applicationStatus",
+      header: "Status",
+      render: (value) => (
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${value === 'APPLIED' ? 'bg-blue-100 text-blue-800' :
+          value === 'SCREENED' ? 'bg-purple-100 text-purple-800' :
+            value === 'INTERVIEWING' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-gray-100 text-gray-800'
+          }`}>
+          {value || 'Active'}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (_, row) => (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); handleView(row); }}
+            className="p-1.5 text-gray-500 hover:text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
+            title="View Screening"
+          >
+            <Eye size={16} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleProfile(row); }}
+            className="p-1.5 text-gray-500 hover:text-custom-blue hover:bg-blue-50 rounded-lg transition-colors"
+            title="View Profile"
+          >
+            <User size={16} />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <Loader2 className="w-8 h-8 animate-spin text-custom-blue" />
+      </div>
+    );
+  }
+
+  if (candidatesData.length === 0) {
+    return (
+      <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+        <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <p className="text-gray-500">No candidates available for this position.</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <TableView
+          data={candidatesData}
+          columns={tableColumns}
+        />
+      </div>
+
+      {viewingCandidate && (
+        <CandidateViewer
+          candidate={viewingCandidate}
+          position={position}
+          onClose={() => setViewingCandidate(null)}
+          onAction={(action, id) => {
+            console.log("Action on candidate:", action, id);
+            // Implement actions if needed (e.g. Move to Interview)
+            // For now, just close or log
+            setViewingCandidate(null);
+          }}
+        />
+      )}
+    </>
   );
 };
 
@@ -900,10 +1160,7 @@ const PositionSlideDetails = () => {
 
             {/* Candidates Tab */}
             {activeTab === "Candidates" && (
-              <div className="bg-white rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Candidates</h3>
-                <p className="text-gray-500">Candidates associated with this position will appear here.</p>
-              </div>
+              <PositionCandidatesTab positionId={id} position={position} />
             )}
 
             {/* Applications Tab */}
