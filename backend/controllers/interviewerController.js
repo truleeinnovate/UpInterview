@@ -64,7 +64,7 @@ const getAllInterviewers = async (req, res) => {
         const interviewers = await Interviewer.find(filter)
             .populate('tag_ids', 'name color category')
             .populate('team_id', 'name color')
-            .populate('user_id', 'firstName lastName email currentRole imageData rating')
+            .populate('contactId', 'firstName lastName email currentRole imageData rating')
             .sort({ _id: -1 })
             .skip(skip)
             .limit(limitNum)
@@ -105,7 +105,7 @@ const getAllInterviewersData = async (req, res) => {
         const interviewers = await Interviewer.find(filter)
             .populate('tag_ids', 'name color category')
             .populate('team_id', 'name color')
-            .populate('user_id', 'firstName lastName email currentRole imageData rating')
+            .populate('contactId', 'firstName lastName email currentRole imageData rating')
             .sort({ _id: -1 })
             .lean();
 
@@ -129,7 +129,7 @@ const getInterviewerById = async (req, res) => {
         const interviewer = await Interviewer.findOne({ _id: id, tenantId })
             .populate('tag_ids', 'name color category description')
             .populate('team_id', 'name color description department')
-            .populate('user_id', 'firstName lastName email currentRole imageData rating')
+            .populate('contactId', 'firstName lastName email currentRole imageData rating')
             .lean();
 
         if (!interviewer) {
@@ -147,14 +147,14 @@ const getInterviewerById = async (req, res) => {
 const createInterviewer = async (req, res) => {
     try {
         const tenantId = res.locals.auth?.actingAsTenantId;
-        const ownerId = res.locals.auth?.userId;
+
 
         if (!tenantId) {
             return res.status(401).json({ message: 'Unauthorized: No tenant ID' });
         }
 
         const {
-            user_id,
+            contactId,
             interviewer_type,
             tag_ids,
             team_id,
@@ -167,28 +167,27 @@ const createInterviewer = async (req, res) => {
             contract_end_date
         } = req.body;
 
-        // Validate required fields - user_id is required
-        if (!user_id) {
-            return res.status(400).json({ message: 'User ID is required to create an interviewer' });
+        // Validate required fields - contactId is required
+        if (!contactId) {
+            return res.status(400).json({ message: 'Contact ID is required to create an interviewer' });
         }
 
-        // Check if interviewer already exists for this user_id and tenant
-        const existingInterviewer = await Interviewer.findOne({ user_id, tenantId });
+        // Check if interviewer already exists for this contactId and tenant
+        const existingInterviewer = await Interviewer.findOne({ contactId, tenantId });
         if (existingInterviewer) {
-            return res.status(400).json({ message: 'An interviewer already exists for this user' });
+            return res.status(400).json({ message: 'An interviewer already exists for this contact' });
         }
 
         // Prepare interviewer data - name/email/title/department/avatar come from user_id (Contact)
         const interviewerData = {
-            user_id,
+            contactId,
             interviewer_type: interviewer_type || 'internal',
             tag_ids: tag_ids || [],
             team_id: team_id || null,
             is_active: is_active !== undefined ? is_active : true,
             specializations: specializations || [],
             max_interviews_per_week: max_interviews_per_week || 5,
-            tenantId,
-            ownerId
+            tenantId
         };
 
         // Add external interviewer fields (for future use)
@@ -205,7 +204,7 @@ const createInterviewer = async (req, res) => {
         const populatedInterviewer = await Interviewer.findById(newInterviewer._id)
             .populate('tag_ids', 'name color category')
             .populate('team_id', 'name color')
-            .populate('user_id', 'firstName lastName email currentRole imageData rating')
+            .populate('contactId', 'firstName lastName email currentRole imageData rating')
             .lean();
 
         res.status(201).json({
@@ -258,7 +257,7 @@ const updateInterviewer = async (req, res) => {
             updateData.hourly_rate = null;
             updateData.contract_end_date = null;
         } else if (updateData.interviewer_type === 'external') {
-            updateData.user_id = null;
+            updateData.contactId = null;
         }
 
         const updatedInterviewer = await Interviewer.findByIdAndUpdate(

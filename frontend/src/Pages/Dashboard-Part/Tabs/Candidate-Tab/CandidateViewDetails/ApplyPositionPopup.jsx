@@ -9,6 +9,7 @@ import {
     useApplicationMutations,
 } from "../../../../../apiHooks/useApplications";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect";
+import { getCurrentTenantId } from "../../../../../utils/AuthCookieManager/AuthCookieManager";
 
 const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
     const [selectedPosition, setSelectedPosition] = useState("");
@@ -66,9 +67,11 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
         setError("");
 
         try {
+            const tenantId = getCurrentTenantId();
             await createApplication({
                 candidateId: candidate._id,
                 positionId: selectedPosition,
+                tenantId,
             });
 
             // Refetch applications to update table
@@ -100,6 +103,7 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
 
     const getStatusBadgeClass = (status) => {
         const statusClasses = {
+            NEW: "bg-blue-100 text-blue-800",
             APPLIED: "bg-blue-100 text-blue-800",
             SCREENED: "bg-purple-100 text-purple-800",
             INTERVIEWING: "bg-yellow-100 text-yellow-800",

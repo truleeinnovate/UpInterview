@@ -52,6 +52,9 @@ const getApplicationsByCandidate = async (req, res) => {
 /**
  * Get all applications for a specific position
  */
+/**
+ * Get all applications for a specific position with enriched candidate data
+ */
 const getApplicationsByPosition = async (req, res) => {
     try {
         const { positionId } = req.params;
@@ -61,14 +64,123 @@ const getApplicationsByPosition = async (req, res) => {
         }
 
         // Query by positionId only - get all applications for this position
-        const query = { positionId };
+        // Use aggregation to fetch rich data from Resume
+        const applications = await Application.aggregate([
+            { $match: { positionId: new mongoose.Types.ObjectId(positionId) } },
+            { $sort: { _id: -1 } },
 
-        const applications = await Application.find(query)
-            .populate("candidateId", "FirstName LastName Email Phone")
-            .populate("positionId", "title status")
-            .populate("interviewId", "interviewCode status")
-            .sort({ _id: -1 })
-            .lean();
+            // Lookup Candidate
+            {
+                $lookup: {
+                    from: "candidates", // Default mongoose collection name for Candidate model
+                    localField: "candidateId",
+                    foreignField: "_id",
+                    as: "candidate"
+                }
+            },
+            { $unwind: "$candidate" },
+
+            // Lookup Active Resume
+            {
+                $lookup: {
+                    from: "resume", // Explicit collection name from Resume model
+                    let: { candidateId: "$candidate._id" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$candidateId", "$$candidateId"] },
+                                        { $eq: ["$isActive", true] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    as: "resume"
+                }
+            },
+            // Unwind Active Resume - preserve if none (so we still get the application)
+            {
+                $unwind: {
+                    path: "$resume",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+            // Lookup Position
+            {
+                $lookup: {
+                    from: "positions",
+                    localField: "positionId",
+                    foreignField: "_id",
+                    as: "position"
+                }
+            },
+            { $unwind: "$position" },
+
+            // Lookup Interview
+            {
+                $lookup: {
+                    from: "interviews",
+                    localField: "interviewId",
+                    foreignField: "_id",
+                    as: "interview"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$interview",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+            // Project final structure - mimicking populate result but enriched
+            {
+                $project: {
+                    _id: 1,
+                    applicationNumber: 1,
+                    status: 1,
+                    currentStage: 1,
+                    screeningScore: 1,
+                    screeningDecision: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+
+                    // Populated Position
+                    positionId: {
+                        _id: "$position._id",
+                        title: "$position.title",
+                        status: "$position.status"
+                    },
+
+                    // Populated Interview
+                    interviewId: {
+                        _id: "$interview._id",
+                        interviewCode: "$interview.interviewCode",
+                        status: "$interview.status"
+                    },
+
+                    // Enriched Candidate (Candidate + Resume Data)
+                    candidateId: {
+                        _id: "$candidate._id",
+                        FirstName: "$candidate.FirstName",
+                        LastName: "$candidate.LastName",
+                        Email: "$candidate.Email",
+                        Phone: "$candidate.Phone",
+
+                        // Resume Fields
+                        HigherQualification: { $ifNull: ["$resume.HigherQualification", "Not Provided"] },
+                        CurrentExperience: { $ifNull: ["$resume.CurrentExperience", 0] },
+                        // RelevantExperience: { $ifNull: ["$resume.RelevantExperience", 0] },
+                        skills: { $ifNull: ["$resume.skills", []] },
+                        // ImageData: { $ifNull: ["$resume.ImageData", null] },
+                        resumeId: "$resume._id"
+                    }
+                }
+            }
+        ]);
+
 
         res.status(200).json({
             success: true,
@@ -158,7 +270,7 @@ const createApplication = async (req, res) => {
             positionId,
             tenantId,
             companyId,
-            status: status || "APPLIED",
+            status: status || "NEW",
             currentStage: currentStage || "Application Submitted",
             ownerId: userId,
             createdBy: userId,

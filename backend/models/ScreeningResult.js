@@ -39,8 +39,6 @@ const ScreeningResultSchema = new mongoose.Schema(
         },
 
 
-        ats: { type: String },
-
         // Audit
         screenedAt: {
             type: Date,

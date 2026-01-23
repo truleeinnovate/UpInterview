@@ -56,7 +56,7 @@ const resumeSchema = new mongoose.Schema(
         },
 
         // Additional parsed resume data
-        // parsedJson: mongoose.Schema.Types.Mixed,
+        parsedJson: mongoose.Schema.Types.Mixed,
         // experienceYears: Number,
         // education: String,
 

@@ -65,7 +65,12 @@ const addCandidatePostCall = async (req, res) => {
     console.log("🔍 [addCandidatePostCall] Extracting ownerId and tenantId");
     const ownerId = req.body.ownerId;
     const tenantId = req.body.tenantId;
-    console.log("📋 [addCandidatePostCall] OwnerId:", ownerId, "TenantId:", tenantId);
+    console.log(
+      "📋 [addCandidatePostCall] OwnerId:",
+      ownerId,
+      "TenantId:",
+      tenantId,
+    );
 
     if (!ownerId) {
       console.log("❌ [addCandidatePostCall] Missing ownerId");
@@ -106,7 +111,7 @@ const addCandidatePostCall = async (req, res) => {
 
     await newCandidate.save();
 
-    console.log('✅ [addCandidatePostCall] Candidate saved successfully');
+    console.log("✅ [addCandidatePostCall] Candidate saved successfully");
 
     // Create Resume with professional/resume-related fields
     const { ImageData, resume: resumeFile, source } = req.body;
@@ -132,7 +137,7 @@ const addCandidatePostCall = async (req, res) => {
 
     await newResume.save();
 
-    console.log('✅ [addCandidatePostCall] Resume saved successfully');
+    console.log("✅ [addCandidatePostCall] Resume saved successfully");
 
     // Generate feed
     res.locals.feedData = {
@@ -318,13 +323,33 @@ const updateCandidatePatchCall = async (req, res) => {
     }
 
     // Separate candidate fields and resume fields
-    const candidateFields = ['FirstName', 'LastName', 'Email', 'Phone', 'CountryCode', 'Date_Of_Birth', 'Gender', 'externalId', 'linkedInUrl'];
-    const resumeFields = ['HigherQualification', 'UniversityCollege', 'CurrentExperience', 'RelevantExperience', 'CurrentRole', 'skills', 'ImageData', 'resume', 'source'];
+    const candidateFields = [
+      "FirstName",
+      "LastName",
+      "Email",
+      "Phone",
+      "CountryCode",
+      "Date_Of_Birth",
+      "Gender",
+      "externalId",
+      "linkedInUrl",
+    ];
+    const resumeFields = [
+      "HigherQualification",
+      "UniversityCollege",
+      "CurrentExperience",
+      "RelevantExperience",
+      "CurrentRole",
+      "skills",
+      "ImageData",
+      "resume",
+      "source",
+    ];
 
     const candidateUpdateData = { updatedBy: ownerId };
     const resumeUpdateData = { updatedBy: ownerId };
 
-    Object.keys(updateFields).forEach(key => {
+    Object.keys(updateFields).forEach((key) => {
       if (candidateFields.includes(key)) {
         candidateUpdateData[key] = updateFields[key];
       } else if (resumeFields.includes(key)) {
@@ -336,7 +361,7 @@ const updateCandidatePatchCall = async (req, res) => {
     const updatedCandidate = await Candidate.findByIdAndUpdate(
       candidateId,
       candidateUpdateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedCandidate) {
@@ -350,9 +375,9 @@ const updateCandidatePatchCall = async (req, res) => {
       await Resume.findOneAndUpdate(
         { candidateId, isActive: true },
         { $set: resumeUpdateData },
-        { new: true, upsert: true }
+        { new: true, upsert: true },
       );
-      console.log('✅ [updateCandidatePatchCall] Resume updated successfully');
+      console.log("✅ [updateCandidatePatchCall] Resume updated successfully");
     }
 
     // Generate feed
@@ -457,34 +482,36 @@ const getCandidatesData = async (req, res) => {
                 $expr: {
                   $and: [
                     { $eq: ["$candidateId", "$$candidateId"] },
-                    { $eq: ["$isActive", true] }
-                  ]
-                }
-              }
-            }
+                    { $eq: ["$isActive", true] },
+                  ],
+                },
+              },
+            },
           ],
-          as: "activeResume"
-        }
+          as: "activeResume",
+        },
       },
       // Unwind the resume (will be null if no active resume)
       {
         $unwind: {
           path: "$activeResume",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
     ];
 
     // Add resume-based filters
     if (status) {
       pipeline.push({
-        $match: { "activeResume.HigherQualification": { $in: status.split(",") } }
+        $match: {
+          "activeResume.HigherQualification": { $in: status.split(",") },
+        },
       });
     }
 
     if (tech) {
       pipeline.push({
-        $match: { "activeResume.skills.skill": { $in: tech.split(",") } }
+        $match: { "activeResume.skills.skill": { $in: tech.split(",") } },
       });
     }
 
@@ -493,7 +520,7 @@ const getCandidatesData = async (req, res) => {
       if (minExperience) expMatch.$gte = parseInt(minExperience);
       if (maxExperience) expMatch.$lte = parseInt(maxExperience);
       pipeline.push({
-        $match: { "activeResume.CurrentExperience": expMatch }
+        $match: { "activeResume.CurrentExperience": expMatch },
       });
     }
 
@@ -506,28 +533,38 @@ const getCandidatesData = async (req, res) => {
         Phone: 1,
         createdAt: 1,
         // Resume fields with fallback to legacy candidate fields (for backward compatibility)
-        CurrentExperience: { $ifNull: ["$activeResume.CurrentExperience", "$CurrentExperience"] },
+        CurrentExperience: {
+          $ifNull: ["$activeResume.CurrentExperience", "$CurrentExperience"],
+        },
         skills: { $ifNull: ["$activeResume.skills", "$skills"] },
-        HigherQualification: { $ifNull: ["$activeResume.HigherQualification", "$HigherQualification"] },
+        HigherQualification: {
+          $ifNull: [
+            "$activeResume.HigherQualification",
+            "$HigherQualification",
+          ],
+        },
         ImageData: { $ifNull: ["$activeResume.ImageData", "$ImageData"] },
         CurrentRole: { $ifNull: ["$activeResume.CurrentRole", "$CurrentRole"] },
-      }
+      },
     });
 
     // Sort, skip, and limit
     pipeline.push(
       { $sort: { _id: -1 } },
       { $skip: skip },
-      { $limit: limitNum }
+      { $limit: limitNum },
     );
 
     // Get total count
-    const countPipeline = pipeline.slice(0, pipeline.findIndex(p => p.$sort));
+    const countPipeline = pipeline.slice(
+      0,
+      pipeline.findIndex((p) => p.$sort),
+    );
     countPipeline.push({ $count: "total" });
 
     const [candidates, countResult] = await Promise.all([
       Candidate.aggregate(pipeline),
-      Candidate.aggregate(countPipeline)
+      Candidate.aggregate(countPipeline),
     ]);
 
     // Debug logging
@@ -590,20 +627,20 @@ const searchCandidates = async (req, res) => {
                 $expr: {
                   $and: [
                     { $eq: ["$candidateId", "$$candidateId"] },
-                    { $eq: ["$isActive", true] }
-                  ]
-                }
-              }
-            }
+                    { $eq: ["$isActive", true] },
+                  ],
+                },
+              },
+            },
           ],
-          as: "activeResume"
-        }
+          as: "activeResume",
+        },
       },
       {
         $unwind: {
           path: "$activeResume",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       // Project fields with resume data
       {
@@ -612,10 +649,10 @@ const searchCandidates = async (req, res) => {
           LastName: 1,
           Email: 1,
           Phone: 1,
-          CurrentExperience: "$activeResume.CurrentExperience"
-        }
+          CurrentExperience: "$activeResume.CurrentExperience",
+        },
       },
-      { $limit: parseInt(limit) }
+      { $limit: parseInt(limit) },
     ];
 
     const results = await Candidate.aggregate(pipeline);
@@ -669,8 +706,7 @@ const getCandidateById = async (req, res) => {
       ? { _id: id, tenantId: actingAsTenantId }
       : { _id: id };
 
-    const candidate = await Candidate.findOne(query)
-      .lean();
+    const candidate = await Candidate.findOne(query).lean();
 
     if (!candidate) {
       return res.status(404).json({ message: "Candidate not found" });
@@ -679,13 +715,15 @@ const getCandidateById = async (req, res) => {
     // Fetch active resume for the candidate
     const activeResume = await Resume.findOne({
       candidateId: id,
-      isActive: true
+      isActive: true,
     }).lean();
 
     // Get role details from resume's CurrentRole
     let roleDetails = null;
     if (activeResume?.CurrentRole) {
-      roleDetails = await RoleMaster.findOne({ roleName: activeResume.CurrentRole })
+      roleDetails = await RoleMaster.findOne({
+        roleName: activeResume.CurrentRole,
+      })
         .select("roleName roleLabel")
         .lean();
     }
@@ -873,6 +911,63 @@ const deleteCandidate = async (req, res) => {
   }
 };
 
+// ----------------------------- Uniqueness validation apis for Email, phone, linkedin ---------------------------------
+// Check if Email exists within a specific Tenant
+const checkEmailExists = async (req, res) => {
+  try {
+    const { email, tenantId } = req.query;
+
+    if (!tenantId) {
+      return res.status(400).json({ message: "tenantId is required." });
+    }
+
+    // Filter by both field and tenantId
+    const exists = await Candidate.exists({ Email: email, tenantId });
+    res.status(200).json({ exists: !!exists });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error checking email", error: error.message });
+  }
+};
+
+// Check if Phone exists within a specific Tenant
+const checkPhoneExists = async (req, res) => {
+  try {
+    const { phone, tenantId } = req.query;
+
+    if (!tenantId) {
+      return res.status(400).json({ message: "tenantId is required." });
+    }
+
+    const exists = await Candidate.exists({ Phone: phone, tenantId });
+    res.status(200).json({ exists: !!exists });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error checking phone", error: error.message });
+  }
+};
+
+// Check if LinkedIn URL exists within a specific Tenant
+const checkLinkedInExists = async (req, res) => {
+  try {
+    const { url, tenantId } = req.query;
+
+    if (!tenantId) {
+      return res.status(400).json({ message: "tenantId is required." });
+    }
+
+    const exists = await Candidate.exists({ linkedInUrl: url, tenantId });
+    res.status(200).json({ exists: !!exists });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error checking LinkedIn", error: error.message });
+  }
+};
+// ----------------------------- Uniqueness validation apis for Email, phone, linkedin ---------------------------------
+
 module.exports = {
   getCandidates,
   addCandidatePostCall,
@@ -882,4 +977,8 @@ module.exports = {
   getCandidateById,
   //getCandidatePositionById,
   deleteCandidate,
+  // uniqueness validation
+  checkEmailExists,
+  checkPhoneExists,
+  checkLinkedInExists,
 };

@@ -492,7 +492,7 @@ const createInterview = async (req, res) => {
           tenantId: orgId,
           companyId,
           interviewId: interview._id,
-          status: "INTERVIEWING",
+          status: "NEW",
           currentStage: "Interview Created",
           ownerId: userId,
           createdBy: userId,

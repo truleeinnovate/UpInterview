@@ -351,18 +351,10 @@
 
 // export default InterviewerTags;
 
+
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
-import {
-  CheckCircle,
-  Eye,
-  MoreVertical,
-  Pencil,
-  Trash,
-  Users,
-} from "lucide-react";
-
-// Components
+import { CheckCircle, Eye, MoreVertical, Pencil, Trash } from "lucide-react";
 import Header from "../../../../Components/Shared/Header/Header";
 import Toolbar from "../../../../Components/Shared/Toolbar/Toolbar";
 import TableView from "../../../../Components/Shared/Table/TableView";
@@ -370,8 +362,6 @@ import KanbanView from "../../../../Components/Shared/KanbanCommon/KanbanCommon.
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import InfoGuide from "../CommonCode-AllTabs/InfoCards";
 import DeleteConfirmModal from "../../../Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
-
-// Hooks & Utilities
 import { usePermissions } from "../../../../Context/PermissionsContext";
 import {
   useInterviewerTags,
@@ -380,7 +370,6 @@ import {
 import { notify } from "../../../../services/toastService";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
-import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField.jsx";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -491,28 +480,9 @@ const InterviewerTags = () => {
   const [selectedFilters, setSelectedFilters] = useState(defaultFilters);
   const [tempFilters, setTempFilters] = useState(defaultFilters);
 
-  // Change this to reflect we are selecting a category
-  const [selectedCategory, setSelectedCategory] = useState("all");
-
-  // 1. Prepare options based on CATEGORIES
-  const categoryOptions = useMemo(() => {
-    const options = Object.entries(categoryLabels).map(([key, label]) => ({
-      value: key,
-      label: label,
-    }));
-    return [{ value: "all", label: "All Categories" }, ...options];
-  }, [categoryLabels]);
-
   // --- FILTER LOGIC ---
   const processedData = useMemo(() => {
     let result = [...tags];
-
-    // Dropdown Category Filter
-    if (selectedCategory !== "all") {
-      result = result.filter(
-        (t) => (t.category || "other") === selectedCategory,
-      );
-    }
 
     // Search filter
     if (searchQuery) {
@@ -532,7 +502,7 @@ const InterviewerTags = () => {
     }
 
     return result;
-  }, [tags, searchQuery, selectedFilters, selectedCategory]);
+  }, [tags, searchQuery, selectedFilters]);
 
   const paginatedData = processedData.slice(
     currentPage * ITEMS_PER_PAGE,
@@ -646,7 +616,7 @@ const InterviewerTags = () => {
                 skills, certifications, experience levels, or languages. When
                 setting up interview templates or positions, you can specify
                 which tags are required for each round, and the system will
-                automatically suggest matching interviewers. teams alongside
+                automatically suggest matching interviewers.
                 <div className="mt-2 flex items-start gap-2">
                   <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
                   <strong>Best for:</strong> Granular expertise matching,
@@ -682,20 +652,6 @@ const InterviewerTags = () => {
           isFilterPopupOpen={isFilterPopupOpen}
           dataLength={processedData.length}
           filterIconRef={filterIconRef}
-          startContent={
-            <div className="w-64">
-              <DropdownWithSearchField
-                options={categoryOptions}
-                value={selectedCategory}
-                onChange={(e) => {
-                  setSelectedCategory(e.target.value);
-                  setCurrentPage(0); // Reset to first page on filter change
-                }}
-                placeholder="Filter by Category"
-                isSearchable={true}
-              />
-            </div>
-          }
         />
       </div>
       <div className="flex-grow bg-background">

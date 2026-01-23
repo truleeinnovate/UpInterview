@@ -60,10 +60,10 @@ export const InterviewerCard = ({
 
   if (
     interviewer.interviewer_type === "internal" &&
-    interviewer.user_id &&
-    typeof interviewer.user_id === "object"
+    interviewer.contactId &&
+    typeof interviewer.contactId === "object"
   ) {
-    const user = interviewer.user_id;
+    const user = interviewer.contactId;
     const userName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
     if (userName) displayName = userName;
     if (user.email) displayEmail = user.email;
@@ -160,9 +160,9 @@ export const InterviewerCard = ({
           <div className="flex items-center gap-1 mt-1">
             <Star size={14} className="text-yellow-400 fill-current" />
             <span className="text-sm font-semibold text-gray-700">
-              {interviewer.user_id?.rating
-                ? interviewer.user_id?.rating.toFixed(1)
-                : "0"}
+              {interviewer.contactId.rating
+                ? interviewer.contactId.rating.toFixed(1)
+                : "N/A"}
             </span>
             <span className="text-xs text-gray-400">rating</span>
           </div>
@@ -317,10 +317,10 @@ const Interviewers = () => {
 
         if (
           row.interviewer_type === "internal" &&
-          row.user_id &&
-          typeof row.user_id === "object"
+          row.contactId &&
+          typeof row.contactId === "object"
         ) {
-          const user = row.user_id;
+          const user = row.contactId;
           const userName =
             `${user.firstName || ""} ${user.lastName || ""}`.trim();
           if (userName) displayName = userName;
@@ -357,8 +357,8 @@ const Interviewers = () => {
       header: "Email",
       render: (value, row) => {
         let displayEmail = value;
-        if (!displayEmail && row.user_id?.email) {
-          displayEmail = row.user_id.email;
+        if (!displayEmail && row.contactId?.email) {
+          displayEmail = row.contactId.email;
         }
         return <span className="text-gray-600">{displayEmail || "-"}</span>;
       },
