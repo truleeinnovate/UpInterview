@@ -9,10 +9,18 @@ import { Search, X, ChevronDown, ChevronUp } from "lucide-react";
 import useInterviewers from "../../../../../../hooks/useInterviewers";
 // v1.0.1 <------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
-import { useGroupsQuery } from "../../../../../../apiHooks/useInterviewerGroups.js";
+import {
+  useGroupsQuery,
+  useTeamsQuery,
+} from "../../../../../../apiHooks/useInterviewerGroups.js";
 // v1.0.1 ------------------------------------------------------------>
 import { capitalizeFirstLetter } from "../../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import { useScrollLock } from "../../../../../../apiHooks/scrollHook/useScrollLock.js";
+import {
+  useAllInterviewers,
+  useInterviewerTags,
+} from "../../../../../../apiHooks/useInterviewers.js";
+import { InterviewerCard } from "../../../Interviewers/Interviewers.jsx";
 
 const InternalInterviews = ({
   onClose,
@@ -20,16 +28,22 @@ const InternalInterviews = ({
   navigatedfrom,
   selectedInterviewers: selectedInterviewersProp = [],
   defaultViewType = "individuals",
-  selectedGroupName = "",
-  selectedGroupId,
+  // selectedGroupName = "",
+  // selectedGroupId,
+  selectedTeamIds,
+  selectedTagIds,
 }) => {
-  const { data: groups = [] } = useGroupsQuery();
-  const { interviewers } = useInterviewers();
-  //console.log("interviewers", interviewers);
+  // const { data: groups = [] } = useGroupsQuery();
+  // const { interviewers } = useInterviewers();
+  const { data: interviewers = [] } = useAllInterviewers({ active_only: true });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const modalRef = useRef(null);
+
+  const { data: tagsData = [] } = useInterviewerTags({ active_only: true });
+  const { data: teamsData = [] } = useTeamsQuery();
 
   useScrollLock(true);
 
@@ -38,11 +52,14 @@ const InternalInterviews = ({
   // CHANGED: Auto-detect view type based on groupName or groupId
   const [viewType, setViewType] = useState(() => {
     // If groupName or groupId is provided, default to groups view
-    if (selectedGroupName || selectedGroupId) {
-      return "groups";
-    }
+    // if (selectedGroupName || selectedGroupId) {
+    //   return "groups";
+    // }
     return defaultViewType;
   });
+  console.log("tagsData", tagsData);
+  console.log("teamsData", teamsData);
+  console.log("selectedInterviewersProp", selectedInterviewersProp);
 
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
@@ -57,6 +74,50 @@ const InternalInterviews = ({
     { value: "Internal_Interviewer", label: "Internal Interviewer" },
   ];
 
+  // ────────────────────────────────────────────────
+  //   Combined prioritized list: selected → remaining
+  // ────────────────────────────────────────────────
+  // New: prioritized interviewers
+  // New prioritized interviewers with corrected logic
+  const prioritizedInterviewers = useMemo(() => {
+    if (!interviewers?.length) return [];
+    if (!selectedTeamIds?.length && !selectedTagIds?.length) {
+      return interviewers;
+    }
+
+    const selectedTeamIdsSet = new Set(selectedTeamIds || []);
+    const selectedTagIdsSet = new Set(selectedTagIds || []);
+
+    const isSelected = (interviewer) => {
+      // Check for team match
+      const interviewerTeamId = interviewer.team_id?._id || interviewer.team_id;
+      if (interviewerTeamId && selectedTeamIdsSet.has(interviewerTeamId)) {
+        return true;
+      }
+
+      // Check for tag matches
+      const interviewerTags = interviewer.tag_ids || interviewer.tags || [];
+      if (Array.isArray(interviewerTags)) {
+        // Check if any tag matches
+        const hasMatchingTag = interviewerTags.some((tag) => {
+          const tagId = tag._id || tag;
+          return tagId && selectedTagIdsSet.has(tagId);
+        });
+        if (hasMatchingTag) return true;
+      }
+
+      return false;
+    };
+
+    const selected = interviewers.filter(isSelected);
+    const unselected = interviewers.filter((i) => !isSelected(i));
+
+    // You can sort inside selected/unselected if you want (e.g. by name)
+    // selected.sort((a,b) => (a.user_id?.firstName || '').localeCompare(b.user_id?.firstName || ''));
+
+    return [...selected, ...unselected];
+  }, [interviewers, selectedTeamIds, selectedTagIds]);
+
   const getRoleLabel = (roleName) => {
     const role = roles.find((r) => r.value === roleName);
     return role ? role.label : "No role";
@@ -64,35 +125,35 @@ const InternalInterviews = ({
 
   const [selectedInterviewers, setSelectedInterviewers] = useState(() => {
     // CHANGED: Enhanced group detection logic
-    if ((selectedGroupName || selectedGroupId) && groups) {
-      const matchingGroup = groups.find(
-        (group) =>
-          group.name === selectedGroupName || group._id === selectedGroupId
-      );
-      return matchingGroup ? [matchingGroup] : [];
-    }
+    // if ((selectedGroupName || selectedGroupId) && groups) {
+    //   const matchingGroup = groups.find(
+    //     (group) =>
+    //       group.name === selectedGroupName || group._id === selectedGroupId,
+    //   );
+    //   return matchingGroup ? [matchingGroup] : [];
+    // }
     return selectedInterviewersProp;
   });
 
-  // CHANGED: Added useEffect to handle view type changes when group props change
-  useEffect(() => {
-    if (selectedGroupName || selectedGroupId) {
-      setViewType("groups");
-    }
-  }, [selectedGroupName, selectedGroupId]);
+  // // CHANGED: Added useEffect to handle view type changes when group props change
+  // useEffect(() => {
+  //   if (selectedGroupName || selectedGroupId) {
+  //     setViewType("groups");
+  //   }
+  // }, [selectedGroupName, selectedGroupId]);
 
   // CHANGED: Enhanced useEffect to auto-select group when groups data loads
-  useEffect(() => {
-    if ((selectedGroupName || selectedGroupId) && groups && groups.length > 0) {
-      const matchingGroup = groups.find(
-        (group) =>
-          group.name === selectedGroupName || group._id === selectedGroupId
-      );
-      if (matchingGroup) {
-        setSelectedInterviewers([matchingGroup]);
-      }
-    }
-  }, [groups, selectedGroupName, selectedGroupId]);
+  // useEffect(() => {
+  //   if ((selectedGroupName || selectedGroupId) && groups && groups.length > 0) {
+  //     const matchingGroup = groups.find(
+  //       (group) =>
+  //         group.name === selectedGroupName || group._id === selectedGroupId,
+  //     );
+  //     if (matchingGroup) {
+  //       setSelectedInterviewers([matchingGroup]);
+  //     }
+  //   }
+  // }, [groups, selectedGroupName, selectedGroupId]);
 
   //   useEffect(() => {
   //   setSelectedInterviewers([]);
@@ -124,97 +185,101 @@ const InternalInterviews = ({
     };
   }, [onClose]);
 
-  const FilteredData = useMemo(() => {
-    if (viewType === "individuals") {
-      const interviewersArray = Array.isArray(interviewers) ? interviewers : [];
-      return interviewersArray
-        ?.filter((interviewer) => {
-          // <------------------------------- v1.0.0
-          // Filter by internal type
-          if (interviewer.type !== "internal") {
-            return false;
-          }
+  // const FilteredData = useMemo(() => {
+  //   if (viewType === "individuals") {
+  //     const interviewersArray = Array.isArray(interviewers) ? interviewers : [];
+  //     return interviewersArray
+  //       ?.filter((interviewer) => {
+  //         // <------------------------------- v1.0.0
+  //         // Filter by internal type
+  //         if (interviewer.type !== "internal") {
+  //           return false;
+  //         }
 
-          // Filter by selected role
-          if (
-            selectedRole !== "all" &&
-            interviewer?.roleName !== selectedRole
-            // interviewer?.roleLabel !== selectedRole
-          ) {
-            return false;
-          }
+  //         // Filter by selected role
+  //         if (
+  //           selectedRole !== "all" &&
+  //           interviewer?.roleName !== selectedRole
+  //           // interviewer?.roleLabel !== selectedRole
+  //         ) {
+  //           return false;
+  //         }
 
-          // Filter by search query
-          const contact = interviewer.contact || {};
+  //         // Filter by search query
+  //         const contact = interviewer.contact || {};
 
-          // Filter by fullname
-          const fullName = `${contact?.firstName || ""} ${
-            contact?.lastName || ""
-          }`.trim();
+  //         // Filter by fullname
+  //         const fullName = `${contact?.firstName || ""} ${
+  //           contact?.lastName || ""
+  //         }`.trim();
 
-          const matchesSearch = [
-            contact?.firstName,
-            contact?.lastName,
-            fullName,
-            contact?.email,
-            contact?.phone,
-          ].some(
-            (field) =>
-              field &&
-              field.toString().toLowerCase().includes(searchQuery.toLowerCase())
-          );
-          return matchesSearch;
-        })
-        .map((interviewer) => ({
-          _id: interviewer?._id,
-          ...interviewer?.contact,
+  //         const matchesSearch = [
+  //           contact?.firstName,
+  //           contact?.lastName,
+  //           fullName,
+  //           contact?.email,
+  //           contact?.phone,
+  //         ].some(
+  //           (field) =>
+  //             field &&
+  //             field
+  //               .toString()
+  //               .toLowerCase()
+  //               .includes(searchQuery.toLowerCase()),
+  //         );
+  //         return matchesSearch;
+  //       })
+  //       .map((interviewer) => ({
+  //         _id: interviewer?._id,
+  //         ...interviewer?.contact,
 
-          /* System role (permission role) */
-          roleName: interviewer?.roleName,
-          roleLabel: getRoleLabel(interviewer?.roleName),
-          profilePic: interviewer?.contact?.imageData?.path,
+  //         /* System role (permission role) */
+  //         roleName: interviewer?.roleName,
+  //         roleLabel: getRoleLabel(interviewer?.roleName),
+  //         profilePic: interviewer?.contact?.imageData?.path,
 
-          /* Current role (designation) */
-          currentRole: interviewer?.contact?.currentRole || "Not specified",
+  //         /* Current role (designation) */
+  //         currentRole: interviewer?.contact?.currentRole || "Not specified",
 
-          /* Skills */
-          skills: interviewer?.skills || [],
-        }));
-    } else {
-      // Groups filtering remains unchanged
-      return Array.isArray(groups)
-        ? groups.filter((group) => {
-            // Filter by search query
-            const matchesSearch = [group?.name, group?.description]?.some(
-              (field) =>
-                field &&
-                field?.toLowerCase()?.includes(searchQuery?.toLowerCase())
-            );
+  //         /* Skills */
+  //         skills: interviewer?.skills || [],
+  //       }));
+  //   }
+  //   // else {
+  //   //   // Groups filtering remains unchanged
+  //   //   return Array.isArray(groups)
+  //   //     ? groups.filter((group) => {
+  //   //         // Filter by search query
+  //   //         const matchesSearch = [group?.name, group?.description]?.some(
+  //   //           (field) =>
+  //   //             field &&
+  //   //             field?.toLowerCase()?.includes(searchQuery?.toLowerCase()),
+  //   //         );
 
-            // For editing - check if this group matches the selected group name
-            const isSelectedGroup = selectedGroupName
-              ? group.name === selectedGroupName
-              : selectedInterviewersProp?.some(
-                  (selected) => selected?._id === group?._id
-                );
+  //   //         // For editing - check if this group matches the selected group name
+  //   //         // const isSelectedGroup = selectedGroupName
+  //   //         //   ? group.name === selectedGroupName
+  //   //         //   : selectedInterviewersProp?.some(
+  //   //         //       (selected) => selected?._id === group?._id,
+  //   //         //     );
 
-            return matchesSearch || isSelectedGroup;
-          })
-        : [];
-    }
-  }, [
-    interviewers,
-    groups,
-    searchQuery,
-    viewType,
-    selectedRole,
-    selectedGroupName,
-    selectedGroupId,
-  ]); // Added selectedRole to dependencies
+  //   //         return matchesSearch;
+  //   //       })
+  //   //     : [];
+  //   // }
+  // }, [
+  //   interviewers,
+  //   // groups,
+  //   searchQuery,
+  //   viewType,
+  //   selectedRole,
+  //   // selectedGroupName,
+  //   // selectedGroupId,
+  // ]); // Added selectedRole to dependencies
 
-  useEffect(() => {
-    setFilteredData(FilteredData);
-  }, [FilteredData]);
+  // useEffect(() => {
+  //   setFilteredData(FilteredData);
+  // }, [FilteredData]);
 
   // console.log("filteredData", filteredData);
 
@@ -222,29 +287,25 @@ const InternalInterviews = ({
     setSearchQuery(event.target.value);
   };
 
+  // Around line 290-310, replace handleSelectClick:
   const handleSelectClick = (item) => {
-    if (viewType === "groups") {
-      // const isAlreadySelected = selectedInterviewers.some(group => group._id === item._id);
-      // if (isAlreadySelected) {
-      //   setSelectedInterviewers([]);
-      // } else {
-      //  const groupName = selectedInterviewers[0]?.name || '';
-      setSelectedInterviewers([item]);
-      //  onSelectCandidates([item], viewType, item.name);
-      // setSelectedInterviewers([...item]);
-      // }
-    } else {
-      setSelectedInterviewers((prev) => {
-        const isAlreadySelected = prev.some(
-          (interviewer) => interviewer._id === item._id
-        );
-        if (isAlreadySelected) {
-          return prev.filter((interviewer) => interviewer._id !== item._id);
-        } else {
-          return [...prev, item];
-        }
+    setSelectedInterviewers((prev) => {
+      const itemUserId = item?.user_id?._id || item?._id;
+
+      const isAlreadySelected = prev.some((interviewer) => {
+        const selectedUserId = interviewer?.user_id?._id || interviewer?._id;
+        return selectedUserId === itemUserId;
       });
-    }
+
+      if (isAlreadySelected) {
+        return prev.filter((interviewer) => {
+          const selectedUserId = interviewer?.user_id?._id || interviewer?._id;
+          return selectedUserId !== itemUserId;
+        });
+      } else {
+        return [...prev, item];
+      }
+    });
   };
 
   // const handleScheduleClick = () => {
@@ -254,30 +315,37 @@ const InternalInterviews = ({
   // };
 
   const handleScheduleClick = () => {
-    if (viewType === "groups" && selectedInterviewers.length > 0) {
-      // For groups, pass the group name AND group ID
-      const groupName = selectedInterviewers[0]?.name || "";
-      const groupId = selectedInterviewers[0]?._id || "";
+    // if (viewType === "groups" && selectedInterviewers.length > 0) {
+    //   // For groups, pass the group name AND group ID
+    //   const groupName = selectedInterviewers[0]?.name || "";
+    //   const groupId = selectedInterviewers[0]?._id || "";
 
-      onSelectCandidates(selectedInterviewers, viewType, groupName, groupId);
-    } else {
-      // For individuals, just pass the selected interviewers and view type
-      onSelectCandidates(selectedInterviewers, viewType);
-    }
+    //   onSelectCandidates(selectedInterviewers, viewType, groupName, groupId);
+    // } else {
+    // For individuals, just pass the selected interviewers and view type
+    onSelectCandidates(selectedInterviewers, viewType);
+    // }
     onClose();
   };
 
   // const isInterviewerSelected = (item) => selectedInterviewers?.some(interviewer => interviewer._id === item._id);
 
+  // const isInterviewerSelected = (item) => {
+
+  //   return selectedInterviewers.some(
+  //     (interviewer) => interviewer?._id === item?._id || item?.user_id?._id,
+  //   );
+  // };
+
+  // Around line 315-325, replace the isInterviewerSelected function:
   const isInterviewerSelected = (item) => {
-    if (viewType === "groups") {
-      return selectedInterviewers.some(
-        (interviewer) => interviewer.name === item.name
-      );
-    }
-    return selectedInterviewers.some(
-      (interviewer) => interviewer._id === item._id
-    );
+    return selectedInterviewers.some((interviewer) => {
+      // Compare using user_id._id from both sides
+      const selectedUserId = interviewer?.user_id?._id || interviewer?._id;
+      const itemUserId = item?.user_id?._id || item?._id;
+
+      return selectedUserId === itemUserId;
+    });
   };
 
   const toggleDropdown = () => {
@@ -431,6 +499,7 @@ const InternalInterviews = ({
             </div>
           </div>
           {/* v1.0.2 <-------------------------------------------------------------------------- */}
+
           <div
             className={`grid gap-3 sm:grid-cols-1 md:grid-cols-1
             ${
@@ -441,7 +510,7 @@ const InternalInterviews = ({
           `}
           >
             {/* v1.0.2 --------------------------------------------------------------------------> */}
-            {filteredData?.map((item) => (
+            {prioritizedInterviewers?.map((item) => (
               <div
                 key={item._id}
                 className={`relative z-0 flex items-center justify-between p-3 rounded-md transition-all duration-200
@@ -459,91 +528,16 @@ const InternalInterviews = ({
                   navigatedfrom !== "dashboard" && handleSelectClick(item)
                 }
               >
-                {/* <div className="flex items-center"> */}
                 <div
                   className={`flex items-center w-full ${
                     isInterviewerSelected(item) ? "opacity-60" : "opacity-100"
                   }`}
                 >
                   {viewType === "individuals" ? (
-                    <div className="flex items-center">
-                      <div className="w-10 h-10">
-                        {item?.imageData ? (
-                          <div className="w-10 h-10 rounded-full object-cover bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
-                            <img
-                              src={item?.imageData?.path}
-                              alt={`${item?.firstName} ${item?.lastName}`}
-                              className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-10 h-10 rounded-full object-cover bg-custom-blue flex items-center justify-center ring-2 ring-gray-200">
-                            <span className="text-white font-semibold text-md">
-                              {(item?.firstName || "?")[0]?.toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="ml-3 flex flex-col gap-0.5">
-                        {/* Name */}
-                        <div className="flex flex-col justify-start items-start gap-1 mb-3">
-                          <p
-                            title={`${
-                              capitalizeFirstLetter(item?.firstName) || ""
-                            } ${capitalizeFirstLetter(item?.lastName) || ""}`}
-                            className="text-xs font-semibold truncate max-w-[200px] cursor-default text-gray-900 leading-tight"
-                          >
-                            {item?.firstName || item?.lastName
-                              ? `${
-                                  capitalizeFirstLetter(item?.firstName) || ""
-                                } ${
-                                  capitalizeFirstLetter(item?.lastName) || ""
-                                }`
-                              : "No name available"}
-                          </p>
-
-                          {/* System Role (Permission Role) */}
-                          <p
-                            title={item?.roleLabel}
-                            className="inline-block truncate max-w-[200px] text-xs px-2 py-0.5 bg-custom-blue/10 rounded-full 
-                          text-custom-blue font-semibold"
-                          >
-                            {item?.roleLabel}
-                          </p>
-                        </div>
-                        {/* Current Role (Designation) */}
-                        <div className="grid grid-cols-2 mb-1">
-                          <span className="text-xs text-gray-500">
-                            Current Role
-                          </span>
-                          <p
-                            title={item?.currentRole}
-                            className="text-xs truncate max-w-[120px] text-gray-800 leading-tight font-medium"
-                          >
-                            {item?.currentRole}
-                          </p>
-                        </div>
-
-                        {/* Skills */}
-                        <div className="grid grid-cols-2">
-                          <span className="text-xs text-gray-500">Skills</span>
-                          <p
-                            className="text-xs text-gray-800 leading-snug font-medium"
-                            title={item?.skills?.join(", ")}
-                          >
-                            {item?.skills?.length > 0
-                              ? item?.skills?.slice(0, 2)?.join(", ")
-                              : "No skills available"}
-                            {item?.skills?.length > 2 && (
-                              <span className="text-gray-400">
-                                {" "}
-                                +{item?.skills?.length - 2} more
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                    <InterviewerCard
+                      interviewer={item}
+                      from="outsource-interview"
+                    />
                   ) : (
                     <>
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -571,9 +565,6 @@ const InternalInterviews = ({
                             ? item.usersNames.join(", ")
                             : "No users available"}
                         </p>
-                        {/* <span>{item?.usersNames?.firstName || item?.contact?.lastName ?`
-                              ${item?.contact?.firstName + " " + item?.contact?.lastName}` : "Not Provided"}</span> */}
-                        {/* <p className="text-xs text-gray-500">{item.description || 'No description available'}</p> */}
                       </div>
                     </>
                   )}
@@ -602,8 +593,9 @@ const InternalInterviews = ({
               </div>
             ))}
           </div>
+
           {/* v1.0.2 <------------------------------------------------------------------ */}
-          {filteredData?.length === 0 && (
+          {prioritizedInterviewers?.length === 0 && (
             <div className="text-gray-500 flex items-center justify-center h-full mb-8">
               <p>
                 No {viewType === "individuals" ? "interviewers" : "groups"}{" "}

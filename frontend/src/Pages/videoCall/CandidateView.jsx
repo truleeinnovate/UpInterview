@@ -100,7 +100,7 @@ const CandidateView = () =>
     const positionData = isMockInterview ? interviewData?.positionId : {};
     const interviewRoundData =
       interviewData?.rounds[0] || mockinterview?.rounds[0] || {};
-    // console.log("interviewRoundData", interviewRoundData);
+    // console.log("interviewRoundData", candidateData);
 
     // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
     const parseCustomDateTime = (dateTimeStr) => {
@@ -444,7 +444,7 @@ const CandidateView = () =>
                     Welcome,{" "}
                     {candidateData?.FirstName || candidateData?.LastName
                       ? candidateData?.FirstName + " " + candidateData?.LastName
-                      : "Not Available"}
+                      : candidateData?.candidateName}
                     !
                   </h1>
                   <p className="sm:text-sm text-gray-600 text-base">
@@ -536,24 +536,16 @@ const CandidateView = () =>
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4 text-left">
                     <div className="space-y-3">
-                      <div>
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                          Position
-                        </p>
-                        <p className="sm:text-sm md:text-sm text-base font-semibold text-gray-900">
-                          {positionData?.title || "Not Available"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                          Company
-                        </p>
-                        <p className="sm:text-sm md:text-sm text-base font-semibold text-gray-900">
-                          {positionData?.companyname || "Not Available"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
+                      {!isMockInterview && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Position
+                          </p>
+                          <p className="sm:text-sm md:text-sm text-base font-semibold text-gray-900">
+                            {positionData?.title || "Not Available"}
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Time
@@ -575,6 +567,18 @@ const CandidateView = () =>
                         </p>
                       )} */}
                       </div>
+                    </div>
+                    <div className="space-y-3">
+                      {!isMockInterview && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Company
+                          </p>
+                          <p className="sm:text-sm md:text-sm text-base font-semibold text-gray-900">
+                            {positionData?.companyname || "Not Available"}
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Duration

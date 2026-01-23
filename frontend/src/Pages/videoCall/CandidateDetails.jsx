@@ -17,8 +17,8 @@ const CandidateDetails = ({
   positionData,
   isFullScreen = false,
 }) => {
-  console.log("candidate in candidate details ", candidateData);
-  console.log("positionData in candidate details ", positionData);
+  // console.log("candidate in candidate details ", candidateData);
+  // console.log("positionData in candidate details ", positionData);
   const [expandedSections, setExpandedSections] = useState({
     skills: true,
     certificates: false,
