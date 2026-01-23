@@ -1502,7 +1502,7 @@ function RoundFormTemplates() {
               <>
                 {/* v1.0.5 <-------------------------------------------------------- */}
                 {/* ── Required Interviewer Tags Section ── */}
-                <div className="mb-8">
+                <div className="mb-6 mt-6">
                   <div className="space-y-1.5 mb-3">
                     <h3 className="text-base font-semibold text-gray-800">
                       Required Interviewer Tags
