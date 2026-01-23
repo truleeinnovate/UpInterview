@@ -372,12 +372,44 @@ const updateCandidatePatchCall = async (req, res) => {
 
     // Update or create Resume if resume fields are present
     if (Object.keys(resumeUpdateData).length > 1) {
-      await Resume.findOneAndUpdate(
-        { candidateId, isActive: true },
-        { $set: resumeUpdateData },
-        { new: true, upsert: true },
-      );
-      console.log("✅ [updateCandidatePatchCall] Resume updated successfully");
+      // Find the current active resume
+      const currentResume = await Resume.findOne({ candidateId, isActive: true });
+
+      if (currentResume) {
+        // Deactivate the current resume
+        currentResume.isActive = false;
+        await currentResume.save();
+
+        // Create a new resume version merging old data with new updates
+        // We need to exclude _id and createdAt/updatedAt from the old resume copy
+        const { _id, createdAt, updatedAt, __v, ...oldResumeData } = currentResume.toObject();
+
+        const newResume = new Resume({
+          ...oldResumeData,      // Copy existing data
+          ...resumeUpdateData,   // Overwrite with new updates
+          isActive: true,        // Set as active
+          version: (currentResume.version || 1) + 1, // Increment version
+          updatedBy: ownerId,     // Ensure updatedBy is set
+          uploadedAt: new Date() // Set new upload date
+        });
+
+        await newResume.save();
+        console.log(`✅ [updateCandidatePatchCall] New Resume version ${(currentResume.version || 1) + 1} created successfully`);
+      } else {
+        // If no active resume exists, create a new one (version 1)
+        const newResume = new Resume({
+          candidateId,
+          ...resumeUpdateData,
+          isActive: true,
+          version: 1,
+          uploadedAt: new Date(),
+          ownerId,
+          tenantId,
+          createdBy: ownerId
+        });
+        await newResume.save();
+        console.log("✅ [updateCandidatePatchCall] New Resume created successfully (Version 1)");
+      }
     }
 
     // Generate feed
