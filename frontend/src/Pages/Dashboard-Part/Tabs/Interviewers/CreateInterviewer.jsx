@@ -76,6 +76,8 @@ const CreateInterviewer = () => {
   const { interviewers: internalUsers, loading: usersLoading } =
     useInterviewersHook();
 
+  console.log("teams===", teams);
+
   const teamsArray = teams || [];
   const tags = tagsData || [];
 
@@ -173,7 +175,10 @@ const CreateInterviewer = () => {
           email: contact.Email || contact.email || prev.email,
         }));
       }
-    } else if (!formData.contactId && formData.interviewer_type === "internal") {
+    } else if (
+      !formData.contactId &&
+      formData.interviewer_type === "internal"
+    ) {
       setSelectedUserData(null);
       if (!isEditMode) {
         setFormData((prev) => ({
@@ -183,7 +188,12 @@ const CreateInterviewer = () => {
         }));
       }
     }
-  }, [formData.contactId, formData.interviewer_type, internalUsers, isEditMode]);
+  }, [
+    formData.contactId,
+    formData.interviewer_type,
+    internalUsers,
+    isEditMode,
+  ]);
 
   // Check if user is already in selected team
   useEffect(() => {
@@ -473,8 +483,8 @@ const CreateInterviewer = () => {
               {formData.team_id && formData.contactId && (
                 <div
                   className={`mt-2 p-2 rounded text-sm ${userAlreadyInTeam
-                    ? "bg-green-50 text-green-700 border border-green-200"
-                    : "bg-blue-50 text-blue-700 border border-blue-200"
+                      ? "bg-green-50 text-green-700 border border-green-200"
+                      : "bg-blue-50 text-blue-700 border border-blue-200"
                     }`}
                 >
                   {userAlreadyInTeam

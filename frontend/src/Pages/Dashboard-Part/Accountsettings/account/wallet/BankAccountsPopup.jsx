@@ -309,7 +309,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
             onChange={(e) =>
               setNewAccount({ ...newAccount, isDefault: e.target.checked })
             }
-            className="rounded border-gray-300 text-custom-blue focus:ring-custom-blue"
+            className="rounded border-gray-300 accent-custom-blue text-custom-blue focus:ring-custom-blue"
           />
           <span className="text-sm text-gray-700">
             Set as default account for receiving payments

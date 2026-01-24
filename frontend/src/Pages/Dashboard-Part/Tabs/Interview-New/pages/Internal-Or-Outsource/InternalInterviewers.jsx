@@ -290,16 +290,17 @@ const InternalInterviews = ({
   // Around line 290-310, replace handleSelectClick:
   const handleSelectClick = (item) => {
     setSelectedInterviewers((prev) => {
-      const itemUserId = item?.user_id?._id || item?._id;
+      const itemUserId = item?.contactId?._id || item?._id;
 
       const isAlreadySelected = prev.some((interviewer) => {
-        const selectedUserId = interviewer?.user_id?._id || interviewer?._id;
+        const selectedUserId = interviewer?.contactId?._id || interviewer?._id;
         return selectedUserId === itemUserId;
       });
 
       if (isAlreadySelected) {
         return prev.filter((interviewer) => {
-          const selectedUserId = interviewer?.user_id?._id || interviewer?._id;
+          const selectedUserId =
+            interviewer?.contactId?._id || interviewer?._id;
           return selectedUserId !== itemUserId;
         });
       } else {
@@ -341,8 +342,8 @@ const InternalInterviews = ({
   const isInterviewerSelected = (item) => {
     return selectedInterviewers.some((interviewer) => {
       // Compare using user_id._id from both sides
-      const selectedUserId = interviewer?.user_id?._id || interviewer?._id;
-      const itemUserId = item?.user_id?._id || item?._id;
+      const selectedUserId = interviewer?.contactId?._id || interviewer?._id;
+      const itemUserId = item?.contactId?._id || item?._id;
 
       return selectedUserId === itemUserId;
     });
@@ -370,12 +371,26 @@ const InternalInterviews = ({
     onSelectCandidates([], type, "");
   };
 
+  // Add these helper functions after your state declarations
+  const getSelectedTags = useMemo(() => {
+    if (!selectedTagIds?.length || !tagsData?.length) return [];
+    return tagsData.filter((tag) => selectedTagIds.includes(tag._id));
+  }, [tagsData, selectedTagIds]);
+
+  const getSelectedTeams = useMemo(() => {
+    if (!selectedTeamIds?.length || !teamsData?.length) return [];
+    return teamsData.filter((team) => selectedTeamIds.includes(team._id));
+  }, [teamsData, selectedTeamIds]);
+
   return (
     // v1.0.3 <----------------------------------------------------------------------------------
     <SidebarPopup
-      title={`Select Internal ${
-        viewType === "individuals" ? "Individuals" : "Groups"
-      }`}
+      title={`Select Internal  individuals
+       
+      `}
+      //   ${
+      //   viewType === "individuals" ? "Individuals" : "Groups"
+      // }
       onClose={onClose}
       // v1.0.2 <--------------------------------
       setIsFullscreen={setIsFullscreen}
@@ -383,20 +398,88 @@ const InternalInterviews = ({
     >
       <div className="flex flex-col h-full">
         {/* <------------------------------- v1.0.0  */}
-        <div className="flex justify-between bg-white items-center sm:px-2 px-6">
-          {/* ------------------------------ v1.0.0 > */}
-          <div>
-            <p className="text-sm text-gray-500">
-              {selectedInterviewers?.length}{" "}
-              {viewType === "individuals" ? "Individual" : "group"}
+        <div className="flex w-full items-start justify-between bg-white px-3 py-3">
+          <div className="flex flex-col gap-3">
+            {/* Left: Selected count */}
+            <p className="text-sm text-gray-600">
+              <span className="font-medium text-gray-900">
+                {selectedInterviewers?.length}
+              </span>{" "}
+              {viewType === "individuals" ? "Individual" : "Group"}
               {selectedInterviewers?.length !== 1 ? "s" : ""} selected
             </p>
+            {/* </div> */}
+
+            {/* Right: Filters */}
+            <div className="flex flex-col  gap-3 px-3 ">
+              {/* Tags */}
+              {getSelectedTags.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-gray-500 mr-1">Tags:</span>
+
+                  {getSelectedTags.map((tag) => (
+                    <span
+                      key={tag._id}
+                      className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border"
+                      style={{
+                        backgroundColor: `${tag.color}15`,
+                        color: tag.color,
+                        borderColor: `${tag.color}30`,
+                      }}
+                    >
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: tag.color }}
+                      />
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Teams */}
+              {getSelectedTeams.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-gray-500 mr-1">Teams:</span>
+
+                  {getSelectedTeams.map((team) => (
+                    <span
+                      key={team._id}
+                      className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200"
+                    >
+                      <span className="h-2 w-2 rounded-full bg-blue-500" />
+                      {team.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          {/* RIGHT SIDE — SEARCH (40%) */}
+          <div className="relative w-[40%]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search individuals..."
+              value={searchQuery}
+              onChange={handleSearchInputChange}
+              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </div>
         </div>
-
         {/* Fixed Dropdown and Search Section */}
 
-        {/* <------------------------------- v1.0.0  */}
+        {/* RIGHT SIDE — SEARCH */}
+        {/* <div className="relative w-full sm:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search individuals..."
+            value={searchQuery}
+            onChange={handleSearchInputChange}
+            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
+          />
+        </div> */}
 
         {/* Scrollable Data Section */}
         <div className="flex-1 sm:px-2 px-6 py-4">
@@ -406,96 +489,35 @@ const InternalInterviews = ({
             {/* <div className="w-full grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-3 my-5"> */}
             <div
               className={`w-full grid gap-3 my-5 sm:grid-cols-1 md:grid-cols-1 
-              ${
-                viewType === "individuals"
-                  ? "lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
-                  : "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-              }`}
+              
+              
+              `}
             >
+              {/* Right side (search) */}
+              {/* <div className="relative w-full max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search individuals..."
+                  value={searchQuery}
+                  onChange={handleSearchInputChange}
+                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                />
+              </div> */}
               {/* Search Bar */}
               {/* <div className="flex-1"> */}
-              <div className="flex-1 w-full">
-                <div className="relative w-full">
+              {/* <div className=" w-full ">
+                <div className="relative w-[40%] flex items-end">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder={`Search ${
-                      viewType === "individuals" ? "interviewers" : "groups"
-                    }...`}
+                    placeholder={`Search individuals...`}
                     value={searchQuery}
                     onChange={handleSearchInputChange}
                     className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-              </div>
-              {/* View Type Dropdown */}
-              <div className="flex-1 w-full relative" ref={dropdownRef}>
-                <button
-                  onClick={toggleDropdown}
-                  className="w-full flex justify-between items-center border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <span>
-                    {viewType === "individuals" ? "Individuals" : "Groups"}
-                  </span>
-                  {showDropdown ? (
-                    <ChevronUp className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
-                  )}
-                </button>
-                {showDropdown && (
-                  <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md py-1 border border-gray-200">
-                    <button
-                      onClick={() => selectViewType("individuals")}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    >
-                      Individuals
-                    </button>
-                    <button
-                      onClick={() => selectViewType("groups")}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    >
-                      Groups
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Role Filter Dropdown */}
-              <div
-                className={`flex-1 w-full relative ${
-                  viewType === "groups" && "hidden"
-                }`}
-                ref={roleDropdownRef}
-              >
-                <button
-                  onClick={toggleRoleDropdown}
-                  className="w-full flex justify-between items-center border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <span>
-                    {roles.find((r) => r.value === selectedRole)?.label ||
-                      "Select Role"}
-                  </span>
-                  {showRoleDropdown ? (
-                    <ChevronUp className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
-                  )}
-                </button>
-                {showRoleDropdown && (
-                  <div className="absolute z-20 mt-1 w-full bg-white shadow-lg rounded-md py-1 border border-gray-200">
-                    {roles.map((role) => (
-                      <button
-                        key={role.value}
-                        onClick={() => selectRole(role.value)}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                      >
-                        {role.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              </div> */}
             </div>
           </div>
           {/* v1.0.2 <-------------------------------------------------------------------------- */}

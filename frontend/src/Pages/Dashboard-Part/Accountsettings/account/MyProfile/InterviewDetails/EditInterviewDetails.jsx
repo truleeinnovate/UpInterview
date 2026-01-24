@@ -48,7 +48,7 @@ const EditInterviewDetails = ({
 
   // Fetch user profile for "my-profile" context
   const { userProfile } = useUserProfile(
-    resolvedId
+    resolvedId,
     // from === "my-profile" ? resolvedId : null
   );
 
@@ -103,7 +103,7 @@ const EditInterviewDetails = ({
           `${process.env.REACT_APP_API_URL}/exchange/rate/current`,
           {
             timeout: 3000,
-          }
+          },
         );
         if (response.data && response.data.rate) {
           const rate = Number(response.data.rate);
@@ -113,14 +113,14 @@ const EditInterviewDetails = ({
           localStorage.setItem("exchangeRate", rate.toString());
           localStorage.setItem(
             "exchangeRateLastUpdate",
-            new Date().toISOString()
+            new Date().toISOString(),
           );
           return;
         }
       } catch (apiError) {
         console.warn(
           "Primary exchange rate API failed, trying fallback...",
-          apiError
+          apiError,
         );
       }
 
@@ -130,7 +130,7 @@ const EditInterviewDetails = ({
           "https://api.exchangerate-api.com/v4/latest/USD",
           {
             timeout: 3000,
-          }
+          },
         );
         if (response.data && response.data.rates && response.data.rates.INR) {
           const rate = Number(response.data.rates.INR.toFixed(2));
@@ -140,7 +140,7 @@ const EditInterviewDetails = ({
           localStorage.setItem("exchangeRate", rate.toString());
           localStorage.setItem(
             "exchangeRateLastUpdate",
-            new Date().toISOString()
+            new Date().toISOString(),
           );
           return;
         }
@@ -171,7 +171,7 @@ const EditInterviewDetails = ({
   // Get years of experience from profile data or props
   const expYears = parseInt(
     profileData?.yearsOfExperience || yearsOfExperience || 0,
-    10
+    10,
   );
 
   const showJuniorLevel = expYears > 0;
@@ -225,7 +225,7 @@ const EditInterviewDetails = ({
         JSON.stringify(updatedFormData) !== JSON.stringify(initialFormData)
       );
     },
-    [initialFormData]
+    [initialFormData],
   );
 
   // Update hasChanges when formData changes
@@ -242,12 +242,12 @@ const EditInterviewDetails = ({
     try {
       const token = localStorage.getItem("token");
       const baseUrl = process.env.REACT_APP_API_URL || "";
-      
+
       // Fetch all rate cards instead of searching by specific technology name
       // This allows us to filter client-side for roleName array matching
       const apiUrl = `${baseUrl}/rate-cards`;
 
-      console.log('Fetching all rate cards from:', apiUrl);
+      console.log("Fetching all rate cards from:", apiUrl);
 
       const response = await axios.get(apiUrl, {
         withCredentials: true,
@@ -261,49 +261,68 @@ const EditInterviewDetails = ({
         const rateCardsData = Array.isArray(response.data)
           ? response.data
           : [response.data];
-        
-        console.log('Total rate cards fetched:', rateCardsData.length);
-        
+
+        console.log("Total rate cards fetched:", rateCardsData.length);
+
         // Filter rate cards to match the selected technology/role
         // Only use the new structure (roleName array)
-        const filteredRateCards = rateCardsData.filter(card => {
+        const filteredRateCards = rateCardsData.filter((card) => {
           const normalizeString = (str) => {
-            return str.toLowerCase()
-              .replace(/\s+/g, '') // Remove all spaces
-              .replace(/[^a-zA-Z0-9]/g, ''); // Remove special characters
+            return str
+              .toLowerCase()
+              .replace(/\s+/g, "") // Remove all spaces
+              .replace(/[^a-zA-Z0-9]/g, ""); // Remove special characters
           };
-          
+
           const normalizedSelectedValue = normalizeString(techName);
-          
+
           // Debug logging
-          console.log('Matching techName:', techName, 'normalized:', normalizedSelectedValue);
-          console.log('Card data:', {
+          console.log(
+            "Matching techName:",
+            techName,
+            "normalized:",
+            normalizedSelectedValue,
+          );
+          console.log("Card data:", {
             roleName: card.roleName,
-            category: card.category
+            category: card.category,
           });
-          
+
           // Check new structure (roleName array)
           if (card.roleName && Array.isArray(card.roleName)) {
-            const match = card.roleName.some(role => {
+            const match = card.roleName.some((role) => {
               const normalizedRole = normalizeString(role);
-              const isMatch = normalizedRole === normalizedSelectedValue ||
-                     normalizedRole.includes(normalizedSelectedValue) ||
-                     normalizedSelectedValue.includes(normalizedRole);
-              console.log('Checking role:', role, 'normalized:', normalizedRole, 'match:', isMatch);
+              const isMatch =
+                normalizedRole === normalizedSelectedValue ||
+                normalizedRole.includes(normalizedSelectedValue) ||
+                normalizedSelectedValue.includes(normalizedRole);
+              console.log(
+                "Checking role:",
+                role,
+                "normalized:",
+                normalizedRole,
+                "match:",
+                isMatch,
+              );
               return isMatch;
             });
             if (match) {
-              console.log('Found match in roleName array for:', techName);
+              console.log("Found match in roleName array for:", techName);
               return true;
             }
           }
-          
+
           return false;
         });
-        
-        console.log('Filtered rate cards:', filteredRateCards);
-        console.log('Total rate cards before filtering:', rateCardsData.length, 'after filtering:', filteredRateCards.length);
-        
+
+        console.log("Filtered rate cards:", filteredRateCards);
+        console.log(
+          "Total rate cards before filtering:",
+          rateCardsData.length,
+          "after filtering:",
+          filteredRateCards.length,
+        );
+
         setRateCards(filteredRateCards);
       }
     } catch (error) {
@@ -320,7 +339,7 @@ const EditInterviewDetails = ({
     (technologyName) => {
       return fetchRateCardsMemoized(technologyName);
     },
-    [fetchRateCardsMemoized]
+    [fetchRateCardsMemoized],
   );
 
   // Changed: Updated useEffect to properly map all backend fields and fetch rate cards
@@ -355,7 +374,7 @@ const EditInterviewDetails = ({
       bio: profileData?.bio || "",
       interviewFormatWeOffer: Array.isArray(
         profileData?.interviewFormatWeOffer ||
-          profileData?.InterviewFormatWeOffer
+          profileData?.InterviewFormatWeOffer,
       )
         ? profileData.interviewFormatWeOffer ||
           profileData?.InterviewFormatWeOffer
@@ -391,7 +410,7 @@ const EditInterviewDetails = ({
       : "";
 
     setSelectedCandidates(
-      selectedTechs
+      selectedTechs,
       // selectedTechs.map((tech) => ({
       //   TechnologyMasterName: tech,
       //   value: tech,
@@ -407,7 +426,7 @@ const EditInterviewDetails = ({
 
     // Set other UI states
     setSelectedSkills(
-      Array.isArray(profileData?.skills) ? profileData.skills : []
+      Array.isArray(profileData?.skills) ? profileData.skills : [],
     );
     setIsReady(profileData?.IsReadyForMockInterviews === "yes");
     setErrors({});
@@ -479,49 +498,62 @@ const EditInterviewDetails = ({
     (level) => {
       if (!rateCards.length) return null;
 
-      console.log('Getting rate ranges for level:', level, 'from', rateCards.length, 'rate cards');
+      console.log(
+        "Getting rate ranges for level:",
+        level,
+        "from",
+        rateCards.length,
+        "rate cards",
+      );
 
       // Find the first rate card that has the specified level
       const rateCard = rateCards.find((card) =>
-        card.levels.some((lvl) => lvl.level === level)
+        card.levels.some((lvl) => lvl.level === level),
       );
 
       if (!rateCard) {
-        console.log('No rate card found for level:', level);
+        console.log("No rate card found for level:", level);
         return null;
       }
 
-      console.log('Found rate card:', rateCard);
+      console.log("Found rate card:", rateCard);
 
       // Find the level data
       const levelData = rateCard.levels.find((lvl) => lvl.level === level);
       if (!levelData) {
-        console.log('No level data found for level:', level);
+        console.log("No level data found for level:", level);
         return null;
       }
 
-      console.log('Level data found:', levelData);
+      console.log("Level data found:", levelData);
 
       // Handle new data structure (direct properties) or fallback to old structure (nested rateRange)
-      if (levelData.inrMin !== undefined && levelData.inrMax !== undefined && 
-          levelData.usdMin !== undefined && levelData.usdMax !== undefined) {
+      if (
+        levelData.inrMin !== undefined &&
+        levelData.inrMax !== undefined &&
+        levelData.usdMin !== undefined &&
+        levelData.usdMax !== undefined
+      ) {
         // New data structure
         const rates = {
           inr: { min: levelData.inrMin, max: levelData.inrMax },
-          usd: { min: levelData.usdMin, max: levelData.usdMax }
+          usd: { min: levelData.usdMin, max: levelData.usdMax },
         };
-        console.log('Using new data structure, rates:', rates);
+        console.log("Using new data structure, rates:", rates);
         return rates;
       } else if (levelData.rateRange) {
         // Old data structure (fallback)
-        console.log('Using old data structure (rateRange):', levelData.rateRange);
+        console.log(
+          "Using old data structure (rateRange):",
+          levelData.rateRange,
+        );
         return levelData.rateRange;
       }
 
-      console.log('No valid rate structure found in level data');
+      console.log("No valid rate structure found in level data");
       return null;
     },
-    [rateCards]
+    [rateCards],
   );
 
   // Handle technology selection
@@ -623,11 +655,11 @@ const EditInterviewDetails = ({
 
       const cleanFormData = {
         PreviousExperienceConductingInterviews: String(
-          formData.PreviousExperienceConductingInterviews?.trim() || ""
+          formData.PreviousExperienceConductingInterviews?.trim() || "",
         ).trim(),
         ...(formData.PreviousExperienceConductingInterviews === "yes" && {
           PreviousExperienceConductingInterviewsYears: String(
-            formData.PreviousExperienceConductingInterviewsYears || "1"
+            formData.PreviousExperienceConductingInterviewsYears || "1",
           ).trim(),
         }),
         currentRole: formData.currentRole ? formData.currentRole : "",
@@ -635,7 +667,7 @@ const EditInterviewDetails = ({
         skills: Array.isArray(formData.skills) ? formData.skills : [],
         InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
         mock_interview_discount: formData.interviewFormatWeOffer.includes(
-          "mock"
+          "mock",
         )
           ? formData.mock_interview_discount
           : "",
@@ -654,7 +686,7 @@ const EditInterviewDetails = ({
             profileData,
           });
           notify.error(
-            "Profile data is not loaded. Please wait and try again."
+            "Profile data is not loaded. Please wait and try again.",
           );
           return;
         }
@@ -689,7 +721,7 @@ const EditInterviewDetails = ({
           }
         } else {
           notify.error(
-            "Network error. Please check your connection and try again."
+            "Network error. Please check your connection and try again.",
           );
           setErrors((prev) => ({ ...prev, form: "Network error" }));
         }
@@ -709,7 +741,7 @@ const EditInterviewDetails = ({
         }
       } else {
         notify.error(
-          "Network error. Please check your connection and try again."
+          "Network error. Please check your connection and try again.",
         );
         setErrors((prev) => ({ ...prev, form: "Network error" }));
       }
@@ -731,7 +763,7 @@ const EditInterviewDetails = ({
     const skillExists = selectedSkills.some(
       (s) =>
         (typeof s === "object" ? s.SkillName : s).toLowerCase() ===
-        trimmedSkill.toLowerCase()
+        trimmedSkill.toLowerCase(),
     );
 
     if (!skillExists) {
@@ -926,13 +958,13 @@ const EditInterviewDetails = ({
   };
 
   const handleTechnologyChange = (selectedValue) => {
-    console.log('=== TECHNOLOGY SELECTION ===');
-    console.log('Selected Technology/Role:', selectedValue);
-    
+    console.log("=== TECHNOLOGY SELECTION ===");
+    console.log("Selected Technology/Role:", selectedValue);
+
     if (selectedValue) {
       // Find the technology from services or create a temporary one
       const technology = currentRoles.find(
-        (t) => t.roleName === selectedValue || t.roleLabel === selectedValue
+        (t) => t.roleName === selectedValue || t.roleLabel === selectedValue,
       ) || {
         _id: Math.random().toString(36).substr(2, 9),
         roleName: selectedValue,
@@ -974,7 +1006,7 @@ const EditInterviewDetails = ({
           },
         };
 
-        console.log('Initial rates set to:', newFormData.rates);
+        console.log("Initial rates set to:", newFormData.rates);
         return newFormData;
       });
 
@@ -990,7 +1022,7 @@ const EditInterviewDetails = ({
       }));
 
       // Fetch rate cards for the selected technology
-      console.log('Fetching rate cards for:', selectedValue);
+      console.log("Fetching rate cards for:", selectedValue);
       fetchRateCards(selectedValue)
         .then(() => {
           console.log("Rate cards fetched for:", selectedValue);
@@ -999,7 +1031,7 @@ const EditInterviewDetails = ({
           console.error("Error fetching rate cards:", error);
         });
     } else {
-      console.log('Technology selection cleared');
+      console.log("Technology selection cleared");
       setSelectedCandidates("");
       setFormData((prev) => ({
         ...prev,
@@ -1020,10 +1052,10 @@ const EditInterviewDetails = ({
   // Apply rates when rateCards are updated
   useEffect(() => {
     if (rateCards.length > 0 && formData.currentRole) {
-      console.log('=== APPLYING RATES ===');
-      console.log('Current Role:', formData.currentRole);
-      console.log('Rate Cards Found:', rateCards.length);
-      
+      console.log("=== APPLYING RATES ===");
+      console.log("Current Role:", formData.currentRole);
+      console.log("Rate Cards Found:", rateCards.length);
+
       const juniorRange = getRateRanges("Junior") || {
         usd: { min: 0 },
         inr: { min: 0 },
@@ -1037,10 +1069,10 @@ const EditInterviewDetails = ({
         inr: { min: 0 },
       };
 
-      console.log('Rate Ranges Extracted:');
-      console.log('Junior Range:', juniorRange);
-      console.log('Mid-Level Range:', midRange);
-      console.log('Senior Range:', seniorRange);
+      console.log("Rate Ranges Extracted:");
+      console.log("Junior Range:", juniorRange);
+      console.log("Mid-Level Range:", midRange);
+      console.log("Senior Range:", seniorRange);
 
       const newRates = {
         junior: {
@@ -1060,15 +1092,22 @@ const EditInterviewDetails = ({
         },
       };
 
-      console.log('FINAL RATES BEING SET:', newRates);
-      console.log('========================');
+      console.log("FINAL RATES BEING SET:", newRates);
+      console.log("========================");
 
       setFormData((prev) => ({
         ...prev,
         rates: newRates,
       }));
     }
-  }, [rateCards, formData.currentRole, formData.rates?.junior?.isVisible, formData.rates?.mid?.isVisible, formData.rates?.senior?.isVisible, getRateRanges]);
+  }, [
+    rateCards,
+    formData.currentRole,
+    formData.rates?.junior?.isVisible,
+    formData.rates?.mid?.isVisible,
+    formData.rates?.senior?.isVisible,
+    getRateRanges,
+  ]);
 
   // Clamp rates when rateCards change - only if rates have values
   useEffect(() => {
@@ -1093,12 +1132,12 @@ const EditInterviewDetails = ({
               newRates[level].usd = clamp(
                 newRates[level].usd,
                 ranges.usd.min,
-                ranges.usd.max
+                ranges.usd.max,
               );
               newRates[level].inr = clamp(
                 newRates[level].inr,
                 ranges.inr.min,
-                ranges.inr.max
+                ranges.inr.max,
               );
             }
           }
@@ -1156,8 +1195,8 @@ const EditInterviewDetails = ({
                         ?.filter(
                           (skill) =>
                             !selectedSkills.some(
-                              (s) => s.SkillName === skill.SkillName
-                            )
+                              (s) => s.SkillName === skill.SkillName,
+                            ),
                         )
                         .map((skill) => ({
                           value: skill.SkillName,
@@ -1282,7 +1321,7 @@ const EditInterviewDetails = ({
                       onChange={(e) => {
                         handleRadioChange(e.target.value);
                       }}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      className="h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
                     />
                     <span className="ml-2">Yes</span>
                   </label>
@@ -1297,7 +1336,7 @@ const EditInterviewDetails = ({
                       onChange={(e) => {
                         handleRadioChange(e.target.value);
                       }}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      className="h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
                     />
                     <span className="ml-2">No</span>
                   </label>
@@ -1708,7 +1747,7 @@ const EditInterviewDetails = ({
                             </div>
                           </div>
                         </div>
-                      )
+                      ),
                   )}
                 </div>
 
@@ -1773,7 +1812,7 @@ const EditInterviewDetails = ({
                             false
                           }
                           onChange={handleInterviewFormatChange}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                          className="h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
                         />
                       </div>
                       <div className="ml-3">
