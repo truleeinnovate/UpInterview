@@ -9,7 +9,7 @@ import {
 } from "../../../../apiHooks/useInterviewers";
 import { useInterviewerTags } from "../../../../apiHooks/InterviewerTags/useInterviewerTags";
 import {
-  usePaginatedTeams,
+  useTeamsQuery,
   useUpdateTeam,
 } from "../../../../apiHooks/useInterviewerGroups";
 import useInterviewersHook from "../../../../hooks/useInterviewers";
@@ -69,10 +69,7 @@ const CreateInterviewer = () => {
   const updateTeamMutation = useUpdateTeam();
   const { data: interviewerData, isLoading: isLoadingInterviewer } =
     useInterviewerById(id);
-  const { teams, isLoading: teamsLoading } = usePaginatedTeams({
-    page: 1,
-    limit: 100,
-  });
+  const { data: teams, isLoading: teamsLoading } = useTeamsQuery();
   const { data: tagsData } = useInterviewerTags({ active_only: true });
 
   // Use the hook to get internal users
@@ -98,9 +95,9 @@ const CreateInterviewer = () => {
         const matchingUser = internalUsers.find(
           (u) =>
             u?.contact?.Email?.toLowerCase() ===
-              interviewerData.email.toLowerCase() ||
+            interviewerData.email.toLowerCase() ||
             u?.contact?.email?.toLowerCase() ===
-              interviewerData.email.toLowerCase(),
+            interviewerData.email.toLowerCase(),
         );
         if (matchingUser) {
           userId = matchingUser.contact?._id || matchingUser._id;
@@ -128,8 +125,8 @@ const CreateInterviewer = () => {
         hourly_rate: interviewerData.hourly_rate || "",
         contract_end_date: interviewerData.contract_end_date
           ? new Date(interviewerData.contract_end_date)
-              .toISOString()
-              .split("T")[0]
+            .toISOString()
+            .split("T")[0]
           : "",
       });
 
@@ -485,11 +482,10 @@ const CreateInterviewer = () => {
               {/* Team membership status message */}
               {formData.team_id && formData.contactId && (
                 <div
-                  className={`mt-2 p-2 rounded text-sm ${
-                    userAlreadyInTeam
+                  className={`mt-2 p-2 rounded text-sm ${userAlreadyInTeam
                       ? "bg-green-50 text-green-700 border border-green-200"
                       : "bg-blue-50 text-blue-700 border border-blue-200"
-                  }`}
+                    }`}
                 >
                   {userAlreadyInTeam
                     ? "✓ User is already a member of this team"
@@ -554,11 +550,10 @@ const CreateInterviewer = () => {
                       className={`
                       relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
                       cursor-pointer transition-all duration-300 ease-in-out border-2
-                      ${
-                        isSelected
+                      ${isSelected
                           ? "bg-custom-blue border-custom-blue text-white shadow-lg shadow-blue-200"
                           : "bg-gray-50 border-custom-blue/30 text-custom-blue hover:bg-white hover:border-custom-blue hover:text-custom-blue hover:shadow-md"
-                      }
+                        }
                    `}
                     >
                       <input

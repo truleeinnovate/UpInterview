@@ -9,6 +9,7 @@ const { Position } = require("../models/Position/position");
 const { ScreeningResult } = require("../models/ScreeningResult");
 const { Application } = require("../models/Application");
 const { Resume } = require("../models/Resume");
+const { generateApplicationNumber } = require("../services/uniqueIdGeneratorService");
 
 /**
  * Screen one or more resumes (PREVIEW ONLY - No Database Saves)
@@ -449,8 +450,33 @@ exports.createCandidatesFromScreening = async (req, res) => {
 
                 savedResults.push(screeningResult);
 
+
+                // Check if position exists
+                const position = await Position.findById(positionId);
+                if (!position) {
+                    return res.status(404).json({ message: "Position not found" });
+                }
+
+                // Check if application already exists
+                const existingApplication = await Application.findOne({
+                    candidateId,
+                    positionId,
+                    tenantId,
+                });
+
+                if (existingApplication) {
+                    return res.status(409).json({
+                        message: "Application already exists for this candidate and position",
+                        data: existingApplication,
+                    });
+                }
+
+                // Generate application number in format: NAME-TECH-YEAR-0001
+                const applicationNumber = await generateApplicationNumber(candidate, position, tenantId);
+
                 // 3. Create Application
                 const applicationData = {
+                    applicationNumber: applicationNumber,
                     tenantId: tenantId,
                     positionId: positionId,
                     candidateId: candidateId,
