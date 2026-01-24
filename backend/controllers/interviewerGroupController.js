@@ -115,7 +115,7 @@ const getPaginatedTeams = async (req, res) => {
         model: "Contacts",
         select: "firstName lastName _id",
       })
-      .sort({ _id: -1 })
+      .sort({ createdAt: -1 })
       .skip(page * limit)
       .limit(limit);
 

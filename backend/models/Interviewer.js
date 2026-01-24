@@ -111,7 +111,10 @@ interviewerSchema.index({ tenantId: 1 });
 interviewerSchema.index({ email: 1, tenantId: 1 });
 interviewerSchema.index({ full_name: 'text', email: 'text' });
 interviewerSchema.index({ is_active: 1, tenantId: 1 });
+interviewerSchema.index({ is_active: 1, tenantId: 1 });
 interviewerSchema.index({ interviewer_type: 1, tenantId: 1 });
+interviewerSchema.index({ tenantId: 1, createdAt: -1 });
+interviewerSchema.index({ tenantId: 1, _id: -1 });
 
 // Virtual for display name
 interviewerSchema.virtual('displayName').get(function () {

@@ -65,7 +65,7 @@ const getAllInterviewers = async (req, res) => {
             .populate('tag_ids', 'name color category')
             .populate('team_id', 'name color')
             .populate('contactId', 'firstName lastName email currentRole imageData rating')
-            .sort({ _id: -1 })
+            .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limitNum)
             .lean();
@@ -106,7 +106,7 @@ const getAllInterviewersData = async (req, res) => {
             .populate('tag_ids', 'name color category')
             .populate('team_id', 'name color')
             .populate('contactId', 'firstName lastName email currentRole imageData rating')
-            .sort({ _id: -1 })
+            .sort({ createdAt: -1 })
             .lean();
 
         res.status(200).json(interviewers);

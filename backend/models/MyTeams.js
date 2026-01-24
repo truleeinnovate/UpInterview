@@ -56,5 +56,9 @@ teamSchema.virtual('memberCount').get(function () {
 teamSchema.set('toJSON', { virtuals: true });
 teamSchema.set('toObject', { virtuals: true });
 
+// Indexes for efficient querying
+teamSchema.index({ tenantId: 1, createdAt: -1 });
+teamSchema.index({ tenantId: 1, _id: -1 });
+
 // Keep model name as MyTeams for backward compatibility with existing collections
 module.exports = mongoose.model('MyTeams', teamSchema);

@@ -48,6 +48,8 @@ interviewerTagSchema.index({ tenantId: 1 });
 interviewerTagSchema.index({ name: 1, tenantId: 1 });
 interviewerTagSchema.index({ category: 1, tenantId: 1 });
 interviewerTagSchema.index({ is_active: 1, tenantId: 1 });
+interviewerTagSchema.index({ tenantId: 1, createdAt: -1 });
+interviewerTagSchema.index({ tenantId: 1, _id: -1 });
 
 // Ensure virtuals are included in JSON output
 interviewerTagSchema.set('toJSON', { virtuals: true });

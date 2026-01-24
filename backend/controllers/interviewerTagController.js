@@ -22,7 +22,7 @@ const getAllTags = async (req, res) => {
         }
 
         const tags = await InterviewerTag.find(filter)
-            .sort('category name')
+            .sort({ createdAt: -1 })
             .lean();
 
         res.status(200).json(tags);
@@ -68,7 +68,7 @@ const getPaginatedTags = async (req, res) => {
         const totalPages = Math.ceil(totalItems / limitNum);
 
         const tags = await InterviewerTag.find(filter)
-            .sort({ _id: -1 })
+            .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limitNum)
             .lean();
