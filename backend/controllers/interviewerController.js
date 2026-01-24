@@ -3,114 +3,59 @@ const Interviewer = require("../models/Interviewer");
 
 // Get all interviewers with pagination and filters
 const getAllInterviewers = async (req, res) => {
-    try {
-        const tenantId = res.locals.auth?.actingAsTenantId;
-        if (!tenantId) {
-            return res.status(401).json({ message: 'Unauthorized: No tenant ID' });
-        }
-
-        const {
-            page = 0,
-            limit = 10,
-            search = '',
-            tag = '',
-            type = '',
-            status = '',
-            team = '',
-            sortBy = '-createdAt'
-        } = req.query;
-
-        // Build filter query
-        const filter = { tenantId };
-
-        // Search by name or email
-        if (search) {
-            filter.$or = [
-                { full_name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } },
-                { department: { $regex: search, $options: 'i' } }
-            ];
-        }
-
-        // Filter by tag
-        if (tag && tag !== 'all') {
-            filter.tag_ids = tag;
-        }
-
-        // Filter by type (internal/external)
-        if (type && type !== 'all') {
-            filter.interviewer_type = type;
-        }
-
-        // Filter by status (active/inactive)
-        if (status && status !== 'all') {
-            filter.is_active = status === 'active';
-        }
-
-        // Filter by team
-        if (team && team !== 'all') {
-            filter.team_id = team;
-        }
-
-        const skip = Number(page) * Number(limit);
-        const limitNum = Number(limit);
-
-        // Get total count
-        const totalItems = await Interviewer.countDocuments(filter);
-        const totalPages = Math.ceil(totalItems / limitNum);
-
-        // Get interviewers with populated references
-        const interviewers = await Interviewer.find(filter)
-            .populate('tag_ids', 'name color category')
-            .populate('team_id', 'name color')
-            .populate('contactId', 'firstName lastName email currentRole imageData rating')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limitNum)
-            .lean();
-
-        res.status(200).json({
-            data: interviewers,
-            pagination: {
-                currentPage: Number(page),
-                totalPages,
-                totalItems,
-                itemsPerPage: limitNum,
-                hasNext: Number(page) < totalPages - 1,
-                hasPrev: Number(page) > 0
-            }
-        });
-    } catch (error) {
-        console.error('Error fetching interviewers:', error);
-        res.status(500).json({ message: 'Error fetching interviewers', error: error.message });
+  try {
+    const tenantId = res.locals.auth?.actingAsTenantId;
+    if (!tenantId) {
+      return res.status(401).json({ message: "Unauthorized: No tenant ID" });
     }
 
-    // Filter by team
-    if (team && team !== "all") {
-      filter.team_id = team;
+    const {
+      page = 0,
+      limit = 10,
+      search = "",
+      tag = "",
+      type = "",
+      status = "",
+      team = "",
+      sortBy = "-createdAt",
+    } = req.query;
+
+    const filter = { tenantId };
+
+    // Search
+    if (search) {
+      filter.$or = [
+        { full_name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { department: { $regex: search, $options: "i" } },
+      ];
     }
+
+    // Filters
+    if (tag && tag !== "all") filter.tag_ids = tag;
+    if (type && type !== "all") filter.interviewer_type = type;
+    if (status && status !== "all") filter.is_active = status === "active";
+    if (team && team !== "all") filter.team_id = team;
 
     const skip = Number(page) * Number(limit);
     const limitNum = Number(limit);
 
-    // Get total count
     const totalItems = await Interviewer.countDocuments(filter);
     const totalPages = Math.ceil(totalItems / limitNum);
 
-    // Get interviewers with populated references
     const interviewers = await Interviewer.find(filter)
       .populate("tag_ids", "name color category")
       .populate("team_id", "name color")
       .populate(
         "contactId",
-        "firstName lastName email currentRole imageData rating",
+        "firstName lastName email currentRole imageData rating"
       )
-      .sort({ createdAt: -1 })
+      .sort(sortBy)
       .skip(skip)
       .limit(limitNum)
       .lean();
 
-    res.status(200).json({
+    return res.status(200).json({
       data: interviewers,
       pagination: {
         currentPage: Number(page),
@@ -123,38 +68,20 @@ const getAllInterviewers = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching interviewers:", error);
-    res
-      .status(500)
-      .json({ message: "Error fetching interviewers", error: error.message });
+    return res.status(500).json({
+      message: "Error fetching interviewers",
+      error: error.message,
+    });
   }
 };
 
+
 // Get all interviewers without pagination (for dropdowns)
 const getAllInterviewersData = async (req, res) => {
-    try {
-        const tenantId = res.locals.auth?.actingAsTenantId;
-        if (!tenantId) {
-            return res.status(401).json({ message: 'Unauthorized: No tenant ID' });
-        }
-
-        const { active_only = 'false' } = req.query;
-        const filter = { tenantId };
-
-        if (active_only === 'true') {
-            filter.is_active = true;
-        }
-
-        const interviewers = await Interviewer.find(filter)
-            .populate('tag_ids', 'name color category')
-            .populate('team_id', 'name color')
-            .populate('contactId', 'firstName lastName email currentRole imageData rating')
-            .sort({ createdAt: -1 })
-            .lean();
-
-        res.status(200).json(interviewers);
-    } catch (error) {
-        console.error('Error fetching all interviewers:', error);
-        res.status(500).json({ message: 'Error fetching interviewers', error: error.message });
+  try {
+    const tenantId = res.locals.auth?.actingAsTenantId;
+    if (!tenantId) {
+      return res.status(401).json({ message: "Unauthorized: No tenant ID" });
     }
 
     const { active_only = "false" } = req.query;
@@ -169,20 +96,21 @@ const getAllInterviewersData = async (req, res) => {
       .populate("team_id", "name color")
       .populate(
         "contactId",
-        "firstName lastName email currentRole imageData rating",
+        "firstName lastName email currentRole imageData rating"
       )
       .sort({ createdAt: -1 })
       .lean();
-    console.log("interviewers---------------->", interviewers);
 
-    res.status(200).json(interviewers);
+    return res.status(200).json(interviewers);
   } catch (error) {
     console.error("Error fetching all interviewers:", error);
-    res
-      .status(500)
-      .json({ message: "Error fetching interviewers", error: error.message });
+    return res.status(500).json({
+      message: "Error fetching interviewers",
+      error: error.message,
+    });
   }
 };
+
 
 // Get single interviewer by ID
 const getInterviewerById = async (req, res) => {
