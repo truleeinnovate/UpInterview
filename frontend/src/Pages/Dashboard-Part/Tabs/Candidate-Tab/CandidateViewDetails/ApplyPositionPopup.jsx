@@ -10,6 +10,7 @@ import {
 } from "../../../../../apiHooks/useApplications";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect";
 import { getCurrentTenantId } from "../../../../../utils/AuthCookieManager/AuthCookieManager";
+import { notify } from "../../../../../services/toastService";
 
 const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
     const [selectedPosition, setSelectedPosition] = useState("");
@@ -55,16 +56,31 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
         });
     }, [applications, selectedPosition]);
 
+    // Check if selected position contains any active application
+    const hasActiveApplication = useMemo(() => {
+        if (!selectedPosition || filteredApplications.length === 0) return false;
+
+        // Check if any application is NOT rejected or withdrawn
+        return filteredApplications.some(app =>
+            !["REJECTED", "WITHDRAWN"].includes(app.status)
+        );
+    }, [selectedPosition, filteredApplications]);
+
     // Check if selected position already has an application
     const hasExistingApplication = selectedPosition && filteredApplications.length > 0;
 
     const handleProceed = async () => {
         if (!selectedPosition) {
-            setError("Please select a position");
+            notify.error("Please select a position");
             return;
         }
 
-        setError("");
+        if (hasActiveApplication) {
+            notify.warning("Candidate already has an active application for this position");
+            return;
+        }
+
+        // setError(""); // No longer needed if relying on toasts
 
         try {
             const tenantId = getCurrentTenantId();
@@ -80,13 +96,15 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
             // Reset selection
             setSelectedPosition("");
 
+            notify.success("Application created successfully");
+
             // Notify parent of success
             if (onSuccess) {
                 onSuccess();
             }
         } catch (err) {
             console.error("Failed to create application:", err);
-            setError(
+            notify.error(
                 err.response?.data?.message || "Failed to create application"
             );
         }
@@ -198,7 +216,7 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
                             {/* Proceed Button */}
                             <button
                                 onClick={handleProceed}
-                                disabled={!selectedPosition || isCreating}
+                                disabled={!selectedPosition || isCreating || hasActiveApplication}
                                 className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-custom-blue text-white font-medium rounded-lg hover:bg-custom-blue/90 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                             >
                                 {isCreating ? (
