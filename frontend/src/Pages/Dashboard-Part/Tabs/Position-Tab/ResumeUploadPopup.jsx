@@ -14,6 +14,7 @@ import Breadcrumb from '../../Tabs/CommonCode-AllTabs/Breadcrumb';
 import DropdownSelect from '../../../../Components/Dropdowns/DropdownSelect';
 import CandidateViewer from '../../../../Components/CandidateViewer';
 import { config } from '../../../../config';
+import { notify } from '../../../../services/toastService';
 
 const MAX_FILES = 20;
 
@@ -171,7 +172,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                 candidate_name: result.candidateName || 'Unknown',
                 candidate_email: result.candidateEmail || '',
                 candidate_phone: result.candidatePhone || '',
-                candidate_country_code: result.candidateCountryCode || '', 
+                candidate_country_code: result.candidateCountryCode || '',
                 candidate_phone_number: result.candidatePhoneNumber || '',
                 match_percentage: result.matchPercentage ?? null,
                 match_status: result.matchStatus || 'new_candidate',
@@ -214,7 +215,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
             console.error('Screening error:', error);
             setIsProcessing(false);
             setCurrentStep(1);
-            alert(`Screening failed: ${error.message}`);
+            notify.error(`Screening failed: ${error.message}`);
         }
     };
 
@@ -294,17 +295,17 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
 
             if (!response.ok || !data.success) {
                 console.error('Failed to save screening results:', data);
-                alert(`Failed to save: ${data.error || 'Unknown error'}`);
+                notify.error(`Failed to save: ${data.error || 'Unknown error'}`);
             } else {
                 console.log('Saved successfully:', data);
-                alert(`Successfully saved ${data.screeningResults?.length || 0} screening results and ${data.applications?.length || 0} applications.`);
+                notify.success(`Successfully saved ${data.screeningResults?.length || 0} screening results and ${data.applications?.length || 0} applications.`);
             }
 
             setIsProceedLoading(false);
             handleClose();
         } catch (error) {
             console.error('Error saving screening results:', error);
-            alert(`Error: ${error.message}`);
+            notify.error(`Error: ${error.message}`);
             setIsProceedLoading(false);
             handleClose();
         }

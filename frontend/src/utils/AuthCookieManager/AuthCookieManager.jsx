@@ -294,7 +294,7 @@ class AuthCookieManager {
   static getCurrentTenantId() {
     // Get the active token based on user type
     const authToken = this.getAuthToken();
-    
+
     if (authToken) {
       try {
         const decoded = decodeJwt(authToken);
@@ -304,7 +304,7 @@ class AuthCookieManager {
         console.warn('Error decoding auth token for tenant ID:', error);
       }
     }
-    
+
     // Fallback: try to get from impersonation token if no auth token
     const impersonationToken = this.getImpersonationToken();
     if (impersonationToken) {
@@ -364,7 +364,7 @@ class AuthCookieManager {
    * 
    * @param {string} userType - The user type to clear permissions for ('effective' or 'superAdmin')
    */
- 
+
   // Login as user (super admin switching to user account)
   // Login as user (clear all cookies and set new user session)
   static async loginAsUser(authToken, userData) {
@@ -458,11 +458,11 @@ class AuthCookieManager {
         if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
           baseUrl = window.location.protocol + '//' + baseUrl;
         }
-        
+
         const loginPath = (effectivePermissions_RoleName === 'Individual' || effectivePermissions_RoleName === 'Individual_Freelancer')
           ? '/individual-login'
           : '/organization-login';
-          
+
         const redirectUrl = `${baseUrl}${loginPath}`;
         window.location.href = redirectUrl;
       } else if (authToken && impersonationToken) {
@@ -631,7 +631,7 @@ class AuthCookieManager {
     }
   }
 
- }
+}
 
 
 
@@ -642,34 +642,34 @@ export const clearCookie = AuthCookieManager.clearCookie.bind(AuthCookieManager)
 export const verifyCookieState = AuthCookieManager.verifyCookieState;
 
 // Token getters
-export const getAuthToken = AuthCookieManager.getAuthToken;
-export const getImpersonationToken = AuthCookieManager.getImpersonationToken;
-export const getActiveToken = AuthCookieManager.getActiveToken;
-export const getActiveUserData = AuthCookieManager.getActiveUserData;
-export const getCurrentUserId = AuthCookieManager.getCurrentUserId;
-export const getCurrentTenantId = AuthCookieManager.getCurrentTenantId;
+export const getAuthToken = AuthCookieManager.getAuthToken.bind(AuthCookieManager);
+export const getImpersonationToken = AuthCookieManager.getImpersonationToken.bind(AuthCookieManager);
+export const getActiveToken = AuthCookieManager.getActiveToken.bind(AuthCookieManager);
+export const getActiveUserData = AuthCookieManager.getActiveUserData.bind(AuthCookieManager);
+export const getCurrentUserId = AuthCookieManager.getCurrentUserId.bind(AuthCookieManager);
+export const getCurrentTenantId = AuthCookieManager.getCurrentTenantId.bind(AuthCookieManager);
 
 // User type management
-export const getUserType = AuthCookieManager.getUserType;
-export const setUserType = AuthCookieManager.setUserType;
-export const updateUserType = AuthCookieManager.updateUserType;
-export const syncUserType = AuthCookieManager.syncUserType;
+export const getUserType = AuthCookieManager.getUserType.bind(AuthCookieManager);
+export const setUserType = AuthCookieManager.setUserType.bind(AuthCookieManager);
+export const updateUserType = AuthCookieManager.updateUserType.bind(AuthCookieManager);
+export const syncUserType = AuthCookieManager.syncUserType.bind(AuthCookieManager);
 
 // Authentication status
-export const isAuthenticated = AuthCookieManager.isAuthenticated;
-export const isSuperAdminOnly = AuthCookieManager.isSuperAdminOnly;
-export const isEffectiveUserOnly = AuthCookieManager.isEffectiveUserOnly;
+export const isAuthenticated = AuthCookieManager.isAuthenticated.bind(AuthCookieManager);
+export const isSuperAdminOnly = AuthCookieManager.isSuperAdminOnly.bind(AuthCookieManager);
+export const isEffectiveUserOnly = AuthCookieManager.isEffectiveUserOnly.bind(AuthCookieManager);
 
 // Impersonation
 // export const getImpersonatedUser = AuthCookieManager.getImpersonatedUser;
-export const loginAsUser = AuthCookieManager.loginAsUser;
+export const loginAsUser = AuthCookieManager.loginAsUser.bind(AuthCookieManager);
 
 // Permissions
-export const clearPermissions = AuthCookieManager.clearPermissions;
-export const clearAllPermissionCaches = AuthCookieManager.clearAllPermissionCaches;
+export const clearPermissions = AuthCookieManager.clearPermissions?.bind(AuthCookieManager); // Optional chaining just in case, though clearPermissions is not shown in the class body above but exported?
+export const clearAllPermissionCaches = AuthCookieManager.clearAllPermissionCaches.bind(AuthCookieManager);
 
 // Smart logout
-export const smartLogout = AuthCookieManager.smartLogout;
+export const smartLogout = AuthCookieManager.smartLogout.bind(AuthCookieManager);
 // <---------------------- v1.0.2
 // export const handleTokenExpiration = AuthCookieManager.handleTokenExpiration;
 // ---------------------- v1.0.2 >
