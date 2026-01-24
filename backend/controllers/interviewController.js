@@ -16,7 +16,10 @@ const { Candidate } = require("../models/candidate.js");
 const interviewQuestions = require("../models/Interview/selectedInterviewQuestion.js");
 const { Position } = require("../models/Position/position.js");
 const Wallet = require("../models/WalletTopup");
-const { generateUniqueId, generateApplicationNumber } = require("../services/uniqueIdGeneratorService");
+const {
+  generateUniqueId,
+  generateApplicationNumber,
+} = require("../services/uniqueIdGeneratorService");
 const {
   WALLET_BUSINESS_TYPES,
   createWalletTransaction,
@@ -321,7 +324,7 @@ const createInterview = async (req, res) => {
       "INT",
       Interview,
       "interviewCode",
-      orgId
+      orgId,
     );
 
     // Create interview
@@ -336,7 +339,7 @@ const createInterview = async (req, res) => {
     } catch (notificationError) {
       console.error(
         "[INTERVIEW] Error creating notification:",
-        notificationError
+        notificationError,
       );
       // Continue execution even if notification fails
     }
@@ -390,7 +393,9 @@ const createInterview = async (req, res) => {
             // questions: [], // Initialize as empty array
             rejectionReason: round.rejectionReason || "",
             minimumInterviewers: round.minimumInterviewers || "", // This field doesn't exist in schema
-            interviewerGroupId: round.interviewerGroupId || null, // This field doesn't exist in schema
+            // interviewerGroupId: round.interviewerGroupId || null, // This field doesn't exist in schema
+            InterviewerTags: round.InterviewerTags || [],
+            TeamsIds: round.TeamsIds || [],
           });
 
           // Save the round document
@@ -403,7 +408,7 @@ const createInterview = async (req, res) => {
             } catch (notificationError) {
               console.error(
                 "[INTERVIEW] Error creating round scheduled notification:",
-                notificationError
+                notificationError,
               );
               // Continue execution even if notification fails
             }
@@ -419,7 +424,7 @@ const createInterview = async (req, res) => {
               // Validate questions structure
               const validQuestions = round.questions.every(
                 (q) =>
-                  q && (q.questionId || q._id) && (q.snapshot || q.question)
+                  q && (q.questionId || q._id) && (q.snapshot || q.question),
               );
 
               if (validQuestions) {
@@ -432,17 +437,17 @@ const createInterview = async (req, res) => {
                 await handleInterviewQuestions(
                   interview._id,
                   savedRound._id,
-                  transformedQuestions
+                  transformedQuestions,
                 );
               } else {
                 console.warn(
-                  `Invalid questions structure for round ${savedRound._id}, skipping questions.`
+                  `Invalid questions structure for round ${savedRound._id}, skipping questions.`,
                 );
               }
             } catch (questionError) {
               console.error(
                 `Error saving questions for round ${savedRound._id}:`,
-                questionError
+                questionError,
               );
             }
           }
@@ -477,13 +482,15 @@ const createInterview = async (req, res) => {
         const applicationNumber = await generateApplicationNumber(
           candidate,
           position,
-          orgId
+          orgId,
         );
 
         // Validate companyId - only use if it's a valid ObjectId, not a string
-        const companyId = position?.companyname && mongoose.Types.ObjectId.isValid(position.companyname)
-          ? position.companyname
-          : null;
+        const companyId =
+          position?.companyname &&
+          mongoose.Types.ObjectId.isValid(position.companyname)
+            ? position.companyname
+            : null;
 
         await Application.create({
           applicationNumber,
@@ -499,7 +506,7 @@ const createInterview = async (req, res) => {
         });
         console.log(
           "[INTERVIEW] Application created with number:",
-          applicationNumber
+          applicationNumber,
         );
       } else {
         // Update existing application with interview reference if needed
@@ -512,7 +519,7 @@ const createInterview = async (req, res) => {
         }
         console.log(
           "[INTERVIEW] Application already exists for candidate:",
-          candidateId
+          candidateId,
         );
       }
     } catch (appError) {
@@ -687,12 +694,12 @@ const updateInterview = async (req, res) => {
         await createInterviewStatusUpdateNotification(
           interview,
           existingInterview.status,
-          status
+          status,
         );
       } catch (notificationError) {
         console.error(
           "[INTERVIEW] Error creating status update notification:",
-          notificationError
+          notificationError,
         );
         // Continue execution even if notification fails
       }
@@ -725,6 +732,8 @@ const updateInterview = async (req, res) => {
             duration: round.duration || "",
             instructions: round.instructions || "",
             status: "Draft",
+            InterviewerTags: round.InterviewerTags || [],
+            TeamsIds: round.TeamsIds || [],
           });
 
           const savedRound = await roundDoc.save();
@@ -732,7 +741,7 @@ const updateInterview = async (req, res) => {
           // Handle questions if they exist
           if (round.questions?.length > 0) {
             const validQuestions = round.questions.filter(
-              (q) => q && (q.questionId || q._id)
+              (q) => q && (q.questionId || q._id),
             );
 
             if (validQuestions.length > 0) {
@@ -744,7 +753,7 @@ const updateInterview = async (req, res) => {
               await handleInterviewQuestions(
                 interview._id,
                 savedRound._id,
-                transformedQuestions
+                transformedQuestions,
               );
             }
           }
@@ -1925,7 +1934,7 @@ const getDashboardStats = async (req, res) => {
         const weekStart = new Date(
           now.getFullYear(),
           now.getMonth(),
-          now.getDate() - i * 7
+          now.getDate() - i * 7,
         );
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
@@ -1946,7 +1955,7 @@ const getDashboardStats = async (req, res) => {
         const monthEnd = new Date(
           monthStart.getFullYear(),
           monthStart.getMonth() + 1,
-          0
+          0,
         );
         const count = await Interview.countDocuments({
           ...query,
@@ -1967,7 +1976,7 @@ const getDashboardStats = async (req, res) => {
         const dayStart = new Date(
           now.getFullYear(),
           now.getMonth(),
-          now.getDate() - i
+          now.getDate() - i,
         );
         const dayEnd = new Date(dayStart);
         dayEnd.setHours(23, 59, 59, 999);
@@ -2156,7 +2165,7 @@ const getAllInterviews = async (req, res) => {
           candidate: candidate ? candidate.toObject() : null,
           position: position ? position.toObject() : null,
         };
-      })
+      }),
     );
 
     // reverse like frontend (latest first)
@@ -2181,7 +2190,7 @@ const checkInternalInterviewUsage = async (req, res) => {
 
     const usageCheck = await checkInternalInterviewUsageLimit(
       tenantId,
-      ownerId
+      ownerId,
     );
     const usageStats = await getInternalInterviewUsageStats(tenantId, ownerId);
 
@@ -2311,26 +2320,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-        from: "mockinterviews",
-        localField: "mockInterviewId",
-        foreignField: "_id",
-        as: "mainInterview",
-      }
+          from: "mockinterviews",
+          localField: "mockInterviewId",
+          foreignField: "_id",
+          as: "mainInterview",
+        }
       : {
-        from: "interviews",
-        localField: "interviewId",
-        foreignField: "_id",
-        as: "mainInterview",
-      };
+          from: "interviews",
+          localField: "interviewId",
+          foreignField: "_id",
+          as: "mainInterview",
+        };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2352,23 +2361,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-          {
-            $addFields: {
-              mainTenantIdNormalized: {
-                $cond: [
-                  {
-                    $and: [
-                      { $ne: ["$mainInterview.tenantId", null] },
-                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                    ],
-                  },
-                  { $toObjectId: "$mainInterview.tenantId" },
-                  null,
-                ],
+            {
+              $addFields: {
+                mainTenantIdNormalized: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $ne: ["$mainInterview.tenantId", null] },
+                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                      ],
+                    },
+                    { $toObjectId: "$mainInterview.tenantId" },
+                    null,
+                  ],
+                },
               },
             },
-          },
-        ]
+          ]
         : []),
       // Lookup tenant for organization info
       {
@@ -2502,7 +2511,7 @@ const getAllInterviewRounds = async (req, res) => {
         instructions: 1,
         dateTime: 1,
         interviewerViewType: 1,
-        interviewerGroupId: 1,
+        // interviewerGroupId: 1,
         interviewers: "$interviewerDocs",
         interviewerNames: 1,
         status: 1,
@@ -2750,7 +2759,7 @@ const getInterviewRoundTransaction = async (req, res) => {
         (t) =>
           t.type === "debited" &&
           t.metadata &&
-          t.metadata.settlementStatus === "completed"
+          t.metadata.settlementStatus === "completed",
       );
 
       if (settlementTx) {
@@ -2942,7 +2951,7 @@ const getInterviewDataforOrg = async (req, res) => {
           select: "FirstName LastName Email Phone",
         })
         .select(
-          "scheduledAssessmentId candidateId status progress remainingTime totalScore expiryAt createdAt updatedAt"
+          "scheduledAssessmentId candidateId status progress remainingTime totalScore expiryAt createdAt updatedAt",
         )
         .lean();
 
