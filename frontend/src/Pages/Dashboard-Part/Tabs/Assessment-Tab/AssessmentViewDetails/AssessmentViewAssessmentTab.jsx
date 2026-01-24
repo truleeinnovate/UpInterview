@@ -182,7 +182,7 @@ function AssessmentsTab({ assessment }) {
   const formattedCandidates = (candidates) =>
     (Array.isArray(candidates) ? candidates : []).map((candidate) => ({
       id: candidate._id,
-      _id: candidate.candidateId._id,
+      _id: candidate.candidateId?._id || null,
       FirstName: candidate.candidateId?.FirstName || "Unknown",
       LastName: candidate.candidateId?.LastName || "",
       Email: candidate.candidateId?.Email || "No email",
