@@ -9,7 +9,7 @@ import {
 } from "../../../../apiHooks/useInterviewers";
 import { useInterviewerTags } from "../../../../apiHooks/InterviewerTags/useInterviewerTags";
 import {
-  usePaginatedTeams,
+  useTeamsQuery,
   useUpdateTeam,
 } from "../../../../apiHooks/useInterviewerGroups";
 import useInterviewersHook from "../../../../hooks/useInterviewers";
@@ -69,7 +69,7 @@ const CreateInterviewer = () => {
   const updateTeamMutation = useUpdateTeam();
   const { data: interviewerData, isLoading: isLoadingInterviewer } =
     useInterviewerById(id);
-  const { teams, isLoading: teamsLoading } = usePaginatedTeams({ limit: 100 });
+  const { data: teams, isLoading: teamsLoading } = useTeamsQuery();
   const { data: tagsData } = useInterviewerTags({ active_only: true });
 
   // Use the hook to get internal users
@@ -473,8 +473,8 @@ const CreateInterviewer = () => {
               {formData.team_id && formData.contactId && (
                 <div
                   className={`mt-2 p-2 rounded text-sm ${userAlreadyInTeam
-                      ? "bg-green-50 text-green-700 border border-green-200"
-                      : "bg-blue-50 text-blue-700 border border-blue-200"
+                    ? "bg-green-50 text-green-700 border border-green-200"
+                    : "bg-blue-50 text-blue-700 border border-blue-200"
                     }`}
                 >
                   {userAlreadyInTeam

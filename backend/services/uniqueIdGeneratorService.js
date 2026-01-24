@@ -487,14 +487,14 @@ async function generateApplicationNumber(candidate, position, tenantId) {
     .replace(/[^a-zA-Z]/g, "") // Remove non-alphabetic characters
     .substring(0, 5)
     .toUpperCase()
-    .padEnd(5, "X"); // Pad with X if less than 5 chars
+    .padEnd(5); // Pad with X if less than 5 chars
 
   // Get first 3 chars of position title (uppercase)
   const techCode = (position?.title || "POS")
     .replace(/[^a-zA-Z]/g, "") // Remove non-alphabetic characters
     .substring(0, 3)
     .toUpperCase()
-    .padEnd(3, "X"); // Pad with X if less than 3 chars
+    .padEnd(3); // Pad with X if less than 3 chars
 
   // Get current year
   const currentYear = new Date().getFullYear();
