@@ -270,7 +270,7 @@ const createApplication = async (req, res) => {
             positionId,
             tenantId,
             companyId,
-            status: status || "NEW",
+            status: status || "New",
             currentStage: currentStage || "Application Submitted",
             ownerId: userId,
             createdBy: userId,
