@@ -22,7 +22,7 @@ const getAllTags = async (req, res) => {
         }
 
         const tags = await InterviewerTag.find(filter)
-            .sort('category name')
+            .sort({ createdAt: -1 })
             .lean();
 
         res.status(200).json(tags);
