@@ -29,7 +29,7 @@ const getApplicationsByCandidate = async (req, res) => {
             })
             .populate("candidateId", "FirstName LastName Email")
             .populate("interviewId", "interviewCode status")
-            .sort({ _id: -1 })
+            .sort({ createdAt: -1 })
             .lean();
 
         console.log("[APPLICATION] Found", applications.length, "applications");
@@ -67,7 +67,7 @@ const getApplicationsByPosition = async (req, res) => {
         // Use aggregation to fetch rich data from Resume
         const applications = await Application.aggregate([
             { $match: { positionId: new mongoose.Types.ObjectId(positionId) } },
-            { $sort: { _id: -1 } },
+            { $sort: { createdAt: -1 } },
 
             // Lookup Candidate
             {
