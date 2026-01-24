@@ -3175,7 +3175,7 @@ const RoundFormInterviews = () => {
                   {roundTitle !== "Assessment" && (
                     <>
                       {/* ── Required Interviewer Tags Section ── */}
-                      <div className="mb-6 mt-6">
+                      {/* <div className="mb-6 mt-6">
                         <div className="space-y-1.5 mb-3">
                           <h3 className="text-base font-semibold text-gray-800">
                             Required Interviewer Tags
@@ -3219,10 +3219,10 @@ const RoundFormInterviews = () => {
                             );
                           })}
                         </div>
-                      </div>
+                      </div> */}
 
                       {/* ── Preferred Teams Section ── */}
-                      <div className="mb-6">
+                      {/* <div className="mb-6">
                         <div className="space-y-1.5 mb-3">
                           <h3 className="text-base font-semibold text-gray-800">
                             Preferred Teams
@@ -3262,7 +3262,7 @@ const RoundFormInterviews = () => {
                             );
                           })}
                         </div>
-                      </div>
+                      </div> */}
 
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
