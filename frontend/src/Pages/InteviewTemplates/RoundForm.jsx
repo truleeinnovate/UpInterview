@@ -876,16 +876,7 @@ function RoundFormTemplates() {
 
     try {
       let formattedInterviewers = [];
-      // if (
-      //   formData.interviewerViewType === "groups" &&
-      //   formData.interviewers.length > 0
-      // ) {
-      //   // ✅ If 'groups' view type: extract userIds from each group
-      //   formattedInterviewers = formData.interviewers.flatMap(
-      //     (group) => group.userIds || [],
-      //   );
-      // } else {
-      // ✅ If 'individuals' view type: use _id (internal) or contactId (external)
+
       // console.log("formData.interviewers", formData.interviewers);
       formattedInterviewers = formData.interviewers.map((interviewer) =>
         organization

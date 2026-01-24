@@ -30,7 +30,7 @@ const participantSchema = new mongoose.Schema(
     joinedAt: { type: Date },
     status: { type: String, enum: ["Joined", "Not_Joined"] },
   },
-  { _id: false }
+  { _id: false },
 );
 
 // Only schedule / reschedule / cancel info
@@ -60,7 +60,7 @@ const roundHistorySchema = new mongoose.Schema(
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
-  }
+  },
 );
 
 // Main Interview Round Schema
@@ -92,8 +92,12 @@ const interviewRoundSchema = new mongoose.Schema(
 
     interviewerViewType: String,
     // interviewerGroupName: String,
-    interviewerGroupId: String,
+    // interviewerGroupId: String,
     interviewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contacts" }],
+    InterviewerTags: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "InterviewerTag" },
+    ],
+    TeamsIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "MyTeams" }],
 
     // Candidate (always one per round, included in participants too if needed)
     // candidateId: { type: mongoose.Schema.Types.ObjectId, ref: "Candidate", required: true },
@@ -166,7 +170,7 @@ const interviewRoundSchema = new mongoose.Schema(
     // holdTransactionId: { type: String },
     // heldAmount: { type: Number },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Add middleware to track status changes for internal interview usage
@@ -195,7 +199,7 @@ interviewRoundSchema.pre("save", async function (next) {
             {
               tenantId: interview.tenantId,
               ownerId: interview.ownerId,
-            }
+            },
           );
 
           if (!result.success && newStatus === "Scheduled") {
@@ -244,7 +248,7 @@ interviewRoundSchema.post("findOneAndUpdate", async function (doc) {
   } catch (error) {
     console.error(
       "[InterviewRounds] Error in post-findOneAndUpdate hook:",
-      error
+      error,
     );
   }
 });

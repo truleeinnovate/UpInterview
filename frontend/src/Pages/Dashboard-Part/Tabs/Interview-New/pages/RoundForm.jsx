@@ -51,9 +51,13 @@ import { notify } from "../../../../../services/toastService.js";
 import { ROUND_TITLES } from "../../CommonCode-AllTabs/roundTitlesConfig.js";
 // import InternalInterviewUsageDisplay from "../../../../../Components/InternalInterviewUsageDisplay.jsx";
 import { useVideoSettingsQuery } from "../../../../../apiHooks/VideoDetail.js";
-import { useGroupsQuery } from "../../../../../apiHooks/useInterviewerGroups.js";
+import {
+  useGroupsQuery,
+  useTeamsQuery,
+} from "../../../../../apiHooks/useInterviewerGroups.js";
 import DateChangeConfirmationModal from "../components/DateChangeConfirmationModal.jsx";
 import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
+import { useInterviewerTags } from "../../../../../apiHooks/useInterviewers.js";
 const {
   calculateExpiryDate,
 } = require("../../../../../utils/calculateExpiryDateForInterviewRequests.js");
@@ -134,7 +138,7 @@ function formatStartTimeForZoom(combinedDateTime) {
 
     if (localDate < minFuture) {
       console.warn(
-        "⚠️ Scheduled time is in the past, adjusting to 5 minutes from now"
+        "⚠️ Scheduled time is in the past, adjusting to 5 minutes from now",
       );
       const adjustedDate = new Date(now.getTime() + 5 * 60 * 1000);
       const formatted = adjustedDate
@@ -169,7 +173,7 @@ const RoundFormInterviews = () => {
 
   const ASSESSMENT_DROPDOWN_LIMIT = 50;
   const [assessmentLimit, setAssessmentLimit] = useState(
-    ASSESSMENT_DROPDOWN_LIMIT
+    ASSESSMENT_DROPDOWN_LIMIT,
   );
   const [assessmentSearch, setAssessmentSearch] = useState("");
 
@@ -186,7 +190,9 @@ const RoundFormInterviews = () => {
   });
   // const { groups } = useCustomContext();
   // Get groups data and mutations from TanStack Query
-  const { data: groups = [] } = useGroupsQuery();
+  // const { data: groups = [] } = useGroupsQuery();
+  const { data: tagsData = [] } = useInterviewerTags({ active_only: true });
+  const { data: teamsData = [] } = useTeamsQuery();
   const { checkInternalInterviewUsage, isChecking } =
     useInternalInterviewUsage();
   // v1.0.2 <-----------------------------------------
@@ -264,6 +270,9 @@ const RoundFormInterviews = () => {
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [internalInterviewers, setInternalInterviewers] = useState([]);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
+  const [selectedTeamIds, setSelectedTeamIds] = useState([]);
+
   // Add near: const [combinedDateTime, setCombinedDateTime] = useState("");
   const [liveInstantDisplay, setLiveInstantDisplay] = useState(""); // Live UI preview only
   const instantIntervalRef = useRef(null); // Better than state for interval control
@@ -288,7 +297,7 @@ const RoundFormInterviews = () => {
   const [hasManuallyClearedInterviewers, setHasManuallyClearedInterviewers] =
     useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-
+  const [isCustomRoundTitle, setIsCustomRoundTitle] = useState(false);
   // while editing
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
@@ -299,9 +308,6 @@ const RoundFormInterviews = () => {
     isRequestSent = false,
     // mode, // optional if you switch to mode-based approach
   } = location.state || {};
-
-  console.log("isEdit:", isEdit);
-  console.log("isRequestSent:", isRequestSent);
 
   console.log("Round Edit Data:", roundEditData);
 
@@ -317,7 +323,7 @@ const RoundFormInterviews = () => {
       if (!organization && userId) {
         try {
           const response = await axios.get(
-            `${config.REACT_APP_API_URL}/users/owner/${userId}`
+            `${config.REACT_APP_API_URL}/users/owner/${userId}`,
           );
 
           setOwnerData(response.data);
@@ -394,7 +400,7 @@ const RoundFormInterviews = () => {
           ?.tz(
             localTimeStr,
             "YYYY-MM-DD HH:mm",
-            Intl.DateTimeFormat().resolvedOptions().timeZone
+            Intl.DateTimeFormat().resolvedOptions().timeZone,
           )
           .utc()
           .toDate();
@@ -417,7 +423,7 @@ const RoundFormInterviews = () => {
             ?.tz(
               localTimeStr,
               "YYYY-MM-DD HH:mm",
-              Intl.DateTimeFormat().resolvedOptions().timeZone
+              Intl.DateTimeFormat().resolvedOptions().timeZone,
             )
             .utc()
             .toDate();
@@ -459,7 +465,7 @@ const RoundFormInterviews = () => {
       isEditing,
       roundEditData,
       combinedDateTime,
-    ]
+    ],
   );
 
   // UPDATED: Set initial load complete after first render
@@ -518,7 +524,7 @@ const RoundFormInterviews = () => {
       start.setMilliseconds(0);
 
       const end = new Date(
-        start.getTime() + Number(durationMinutes) * 60 * 1000
+        start.getTime() + Number(durationMinutes) * 60 * 1000,
       );
 
       const formattedStart = formatDateTime(start, true); // Your existing function
@@ -529,7 +535,7 @@ const RoundFormInterviews = () => {
         startISO: start.toISOString(),
       };
     },
-    [formatDateTime]
+    [formatDateTime],
   ); // Assuming you have formatDateTime defined
 
   // ── LIVE PREVIEW UPDATER FOR INSTANT ───────────────────────────────────────
@@ -595,8 +601,8 @@ const RoundFormInterviews = () => {
                   question.snapshot.mandatory === "true" ? "false" : "true",
               },
             }
-          : question
-      )
+          : question,
+      ),
     );
   };
 
@@ -613,13 +619,11 @@ const RoundFormInterviews = () => {
         // ||
         // question.snapshot?._id;
         return id !== questionId;
-      })
+      }),
     );
 
     setRemovedQuestionIds((prev) => [...prev, questionId]);
   };
-
-  const [isCustomRoundTitle, setIsCustomRoundTitle] = useState(false);
 
   // const handleSuggestedTabClick = (questionType) => {
   //   setActiveTab("SuggesstedQuestions");
@@ -635,8 +639,10 @@ const RoundFormInterviews = () => {
     return () => {
       setInternalInterviewers([]);
       setExternalInterviewers([]);
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
+      setSelectedTagIds([]);
+      setSelectedTeamIds([]);
       setInterviewerViewType("individuals");
       setSelectedInterviewType(null);
     };
@@ -649,8 +655,10 @@ const RoundFormInterviews = () => {
       internalInterviewers.length > 0
     ) {
       setInternalInterviewers([]);
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
+      setSelectedTagIds([]);
+      setSelectedTeamIds([]);
       setInterviewerViewType("individuals");
     }
   }, [selectedInterviewType]);
@@ -673,7 +681,7 @@ const RoundFormInterviews = () => {
 
   const { assessmentById: editingAssessment } = useAssessmentById(
     editingAssessmentId,
-    {}
+    {},
   );
 
   const assessmentOptions = React.useMemo(() => {
@@ -717,7 +725,7 @@ const RoundFormInterviews = () => {
 
     if (editingAssessmentId && editingAssessment) {
       const exists = baseOptions.some(
-        (opt) => opt.value === editingAssessmentId
+        (opt) => opt.value === editingAssessmentId,
       );
 
       if (!exists) {
@@ -801,9 +809,9 @@ const RoundFormInterviews = () => {
     }
 
     // === EDIT MODE: Load data from roundEditData ===
-    const foundGroup = groups?.find(
-      (g) => g?._id === roundEditData?.interviewerGroupId
-    );
+    // const foundGroup = groups?.find(
+    //   (g) => g?._id === roundEditData?.interviewerGroupId
+    // );
 
     // Assessment
     if (
@@ -839,8 +847,8 @@ const RoundFormInterviews = () => {
     setInstructions(roundEditData.instructions || "");
     setSequence(roundEditData.sequence || 1);
     setDuration(Number(roundEditData.duration) || 60);
-    setInterviewerGroupName(foundGroup?.name || "");
-    setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
+    // setInterviewerGroupName(foundGroup?.name || "");
+    // setInterviewerGroupId(roundEditData?.interviewerGroupId || "");
     setInterviewerViewType(roundEditData?.interviewerViewType || "individuals");
 
     // Store original scheduling values
@@ -850,6 +858,8 @@ const RoundFormInterviews = () => {
     setOriginalInstructions(roundEditData.instructions || "");
     setOriginalSequence(roundEditData.sequence || 1);
     setOriginalQuestions(roundEditData.questions || []);
+    setSelectedTeamIds(roundEditData?.TeamsIds || []);
+    setSelectedTagIds(roundEditData?.InterviewerTags || []);
 
     // history check for schedule/reschedule action
     if (roundEditData?.history) {
@@ -857,7 +867,7 @@ const RoundFormInterviews = () => {
         (h) =>
           h.action === "Scheduled" ||
           h.action === "Rescheduled" ||
-          h.action === "RequestSent"
+          h.action === "RequestSent",
       );
       // console.log("roundEditData for interviewers", hasScheduleOrReschedule);
       setIsScheduleOrRescheduleInHistory(hasScheduleOrReschedule);
@@ -921,7 +931,7 @@ const RoundFormInterviews = () => {
     // === Handle scheduled date/time parsing ===
     if (roundEditData.dateTime && roundEditData.interviewType === "scheduled") {
       const match = roundEditData.dateTime.match(
-        /^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)/
+        /^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)/,
       );
       if (match) {
         let [, day, month, year, hour, minute, ampm] = match;
@@ -933,7 +943,7 @@ const RoundFormInterviews = () => {
           month - 1,
           day,
           hours,
-          parseInt(minute, 10)
+          parseInt(minute, 10),
         );
 
         if (!isNaN(parsedDate.getTime())) {
@@ -944,13 +954,13 @@ const RoundFormInterviews = () => {
             .tz(
               localTimeStr,
               "YYYY-MM-DD HH:mm",
-              Intl.DateTimeFormat().resolvedOptions().timeZone
+              Intl.DateTimeFormat().resolvedOptions().timeZone,
             )
             .utc()
             .toDate();
           const utcEnd = new Date(utcStart);
           utcEnd.setMinutes(
-            utcEnd.getMinutes() + (Number(roundEditData.duration) || 60)
+            utcEnd.getMinutes() + (Number(roundEditData.duration) || 60),
           );
 
           setStartTime(utcStart.toISOString());
@@ -1005,7 +1015,7 @@ const RoundFormInterviews = () => {
     isEditing,
     roundEditData,
     rounds,
-    groups,
+    // groups,
     hasManuallyClearedInterviewers,
     editingAssessment,
     assessmentData,
@@ -1109,6 +1119,12 @@ const RoundFormInterviews = () => {
     return statusList.includes(status);
   };
 
+  const toggleSelection = (id, setFn) => {
+    setFn((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
   // console.log("ExternalInterviewers", externalInterviewers, status);
 
   const handleScheduledDateChange = (e) => {
@@ -1182,8 +1198,10 @@ const RoundFormInterviews = () => {
       setInterviewQuestionsList([]);
       setInstructions(""); // Ensure instructions are cleared for Assessment
 
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
+      setSelectedTagIds([]);
+      setSelectedTeamIds([]);
       setInterviewerViewType("");
       setInterviewType("instant");
       setScheduledDate("");
@@ -1251,8 +1269,10 @@ const RoundFormInterviews = () => {
       !scheduledDate
     ) {
       setInternalInterviewers([]);
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
+      // setSelectedTagIds([]);
+      // setSelectedTeamIds([]);
       setInterviewerViewType("individuals");
       setSelectedInterviewType(null);
       setHasManuallyClearedInterviewers(true);
@@ -1275,7 +1295,7 @@ const RoundFormInterviews = () => {
         .tz(
           localTimeStr,
           "YYYY-MM-DD HH:mm",
-          Intl.DateTimeFormat().resolvedOptions().timeZone
+          Intl.DateTimeFormat().resolvedOptions().timeZone,
         )
         .utc()
         .toDate();
@@ -1318,8 +1338,8 @@ const RoundFormInterviews = () => {
 
     if (internalInterviewers.length > 0) {
       setInternalInterviewers([]);
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
       setInterviewerViewType("individuals");
       if (selectedInterviewType === "Internal") {
         setSelectedInterviewType(null);
@@ -1353,7 +1373,7 @@ const RoundFormInterviews = () => {
           .tz(
             localTimeStr,
             "YYYY-MM-DD HH:mm",
-            Intl.DateTimeFormat().resolvedOptions().timeZone
+            Intl.DateTimeFormat().resolvedOptions().timeZone,
           )
           .utc()
           .toDate();
@@ -1388,7 +1408,7 @@ const RoundFormInterviews = () => {
           .tz(
             localTimeStr,
             "YYYY-MM-DD HH:mm",
-            Intl.DateTimeFormat().resolvedOptions().timeZone
+            Intl.DateTimeFormat().resolvedOptions().timeZone,
           )
           .utc()
           .toDate();
@@ -1420,7 +1440,7 @@ const RoundFormInterviews = () => {
         .tz(
           localTimeStr,
           "YYYY-MM-DD HH:mm",
-          Intl.DateTimeFormat().resolvedOptions().timeZone
+          Intl.DateTimeFormat().resolvedOptions().timeZone,
         )
         .utc()
         .toDate();
@@ -1471,8 +1491,8 @@ const RoundFormInterviews = () => {
   const handleInternalInterviewerSelect = (
     interviewers,
     viewType,
-    groupName,
-    groupId
+    // groupName,
+    // groupId,
   ) => {
     // if (selectedInterviewType === "External") {
     //   alert(
@@ -1490,29 +1510,29 @@ const RoundFormInterviews = () => {
 
     if (viewType && viewType !== interviewerViewType) {
       setInternalInterviewers([]);
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
       setHasManuallyClearedInterviewers(true);
     }
 
     setInterviewerViewType(viewType);
-    setInterviewerGroupName(groupName);
-    setInterviewerGroupId(groupId);
+    // setInterviewerGroupName(groupName);
+    // setInterviewerGroupId(groupId);
     setSelectedInterviewType("Internal");
 
     // For groups, replace existing selection (only one group can be selected)
-    if (viewType === "groups") {
-      setInternalInterviewers(interviewers);
-    }
+    // if (viewType === "groups") {
+    //   setInternalInterviewers(interviewers);
+    // }
     // For individuals, append new interviewers (avoiding duplicates)
-    else {
-      const uniqueInterviewers = interviewers.filter(
-        (newInterviewer) =>
-          !internalInterviewers.some((i) => i._id === newInterviewer._id)
-      );
-      setInternalInterviewers((prev) => [...prev, ...uniqueInterviewers]);
-      // setInternalInterviewers([...internalInterviewers, ...uniqueInterviewers]);
-    }
+    // else {
+    const uniqueInterviewers = interviewers.filter(
+      (newInterviewer) =>
+        !internalInterviewers.some((i) => i._id === newInterviewer._id),
+    );
+    setInternalInterviewers((prev) => [...prev, ...uniqueInterviewers]);
+    // setInternalInterviewers([...internalInterviewers, ...uniqueInterviewers]);
+    // }
 
     // Extract only contactId values
     // const contactIds = uniqueInterviewers?.map((interviewer) => interviewer.contactId);
@@ -1533,8 +1553,8 @@ const RoundFormInterviews = () => {
   const openExternalModal = () => {
     if (internalInterviewers.length > 0) {
       setInternalInterviewers([]);
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
       setInterviewerViewType("individuals");
       setSelectedInterviewType(null);
       setHasManuallyClearedInterviewers(true); // Important: prevent edit data from reloading old internal
@@ -1553,8 +1573,8 @@ const RoundFormInterviews = () => {
     // Clear internal interviewers when selecting external
     if (internalInterviewers.length > 0) {
       setInternalInterviewers([]);
-      setInterviewerGroupName("");
-      setInterviewerGroupId("");
+      // setInterviewerGroupName("");
+      // setInterviewerGroupId("");
       setInterviewerViewType("individuals");
     }
 
@@ -1563,7 +1583,7 @@ const RoundFormInterviews = () => {
     // Ensure no duplicates and append new interviewers
     const uniqueInterviewers = interviewers.filter(
       (newInterviewer) =>
-        !externalInterviewers.some((i) => i.id === newInterviewer.id)
+        !externalInterviewers.some((i) => i.id === newInterviewer.id),
     );
 
     setSelectedInterviewType("External");
@@ -1581,8 +1601,8 @@ const RoundFormInterviews = () => {
         setHasManuallyClearedInterviewers(true);
         setSelectedInterviewType(null);
         // setInternalInterviewers("")
-        setInterviewerGroupName("");
-        setInterviewerGroupId("");
+        // setInterviewerGroupName("");
+        // setInterviewerGroupId("");
         setInterviewerViewType("individuals");
 
         // Only reset selectedInterviewType if no external interviewers either
@@ -1618,7 +1638,7 @@ const RoundFormInterviews = () => {
   const handleRemoveExternalInterviewer = (interviewerId) => {
     setExternalInterviewers((prev) => {
       const updatedInterviewers = prev.filter(
-        (i) => i.id !== interviewerId && i._id !== interviewerId
+        (i) => i.id !== interviewerId && i._id !== interviewerId,
       );
 
       // Reset selectedInterviewType if no interviewers are left
@@ -1655,15 +1675,15 @@ const RoundFormInterviews = () => {
       "Before clear - internal:",
       internalInterviewers.length,
       "external:",
-      externalInterviewers.length
+      externalInterviewers.length,
     );
 
     setInternalInterviewers([]);
     setExternalInterviewers([]);
     setExternalMaxHourlyRate(0);
     setSelectedInterviewType(null);
-    setInterviewerGroupName("");
-    setInterviewerGroupId("");
+    // setInterviewerGroupName("");
+    // setInterviewerGroupId("");
     setInterviewerViewType("individuals");
 
     // Set the flag to prevent re-initialization
@@ -1681,7 +1701,7 @@ const RoundFormInterviews = () => {
       "After clear - internal:",
       internalInterviewers.length,
       "external:",
-      externalInterviewers.length
+      externalInterviewers.length,
     );
   };
 
@@ -1735,16 +1755,16 @@ const RoundFormInterviews = () => {
           // Compare interviewers (internal)
           JSON.stringify(internalInterviewers.map((i) => i._id).sort()) ===
             JSON.stringify(
-              (roundEditData?.interviewers || []).map((i) => i._id).sort()
+              (roundEditData?.interviewers || []).map((i) => i._id).sort(),
             ) &&
           // Compare external interviewers (from pending requests or accepted)
           JSON.stringify(
-            externalInterviewers.map((i) => i._id || i.id).sort()
+            externalInterviewers.map((i) => i._id || i.id).sort(),
           ) ===
             JSON.stringify(
               (roundEditData?.pendingOutsourceRequests || [])
                 .map((req) => req.interviewerId?._id || req.interviewerId?.id)
-                .sort()
+                .sort(),
             ) &&
           roundEditData?.roundTitle !== "Assessment"; // Exclude Assessment rounds from safe update
 
@@ -1760,7 +1780,7 @@ const RoundFormInterviews = () => {
 
         if (criticalFieldsUnchanged && safeFieldsChanged) {
           console.log(
-            "Safe update detected: only instructions, sequence, or questions changed"
+            "Safe update detected: only instructions, sequence, or questions changed",
           );
           updateType = "SAFE_UPDATE";
           const safePayload = {
@@ -1812,19 +1832,25 @@ const RoundFormInterviews = () => {
 
       // Format interviewers data based on view type
       let formattedInterviewers = [];
-      if (interviewerViewType === "groups" && internalInterviewers.length > 0) {
-        // For groups, we need to handle group data appropriately
-        // Assuming internalInterviewers contains group data when in group view
-        formattedInterviewers = internalInterviewers.flatMap(
-          (group) => group.userIds || []
-        );
-      } else {
-        // For individuals, store their IDs
-        formattedInterviewers = internalInterviewers.map((interviewer) =>
-          organization ? interviewer._id : interviewer.contactId
-        );
-      }
+      // if (interviewerViewType === "groups" && internalInterviewers.length > 0) {
+      //   // For groups, we need to handle group data appropriately
+      //   // Assuming internalInterviewers contains group data when in group view
+      //   formattedInterviewers = internalInterviewers.flatMap(
+      //     (group) => group.userIds || [],
+      //   );
+      // } else {
+      // For individuals, store their IDs
+      // formattedInterviewers = internalInterviewers.map((interviewer) =>
+      //   organization ? interviewer._id : interviewer.contactId,
+      // );
+      // }
       // v1.0.1 <---------------------------------------------------------------------------------
+
+      formattedInterviewers = internalInterviewers?.map((interviewer) =>
+        organization
+          ? interviewer?.contactId?._id || interviewer?._id
+          : interviewer?.contactId?._id || interviewer?._id,
+      );
 
       // If editing and rescheduling, increment rescheduleCount
       let updatedRescheduleCount = roundEditData?.rescheduleCount || 0;
@@ -1834,19 +1860,19 @@ const RoundFormInterviews = () => {
         updatedRescheduleCount = roundEditData?.rescheduleCount || 0;
       }
 
-      console.log("assessmentTemplate", assessmentTemplate);
+      // console.log("assessmentTemplate", assessmentTemplate);
 
       const interviewDateTime = new Date(combinedDateTime);
       const expiryDateTime = calculateExpiryDate(interviewDateTime);
-
+      const isAssessment = roundTitle === "Assessment";
       const roundData = {
         roundTitle: roundTitle === "Other" ? customRoundTitle : roundTitle,
         interviewMode,
         // interviewerGroupName,
-        interviewerGroupId:
-          interviewerViewType === "groups" && roundTitle !== "Assessment"
-            ? interviewerGroupId
-            : "", // added newly
+        // interviewerGroupId:
+        //   interviewerViewType === "groups" && roundTitle !== "Assessment"
+        //     ? interviewerGroupId
+        //     : "", // added newly
         // interviewerViewType,
         rescheduleCount: updatedRescheduleCount,
         sequence,
@@ -1859,8 +1885,8 @@ const RoundFormInterviews = () => {
         status: isReschedule
           ? "Rescheduled"
           : roundTitle === "Assessment"
-          ? "Scheduled"
-          : status,
+            ? "Scheduled"
+            : status,
 
         // stateisReschedule  status: roundTitle === "Assessment" ? "Scheduled" :  status,
         ...(roundTitle !== "Assessment" && {
@@ -1882,6 +1908,10 @@ const RoundFormInterviews = () => {
         ...(selectedInterviewType === "Internal" && {
           interviewers: formattedInterviewers || [],
         }),
+        TeamsIds: isAssessment ? [] : selectedTeamIds,
+        interviewers: !isAssessment
+          ? formattedInterviewers.filter(Boolean)
+          : [],
         // External interviewers: send their _id
         ...(selectedInterviewType === "External" &&
           formattedInterviewers.length === 0 && {
@@ -1958,7 +1988,7 @@ const RoundFormInterviews = () => {
         if (isNewScheduling) {
           const usageCheck = await checkInternalInterviewUsage(
             orgId,
-            !organization ? userId : null
+            !organization ? userId : null,
           );
 
           if (!usageCheck.canSchedule) {
@@ -1969,7 +1999,7 @@ const RoundFormInterviews = () => {
                 `Used: ${usageInfo.utilized || 0}/${
                   usageInfo.entitled || 0
                 } interviews.`,
-              { duration: 5000 }
+              { duration: 5000 },
             );
             setIsSubmitting(false);
             return;
@@ -2011,9 +2041,8 @@ const RoundFormInterviews = () => {
           setMeetingCreationProgress("Creating meeting link...");
 
           try {
-            const { createMeeting } = await import(
-              "../../../../../utils/meetingPlatforms.js"
-            );
+            const { createMeeting } =
+              await import("../../../../../utils/meetingPlatforms.js");
 
             let meetingLink = null;
 
@@ -2027,7 +2056,7 @@ const RoundFormInterviews = () => {
                   duration,
                   selectedInterviewers,
                 },
-                (progress) => setMeetingCreationProgress(progress)
+                (progress) => setMeetingCreationProgress(progress),
               );
             } else if (selectedMeetingPlatform === "zoom") {
               // function formatStartTimeForZoom(combinedDateTime) {
@@ -2071,7 +2100,7 @@ const RoundFormInterviews = () => {
               console.log("🟣 interviewType:", effectiveInterviewType);
 
               const formattedStartTime = formatStartTimeForZoom(
-                effectiveCombinedDateTime
+                effectiveCombinedDateTime,
               );
 
               if (!formattedStartTime) {
@@ -2097,7 +2126,7 @@ const RoundFormInterviews = () => {
               meetingLink = await createMeeting(
                 "zoommeet",
                 { payload: zoomPayload },
-                (progress) => setMeetingCreationProgress(progress)
+                (progress) => setMeetingCreationProgress(progress),
               );
             } else if (selectedMeetingPlatform === "platform") {
               meetingLink = await createMeeting(
@@ -2109,7 +2138,7 @@ const RoundFormInterviews = () => {
                   duration,
                   selectedInterviewers,
                 },
-                (progress) => setMeetingCreationProgress(progress)
+                (progress) => setMeetingCreationProgress(progress),
               );
             }
 
@@ -2206,7 +2235,7 @@ const RoundFormInterviews = () => {
           `${
             backendMessage ||
             "Insufficient available wallet balance to send outsourced interview requests."
-          } Please add at least ₹${numericTopup.toFixed(2)} to your wallet.`
+          } Please add at least ₹${numericTopup.toFixed(2)} to your wallet.`,
         );
       } else if (backendMessage) {
         notify.error(backendMessage);
@@ -2307,8 +2336,11 @@ const RoundFormInterviews = () => {
     setInternalInterviewers([]);
     setExternalInterviewers([]);
     setSelectedInterviewType(null);
-    setInterviewerGroupName("");
-    setInterviewerGroupId("");
+    setSelectedTagIds([]);
+    setSelectedTeamIds([]);
+
+    // setInterviewerGroupName("");
+    // setInterviewerGroupId("");
     setInterviewerViewType("individuals");
     // setInterviewQuestionsList([]);
 
@@ -2373,7 +2405,7 @@ const RoundFormInterviews = () => {
     if (!rounds || rounds.length === 0) return { isValid: true };
 
     const completedOrNonDraftRounds = rounds.filter(
-      (round) => round.status !== "Draft" && round._id !== currentRoundId
+      (round) => round.status !== "Draft" && round._id !== currentRoundId,
     );
 
     const fixedSequences = completedOrNonDraftRounds.map((r) => r.sequence);
@@ -2666,7 +2698,7 @@ const RoundFormInterviews = () => {
                           if (!isNaN(newSequence) && newSequence >= 1) {
                             const validation = validateSequenceInput(
                               newSequence,
-                              roundId
+                              roundId,
                             );
                             if (validation.isValid) {
                               setSequence(newSequence);
@@ -2736,7 +2768,7 @@ const RoundFormInterviews = () => {
                             onChange={(e) => {
                               const id = e.target.value;
                               const selected = (assessmentData || []).find(
-                                (a) => a._id === id
+                                (a) => a._id === id,
                               );
                               if (selected) {
                                 handleAssessmentSelect(selected);
@@ -2752,9 +2784,11 @@ const RoundFormInterviews = () => {
                                 setInternalInterviewers([]);
                                 setExternalInterviewers([]);
                                 setSelectedInterviewType(null);
-                                setInterviewerGroupName("");
-                                setInterviewerGroupId("");
+                                // setInterviewerGroupName("");
+                                // setInterviewerGroupId("");
                                 setInterviewerViewType("individuals");
+                                setSelectedTagIds([]);
+                                setSelectedTeamIds([]);
                               }
                               setErrors((prev) => ({
                                 ...prev,
@@ -2851,7 +2885,7 @@ const RoundFormInterviews = () => {
                                 </span>
                                 <span className="text-xs font-medium text-red-500">
                                   {formatDate(
-                                    selectedAssessmentData?.ExpiryDate
+                                    selectedAssessmentData?.ExpiryDate,
                                   )}
                                 </span>
                               </div>
@@ -2903,7 +2937,7 @@ const RoundFormInterviews = () => {
                                           if (
                                             !sectionData ||
                                             !Array.isArray(
-                                              sectionData.questions
+                                              sectionData.questions,
                                             )
                                           ) {
                                             return (
@@ -2935,7 +2969,7 @@ const RoundFormInterviews = () => {
                                                         .charAt(0)
                                                         .toUpperCase() +
                                                       sectionData?.sectionName.slice(
-                                                        1
+                                                        1,
                                                       )
                                                     : "Unnamed Section"}
                                                 </span>
@@ -2970,7 +3004,7 @@ const RoundFormInterviews = () => {
                                                                       question
                                                                         ._id
                                                                     ],
-                                                                })
+                                                                }),
                                                               )
                                                             }
                                                             className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
@@ -3038,7 +3072,7 @@ const RoundFormInterviews = () => {
                                                                     {question.snapshot?.options?.map(
                                                                       (
                                                                         option,
-                                                                        optIdx
+                                                                        optIdx,
                                                                       ) => (
                                                                         <div
                                                                           key={
@@ -3066,7 +3100,7 @@ const RoundFormInterviews = () => {
                                                                             </span>
                                                                           )}
                                                                         </div>
-                                                                      )
+                                                                      ),
                                                                     )}
                                                                   </div>
                                                                 </div>
@@ -3101,7 +3135,7 @@ const RoundFormInterviews = () => {
                                                                   </span>
                                                                   <span className="text-xs text-gray-700 ml-1">
                                                                     {question.snapshot?.skill?.join(
-                                                                      ", "
+                                                                      ", ",
                                                                     ) || "None"}
                                                                   </span>
                                                                 </div>
@@ -3109,7 +3143,7 @@ const RoundFormInterviews = () => {
                                                             </div>
                                                           )}
                                                         </div>
-                                                      )
+                                                      ),
                                                     )
                                                   ) : (
                                                     <div className="text-center py-4 text-gray-500">
@@ -3121,7 +3155,7 @@ const RoundFormInterviews = () => {
                                               )}
                                             </div>
                                           );
-                                        }
+                                        },
                                       )
                                     ) : (
                                       <div className="text-center py-4 text-gray-500">
@@ -3140,6 +3174,96 @@ const RoundFormInterviews = () => {
 
                   {roundTitle !== "Assessment" && (
                     <>
+                      {/* ── Required Interviewer Tags Section ── */}
+                      <div className="mb-6 mt-6">
+                        <div className="space-y-1.5 mb-3">
+                          <h3 className="text-base font-semibold text-gray-800">
+                            Required Interviewer Tags
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Select tags to match interviewers with specific
+                            expertise for this round
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+                          {tagsData.map((tag) => {
+                            const isSelected = selectedTagIds.includes(tag._id);
+                            return (
+                              <button
+                                key={tag._id}
+                                type="button"
+                                onClick={() =>
+                                  toggleSelection(tag._id, setSelectedTagIds)
+                                }
+                                className={`
+            flex items-center gap-1.5 
+            px-3.5 py-1.5 rounded-full text-sm font-medium
+            border transition-all duration-150
+            ${
+              isSelected
+                ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
+                : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
+            }
+          `}
+                                style={{ "--tag-color": tag.color }}
+                              >
+                                <span
+                                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                  style={{
+                                    backgroundColor: tag.color,
+                                  }}
+                                />
+                                <span className="text-black">{tag.name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* ── Preferred Teams Section ── */}
+                      <div className="mb-6">
+                        <div className="space-y-1.5 mb-3">
+                          <h3 className="text-base font-semibold text-gray-800">
+                            Preferred Teams
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Optionally select teams to prioritize interviewers
+                            from specific groups
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-x-3 gap-y-3">
+                          {teamsData.map((team) => {
+                            const isSelected = selectedTeamIds.includes(
+                              team._id,
+                            );
+                            return (
+                              <button
+                                key={team._id}
+                                type="button"
+                                onClick={() =>
+                                  toggleSelection(team._id, setSelectedTeamIds)
+                                }
+                                className={`
+            flex items-center gap-2 
+            px-4 py-2 rounded-full text-sm font-medium
+            border transition-all duration-150
+            ${
+              isSelected
+                ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
+                : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
+            }
+          `}
+                              >
+                                <span className="text-base">👥</span>
+                                <span className="text-black">{team.name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Interview Scheduling
@@ -3254,7 +3378,7 @@ const RoundFormInterviews = () => {
                                   if (scheduledDate) {
                                     setTimeout(
                                       () => updateTimes(duration),
-                                      1000
+                                      1000,
                                     );
                                   }
                                 }}
@@ -3388,8 +3512,8 @@ const RoundFormInterviews = () => {
                                 roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
                               }
                               disabled={
                                 roundEditData?.interviewerType === "External" ||
@@ -3401,8 +3525,8 @@ const RoundFormInterviews = () => {
                                 roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
                                   : isExternalSelected
-                                  ? "Clear outsourced interviewers first"
-                                  : ""
+                                    ? "Clear outsourced interviewers first"
+                                    : ""
                               }
                             >
                               <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
@@ -3422,8 +3546,8 @@ const RoundFormInterviews = () => {
                                 roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
                               }
                               disabled={
                                 roundEditData?.interviewerType === "External" ||
@@ -3440,8 +3564,8 @@ const RoundFormInterviews = () => {
                                 roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
                                   : isExternalSelected
-                                  ? "Clear outsourced interviewers first"
-                                  : ""
+                                    ? "Clear outsourced interviewers first"
+                                    : ""
                               }
                             >
                               <User className="h-4 w-4 sm:mr-0 mr-1 text-custom-blue" />
@@ -3463,9 +3587,9 @@ const RoundFormInterviews = () => {
                               roundEditData?.interviewerType === "Internal"
                                 ? "opacity-50 cursor-not-allowed"
                                 : isInternalSelected ||
-                                  interviewMode === "Face to Face"
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
+                                    interviewMode === "Face to Face"
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
                             }
                             disabled={
                               roundEditData?.interviewerType === "Internal" ||
@@ -3478,10 +3602,10 @@ const RoundFormInterviews = () => {
                               roundEditData?.interviewerType === "Internal"
                                 ? "Cannot change from Internal to Outsourced interviewers in edit/reschedule"
                                 : isInternalSelected
-                                ? "Clear internal interviewers first"
-                                : interviewMode === "Face to Face"
-                                ? "Outsourced interviewers not allowed for Face-to-Face"
-                                : ""
+                                  ? "Clear internal interviewers first"
+                                  : interviewMode === "Face to Face"
+                                    ? "Outsourced interviewers not allowed for Face-to-Face"
+                                    : ""
                             }
                           >
                             <Users className="h-4 w-4 sm:mr-0 mr-1 text-orange-600" />
@@ -3586,10 +3710,13 @@ const RoundFormInterviews = () => {
                             {isInternalSelected && (
                               <section className="mb-4 mt-2 w-full">
                                 <h4 className="text-sm font-semibold text-gray-600 mb-3">
-                                  {interviewerViewType === "groups" ||
-                                  interviewerGroupId
-                                    ? "Interviewer Groups "
-                                    : "Internal Interviewers "}
+                                  {
+                                    // interviewerViewType === "groups" ||
+                                    // interviewerGroupId
+                                    //   ? "Interviewer Groups "
+                                    //   :
+                                    "Internal Interviewers "
+                                  }
                                   <span className="text-xs text-custom-blue">
                                     (
                                     {selectedInterviewers.length ||
@@ -3602,7 +3729,7 @@ const RoundFormInterviews = () => {
                                 </h4>
                                 <div className="grid grid-cols-4 xl:grid-cols-2 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 w-full gap-4">
                                   {/* Render group card if group exists */}
-                                  {interviewerGroupId && (
+                                  {/* {interviewerGroupId && (
                                     <div
                                       key={`group-${interviewerGroupId}`}
                                       className="rounded-xl border w-[80%] border-blue-200 bg-blue-50 p-3 shadow-sm flex flex-col justify-between"
@@ -3620,7 +3747,7 @@ const RoundFormInterviews = () => {
                                         <button
                                           disabled={
                                             shouldDisable(
-                                              "clearInterviewersBtn"
+                                              "clearInterviewersBtn",
                                             )
                                             // status === "RequestSent" ||
                                             // status === "Scheduled" ||
@@ -3634,8 +3761,7 @@ const RoundFormInterviews = () => {
                                       </div>
                                       <div>
                                         <ul className="list-disc list-inside text-xs text-blue-800 ml-1">
-                                          {/* Check if we have a group with usersNames */}
-                                          {interviewerGroupId &&
+                                         {interviewerGroupId &&
                                           selectedInterviewers[0]?.usersNames
                                             ? // Render group members from usersNames
                                               selectedInterviewers[0].usersNames.map(
@@ -3645,43 +3771,44 @@ const RoundFormInterviews = () => {
                                                   >
                                                     {name}
                                                   </li>
-                                                )
+                                                ),
                                               )
                                             : interviewerGroupId &&
-                                              selectedInterviewers[0]?.userIds
-                                            ? // Fallback: if we have group but no usersNames, show placeholder
-                                              selectedInterviewers[0].userIds.map(
-                                                (userId, i) => (
-                                                  <li
-                                                    key={`${selectedInterviewers[0]._id}-user-${i}`}
-                                                  >
-                                                    User ID: {userId}
-                                                  </li>
+                                                selectedInterviewers[0]?.userIds
+                                              ? // Fallback: if we have group but no usersNames, show placeholder
+                                                selectedInterviewers[0].userIds.map(
+                                                  (userId, i) => (
+                                                    <li
+                                                      key={`${selectedInterviewers[0]._id}-user-${i}`}
+                                                    >
+                                                      User ID: {userId}
+                                                    </li>
+                                                  ),
                                                 )
-                                              )
-                                            : // Render individual interviewers
-                                              selectedInterviewers.map(
-                                                (interviewer, index) => (
-                                                  <li
-                                                    key={`${interviewer._id}-${index}`}
-                                                  >
-                                                    {`${
-                                                      interviewer.firstName ||
-                                                      ""
-                                                    } ${
-                                                      interviewer.lastName || ""
-                                                    }`.trim() ||
-                                                      interviewer.email}
-                                                  </li>
-                                                )
-                                              )}
+                                              : // Render individual interviewers
+                                                selectedInterviewers.map(
+                                                  (interviewer, index) => (
+                                                    <li
+                                                      key={`${interviewer._id}-${index}`}
+                                                    >
+                                                      {`${
+                                                        interviewer.firstName ||
+                                                        ""
+                                                      } ${
+                                                        interviewer.lastName ||
+                                                        ""
+                                                      }`.trim() ||
+                                                        interviewer.email}
+                                                    </li>
+                                                  ),
+                                                )}
                                         </ul>
                                       </div>
                                     </div>
-                                  )}
+                                  )} */}
 
                                   {/* Render individual interviewers if no group */}
-                                  {!interviewerGroupId &&
+                                  {selectedInterviewers?.length > 0 &&
                                     selectedInterviewers.map(
                                       (interviewer, index) => (
                                         <div
@@ -3691,18 +3818,27 @@ const RoundFormInterviews = () => {
                                           <div className="flex items-center">
                                             <User className="h-4 w-4 text-blue-600 mr-2" />
                                             <span className="text-sm font-medium text-blue-900 truncate">
-                                              {`${
+                                              {`${interviewer?.contactId?.firstName || interviewer?.firstName || ""} ${
+                                                interviewer?.contactId
+                                                  ?.lastName ||
+                                                interviewer?.lastName ||
+                                                ""
+                                              }`.trim() ||
+                                                interviewer?.email ||
+                                                interviewer?.contactId?.email}
+
+                                              {/* {`${
                                                 interviewer?.firstName || ""
                                               } ${
                                                 interviewer?.lastName || ""
-                                              }`.trim() || interviewer?.email}
+                                              }`.trim() || interviewer?.email} */}
                                             </span>
                                           </div>
                                           <button
                                             type="button"
                                             onClick={() =>
                                               handleRemoveInternalInterviewer(
-                                                interviewer._id
+                                                interviewer._id,
                                               )
                                             }
                                             // disabled={status === "RequestSent"}
@@ -3711,7 +3847,7 @@ const RoundFormInterviews = () => {
                                               // status === "Scheduled" ||
                                               // status === "ReScheduled"
                                               shouldDisable(
-                                                "removeInterviewerBtn"
+                                                "removeInterviewerBtn",
                                               )
                                             }
                                             className={`text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100 ${
@@ -3719,7 +3855,7 @@ const RoundFormInterviews = () => {
                                               // status === "Scheduled" ||
                                               // status === "ReScheduled"
                                               shouldDisable(
-                                                "removeInterviewerBtn"
+                                                "removeInterviewerBtn",
                                               )
                                                 ? "opacity-50 cursor-not-allowed"
                                                 : ""
@@ -3730,7 +3866,7 @@ const RoundFormInterviews = () => {
                                             <X className="h-4 w-4" />
                                           </button>
                                         </div>
-                                      )
+                                      ),
                                     )}
                                 </div>
                               </section>
@@ -3787,7 +3923,7 @@ const RoundFormInterviews = () => {
                                         type="button"
                                         onClick={() =>
                                           handleRemoveExternalInterviewer(
-                                            interviewer.id || interviewer._id
+                                            interviewer.id || interviewer._id,
                                           )
                                         }
                                         className={`text-orange-600 hover:text-orange-800 p-1 rounded-full hover:bg-orange-100 ${
@@ -3870,7 +4006,7 @@ const RoundFormInterviews = () => {
                                               question.questionId ||
                                                 question.id ||
                                                 question._id,
-                                              e
+                                              e,
                                             )
                                           }
                                           disabled={shouldDisable("questions")}
@@ -3881,7 +4017,7 @@ const RoundFormInterviews = () => {
                                         </button>
                                       </li>
                                     );
-                                  }
+                                  },
                                 )}
                               </ul>
                             ) : (
@@ -3982,10 +4118,10 @@ const RoundFormInterviews = () => {
                         isMeetingCreationLoading
                           ? meetingCreationProgress || "Creating meeting..."
                           : isSubmitting
-                          ? "Submitting..."
-                          : isEditing
-                          ? "Updating..."
-                          : "Saving..."
+                            ? "Submitting..."
+                            : isEditing
+                              ? "Updating..."
+                              : "Saving..."
                       }
                       disabled={isSubmitting}
                     >
@@ -4017,7 +4153,7 @@ const RoundFormInterviews = () => {
 
       {isInternalInterviews && (
         <InternalInterviews
-          key={`internal-modal-${internalInterviewers.length}-${interviewerGroupId}`}
+          key={`internal-modal-${internalInterviewers.length}`}
           isOpen={isInternalInterviews}
           // onClose={() => setInternalInterviews(false)}
           onClose={() => {
@@ -4030,9 +4166,11 @@ const RoundFormInterviews = () => {
           }}
           onSelectCandidates={handleInternalInterviewerSelect}
           selectedInterviewers={internalInterviewers}
+          selectedTeamIds={selectedTeamIds}
+          selectedTagIds={selectedTagIds}
           // defaultViewType={interviewerViewType}
-          selectedGroupName={interviewerGroupName}
-          selectedGroupId={interviewerGroupId}
+          // selectedGroupName={interviewerGroupName}
+          // selectedGroupId={interviewerGroupId}
           // key={`${internalInterviewers.length}-${interviewerGroupId}`}
           //  clearOnViewTypeChange={true}
         />
