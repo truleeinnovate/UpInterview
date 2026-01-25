@@ -10,6 +10,28 @@ const { ScreeningResult } = require("../models/ScreeningResult");
 const { Application } = require("../models/Application");
 const { Resume } = require("../models/Resume");
 const { generateApplicationNumber } = require("../services/uniqueIdGeneratorService");
+const { Candidate } = require("../models/candidate");
+
+// ===================== Helper: Find Existing Candidate (Tenant Scoped) =====================
+const findExistingCandidate = async ({ email, phone, linkedInUrl, tenantId }) => {
+    const orConditions = [];
+
+    if (email) orConditions.push({ Email: email });
+    if (phone) orConditions.push({ Phone: phone });
+    if (linkedInUrl) orConditions.push({ linkedInUrl });
+
+    if (orConditions.length === 0) return null;
+
+   return Candidate.findOne({
+    tenantId,
+    $or: [
+        email ? { Email: email } : null,
+        phone ? { Phone: phone } : null,
+        linkedInUrl ? { linkedInUrl } : null
+    ].filter(Boolean)
+});
+};
+
 
 /**
  * Screen one or more resumes (PREVIEW ONLY - No Database Saves)
@@ -121,6 +143,14 @@ exports.screenResume = async (req, res) => {
                     rawText: parsedData.fullText || ''
                 };
 
+                  // ===================== 2. Existing Candidate Check =====================
+                const existingCandidate = await findExistingCandidate({
+                    email: resumeData.email,
+                    phone: resumeData.phone,
+                    linkedInUrl: parsedData.linkedInUrl,
+                    tenantId
+                });
+
                 // 2. Run Screening Analysis (AI or System)
                 let metadata = {
                     score: 0,
@@ -201,8 +231,8 @@ exports.screenResume = async (req, res) => {
                 results.push({
                     id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     fileName: file.originalname,
-                    matchStatus: 'new_candidate',
-
+                     matchStatus: existingCandidate ? 'existing_candidate' : 'new_candidate',
+                     existingCandidateId: existingCandidate?._id || null,
                     // Screening Scores
                     matchPercentage: metadata.score,
                     skillMatch: metadata.skillMatch,
@@ -287,262 +317,256 @@ exports.screenResume = async (req, res) => {
  * Save selected candidates when "Proceed Selected" is clicked
  * Creates: ScreeningResult + Application records
  */
-exports.createCandidatesFromScreening = async (req, res) => {
-    try {
-        const { selectedResults, positionId } = req.body;
+// this will create candidate after application and screening data also
+// exports.createCandidatesFromScreening = async (req, res) => {
+//   try {
+//     const { selectedResults, positionId } = req.body;
 
-        const { actingAsUserId, actingAsTenantId } = res.locals.auth || {};
-        const tenantId = actingAsTenantId;
-        const userId = actingAsUserId;
+//     const { actingAsUserId, actingAsTenantId } = res.locals.auth || {};
+//     const tenantId = actingAsTenantId;
+//     const userId = actingAsUserId;
 
-        if (!selectedResults || selectedResults.length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: "No results selected"
-            });
-        }
+//     if (!Array.isArray(selectedResults) || selectedResults.length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "No results selected"
+//       });
+//     }
 
-        if (!positionId) {
-            return res.status(400).json({
-                success: false,
-                error: "Position ID is required"
-            });
-        }
+//     if (!positionId) {
+//       return res.status(400).json({
+//         success: false,
+//         error: "Position ID is required"
+//       });
+//     }
 
-        if (!tenantId) {
-            return res.status(401).json({
-                success: false,
-                error: "Authentication failed: Tenant ID missing"
-            });
-        }
+//     if (!tenantId || !userId) {
+//       return res.status(401).json({
+//         success: false,
+//         error: "Authentication failed: missing tenant or user"
+//       });
+//     }
 
-        console.log(`Saving ${selectedResults.length} screening results for position ${positionId}`);
+//     console.log(`Saving ${selectedResults.length} screening results for position ${positionId}`);
 
-        const savedResults = [];
-        const savedApplications = [];
-        const saveErrors = [];
+//     const savedScreeningResults = [];
+//     const savedApplications = [];
+//     const errors = [];
 
-        for (const result of selectedResults) {
-            try {
-                // Import Candidate model
-                const { Candidate } = require("../models/candidate");
+//     const position = await Position.findById(positionId);
+//     if (!position) {
+//       return res.status(404).json({
+//         success: false,
+//         error: "Position not found"
+//       });
+//     }
 
-                // 1. Find or Create Candidate
-                let candidate = null;
+//     for (const result of selectedResults) {
+//       try {
+//         // 1. Find or create Candidate
+//         let candidate = null;
 
-                // Try to find by email first
-                if (result.candidateEmail) {
-                    candidate = await Candidate.findOne({
-                        email: result.candidateEmail.toLowerCase(),
-                        tenantId: tenantId
-                    });
-                }
+//         if (result.candidateEmail?.trim()) {
+//           candidate = await Candidate.findOne({
+//             email: result.candidateEmail.toLowerCase().trim(),
+//             tenantId
+//           });
+//         }
 
-                if (!candidate) {
-                    // Split Name
-                    const fullName = result.candidateName || 'Unknown';
-                    const nameParts = fullName.trim().split(/\s+/);
-                    let firstName = fullName;
-                    let lastName = '';
+//         if (!candidate) {
+//           const fullName = (result.candidateName || "Unknown").trim();
+//           const nameParts = fullName.split(/\s+/);
+//           const firstName = nameParts[0] || "";
+//           const lastName = nameParts.slice(1).join(" ") || "";
 
-                    if (nameParts.length > 1) {
-                        lastName = nameParts.pop(); // Last word is last name
-                        firstName = nameParts.join(' '); // Remaining is first name
-                    }
+//           candidate = new Candidate({
+//             tenantId,
+//             FirstName: firstName,
+//             LastName: lastName,
+//             Email: result.candidateEmail?.toLowerCase().trim() || "",
+//             Phone: result.candidatePhone || "",
+//             CountryCode: result.candidateCountryCode || "+91",
+//             source: "Resume Upload",
+//             status: "New",
+//             ownerId: userId,
+//             createdBy: userId
+//           });
 
-                    // Create new candidate
-                    candidate = new Candidate({
-                        tenantId: tenantId,
-                        FirstName: firstName,
-                        LastName: lastName,
-                        // name: result.candidateName || 'Unknown', // Removed legacy field if strictly using First/Last
-                        Email: result.candidateEmail?.toLowerCase() || '',
-                        Phone: result.candidatePhone || '',
-                        CountryCode: result.candidateCountryCode || '+91',
-                        linkedInUrl: result.metadata?.linkedIn || result.candidateLinkedIn || '',
-                        source: 'Resume Upload',
-                        status: 'New',
-                        ownerId: userId,
-                        createdBy: userId
-                    });
-                    await candidate.save();
-                    console.log(`Created new candidate: ${candidate._id}`);
-                }
+//           await candidate.save();
+//           console.log(`Created candidate: ${candidate._id}`);
+//         }
 
-                // 2. Create Resume record
-                let resume = await Resume.findOne({ candidateId: candidate._id }).sort({ _id: -1 });
+//         // 2. Find or create Resume
+//         let resume = await Resume.findOne({ candidateId: candidate._id }).sort({
+//           createdAt: -1
+//         });
 
-                if (!resume) {
-                    resume = new Resume({
-                        candidateId: candidate._id,
-                        fileUrl: 'memory://buffer',
-                        resume: {
-                            filename: result.fileName,
-                            uploadDate: new Date()
-                        },
-                        skills: result.metadata?.matchedSkills?.map(s => ({
-                            skill: s,
-                            experience: '0',
-                            expertise: 'Beginner'
-                        })) || [],
+//         if (!resume) {
+//           const skillsArray = (result.parsedSkills || []).map((skillName) => ({
+//             skill: skillName.trim(),
+//             experience: String(result.parsedData?.experienceYears || "0"),
+//             expertise: "Beginner"
+//           }));
 
-                        // New fields
-                        certifications: result.metadata?.certifications || [],
-                        languages: result.metadata?.languages || [],
-                        projects: result.metadata?.projects || [],
+//           resume = new Resume({
+//             candidateId: candidate._id,
+//             fileUrl: "memory://buffer", // TODO: replace with real cloud URL
+//             resume: {
+//               filename: result.fileName || "resume.pdf",
+//               uploadDate: new Date()
+//             },
 
-                        // Updated profile data
-                        CurrentExperience: result.metadata?.extractedProfile?.experienceYears || 0,
-                        HigherQualification: result.metadata?.extractedProfile?.education || '',
+//             // Normalized fields
+//             skills: skillsArray,
+//             CurrentExperience: Number(result.parsedExperienceYears) || 0,
+//             RelevantExperience: Number(result.parsedExperienceYears) || 0,
+//             HigherQualification: result.parsedEducation || "Not specified",
 
-                        // Full Rich Metadata
-                        parsedJson: result.metadata?.extractedProfile || {},
+//             languages: result.parsedData?.languages || [],
+//             certifications: result.parsedData?.certifications || [],
+//             projects: result.parsedData?.projects || [],
 
-                        source: 'UPLOAD',
-                        isActive: true
-                    });
-                    await resume.save();
-                    console.log(`Created new resume: ${resume._id}`);
-                }
+//             // === FULL PARSED DATA STORAGE ===
+//             parsedJson: result.parsedData || {
+//               fullText: "",
+//               extractedProfile: {},
+//               parsedAt: new Date().toISOString(),
+//               parserVersion: result.metadata?.method || "SYSTEM"
+//             },
 
-                const resumeId = resume._id;
-                const candidateId = candidate._id;
+//             // Optional: helps with full-text search
+//             searchText: [
+//               result.candidateName || "",
+//               result.parsedEducation || "",
+//               (result.parsedSkills || []).join(" "),
+//               result.parsedData?.fullText?.substring(0, 1500) || ""
+//             ].filter(Boolean).join(" ").toLowerCase(),
 
-                // 2. Create ScreeningResult
-                const screeningData = {
-                    resumeId: resumeId,
-                    positionId: positionId,
-                    tenantId: tenantId,
-                    metadata: result.metadata || {
-                        score: result.matchPercentage || 0,
-                        skillMatch: result.skillMatch || 0,
-                        experienceMatch: result.experienceMatch || 0,
-                        matchedSkills: result.screeningResult?.matchedSkills || [],
-                        missingSkills: result.screeningResult?.missingSkills || [],
-                        screeningNotes: result.screeningResult?.screeningNotes || '',
-                        strengths: result.screeningResult?.strengths || [],
-                        concerns: result.screeningResult?.concerns || [],
-                        summary: result.screeningResult?.summary || '',
-                        method: result.screeningResult?.method || 'SYSTEM'
-                    },
-                    recommendation: result.recommendation || 'HOLD',
-                    screenedBy: result.screeningResult?.method || 'SYSTEM',
-                    screenedAt: new Date(),
-                    ownerId: userId,
-                    createdBy: userId
-                };
+//             source: "UPLOAD",
+//             isActive: true,
+//             ownerId: userId,
+//             tenantId,
+//             createdBy: userId
+//           });
 
-                // Check if screening result already exists for this resume-position pair
-                let screeningResult = await ScreeningResult.findOne({
-                    resumeId: resumeId,
-                    positionId: positionId
-                });
+//           await resume.save();
+//           console.log(`Created resume: ${resume._id}`);
+//         }
 
-                if (screeningResult) {
-                    // Update existing
-                    Object.assign(screeningResult, screeningData);
-                    await screeningResult.save();
-                } else {
-                    // Create new
-                    screeningResult = new ScreeningResult(screeningData);
-                    await screeningResult.save();
-                }
+//         const resumeId = resume._id.toString();
+//         const candidateId = candidate._id.toString();
 
-                savedResults.push(screeningResult);
+//         // 3. Create / Update ScreeningResult
+//         const screeningData = {
+//           resumeId,
+//           positionId,
+//           tenantId,
+//           metadata: {
+//             score: Number(result.matchPercentage) || 0,
+//             skillMatch: Number(result.skillMatch) || 0,
+//             experienceMatch: Number(result.experienceMatch) || 0,
+//             matchedSkills: result.matchedSkills || [],
+//             missingSkills: result.missingSkills || [],
+//             summary: result.summary || "",
+//             strengths: result.strengths || [],
+//             concerns: result.concerns || [],
+//             method: result.metadata?.method || "SYSTEM"
+//           },
+//           recommendation: result.recommendation || "HOLD",
+//           screenedBy: result.metadata?.method || "SYSTEM",
+//           screenedAt: new Date(),
+//           ownerId: userId,
+//           createdBy: userId
+//         };
 
+//         let screeningResult = await ScreeningResult.findOne({
+//           resumeId,
+//           positionId
+//         });
 
-                // Check if position exists
-                const position = await Position.findById(positionId);
-                if (!position) {
-                    return res.status(404).json({ message: "Position not found" });
-                }
+//         if (screeningResult) {
+//           Object.assign(screeningResult, screeningData);
+//           await screeningResult.save();
+//         } else {
+//           screeningResult = new ScreeningResult(screeningData);
+//           await screeningResult.save();
+//         }
 
-                // Check if application already exists
-                const existingApplication = await Application.findOne({
-                    candidateId,
-                    positionId,
-                    tenantId,
-                });
+//         savedScreeningResults.push(screeningResult);
 
-                if (existingApplication) {
-                    return res.status(409).json({
-                        message: "Application already exists for this candidate and position",
-                        data: existingApplication,
-                    });
-                }
+//         // 4. Create / Update Application
+//         let application = await Application.findOne({
+//           candidateId,
+//           positionId,
+//           tenantId
+//         });
 
-                // Generate application number in format: NAME-TECH-YEAR-0001
-                const applicationNumber = await generateApplicationNumber(candidate, position, tenantId);
+//         const applicationNumber = await generateApplicationNumber(
+//           candidate,
+//           position,
+//           tenantId
+//         );
 
-                // 3. Create Application
-                const applicationData = {
-                    applicationNumber: applicationNumber,
-                    tenantId: tenantId,
-                    positionId: positionId,
-                    candidateId: candidateId,
-                    status: 'SCREENED',
-                    screeningScore: result.matchPercentage || 0,
-                    screeningDecision: result.recommendation || 'HOLD',
-                    ownerId: userId,
-                    createdBy: userId
-                };
+//         const appData = {
+//           applicationNumber,
+//           tenantId,
+//           positionId,
+//           candidateId,
+//           status: "SCREENED",
+//           screeningScore: Number(result.matchPercentage) || 0,
+//           screeningDecision: result.recommendation || "HOLD",
+//           ownerId: userId,
+//           createdBy: userId
+//         };
 
-                // Check if application already exists
-                let application = await Application.findOne({
-                    candidateId: candidateId,
-                    positionId: positionId
-                });
+//         if (application) {
+//           Object.assign(application, {
+//             status: appData.status,
+//             screeningScore: appData.screeningScore,
+//             screeningDecision: appData.screeningDecision,
+//             updatedBy: userId
+//           });
+//           await application.save();
+//         } else {
+//           application = new Application(appData);
+//           await application.save();
+//         }
 
-                if (application) {
-                    // Update existing
-                    application.status = 'SCREENED';
-                    application.screeningScore = applicationData.screeningScore;
-                    application.screeningDecision = applicationData.screeningDecision;
-                    application.updatedBy = userId;
-                    await application.save();
-                } else {
-                    // Create new
-                    application = new Application(applicationData);
-                    await application.save();
-                }
+//         savedApplications.push(application);
+//       } catch (innerError) {
+//         console.error(`Error processing ${result.fileName || "unknown"}:`, innerError);
+//         errors.push({
+//           fileName: result.fileName || "unknown",
+//           error: innerError.message
+//         });
+//       }
+//     }
 
-                savedApplications.push(application);
-
-            } catch (saveError) {
-                console.error(`Error saving result for ${result.fileName}:`, saveError);
-                saveErrors.push({
-                    fileName: result.fileName,
-                    error: saveError.message
-                });
-            }
-        }
-
-        res.json({
-            success: true,
-            message: `Saved ${savedResults.length} screening results and ${savedApplications.length} applications.`,
-            screeningResults: savedResults.map(sr => ({
-                id: sr._id,
-                resumeId: sr.resumeId,
-                positionId: sr.positionId,
-                recommendation: sr.recommendation
-            })),
-            applications: savedApplications.map(app => ({
-                id: app._id,
-                applicationNumber: app.applicationNumber,
-                candidateId: app.candidateId,
-                status: app.status
-            })),
-            errors: saveErrors
-        });
-
-    } catch (error) {
-        console.error("Create candidates error:", error);
-        res.status(500).json({
-            success: false,
-            error: error.message,
-        });
-    }
-};
+//     return res.json({
+//       success: true,
+//       message: `Processed ${selectedResults.length} items → ${savedScreeningResults.length} screening results, ${savedApplications.length} applications`,
+//       screeningResults: savedScreeningResults.map((sr) => ({
+//         id: sr._id,
+//         resumeId: sr.resumeId,
+//         positionId: sr.positionId,
+//         recommendation: sr.recommendation
+//       })),
+//       applications: savedApplications.map((app) => ({
+//         id: app._id,
+//         applicationNumber: app.applicationNumber,
+//         candidateId: app.candidateId,
+//         status: app.status
+//       })),
+//       errors: errors.length > 0 ? errors : undefined
+//     });
+//   } catch (error) {
+//     console.error("createCandidatesFromScreening error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       error: error.message || "Internal server error"
+//     });
+//   }
+// };
 
 // Helper function to build metadata from system screening result
 function buildSystemMetadata(systemResult) {

@@ -94,7 +94,20 @@ const candidateValidationSchema = Joi.object({
       "string.uri": "Invalid LinkedIn URL",
       "string.pattern.base": "Please enter a valid LinkedIn profile URL",
     }),
-});
+  // ────────────────────────────────────────────────────────────────
+  // NEW: Allow screening/parsed fields (optional - no error if missing)
+  // ────────────────────────────────────────────────────────────────
+  screeningData: Joi.object().optional(),
+  parsedJson: Joi.object().optional(),
+  parsedSkills: Joi.array().items(Joi.string()).optional(),
+  parsedExperience: Joi.string().optional().allow(null, ""),
+  parsedEducation: Joi.string().optional().allow(null, ""),
+  matchPercentage: Joi.number().optional(),
+  recommendation: Joi.string().optional().allow(null, ""),
+  summary: Joi.string().optional().allow(null, ""),
+  matchedSkills: Joi.array().items(Joi.string()).optional(),
+  missingSkills: Joi.array().items(Joi.string()).optional(),
+}).unknown(true);  // ← optional: allows any other extra fields in future
 
 // 🔹 Add custom validation for RelevantExperience <= CurrentExperience
 const validateCandidateData = (data) => {

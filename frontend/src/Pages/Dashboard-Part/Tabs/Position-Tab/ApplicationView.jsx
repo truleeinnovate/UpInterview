@@ -1,20 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     ArrowLeft, Mail, Phone, Linkedin, Upload, FileText, X, CheckCircle, Clock,
     XCircle, AlertCircle, Calendar, User, Award, Briefcase, GraduationCap,
     Star, TrendingUp, MessageSquare, ExternalLink, Download, MapPin, Globe,
     Languages, DollarSign
 } from 'lucide-react';
+import { useCandidateById } from "../../../../apiHooks/useCandidates";
 
 export default function ApplicationView({ application, onBack }) {
     const [applicationStatus, setApplicationStatus] = useState(application.status || 'APPLIED');
     const [activeTab, setActiveTab] = useState('resume');
+    const [candidate, setCandidate] = useState({});
+
     const [showAllResumes, setShowAllResumes] = useState(false);
     const [showUploadResume, setShowUploadResume] = useState(false);
-
+    const candidateId = application.candidateId._id;
+    console.log(candidateId);
+    const { candidate: fetchedCandidate, isLoading } = useCandidateById(candidateId);
     // Use candidate data from the populated application object
-    const candidate = application.candidateId || {};
-
+    useEffect(() => {
+        if (candidateId && fetchedCandidate) {
+            setCandidate(fetchedCandidate);
+        }
+    }, [candidateId, fetchedCandidate]);
     // Mock interviews for now - typically would fetch using useInterviewsByApplication hook
     const applicationInterviews = application.interviews || [];
 

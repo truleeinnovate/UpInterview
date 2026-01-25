@@ -133,6 +133,9 @@ const addCandidatePostCall = async (req, res) => {
       ownerId,
       tenantId,
       createdBy: ownerId,
+
+      // ─── All screening/parsed data goes here ────────
+      parsedJson: req.body.screeningData || req.body.parsedJson || {},
     });
 
     await newResume.save();
@@ -174,7 +177,10 @@ const addCandidatePostCall = async (req, res) => {
     res.status(201).json({
       status: "success",
       message: "Candidate created successfully",
-      data: newCandidate,
+      data: {
+        candidate: newCandidate,
+        resumeId: newResume._id.toString()  // ← add this
+      }
     });
 
     console.log("✅ [addCandidatePostCall] Response sent successfully");
