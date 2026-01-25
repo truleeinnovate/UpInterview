@@ -5,6 +5,10 @@ const { Application } = require("../models/Application.js");
 const { Position } = require("../models/Position/position.js");
 const { Candidate } = require("../models/candidate.js");
 const { generateApplicationNumber } = require("../services/uniqueIdGeneratorService");
+const { ScreeningResult } = require("../models/ScreeningResult");
+const { Resume } = require("../models/Resume.js");
+
+
 
 /**
  * Get all applications for a specific candidate
@@ -67,12 +71,12 @@ const getApplicationsByPosition = async (req, res) => {
         // Use aggregation to fetch rich data from Resume
         const applications = await Application.aggregate([
             { $match: { positionId: new mongoose.Types.ObjectId(positionId) } },
-            { $sort: { createdAt: -1 } },
+            // { $sort: { createdAt: -1 } },
 
             // Lookup Candidate
             {
                 $lookup: {
-                    from: "candidates", // Default mongoose collection name for Candidate model
+                    from: "candidates",
                     localField: "candidateId",
                     foreignField: "_id",
                     as: "candidate"
@@ -80,33 +84,36 @@ const getApplicationsByPosition = async (req, res) => {
             },
             { $unwind: "$candidate" },
 
-            // Lookup Active Resume
+            // Lookup ALL Resumes for the candidate (no pipeline filter)
             {
                 $lookup: {
-                    from: "resume", // Explicit collection name from Resume model
-                    let: { candidateId: "$candidate._id" },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ["$candidateId", "$$candidateId"] },
-                                        { $eq: ["$isActive", true] }
-                                    ]
-                                }
-                            }
-                        }
-                    ],
-                    as: "resume"
+                    from: "resume",
+                    localField: "candidate._id",
+                    foreignField: "candidateId",
+                    as: "resumes"
                 }
             },
-            // Unwind Active Resume - preserve if none (so we still get the application)
+
+            // Pick the active resume (or null)
             {
-                $unwind: {
-                    path: "$resume",
-                    preserveNullAndEmptyArrays: true
+                $addFields: {
+                    resume: {
+                        $arrayElemAt: [
+                            {
+                                $filter: {
+                                    input: "$resumes",
+                                    as: "r",
+                                    cond: { $eq: ["$$r.isActive", true] }
+                                }
+                            },
+                            0
+                        ]
+                    }
                 }
             },
+
+            // Optional: clean up – remove the resumes array if you don't need it
+            { $unset: "resumes" },
 
             // Lookup Position
             {
@@ -119,7 +126,7 @@ const getApplicationsByPosition = async (req, res) => {
             },
             { $unwind: "$position" },
 
-            // Lookup Interview
+            // Lookup Interview (optional, keep preserveNullAndEmptyArrays)
             {
                 $lookup: {
                     from: "interviews",
@@ -135,7 +142,7 @@ const getApplicationsByPosition = async (req, res) => {
                 }
             },
 
-            // Project final structure - mimicking populate result but enriched
+            // Final projection (same structure as before)
             {
                 $project: {
                     _id: 1,
@@ -147,21 +154,18 @@ const getApplicationsByPosition = async (req, res) => {
                     createdAt: 1,
                     updatedAt: 1,
 
-                    // Populated Position
                     positionId: {
                         _id: "$position._id",
                         title: "$position.title",
                         status: "$position.status"
                     },
 
-                    // Populated Interview
                     interviewId: {
                         _id: "$interview._id",
                         interviewCode: "$interview.interviewCode",
                         status: "$interview.status"
                     },
 
-                    // Enriched Candidate (Candidate + Resume Data)
                     candidateId: {
                         _id: "$candidate._id",
                         FirstName: "$candidate.FirstName",
@@ -169,13 +173,13 @@ const getApplicationsByPosition = async (req, res) => {
                         Email: "$candidate.Email",
                         Phone: "$candidate.Phone",
 
-                        // Resume Fields
-                        HigherQualification: { $ifNull: ["$resume.HigherQualification", "Not Provided"] },
-                        CurrentExperience: { $ifNull: ["$resume.CurrentExperience", 0] },
-                        // RelevantExperience: { $ifNull: ["$resume.RelevantExperience", 0] },
-                        skills: { $ifNull: ["$resume.skills", []] },
-                        // ImageData: { $ifNull: ["$resume.ImageData", null] },
-                        resumeId: "$resume._id"
+                        // // Resume fields with fallback
+                        // HigherQualification: { $ifNull: ["$resume.HigherQualification", "Not Provided"] },
+                        // CurrentExperience: { $ifNull: ["$resume.CurrentExperience", 0] },
+                        // // RelevantExperience: { $ifNull: ["$resume.RelevantExperience", 0] },
+                        // skills: { $ifNull: ["$resume.skills", []] },
+                        // // ImageData: { $ifNull: ["$resume.ImageData", null] },
+                        // resumeId: "$resume._id"
                     }
                 }
             }
@@ -200,9 +204,10 @@ const getApplicationsByPosition = async (req, res) => {
 /**
  * Create a new application
  */
+// this will use to create application with already created postion and candidate
 const createApplication = async (req, res) => {
     try {
-        const { candidateId, positionId, status, currentStage } = req.body;
+        const { candidateId, positionId, status, currentStage, type, screeningData, resumeId: providedResumeId } = req.body;
 
         // Get tenant and user from auth context
         const tenantId = res.locals.auth?.actingAsTenantId || req.body.tenantId;
@@ -239,6 +244,20 @@ const createApplication = async (req, res) => {
         const position = await Position.findById(positionId);
         if (!position) {
             return res.status(404).json({ message: "Position not found" });
+        }
+
+        // NEW: Prefer provided resumeId, fallback to latest resume
+        let resumeId;
+
+        if (providedResumeId) {
+            resumeId = providedResumeId;
+        } else {
+            const resume = await Resume.findOne({ candidateId }).sort({ createdAt: -1 });
+            if (!resume) {
+                console.warn("No resume found — skipping ScreeningResult");
+            } else {
+                resumeId = resume._id;
+            }
         }
 
         // Check if application already exists
@@ -282,10 +301,68 @@ const createApplication = async (req, res) => {
             .populate("candidateId", "FirstName LastName Email")
             .lean();
 
+
+        // ────────────────────────────────────────────────────────────────
+        // NEW: Create / Update ScreeningResult ONLY if from candidate screening
+        // ────────────────────────────────────────────────────────────────
+        let screeningResult = null;
+
+        if (type === "candidate-screening" && screeningData) {
+            try {
+                const resume = await Resume.findOne({ candidateId }).sort({ createdAt: -1 });
+                if (!resume) {
+                    console.warn("No resume found for candidate — skipping ScreeningResult");
+                } else {
+                    const resumeId = resume._id;
+
+                    const screeningPayload = {
+                        resumeId,
+                        positionId,
+                        tenantId,
+                        metadata: {
+                            score: Number(screeningData.matchPercentage || screeningData.score) || 0,
+                            skillMatch: Number(screeningData.skillMatch) || 0,
+                            experienceMatch: Number(screeningData.experienceMatch) || 0,
+                            matchedSkills: screeningData.matchedSkills || screeningData.extractedSkills || [],
+                            missingSkills: screeningData.missingSkills || [],
+                            summary: screeningData.summary || "",
+                            strengths: screeningData.strengths || [],
+                            concerns: screeningData.concerns || screeningData.gaps || [],
+                            method: screeningData.method || "SYSTEM"
+                        },
+                        recommendation: screeningData.recommendation || "HOLD",
+                        screenedBy: screeningData.method || "SYSTEM",
+                        screenedAt: new Date(),
+                        ownerId: userId,
+                        createdBy: userId
+                    };
+
+                    screeningResult = await ScreeningResult.findOneAndUpdate(
+                        { resumeId, positionId },
+                        screeningPayload,
+                        { upsert: true, new: true, setDefaultsOnInsert: true }
+                    );
+
+                    console.log("ScreeningResult created/updated:", screeningResult._id);
+                }
+            } catch (screenErr) {
+                console.error("Failed to create/update ScreeningResult (application saved):", screenErr);
+                // Do NOT fail the response — just log
+            }
+        }
+
+        // Final success response
         res.status(201).json({
             success: true,
             message: "Application created successfully",
-            data: populatedApplication,
+            data: {
+                application: populatedApplication,
+                screeningResult: screeningResult ? {
+                    id: screeningResult._id,
+                    recommendation: screeningResult.recommendation,
+                    metadata: screeningResult.metadata
+                } : null
+            }
         });
     } catch (error) {
         console.error("Error creating application:", error);

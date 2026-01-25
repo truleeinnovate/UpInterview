@@ -90,15 +90,15 @@ const ApplicationSchema = new mongoose.Schema(
 // Compound index for unique application per candidate-position
 ApplicationSchema.index({ candidateId: 1, positionId: 1 }, { unique: true });
 
-// Index for efficient queries
-ApplicationSchema.index({ tenantId: 1, status: 1 });
-ApplicationSchema.index({ tenantId: 1, positionId: 1 });
-ApplicationSchema.index({ tenantId: 1, createdAt: -1 });
-ApplicationSchema.index({ tenantId: 1, _id: -1 });
-ApplicationSchema.index({ positionId: 1, createdAt: -1 });
-ApplicationSchema.index({ positionId: 1, _id: -1 });
-ApplicationSchema.index({ candidateId: 1, createdAt: -1 });
-ApplicationSchema.index({ candidateId: 1, _id: -1 });
+// // Index for efficient queries
+// ApplicationSchema.index({ tenantId: 1, status: 1 });
+// ApplicationSchema.index({ tenantId: 1, positionId: 1 });
+// ApplicationSchema.index({ tenantId: 1, createdAt: -1 });
+// ApplicationSchema.index({ tenantId: 1, _id: -1 });
+// ApplicationSchema.index({ positionId: 1, createdAt: -1 });
+// ApplicationSchema.index({ positionId: 1, _id: -1 });
+// ApplicationSchema.index({ candidateId: 1, createdAt: -1 });
+// ApplicationSchema.index({ candidateId: 1, _id: -1 });
 
 // Pre-save hook to generate application number
 ApplicationSchema.pre("save", async function (next) {

@@ -7,7 +7,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const {
     screenResume,
-    createCandidatesFromScreening,
+    // createCandidatesFromScreening,
     getScreeningStatus,
 } = require("../controllers/resumeScreeningController");
 
@@ -29,10 +29,10 @@ router.post(
  * @desc    Create candidates from selected screening results
  * @access  Private
  */
-router.post(
-    "/create-candidates",
-    createCandidatesFromScreening
-);
+// router.post(
+//     "/create-candidates",
+//     createCandidatesFromScreening
+// );
 
 /**
  * @route   GET /api/resume-screening/status/:jobId

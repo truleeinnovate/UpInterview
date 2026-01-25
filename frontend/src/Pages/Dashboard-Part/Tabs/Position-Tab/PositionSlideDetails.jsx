@@ -341,9 +341,6 @@ const PositionCandidatesTab = ({ positionId, position }) => {
           position={position}
           onClose={() => setViewingCandidate(null)}
           onAction={(action, id) => {
-            console.log("Action on candidate:", action, id);
-            // Implement actions if needed (e.g. Move to Interview)
-            // For now, just close or log
             setViewingCandidate(null);
           }}
         />

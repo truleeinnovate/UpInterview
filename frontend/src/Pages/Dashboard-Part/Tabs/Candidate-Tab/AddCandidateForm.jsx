@@ -53,13 +53,13 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 import { notify } from "../../../../services/toastService";
 import { Info } from "lucide-react";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
-import InfoGuide from "../CommonCode-AllTabs/InfoCards";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
 import InputField from "../../../../Components/FormFields/InputField";
-import { logger } from "../../../../utils/logger";
 import { Button } from "../../../../Components/Buttons/Button";
-
+import {
+  useApplicationMutations,
+} from "../../../../apiHooks/useApplications";
 // v1.0.3 ----------------------------------------------------------------->
 
 // Main AddCandidateForm Component
@@ -69,7 +69,14 @@ const AddCandidateForm = ({
   isModal = false,
   hideAddButton = false,
   candidateId = null, // Optional: Pass candidateId when using as modal for editing
+  initialData = {},          // ← new prop for pre-filling
+  screeningData = {},
+  source = "",
+  positionId,
 }) => {
+  console.log("mode", mode);
+  console.log("candidateId", candidateId);
+
   const pageType = "adminPortal";
   const {
     skills,
@@ -106,6 +113,7 @@ const AddCandidateForm = ({
     error: _error,
     addOrUpdateCandidate,
   } = useCandidates();
+  const { createApplication, isCreating } = useApplicationMutations();
   const { id: routeId } = useParams();
   // Use candidateId prop when in modal mode, otherwise use route param
   const id = isModal ? candidateId : routeId;
@@ -123,6 +131,32 @@ const AddCandidateForm = ({
 
   // State for tooltip visibility
   const [showTooltip, setShowTooltip] = useState(false);
+
+  // 2. Optional: Re-apply if initialData changes later (rare case)
+  useEffect(() => {
+    if (Object.keys(initialData).length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        ...initialData,
+        // Preserve skills from entries if needed — but usually not necessary
+        skills: prev.skills.length > 0 ? prev.skills : (initialData.skills || []),
+      }));
+    }
+  }, [initialData]);
+
+  // 3. Make sure entries are initialized correctly too (for skills)
+  useEffect(() => {
+    if (initialData.skills?.length > 0) {
+      setEntries(initialData.skills);  // ← pre-fill entries from initialData.skills
+    } else {
+      // Default empty rows if no pre-fill
+      setEntries([
+        { skill: "", experience: "", expertise: "" },
+        { skill: "", experience: "", expertise: "" },
+        { skill: "", experience: "", expertise: "" },
+      ]);
+    }
+  }, [initialData.skills]);
 
   // Close tooltip when clicking outside
   useEffect(() => {
@@ -322,10 +356,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry,
       );
       setEntries(updatedEntries);
@@ -504,12 +538,12 @@ const AddCandidateForm = ({
       [name]: errorMessage,
       ...(name === "CurrentExperience" && formData.RelevantExperience
         ? {
-            RelevantExperience: getErrorMessage(
-              "RelevantExperience",
-              formData.RelevantExperience,
-              nextFormData,
-            ),
-          }
+          RelevantExperience: getErrorMessage(
+            "RelevantExperience",
+            formData.RelevantExperience,
+            nextFormData,
+          ),
+        }
         : {}),
     }));
   };
@@ -690,36 +724,72 @@ const AddCandidateForm = ({
       linkedInUrl: formData.linkedInUrl,
     };
 
+
+    // Add screening metadata for backend storage only
+    const payload = {
+      ...data,
+      // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
+      ...(source === "candidate-screening" && {
+        // Pass full screeningData so backend can store it
+        screeningData: screeningData,               // ← direct pass (full object)
+        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+        parsedSkills: screeningData.parsed_skills || [],
+        parsedExperience: screeningData.parsed_experience || null,
+        parsedEducation: screeningData.parsed_education || null,
+      }),
+    };
+
     try {
-      const response = await addOrUpdateCandidate({
+      const candidateResponse = await addOrUpdateCandidate({
         id,
-        data,
+        data: payload,
         profilePicFile: selectedImage,
         resumeFile: selectedResume,
         isProfilePicRemoved,
         isResumeRemoved,
       });
-      // console.log("response", response);
-      // Send response
-      // res.status(203).json({
-      //   status: 'Updated successfully',
-      //   message: 'Candidate updated successfully',
-      //   data: updatedCandidate,
-      // });
-      // if (response.status === "success") {
-      //   notify.success("Candidate added successfully");
-      // } else if (response.status === "no_changes" || response.status === "Updated successfully") {
-      //   notify.success("Candidate Updated successfully");
+
+
+      // if (isAddCandidate) {
+      //   if (response.status === "success") {
+      //     notify.success("Candidate added successfully");
+      //   }
       // }
-
-      // notify.success("Candidate added successfully");
-
-      if (isAddCandidate) {
-        if (response.status === "success") {
-          notify.success("Candidate added successfully");
-        }
+      if (candidateResponse.status !== "success" && candidateResponse.status !== "Updated successfully") {
+        throw new Error("Candidate creation failed");
       }
 
+      const newCandidate = candidateResponse.data.candidate;  // ← updated
+      const resumeId = candidateResponse.data.resumeId;       // ← NEW: get resumeId
+
+      const candidateId = newCandidate._id;
+
+      notify.success(
+        id ? "Candidate updated successfully" : "Candidate added successfully"
+      );
+
+      // 2. ONLY if from candidate screening → create application
+      if (source === "candidate-screening" && positionId) {
+        try {
+          const appPayload = {
+            candidateId,
+            positionId,
+            status: "SCREENED",
+            currentStage: "Application Submitted",
+            type: "candidate-screening",                  // ← tell backend to create ScreeningResult
+            screeningData: screeningData,  // ← full object
+            resumeId,                     
+          };
+
+          const appResult = await createApplication(appPayload);
+
+          console.log("Application & ScreeningResult created:", appResult);
+          notify.success("Application and screening result created successfully");
+        } catch (appError) {
+          console.error("Application/Screening creation failed:", appError);
+          notify.warning("Candidate saved, but application/screening failed");
+        }
+      }
       resetFormData();
       // Reset custom skill rows inside SkillsField component
       // This should now correctly call the function in SkillsField
@@ -731,12 +801,12 @@ const AddCandidateForm = ({
         // setTimeout(() => {
         // If it's a modal, call the onClose function with the new candidate data
         if (isModal && onClose) {
-          onClose(response.data);
-          if (response.status === "success") {
+          onClose(candidateResponse.data);
+          if (candidateResponse.status === "success") {
             notify.success("Candidate added successfully");
           } else if (
-            response.status === "no_changes" ||
-            response.status === "Updated successfully"
+            candidateResponse.status === "no_changes" ||
+            candidateResponse.status === "Updated successfully"
           ) {
             notify.success("Candidate updated successfully");
           }
@@ -753,8 +823,8 @@ const AddCandidateForm = ({
         }
 
         switch (mode) {
-          case ("Edit" && response.status === "no_changes") ||
-            response.status === "Updated successfully":
+          case ("Edit" && candidateResponse.status === "no_changes") ||
+            candidateResponse.status === "Updated successfully":
             navigate(-1); // /candidate
             notify.success("Candidate updated successfully");
             break;
@@ -764,11 +834,11 @@ const AddCandidateForm = ({
             break;
           default:
             navigate("/candidate");
-            if (response.status === "success") {
+            if (candidateResponse.status === "success") {
               notify.success("Candidate added successfully");
             } else if (
-              response.status === "no_changes" ||
-              response.status === "Updated successfully"
+              candidateResponse.status === "no_changes" ||
+              candidateResponse.status === "Updated successfully"
             ) {
               notify.success("Candidate updated successfully");
             }
@@ -778,7 +848,7 @@ const AddCandidateForm = ({
         // For "Add Candidate" button, also close modal if in modal mode
         if (isModal && onClose) {
           // setTimeout(() => {
-          onClose(response.data);
+          onClose(candidateResponse.data);
           // }, 1000);
         }
       }
@@ -788,8 +858,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save candidate",
+        error.message ||
+        "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -931,17 +1001,505 @@ const AddCandidateForm = ({
     id,
   ]);
 
+
+  // The form content (this part is shared)
+  const formContent = (
+    <div className="sm:p-0 p-4 mb-10" ref={formRef}>
+      {/* v1.0.8 ----------------------------------------------> */}
+      {/* v1.0.7 ---------------------------------------------------------------------> */}
+      {/* v1.0.4 ----------------------------------------------------------------------------------> */}
+      {/* v1.0.2 ------------------------------------------------------------------> */}
+      {source !== "candidate-screening" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
+          {/* Profile Image Upload */}
+          <ProfilePhotoUpload
+            imageInputRef={imageInputRef}
+            imagePreview={imagePreview}
+            selectedImage={selectedImage}
+            fileError={fileError}
+            onImageChange={handleImageChange}
+            onRemoveImage={removeImage}
+            label="Profile Photo"
+          />
+
+          {/* Resume Upload */}
+          <ResumeUpload
+            resumeInputRef={resumeInputRef}
+            selectedResume={selectedResume}
+            resumeError={resumeError}
+            onResumeChange={handleResumeChange}
+            onRemoveResume={removeResume}
+            label="Resume"
+          />
+        </div>
+      )}
+      {/* </div> */}
+
+      <div className="space-y-2">
+        <div className="grid grid-cols-1 gap-6">
+          <div className="bg-white space-y-4">
+            {/* v1.0.7 <------------------------------------------------------ */}
+            {/* <h4 className="text-lg font-semibold text-gray-800"> */}
+            <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
+              {/* v1.0.7 ------------------------------------------------------> */}
+              Personal Details
+            </h4>
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+              <InputField
+                value={formData.FirstName}
+                onChange={handleChange}
+                inputRef={fieldRefs.FirstName}
+                label="First Name"
+                name="FirstName"
+                required
+                error={errors.FirstName}
+              />
+              <InputField
+                value={formData.LastName}
+                onChange={handleChange}
+                inputRef={fieldRefs.LastName}
+                error={errors.LastName}
+                label="Last Name"
+                name="LastName"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+              <DateOfBirthField
+                selectedDate={
+                  formData.Date_Of_Birth
+                    ? new Date(formData.Date_Of_Birth)
+                    : null
+                }
+                onChange={handleDateChange}
+                label="Date of Birth"
+                required={false}
+              />
+              <GenderDropdown
+                value={formData.Gender}
+                options={genderOptionsRS}
+                onChange={handleChange}
+                // error={errors.Gender}
+                containerRef={fieldRefs.Gender}
+                label="Gender"
+              // required
+              />
+            </div>
+            {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
+            {/* <p className="text-lg font-semibold col-span-2"> */}
+            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+              {/* v1.0.7 ----------------------------------------------------------------------------------------> */}
+              Contact Details
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+              <EmailField
+                value={formData.Email}
+                onChange={handleChange}
+                inputRef={fieldRefs.Email}
+                error={errors.Email}
+                label="Email"
+                required
+              />
+              <PhoneField
+                countryCodeValue={formData.CountryCode}
+                onCountryCodeChange={handleChange}
+                countryCodeError={errors.CountryCode}
+                countryCodeRef={fieldRefs.CountryCode}
+                phoneValue={formData.Phone}
+                onPhoneChange={handleChange}
+                phoneError={errors.Phone}
+                phoneRef={fieldRefs.Phone}
+                label="Phone"
+                required
+              />
+              <InputField
+                value={formData.linkedInUrl}
+                onChange={handleChange}
+                inputRef={fieldRefs.linkedInUrl}
+                label="LinkedIn URL"
+                name="linkedInUrl"
+                placeholder="https://linkedin.com/in/username"
+                error={errors.linkedInUrl}
+              />
+            </div>
+
+            {/* v1.0.7 <-------------------------------------------------------------------------------------- */}
+            {/* <p className="text-lg font-semibold col-span-2"> */}
+            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+              {/* v1.0.7 --------------------------------------------------------------------------------------> */}
+              Education Details
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+              <DropdownWithSearchField
+                value={formData.HigherQualification}
+                options={qualificationOptionsRS}
+                onChange={handleChange}
+                error={errors.HigherQualification}
+                containerRef={fieldRefs.HigherQualification}
+                label="Higher Qualification"
+                name="HigherQualification"
+                required
+                onMenuOpen={loadQualifications}
+                loading={isQualificationsFetching}
+              />
+              <DropdownWithSearchField
+                value={formData.UniversityCollege}
+                options={collegeOptionsRS}
+                onChange={(e) => {
+                  const { value } = e.target;
+                  setFormData((prev) => ({
+                    ...prev,
+                    UniversityCollege: value,
+                  }));
+                  if (errors.UniversityCollege) {
+                    setErrors((prevErrors) => ({
+                      ...prevErrors,
+                      UniversityCollege: "",
+                    }));
+                  }
+                }}
+                // error={errors.UniversityCollege}
+                isCustomName={isCustomUniversity}
+                setIsCustomName={setIsCustomUniversity}
+                containerRef={fieldRefs.UniversityCollege}
+                label="University/College"
+                name="UniversityCollege"
+                // required
+                onMenuOpen={loadColleges}
+                loading={isCollegesFetching}
+              />
+            </div>
+            {/* --------v1.0.1----->*/}
+            {/* v1.0.7 <----------------------------------------------------------------------------------- */}
+            {/* <p className="text-lg font-semibold col-span-2"> */}
+            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+              {/* v1.0.7 -----------------------------------------------------------------------------------> */}
+              Experience Details
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+              <IncreaseAndDecreaseField
+                value={formData.CurrentExperience}
+                onChange={handleChange}
+                inputRef={fieldRefs.CurrentExperience}
+                error={errors.CurrentExperience}
+                label="Total Experience"
+                name="CurrentExperience"
+                required
+              />
+              <IncreaseAndDecreaseField
+                value={formData.RelevantExperience}
+                onChange={handleChange}
+                inputRef={fieldRefs.RelevantExperience}
+                error={errors.RelevantExperience}
+                label="Relevant Experience"
+                name="RelevantExperience"
+                required
+              />
+            </div>
+
+            {/* Current Role */}
+
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+              <DropdownWithSearchField
+                value={formData.CurrentRole}
+                options={roleOptionsRS}
+                onChange={handleChange}
+                error={errors.CurrentRole}
+                containerRef={fieldRefs.CurrentRole}
+                label="Role / Technology"
+                name="CurrentRole"
+                required
+                onMenuOpen={loadCurrentRoles}
+                loading={isCurrentRolesFetching}
+              />
+
+              {/* <DropdownWithSearchField
+                    containerRef={fieldRefs.Technology}
+                    label="Technology"
+                    name="technology"
+                    value={formData.Technology}
+                    options={currentRoles.map((t) => ({
+                      value: t.roleName,
+                      label: t.roleLabel,
+                    }))}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        Technology: e.target.value,
+                      }));
+                      setErrors((prev) => ({
+                        ...prev,
+                        Technology: "",
+                      }));
+                    }}
+                    error={errors.Technology}
+                    placeholder="Select Technology"
+                    required
+                    onMenuOpen={loadCurrentRoles}
+                    loading={isCurrentRolesFetching}
+                  /> */}
+            </div>
+          </div>
+          <div>
+            <SkillsField
+              ref={fieldRefs.skills}
+              entries={entries}
+              errors={errors}
+              showValidation={showSkillValidation}
+              onSkillsValidChange={(hasValidSkills) => {
+                // Clear the skills error if at least one complete row exists
+                if (hasValidSkills && errors.skills) {
+                  setErrors((prevErrors) => {
+                    const newErrors = { ...prevErrors };
+                    delete newErrors.skills;
+                    return newErrors;
+                  });
+                }
+              }}
+              onAddSkill={(setEditingIndexCallback) => {
+                setEntries((prevEntries) => {
+                  const newEntries = [
+                    ...prevEntries,
+                    { skill: "", experience: "", expertise: "" },
+                  ];
+                  // Only set editing index if callback is provided
+                  if (
+                    setEditingIndexCallback &&
+                    typeof setEditingIndexCallback === "function"
+                  ) {
+                    setEditingIndexCallback(newEntries.length - 1);
+                  }
+                  return newEntries;
+                });
+                setSelectedSkill("");
+                setSelectedExp("");
+                setSelectedLevel("");
+              }}
+              onAddMultipleSkills={(
+                newSkillEntries,
+                skillsToRemove = [],
+              ) => {
+                setEntries((prevEntries) => {
+                  let updatedEntries = [...prevEntries];
+
+                  // First, handle skill removals
+                  if (skillsToRemove.length > 0) {
+                    // Count current skills with data
+                    const currentFilledSkills = updatedEntries.filter(
+                      (e) => e.skill,
+                    ).length;
+                    const remainingSkillsAfterRemoval =
+                      currentFilledSkills - skillsToRemove.length;
+
+                    // If we still have 3+ skills after removal, remove rows entirely
+                    if (remainingSkillsAfterRemoval >= 3) {
+                      updatedEntries = updatedEntries.filter(
+                        (entry) => !skillsToRemove.includes(entry.skill),
+                      );
+                    } else {
+                      // If we'd have less than 3, just clear the skill but keep rows
+                      updatedEntries = updatedEntries.map((entry) => {
+                        if (skillsToRemove.includes(entry.skill)) {
+                          return {
+                            skill: "",
+                            experience: "",
+                            expertise: "",
+                          };
+                        }
+                        return entry;
+                      });
+                    }
+
+                    // Ensure we always have at least 3 rows
+                    while (updatedEntries.length < 3) {
+                      updatedEntries.push({
+                        skill: "",
+                        experience: "",
+                        expertise: "",
+                      });
+                    }
+                  }
+
+                  // Then, add new skills - fill empty rows first
+                  let skillIndex = 0;
+                  for (
+                    let i = 0;
+                    i < updatedEntries.length &&
+                    skillIndex < newSkillEntries.length;
+                    i++
+                  ) {
+                    if (!updatedEntries[i].skill) {
+                      updatedEntries[i] = {
+                        ...updatedEntries[i],
+                        skill: newSkillEntries[skillIndex].skill,
+                      };
+                      skillIndex++;
+                    }
+                  }
+
+                  // Add remaining skills as new rows
+                  while (
+                    skillIndex < newSkillEntries.length &&
+                    updatedEntries.length < 10
+                  ) {
+                    updatedEntries.push(newSkillEntries[skillIndex]);
+                    skillIndex++;
+                  }
+
+                  return updatedEntries;
+                });
+                // Update allSelectedSkills
+                setAllSelectedSkills((prev) => {
+                  let updated = prev.filter(
+                    (s) => !skillsToRemove.includes(s),
+                  );
+                  return [
+                    ...updated,
+                    ...newSkillEntries.map((e) => e.skill),
+                  ];
+                });
+              }}
+              onEditSkill={(index) => {
+                const entry = entries[index];
+                setSelectedSkill(entry.skill || "");
+                setSelectedExp(entry.experience);
+                setSelectedLevel(entry.expertise);
+              }}
+              onDeleteSkill={(index) => {
+                const entry = entries[index];
+                setAllSelectedSkills(
+                  allSelectedSkills.filter(
+                    (skill) => skill !== entry.skill,
+                  ),
+                );
+                setEntries(entries.filter((_, i) => i !== index));
+              }}
+              onUpdateEntry={(index, updatedEntry) => {
+                const newEntries = [...entries];
+                const oldSkill = newEntries[index]?.skill;
+                newEntries[index] = updatedEntry;
+                setEntries(newEntries);
+
+                // Update allSelectedSkills if skill changed
+                if (oldSkill !== updatedEntry.skill) {
+                  const newSelectedSkills = newEntries
+                    .map((e) => e.skill)
+                    .filter(Boolean);
+                  setAllSelectedSkills(newSelectedSkills);
+                }
+
+                // Update formData
+                setFormData((prev) => ({ ...prev, skills: newEntries }));
+              }}
+              setIsModalOpen={setIsModalOpen}
+              setEditingIndex={setEditingIndex}
+              isModalOpen={isModalOpen}
+              currentStep={currentStep}
+              setCurrentStep={setCurrentStep}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              selectedSkill={selectedSkill}
+              setSelectedSkill={setSelectedSkill}
+              allSelectedSkills={allSelectedSkills}
+              selectedExp={selectedExp}
+              setSelectedExp={setSelectedExp}
+              selectedLevel={selectedLevel}
+              setSelectedLevel={setSelectedLevel}
+              skills={skills}
+              isNextEnabled={isNextEnabled}
+              handleAddEntry={handleAddEntry}
+              skillpopupcancelbutton={skillpopupcancelbutton}
+              editingIndex={editingIndex}
+              onOpenSkills={loadSkills}
+            />
+          </div>
+
+          {/* External ID Field - Only show for organization users */}
+          {isOrganization && (
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+              <div className="-mt-5 mb-3">
+                <div className="flex items-center gap-2 mb-1 relative">
+                  <label className="text-sm font-medium text-gray-700">
+                    External ID
+                  </label>
+                  <div className="relative tooltip-container">
+                    <Info
+                      className="w-4 h-4 text-gray-400 cursor-pointer"
+                      onClick={() => setShowTooltip(!showTooltip)}
+                    />
+                    {showTooltip && (
+                      <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
+                        External System Reference Id
+                        <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <InputField
+                  value={formData.externalId}
+                  onChange={handleChange}
+                  inputRef={fieldRefs.externalId}
+                  error={errors.externalId}
+                  label=""
+                  name="externalId"
+                  placeholder="External System Reference Id"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* v1.0.8 <----------------------------------- */}
+          <div className="flex justify-end gap-3">
+            {/* v1.0.8 <----------------------------------- */}
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handleClose}
+              disabled={isMutationLoading}
+              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+            >
+              Cancel
+            </Button>
+
+            <LoadingButton
+              onClick={handleSubmit}
+              isLoading={isMutationLoading && activeButton === "save"}
+              loadingText={id ? "Updating..." : "Saving..."}
+            >
+              {id ? "Update" : "Save"}
+            </LoadingButton>
+
+            {!hideAddButton && !id && source !== "candidate-screening" && (
+              <LoadingButton
+                onClick={(e) => handleSubmit(e, true)}
+                isLoading={isMutationLoading && activeButton === "add"}
+                loadingText="Adding..."
+                className="flex items-center"
+              >
+                <FaPlus className="w-4 h-4 sm:hidden mr-1" /> Add Candidate
+              </LoadingButton>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
   // ---------------------------------- Uniqueness checking ----------------------------------------
   return (
     <>
       {/* v1.0.2 <------------------------------------------------------------------ */}
       {/* v1.0.4 <----------------------------------------------------------------------------------- */}
-      <SidebarPopup
+      {/* <SidebarPopup
         title={id ? "Update Candidate" : "Add New Candidate"}
         onClose={handleClose}
-      >
-        {/* // newly added guide for CandidateForm component by Ranjith */}
-        <InfoGuide
+      > */}
+      {/* // newly added guide for CandidateForm component by Ranjith */}
+      {/* <InfoGuide
           title="Candidate Profile Guidelines"
           items={[
             <>
@@ -985,495 +1543,29 @@ const AddCandidateForm = ({
               university entries available if not found in the list
             </>,
           ]}
-        />
+        /> */}
 
-        {/* v1.0.7 <--------------------------------------------------------------------- */}
-        {/* <div className="p-4" ref={formRef}> */}
-        {/* v1.0.8 <---------------------------------------------- */}
-        <div className="sm:p-0 p-4 mb-10" ref={formRef}>
-          {/* v1.0.8 ----------------------------------------------> */}
-          {/* v1.0.7 ---------------------------------------------------------------------> */}
-          {/* v1.0.4 ----------------------------------------------------------------------------------> */}
-          {/* v1.0.2 ------------------------------------------------------------------> */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
-            {/* Profile Image Upload */}
-            <ProfilePhotoUpload
-              imageInputRef={imageInputRef}
-              imagePreview={imagePreview}
-              selectedImage={selectedImage}
-              fileError={fileError}
-              onImageChange={handleImageChange}
-              onRemoveImage={removeImage}
-              label="Profile Photo"
-            />
+      {/* v1.0.7 <--------------------------------------------------------------------- */}
+      {/* <div className="p-4" ref={formRef}> */}
+      {/* v1.0.8 <---------------------------------------------- */}
 
-            {/* Resume Upload */}
-            <ResumeUpload
-              resumeInputRef={resumeInputRef}
-              selectedResume={selectedResume}
-              resumeError={resumeError}
-              onResumeChange={handleResumeChange}
-              onRemoveResume={removeResume}
-              label="Resume"
-            />
-          </div>
-          {/* </div> */}
+      {/* </SidebarPopup> */}
 
-          <div className="space-y-2">
-            <div className="grid grid-cols-1 gap-6">
-              <div className="bg-white space-y-4">
-                {/* v1.0.7 <------------------------------------------------------ */}
-                {/* <h4 className="text-lg font-semibold text-gray-800"> */}
-                <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
-                  {/* v1.0.7 ------------------------------------------------------> */}
-                  Personal Details
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <InputField
-                    value={formData.FirstName}
-                    onChange={handleChange}
-                    inputRef={fieldRefs.FirstName}
-                    label="First Name"
-                    name="FirstName"
-                    required
-                    error={errors.FirstName}
-                  />
-                  <InputField
-                    value={formData.LastName}
-                    onChange={handleChange}
-                    inputRef={fieldRefs.LastName}
-                    error={errors.LastName}
-                    label="Last Name"
-                    name="LastName"
-                    required
-                  />
-                </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <DateOfBirthField
-                    selectedDate={
-                      formData.Date_Of_Birth
-                        ? new Date(formData.Date_Of_Birth)
-                        : null
-                    }
-                    onChange={handleDateChange}
-                    label="Date of Birth"
-                    required={false}
-                  />
-                  <GenderDropdown
-                    value={formData.Gender}
-                    options={genderOptionsRS}
-                    onChange={handleChange}
-                    // error={errors.Gender}
-                    containerRef={fieldRefs.Gender}
-                    label="Gender"
-                    // required
-                  />
-                </div>
-                {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
-                {/* <p className="text-lg font-semibold col-span-2"> */}
-                <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-                  {/* v1.0.7 ----------------------------------------------------------------------------------------> */}
-                  Contact Details
-                </p>
-
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <EmailField
-                    value={formData.Email}
-                    onChange={handleChange}
-                    inputRef={fieldRefs.Email}
-                    error={errors.Email}
-                    label="Email"
-                    required
-                  />
-                  <PhoneField
-                    countryCodeValue={formData.CountryCode}
-                    onCountryCodeChange={handleChange}
-                    countryCodeError={errors.CountryCode}
-                    countryCodeRef={fieldRefs.CountryCode}
-                    phoneValue={formData.Phone}
-                    onPhoneChange={handleChange}
-                    phoneError={errors.Phone}
-                    phoneRef={fieldRefs.Phone}
-                    label="Phone"
-                    required
-                  />
-                  <InputField
-                    value={formData.linkedInUrl}
-                    onChange={handleChange}
-                    inputRef={fieldRefs.linkedInUrl}
-                    label="LinkedIn URL"
-                    name="linkedInUrl"
-                    placeholder="https://linkedin.com/in/username"
-                    error={errors.linkedInUrl}
-                  />
-                </div>
-
-                {/* v1.0.7 <-------------------------------------------------------------------------------------- */}
-                {/* <p className="text-lg font-semibold col-span-2"> */}
-                <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-                  {/* v1.0.7 --------------------------------------------------------------------------------------> */}
-                  Education Details
-                </p>
-
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <DropdownWithSearchField
-                    value={formData.HigherQualification}
-                    options={qualificationOptionsRS}
-                    onChange={handleChange}
-                    error={errors.HigherQualification}
-                    containerRef={fieldRefs.HigherQualification}
-                    label="Higher Qualification"
-                    name="HigherQualification"
-                    required
-                    onMenuOpen={loadQualifications}
-                    loading={isQualificationsFetching}
-                  />
-                  <DropdownWithSearchField
-                    value={formData.UniversityCollege}
-                    options={collegeOptionsRS}
-                    onChange={(e) => {
-                      const { value } = e.target;
-                      setFormData((prev) => ({
-                        ...prev,
-                        UniversityCollege: value,
-                      }));
-                      if (errors.UniversityCollege) {
-                        setErrors((prevErrors) => ({
-                          ...prevErrors,
-                          UniversityCollege: "",
-                        }));
-                      }
-                    }}
-                    // error={errors.UniversityCollege}
-                    isCustomName={isCustomUniversity}
-                    setIsCustomName={setIsCustomUniversity}
-                    containerRef={fieldRefs.UniversityCollege}
-                    label="University/College"
-                    name="UniversityCollege"
-                    // required
-                    onMenuOpen={loadColleges}
-                    loading={isCollegesFetching}
-                  />
-                </div>
-                {/* --------v1.0.1----->*/}
-                {/* v1.0.7 <----------------------------------------------------------------------------------- */}
-                {/* <p className="text-lg font-semibold col-span-2"> */}
-                <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-                  {/* v1.0.7 -----------------------------------------------------------------------------------> */}
-                  Experience Details
-                </p>
-
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <IncreaseAndDecreaseField
-                    value={formData.CurrentExperience}
-                    onChange={handleChange}
-                    inputRef={fieldRefs.CurrentExperience}
-                    error={errors.CurrentExperience}
-                    label="Total Experience"
-                    name="CurrentExperience"
-                    required
-                  />
-                  <IncreaseAndDecreaseField
-                    value={formData.RelevantExperience}
-                    onChange={handleChange}
-                    inputRef={fieldRefs.RelevantExperience}
-                    error={errors.RelevantExperience}
-                    label="Relevant Experience"
-                    name="RelevantExperience"
-                    required
-                  />
-                </div>
-
-                {/* Current Role */}
-
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <DropdownWithSearchField
-                    value={formData.CurrentRole}
-                    options={roleOptionsRS}
-                    onChange={handleChange}
-                    error={errors.CurrentRole}
-                    containerRef={fieldRefs.CurrentRole}
-                    label="Role / Technology"
-                    name="CurrentRole"
-                    required
-                    onMenuOpen={loadCurrentRoles}
-                    loading={isCurrentRolesFetching}
-                  />
-
-                  {/* <DropdownWithSearchField
-                    containerRef={fieldRefs.Technology}
-                    label="Technology"
-                    name="technology"
-                    value={formData.Technology}
-                    options={currentRoles.map((t) => ({
-                      value: t.roleName,
-                      label: t.roleLabel,
-                    }))}
-                    onChange={(e) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        Technology: e.target.value,
-                      }));
-                      setErrors((prev) => ({
-                        ...prev,
-                        Technology: "",
-                      }));
-                    }}
-                    error={errors.Technology}
-                    placeholder="Select Technology"
-                    required
-                    onMenuOpen={loadCurrentRoles}
-                    loading={isCurrentRolesFetching}
-                  /> */}
-                </div>
-              </div>
-              <div>
-                <SkillsField
-                  ref={fieldRefs.skills}
-                  entries={entries}
-                  errors={errors}
-                  showValidation={showSkillValidation}
-                  onSkillsValidChange={(hasValidSkills) => {
-                    // Clear the skills error if at least one complete row exists
-                    if (hasValidSkills && errors.skills) {
-                      setErrors((prevErrors) => {
-                        const newErrors = { ...prevErrors };
-                        delete newErrors.skills;
-                        return newErrors;
-                      });
-                    }
-                  }}
-                  onAddSkill={(setEditingIndexCallback) => {
-                    setEntries((prevEntries) => {
-                      const newEntries = [
-                        ...prevEntries,
-                        { skill: "", experience: "", expertise: "" },
-                      ];
-                      // Only set editing index if callback is provided
-                      if (
-                        setEditingIndexCallback &&
-                        typeof setEditingIndexCallback === "function"
-                      ) {
-                        setEditingIndexCallback(newEntries.length - 1);
-                      }
-                      return newEntries;
-                    });
-                    setSelectedSkill("");
-                    setSelectedExp("");
-                    setSelectedLevel("");
-                  }}
-                  onAddMultipleSkills={(
-                    newSkillEntries,
-                    skillsToRemove = [],
-                  ) => {
-                    setEntries((prevEntries) => {
-                      let updatedEntries = [...prevEntries];
-
-                      // First, handle skill removals
-                      if (skillsToRemove.length > 0) {
-                        // Count current skills with data
-                        const currentFilledSkills = updatedEntries.filter(
-                          (e) => e.skill,
-                        ).length;
-                        const remainingSkillsAfterRemoval =
-                          currentFilledSkills - skillsToRemove.length;
-
-                        // If we still have 3+ skills after removal, remove rows entirely
-                        if (remainingSkillsAfterRemoval >= 3) {
-                          updatedEntries = updatedEntries.filter(
-                            (entry) => !skillsToRemove.includes(entry.skill),
-                          );
-                        } else {
-                          // If we'd have less than 3, just clear the skill but keep rows
-                          updatedEntries = updatedEntries.map((entry) => {
-                            if (skillsToRemove.includes(entry.skill)) {
-                              return {
-                                skill: "",
-                                experience: "",
-                                expertise: "",
-                              };
-                            }
-                            return entry;
-                          });
-                        }
-
-                        // Ensure we always have at least 3 rows
-                        while (updatedEntries.length < 3) {
-                          updatedEntries.push({
-                            skill: "",
-                            experience: "",
-                            expertise: "",
-                          });
-                        }
-                      }
-
-                      // Then, add new skills - fill empty rows first
-                      let skillIndex = 0;
-                      for (
-                        let i = 0;
-                        i < updatedEntries.length &&
-                        skillIndex < newSkillEntries.length;
-                        i++
-                      ) {
-                        if (!updatedEntries[i].skill) {
-                          updatedEntries[i] = {
-                            ...updatedEntries[i],
-                            skill: newSkillEntries[skillIndex].skill,
-                          };
-                          skillIndex++;
-                        }
-                      }
-
-                      // Add remaining skills as new rows
-                      while (
-                        skillIndex < newSkillEntries.length &&
-                        updatedEntries.length < 10
-                      ) {
-                        updatedEntries.push(newSkillEntries[skillIndex]);
-                        skillIndex++;
-                      }
-
-                      return updatedEntries;
-                    });
-                    // Update allSelectedSkills
-                    setAllSelectedSkills((prev) => {
-                      let updated = prev.filter(
-                        (s) => !skillsToRemove.includes(s),
-                      );
-                      return [
-                        ...updated,
-                        ...newSkillEntries.map((e) => e.skill),
-                      ];
-                    });
-                  }}
-                  onEditSkill={(index) => {
-                    const entry = entries[index];
-                    setSelectedSkill(entry.skill || "");
-                    setSelectedExp(entry.experience);
-                    setSelectedLevel(entry.expertise);
-                  }}
-                  onDeleteSkill={(index) => {
-                    const entry = entries[index];
-                    setAllSelectedSkills(
-                      allSelectedSkills.filter(
-                        (skill) => skill !== entry.skill,
-                      ),
-                    );
-                    setEntries(entries.filter((_, i) => i !== index));
-                  }}
-                  onUpdateEntry={(index, updatedEntry) => {
-                    const newEntries = [...entries];
-                    const oldSkill = newEntries[index]?.skill;
-                    newEntries[index] = updatedEntry;
-                    setEntries(newEntries);
-
-                    // Update allSelectedSkills if skill changed
-                    if (oldSkill !== updatedEntry.skill) {
-                      const newSelectedSkills = newEntries
-                        .map((e) => e.skill)
-                        .filter(Boolean);
-                      setAllSelectedSkills(newSelectedSkills);
-                    }
-
-                    // Update formData
-                    setFormData((prev) => ({ ...prev, skills: newEntries }));
-                  }}
-                  setIsModalOpen={setIsModalOpen}
-                  setEditingIndex={setEditingIndex}
-                  isModalOpen={isModalOpen}
-                  currentStep={currentStep}
-                  setCurrentStep={setCurrentStep}
-                  searchTerm={searchTerm}
-                  setSearchTerm={setSearchTerm}
-                  selectedSkill={selectedSkill}
-                  setSelectedSkill={setSelectedSkill}
-                  allSelectedSkills={allSelectedSkills}
-                  selectedExp={selectedExp}
-                  setSelectedExp={setSelectedExp}
-                  selectedLevel={selectedLevel}
-                  setSelectedLevel={setSelectedLevel}
-                  skills={skills}
-                  isNextEnabled={isNextEnabled}
-                  handleAddEntry={handleAddEntry}
-                  skillpopupcancelbutton={skillpopupcancelbutton}
-                  editingIndex={editingIndex}
-                  onOpenSkills={loadSkills}
-                />
-              </div>
-
-              {/* External ID Field - Only show for organization users */}
-              {isOrganization && (
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <div className="-mt-5 mb-3">
-                    <div className="flex items-center gap-2 mb-1 relative">
-                      <label className="text-sm font-medium text-gray-700">
-                        External ID
-                      </label>
-                      <div className="relative tooltip-container">
-                        <Info
-                          className="w-4 h-4 text-gray-400 cursor-pointer"
-                          onClick={() => setShowTooltip(!showTooltip)}
-                        />
-                        {showTooltip && (
-                          <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
-                            External System Reference Id
-                            <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <InputField
-                      value={formData.externalId}
-                      onChange={handleChange}
-                      inputRef={fieldRefs.externalId}
-                      error={errors.externalId}
-                      label=""
-                      name="externalId"
-                      placeholder="External System Reference Id"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* v1.0.8 <----------------------------------- */}
-              <div className="flex justify-end gap-3">
-                {/* v1.0.8 <----------------------------------- */}
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={handleClose}
-                  disabled={isMutationLoading}
-                  className={`text-custom-blue border border-custom-blue transition-colors ${
-                    isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  Cancel
-                </Button>
-
-                <LoadingButton
-                  onClick={handleSubmit}
-                  isLoading={isMutationLoading && activeButton === "save"}
-                  loadingText={id ? "Updating..." : "Saving..."}
-                >
-                  {id ? "Update" : "Save"}
-                </LoadingButton>
-
-                {!hideAddButton && !id && (
-                  <LoadingButton
-                    onClick={(e) => handleSubmit(e, true)}
-                    isLoading={isMutationLoading && activeButton === "add"}
-                    loadingText="Adding..."
-                    className="flex items-center"
-                  >
-                    <FaPlus className="w-4 h-4 sm:hidden mr-1" /> Add Candidate
-                  </LoadingButton>
-                )}
-              </div>
-            </div>
-          </div>
+      {isModal ? (
+        // When opened as modal/popup (from screening) → NO sidebar, just content
+        <div className="h-full overflow-y-auto bg-white">
+          {formContent}
         </div>
-      </SidebarPopup>
+      ) : (
+        // Normal page mode → show SidebarPopup
+        <SidebarPopup
+          title={id ? "Update Candidate" : "Add New Candidate"}
+          onClose={handleClose}
+        >
+          {formContent}
+        </SidebarPopup>
+      )}
     </>
   );
 };

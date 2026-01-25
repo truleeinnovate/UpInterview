@@ -175,7 +175,9 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                 candidate_country_code: result.candidateCountryCode || '',
                 candidate_phone_number: result.candidatePhoneNumber || '',
                 match_percentage: result.matchPercentage ?? null,
-                match_status: result.matchStatus || 'new_candidate',
+                match_status: result.matchStatus === 'existing_candidate'
+                    ? 'existing'
+                    : result.matchStatus,
                 existing_candidate_id: result.existingCandidateId || null,
                 skill_match: result.skillMatch ?? null,
                 experience_match: result.experienceMatch ?? null,
@@ -203,11 +205,31 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                 metadata: result.metadata
             }));
 
+            const seenCandidates = new Set();
+
+            const finalResults = transformedResults.map(r => {
+                if (r.existing_candidate_id) {
+                    if (seenCandidates.has(r.existing_candidate_id)) {
+                        return { ...r, match_status: 'duplicate' };
+                    }
+                    seenCandidates.add(r.existing_candidate_id);
+                }
+
+                return r;
+            });
+            console.log("finalResults", finalResults);
+
+
             setProcessingProgress(100);
             await new Promise(resolve => setTimeout(resolve, 300));
 
-            setScreeningResults(transformedResults);
-            setSelectedIds(transformedResults.filter(r => r.match_status === 'new_candidate').map(r => r.id));
+            setScreeningResults(finalResults);
+            setSelectedIds(
+                finalResults
+                    .filter(r => r.match_status === 'new_candidate')
+                    .map(r => r.id)
+            );
+
             setIsProcessing(false);
             setCurrentStep(3);
 
@@ -220,96 +242,132 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
     };
 
 
-    const handleProceed = async () => {
-        setIsProceedLoading(true);
+    //   const handleProceed = async () => {
+    //   setIsProceedLoading(true);
 
-        try {
-            const selectedResults = screeningResults.filter(r => selectedIds.includes(r.id));
+    //   try {
+    //     const selectedResults = screeningResults.filter((r) => selectedIds.includes(r.id));
 
-            const token = document.cookie
-                .split('; ')
-                .find(row => row.startsWith('authToken='))
-                ?.split('=')[1];
+    //     if (selectedResults.length === 0) {
+    //       notify.warning("No candidates selected");
+    //       setIsProceedLoading(false);
+    //       return;
+    //     }
 
-            const response = await fetch(`${config.REACT_APP_API_URL}/api/resume-screening/create-candidates`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    positionId,
-                    selectedResults: selectedResults.map(r => ({
-                        // IDs
-                        resumeId: r.resumeId || null,
-                        candidateId: r.candidateId || null,
+    //     const token = document.cookie
+    //       .split("; ")
+    //       .find((row) => row.startsWith("authToken="))
+    //       ?.split("=")[1];
 
-                        // File info
-                        fileName: r.file_name,
+    //     if (!token) {
+    //       throw new Error("Authentication token not found");
+    //     }
 
-                        // Candidate info
-                        candidateName: r.candidate_name,
-                        candidateEmail: r.candidate_email,
-                        candidatePhone: r.candidate_phone_number || r.candidate_phone || '',
-                        candidateCountryCode: r.candidate_country_code || '+91',                 // default India
+    //     // Prepare payload — include rich parsed data so backend can save it
+    //     const payload = {
+    //       positionId,
+    //       selectedResults: selectedResults.map((r) => ({
+    //         // Candidate identification
+    //         candidateName: r.candidate_name?.trim() || "Unknown",
+    //         candidateEmail: (r.candidate_email || "").toLowerCase().trim(),
+    //         candidatePhone: r.candidate_phone || r.candidate_phone_number || "",
+    //         candidateCountryCode: r.candidate_country_code || "+91",
 
+    //         // File reference
+    //         fileName: r.file_name,
 
-                        // Screening scores
-                        matchPercentage: r.match_percentage || 0,
-                        skillMatch: r.skill_match || 0,
-                        experienceMatch: r.experience_match || 0,
+    //         // Screening outcome
+    //         matchPercentage: Number(r.match_percentage) || 0,
+    //         skillMatch: Number(r.skill_match) || 0,
+    //         experienceMatch: Number(r.experience_match) || 0,
+    //         recommendation: r.screening_result?.recommendation || "HOLD",
 
-                        // Recommendation
-                        recommendation: r.screening_result?.recommendation || 'HOLD',
+    //         // Rich parsed data — crucial for saving full info
+    //         parsedSkills: Array.isArray(r.parsed_skills) ? r.parsed_skills : [],
+    //         parsedExperienceYears: Number(
+    //           parseFloat(r.parsed_experience) ||
+    //           r.metadata?.extractedProfile?.experienceYears ||
+    //           r.screening_result?.experience_years ||
+    //           0
+    //         ),
+    //         parsedEducation: r.parsed_education || r.screening_result?.education || "Not specified",
 
-                        // Use the full metadata from backend (already has candidate details)
-                        metadata: r.metadata || {
-                            score: r.match_percentage || 0,
-                            skillMatch: r.skill_match || 0,
-                            experienceMatch: r.experience_match || 0,
-                            matchedSkills: r.screening_result?.extracted_skills || [],
-                            missingSkills: r.screening_result?.missingSkills || [],
-                            screeningNotes: r.screening_result?.summary || '',
-                            strengths: r.screening_result?.strengths || [],
-                            concerns: r.screening_result?.gaps || [],
-                            summary: r.screening_result?.summary || '',
-                            method: r.screening_result?.method,
-                            candidate: {
-                                name: r.candidate_name,
-                                email: r.candidate_email,
-                                phone: r.candidate_phone || '',
-                                skills: r.parsed_skills || [],
-                                experience: r.parsed_experience,
-                                education: r.parsed_education
-                            }
-                        },
+    //         // Additional screening context
+    //         summary: r.screening_result?.summary || "",
+    //         matchedSkills: r.screening_result?.extracted_skills ||
+    //                        r.screening_result?.matchedSkills || [],
+    //         missingSkills: r.screening_result?.missingSkills || [],
+    //         strengths: r.screening_result?.strengths || [],
+    //         concerns: r.screening_result?.gaps || r.screening_result?.concerns || [],
 
-                        // Screening result object
-                        screeningResult: r.screening_result
-                    })),
-                }),
-                credentials: 'include',
-            });
+    //         // === Most important: send the full parsed / extracted data ===
+    //         parsedData: {
+    //           fullText: r.metadata?.candidate?.rawText || 
+    //                     r.rawText || 
+    //                     r.screening_result?.fullText || 
+    //                     "",
+    //           extractedProfile: r.metadata?.extractedProfile || 
+    //                            r.screening_result?.extractedProfile || 
+    //                            {},
+    //           experienceYears: r.metadata?.extractedProfile?.experienceYears ||
+    //                           r.screening_result?.experience_years || null,
+    //           educationDetails: r.metadata?.extractedProfile?.education ||
+    //                            r.screening_result?.education || null,
+    //           languages: r.metadata?.languages || 
+    //                      r.metadata?.extractedProfile?.languages || 
+    //                      r.screening_result?.languages || [],
+    //           certifications: r.metadata?.certifications || 
+    //                          r.metadata?.extractedProfile?.certifications || 
+    //                          r.screening_result?.certifications || [],
+    //           projects: r.metadata?.projects || 
+    //                     r.metadata?.extractedProfile?.projects || 
+    //                     r.screening_result?.projects || [],
+    //           // you can add more fields that exist in your preview response
+    //         },
 
-            const data = await response.json();
+    //         // Minimal metadata
+    //         metadata: {
+    //           method: r.screening_result?.method || "SYSTEM",
+    //           score: Number(r.match_percentage) || 0
+    //         }
+    //       }))
+    //     };
 
-            if (!response.ok || !data.success) {
-                console.error('Failed to save screening results:', data);
-                notify.error(`Failed to save: ${data.error || 'Unknown error'}`);
-            } else {
-                console.log('Saved successfully:', data);
-                notify.success(`Successfully saved ${data.screeningResults?.length || 0} screening results and ${data.applications?.length || 0} applications.`);
-            }
+    //     const response = await fetch(
+    //       `${config.REACT_APP_API_URL}/api/resume-screening/create-candidates`,
+    //       {
+    //         method: "POST",
+    //         headers: {
+    //           Authorization: `Bearer ${token}`,
+    //           "Content-Type": "application/json"
+    //         },
+    //         body: JSON.stringify(payload),
+    //         credentials: "include"
+    //       }
+    //     );
 
-            setIsProceedLoading(false);
-            handleClose();
-        } catch (error) {
-            console.error('Error saving screening results:', error);
-            notify.error(`Error: ${error.message}`);
-            setIsProceedLoading(false);
-            handleClose();
-        }
-    };
+    //     const data = await response.json();
+
+    //     if (!response.ok || !data.success) {
+    //       console.error("Save failed:", data);
+    //       notify.error(data.error || data.message || "Failed to save candidates");
+    //       return;
+    //     }
+
+    //     notify.success(
+    //       `Saved ${data.screeningResults?.length || 0} screening results and ${
+    //         data.applications?.length || 0
+    //       } applications`
+    //     );
+
+    //     handleClose();
+    //   } catch (error) {
+    //     console.error("Error in handleProceed:", error);
+    //     notify.error(error.message || "Something went wrong while saving");
+    //   } finally {
+    //     setIsProceedLoading(false);
+    //   }
+    // };
 
     const toggleSelect = (id) => {
         setSelectedIds(prev =>
@@ -348,8 +406,8 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
     });
 
     const newCandidates = screeningResults.filter(r => r.match_status === 'new_candidate');
-    const duplicates = screeningResults.filter(r => r.match_status === 'duplicate');
     const existing = screeningResults.filter(r => r.match_status === 'existing');
+    const duplicates = screeningResults.filter(r => r.match_status === 'duplicate');
 
     const discardResult = (id) => {
         setScreeningResults(prev => prev.filter(r => r.id !== id));
@@ -459,7 +517,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
 
                                         {uploadedFiles.length > 0 && (
                                             <div className="space-y-3">
-                                                <div className="flex items-center justify-between">
+                                                {/* <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
                                                         <input
                                                             type="checkbox"
@@ -480,7 +538,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                             Remove Selected ({selectedFileIds.length})
                                                         </button>
                                                     )}
-                                                </div>
+                                                </div> */}
 
                                                 <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
                                                     {uploadedFiles.map((file) => (
@@ -868,7 +926,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                 <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                                     <div className="px-5 py-4 border-b border-gray-100 flex flex-row items-center justify-between flex-wrap gap-4">
                                         <h3 className="font-semibold text-gray-800">Screening Results</h3>
-                                        <div className="flex items-center gap-2">
+                                        {/* <div className="flex items-center gap-2">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedIds.length === screeningResults.filter(r => r.match_status !== 'duplicate').length && selectedIds.length > 0}
@@ -876,13 +934,13 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                 className="w-4 h-4 rounded border-gray-300 text-custom-blue focus:ring-custom-blue"
                                             />
                                             <span className="text-sm text-gray-500">Select All</span>
-                                        </div>
+                                        </div> */}
                                     </div>
                                     <div className="overflow-x-auto">
                                         <table className="w-full">
                                             <thead>
                                                 <tr className="border-b border-gray-200 bg-gray-50 text-left">
-                                                    <th className="p-3 w-10"></th>
+                                                    {/* <th className="p-3 w-10"></th> */}
                                                     <th className="p-3 text-sm font-semibold text-gray-600">Resume</th>
                                                     <th className="p-3 text-sm font-semibold text-gray-600">Candidate Match</th>
                                                     <th className="p-3 text-sm font-semibold text-gray-600 text-center">Match %</th>
@@ -895,7 +953,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                             <tbody>
                                                 {filteredResults.map(result => (
                                                     <tr key={result.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                                        <td className="p-3">
+                                                        {/* <td className="p-3">
                                                             {result.match_status !== 'duplicate' && (
                                                                 <input
                                                                     type="checkbox"
@@ -904,7 +962,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                                     className="w-4 h-4 rounded border-gray-300 text-custom-blue focus:ring-custom-blue"
                                                                 />
                                                             )}
-                                                        </td>
+                                                        </td> */}
                                                         <td className="p-3">
                                                             <div className="flex items-center gap-2">
                                                                 <FileText className="w-4 h-4 text-gray-400" />
@@ -917,7 +975,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                                     'bg-amber-100 text-amber-700'
                                                                 }`}>
                                                                 {result.match_status === 'new_candidate' ? 'New Candidate' :
-                                                                    result.match_status === 'existing' ? `Existing (ID:${result.existing_candidate_id})` :
+                                                                    result.match_status === 'existing' ? `Existing` :
                                                                         'Duplicate'}
                                                             </span>
                                                         </td>
@@ -951,7 +1009,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                                 >
                                                                     <Eye className="w-4 h-4" />
                                                                 </button>
-                                                                {result.match_status !== 'duplicate' && (
+                                                                {/* {result.match_status !== 'duplicate' && (
                                                                     <button
                                                                         className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
                                                                         onClick={() => toggleSelect(result.id)}
@@ -959,7 +1017,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                                     >
                                                                         <UserPlus className="w-4 h-4" />
                                                                     </button>
-                                                                )}
+                                                                )} */}
                                                                 <button
                                                                     className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                                                                     onClick={() => discardResult(result.id)}
@@ -984,7 +1042,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                 </div>
 
                                 {/* Footer Actions */}
-                                <div className="flex sm:flex-col flex-row  justify-between gap-4 p-4 bg-gray-50 rounded-lg">
+                                {/* <div className="flex sm:flex-col flex-row  justify-between gap-4 p-4 bg-gray-50 rounded-lg">
                                     <p className="text-sm text-gray-600">
                                         <strong>Selected:</strong> {selectedIds.length} resumes
                                     </p>
@@ -1009,7 +1067,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                             Proceed Selected ({selectedIds.length})
                                         </button>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         )}
 
@@ -1030,6 +1088,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                     // 'hold' currently doesn't have a specific logic in this localized state other than maybe untoggling
                                     setViewingResult(null);
                                 }}
+                                source={screeningMethod}
                             />
                         )}
                     </div>
