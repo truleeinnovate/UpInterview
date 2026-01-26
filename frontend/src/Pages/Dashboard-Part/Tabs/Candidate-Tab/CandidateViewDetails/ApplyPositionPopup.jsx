@@ -7,6 +7,7 @@ import { usePositions } from "../../../../../apiHooks/usePositions";
 import {
     useApplicationsByCandidate,
     useApplicationMutations,
+    useApplicationFilter,
 } from "../../../../../apiHooks/useApplications";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect";
 import { getCurrentTenantId } from "../../../../../utils/AuthCookieManager/AuthCookieManager";
@@ -20,9 +21,21 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
     const { positionData: positions, isLoading: positionsLoading } =
         usePositions();
 
-    // Fetch existing applications for this candidate
-    const { applications, isLoading: applicationsLoading, refetch } =
-        useApplicationsByCandidate(candidate?._id);
+    // Fetch applications for selected position (filtering via API)
+    const { applications: filteredApplications, isLoading: applicationsLoading, refetch } =
+        useApplicationFilter(candidate?._id, selectedPosition);
+
+    // Fetch ALL applications for this candidate to determine which positions are already applied (for dropdown filtering if needed)
+    // Note: If we want to strictly follow "filter via API", we might skip this usage, 
+    // but we need to know which positions to disable/mark as applied in the dropdown?
+    // The user said "filtering applications based on candidate and position id's... don't sepearte and filters applications".
+    // However, to show "Available Positions" dropdown effectively, we usually need to know which ones are already taken.
+    // The current code computes `appliedPositionIds` from `applications`.
+    // If I remove `useApplicationsByCandidate`, I lose `appliedPositionIds`.
+    // But the user specifically asked for the filtering part.
+    // I will keep `useApplicationsByCandidate` for the dropdown logic (to know what's applied) 
+    // BUT I will use the new `useApplicationFilter` for the table display as requested.
+    const { applications: allCandidateApplications } = useApplicationsByCandidate(candidate?._id);
 
     // Mutation for creating application
     const { createApplication, isCreating } = useApplicationMutations();
@@ -30,9 +43,9 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
     // Get position IDs that already have applications
     const appliedPositionIds = useMemo(() => {
         return new Set(
-            applications.map((app) => app.positionId?._id || app.positionId)
+            allCandidateApplications.map((app) => app.positionId?._id || app.positionId)
         );
-    }, [applications]);
+    }, [allCandidateApplications]);
 
     // Show ALL positions in dropdown (no filtering)
     const positionOptions = useMemo(() => {
@@ -43,18 +56,9 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
         }));
     }, [positions]);
 
-    // Filter applications based on selected position (only when position is selected)
-    const filteredApplications = useMemo(() => {
-        if (!selectedPosition) {
-            // No position selected - return empty array (don't show table)
-            return [];
-        }
-        // Filter to show only applications matching the selected position
-        return applications.filter((app) => {
-            const appPositionId = app.positionId?._id || app.positionId;
-            return appPositionId === selectedPosition;
-        });
-    }, [applications, selectedPosition]);
+    // Filter logic is now handled by the API hook `useApplicationFilter`
+    // So distinct `filteredApplications` memo is no longer needed.
+    // We utilize `filteredApplications` directly from the hook.
 
     // Check if selected position contains any active application
     const hasActiveApplication = useMemo(() => {

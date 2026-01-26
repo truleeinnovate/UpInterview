@@ -8,10 +8,15 @@ const {
     createApplication,
     updateApplication,
     getApplicationById,
+    filterApplications,
+    updateApplicationStatus,
 } = require("../controllers/applicationController.js");
 
 // Get applications by candidate
 router.get("/candidate/:candidateId", getApplicationsByCandidate);
+
+// Filter applications (Must be before /:id)
+router.get("/filter", filterApplications);
 
 // Get applications by position
 router.get("/position/:positionId", getApplicationsByPosition);
@@ -24,5 +29,6 @@ router.post("/", createApplication);
 
 // Update application
 router.patch("/:id", updateApplication);
+router.put("/status/:id", updateApplicationStatus);
 
 module.exports = router;
