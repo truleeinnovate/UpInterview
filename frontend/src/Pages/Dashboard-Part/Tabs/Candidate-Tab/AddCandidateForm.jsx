@@ -254,6 +254,12 @@ const AddCandidateForm = ({
   // const userId = tokenPayload?.userId;
 
   useEffect(() => {
+
+    // IMPORTANT: Skip DB pre-fill when coming from screening — we want screening data instead
+    if (source === "candidate-screening") {
+      console.log("Skipping DB pre-fill because source is candidate-screening");
+      return;
+    }
     if (id && selectedCandidate) {
       const dob = selectedCandidate.Date_Of_Birth;
 
@@ -282,82 +288,43 @@ const AddCandidateForm = ({
         workExperience: selectedCandidate.workExperience || [],
       });
 
-    console.log("SCREENING PRE-FILL RUNNING — full data:", {
-      skillsCount: screeningData.parsed_skills?.length,
-      experience: screeningData.parsed_experience,
-      education: screeningData.parsed_education,
-      name: screeningData.candidate_name
-    });
+      if (selectedCandidate.ImageData?.filename) {
+        setImagePreview(selectedCandidate?.ImageData.path);
+        setSelectedImage(selectedCandidate?.ImageData);
+      } else {
+        setImagePreview(null);
+        setSelectedImage(null);
+      }
 
-    const sd = screeningData;
+      if (selectedCandidate.resume?.filename) {
+        setSelectedResume({
+          path: selectedCandidate?.resume.path,
+          name: selectedCandidate?.resume.filename,
+          size: selectedCandidate?.resume.fileSize,
+        });
+      } else {
+        setSelectedResume(null);
+      }
 
-    const parsedSkills = sd.parsed_skills || [];
-    const parsedExperience = sd.parsed_experience || '';
-    const parsedEducation = sd.parsed_education || '';
-
-    // Parse years from "6 Years" string
-    const experienceYears =
-      Number(sd.screening_result?.experience_years) ||
-      parseFloat(parsedExperience.match(/(\d+(\.\d+)?)/)?.[0]) ||
-      0;
-
-    const newFormData = {
-      // ── Name ────────────────────────────────────────
-      FirstName: sd.candidate_name?.split(' ')[0]?.trim() || '',
-      LastName: sd.candidate_name?.split(' ').slice(1).join(' ').trim() || '',
-
-      // ── Contact ─────────────────────────────────────
-      Email: sd.candidate_email?.trim() || '',
-      CountryCode: sd.candidate_country_code || '+91',
-      Phone: sd.candidate_phone
-        ? sd.candidate_phone.replace(/^\+\d{1,3}/, '').replace(/^\d{1,3}/, '').trim()
-        : '',
-
-      // ── Education ───────────────────────────────────
-      HigherQualification: parsedEducation || sd.screening_result?.education || '',
-      UniversityCollege:
-        sd.screening_result?.university ||
-        (parsedEducation.match(/University\s+of\s+([\w\s]+)/i)?.[1]?.trim() ||
-          parsedEducation.match(/([\w\s]+)\s+University/i)?.[1]?.trim() ||
-          parsedEducation.split(',').pop()?.trim() || ''),
-
-      // ── Experience ──────────────────────────────────
-      CurrentExperience: experienceYears,
-      RelevantExperience: experienceYears,
-
-      // ── Skills ──────────────────────────────────────
-      skills: parsedSkills.length > 0
-        ? parsedSkills.map(name => ({
-          skill: (name || '').trim(),
-          experience: '',
-          expertise: 'Beginner'
-        }))
-        : (sd.screening_result?.extracted_skills || []).map(name => ({
-          skill: (name || '').trim(),
-          experience: '',
-          expertise: 'Beginner'
-        })),
-
-      linkedInUrl: sd.linkedInUrl || '',
-    };
-
-    console.log("Setting formData with:", {
-      skills: newFormData.skills.length,
-      experience: newFormData.CurrentExperience,
-      name: `${newFormData.FirstName} ${newFormData.LastName}`
-    });
-
-    // Apply form data
-    setFormData(prev => ({ ...prev, ...newFormData }));
-
-    // Set skill entries (critical for SkillsField to show them)
-    if (newFormData.skills.length > 0) {
-      console.log("Setting entries to", newFormData.skills.length, "skills");
-      setEntries(newFormData.skills);
-      setAllSelectedSkills(newFormData.skills.map(s => s.skill));
+      // In edit mode, use existing skills or default to 3 empty rows
+      const candidateSkills = selectedCandidate.skills || [];
+      if (candidateSkills.length === 0) {
+        setEntries([
+          { skill: "", experience: "", expertise: "" },
+          { skill: "", experience: "", expertise: "" },
+          { skill: "", experience: "", expertise: "" },
+        ]);
+      } else {
+        setEntries(candidateSkills);
+      }
+      // Initialize allSelectedSkills with the skills from the candidate being edited
+      setAllSelectedSkills(
+        selectedCandidate.skills?.map((skill) => skill.skill) || [],
+      );
+      // setAllSelectedExperiences(selectedCandidate.skills?.map(skill => skill.experience) || []);
+      // setAllSelectedExpertises(selectedCandidate.skills?.map(skill => skill.expertise) || []);
     }
-
-  }, [screeningData, source]);
+  }, [id, selectedCandidate, source]);
 
   // Ensure form starts with 3 default skill rows when in Add mode
   useEffect(() => {
@@ -372,49 +339,88 @@ const AddCandidateForm = ({
   }, [id]); // Only depend on id to run when form mode changes
 
 
-  useEffect(() => {
-    if (source !== "candidate-screening" || !screeningData) {
-      console.log("Screening pre-fill SKIPPED — source or data missing");
-      return;
-    }
+useEffect(() => {
+  if (source !== "candidate-screening" || !screeningData) {
+    console.log("Screening pre-fill SKIPPED — source or data missing");
+    return;
+  }
 
-    console.log("SCREENING PRE-FILL RUNNING — data received", {
-      skillsCount: screeningData.parsed_skills?.length,
-      experience: screeningData.parsed_experience
-    });
+  console.log("SCREENING PRE-FILL RUNNING — full data:", {
+    skillsCount: screeningData.parsed_skills?.length,
+    experience: screeningData.parsed_experience,
+    education: screeningData.parsed_education,
+    name: screeningData.candidate_name
+  });
 
-    const sd = screeningData;
+  const sd = screeningData;
 
-    const parsedSkills = sd.parsed_skills || [];
-    const parsedExperience = sd.parsed_experience || '';
-    const parsedEducation = sd.parsed_education || '';
+  const parsedSkills = sd.parsed_skills || [];
+  const parsedExperience = sd.parsed_experience || '';
+  const parsedEducation = sd.parsed_education || '';
 
-    const experienceYears =
-      Number(sd.screening_result?.experience_years) ||
-      parseFloat(parsedExperience.match(/(\d+(\.\d+)?)/)?.[0]) ||
-      0;
+  // Parse years from "6 Years" string
+  const experienceYears = 
+    Number(sd.screening_result?.experience_years) ||
+    parseFloat(parsedExperience.match(/(\d+(\.\d+)?)/)?.[0]) ||
+    0;
 
-    const newFormData = {
-      // ... your existing fields ...
-      skills: parsedSkills.length > 0
-        ? parsedSkills.map(name => ({
+  const newFormData = {
+    // ── Name ────────────────────────────────────────
+    FirstName: sd.candidate_name?.split(' ')[0]?.trim() || '',
+    LastName: sd.candidate_name?.split(' ').slice(1).join(' ').trim() || '',
+
+    // ── Contact ─────────────────────────────────────
+    Email: sd.candidate_email?.trim() || '',
+    CountryCode: sd.candidate_country_code || '+91',
+    Phone: sd.candidate_phone
+      ? sd.candidate_phone.replace(/^\+\d{1,3}/, '').replace(/^\d{1,3}/, '').trim()
+      : '',
+
+    // ── Education ───────────────────────────────────
+    HigherQualification: parsedEducation || sd.screening_result?.education || '',
+    UniversityCollege:
+      sd.screening_result?.university ||
+      (parsedEducation.match(/University\s+of\s+([\w\s]+)/i)?.[1]?.trim() ||
+       parsedEducation.match(/([\w\s]+)\s+University/i)?.[1]?.trim() ||
+       parsedEducation.split(',').pop()?.trim() || ''),
+
+    // ── Experience ──────────────────────────────────
+    CurrentExperience: experienceYears,
+    RelevantExperience: experienceYears,
+
+    // ── Skills ──────────────────────────────────────
+    skills: parsedSkills.length > 0 
+      ? parsedSkills.map(name => ({
           skill: (name || '').trim(),
           experience: '',
           expertise: 'Beginner'
         }))
-        : []
-    };
+      : (sd.screening_result?.extracted_skills || []).map(name => ({
+          skill: (name || '').trim(),
+          experience: '',
+          expertise: 'Beginner'
+        })),
 
-    console.log("About to set formData with skills:", newFormData.skills.length);
+    linkedInUrl: sd.linkedInUrl || '',
+  };
 
-    setFormData(prev => ({ ...prev, ...newFormData }));
+  console.log("Setting formData with:", {
+    skills: newFormData.skills.length,
+    experience: newFormData.CurrentExperience,
+    name: `${newFormData.FirstName} ${newFormData.LastName}`
+  });
 
-    if (newFormData.skills.length > 0) {
-      console.log("Setting entries to", newFormData.skills.length, "skills");
-      setEntries(newFormData.skills);
-      setAllSelectedSkills(newFormData.skills.map(s => s.skill));
-    }
-  }, [screeningData, source]);
+  // Apply form data
+  setFormData(prev => ({ ...prev, ...newFormData }));
+
+  // Set skill entries (critical for SkillsField to show them)
+  if (newFormData.skills.length > 0) {
+    console.log("Setting entries to", newFormData.skills.length, "skills");
+    setEntries(newFormData.skills);
+    setAllSelectedSkills(newFormData.skills.map(s => s.skill));
+  }
+
+}, [screeningData, source]);
 
   // Ensure University/College custom input is shown in edit mode when the saved value
   // is not present in master list (handles the '+ Others' flow gracefully)
