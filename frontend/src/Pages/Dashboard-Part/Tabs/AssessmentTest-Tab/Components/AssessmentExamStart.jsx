@@ -241,7 +241,6 @@ function AssessmentTest({
 
     } catch (error) {
       console.error("Error submitting assessment:", error);
-      alert(`Error submitting assessment: ${error.message}`);
     }
   };
 
