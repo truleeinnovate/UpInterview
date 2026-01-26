@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../config";
+import Cookies from "js-cookie";
 
 /**
  * Hook to fetch applications by candidate ID
@@ -78,30 +79,43 @@ export const useApplicationsByPosition = (positionId) => {
  * Hook for application mutations (create, update)
  */
 export const useApplicationMutations = () => {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
+  const authToken = Cookies.get("authToken") ?? "";
 
-    // Create application mutation
-    const createMutation = useMutation({
-        mutationFn: async (applicationData) => {
-            const response = await axios.post(
-                `${config.REACT_APP_API_URL}/application`,
-                applicationData
-            );
-            return response.data;
-        },
-        onSuccess: (data, variables) => {
-            // Invalidate relevant queries
-            queryClient.invalidateQueries({
-                queryKey: ["applications", "candidate", variables.candidateId],
-            });
-            queryClient.invalidateQueries({
-                queryKey: ["applications", "position", variables.positionId],
-            });
-        },
-        onError: (error) => {
-            console.error("Error creating application:", error);
-        },
-    });
+  // Create application mutation
+  const createMutation = useMutation({
+    mutationFn: async (applicationData) => {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/application`,
+        applicationData,
+        {
+          headers: authToken
+            ? {
+                Authorization: `Bearer ${authToken}`,
+              }
+            : undefined,
+          withCredentials: true,
+        }
+      );
+
+      return response.data;
+    },
+
+    onSuccess: (data, variables) => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({
+        queryKey: ["applications", "candidate", variables.candidateId],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["applications", "position", variables.positionId],
+      });
+    },
+
+    onError: (error) => {
+      console.error("Error creating application:", error);
+    },
+  });
 
     // Update application mutation
     const updateMutation = useMutation({
