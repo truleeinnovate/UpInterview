@@ -17,6 +17,14 @@ const TenantCompanySchema = new mongoose.Schema(
     primaryContactName: { type: String },
     primaryContactEmail: { type: String },
     description: { type: String },
+    address: {
+      addressLineOne: { type: String },
+      addressLineTwo: { type: String },
+      city: { type: String },
+      state: { type: String },
+      country: { type: String },
+      zip: { type: String },
+    },
   },
   { timestamps: true },
 );

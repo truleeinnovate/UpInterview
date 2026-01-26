@@ -51,15 +51,13 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 // v1.0.3 ----------------------------------------------------------------------------------->
 
 import { notify } from "../../../../services/toastService";
-import { Info } from "lucide-react";
+import { Edit, ExternalLink, Info, X } from "lucide-react";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
 import InputField from "../../../../Components/FormFields/InputField";
 import { Button } from "../../../../Components/Buttons/Button";
-import {
-  useApplicationMutations,
-} from "../../../../apiHooks/useApplications";
+import { useApplicationMutations } from "../../../../apiHooks/useApplications";
 // v1.0.3 ----------------------------------------------------------------->
 
 // Main AddCandidateForm Component
@@ -69,7 +67,7 @@ const AddCandidateForm = ({
   isModal = false,
   hideAddButton = false,
   candidateId = null, // Optional: Pass candidateId when using as modal for editing
-  initialData = {},          // ← new prop for pre-filling
+  initialData = {}, // ← new prop for pre-filling
   screeningData = {},
   source = "",
   positionId,
@@ -135,11 +133,11 @@ const AddCandidateForm = ({
   // 2. Optional: Re-apply if initialData changes later (rare case)
   useEffect(() => {
     if (Object.keys(initialData).length > 0) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         ...initialData,
         // Preserve skills from entries if needed — but usually not necessary
-        skills: prev.skills.length > 0 ? prev.skills : (initialData.skills || []),
+        skills: prev.skills.length > 0 ? prev.skills : initialData.skills || [],
       }));
     }
   }, [initialData]);
@@ -147,7 +145,7 @@ const AddCandidateForm = ({
   // 3. Make sure entries are initialized correctly too (for skills)
   useEffect(() => {
     if (initialData.skills?.length > 0) {
-      setEntries(initialData.skills);  // ← pre-fill entries from initialData.skills
+      setEntries(initialData.skills); // ← pre-fill entries from initialData.skills
     } else {
       // Default empty rows if no pre-fill
       setEntries([
@@ -356,10 +354,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry,
       );
       setEntries(updatedEntries);
@@ -538,12 +536,12 @@ const AddCandidateForm = ({
       [name]: errorMessage,
       ...(name === "CurrentExperience" && formData.RelevantExperience
         ? {
-          RelevantExperience: getErrorMessage(
-            "RelevantExperience",
-            formData.RelevantExperience,
-            nextFormData,
-          ),
-        }
+            RelevantExperience: getErrorMessage(
+              "RelevantExperience",
+              formData.RelevantExperience,
+              nextFormData,
+            ),
+          }
         : {}),
     }));
   };
@@ -724,14 +722,13 @@ const AddCandidateForm = ({
       linkedInUrl: formData.linkedInUrl,
     };
 
-
     // Add screening metadata for backend storage only
     const payload = {
       ...data,
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" && {
         // Pass full screeningData so backend can store it
-        screeningData: screeningData,               // ← direct pass (full object)
+        screeningData: screeningData, // ← direct pass (full object)
         parsedJson: screeningData.metadata || screeningData.parsedJson || {},
         parsedSkills: screeningData.parsed_skills || [],
         parsedExperience: screeningData.parsed_experience || null,
@@ -749,23 +746,25 @@ const AddCandidateForm = ({
         isResumeRemoved,
       });
 
-
       // if (isAddCandidate) {
       //   if (response.status === "success") {
       //     notify.success("Candidate added successfully");
       //   }
       // }
-      if (candidateResponse.status !== "success" && candidateResponse.status !== "Updated successfully") {
+      if (
+        candidateResponse.status !== "success" &&
+        candidateResponse.status !== "Updated successfully"
+      ) {
         throw new Error("Candidate creation failed");
       }
 
-      const newCandidate = candidateResponse.data.candidate;  // ← updated
-      const resumeId = candidateResponse.data.resumeId;       // ← NEW: get resumeId
+      const newCandidate = candidateResponse.data.candidate; // ← updated
+      const resumeId = candidateResponse.data.resumeId; // ← NEW: get resumeId
 
       const candidateId = newCandidate._id;
 
       notify.success(
-        id ? "Candidate updated successfully" : "Candidate added successfully"
+        id ? "Candidate updated successfully" : "Candidate added successfully",
       );
 
       // 2. ONLY if from candidate screening → create application
@@ -776,15 +775,17 @@ const AddCandidateForm = ({
             positionId,
             status: "SCREENED",
             currentStage: "Application Submitted",
-            type: "candidate-screening",                  // ← tell backend to create ScreeningResult
-            screeningData: screeningData,  // ← full object
-            resumeId,                     
+            type: "candidate-screening", // ← tell backend to create ScreeningResult
+            screeningData: screeningData, // ← full object
+            resumeId,
           };
 
           const appResult = await createApplication(appPayload);
 
           console.log("Application & ScreeningResult created:", appResult);
-          notify.success("Application and screening result created successfully");
+          notify.success(
+            "Application and screening result created successfully",
+          );
         } catch (appError) {
           console.error("Application/Screening creation failed:", appError);
           notify.warning("Candidate saved, but application/screening failed");
@@ -858,8 +859,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save candidate",
+          error.message ||
+          "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1001,7 +1002,6 @@ const AddCandidateForm = ({
     id,
   ]);
 
-
   // The form content (this part is shared)
   const formContent = (
     <div className="sm:p-0 p-4 mb-10" ref={formRef}>
@@ -1083,7 +1083,7 @@ const AddCandidateForm = ({
                 // error={errors.Gender}
                 containerRef={fieldRefs.Gender}
                 label="Gender"
-              // required
+                // required
               />
             </div>
             {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -1279,10 +1279,7 @@ const AddCandidateForm = ({
                 setSelectedExp("");
                 setSelectedLevel("");
               }}
-              onAddMultipleSkills={(
-                newSkillEntries,
-                skillsToRemove = [],
-              ) => {
+              onAddMultipleSkills={(newSkillEntries, skillsToRemove = []) => {
                 setEntries((prevEntries) => {
                   let updatedEntries = [...prevEntries];
 
@@ -1354,13 +1351,8 @@ const AddCandidateForm = ({
                 });
                 // Update allSelectedSkills
                 setAllSelectedSkills((prev) => {
-                  let updated = prev.filter(
-                    (s) => !skillsToRemove.includes(s),
-                  );
-                  return [
-                    ...updated,
-                    ...newSkillEntries.map((e) => e.skill),
-                  ];
+                  let updated = prev.filter((s) => !skillsToRemove.includes(s));
+                  return [...updated, ...newSkillEntries.map((e) => e.skill)];
                 });
               }}
               onEditSkill={(index) => {
@@ -1372,9 +1364,7 @@ const AddCandidateForm = ({
               onDeleteSkill={(index) => {
                 const entry = entries[index];
                 setAllSelectedSkills(
-                  allSelectedSkills.filter(
-                    (skill) => skill !== entry.skill,
-                  ),
+                  allSelectedSkills.filter((skill) => skill !== entry.skill),
                 );
                 setEntries(entries.filter((_, i) => i !== index));
               }}
@@ -1460,8 +1450,9 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${
+                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Cancel
             </Button>
@@ -1551,20 +1542,23 @@ const AddCandidateForm = ({
 
       {/* </SidebarPopup> */}
 
-
       {isModal ? (
         // When opened as modal/popup (from screening) → NO sidebar, just content
-        <div className="h-full overflow-y-auto bg-white">
-          {formContent}
-        </div>
+        <div className="h-full overflow-y-auto bg-white">{formContent}</div>
       ) : (
         // Normal page mode → show SidebarPopup
-        <SidebarPopup
-          title={id ? "Update Candidate" : "Add New Candidate"}
-          onClose={handleClose}
-        >
-          {formContent}
-        </SidebarPopup>
+        // <SidebarPopup
+        //   title={id ? "Update Candidate" : "Add New Candidate"}
+        //   onClose={handleClose}
+        // >
+        <div className="fixed top-[62px] inset-x-0 bottom-0 z-40 overflow-y-auto bg-white">
+          <div className="flex min-h-full items-start justify-center pb-10 pt-4">
+            <div className="w-full max-w-6xl p-4 rounded-lg border bg-white shadow-md">
+              {formContent}
+            </div>
+          </div>
+        </div>
+        // </SidebarPopup>
       )}
     </>
   );
