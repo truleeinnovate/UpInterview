@@ -729,7 +729,7 @@ const AddCandidateForm = ({
     const payload = {
       ...data,
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
-      ...(source === "candidate-screening" && {
+      ...(source === "candidate-screening" && mode !== "Edit" && {
         // Pass full screeningData so backend can store it
         screeningData: screeningData,               // ← direct pass (full object)
         parsedJson: screeningData.metadata || screeningData.parsedJson || {},
@@ -755,21 +755,50 @@ const AddCandidateForm = ({
       //     notify.success("Candidate added successfully");
       //   }
       // }
-      if (candidateResponse.status !== "success" && candidateResponse.status !== "Updated successfully") {
-        throw new Error("Candidate creation failed");
+      if (
+        candidateResponse.status !== "success" &&
+        candidateResponse.status !== "Updated successfully" &&
+        candidateResponse.status !== "no_changes"
+      ) {
+        throw new Error("Candidate save failed");
       }
 
-      const newCandidate = candidateResponse.data.candidate;  // ← updated
-      const resumeId = candidateResponse.data.resumeId;       // ← NEW: get resumeId
+      // ────────────────────────────────────────────────
+      // Safely determine if this was CREATE or UPDATE
+      // ────────────────────────────────────────────────
+      const isCreateOperation = !id; // no id → definitely create
+      const isUpdateOperation = !!id;
 
-      const candidateId = newCandidate._id;
+      let candidateId;
+      let newOrUpdatedCandidate;
 
-      notify.success(
-        id ? "Candidate updated successfully" : "Candidate added successfully"
-      );
+      if (isCreateOperation) {
+        // Create mode → expect candidate in response
+        newOrUpdatedCandidate = candidateResponse.data?.candidate;
+        candidateId = newOrUpdatedCandidate?._id;
+
+        if (!candidateId) {
+          throw new Error("Candidate created but no _id returned from server");
+        }
+      } else {
+        // Update mode → we already had the id
+        candidateId = id;
+        newOrUpdatedCandidate = candidateResponse.data?.candidate || {
+          _id: id,
+        }; // fallback
+      }
+
+      // ────────────────────────────────────────────────
+      // Application + ScreeningResult — only on NEW candidates from screening
+      // ────────────────────────────────────────────────
+      const shouldCreateApplication =
+        source === "candidate-screening" &&
+        positionId &&
+        isCreateOperation &&           // ← key change: only on create
+        candidateResponse.status === "success"; // not "Updated successfully" or "no_changes"
 
       // 2. ONLY if from candidate screening → create application
-      if (source === "candidate-screening" && positionId) {
+      if (shouldCreateApplication) {
         try {
           const appPayload = {
             candidateId,
@@ -778,7 +807,7 @@ const AddCandidateForm = ({
             currentStage: "Application Submitted",
             type: "candidate-screening",                  // ← tell backend to create ScreeningResult
             screeningData: screeningData,  // ← full object
-            resumeId,                     
+            resumeId: candidateResponse.data?.resumeId,
           };
 
           const appResult = await createApplication(appPayload);
@@ -951,56 +980,149 @@ const AddCandidateForm = ({
   const phoneCheck = useValidatePhone(formData.Phone);
   const linkedinCheck = useValidateLinkedIn(formData.linkedInUrl);
 
-  useEffect(() => {
-    if (id && formData.Email === selectedCandidate?.Email) return;
+  // ──────────────────────────────────────────────────────────────────────────────
+  // Uniqueness checking — improved version for add + edit modes
+  // ──────────────────────────────────────────────────────────────────────────────
 
-    if (emailCheck.data?.exists) {
-      setErrors((prev) => ({
-        ...prev,
-        Email: "This email already exists.",
-      }));
-    } else if (emailCheck.data && !emailCheck.data.exists) {
-      setErrors((prev) => {
-        const { Email, ...rest } = prev;
-        return rest;
+  useEffect(() => {
+    const current = formData.Email?.trim() || "";
+    const original = selectedCandidate?.Email?.trim() || "";
+
+    // Edit mode + value didn't change → immediately clear error (most important)
+    if (id && current === original) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.Email;
+        return next;
       });
+      return;
     }
-  }, [emailCheck.data, formData.Email, selectedCandidate?.Email, id]);
 
-  useEffect(() => {
-    if (id && formData.Phone === selectedCandidate?.Phone) return;
-
-    if (phoneCheck.data?.exists) {
-      setErrors((prev) => ({ ...prev, Phone: "Phone number already exists." }));
-    } else if (phoneCheck.data && !phoneCheck.data.exists) {
-      setErrors((prev) => {
-        const { Phone, ...rest } = prev;
-        return rest;
+    // No value → no error
+    if (!current) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.Email;
+        return next;
       });
+      return;
     }
-  }, [phoneCheck.data, formData.Phone, selectedCandidate?.Phone, id]);
 
-  useEffect(() => {
-    if (id && formData.linkedInUrl === selectedCandidate?.linkedInUrl) return;
+    // While loading → do nothing (don't show stale error)
+    if (emailCheck.isLoading || !emailCheck.data) {
+      return;
+    }
 
-    if (linkedinCheck.data?.exists) {
-      setErrors((prev) => ({
+    // Real conflict
+    if (emailCheck.data.exists) {
+      setErrors(prev => ({
         ...prev,
-        linkedInUrl: "LinkedIn Url already exists.",
+        Email: "This email is already in use by another candidate.",
       }));
-    } else if (linkedinCheck.data && !linkedinCheck.data.exists) {
-      setErrors((prev) => {
-        const { linkedInUrl, ...rest } = prev;
-        return rest;
+    } else {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.Email;
+        return next;
       });
     }
   }, [
-    linkedinCheck.data,
+    formData.Email,
+    selectedCandidate?.Email,
+    id,
+    emailCheck.isLoading,
+    emailCheck.data,
+  ]);
+
+  // ──────────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const current = formData.Phone?.trim() || "";
+    const original = selectedCandidate?.Phone?.trim() || "";
+
+    if (id && current === original) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.Phone;
+        return next;
+      });
+      return;
+    }
+
+    if (!current) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.Phone;
+        return next;
+      });
+      return;
+    }
+
+    if (phoneCheck.isLoading || !phoneCheck.data) return;
+
+    if (phoneCheck.data.exists) {
+      setErrors(prev => ({
+        ...prev,
+        Phone: "This phone number is already in use by another candidate.",
+      }));
+    } else {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.Phone;
+        return next;
+      });
+    }
+  }, [
+    formData.Phone,
+    selectedCandidate?.Phone,
+    id,
+    phoneCheck.isLoading,
+    phoneCheck.data,
+  ]);
+
+  // ──────────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const current = formData.linkedInUrl?.trim() || "";
+    const original = selectedCandidate?.linkedInUrl?.trim() || "";
+
+    if (id && current === original) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.linkedInUrl;
+        return next;
+      });
+      return;
+    }
+
+    if (!current) {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.linkedInUrl;
+        return next;
+      });
+      return;
+    }
+
+    if (linkedinCheck.isLoading || !linkedinCheck.data) return;
+
+    if (linkedinCheck.data.exists) {
+      setErrors(prev => ({
+        ...prev,
+        linkedInUrl: "This LinkedIn URL is already in use by another candidate.",
+      }));
+    } else {
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.linkedInUrl;
+        return next;
+      });
+    }
+  }, [
     formData.linkedInUrl,
     selectedCandidate?.linkedInUrl,
     id,
+    linkedinCheck.isLoading,
+    linkedinCheck.data,
   ]);
-
 
   // The form content (this part is shared)
   const formContent = (
