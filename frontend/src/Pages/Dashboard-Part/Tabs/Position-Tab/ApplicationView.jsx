@@ -6,15 +6,23 @@ import {
     Languages, DollarSign
 } from 'lucide-react';
 import { useCandidateById } from "../../../../apiHooks/useCandidates";
+import { useApplicationMutations } from "../../../../apiHooks/useApplications";
+import ConfirmationPopup from "../Assessment-Tab/ConfirmationPopup";
 
 export default function ApplicationView({ application, onBack }) {
     const [applicationStatus, setApplicationStatus] = useState(application.status || 'APPLIED');
     const [activeTab, setActiveTab] = useState('resume');
     const [candidate, setCandidate] = useState({});
 
+    // Confirmation Popup State
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+    const [pendingStatusUpdate, setPendingStatusUpdate] = useState(null);
+
+    const { updateApplicationStatus } = useApplicationMutations();
+
     const [showAllResumes, setShowAllResumes] = useState(false);
     const [showUploadResume, setShowUploadResume] = useState(false);
-    const candidateId = application.candidateId._id;
+    const candidateId = application.candidateId?._id || application.candidateId;
     console.log(candidateId);
     const { candidate: fetchedCandidate, isLoading } = useCandidateById(candidateId);
     // Use candidate data from the populated application object
@@ -67,6 +75,8 @@ export default function ApplicationView({ application, onBack }) {
             case 'HIRED':
             case 'OFFERED':
                 return 'bg-green-100 text-green-800';
+            case 'WITHDRAWN':
+                return 'bg-gray-100 text-gray-800';
             default:
                 return 'bg-gray-100 text-gray-800';
         }
@@ -97,9 +107,33 @@ export default function ApplicationView({ application, onBack }) {
         }
     };
 
-    const handleStatusChange = (newStatus) => {
+    const handleStatusChange = (newStatus, actionLabel) => {
+        setPendingStatusUpdate({ newStatus, actionLabel });
+        setShowConfirmPopup(true);
+    };
+
+    const confirmStatusUpdate = async () => {
+        if (!pendingStatusUpdate) return;
+
+        const { newStatus, actionLabel } = pendingStatusUpdate;
+        const oldStatus = applicationStatus;
+
+        // Optimistic update
         setApplicationStatus(newStatus);
-        // Here you would typically call an updateStatus mutation
+        setShowConfirmPopup(false);
+        setPendingStatusUpdate(null);
+
+        try {
+            await updateApplicationStatus({
+                id: application._id,
+                action: actionLabel || newStatus,
+                status: newStatus
+            });
+        } catch (error) {
+            console.error("Failed to update status:", error);
+            // Revert on failure
+            setApplicationStatus(oldStatus);
+        }
     };
 
     const getAvailableActions = () => {
@@ -108,24 +142,27 @@ export default function ApplicationView({ application, onBack }) {
             case 'NEW':
             case 'APPLIED':
                 return [
-                    { label: 'Run AI Screening', action: () => handleStatusChange('SCREENED'), color: 'primary', icon: TrendingUp },
-                    { label: 'Reject', action: () => handleStatusChange('REJECTED'), color: 'red', icon: X }
+                    { label: 'Run AI Screening', action: () => handleStatusChange('SCREENED', 'Run AI Screening'), color: 'primary', icon: TrendingUp },
+                    { label: 'Reject', action: () => handleStatusChange('REJECTED', 'Reject'), color: 'red', icon: X },
+                    { label: 'Withdraw Application', action: () => handleStatusChange('WITHDRAWN', 'Withdraw Application'), color: 'yellow', icon: X }
                 ];
             case 'SCREENED':
                 return [
-                    { label: 'Schedule Interview', action: () => handleStatusChange('INTERVIEWING'), color: 'primary', icon: Calendar },
-                    { label: 'Reject', action: () => handleStatusChange('REJECTED'), color: 'red', icon: X }
+                    { label: 'Schedule Interview', action: () => handleStatusChange('INTERVIEWING', 'Schedule Interview'), color: 'primary', icon: Calendar },
+                    { label: 'Reject', action: () => handleStatusChange('REJECTED', 'Reject'), color: 'red', icon: X },
+                    { label: 'Withdraw Application', action: () => handleStatusChange('WITHDRAWN', 'Withdraw Application'), color: 'yellow', icon: X }
                 ];
             case 'INTERVIEW':
             case 'INTERVIEWING':
                 return [
-                    { label: 'Move to Decision', action: () => handleStatusChange('DECISION'), color: 'primary', icon: CheckCircle },
-                    { label: 'Reject', action: () => handleStatusChange('REJECTED'), color: 'red', icon: X }
+                    { label: 'Move to Decision', action: () => handleStatusChange('DECISION', 'Move to Decision'), color: 'primary', icon: CheckCircle },
+                    { label: 'Reject', action: () => handleStatusChange('REJECTED', 'Reject'), color: 'red', icon: X },
+                    { label: 'Withdraw Application', action: () => handleStatusChange('WITHDRAWN', 'Withdraw Application'), color: 'yellow', icon: X }
                 ];
             case 'DECISION':
                 return [
-                    { label: 'Make Offer', action: () => handleStatusChange('OFFERED'), color: 'green', icon: CheckCircle },
-                    { label: 'Reject', action: () => handleStatusChange('REJECTED'), color: 'red', icon: X }
+                    { label: 'Make Offer', action: () => handleStatusChange('OFFERED', 'Offer'), color: 'green', icon: CheckCircle },
+                    { label: 'Reject', action: () => handleStatusChange('REJECTED', 'Reject'), color: 'red', icon: X }
                 ];
             case 'REJECTED':
             case 'HIRED':
@@ -343,18 +380,15 @@ export default function ApplicationView({ application, onBack }) {
                                 </div>
 
                                 <div className="pt-6 border-t space-y-3">
-                                    <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[rgb(33,121,137)] hover:bg-[rgb(28,102,116)] text-white rounded-lg text-sm font-bold transition-colors">
+                                    {/* <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[rgb(33,121,137)] hover:bg-[rgb(28,102,116)] text-white rounded-lg text-sm font-bold transition-colors">
                                         <Upload size={16} />
                                         Upload New Resume
-                                    </button>
+                                    </button> */}
                                     <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-bold transition-colors">
                                         <FileText size={16} />
                                         View All Resumes
                                     </button>
-                                    <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-bold transition-colors">
-                                        <X size={16} />
-                                        Withdraw Application
-                                    </button>
+
                                 </div>
 
                             </div>
@@ -760,8 +794,8 @@ export default function ApplicationView({ application, onBack }) {
                                 <div className="mb-6 pb-6 border-b">
                                     <div className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4">Application Progress</div>
                                     <div className="space-y-3">
-                                        {['APPLIED', 'SCREENED', 'INTERVIEWING', 'OFFERED'].map((status, index) => {
-                                            const stages = ['APPLIED', 'SCREENED', 'INTERVIEWING', 'OFFERED'];
+                                        {['APPLIED', 'SCREENED', 'INTERVIEWING', 'DECISION'].map((status, index) => {
+                                            const stages = ['APPLIED', 'SCREENED', 'INTERVIEWING', 'DECISION'];
                                             // Naive progress check
                                             const currentIndex = stages.indexOf(applicationStatus);
                                             const statusIndex = stages.indexOf(status);
@@ -840,6 +874,19 @@ export default function ApplicationView({ application, onBack }) {
                     </div>
                 </div>
             </div>
+            {/* Confirmation Popup */}
+            <ConfirmationPopup
+                isOpen={showConfirmPopup}
+                title={`Confirm ${pendingStatusUpdate?.actionLabel || 'Action'}`}
+                message={`Are you sure you want to proceed with "${pendingStatusUpdate?.actionLabel}"? This will update the application status.`}
+                onConfirm={confirmStatusUpdate}
+                onCancel={() => {
+                    setShowConfirmPopup(false);
+                    setPendingStatusUpdate(null);
+                }}
+                confirmText="Yes, Proceed"
+                cancelText="Cancel"
+            />
         </div>
     );
 }

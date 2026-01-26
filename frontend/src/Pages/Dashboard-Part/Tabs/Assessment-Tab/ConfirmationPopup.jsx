@@ -3,6 +3,7 @@
 // v1.0.1 - Ashok - UI polish: better spacing, rounded corners, shadow, transitions
 
 import React from "react";
+import { createPortal } from "react-dom";
 import { AlertCircle } from "lucide-react";
 
 const ConfirmationPopup = ({
@@ -19,8 +20,7 @@ const ConfirmationPopup = ({
 }) => {
   if (!isOpen) return null;
 
-  return (
-    // v1.0.1 <--------------------------------------------------------------------------------
+  return createPortal(
     <div
       style={{ zIndex: "9999" }}
       className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity"
@@ -65,8 +65,8 @@ const ConfirmationPopup = ({
           </div>
         </div>
       </div>
-    </div>
-    // v1.0.1 -------------------------------------------------------------------------------->
+    </div>,
+    document.body
   );
 };
 

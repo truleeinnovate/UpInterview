@@ -1230,6 +1230,140 @@ function Candidate({
   //       ]
   //     : []),
   // ];
+  // Helper for Application Status Colors
+  const getApplicationStatusColor = (status) => {
+    switch (status) {
+      case 'APPLIED': return 'bg-blue-100 text-blue-800';
+      case 'SCREENED': return 'bg-purple-100 text-purple-800';
+      case 'INTERVIEWING': return 'bg-yellow-100 text-yellow-800';
+      case 'OFFERED': return 'bg-orange-100 text-orange-800';
+      case 'REJECTED': return 'bg-red-100 text-red-800';
+      case 'HIRED': return 'bg-green-100 text-green-800';
+      case 'WITHDRAWN': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getMatchColor = (match) => {
+    if (match >= 80) return 'text-green-600 font-bold';
+    if (match >= 60) return 'text-yellow-600 font-bold';
+    return 'text-red-600 font-bold';
+  };
+
+  // Specific columns for Position View
+  const positionColumns = [
+    {
+      key: "name",
+      header: "Candidate Name",
+      render: (value, row) => (
+        <div className="flex items-center" title={`${row?.FirstName} ${row?.LastName}`}>
+          <div className="h-8 w-8 flex-shrink-0">
+            {row?.ImageData ? (
+              <img
+                className="h-8 w-8 rounded-full object-cover"
+                src={row?.ImageData?.path || null}
+                alt={row?.FirstName || "Candidate"}
+                onError={(e) => { e.target.src = "/default-profile.png"; }}
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
+                {row.FirstName ? row.FirstName.charAt(0).toUpperCase() : "?"}
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col ml-3">
+            <div
+              className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
+              onClick={() => {
+                if (onCandidateClick) {
+                  onCandidateClick(row);
+                  return;
+                }
+              }}
+            >
+              {capitalizeFirstLetter(row?.FirstName) + " " + capitalizeFirstLetter(row.LastName)}
+            </div>
+            <div className="text-xs text-gray-500 truncate max-w-[140px]">
+              {row.CountryCode || ""} {row.Phone || "N/A"}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "Email",
+      header: "Email",
+      render: (value) => (
+        <div className="flex items-center gap-2" title={value}>
+          <Mail className="w-4 h-4 text-gray-500" />
+          <span className="truncate max-w-[140px] cursor-default">{value || "Not Provided"}</span>
+        </div>
+      ),
+    },
+    // {
+    //   key: "Phone",
+    //   header: "Contact",
+    //   render: (value, row) => row.CountryCode + " " + row?.Phone || "Not Provided",
+    // },
+    {
+      key: "screeningScore",
+      header: "Score",
+      render: (value) => (
+        <span className={getMatchColor(value || 0)}>
+          {value || 0}%
+        </span>
+      ),
+    },
+    {
+      key: "skills",
+      header: "Skill Match",
+      render: (value) => (
+        <div
+          className="flex flex-wrap gap-1 cursor-default"
+          title={value?.map((skill) => skill.skill)?.join(", ")}
+        >
+          {value && value.length > 0 ? (
+            <>
+              {value.slice(0, 1).map((skill, idx) => (
+                <span
+                  key={idx}
+                  className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue rounded-full text-xs"
+                >
+                  {skill.skill || "Not Provided"}
+                </span>
+              ))}
+              {value.length > 1 && (
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
+                  +{value.length - 1}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-gray-400 text-xs">No Skills</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "CurrentExperience",
+      header: "Experience",
+      render: (value) => (
+        <span>{value ? `${value} years` : "N/A"}</span>
+      ),
+    },
+    {
+      key: "applicationStatus",
+      header: "Status",
+      render: (value) => (
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getApplicationStatusColor(value)}`}>
+          {value || "N/A"}
+        </span>
+      ),
+    }
+  ];
+
+  const columnsToUse = isPositionView ? positionColumns : tableColumns;
+
   const kanbanColumns = [
     {
       key: "email",
@@ -1486,7 +1620,7 @@ function Candidate({
                     {/* v1.0.8 ----------------------------------------------------------------------------------------------> */}
                     <TableView
                       data={currentFilteredRows}
-                      columns={tableColumns}
+                      columns={columnsToUse}
                       loading={isLoading}
                       actions={tableActions}
                       emptyState={emptyStateMessage}

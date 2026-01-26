@@ -49,6 +49,7 @@ import CandidateViewer from "../../../../Components/CandidateViewer";
 import Candidate from "../Candidate-Tab/Candidate";
 
 import ApplicationView from "./ApplicationView";
+import ProfileViewer from "../Candidate-Tab/CandidateViewDetails/ProfileViewer";
 
 // Applications Tab Component for Position
 const PositionApplicationsTab = ({ positionId, onOpenApplication }) => {
@@ -240,6 +241,7 @@ const PositionCandidatesTab = ({ positionId, position }) => {
   const { applications, isLoading } = useApplicationsByPosition(positionId);
   const navigate = useNavigate();
   const [viewingCandidate, setViewingCandidate] = useState(null);
+  const [viewingProfile, setViewingProfile] = useState(null);
 
   // Map applications to the structure expected by the table (flattening candidateId)
   const formattedCandidates = (apps) => {
@@ -257,6 +259,8 @@ const PositionCandidatesTab = ({ positionId, position }) => {
         HigherQualification: candidate.HigherQualification || "N/A",
         CurrentExperience: candidate.CurrentExperience || "N/A",
         skills: candidate.skills || [],
+        certifications: candidate.certifications || [],
+        profileJSON: candidate.profileJSON || {},
         ImageData: candidate.ImageData || null,
         currentRoleLabel: candidate.CurrentRole || "N/A", // Added specifically for Candidate component display
         createdAt: app.createdAt, // Use application creation date for filters if needed
@@ -300,7 +304,20 @@ const PositionCandidatesTab = ({ positionId, position }) => {
   };
 
   const handleProfile = (row) => {
-    navigate(`/dashboard/candidate-details/${row._id}`, { state: { from: "position" } });
+    // navigate(`/dashboard/candidate-details/${row._id}`, { state: { from: "position" } });
+    const profileData = {
+      name: `${row.FirstName} ${row.LastName}`,
+      email: row.Email,
+      phone: `${row.CountryCode || ''} ${row.Phone || ''}`.trim(),
+      score: row.screeningScore,
+      skillMatch: row.screeningScore >= 80 ? 'High' : row.screeningScore >= 60 ? 'Medium' : 'Low', // Derived from score
+      currentCompany: row.CurrentRole,
+      experience: row.CurrentExperience ? `${row.CurrentExperience} years` : '0 years',
+      skills: row.skills,
+      certifications: row.certifications,
+      profileJSON: row.profileJSON,
+    };
+    setViewingProfile(profileData);
   };
 
 
@@ -345,6 +362,13 @@ const PositionCandidatesTab = ({ positionId, position }) => {
           }}
         />
       )}
+
+      {viewingProfile && (
+        <ProfileViewer
+          candidate={viewingProfile}
+          onClose={() => setViewingProfile(null)}
+        />
+      )}
     </>
   );
 };
@@ -353,6 +377,8 @@ Modal.setAppElement("#root");
 
 const PositionSlideDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { position: fetchedPosition, isLoading } = usePositionById(id);
   console.log(
     "CURRENT POSITION ============================> ",
@@ -363,7 +389,7 @@ const PositionSlideDetails = () => {
   const [activeRound, setActiveRound] = useState(null);
   const [roundsViewMode, setRoundsViewMode] = useState("vertical");
   const [position, setPosition] = useState(null);
-  const [activeTab, setActiveTab] = useState("Overview");
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || "Overview");
   const [showAddCandidateModal, setShowAddCandidateModal] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
 
@@ -375,8 +401,7 @@ const PositionSlideDetails = () => {
   const [internalInterviewerCount, setInternalInterviewerCount] = useState(0);
   const [externalInterviewerCount, setExternalInterviewerCount] = useState(0);
 
-  const navigate = useNavigate();
-  const location = useLocation();
+
 
   // <----- v1.0.1 - Ranjith -
   const mode = location.state?.mode;
@@ -455,6 +480,16 @@ const PositionSlideDetails = () => {
   }, [fetchedPosition]);
 
   // v1.0.3 ---------------------------------------------------------------------->
+
+  // Listen for tab changes from navigation state (e.g. from ResumeUpload or CandidateViewer)
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+    if (location.state?.application) {
+      setSelectedApplication(location.state.application);
+    }
+  }, [location.state]);
 
   const handleAddRound = () => {
     navigate(`/position/view-details/${id}/rounds/new`);
