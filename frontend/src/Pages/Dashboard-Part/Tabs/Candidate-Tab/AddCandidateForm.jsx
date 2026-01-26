@@ -67,10 +67,11 @@ const AddCandidateForm = ({
   isModal = false,
   hideAddButton = false,
   candidateId = null, // Optional: Pass candidateId when using as modal for editing
-  initialData = {}, // ← new prop for pre-filling
+  // initialData = {}, // ← new prop for pre-filling
   screeningData = {},
   source = "",
   positionId,
+  shouldCreateApplication = false,   // ← new prop, default false
 }) => {
   console.log("mode", mode);
   console.log("candidateId", candidateId);
@@ -129,32 +130,22 @@ const AddCandidateForm = ({
 
   // State for tooltip visibility
   const [showTooltip, setShowTooltip] = useState(false);
-
   // 2. Optional: Re-apply if initialData changes later (rare case)
-  useEffect(() => {
-    if (Object.keys(initialData).length > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        ...initialData,
-        // Preserve skills from entries if needed — but usually not necessary
-        skills: prev.skills.length > 0 ? prev.skills : initialData.skills || [],
-      }));
-    }
-  }, [initialData]);
+  // Inside AddCandidateForm component
 
   // 3. Make sure entries are initialized correctly too (for skills)
-  useEffect(() => {
-    if (initialData.skills?.length > 0) {
-      setEntries(initialData.skills); // ← pre-fill entries from initialData.skills
-    } else {
-      // Default empty rows if no pre-fill
-      setEntries([
-        { skill: "", experience: "", expertise: "" },
-        { skill: "", experience: "", expertise: "" },
-        { skill: "", experience: "", expertise: "" },
-      ]);
-    }
-  }, [initialData.skills]);
+  // useEffect(() => {
+  //   if (initialData.skills?.length > 0) {
+  //     setEntries(initialData.skills); // ← pre-fill entries from initialData.skills
+  //   } else {
+  //     // Default empty rows if no pre-fill
+  //     setEntries([
+  //       { skill: "", experience: "", expertise: "" },
+  //       { skill: "", experience: "", expertise: "" },
+  //       { skill: "", experience: "", expertise: "" },
+  //     ]);
+  //   }
+  // }, [initialData.skills]);
 
   // Close tooltip when clicking outside
   useEffect(() => {
@@ -169,11 +160,7 @@ const AddCandidateForm = ({
   }, [showTooltip]);
 
   // Initialize with 3 default empty skill rows
-  const [entries, setEntries] = useState([
-    { skill: "", experience: "", expertise: "" },
-    { skill: "", experience: "", expertise: "" },
-    { skill: "", experience: "", expertise: "" },
-  ]);
+  const [entries, setEntries] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -247,68 +234,87 @@ const AddCandidateForm = ({
   // const userId = tokenPayload?.userId;
 
   useEffect(() => {
-    if (id && selectedCandidate) {
-      const dob = selectedCandidate.Date_Of_Birth;
-
-      setFormData({
-        FirstName: selectedCandidate.FirstName || "",
-        LastName: selectedCandidate.LastName || "",
-        Email: selectedCandidate.Email || "",
-        externalId: selectedCandidate.externalId || "",
-        Phone: selectedCandidate.Phone || "",
-        Date_Of_Birth: dob ? format(dob, "MMMM dd, yyyy") : "",
-        Gender: selectedCandidate.Gender || "",
-        HigherQualification: selectedCandidate.HigherQualification || "",
-        UniversityCollege: selectedCandidate.UniversityCollege || "",
-        CurrentExperience: selectedCandidate.CurrentExperience || "",
-        RelevantExperience: selectedCandidate.RelevantExperience || "",
-        skills: selectedCandidate.skills || [],
-        // ImageData: selectedCandidate.imageUrl || null,
-        ImageData: selectedCandidate?.ImageData || null, // Added by Ashok
-        resume: selectedCandidate?.resume || null,
-        CurrentRole: selectedCandidate?.CurrentRole || "",
-        CountryCode: selectedCandidate?.CountryCode || "",
-        // Technology: selectedCandidate?.Technology || "",
-        linkedInUrl: selectedCandidate.linkedInUrl || "",
-      });
-
-      if (selectedCandidate.ImageData?.filename) {
-        setImagePreview(selectedCandidate?.ImageData.path);
-        setSelectedImage(selectedCandidate?.ImageData);
-      } else {
-        setImagePreview(null);
-        setSelectedImage(null);
-      }
-
-      if (selectedCandidate.resume?.filename) {
-        setSelectedResume({
-          path: selectedCandidate?.resume.path,
-          name: selectedCandidate?.resume.filename,
-          size: selectedCandidate?.resume.fileSize,
-        });
-      } else {
-        setSelectedResume(null);
-      }
-
-      // In edit mode, use existing skills or default to 3 empty rows
-      const candidateSkills = selectedCandidate.skills || [];
-      if (candidateSkills.length === 0) {
-        setEntries([
-          { skill: "", experience: "", expertise: "" },
-          { skill: "", experience: "", expertise: "" },
-          { skill: "", experience: "", expertise: "" },
-        ]);
-      } else {
-        setEntries(candidateSkills);
-      }
-      // Initialize allSelectedSkills with the skills from the candidate being edited
-      setAllSelectedSkills(
-        selectedCandidate.skills?.map((skill) => skill.skill) || [],
-      );
-      // setAllSelectedExperiences(selectedCandidate.skills?.map(skill => skill.experience) || []);
-      // setAllSelectedExpertises(selectedCandidate.skills?.map(skill => skill.expertise) || []);
+    if (source !== "candidate-screening" || !screeningData) {
+      console.log("Screening pre-fill SKIPPED — source or data missing");
+      return;
     }
-  }, [id, selectedCandidate]);
+
+    console.log("SCREENING PRE-FILL RUNNING — full data:", {
+      skillsCount: screeningData.parsed_skills?.length,
+      experience: screeningData.parsed_experience,
+      education: screeningData.parsed_education,
+      name: screeningData.candidate_name
+    });
+
+    const sd = screeningData;
+
+    const parsedSkills = sd.parsed_skills || [];
+    const parsedExperience = sd.parsed_experience || '';
+    const parsedEducation = sd.parsed_education || '';
+
+    // Parse years from "6 Years" string
+    const experienceYears =
+      Number(sd.screening_result?.experience_years) ||
+      parseFloat(parsedExperience.match(/(\d+(\.\d+)?)/)?.[0]) ||
+      0;
+
+    const newFormData = {
+      // ── Name ────────────────────────────────────────
+      FirstName: sd.candidate_name?.split(' ')[0]?.trim() || '',
+      LastName: sd.candidate_name?.split(' ').slice(1).join(' ').trim() || '',
+
+      // ── Contact ─────────────────────────────────────
+      Email: sd.candidate_email?.trim() || '',
+      CountryCode: sd.candidate_country_code || '+91',
+      Phone: sd.candidate_phone
+        ? sd.candidate_phone.replace(/^\+\d{1,3}/, '').replace(/^\d{1,3}/, '').trim()
+        : '',
+
+      // ── Education ───────────────────────────────────
+      HigherQualification: parsedEducation || sd.screening_result?.education || '',
+      UniversityCollege:
+        sd.screening_result?.university ||
+        (parsedEducation.match(/University\s+of\s+([\w\s]+)/i)?.[1]?.trim() ||
+          parsedEducation.match(/([\w\s]+)\s+University/i)?.[1]?.trim() ||
+          parsedEducation.split(',').pop()?.trim() || ''),
+
+      // ── Experience ──────────────────────────────────
+      CurrentExperience: experienceYears,
+      RelevantExperience: experienceYears,
+
+      // ── Skills ──────────────────────────────────────
+      skills: parsedSkills.length > 0
+        ? parsedSkills.map(name => ({
+          skill: (name || '').trim(),
+          experience: '',
+          expertise: 'Beginner'
+        }))
+        : (sd.screening_result?.extracted_skills || []).map(name => ({
+          skill: (name || '').trim(),
+          experience: '',
+          expertise: 'Beginner'
+        })),
+
+      linkedInUrl: sd.linkedInUrl || '',
+    };
+
+    console.log("Setting formData with:", {
+      skills: newFormData.skills.length,
+      experience: newFormData.CurrentExperience,
+      name: `${newFormData.FirstName} ${newFormData.LastName}`
+    });
+
+    // Apply form data
+    setFormData(prev => ({ ...prev, ...newFormData }));
+
+    // Set skill entries (critical for SkillsField to show them)
+    if (newFormData.skills.length > 0) {
+      console.log("Setting entries to", newFormData.skills.length, "skills");
+      setEntries(newFormData.skills);
+      setAllSelectedSkills(newFormData.skills.map(s => s.skill));
+    }
+
+  }, [screeningData, source]);
 
   // Ensure form starts with 3 default skill rows when in Add mode
   useEffect(() => {
@@ -321,6 +327,51 @@ const AddCandidateForm = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]); // Only depend on id to run when form mode changes
+
+
+  useEffect(() => {
+    if (source !== "candidate-screening" || !screeningData) {
+      console.log("Screening pre-fill SKIPPED — source or data missing");
+      return;
+    }
+
+    console.log("SCREENING PRE-FILL RUNNING — data received", {
+      skillsCount: screeningData.parsed_skills?.length,
+      experience: screeningData.parsed_experience
+    });
+
+    const sd = screeningData;
+
+    const parsedSkills = sd.parsed_skills || [];
+    const parsedExperience = sd.parsed_experience || '';
+    const parsedEducation = sd.parsed_education || '';
+
+    const experienceYears =
+      Number(sd.screening_result?.experience_years) ||
+      parseFloat(parsedExperience.match(/(\d+(\.\d+)?)/)?.[0]) ||
+      0;
+
+    const newFormData = {
+      // ... your existing fields ...
+      skills: parsedSkills.length > 0
+        ? parsedSkills.map(name => ({
+          skill: (name || '').trim(),
+          experience: '',
+          expertise: 'Beginner'
+        }))
+        : []
+    };
+
+    console.log("About to set formData with skills:", newFormData.skills.length);
+
+    setFormData(prev => ({ ...prev, ...newFormData }));
+
+    if (newFormData.skills.length > 0) {
+      console.log("Setting entries to", newFormData.skills.length, "skills");
+      setEntries(newFormData.skills);
+      setAllSelectedSkills(newFormData.skills.map(s => s.skill));
+    }
+  }, [screeningData, source]);
 
   // Ensure University/College custom input is shown in edit mode when the saved value
   // is not present in master list (handles the '+ Others' flow gracefully)
@@ -354,10 +405,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry,
       );
       setEntries(updatedEntries);
@@ -536,12 +587,12 @@ const AddCandidateForm = ({
       [name]: errorMessage,
       ...(name === "CurrentExperience" && formData.RelevantExperience
         ? {
-            RelevantExperience: getErrorMessage(
-              "RelevantExperience",
-              formData.RelevantExperience,
-              nextFormData,
-            ),
-          }
+          RelevantExperience: getErrorMessage(
+            "RelevantExperience",
+            formData.RelevantExperience,
+            nextFormData,
+          ),
+        }
         : {}),
     }));
   };
@@ -727,7 +778,7 @@ const AddCandidateForm = ({
       ...data,
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" && mode !== "Edit" && {
-        source:"UPLOAD",
+        source: "UPLOAD",
         // Pass full screeningData so backend can store it
         screeningData: screeningData, // ← direct pass (full object)
         parsedJson: screeningData.metadata || screeningData.parsedJson || {},
@@ -788,34 +839,68 @@ const AddCandidateForm = ({
       // ────────────────────────────────────────────────
       // Application + ScreeningResult — only on NEW candidates from screening
       // ────────────────────────────────────────────────
-      const shouldCreateApplication =
+
+
+      // Debug: Log EVERY variable that affects the final decision
+      console.log("=== DEBUG: shouldCreateApplicationFinal calculation ===");
+      console.log("source:", source);
+      console.log("positionId:", positionId ? "exists" : "missing");
+      console.log("candidateResponse.status:", candidateResponse.status);
+      console.log("shouldCreateApplication prop (from viewer):", shouldCreateApplication);
+      console.log("candidateResponse full:", candidateResponse); // ← see the real status
+
+      const isSuccess = ["success", "Updated successfully", "no_changes"].includes(candidateResponse.status);
+
+      console.log("isSuccess (after checking status):", isSuccess);
+
+      const shouldCreateApplicationFinal =
         source === "candidate-screening" &&
-        positionId &&
-        isCreateOperation &&           // ← key change: only on create
-        candidateResponse.status === "success"; // not "Updated successfully" or "no_changes"
+        !!positionId &&                           // make sure it's truthy
+        isSuccess &&
+        shouldCreateApplication;                  // from CandidateViewer: !hasActiveApplication
+
+      console.log("shouldCreateApplicationFinal FINAL result:", shouldCreateApplicationFinal);
+      console.log("Reason breakdown:");
+      console.log("  - source === 'candidate-screening' →", source === "candidate-screening");
+      console.log("  - !!positionId →", !!positionId);
+      console.log("  - isSuccess →", isSuccess);
+      console.log("  - shouldCreateApplication →", shouldCreateApplication);
+
 
       // 2. ONLY if from candidate screening → create application
-      if (shouldCreateApplication) {
+      if (shouldCreateApplicationFinal) {
         try {
+          let candidateIdForApp;
+
+          // For new candidate: get the newly created _id
+          if (!id) {
+            // Create mode → candidateResponse should have the new candidate
+            const newCandidate = candidateResponse.data?.candidate;
+            candidateIdForApp = newCandidate?._id;
+            if (!candidateIdForApp) {
+              throw new Error("New candidate created but no _id returned");
+            }
+          } else {
+            // Update mode → use existing id
+            candidateIdForApp = id;
+          }
+
           const appPayload = {
-            candidateId,
+            candidateId: candidateIdForApp,
             positionId,
             status: "SCREENED",
             currentStage: "Application Submitted",
-            type: "candidate-screening",                  // ← tell backend to create ScreeningResult
-            screeningData: screeningData,  // ← full object
+            type: "candidate-screening",
+            screeningData: screeningData,
             resumeId: candidateResponse.data?.resumeId,
           };
 
           const appResult = await createApplication(appPayload);
-
           console.log("Application & ScreeningResult created:", appResult);
-          notify.success(
-            "Application and screening result created successfully",
-          );
+          notify.success("Application and screening result created successfully");
         } catch (appError) {
           console.error("Application/Screening creation failed:", appError);
-          notify.warning("Candidate saved, but application/screening failed");
+          notify.warning("Candidate saved/updated, but application creation failed");
         }
       }
       resetFormData();
@@ -886,8 +971,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save candidate",
+        error.message ||
+        "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1204,7 +1289,7 @@ const AddCandidateForm = ({
                 // error={errors.Gender}
                 containerRef={fieldRefs.Gender}
                 label="Gender"
-                // required
+              // required
               />
             </div>
             {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -1571,9 +1656,8 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${
-                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               Cancel
             </Button>
