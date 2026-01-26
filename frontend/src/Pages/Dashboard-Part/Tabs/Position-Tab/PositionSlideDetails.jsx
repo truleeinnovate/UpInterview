@@ -377,6 +377,8 @@ Modal.setAppElement("#root");
 
 const PositionSlideDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { position: fetchedPosition, isLoading } = usePositionById(id);
   console.log(
     "CURRENT POSITION ============================> ",
@@ -387,7 +389,7 @@ const PositionSlideDetails = () => {
   const [activeRound, setActiveRound] = useState(null);
   const [roundsViewMode, setRoundsViewMode] = useState("vertical");
   const [position, setPosition] = useState(null);
-  const [activeTab, setActiveTab] = useState("Overview");
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || "Overview");
   const [showAddCandidateModal, setShowAddCandidateModal] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
 
@@ -399,8 +401,7 @@ const PositionSlideDetails = () => {
   const [internalInterviewerCount, setInternalInterviewerCount] = useState(0);
   const [externalInterviewerCount, setExternalInterviewerCount] = useState(0);
 
-  const navigate = useNavigate();
-  const location = useLocation();
+
 
   // <----- v1.0.1 - Ranjith -
   const mode = location.state?.mode;
@@ -479,6 +480,13 @@ const PositionSlideDetails = () => {
   }, [fetchedPosition]);
 
   // v1.0.3 ---------------------------------------------------------------------->
+
+  // Listen for tab changes from navigation state (e.g. from ResumeUpload or CandidateViewer)
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
 
   const handleAddRound = () => {
     navigate(`/position/view-details/${id}/rounds/new`);

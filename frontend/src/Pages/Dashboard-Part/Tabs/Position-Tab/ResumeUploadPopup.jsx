@@ -1089,6 +1089,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                     setViewingResult(null);
                                 }}
                                 source={screeningMethod}
+                                totalResults={screeningResults.length}
                             />
                         )}
                     </div>
