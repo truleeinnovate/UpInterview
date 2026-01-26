@@ -16,6 +16,7 @@ import { ReactComponent as FaPlus } from "../../../../icons/FaPlus.svg";
 // Removed FaTimes import - not needed for always-editable rows
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
+import { createPortal } from "react-dom";
 
 const SkillsField = forwardRef(
   (
@@ -35,7 +36,7 @@ const SkillsField = forwardRef(
       showValidation = false, // New prop to control when validation errors are shown
       showRequirementLevel = false, // New prop to show/hide Requirement Level dropdown (only for Position)
     },
-    ref
+    ref,
   ) => {
     const [deleteIndex, setDeleteIndex] = useState(null);
     const initializedRef = useRef(false);
@@ -105,7 +106,7 @@ const SkillsField = forwardRef(
       const availableSkills = skills.filter(
         (skill) =>
           !otherSelectedSkills.includes(skill.SkillName) ||
-          skill.SkillName === currentRowSkill
+          skill.SkillName === currentRowSkill,
       );
 
       // Add "Other" option at the end for custom skills
@@ -140,7 +141,9 @@ const SkillsField = forwardRef(
 
       entries.forEach((entry, index) => {
         const isCompleteRow =
-          entry.skill && entry.experience && (showRequirementLevel || entry.expertise);
+          entry.skill &&
+          entry.experience &&
+          (showRequirementLevel || entry.expertise);
         const hasAnyValue = entry.skill || entry.experience || entry.expertise;
 
         // First 3 rows are mandatory
@@ -219,7 +222,7 @@ const SkillsField = forwardRef(
           if (entry.skill) {
             // Check if the skill exists in the predefined skills list
             const isSkillInList = skills.some(
-              (skill) => skill.SkillName === entry.skill
+              (skill) => skill.SkillName === entry.skill,
             );
             // If not in list and not the special "__other__" value, it's custom
             if (!isSkillInList && entry.skill !== "__other__") {
@@ -286,13 +289,20 @@ const SkillsField = forwardRef(
       const newSelectedSkills = popupSelectedSkills;
 
       // Find skills to add (in popup but not in current entries)
-      const skillsToAdd = newSelectedSkills.filter(s => !currentSkills.includes(s));
+      const skillsToAdd = newSelectedSkills.filter(
+        (s) => !currentSkills.includes(s),
+      );
 
       // Find skills to remove (in current entries but not in popup)
-      const skillsToRemove = currentSkills.filter(s => !newSelectedSkills.includes(s));
+      const skillsToRemove = currentSkills.filter(
+        (s) => !newSelectedSkills.includes(s),
+      );
 
       // Apply changes through parent handlers
-      if (onAddMultipleSkills && (skillsToAdd.length > 0 || skillsToRemove.length > 0)) {
+      if (
+        onAddMultipleSkills &&
+        (skillsToAdd.length > 0 || skillsToRemove.length > 0)
+      ) {
         // Build the new skill entries list
         const newEntries = skillsToAdd.map((skillName) => ({
           skill: skillName,
@@ -312,7 +322,7 @@ const SkillsField = forwardRef(
     const getFilteredSkillsForPopup = () => {
       return skills
         .filter((skill) =>
-          skill.SkillName.toLowerCase().includes(popupSearchTerm.toLowerCase())
+          skill.SkillName.toLowerCase().includes(popupSearchTerm.toLowerCase()),
         )
         .map((s) => s.SkillName);
     };
@@ -343,115 +353,143 @@ const SkillsField = forwardRef(
         </div>
 
         {/* Skills Selection Popup */}
-        {showSkillsPopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-              onClick={handleCloseSkillsPopup}
-            />
-            {/* Modal */}
-            <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col animate-in fade-in zoom-in duration-200">
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  Select Skills
-                </h3>
-                <button
-                  type="button"
-                  onClick={handleCloseSkillsPopup}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Search */}
-              <div className="px-6 py-4 border-b border-gray-100">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search skills..."
-                    value={popupSearchTerm}
-                    onChange={(e) => setPopupSearchTerm(e.target.value)}
-                    className="w-full px-4 py-3 pl-10 border-2 border-custom-blue/30 rounded-lg focus:border-custom-blue focus:ring-2 focus:ring-custom-blue/20 outline-none transition-all text-gray-700 placeholder-gray-400"
-                    autoFocus
-                  />
-                  <svg
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+        {showSkillsPopup &&
+          createPortal(
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Backdrop */}
+              <div
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={handleCloseSkillsPopup}
+              />
+              {/* Modal */}
+              <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col animate-in fade-in zoom-in duration-200">
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    Select Skills
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={handleCloseSkillsPopup}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
                 </div>
-                <p className="mt-2 text-sm text-gray-500">
-                  {popupSelectedSkills.length} skill{popupSelectedSkills.length !== 1 ? "s" : ""} selected
-                </p>
-              </div>
 
-              {/* Skills Grid */}
-              <div className="flex-1 overflow-y-auto px-6 py-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {getFilteredSkillsForPopup().map((skillName) => {
-                    const isSelected = popupSelectedSkills.includes(skillName);
-                    return (
-                      <button
-                        key={skillName}
-                        type="button"
-                        onClick={() => toggleSkillInPopup(skillName)}
-                        className={`
+                {/* Search */}
+                <div className="px-6 py-4 border-b border-gray-100">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search skills..."
+                      value={popupSearchTerm}
+                      onChange={(e) => setPopupSearchTerm(e.target.value)}
+                      className="w-full px-4 py-3 pl-10 border-2 border-custom-blue/30 rounded-lg focus:border-custom-blue focus:ring-2 focus:ring-custom-blue/20 outline-none transition-all text-gray-700 placeholder-gray-400"
+                      autoFocus
+                    />
+                    <svg
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                  <p className="mt-2 text-sm text-gray-500">
+                    {popupSelectedSkills.length} skill
+                    {popupSelectedSkills.length !== 1 ? "s" : ""} selected
+                  </p>
+                </div>
+
+                {/* Skills Grid */}
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {getFilteredSkillsForPopup().map((skillName) => {
+                      const isSelected =
+                        popupSelectedSkills.includes(skillName);
+                      return (
+                        <button
+                          key={skillName}
+                          type="button"
+                          onClick={() => toggleSkillInPopup(skillName)}
+                          className={`
                           px-4 py-3 rounded-lg border-2 text-left text-sm font-medium transition-all duration-150
-                          ${isSelected
-                            ? "border-custom-blue bg-custom-blue/10 text-custom-blue ring-2 ring-custom-blue/20"
-                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                          ${
+                            isSelected
+                              ? "border-custom-blue bg-custom-blue/10 text-custom-blue ring-2 ring-custom-blue/20"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
                           }
                         `}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="truncate">{skillName}</span>
-                          {isSelected && (
-                            <svg className="w-5 h-5 text-custom-blue flex-shrink-0 ml-2" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                  {getFilteredSkillsForPopup().length === 0 && (
-                    <div className="col-span-full text-center py-8 text-gray-500">
-                      {popupSearchTerm
-                        ? `No skills found for "${popupSearchTerm}"`
-                        : "All available skills have been added"}
-                    </div>
-                  )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="truncate">{skillName}</span>
+                            {isSelected && (
+                              <svg
+                                className="w-5 h-5 text-custom-blue flex-shrink-0 ml-2"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                    {getFilteredSkillsForPopup().length === 0 && (
+                      <div className="col-span-full text-center py-8 text-gray-500">
+                        {popupSearchTerm
+                          ? `No skills found for "${popupSearchTerm}"`
+                          : "All available skills have been added"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+                  <button
+                    type="button"
+                    onClick={handleCloseSkillsPopup}
+                    className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleApplySkillChanges}
+                    className="px-5 py-2.5 rounded-lg font-medium transition-colors bg-custom-blue text-white hover:bg-custom-blue/90 shadow-sm"
+                  >
+                    Apply Changes
+                  </button>
                 </div>
               </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
-                <button
-                  type="button"
-                  onClick={handleCloseSkillsPopup}
-                  className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleApplySkillChanges}
-                  className="px-5 py-2.5 rounded-lg font-medium transition-colors bg-custom-blue text-white hover:bg-custom-blue/90 shadow-sm"
-                >
-                  Apply Changes
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+            </div>,
+            document.body,
+          )}
 
         {/* Skills entries below */}
         <div className="space-y-2 mb-4 mt-5">
@@ -459,7 +497,9 @@ const SkillsField = forwardRef(
             <div key={index}>
               <div className={`border p-2 rounded-lg bg-gray-100 w-full flex`}>
                 <>
-                  <div className={`grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 bg-white rounded w-full p-2 mr-3 gap-2`}>
+                  <div
+                    className={`grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 bg-white rounded w-full p-2 mr-3 gap-2`}
+                  >
                     <div className="px-1">
                       <DropdownWithSearchField
                         options={getAvailableSkillsForRow(index).map((s) => ({
@@ -498,16 +538,20 @@ const SkillsField = forwardRef(
                     </div>
                     <div className="px-1">
                       <DropdownSelect
-                        options={showRequirementLevel ? positionExperienceOptions : experienceOptionsRS}
+                        options={
+                          showRequirementLevel
+                            ? positionExperienceOptions
+                            : experienceOptionsRS
+                        }
                         isSearchable={false}
                         value={
                           showRequirementLevel
                             ? positionExperienceOptions.find(
-                              (o) => o.value === entry.experience
-                            ) || null
+                                (o) => o.value === entry.experience,
+                              ) || null
                             : experienceOptionsRS.find(
-                              (o) => o.value === entry.experience
-                            ) || null
+                                (o) => o.value === entry.experience,
+                              ) || null
                         }
                         onChange={(opt) => {
                           if (onUpdateEntry) {
@@ -527,33 +571,35 @@ const SkillsField = forwardRef(
                         </span>
                       )}
                     </div>
-                    {!showRequirementLevel && <div className="px-1">
-                      <DropdownSelect
-                        options={expertiseOptionsRS}
-                        isSearchable={false}
-                        value={
-                          expertiseOptionsRS.find(
-                            (o) => o.value === entry.expertise
-                          ) || null
-                        }
-                        onChange={(opt) => {
-                          if (onUpdateEntry) {
-                            onUpdateEntry(index, {
-                              ...entry,
-                              expertise: opt?.value || "",
-                            });
+                    {!showRequirementLevel && (
+                      <div className="px-1">
+                        <DropdownSelect
+                          options={expertiseOptionsRS}
+                          isSearchable={false}
+                          value={
+                            expertiseOptionsRS.find(
+                              (o) => o.value === entry.expertise,
+                            ) || null
                           }
-                        }}
-                        placeholder="Select Expertise"
-                        classNamePrefix="rs"
-                        hasError={rowErrors[index]?.expertise}
-                      />
-                      {rowErrors[index]?.expertise && (
-                        <span className="text-red-500 text-xs mt-1">
-                          Expertise required
-                        </span>
-                      )}
-                    </div>}
+                          onChange={(opt) => {
+                            if (onUpdateEntry) {
+                              onUpdateEntry(index, {
+                                ...entry,
+                                expertise: opt?.value || "",
+                              });
+                            }
+                          }}
+                          placeholder="Select Expertise"
+                          classNamePrefix="rs"
+                          hasError={rowErrors[index]?.expertise}
+                        />
+                        {rowErrors[index]?.expertise && (
+                          <span className="text-red-500 text-xs mt-1">
+                            Expertise required
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {showRequirementLevel && (
                       <div className="px-1">
                         <DropdownSelect
@@ -561,7 +607,7 @@ const SkillsField = forwardRef(
                           isSearchable={false}
                           value={
                             requirementLevelOptions.find(
-                              (o) => o.value === entry.requirement_level
+                              (o) => o.value === entry.requirement_level,
                             ) || requirementLevelOptions[0]
                           }
                           onChange={(opt) => {
@@ -634,7 +680,7 @@ const SkillsField = forwardRef(
         )}
       </div>
     );
-  }
+  },
 );
 // v1.0.1 ----------------------------------------------------------------------------------->
 

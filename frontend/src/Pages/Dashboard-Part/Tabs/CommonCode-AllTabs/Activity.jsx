@@ -192,11 +192,11 @@ function Activity({ parentId, parentId2, mode }) {
     switch (type) {
       case "info":
         return {
-          container: "bg-blue-50 hover:bg-blue-100",
-          border: "border-blue-200",
-          timeline: "bg-blue-200",
-          text: "text-blue-800",
-          hover: "hover:border-blue-300",
+          container: "bg-custom-blue/10 hover:bg-custom-blue/20",
+          border: "border-custom-blue/20",
+          timeline: "bg-custom-blue",
+          text: "text-custom-blue",
+          hover: "hover:border-custom-blue/30",
         };
       case "alert":
         return {
@@ -478,7 +478,7 @@ function Activity({ parentId, parentId2, mode }) {
           // </div>
           <div className="space-y-4">
             {/* Step 1: Changed grid-cols-1 to a flex-wrap container */}
-            <div className="flex flex-wrap gap-16">
+            <div className="grid grid-cols-3 gap-3">
               {Object.entries(metadata)
                 .filter(
                   ([key]) =>
@@ -848,7 +848,6 @@ function Activity({ parentId, parentId2, mode }) {
       </div>
 
       <div className="relative">
-        <div className="absolute left-4 sm:left-8 top-0 bottom-0 w-px bg-gray-200" />
         <div className="space-y-6">
           {/* v1.0.1 <--------------------------------------------------------------------- */}
           {loading ? (
@@ -893,7 +892,9 @@ function Activity({ parentId, parentId2, mode }) {
                           </h4>
                           <div className="flex flex-wrap items-center mt-1 gap-2 text-sm text-gray-500">
                             <div className="flex items-center">
-                              <User className="mr-1 flex-shrink-0" />
+                              <span className="flex items-center justify-center w-6 h-6 p-1 bg-white/50 rounded-full mr-1 flex-shrink-0">
+                                <User className="w-4 h-4" />
+                              </span>
                               <span className="sm:text-xs truncate">
                                 {feed?.metadata?.changedBy || "System"}
                               </span>
