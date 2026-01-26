@@ -116,6 +116,36 @@ const getApplicationsByPosition = async (req, res) => {
             // Optional: clean up – remove the resumes array if you don't need it
             { $unset: "resumes" },
 
+            // Lookup ScreeningResult (Fallback for missing scores in Application)
+            // Match using resume._id and positionId
+            {
+                $lookup: {
+                    from: "screeningresult",
+                    let: { rId: "$resume._id", pId: "$positionId" },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ["$resumeId", "$$rId"] },
+                                        { $eq: ["$positionId", "$$pId"] }
+                                    ]
+                                }
+                            }
+                        },
+                        { $project: { metadata: 1, recommendation: 1 } }
+                    ],
+                    as: "screeningResult"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$screeningResult",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+
             // Lookup Position
             {
                 $lookup: {
@@ -150,8 +180,19 @@ const getApplicationsByPosition = async (req, res) => {
                     applicationNumber: 1,
                     status: 1,
                     currentStage: 1,
-                    screeningScore: 1,
-                    screeningDecision: 1,
+                    // Fallback to screeningResult if Application.screeningScore is missing
+                    screeningScore: {
+                        $ifNull: [
+                            "$screeningScore",
+                            { $ifNull: ["$screeningResult.metadata.score", 0] }
+                        ]
+                    },
+                    screeningDecision: {
+                        $ifNull: [
+                            "$screeningDecision",
+                            "$screeningResult.recommendation"
+                        ]
+                    },
                     createdAt: 1,
                     updatedAt: 1,
 
@@ -298,6 +339,9 @@ const createApplication = async (req, res) => {
             currentStage: currentStage || "Application Submitted",
             ownerId: userId,
             createdBy: userId,
+            // vvvv FIX: Save screening data to Application document vvvv
+            screeningScore: screeningData ? (Number(screeningData.matchPercentage || screeningData.score) || 0) : undefined,
+            screeningDecision: screeningData ? (screeningData.recommendation) : undefined,
         });
 
         // Populate the created application for response
