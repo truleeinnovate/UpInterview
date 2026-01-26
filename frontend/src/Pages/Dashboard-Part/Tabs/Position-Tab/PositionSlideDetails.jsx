@@ -486,6 +486,9 @@ const PositionSlideDetails = () => {
     if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab);
     }
+    if (location.state?.application) {
+      setSelectedApplication(location.state.application);
+    }
   }, [location.state]);
 
   const handleAddRound = () => {
