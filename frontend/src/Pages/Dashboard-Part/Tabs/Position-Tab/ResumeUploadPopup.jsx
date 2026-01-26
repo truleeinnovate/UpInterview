@@ -157,6 +157,8 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
             }
 
             const data = await response.json();
+            console.log("response",response);
+            
 
             if (!data.success) {
                 throw new Error(data.message || 'Screening failed');
@@ -198,7 +200,11 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                     education: result.screeningResult.education || 'Not specified',
                     recommendation: result.screeningResult.recommendation || 'Consider for review',
                     missingSkills: result.screeningResult.missingSkills || [],
-                    method: result.screeningResult.method
+                    method: result.screeningResult.method,
+                    languages: result.metadata.languages || [],  // Pull from metadata if needed
+                    certifications: result.metadata.certifications || [],
+                    projects: result.metadata.projects || [],
+                    workHistory: result.metadata.workHistory || []
                 } : null,
 
                 // Pass through the full metadata from backend

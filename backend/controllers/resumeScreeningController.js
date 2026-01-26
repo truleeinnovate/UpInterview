@@ -168,6 +168,8 @@ exports.screenResume = async (req, res) => {
 
                 let recommendation = 'HOLD';
 
+                let extractedProfile = {};
+
                 if (methodToUse === 'ai_assistant' || methodToUse === 'ai_claude') {
                     // AI Screening
                     console.log(`Using AI screening method: ${methodToUse}`);
@@ -202,6 +204,7 @@ exports.screenResume = async (req, res) => {
                         if (systemResult.success) {
                             metadata = buildSystemMetadata(systemResult);
                             recommendation = getRecommendation(metadata.score);
+                            extractedProfile = systemResult.extractedProfile || {};
                         }
                     }
                 } else {
@@ -211,22 +214,22 @@ exports.screenResume = async (req, res) => {
                         metadata = buildSystemMetadata(systemResult);
                         recommendation = getRecommendation(metadata.score);
                         // For system, we rely on parsedData, so we don't have a separate extractedProfile
-                        metadata.extractedProfile = {};
+                        extractedProfile = systemResult.extractedProfile || {};
                     } else {
                         metadata.screeningNotes = systemResult.error || 'Screening could not be completed';
                         metadata.concerns.push(systemResult.error || 'Position may not have skills defined');
-                        metadata.extractedProfile = {};
+                        extractedProfile = {};
                     }
                 }
 
                 // 3. Build result object with full metadata
 
                 // Prioritize AI-extracted profile data if available
-                const finalName = metadata.extractedProfile?.name || resumeData.name || file.originalname.replace(/\.[^/.]+$/, ""); // Best effort name
-                const finalEmail = metadata.extractedProfile?.email || resumeData.email;
-                const finalPhone = metadata.extractedProfile?.phone || resumeData.phone;
-                const finalExperience = metadata.extractedProfile?.experienceYears ? `${metadata.extractedProfile.experienceYears} Years` : resumeData.experience;
-                const finalEducation = metadata.extractedProfile?.education || resumeData.education;
+                const finalName = extractedProfile?.name || resumeData.name || file.originalname.replace(/\.[^/.]+$/, ""); // Best effort name
+                const finalEmail = extractedProfile?.email || resumeData.email;
+                const finalPhone = extractedProfile?.phone || resumeData.phone;
+                const finalExperience = extractedProfile?.experienceYears ? `${extractedProfile.experienceYears} Years` : resumeData.experience;
+                const finalEducation = extractedProfile?.education || resumeData.education;
 
                 results.push({
                     id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -242,8 +245,8 @@ exports.screenResume = async (req, res) => {
                     candidateName: finalName || 'Unknown Candidate',
                     candidateEmail: finalEmail,
                     candidatePhone: finalPhone,
-                    candidateCountryCode: metadata.extractedProfile?.countryCode || parsedData.countryCode || null,  // ← add this
-                    candidatePhoneNumber: metadata.extractedProfile?.phoneNumber || parsedData.phoneNumber || null,
+                    candidateCountryCode: extractedProfile?.countryCode || parsedData.countryCode || null,  // ← add this
+                    candidatePhoneNumber: extractedProfile?.phoneNumber || parsedData.phoneNumber || null,
 
                     // Parsed Data
                     parsedSkills: resumeData.skills,
@@ -261,7 +264,7 @@ exports.screenResume = async (req, res) => {
                         screeningNotes: metadata.screeningNotes,
                         aiRecommendation: metadata.aiRecommendation,
                         method: metadata.method,
-                        experience_years: metadata.extractedProfile?.experienceYears || (typeof finalExperience === 'string' ? parseFloat(finalExperience) : 0),
+                        experience_years: extractedProfile?.experienceYears || (typeof finalExperience === 'string' ? parseFloat(finalExperience) : 0),
                         education: finalEducation,
                         extracted_skills: metadata.matchedSkills.concat(metadata.missingSkills) // combine for display if needed
                     },
@@ -273,11 +276,12 @@ exports.screenResume = async (req, res) => {
                             name: finalName,
                             email: finalEmail,
                             phone: finalPhone,
-                            countryCode: metadata.extractedProfile?.countryCode || parsedData.countryCode || null,
+                            countryCode: extractedProfile?.countryCode || parsedData.countryCode || null,
                             skills: resumeData.skills,
                             experience: finalExperience,
                             education: finalEducation
-                        }
+                        },
+                        extractedProfile: extractedProfile  // Ensure it's included here
                     },
                     recommendation: recommendation,
 
@@ -295,6 +299,7 @@ exports.screenResume = async (req, res) => {
                 });
             }
         }
+        console.log("results",results);
 
         res.json({
             success: true,
@@ -303,6 +308,7 @@ exports.screenResume = async (req, res) => {
             message: `Analyzed ${results.length} resumes successfully. ${errors.length} errors.`,
             previewOnly: true
         });
+        
 
     } catch (error) {
         console.error("Resume screening error:", error);

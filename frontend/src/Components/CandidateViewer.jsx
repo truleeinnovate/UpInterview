@@ -12,7 +12,7 @@ import AddCandidateForm from '../Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCand
 import LoadingButton from "./LoadingButton";
 import { Button } from "./Buttons/Button";
 import {
-    useApplicationsByCandidate,
+    useApplicationFilter,
 } from "../apiHooks/useApplications";
 // Utility functions
 const getScoreColor = (score) => {
@@ -37,6 +37,8 @@ export default function CandidateViewer({
     source = 'system_internal',
     totalResults = 1 // Default to 1 (force navigation) if not provided
 }) {
+    console.log("position", position);
+
     const [showCandidateForm, setShowCandidateForm] = useState(false);
     const isExistingCandidate = candidate.match_status === 'existing';
 
@@ -53,24 +55,19 @@ export default function CandidateViewer({
         return 'Weak match - May not meet requirements';
     };
     // Fetch existing applications for this candidate
-    const { applications } =
-        useApplicationsByCandidate(candidate?.existing_candidate_id);
-    console.log("applications", applications);
+    const { applications: filteredApplications } =
+        useApplicationFilter(
+            candidate?.existing_candidate_id,
+            position?._id                     // ← add ? here too
+        );
 
+    console.log("useApplicationFilter called with:", {
+        candidateId: candidate?.existing_candidate_id,
+        positionId: position?._id,
+        candidateIdType: typeof candidate?.existing_candidate_id,
+        positionIdType: typeof position?._id,
+    });
     // Filter applications based on selected position (only when position is selected)
-    const filteredApplications = useMemo(() => {
-        if (!position?.id) {
-            // No position selected - return empty array (don't show table)
-            return [];
-        }
-        // Filter to show only applications matching the selected position
-        return applications.filter((app) => {
-            const appPositionId = position?._id;
-            return appPositionId === position?._id;
-        });
-    }, [applications, position?.id]);
-
-    // Check if selected position contains any active application
     const hasActiveApplication = useMemo(() => {
         if (!position._id || filteredApplications.length === 0) return false;
 
@@ -78,7 +75,7 @@ export default function CandidateViewer({
         return filteredApplications.some(app =>
             !["REJECTED", "WITHDRAWN"].includes(app.status)
         );
-    }, [filteredApplications]);
+    }, [position._id, filteredApplications]);
 
 
 

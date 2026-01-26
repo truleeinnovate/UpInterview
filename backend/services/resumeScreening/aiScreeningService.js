@@ -42,6 +42,11 @@ async function screenResumeWithAI(resumeData, positionRequirements) {
                 missingSkills: analysis.missingSkills || [],
                 experienceMatch: analysis.experienceMatch,
                 recommendation: analysis.recommendation,
+                languages: analysis.languages || [],
+                certifications: analysis.certifications || [],
+                projects: analysis.projects || [],
+                workHistory: analysis.workHistory || [],
+                extractedProfile: analysis.extractedProfile || {}
             },
         };
     } catch (error) {

@@ -730,6 +730,7 @@ const AddCandidateForm = ({
       ...data,
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" && mode !== "Edit" && {
+        source:"UPLOAD",
         // Pass full screeningData so backend can store it
         screeningData: screeningData,               // ← direct pass (full object)
         parsedJson: screeningData.metadata || screeningData.parsedJson || {},

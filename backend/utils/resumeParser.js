@@ -10,61 +10,57 @@ const { PREDEFINED_SKILLS, SALESFORCE_CERTIFICATIONS, TECH_CERTIFICATIONS } = re
  * @param {Object} position - Position for context
  * @returns {Object} Parsed resume data
  */
-async function parseResume(pdfBuffer, fileName, position = null) {
-    try {
-        console.log("Starting to parse resume:", fileName);
+async function parseResume(buffer, filename) {
+  try {
+    console.log(`Parsing resume: ${filename} (size: ${buffer.length} bytes)`);
 
-        const text = await extractText(pdfBuffer, fileName);
+    const fullText = await new Promise((resolve, reject) => {
+      let mime;
 
-        if (!text || text.trim().length === 0) {
-            console.warn("No text extracted from PDF:", fileName);
-            return {
-                success: false,
-                error: "Could not extract text from PDF",
-            };
-        }
+      if (filename.toLowerCase().endsWith('.docx')) {
+        mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      } else if (filename.toLowerCase().endsWith('.doc')) {
+        mime = 'application/msword';
+      } else if (filename.toLowerCase().endsWith('.pdf')) {
+        mime = 'application/pdf';
+      } else {
+        mime = 'application/octet-stream';
+      }
 
-        console.log("Text extracted, parsing data...");
+      textract.fromBufferWithMime(mime, buffer, (err, text) => {
+        if (err) return reject(err);
+        resolve(text.trim());
+      });
+    });
 
-        const name = extractName(text, fileName);
-        const email = extractEmail(text);
-        const phoneObj = extractPhone(text);
-        const skills = extractSkills(text);
-        const experience = extractExperience(text);
-        const education = extractEducation(text);
-        const currentCompany = extractCurrentCompany(text);
-        const certifications = extractCertifications(text);
-        const summary = generateResumeSummary(text, skills, experience, position);
-        const workHistory = extractWorkHistory(text);
-        const linkedInUrl = extractLinkedIn(text);
-
-        const parsedData = {
-            success: true,
-            name: name || null,
-            email: email || (name ? `${name.toLowerCase().replace(/\s+/g, ".")}@email.com` : null),
-            phone: phoneObj?.full || "Not provided",
-            countryCode: phoneObj?.countryCode || null,
-            phoneNumber: phoneObj?.number || null,
-            linkedInUrl,
-            experience: experience || calculateTotalExperience(workHistory) || "Not specified",
-            education: education || "Not specified",
-            currentCompany: currentCompany || "Not specified",
-            skills,
-            certifications: certifications.length > 0 ? certifications : [],
-            summary,
-            workHistory,
-            resumeText: text,
-        };
-
-        console.log("Successfully parsed resume:", fileName, "Found", skills.length, "skills");
-        return parsedData;
-    } catch (error) {
-        console.error("Error in parseResume for", fileName, ":", error);
-        return {
-            success: false,
-            error: error.message,
-        };
+    if (!fullText) {
+      throw new Error('No text could be extracted');
     }
+
+    // Basic extractions (you can keep expanding these)
+    const name = extractName(fullText, filename);
+    const email = extractEmail(fullText) || '';
+    const phoneObj = extractPhone(fullText);
+    const skills = extractSkills(fullText) || [];
+    const experience = extractExperience(fullText) || 'Not specified';
+    const education = extractEducation(fullText) || 'Not specified';
+
+    return {
+      fullText,
+      resumeText: fullText,
+      name,
+      email,
+      phone: phoneObj?.full || null,
+      countryCode: phoneObj?.countryCode || null,
+      phoneNumber: phoneObj?.number || null,
+      skills,
+      experience,
+      education
+    };
+  } catch (err) {
+    console.error(`Parse failed for ${filename}:`, err.message);
+    throw err;
+  }
 }
 
 /**
