@@ -7,11 +7,16 @@ import {
 } from 'lucide-react';
 import { useCandidateById } from "../../../../apiHooks/useCandidates";
 import { useApplicationMutations } from "../../../../apiHooks/useApplications";
+import ConfirmationPopup from "../Assessment-Tab/ConfirmationPopup";
 
 export default function ApplicationView({ application, onBack }) {
     const [applicationStatus, setApplicationStatus] = useState(application.status || 'APPLIED');
     const [activeTab, setActiveTab] = useState('resume');
     const [candidate, setCandidate] = useState({});
+
+    // Confirmation Popup State
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+    const [pendingStatusUpdate, setPendingStatusUpdate] = useState(null);
 
     const { updateApplicationStatus } = useApplicationMutations();
 
@@ -70,6 +75,8 @@ export default function ApplicationView({ application, onBack }) {
             case 'HIRED':
             case 'OFFERED':
                 return 'bg-green-100 text-green-800';
+            case 'WITHDRAWN':
+                return 'bg-gray-100 text-gray-800';
             default:
                 return 'bg-gray-100 text-gray-800';
         }
@@ -100,15 +107,26 @@ export default function ApplicationView({ application, onBack }) {
         }
     };
 
-    const handleStatusChange = async (newStatus, actionLabel) => {
-        // Optimistic update
+    const handleStatusChange = (newStatus, actionLabel) => {
+        setPendingStatusUpdate({ newStatus, actionLabel });
+        setShowConfirmPopup(true);
+    };
+
+    const confirmStatusUpdate = async () => {
+        if (!pendingStatusUpdate) return;
+
+        const { newStatus, actionLabel } = pendingStatusUpdate;
         const oldStatus = applicationStatus;
+
+        // Optimistic update
         setApplicationStatus(newStatus);
+        setShowConfirmPopup(false);
+        setPendingStatusUpdate(null);
 
         try {
             await updateApplicationStatus({
                 id: application._id,
-                action: actionLabel || newStatus, // pass action if available, else status
+                action: actionLabel || newStatus,
                 status: newStatus
             });
         } catch (error) {
@@ -131,13 +149,15 @@ export default function ApplicationView({ application, onBack }) {
             case 'SCREENED':
                 return [
                     { label: 'Schedule Interview', action: () => handleStatusChange('INTERVIEWING', 'Schedule Interview'), color: 'primary', icon: Calendar },
-                    { label: 'Reject', action: () => handleStatusChange('REJECTED', 'Reject'), color: 'red', icon: X }
+                    { label: 'Reject', action: () => handleStatusChange('REJECTED', 'Reject'), color: 'red', icon: X },
+                    { label: 'Withdraw Application', action: () => handleStatusChange('WITHDRAWN', 'Withdraw Application'), color: 'yellow', icon: X }
                 ];
             case 'INTERVIEW':
             case 'INTERVIEWING':
                 return [
                     { label: 'Move to Decision', action: () => handleStatusChange('DECISION', 'Move to Decision'), color: 'primary', icon: CheckCircle },
-                    { label: 'Reject', action: () => handleStatusChange('REJECTED', 'Reject'), color: 'red', icon: X }
+                    { label: 'Reject', action: () => handleStatusChange('REJECTED', 'Reject'), color: 'red', icon: X },
+                    { label: 'Withdraw Application', action: () => handleStatusChange('WITHDRAWN', 'Withdraw Application'), color: 'yellow', icon: X }
                 ];
             case 'DECISION':
                 return [
@@ -854,6 +874,19 @@ export default function ApplicationView({ application, onBack }) {
                     </div>
                 </div>
             </div>
+            {/* Confirmation Popup */}
+            <ConfirmationPopup
+                isOpen={showConfirmPopup}
+                title={`Confirm ${pendingStatusUpdate?.actionLabel || 'Action'}`}
+                message={`Are you sure you want to proceed with "${pendingStatusUpdate?.actionLabel}"? This will update the application status.`}
+                onConfirm={confirmStatusUpdate}
+                onCancel={() => {
+                    setShowConfirmPopup(false);
+                    setPendingStatusUpdate(null);
+                }}
+                confirmText="Yes, Proceed"
+                cancelText="Cancel"
+            />
         </div>
     );
 }
