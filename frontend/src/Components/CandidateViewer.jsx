@@ -476,14 +476,23 @@ export default function CandidateViewer({
                                     </Button>
 
                                     <Button
-                                    // onClick={() => {
-                                    //     setShowExistingAppPrompt(false);
-                                    //     onClose(); // close viewer
-                                    //     onAction?.({
-                                    //         type: "NAVIGATE_TO_APPLICATION",
-                                    //         applicationId: existingApplication._id
-                                    //     });
-                                    // }}
+                                        onClick={() => {
+                                            setShowExistingAppPrompt(false);
+                                            onClose();
+
+                                            const activeApp = filteredApplications.find(app =>
+                                                !["REJECTED", "WITHDRAWN"].includes(app.status)
+                                            ) || filteredApplications[0];
+
+                                            if (activeApp && position?._id) {
+                                                navigate(`/position/view-details/${position._id}`, {
+                                                    state: {
+                                                        activeTab: 'Applications', // Ensure Applications tab is active
+                                                        application: activeApp     // Pass application to open it directly
+                                                    }
+                                                });
+                                            }
+                                        }}
                                     >
                                         Go to Application
                                     </Button>
