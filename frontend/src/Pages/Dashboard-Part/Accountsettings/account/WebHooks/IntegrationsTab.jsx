@@ -34,6 +34,7 @@ const IntegrationsTab = () => {
 
   const availableEvents = [
     { id: "interview.round.status.updated", label: "interview.round.status.updated" },
+    { id: "application.status.updated", label: "application.status.updated" },
     { id: "assessment.status.updated", label: "assessment.status.updated" },
     { id: "feedback.status.updated", label: "feedback.status.updated" },
   ];
@@ -47,10 +48,10 @@ const IntegrationsTab = () => {
     try {
       const authToken = getAuthToken();
       // Include tenantId in the query to filter integrations for the current tenant
-      const url = tenantId 
+      const url = tenantId
         ? `${config.REACT_APP_API_URL}/integrations?tenantId=${tenantId}`
         : `${config.REACT_APP_API_URL}/integrations`;
-      
+
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
@@ -572,8 +573,8 @@ const IntegrationsTab = () => {
               <div className="flex flex-wrap gap-2 mb-4">
                 {(integration.events && Array.isArray(integration.events)
                   ? integration.events.filter((eventId) =>
-                      availableEvents.some((e) => e.id === eventId)
-                    )
+                    availableEvents.some((e) => e.id === eventId)
+                  )
                   : []
                 ).map((event) => (
                   <span
