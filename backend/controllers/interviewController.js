@@ -396,6 +396,7 @@ const createInterview = async (req, res) => {
             // interviewerGroupId: round.interviewerGroupId || null, // This field doesn't exist in schema
             InterviewerTags: round.InterviewerTags || [],
             TeamsIds: round.TeamsIds || [],
+            ...round,
           });
 
           // Save the round document
@@ -734,6 +735,7 @@ const updateInterview = async (req, res) => {
             status: "Draft",
             InterviewerTags: round.InterviewerTags || [],
             TeamsIds: round.TeamsIds || [],
+            round
           });
 
           const savedRound = await roundDoc.save();

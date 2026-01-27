@@ -89,7 +89,11 @@ const interviewRoundSchema = new mongoose.Schema(
     // Current scheduled date/time
 
     dateTime: String,
-
+    addressId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Tenant",
+      // required: true,
+    },
     interviewerViewType: String,
     // interviewerGroupName: String,
     // interviewerGroupId: String,

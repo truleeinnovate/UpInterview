@@ -3,9 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   MoreVertical,
   Mail,
-  Briefcase,
   Star,
-  Users,
   Building,
   Eye,
   Pencil,
@@ -49,26 +47,66 @@ export const InterviewerCard = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const isActive = interviewer.is_active;
+  console.log("interviewer interviewer", interviewer);
+
+  const isActive = interviewer?.interviwer?.is_active || interviewer?.is_active;
   // console.log(interviewer);
   // Get display values
-  let displayName = interviewer.full_name;
-  let displayEmail = interviewer.email;
-  let displayAvatar = interviewer.avatar_url;
+  let displayName =
+    // interviewer?.contactDetails?.firstName ||
+    interviewer?.contactDetails
+      ? interviewer?.contactDetails?.firstName
+      : interviewer?.contactId?.firstName + " " + interviewer?.contactDetails
+        ? interviewer?.contactDetails?.lastName
+        : interviewer?.contactDetails.lastName;
+  // : interviewer?.contactId?.lastName;
+  let displayEmail = interviewer?.contactDetails
+    ? interviewer?.contactDetails?.email
+    : interviewer?.contactId?.email;
+  let displayAvatar = interviewer?.contactDetails
+    ? interviewer?.contactId?.imageData
+    : interviewer?.contactDetails?.imageData;
   let displayRole = interviewer.title || "Interviewer";
 
   if (
-    interviewer.interviewer_type === "internal" &&
+    (interviewer?.interviwer?.interviewer_type ||
+      interviewer?.interviewer_type) === "internal" &&
     interviewer.contactId &&
     typeof interviewer.contactId === "object"
   ) {
-    const user = interviewer.contactId;
+    const user = interviewer?.contactDetails || interviewer?.contactId;
+    console.log("user user", user);
     const userName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
     if (userName) displayName = userName;
     if (user.email) displayEmail = user.email;
     if (user.imageData?.path) displayAvatar = user.imageData.path;
     if (user.currentRole) displayRole = user.currentRole;
   }
+
+  // Calculate available slots from contactDetails.availability
+  const getAvailableSlotsInfo = () => {
+    const availability = interviewer?.contactDetails?.availability || [];
+
+    if (availability.length === 0) {
+      return {
+        text: "No available slots",
+        count: 0,
+        hasSlots: false,
+      };
+    }
+
+    // Count total available slots (assuming each availability item represents a slot)
+    const slotCount = availability.length;
+
+    return {
+      text:
+        slotCount === 1 ? "1 slot available" : `${slotCount} slots available`,
+      count: slotCount,
+      hasSlots: slotCount > 0,
+    };
+  };
+
+  const slotsInfo = getAvailableSlotsInfo();
 
   return (
     <div
@@ -94,7 +132,7 @@ export const InterviewerCard = ({
             <div>
               <h3
                 className="font-bold text-gray-900 text-lg leading-tight cursor-pointer hover:text-blue-600"
-                onClick={() => onView(interviewer._id)}
+                onClick={() => onView(interviewer?.interviwer?._id)}
               >
                 {displayName || "Unknown"}
               </h3>
@@ -103,7 +141,6 @@ export const InterviewerCard = ({
           </div>
 
           {/* Menu Button */}
-
           <div className="relative" ref={menuRef}>
             {from !== "outsource-interview" && (
               <button
@@ -119,7 +156,7 @@ export const InterviewerCard = ({
                 <button
                   onClick={() => {
                     setShowMenu(false);
-                    onEdit(interviewer._id);
+                    onEdit(interviewer?.interviwer?._id);
                   }}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 >
@@ -128,7 +165,7 @@ export const InterviewerCard = ({
                 <button
                   onClick={() => {
                     setShowMenu(false);
-                    onDelete(interviewer._id);
+                    onDelete(interviewer?.interviwer?._id);
                   }}
                   className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
@@ -145,13 +182,14 @@ export const InterviewerCard = ({
             <span className="truncate">{displayEmail || "-"}</span>
           </div>
 
-          {(interviewer.department || interviewer.external_company) && (
+          {(interviewer?.interviwer?.department ||
+            interviewer?.interviwer?.external_company) && (
             <div className="flex items-center text-sm text-gray-500 gap-2">
               <Building size={14} className="text-gray-400" />
               <span className="truncate">
-                {interviewer.interviewer_type === "internal"
-                  ? interviewer.department
-                  : interviewer.external_company}
+                {interviewer?.interviwer?.interviewer_type === "internal"
+                  ? interviewer?.interviwer?.department
+                  : interviewer?.interviwer?.external_company}
               </span>
             </div>
           )}
@@ -159,42 +197,61 @@ export const InterviewerCard = ({
           <div className="flex items-center gap-1 mt-1">
             <Star size={14} className="text-yellow-400 fill-current" />
             <span className="text-sm font-semibold text-gray-700">
-              {interviewer.contactId.rating
-                ? interviewer.contactId.rating.toFixed(1)
-                : "N/A"}
+              {interviewer?.contactDetails?.rating
+                ? interviewer?.contactDetails?.rating.toFixed(1) || "N/A"
+                : interviewer?.conactId?.rating.toFixed(1) || "N/A"}
             </span>
             <span className="text-xs text-gray-400">rating</span>
           </div>
 
-          {interviewer.team_id && (
+          {interviewer?.team && (
             <div className="mt-2">
               <span className="inline-block px-2 py-1 rounded border border-gray-200 text-xs font-semibold text-gray-600 bg-gray-50">
-                Team: {interviewer.team_id.name}
+                Team:{" "}
+                {interviewer?.interviwer?.team?.name || interviewer?.team?.name}
               </span>
             </div>
           )}
 
           <div className="flex flex-wrap gap-1 mt-2">
-            {interviewer.tag_ids &&
-              interviewer.tag_ids.slice(0, 3).map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-0.5 rounded text-xs border border-purple-200 text-purple-600 bg-purple-50"
-                >
-                  {tag.name}
-                </span>
-              ))}
+            {(interviewer?.interviwer?.tags || interviewer?.tag_ids) &&
+              (interviewer?.tag_ids || interviewer?.interviwer?.tags)
+                .slice(0, 3)
+                .map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-0.5 rounded text-xs border border-purple-200 text-purple-600 bg-purple-50"
+                  >
+                    {tag?.name}
+                  </span>
+                ))}
           </div>
         </div>
 
-        {/* Available Slots Mockup */}
-        <div className="bg-blue-50 rounded-lg p-3 mb-4 flex items-start gap-2">
-          <Clock size={16} className="text-blue-500 mt-0.5" />
+        {/* Available Slots - Updated to show actual data */}
+        <div
+          className={`rounded-lg p-3 mb-4 flex items-start gap-2 ${slotsInfo.hasSlots ? "bg-green-50" : "bg-blue-50"}`}
+        >
+          <Clock
+            size={16}
+            className={`mt-0.5 ${slotsInfo.hasSlots ? "text-green-500" : "text-blue-500"}`}
+          />
           <div>
-            <p className="text-xs font-semibold text-blue-700">
+            <p
+              className={`text-xs font-semibold ${slotsInfo.hasSlots ? "text-green-700" : "text-blue-700"}`}
+            >
               Available Slots
             </p>
-            <p className="text-xs text-blue-600">Not Available</p>
+            <p
+              className={`text-xs ${slotsInfo.hasSlots ? "text-green-600" : "text-blue-600"}`}
+            >
+              {slotsInfo.text}
+            </p>
+            {slotsInfo.hasSlots && (
+              <p className="text-xs text-gray-500 mt-1">
+                Check calendar for details
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -212,7 +269,7 @@ export const InterviewerCard = ({
           </div>
 
           <button
-            onClick={() => onView(interviewer?._id)}
+            onClick={() => onView(interviewer?.interviwer?._id)}
             className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <Eye size={14} />
@@ -299,6 +356,8 @@ const Interviewers = () => {
   const interviewers = data?.data || [];
   const pagination = data?.pagination || {};
 
+  // console.log("interviewers", interviewers);
+
   const emptyStateMessage = getEmptyStateMessage(
     searchQuery,
     pagination.totalItems || 0,
@@ -311,19 +370,18 @@ const Interviewers = () => {
       key: "full_name",
       header: "Name",
       render: (value, row) => {
-        let displayName = row.full_name;
-        let displayAvatar = row.avatar_url;
+        let displayName = "";
+        let displayAvatar = "";
 
-        if (
-          row.interviewer_type === "internal" &&
-          row.contactId &&
-          typeof row.contactId === "object"
-        ) {
-          const user = row.contactId;
-          const userName =
-            `${user.firstName || ""} ${user.lastName || ""}`.trim();
-          if (userName) displayName = userName;
-          if (user.imageData?.path) displayAvatar = user.imageData.path;
+        // Access name from contactDetails
+        if (row.contactDetails) {
+          displayName =
+            `${row.contactDetails.firstName || ""} ${row.contactDetails.lastName || ""}`.trim();
+        }
+
+        // For internal interviewers, you might also have user data
+        if (row.user && !displayName) {
+          displayName = row.user.name || "";
         }
 
         return (
@@ -342,7 +400,7 @@ const Interviewers = () => {
             <div className="flex flex-col">
               <span
                 className="font-medium text-gray-900 cursor-pointer hover:text-blue-600"
-                onClick={() => handleView(row._id)}
+                onClick={() => handleView(row.interviwer?._id)}
               >
                 {displayName || "Unknown"}
               </span>
@@ -355,30 +413,61 @@ const Interviewers = () => {
       key: "email",
       header: "Email",
       render: (value, row) => {
-        let displayEmail = value;
-        if (!displayEmail && row.contactId?.email) {
-          displayEmail = row.contactId.email;
-        }
-        return <span className="text-gray-600">{displayEmail || "-"}</span>;
+        // Access email from contactDetails
+        return (
+          <span className="text-gray-600">
+            {row.contactDetails?.email || "-"}
+          </span>
+        );
       },
     },
     {
       key: "interviewer_type",
       header: "Type",
-      render: (value) => (
-        <span
-          className={`px-2 py-0.5 rounded-full text-xs font-medium ${value === "internal" ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"}`}
-        >
-          {capitalizeFirstLetter(value)}
-        </span>
-      ),
+      render: (value, row) => {
+        // Access interviewer_type from interviwer object
+        const type = row.interviwer?.interviewer_type;
+        return (
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-medium ${type === "internal" ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"}`}
+          >
+            {capitalizeFirstLetter(type || "")}
+          </span>
+        );
+      },
+      // render: (value) => (
+      //   console.log("value interviewer_type", value),
+      //   (
+      //     <span
+      //       className={`px-2 py-0.5 rounded-full text-xs font-medium ${value === "internal" ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"}`}
+      //     >
+      //       {capitalizeFirstLetter(value)}
+      //     </span>
+      //   )
+      // ),
     },
     // { key: 'title', header: 'Title', render: (value) => value || '-' },
-    { key: "team_id", header: "Team", render: (value) => value?.name || "-" },
+    {
+      key: "team_id",
+      header: "Team",
+      render: (value, row) => {
+        // Access team from interviwer object
+        return row.interviwer?.team?.name || "-";
+      },
+      //  render: (value) => value?.name || "-"
+    },
     {
       key: "is_active",
       header: "Status",
-      render: (value) => <StatusBadge status={value ? "Active" : "Inactive"} />,
+      render: (value, row) => {
+        // Access is_active from interviwer object
+        return (
+          <StatusBadge
+            status={row.interviwer?.is_active ? "Active" : "Inactive"}
+          />
+        );
+      },
+      // render: (value) => <StatusBadge status={value ? "Active" : "Inactive"} />,
     },
   ];
 
@@ -388,32 +477,33 @@ const Interviewers = () => {
       key: "view",
       label: "View",
       icon: <Eye size={16} className="text-gray-500" />,
-      onClick: (row) => handleView(row._id),
+      onClick: (row) => handleView(row?.interviwer?._id),
     },
     {
       key: "edit",
       label: "Edit",
       icon: <Pencil size={16} className="text-gray-500" />,
-      onClick: (row) => handleEdit(row._id),
+      onClick: (row) => handleEdit(row?.interviwer?._id),
       show: () => effectivePermissions?.Interviewers?.Edit,
     },
     {
       key: "toggle",
-      label: (row) => (row.is_active ? "Deactivate" : "Activate"),
+      label: (row) => (row?.interviwer?.is_active ? "Deactivate" : "Activate"),
       icon: (row) =>
         row.is_active ? (
           <ToggleLeft size={16} className="text-red-500" />
         ) : (
           <ToggleRight size={16} className="text-green-500" />
         ),
-      onClick: (row) => handleToggleActive(row._id, !row.is_active),
+      onClick: (row) =>
+        handleToggleActive(row?.interviwer?._id, !row?.interviwer?.is_active),
       show: () => effectivePermissions?.Interviewers?.Edit,
     },
     {
       key: "delete",
       label: "Delete",
       icon: <Trash2 size={16} className="text-red-500" />,
-      onClick: (row) => handleDelete(row._id),
+      onClick: (row) => handleDelete(row?.interviwer?._id),
       show: () => effectivePermissions?.Interviewers?.Delete,
     },
   ];
@@ -514,7 +604,7 @@ const Interviewers = () => {
           <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 grid-cols-4 gap-6">
             {interviewers.map((interviewer) => (
               <InterviewerCard
-                key={interviewer._id}
+                key={interviewer?.interviwer?._id}
                 interviewer={interviewer}
                 onEdit={handleEdit}
                 onDelete={handleDelete}

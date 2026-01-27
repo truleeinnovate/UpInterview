@@ -47,7 +47,7 @@ const saveInterviewRound = async (req, res) => {
   try {
     const { roundId, interviewId, round, questions } = req.body;
 
-    // console.log("req.bodyround", round);
+    console.log("req.bodyround", round);
 
     if (!interviewId || !round) {
       return res
@@ -177,7 +177,7 @@ const saveInterviewRound = async (req, res) => {
 
     const candidate = await Candidate.findById(interview.candidateId).lean();
 
-    if (!candidate) {
+    if (!candidate && savedRound.roundTitle === "Assessment") {
       return res.status(404).json({
         message: "Candidate not found for assessment sharing",
         status: "error",

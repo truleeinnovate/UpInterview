@@ -557,6 +557,7 @@ const InternalInterviews = ({
                 >
                   {viewType === "individuals" ? (
                     <InterviewerCard
+                      key={item._id}
                       interviewer={item}
                       from="outsource-interview"
                     />
