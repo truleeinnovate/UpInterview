@@ -246,7 +246,7 @@ const InterviewForm = () => {
 
   const { data: interview, isLoading: interviewLoading } = useInterviewDetails(
     // isEditing ? id : null
-    isEditing ? { interviewId: id } : {}
+    isEditing ? { interviewId: id } : {},
   );
 
   // v1.0.7  -  Your Name  -  Fixed template dropdown not showing selected value in edit mode
@@ -274,7 +274,7 @@ const InterviewForm = () => {
         // Verify template exists in templatesData
         if (templateIdToSet) {
           const templateExists = templatesData.some(
-            (t) => t._id === templateIdToSet
+            (t) => t._id === templateIdToSet,
           );
           if (templateExists) {
             // Use setTimeout to ensure state updates after component renders
@@ -284,7 +284,7 @@ const InterviewForm = () => {
           } else {
             console.warn(
               "Template not found in templatesData:",
-              templateIdToSet
+              templateIdToSet,
             );
             setTemplateId("");
           }
@@ -331,12 +331,16 @@ const InterviewForm = () => {
       return;
     }
 
-    // In edit mode, don't overwrite existing interview rounds when
-    // the position is still the original one. Only apply rounds/template
-    // when user actually changes the position.
+    console.log("interview", interview);
+
     const isOriginalInterviewPosition =
       isEditing && interview?.positionId?._id === positionId;
 
+    console.log("isOriginalInterviewPosition", isOriginalInterviewPosition);
+    console.log("selectedPosition", selectedPosition);
+
+    // Always apply position template when position changes (for both create and edit modes)
+    // Only skip in edit mode if it's the original position that hasn't changed
     if (isOriginalInterviewPosition) {
       return;
     }
@@ -347,12 +351,42 @@ const InterviewForm = () => {
       setRounds([]);
     }
 
+    // Always set templateId from position when position changes
+    // Check if templateId exists in position data
     if (selectedPosition?.templateId) {
-      setTemplateId(selectedPosition?.templateId);
+      // Handle both object and string formats
+      let templateIdToSet = "";
+
+      if (
+        typeof selectedPosition.templateId === "object" &&
+        selectedPosition.templateId._id
+      ) {
+        templateIdToSet = selectedPosition.templateId._id;
+      } else if (typeof selectedPosition.templateId === "string") {
+        templateIdToSet = selectedPosition.templateId;
+      }
+
+      if (templateIdToSet) {
+        // Verify template exists in available templates before setting
+        const templateExists = templatesData?.some(
+          (t) => t._id === templateIdToSet,
+        );
+        if (templateExists) {
+          setTemplateId(templateIdToSet);
+        } else {
+          console.warn(
+            "Template from position not found in available templates:",
+            templateIdToSet,
+          );
+          setTemplateId("");
+        }
+      } else {
+        setTemplateId("");
+      }
     } else {
       setTemplateId("");
     }
-  }, [positionId, selectedPosition, isEditing, interview]);
+  }, [positionId, selectedPosition, isEditing, interview, templatesData]);
 
   useEffect(() => {
     if (
@@ -375,7 +409,7 @@ const InterviewForm = () => {
 
     const selectedPosition = positionData.find((pos) => pos._id === positionId);
     const selectedTemplate = templatesData?.find(
-      (t) => t._id === newTemplateId
+      (t) => t._id === newTemplateId,
     );
 
     if (selectedPosition) {
@@ -472,7 +506,7 @@ const InterviewForm = () => {
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
+        err instanceof Error ? err.message : "An unknown error occurred",
       );
     } finally {
     }
@@ -498,13 +532,13 @@ const InterviewForm = () => {
               { label: "Interviews", path: "/interviews" },
               ...(isEditing && interview
                 ? [
-                  {
-                    label: interview?.candidateId?.LastName || "Interview",
-                    path: `/interviews/${id}`,
-                    status: interview.status,
-                  },
-                  { label: "Edit Interview", path: "" },
-                ]
+                    {
+                      label: interview?.candidateId?.LastName || "Interview",
+                      path: `/interviews/${id}`,
+                      status: interview.status,
+                    },
+                    { label: "Edit Interview", path: "" },
+                  ]
                 : [{ label: "New Interview", path: "" }]),
             ]}
           />
@@ -598,8 +632,9 @@ const InterviewForm = () => {
                       options={[
                         ...(candidateData?.map((candidate) => ({
                           value: candidate._id,
-                          label: `${candidate.FirstName || ""} ${candidate.LastName || ""
-                            } (${candidate.Email || ""})`,
+                          label: `${candidate.FirstName || ""} ${
+                            candidate.LastName || ""
+                          } (${candidate.Email || ""})`,
                         })) || []),
                         {
                           value: "add_new",
@@ -693,7 +728,7 @@ const InterviewForm = () => {
                         templatesData
                           ?.filter(
                             (template) =>
-                              template.rounds && template.rounds.length > 0
+                              template.rounds && template.rounds.length > 0,
                           ) // only with rounds
                           .sort((a, b) => {
                             // custom first, standard after
@@ -706,8 +741,8 @@ const InterviewForm = () => {
                           .map((template) => {
                             const titleLabel = capitalizeFirstLetter(
                               template.title ||
-                              template.type ||
-                              "Unnamed Template"
+                                template.type ||
+                                "Unnamed Template",
                             );
 
                             return {
@@ -784,7 +819,7 @@ const InterviewForm = () => {
                             <div
                               className={`flex items-center px-4 py-2 border rounded-lg shadow-sm min-w-[200px]  `}
 
-                            // ${index === rounds.length - 1 ? "bg-blue-50 border-blue-400" : "bg-white border-gray-200"}
+                              // ${index === rounds.length - 1 ? "bg-blue-50 border-blue-400" : "bg-white border-gray-200"}
                             >
                               {/* Step number circle */}
                               <div className="flex items-center justify-center w-6 h-6 rounded-full border border-gray-400 text-xs font-medium text-gray-600 mr-3">
@@ -821,15 +856,17 @@ const InterviewForm = () => {
                       onClick={() =>
                         setAllowParallelScheduling(!allowParallelScheduling)
                       }
-                      className={`${allowParallelScheduling ? "bg-teal-600" : "bg-gray-200"
-                        } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2`}
+                      className={`${
+                        allowParallelScheduling ? "bg-teal-600" : "bg-gray-200"
+                      } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2`}
                     >
                       <span
                         aria-hidden="true"
-                        className={`${allowParallelScheduling
-                          ? "translate-x-5"
-                          : "translate-x-0"
-                          } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                        className={`${
+                          allowParallelScheduling
+                            ? "translate-x-5"
+                            : "translate-x-0"
+                        } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                       />
                     </button>
                   </div>

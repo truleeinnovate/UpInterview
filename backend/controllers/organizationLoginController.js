@@ -207,9 +207,7 @@ const organizationUserCreation = async (req, res) => {
 
     res.locals.logData = {
       tenantId:
-        req.body?.UserData?.tenantId ||
-        req.body?.contactData?.tenantId ||
-        "",
+        req.body?.UserData?.tenantId || req.body?.contactData?.tenantId || "",
       ownerId: req.body?.UserData?._id || "",
       processName: "Create/Update Organization User",
       requestBody: req.body,
@@ -590,7 +588,7 @@ const updateSubdomain = async (req, res) => {
         subdomainAddedDate,
         subdomainLastVerified,
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedOrganization) {
@@ -716,7 +714,7 @@ const activateSubdomain = async (req, res) => {
         subdomainStatus,
         subdomainLastVerified,
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedOrganization) {
@@ -794,7 +792,7 @@ const deactivateSubdomain = async (req, res) => {
         subdomainAddedDate: null,
         subdomainLastVerified: null,
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedOrganization) {
@@ -871,7 +869,7 @@ const updateBasedIdOrganizations = async (req, res) => {
       {
         new: true, // Return the updated document
         runValidators: true, // Run schema validators
-      }
+      },
     );
 
     if (!organization) {
@@ -1268,7 +1266,7 @@ const getAllOrganizations = async (req, res) => {
     } catch (dataErr) {
       console.warn(
         "getAllOrganizations data aggregation failed, falling back to simple find():",
-        dataErr?.message
+        dataErr?.message,
       );
 
       // Fallback: basic query without lookups/joins
@@ -1288,14 +1286,14 @@ const getAllOrganizations = async (req, res) => {
     } catch (countErr) {
       console.warn(
         "getAllOrganizations count aggregation failed, using countDocuments() fallback:",
-        countErr?.message
+        countErr?.message,
       );
       try {
         total = await Tenant.countDocuments(matchStage);
       } catch (simpleCountErr) {
         console.warn(
           "getAllOrganizations countDocuments fallback failed, using page length as total:",
-          simpleCountErr?.message
+          simpleCountErr?.message,
         );
         total = organizations.length;
       }
@@ -1351,7 +1349,7 @@ const getAllOrganizations = async (req, res) => {
     } catch (statsErr) {
       console.warn(
         "getAllOrganizations stats aggregation failed, using countDocuments() fallback:",
-        statsErr?.message
+        statsErr?.message,
       );
 
       try {
@@ -1380,7 +1378,7 @@ const getAllOrganizations = async (req, res) => {
       } catch (statsFallbackErr) {
         console.warn(
           "getAllOrganizations stats countDocuments fallback failed:",
-          statsFallbackErr?.message
+          statsFallbackErr?.message,
         );
       }
     }
@@ -1845,7 +1843,7 @@ const getOrganizationById = async (req, res) => {
     let subscriptionPlan = null;
     if (subscription?.subscriptionPlanId) {
       subscriptionPlan = await SubscriptionPlan.findById(
-        subscription.subscriptionPlanId
+        subscription.subscriptionPlanId,
       ).lean();
     }
 
@@ -1865,7 +1863,7 @@ const getOrganizationById = async (req, res) => {
         }
 
         const contact = allContacts.find(
-          (contact) => contact.ownerId?.toString() === user._id.toString()
+          (contact) => contact.ownerId?.toString() === user._id.toString(),
         );
 
         return {
@@ -1873,7 +1871,7 @@ const getOrganizationById = async (req, res) => {
           roleName,
           contact,
         };
-      })
+      }),
     );
     const tenant = {
       tenant: {
@@ -2103,7 +2101,7 @@ const registerOrganization = async (req, res) => {
     const organizationRequestCode = await generateUniqueId(
       "ORG",
       OrganizationRequest,
-      "organizationRequestCode"
+      "organizationRequestCode",
     );
 
     // Create OrganizationRequest with contact ID (profileId)
@@ -2122,7 +2120,7 @@ const registerOrganization = async (req, res) => {
           upsert: true,
           new: true,
           setDefaultsOnInsert: true,
-        }
+        },
       );
     } catch (error) {
       console.error("Error creating/updating OrganizationRequest:", error);

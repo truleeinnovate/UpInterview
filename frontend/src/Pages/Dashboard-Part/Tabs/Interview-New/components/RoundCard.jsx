@@ -240,7 +240,7 @@ const RoundCard = ({
     newStatus,
     reasonValue = null,
     comment = null,
-    roundOutcome = null
+    roundOutcome = null,
   ) => {
     // const roundData = {
     //   status: newStatus,
@@ -366,7 +366,7 @@ const RoundCard = ({
         "Evaluated",
         reason,
         comment || null,
-        roundOutcome
+        roundOutcome,
       );
       setEvaluatedReasonModalOpen(false);
       setActionInProgress(false);
@@ -447,10 +447,10 @@ const RoundCard = ({
       ? Array.isArray(round?.interviewers) && round.interviewers.length > 0
         ? round.interviewers
         : Array.isArray(round?.pendingOutsourceRequests)
-        ? round.pendingOutsourceRequests
-            .map((req) => req.interviewerId)
-            .filter(Boolean)
-        : []
+          ? round.pendingOutsourceRequests
+              .map((req) => req.interviewerId)
+              .filter(Boolean)
+          : []
       : [];
 
   // Get questions
@@ -490,7 +490,7 @@ const RoundCard = ({
           assessmentId: round?.assessmentId,
           type: "scheduled",
         }
-      : null
+      : null,
   );
 
   // Filter scheduled assessments for Assessment rounds
@@ -545,7 +545,7 @@ const RoundCard = ({
           userId,
           organizationId: tenantId,
           assessmentId: round.assessmentId,
-        }
+        },
       );
 
       const data = response.data;
@@ -555,7 +555,7 @@ const RoundCard = ({
         if (data.summary) {
           const { successful, total } = data.summary;
           notify.success(
-            `Resent links to ${successful} out of ${total} candidates`
+            `Resent links to ${successful} out of ${total} candidates`,
           );
         } else {
           // Single candidate response — use message or generic success
@@ -808,14 +808,14 @@ const RoundCard = ({
     if (scheduleData.length > 0 && round.scheduleAssessmentId) {
       // Find the specific scheduled assessment
       scheduledData = scheduleData.find(
-        (assessment) => assessment._id === round.scheduleAssessmentId
+        (assessment) => assessment._id === round.scheduleAssessmentId,
       );
 
       // Find the candidate-specific data
       if (scheduledData && scheduledData.candidates) {
         const candidateAssessment = scheduledData.candidates.find(
           (candidate) =>
-            candidate.candidateId?._id === interviewData?.candidateId?._id
+            candidate.candidateId?._id === interviewData?.candidateId?._id,
         );
 
         if (candidateAssessment) {
@@ -845,7 +845,7 @@ const RoundCard = ({
     // Load assessment data
     const loadData = async () => {
       const foundAssessment = assessmentData?.find(
-        (a) => a._id === round?.assessmentId
+        (a) => a._id === round?.assessmentId,
       );
       if (foundAssessment) {
         setAssessment(foundAssessment);
@@ -877,10 +877,10 @@ const RoundCard = ({
             } else {
               console.error(
                 "Error fetching assessment questions:",
-                questionError
+                questionError,
               );
             }
-          }
+          },
         );
       } else {
         console.error("Error fetching assessment results:", error);
@@ -1122,7 +1122,7 @@ const RoundCard = ({
       canSkipped: false,
       canEvaluated: false,
     },
-      FeedbackSubmitted: {
+    FeedbackSubmitted: {
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
@@ -1584,7 +1584,7 @@ const RoundCard = ({
                                                         ...prev,
                                                         [question._id]:
                                                           !prev[question._id],
-                                                      })
+                                                      }),
                                                     )
                                                   }
                                                   className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
@@ -1648,7 +1648,7 @@ const RoundCard = ({
                                                           {question.snapshot?.options?.map(
                                                             (
                                                               option,
-                                                              optIdx
+                                                              optIdx,
                                                             ) => (
                                                               <div
                                                                 key={optIdx}
@@ -1672,7 +1672,7 @@ const RoundCard = ({
                                                                   </span>
                                                                 )}
                                                               </div>
-                                                            )
+                                                            ),
                                                           )}
                                                         </div>
                                                       </div>
@@ -1706,7 +1706,7 @@ const RoundCard = ({
                                                         </span>
                                                         <span className="text-xs text-gray-700 ml-1">
                                                           {question.snapshot?.skill?.join(
-                                                            ", "
+                                                            ", ",
                                                           ) || "None"}
                                                         </span>
                                                       </div>
@@ -1714,7 +1714,7 @@ const RoundCard = ({
                                                   </div>
                                                 )}
                                               </div>
-                                            )
+                                            ),
                                           )
                                         ) : (
                                           <div className="text-center py-4 text-gray-500">
@@ -1725,7 +1725,7 @@ const RoundCard = ({
                                     )}
                                   </div>
                                 );
-                              }
+                              },
                             )
                           ) : (
                             <div className="text-center py-4 text-gray-500">
@@ -2205,14 +2205,14 @@ const RoundCard = ({
                 {completedReasonModalOpen
                   ? "Complete"
                   : selectedReasonModalOpen
-                  ? "Select"
-                  : confirmAction === "Skipped"
-                  ? "mark as Skipped"
-                  : confirmAction === "FeedbackPending"
-                  ? "mark as Feedback Pending"
-                  : confirmAction === "Scheduled"
-                  ? "mark as Scheduled"
-                  : "Reject"}{" "}
+                    ? "Select"
+                    : confirmAction === "Skipped"
+                      ? "mark as Skipped"
+                      : confirmAction === "FeedbackPending"
+                        ? "mark as Feedback Pending"
+                        : confirmAction === "Scheduled"
+                          ? "mark as Scheduled"
+                          : "Reject"}{" "}
                 this round?
               </h3>
               <div className="flex justify-end space-x-3">
@@ -2241,7 +2241,7 @@ const RoundCard = ({
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
           // v1.0.5 -------------------------------------------------------------------------------->
         )}
       {showDeleteConfirmModal &&
@@ -2265,7 +2265,7 @@ const RoundCard = ({
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
           // v1.0.5 ------------------------------------------------------------------------------------------>
         )}
 
@@ -2328,7 +2328,7 @@ const RoundCard = ({
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Assessment Action Popup - Rendered independently */}

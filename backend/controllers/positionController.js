@@ -30,6 +30,7 @@ const createPosition = async (req, res) => {
   if (isStandardType) {
     schemaToUse = positionValidationSchema.fork(["rounds"], (field) =>
       field.items(validateRoundDataStandard).optional(),
+    
     );
   }
 

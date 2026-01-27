@@ -18,8 +18,14 @@ import {
   Clock,
   Calendar,
   ChevronUp,
+  MapPin,
+  Building2,
+  Phone,
+  CheckCircle2,
+  Loader2,
   //   Info,
 } from "lucide-react";
+import classNames from "classnames";
 import { Button } from "../../CommonCode-AllTabs/ui/button.jsx";
 import axios from "axios";
 import InternalInterviews from "./Internal-Or-Outsource/InternalInterviewers.jsx";
@@ -58,6 +64,8 @@ import {
 import DateChangeConfirmationModal from "../components/DateChangeConfirmationModal.jsx";
 import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
 import { useInterviewerTags } from "../../../../../apiHooks/useInterviewers.js";
+import AddressesPopup from "../../../../../Components/Shared/AddressPopup/AddressPopup.jsx";
+import { useOrganizationDetails } from "../../../../../apiHooks/useOrganization.js";
 const {
   calculateExpiryDate,
 } = require("../../../../../utils/calculateExpiryDateForInterviewRequests.js");
@@ -101,7 +109,7 @@ function formatStartTimeForZoom(combinedDateTime) {
   if (!combinedDateTime) return null;
 
   try {
-    console.log("🔵 Formatting for Zoom - Input:", combinedDateTime);
+    // console.log("🔵 Formatting for Zoom - Input:", combinedDateTime);
 
     // Parse "05-01-2026 08:10 PM - 09:10 PM" format
     const [dateTimePart] = combinedDateTime.split(" - ");
@@ -118,7 +126,7 @@ function formatStartTimeForZoom(combinedDateTime) {
     const [day, month, year] = datePart.split("-").map(Number);
     let [hours, minutes] = timePart.split(":").map(Number);
 
-    console.log("🔵 Parsed:", { day, month, year, hours, minutes, meridiem });
+    // console.log("🔵 Parsed:", { day, month, year, hours, minutes, meridiem });
 
     // Convert to 24-hour format
     if (meridiem === "PM" && hours !== 12) hours += 12;
@@ -127,31 +135,31 @@ function formatStartTimeForZoom(combinedDateTime) {
     // Create date in LOCAL timezone (not UTC)
     const localDate = new Date(year, month - 1, day, hours, minutes, 0);
 
-    console.log("🔵 Local date created:", localDate.toString());
+    // console.log("🔵 Local date created:", localDate.toString());
 
     // Ensure it's at least 5 minutes in the future
     const now = new Date();
     const minFuture = new Date(now.getTime() + 5 * 60 * 1000);
 
-    console.log("🔵 Current time:", now.toString());
-    console.log("🔵 Min future time:", minFuture.toString());
+    // console.log("🔵 Current time:", now.toString());
+    // console.log("🔵 Min future time:", minFuture.toString());
 
     if (localDate < minFuture) {
-      console.warn(
-        "⚠️ Scheduled time is in the past, adjusting to 5 minutes from now",
-      );
+      // console.warn(
+      //   "⚠️ Scheduled time is in the past, adjusting to 5 minutes from now",
+      // );
       const adjustedDate = new Date(now.getTime() + 5 * 60 * 1000);
       const formatted = adjustedDate
         .toISOString()
         .replace("Z", "")
         .slice(0, 19);
-      console.log("🔵 Adjusted formatted time:", formatted);
+      // console.log("🔵 Adjusted formatted time:", formatted);
       return formatted;
     }
 
     // Format for Zoom API: YYYY-MM-DDTHH:mm:ss (NO 'Z' suffix)
     const formatted = localDate.toISOString().replace("Z", "").slice(0, 19);
-    console.log("🔵 Final formatted time:", formatted);
+    // console.log("🔵 Final formatted time:", formatted);
 
     return formatted;
   } catch (error) {
@@ -262,8 +270,8 @@ const RoundFormInterviews = () => {
   const [endTime, setEndTime] = useState(""); // Calculated End Time
   const [combinedDateTime, setCombinedDateTime] = useState("");
   const [interviewerViewType, setInterviewerViewType] = useState("individuals"); // group or individuals
-  const [interviewerGroupName, setInterviewerGroupName] = useState("");
-  const [interviewerGroupId, setInterviewerGroupId] = useState("");
+  // const [interviewerGroupName, setInterviewerGroupName] = useState("");
+  // const [interviewerGroupId, setInterviewerGroupId] = useState("");
   const [expandedSections, setExpandedSections] = useState({});
   const [expandedQuestions, setExpandedQuestions] = useState({});
   const [showDropdown, setShowDropdown] = useState(false);
@@ -298,6 +306,11 @@ const RoundFormInterviews = () => {
     useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isCustomRoundTitle, setIsCustomRoundTitle] = useState(false);
+
+  // const [isAddressPopupOpen, setIsAddressPopupOpen] = useState(false);
+  const [address, setAddress] = useState(null);
+  const [popUpOpen, setPopUpOpen] = useState(false);
+
   // while editing
   const isEditing = !!roundId && roundId !== "new";
   const roundEditData = isEditing && rounds?.find((r) => r._id === roundId);
@@ -309,7 +322,33 @@ const RoundFormInterviews = () => {
     // mode, // optional if you switch to mode-based approach
   } = location.state || {};
 
-  console.log("Round Edit Data:", roundEditData);
+  // Fetch addresses using TanStack Query
+  const {
+    data: response,
+    isLoading: isFetching,
+    isError,
+    error,
+  } = useOrganizationDetails(orgId);
+
+  // const offices = response?.offices || [];
+
+  // Add this useEffect to handle address when switching to Face to Face mode
+  useEffect(() => {
+    if (interviewMode === "Face to Face" && !address && response?.offices) {
+      // Get the default address when switching to Face to Face mode
+      const defaultAddress = response.offices.find(
+        (office) => office.isDefault === true,
+      );
+      if (defaultAddress) {
+        setAddress(defaultAddress);
+      } else if (response.offices.length > 0) {
+        // Fallback: use first address if no default found
+        setAddress(response.offices[0]);
+      }
+    }
+  }, [interviewMode, address, response]);
+
+  console.log("Address:", address);
 
   const handleAssessmentMenuScrollToBottom = () => {
     if (isAssessmentQueryLoading) return;
@@ -1115,7 +1154,7 @@ const RoundFormInterviews = () => {
 
     const statusList = disabledInStatus[fieldName] || [];
 
-    console.log("statusList", statusList);
+    // console.log("statusList", statusList);
     return statusList.includes(status);
   };
 
@@ -1888,6 +1927,9 @@ const RoundFormInterviews = () => {
             ? "Scheduled"
             : status,
 
+        // Only include addressId when interview mode is Face to Face
+        ...(interviewMode === "Face to Face" && { addressId: address?._id }),
+
         // stateisReschedule  status: roundTitle === "Assessment" ? "Scheduled" :  status,
         ...(roundTitle !== "Assessment" && {
           interviewerType: selectedInterviewType,
@@ -2006,6 +2048,8 @@ const RoundFormInterviews = () => {
           }
         }
       }
+
+      console.log("payload", payload);
 
       // console.log("=== PAYLOAD DEBUG ===");
       // console.log("roundData.dateTime:", roundData.dateTime);
@@ -2470,6 +2514,11 @@ const RoundFormInterviews = () => {
     //   await fetchQuestionsForAssessment(assessmentTemplate.assessmentId);
     // }
   };
+
+  // const handleAddressPopupToggle = () => {
+  //   setIsAddressPopupOpen(!isAddressPopupOpen);
+  // };
+
   return (
     <div className="h-[calc(100vh-4rem)] mt-2 overflow-y-auto bg-gray-50">
       {/* v1.0.5 <------------------------------------------------------------- */}
@@ -2617,32 +2666,97 @@ const RoundFormInterviews = () => {
                           //   setInterviewMode(e.target.value);
                           //   setErrors({ ...errors, interviewMode: "" });
                           // }}
+                          // onChange={(e) => {
+                          //   const newMode = e.target.value;
+
+                          //   console.log("newMode", newMode);
+
+                          //   // Clear external interviewers when switching from Virtual to Face to Face
+                          //   if (
+                          //     newMode === "Face to Face" &&
+                          //     externalInterviewers.length > 0
+                          //   ) {
+                          //     setExternalInterviewers([]);
+                          //     if (
+                          //       selectedInterviewType === "External" &&
+                          //       internalInterviewers.length === 0
+                          //     ) {
+                          //       setSelectedInterviewType(null);
+                          //     }
+                          //     // Optional: Show notification to user
+                          //     // notify.warn("Interview mode changed to Face to Face - external interviewers have been cleared.");
+                          //   } else if (
+                          //     newMode === "Face to Face" &&
+                          //     internalInterviewers.length === 0
+                          //   ) {
+                          //     setSelectedInterviewType("Internal");
+                          //   } else {
+                          //     setSelectedInterviewType(null);
+                          //   }
+                          //   // Clear address when switching from Face to Face to Virtual
+                          //   if (
+                          //     interviewMode === "Face to Face" &&
+                          //     newMode !== "Face to Face"
+                          //   ) {
+                          //     setAddress(null);
+                          //   }
+
+                          //   setInterviewMode(newMode);
+                          //   setErrors({ ...errors, interviewMode: "" });
+                          // }}
                           onChange={(e) => {
                             const newMode = e.target.value;
+                            const oldMode = interviewMode;
 
-                            console.log("newMode", newMode);
+                            console.log("Mode change:", oldMode, "→", newMode);
 
-                            // Clear external interviewers when switching from Virtual to Face to Face
+                            // Clear external interviewers when switching to Face to Face
                             if (
                               newMode === "Face to Face" &&
                               externalInterviewers.length > 0
                             ) {
                               setExternalInterviewers([]);
-                              if (
-                                selectedInterviewType === "External" &&
-                                internalInterviewers.length === 0
-                              ) {
-                                setSelectedInterviewType(null);
+                              if (selectedInterviewType === "External") {
+                                setSelectedInterviewType("Internal");
                               }
-                              // Optional: Show notification to user
-                              // notify.warn("Interview mode changed to Face to Face - external interviewers have been cleared.");
-                            } else if (
-                              newMode === "Face to Face" &&
-                              internalInterviewers.length === 0
-                            ) {
-                              setSelectedInterviewType("Internal");
+                            }
+
+                            // Handle Face to Face mode specific logic
+                            if (newMode === "Face to Face") {
+                              // Face to Face requires internal interviewers
+                              if (internalInterviewers.length === 0) {
+                                setSelectedInterviewType("Internal");
+                              }
+
+                              // When switching TO Face to Face, set the default address if not already set
+                              if (!address) {
+                                // Get the default address from response
+                                if (response?.offices) {
+                                  const defaultAddress = response.offices.find(
+                                    (office) => office.isDefault === true,
+                                  );
+                                  if (defaultAddress) {
+                                    setAddress(defaultAddress);
+                                  } else if (response.offices.length > 0) {
+                                    // Fallback: use first address if no default found
+                                    setAddress(response.offices[0]);
+                                  }
+                                }
+                              }
                             } else {
-                              setSelectedInterviewType(null);
+                              // Switching away from Face to Face
+                              if (oldMode === "Face to Face") {
+                                // Clear the address only when switching FROM Face to Face
+                                setAddress(null);
+
+                                // If only had internal because of Face to Face requirement, clear it
+                                if (
+                                  selectedInterviewType === "Internal" &&
+                                  internalInterviewers.length === 0
+                                ) {
+                                  setSelectedInterviewType(null);
+                                }
+                              }
                             }
 
                             setInterviewMode(newMode);
@@ -4074,6 +4188,86 @@ const RoundFormInterviews = () => {
                     </>
                   )}
 
+                  {/* Conditionally show address section only for Face to Face mode */}
+                  {interviewMode === "Face to Face" && (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div
+                          className={classNames(
+                            "relative p-5 rounded-xl border-2 transition-all duration-200 bg-white",
+                            // address?.isDefault
+                            // ? "border-custom-blue ring-1 ring-custom-blue shadow-md"
+                            // :
+                            "border-gray-200   cursor-pointer",
+                          )}
+                        >
+                          {/* Selection Badge */}
+                          {/* <div className="absolute top-4 right-4">
+                            {
+                            address?.isDefault ? 
+                            (
+                              <CheckCircle2 className="w-5 h-5 text-custom-blue fill-custom-blue/10" />
+                            ) : (
+                              <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
+                            )}
+                          </div> */}
+
+                          {/* Type Label */}
+                          <span
+                            className={classNames(
+                              "text-[10px] font-bold uppercase px-2 py-0.5 rounded-md mb-3 inline-block",
+                              address?.type === "headquarters"
+                                ? "bg-purple-100 text-purple-700"
+                                : "bg-blue-100 text-blue-700",
+                            )}
+                          >
+                            {address?.type}
+                          </span>
+
+                          <div className="space-y-3 pr-6 text-sm">
+                            <div className="flex gap-2">
+                              <MapPin className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                              <div className="text-gray-700">
+                                <p className="font-bold text-gray-900 leading-tight">
+                                  {address?.address || "No Address Provided"}
+                                </p>
+                                <p className="mt-1">
+                                  {address?.city}, {address?.state}{" "}
+                                  {address?.zip}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {address?.country}
+                                </p>
+                              </div>
+                            </div>
+
+                            {address?.phone && (
+                              <div className="flex items-center gap-2 pt-2 border-t border-gray-100 text-gray-600">
+                                <Phone className="w-3.5 h-3.5 text-gray-400" />
+                                <span>
+                                  {address?.countryCode} {address?.phone}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* <div> */}
+                      <button
+                        type="button" // ← ADD THIS
+                        onClick={() => {
+                          // Simply open the popup without toggling
+                          setPopUpOpen(true);
+                        }}
+                        className="px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                      >
+                        Change Address
+                      </button>
+                      {/* </div> */}
+                    </>
+                  )}
+
                   {/* instructions */}
                   <div>
                     <DescriptionField
@@ -4135,6 +4329,21 @@ const RoundFormInterviews = () => {
           </div>
         </div>
       </main>
+
+      {popUpOpen && (
+        <AddressesPopup
+          isOpen={popUpOpen}
+          onClose={() => {
+            // Don't toggle, just close the popup
+            setPopUpOpen(false);
+            // After closing, you might want to trigger a re-fetch or update
+            // if needed for the parent component
+          }}
+          setAddress={setAddress}
+          address={address}
+          organizationId={orgId}
+        />
+      )}
 
       {/* External Interviews Modal */}
       {showOutsourcePopup && (

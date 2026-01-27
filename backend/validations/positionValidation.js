@@ -1,27 +1,6 @@
 const Joi = require("joi");
 const { default: mongoose } = require("mongoose");
 
-// Round schema for validation
-// const roundValidationSchema = Joi.object({
-//   sequence: Joi.number().optional(),
-//   roundTitle: Joi.string().optional(),
-//   interviewMode: Joi.string().optional(),
-//   interviewerType: Joi.string().optional(), // internal or external
-//   duration: Joi.number().optional(),
-//   instructions: Joi.string().optional(),
-//   interviewerGroupName: Joi.string().optional(),
-//   interviewerViewType: Joi.string().optional(),
-//   selectedInterviewersType: Joi.string().optional(),
-//   interviewers: Joi.array().items(Joi.string()).optional(), // ObjectId as string
-//   assessmentId: Joi.string().optional(),
-//   questions: Joi.array().items(
-//     Joi.object({
-//       questionId: Joi.alternatives().try(Joi.string(), Joi.number()).required(),
-//       snapshot: Joi.any().required(),
-//     })
-//   ).optional(),
-// });
-
 // post call valdiaitons for rounds
 const validateRoundData = Joi.object({
   sequence: Joi.number().min(1).required().messages({
@@ -103,12 +82,13 @@ const validateRoundData = Joi.object({
     })
     .when("interviewerType", {
       not: "External",
-      then: Joi.array().min(1).messages({
-        "array.min": "At least one interviewer is required",
-      }),
+      then: Joi.optional(),
+      // then: Joi.array().min(1).messages({
+      //   "array.min": "At least one interviewer is required",
+      // }),
     }),
 
-  interviewerGroupId: Joi.string().allow(""),
+  // interviewerGroupId: Joi.string().allow(""),
 
   interviewerViewType: Joi.string().allow(""),
 
@@ -217,7 +197,7 @@ const positionValidationSchema = Joi.object({
           .valid("REQUIRED", "PREFERRED", "NICE_TO_HAVE", "OPTIONAL")
           .default("REQUIRED")
           .optional(),
-      })
+      }),
     )
     .required()
     .messages({
@@ -253,7 +233,7 @@ const validateRoundPatchData = Joi.object({
   // IMPORTANT: Remove or simplify the .when() condition for interviewers in PATCH
   interviewers: Joi.array().optional(),
 
-  interviewerGroupId: Joi.string().allow("").optional(),
+  // interviewerGroupId: Joi.string().allow("").optional(),
   interviewerViewType: Joi.string().allow("").optional(),
 
   assessmentId: Joi.string().allow(null, "").optional(),
@@ -270,7 +250,7 @@ const validateRoundDataStandard = Joi.object({
   instructions: Joi.string().allow("").optional(),
   interviewerType: Joi.string().allow("").optional(),
   interviewers: Joi.array().optional(),
-  interviewerGroupId: Joi.string().allow("").optional(),
+  // interviewerGroupId: Joi.string().allow("").optional(),
   interviewerViewType: Joi.string().allow("").optional(),
   selectedInterviewersType: Joi.string().allow("").optional(),
   assessmentId: Joi.string().allow(null, "").optional(),
@@ -280,7 +260,7 @@ const validateRoundDataStandard = Joi.object({
 // PATCH schema (all optional)
 const positionPatchValidationSchema = positionValidationSchema.fork(
   Object.keys(positionValidationSchema.describe().keys),
-  (field) => field.optional()
+  (field) => field.optional(),
 );
 
 // ✅ Joi schema for PATCH validation

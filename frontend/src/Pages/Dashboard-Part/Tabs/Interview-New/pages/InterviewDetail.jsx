@@ -157,7 +157,7 @@ const InterviewDetail = () => {
       } else {
         // If all rounds are completed, set the last round as active
         const lastRound = [...rounds].sort(
-          (a, b) => b?.sequence - a?.sequence
+          (a, b) => b?.sequence - a?.sequence,
         )[0];
         if (lastRound) {
           setActiveRound(lastRound?._id);
@@ -175,7 +175,7 @@ const InterviewDetail = () => {
       "Rejected",
     ];
     const invalidRounds = interview?.rounds?.filter(
-      (round) => !allowedStatuses.includes(round.status)
+      (round) => !allowedStatuses.includes(round.status),
     );
 
     if (invalidRounds && invalidRounds.length > 0) {
@@ -197,8 +197,9 @@ const InterviewDetail = () => {
 
       setStatusModal({
         isOpen: true,
-        title: `Cannot ${action.charAt(0).toUpperCase() + action.slice(1)
-          } Interview`,
+        title: `Cannot ${
+          action.charAt(0).toUpperCase() + action.slice(1)
+        } Interview`,
         message: `The following rounds are not completed state:<ul class="list-disc pl-5 mt-2 mb-3">${roundItems}</ul>Please update all rounds to a completed state (Completed, Cancelled, Selected, or Rejected) before ${action.toLowerCase()} the interview.`,
         isHTML: true,
       });
@@ -220,17 +221,31 @@ const InterviewDetail = () => {
     const actionType = actionModal.actionType; // Get actionType from state
 
     // Use comment if reason is "other" (case-insensitive) or if reason is missing but comment exists
-    const finalReason = (reason?.toLowerCase() === 'other' || reason === '__other__') ? comment : reason;
+    const finalReason =
+      reason?.toLowerCase() === "other" || reason === "__other__"
+        ? comment
+        : reason;
 
     // Map action type to status
     let newStatus = "";
     switch (actionType) {
-      case "Complete": newStatus = "Completed"; break;
-      case "Reject": newStatus = "Rejected"; break;
-      case "Cancel": newStatus = "Cancelled"; break;
-      case "Withdraw": newStatus = "Withdrawn"; break;
-      case "Select": newStatus = "Selected"; break;
-      default: return;
+      case "Complete":
+        newStatus = "Completed";
+        break;
+      case "Reject":
+        newStatus = "Rejected";
+        break;
+      case "Cancel":
+        newStatus = "Cancelled";
+        break;
+      case "Withdraw":
+        newStatus = "Withdrawn";
+        break;
+      case "Select":
+        newStatus = "Selected";
+        break;
+      default:
+        return;
     }
 
     try {
@@ -265,7 +280,7 @@ const InterviewDetail = () => {
 
   const handleCancelClick = async () => {
     // if (!checkRoundStatuses("cancel")) {
-    //   return; 
+    //   return;
     // }
     setActionModal({
       isOpen: true,
@@ -503,7 +518,7 @@ const InterviewDetail = () => {
       await axios.patch(
         `${config.REACT_APP_API_URL}/interview/status/${id}/${newStatus}`,
         { reason },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       // Refresh the interview data
@@ -512,14 +527,15 @@ const InterviewDetail = () => {
 
       // Show success message
       notify.success(
-        `Interview marked as ${newStatus.toLowerCase()} successfully`
+        `Interview marked as ${newStatus.toLowerCase()} successfully`,
       );
       return true;
     } catch (error) {
       console.error("Error updating interview status:", error);
       notify.error(
-        `Failed to update status: ${error.response?.data?.message || error.message
-        }`
+        `Failed to update status: ${
+          error.response?.data?.message || error.message
+        }`,
       );
       return false;
     }
@@ -566,12 +582,12 @@ const InterviewDetail = () => {
 
   const toggleViewMode = () => {
     setRoundsViewMode((prev) =>
-      prev === "horizontal" ? "vertical" : "horizontal"
+      prev === "horizontal" ? "vertical" : "horizontal",
     );
   };
 
   const pendingRounds = rounds?.filter((round) =>
-    ["Scheduled"].includes(round.status)
+    ["Scheduled"].includes(round.status),
   );
 
   // const [TemplateDetailsSidebarOpen, setTemplateDetailsSidebarOpen] = useState(false);
@@ -624,7 +640,6 @@ const InterviewDetail = () => {
   // Check if all rounds are completed
   const allRoundsCompleted = totalRounds > 0 && completedRounds === totalRounds;
 
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* v1.0.3 <------------------------------------------------------------ */}
@@ -668,18 +683,18 @@ const InterviewDetail = () => {
                   </div>
                   {/* v1.0.4 <------------------------------------------------------------------------------------------------------ */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    {interview?.status === "InProgress" && (
+                    {interview?.status === "InProgress" &&
                       (() => {
                         // Normalize statuses to lowercase for safe comparison
                         const blockingStatuses = new Set([
-                          'Scheduled',
-                          'Rescheduled',
-                          'InProgress',
-                          'RequestSent'
+                          "Scheduled",
+                          "Rescheduled",
+                          "InProgress",
+                          "RequestSent",
                         ]);
 
-                        const hasBlockingRound = rounds.some(r =>
-                          r?.status && blockingStatuses.has(r.status)
+                        const hasBlockingRound = rounds.some(
+                          (r) => r?.status && blockingStatuses.has(r.status),
                         );
 
                         // Only show actions when interview is InProgress AND no blocking rounds
@@ -755,7 +770,9 @@ const InterviewDetail = () => {
                             {hiddenActions.length > 0 && (
                               <div className="relative">
                                 <button
-                                  onClick={() => setShowMoreActions(prev => !prev)}
+                                  onClick={() =>
+                                    setShowMoreActions((prev) => !prev)
+                                  }
                                   className="inline-flex flex-shrink-0 items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
                                   <MoreVertical className="h-4 w-4 mr-1" />
@@ -795,8 +812,7 @@ const InterviewDetail = () => {
                             )}
                           </>
                         );
-                      })()
-                    )}
+                      })()}
 
                     {interview?.status === "Draft" && (
                       <Link
@@ -804,7 +820,8 @@ const InterviewDetail = () => {
                         className="inline-flex flex-shrink-0 items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
                         <Edit className="h-4 w-4 mr-1" />
-                        Edit <span className="sm:hidden inline ml-1">Interview</span>
+                        Edit{" "}
+                        <span className="sm:hidden inline ml-1">Interview</span>
                       </Link>
                     )}
                   </div>
@@ -847,7 +864,7 @@ const InterviewDetail = () => {
                           <span className="font-medium truncate">
                             {candidate?.LastName
                               ? candidate.LastName.charAt(0).toUpperCase() +
-                              candidate.LastName.slice(1)
+                                candidate.LastName.slice(1)
                               : "Unknown"}
                           </span>
                           {candidate && (
@@ -889,7 +906,7 @@ const InterviewDetail = () => {
                     <div className="font-medium">
                       {position?.title
                         ? position.title.charAt(0).toUpperCase() +
-                        position.title.slice(1)
+                          position.title.slice(1)
                         : "Unknown"}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
@@ -908,7 +925,7 @@ const InterviewDetail = () => {
                           handleViewEntityDetails(
                             template,
                             "template",
-                            "sidebar"
+                            "sidebar",
                           )
                         }
                         className="ml-1 p-0.5 text-custom-blue hover:bg-blue-50 rounded focus:outline-none"
@@ -925,8 +942,8 @@ const InterviewDetail = () => {
                         : template?.title
                           ? capitalizeFirstLetter(template?.title)
                           : //  template.templateName.charAt(0).toUpperCase() +
-                          //   template.templateName.slice(1)
-                          "Not selected any template"}
+                            //   template.templateName.slice(1)
+                            "Not selected any template"}
                     </div>
                   </dd>
                 </div>
@@ -941,17 +958,19 @@ const InterviewDetail = () => {
                       <button
                         type="button"
                         disabled
-                        className={`${interview?.allowParallelScheduling
-                          ? "bg-teal-600"
-                          : "bg-gray-200"
-                          } relative inline-flex h-6 w-11 flex-shrink-0 cursor-not-allowed rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                        className={`${
+                          interview?.allowParallelScheduling
+                            ? "bg-teal-600"
+                            : "bg-gray-200"
+                        } relative inline-flex h-6 w-11 flex-shrink-0 cursor-not-allowed rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
                       >
                         <span
                           aria-hidden="true"
-                          className={`${interview?.allowParallelScheduling
-                            ? "translate-x-5"
-                            : "translate-x-0"
-                            } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                          className={`${
+                            interview?.allowParallelScheduling
+                              ? "translate-x-5"
+                              : "translate-x-0"
+                          } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                         />
                       </button>
                       <span className="ml-3 text-sm font-medium">
@@ -1073,7 +1092,7 @@ const InterviewDetail = () => {
                                                 )} */}
                       {/* we have to check like we need final feedback for interviews or not */}
 
-                      {canAddRound() && (
+                      {rounds.length > 0 && canAddRound() && (
                         <button
                           onClick={handleAddRound}
                           className="inline-flex flex-shrink-0 items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -1175,8 +1194,6 @@ const InterviewDetail = () => {
         </div>
       )}
 
-
-
       {entityDetailsSidebar && entityDetailsSidebar.type === "template" && (
         <TemplateDetail
           templateId={entityDetailsSidebar.entity?._id}
@@ -1260,7 +1277,7 @@ const InterviewDetail = () => {
         actionType={actionModal.actionType}
         title={actionModal.title}
         status={interview?.status} // Pass current status
-      // Pass requiresReason implicitly via actionType logic in Modal, or explicitly if Modal supports it
+        // Pass requiresReason implicitly via actionType logic in Modal, or explicitly if Modal supports it
       />
 
       {/* {selectPositionView === true && (
