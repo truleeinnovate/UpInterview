@@ -2846,7 +2846,7 @@ const RoundFormInterviews = () => {
                             // </div>
                             <div className="col-span-2 mt-6 mb-4 grid grid-cols-4 gap-4 p-3 bg-blue-50/40 border border-blue-100 rounded-lg">
                               <div className="flex flex-col">
-                                <span className="text-sm text-gray-800 font-semibold mb-2">
+                                <span className="text-xs text-gray-800 font-semibold mb-2">
                                   Total Score
                                 </span>
                                 <span className="text-xs font-semibold text-gray-500">
@@ -2854,7 +2854,7 @@ const RoundFormInterviews = () => {
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-sm text-gray-800 font-semibold mb-2">
+                                <span className="text-xs text-gray-800 font-semibold mb-2">
                                   Pass Criteria
                                 </span>
                                 <span className="text-xs font-semibold text-gray-500">
@@ -2866,8 +2866,8 @@ const RoundFormInterviews = () => {
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-sm text-gray-800 font-semibold mb-2">
-                                  Link Valid For
+                                <span className="text-xs text-gray-800 font-semibold mb-2">
+                                  Link Expires In
                                 </span>
                                 <div className="flex text-xs items-center gap-1 text-gray-500">
                                   <span>
@@ -2880,8 +2880,8 @@ const RoundFormInterviews = () => {
                                 </div>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-sm text-gray-800 font-semibold mb-2">
-                                  Expiry Date
+                                <span className="text-xs text-gray-800 font-semibold mb-2">
+                                  Template Expiry Date
                                 </span>
                                 <span className="text-xs font-medium text-red-500">
                                   {formatDate(

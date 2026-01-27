@@ -479,7 +479,7 @@ function Activity({ parentId, parentId2, mode }) {
           // </div>
           <div className="space-y-4">
             {/* Step 1: Changed grid-cols-1 to a flex-wrap container */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-3">
               {Object.entries(metadata)
                 .filter(
                   ([key]) =>
@@ -952,7 +952,7 @@ function Activity({ parentId, parentId2, mode }) {
     //     </div>
     //   </div>
     // </div>
-    <div className="max-w-5xl mx-auto p-4 md:p-6 bg-slate-50/50 min-h-screen">
+    <div className="w-full mx-auto p-4 md:p-6 bg-slate-50/50 min-h-screen">
       {/* Header Section */}
       <div className="flex items-center justify-between mb-8">
         <div>

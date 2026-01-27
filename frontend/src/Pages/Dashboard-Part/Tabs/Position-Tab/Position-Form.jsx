@@ -29,7 +29,7 @@ import { useInterviewTemplates } from "../../../../apiHooks/useInterviewTemplate
 // v1.0.1 <----------------------------------------------------------------------------
 import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { notify } from "../../../../services/toastService.js";
-import { Info } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import InfoGuide from "../CommonCode-AllTabs/InfoCards.jsx";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
@@ -555,10 +555,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       if (!exists) {
         const selectedTitleLabel = selectedTemplate.title
           ? selectedTemplate.title.charAt(0).toUpperCase() +
-          selectedTemplate.title.slice(1)
+            selectedTemplate.title.slice(1)
           : selectedTemplate.type
             ? selectedTemplate.type.charAt(0).toUpperCase() +
-            selectedTemplate.type.slice(1)
+              selectedTemplate.type.slice(1)
             : "Unnamed Template";
 
         baseOptions.push({
@@ -583,7 +583,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
               >
                 {selectedTemplate.type
                   ? selectedTemplate.type.charAt(0).toUpperCase() +
-                  selectedTemplate.type.slice(1)
+                    selectedTemplate.type.slice(1)
                   : ""}
               </span>
             </div>
@@ -652,7 +652,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           // If either is empty, clear cross-field errors
           if (
             next.minexperience ===
-            "Min Experience cannot be greater than Max" ||
+              "Min Experience cannot be greater than Max" ||
             next.minexperience === "Min and Max Experience cannot be equal"
           )
             next.minexperience = "";
@@ -703,7 +703,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           } else {
             if (
               next.minsalary ===
-              "Minimum Salary cannot be greater than Maximum" ||
+                "Minimum Salary cannot be greater than Maximum" ||
               next.minsalary === "Minimum and Maximum Salary cannot be equal"
             )
               next.minsalary = "";
@@ -728,10 +728,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry,
       );
       setEntries(updatedEntries);
@@ -969,8 +969,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save position",
+          error.message ||
+          "Failed to save position",
       );
 
       if (error.response && error.response.status === 400) {
@@ -1346,9 +1346,31 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
         {/* Modal Header */}
         <div className="mt-4">
           {/* v1.0.6 <----------------------------------------------------------------------------- */}
-          <h2 className="text-2xl font-semibold px-[8%] sm:mt-5 sm:mb-2 sm:text-lg sm:px-[5%] md:mt-6 md:mb-2 md:text-xl md:px-[5%]">
+          {/* <h2 className="text-2xl font-semibold px-[8%] sm:mt-5 sm:mb-2 sm:text-lg sm:px-[5%] md:mt-6 md:mb-2 md:text-xl md:px-[5%]">
             Position
-          </h2>
+          </h2> */}
+          <div className="px-[8%] sm:px-[5%] mt-4 mb-2 md:px-[5%]">
+            <button
+              onClick={() => {
+                if (isModal && onClose) {
+                  onClose();
+                  return;
+                }
+                const fromPath = location.state?.from;
+                const returnTo = location.state?.returnTo;
+
+                if (fromPath === "/interviews/new" && returnTo) {
+                  navigate(returnTo);
+                } else {
+                  navigate(-1);
+                }
+              }}
+              type="button"
+              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+            >
+              <ArrowLeft className="h-5 w-5 mr-2" /> Back to Positions
+            </button>
+          </div>
           {/* v1.0.6 -----------------------------------------------------------------------------> */}
           {/* NAVIGATION - PATH */}
           {renderStageIndicator()}
@@ -1615,7 +1637,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           max={1000000000}
                           label="Min Salary (Annual)"
                           name="minSalary"
-                        // required={formData.maxSalary ? true : false}
+                          // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
                           value={formData.maxSalary}
@@ -1626,7 +1648,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           error={errors.maxsalary}
                           label="Max Salary (Annual)"
                           name="maxSalary"
-                        // required={formData.minSalary ? true : false}
+                          // required={formData.minSalary ? true : false}
                         />
                       </div>
                     </div>
@@ -1643,7 +1665,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         max={100}
                         label="No. of Positions"
                         name="NoofPositions"
-                      // required
+                        // required
                       />
 
                       <div>
@@ -1725,7 +1747,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             const resolvedTemplate =
                               fromList ||
                               (selectedTemplate &&
-                                selectedTemplate._id === templateId
+                              selectedTemplate._id === templateId
                                 ? selectedTemplate
                                 : null);
 

@@ -51,7 +51,7 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 // v1.0.3 ----------------------------------------------------------------------------------->
 
 import { notify } from "../../../../services/toastService";
-import { Dot, Edit, ExternalLink, Info, X } from "lucide-react";
+import { ArrowLeft, Dot, Edit, ExternalLink, Info, X } from "lucide-react";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
@@ -1811,7 +1811,7 @@ const AddCandidateForm = ({
           )}
 
           {/* Work Experience Heading */}
-          <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800 mb-4">
+          <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
             Work Experience
           </p>
 
@@ -2029,8 +2029,17 @@ const AddCandidateForm = ({
         //   title={id ? "Update Candidate" : "Add New Candidate"}
         //   onClose={handleClose}
         // >
-        <div className="fixed top-[62px] inset-x-0 bottom-0 z-40 overflow-y-auto bg-white">
-          <div className="flex min-h-full items-start justify-center pb-10 pt-4">
+        <div className="fixed top-[62px] inset-x-0 bottom-0 z-40 overflow-y-auto bg-white px-4">
+          <div className="relative flex flex-col min-h-full items-center justify-start pb-10 pt-4">
+            <div className="w-full max-w-6xl mb-4">
+              <button
+                onClick={handleClose}
+                type="button"
+                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+              >
+                <ArrowLeft className="h-5 w-5 mr-2" /> Back to Candidates
+              </button>
+            </div>
             <div className="w-full max-w-6xl p-4 rounded-lg border bg-white shadow-md">
               {formContent}
             </div>
