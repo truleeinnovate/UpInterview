@@ -8,8 +8,7 @@ const { generateApplicationNumber } = require("../services/uniqueIdGeneratorServ
 const { ScreeningResult } = require("../models/ScreeningResult");
 const { Resume } = require("../models/Resume.js");
 const { screenResumeWithAI } = require("../services/resumeScreening/aiScreeningService");
-
-
+const { triggerWebhook, EVENT_TYPES } = require("../services/webhookService");
 
 /**
  * Get all applications for a specific candidate
@@ -709,6 +708,9 @@ const updateApplicationStatus = async (req, res) => {
 
         console.log(`[UPDATE STATUS] App: ${id}, Action: ${action} -> Status: ${updateData.status}, Stage: ${updateData.currentStage}`);
 
+        // Get original application before update for webhook payload
+        const originalApplication = await Application.findById(id).lean();
+
         const updatedApplication = await Application.findByIdAndUpdate(
             id,
             updateData,
@@ -721,6 +723,43 @@ const updateApplicationStatus = async (req, res) => {
 
         if (!updatedApplication) {
             return res.status(404).json({ message: "Application not found" });
+        }
+
+        // Trigger webhook for application status update
+        try {
+            const webhookPayload = {
+                applicationId: updatedApplication._id,
+                applicationNumber: updatedApplication.applicationNumber,
+                tenantId: updatedApplication.tenantId,
+                ownerId: updatedApplication.ownerId,
+                candidateId: updatedApplication.candidateId,
+                positionId: updatedApplication.positionId,
+                interviewId: updatedApplication.interviewId,
+                status: updatedApplication.status,
+                currentStage: updatedApplication.currentStage,
+                previousStatus: originalApplication.status, // old status before update
+                previousStage: originalApplication.currentStage, // old stage before update
+                updatedAt: updatedApplication.updatedAt,
+                event: "application.status.updated",
+            };
+
+            console.log(
+                `[APPLICATION WEBHOOK] Triggering status update webhook for application ${updatedApplication._id} with status: ${updatedApplication.status}`
+            );
+            await triggerWebhook(
+                EVENT_TYPES.APPLICATION_STATUS_UPDATED,
+                webhookPayload,
+                updatedApplication.tenantId
+            );
+            console.log(
+                `[APPLICATION WEBHOOK] Status update webhook sent successfully for application ${updatedApplication._id}`
+            );
+        } catch (webhookError) {
+            console.error(
+                "[APPLICATION WEBHOOK] Error triggering application status update webhook:",
+                webhookError
+            );
+            // Continue execution even if webhook fails
         }
 
         res.status(200).json({

@@ -9,31 +9,37 @@ const EVENT_TYPES = {
   INTERVIEW_ROUND_STATUS_UPDATED: "interview.round.status.updated",
   ASSESSMENT_STATUS_UPDATED: "assessment.status.updated",
   FEEDBACK_STATUS_UPDATED: "feedback.status.updated",
+  APPLICATION_STATUS_UPDATED: "application.status.updated",
 };
 
 // Define allowed status changes for webhook triggers
 const ALLOWED_STATUS_CHANGES = {
   INTERVIEW: ['RequestSent', 'Scheduled', 'Rescheduled', 'Completed', 'Rejected', 'Selected', 'Cancelled', 'NoShow'],
   ASSESSMENT: ['scheduled', 'cancelled', 'completed', 'expired', 'failed'],
-  FEEDBACK: ['submitted']
+  FEEDBACK: ['submitted'],
+  APPLICATION: ['SCREENED', 'INTERVIEWING', 'DECISION', 'REJECTED', 'WITHDRAWN']
 };
 
 // Helper function to check if status change should trigger webhook
 const shouldTriggerWebhook = (eventType, status, previousStatus = null) => {
-  
+
   switch (eventType) {
     case EVENT_TYPES.INTERVIEW_ROUND_STATUS_UPDATED:
       const shouldTriggerInterview = ALLOWED_STATUS_CHANGES.INTERVIEW.includes(status);
       return shouldTriggerInterview;
-      
+
     case EVENT_TYPES.ASSESSMENT_STATUS_UPDATED:
       const shouldTriggerAssessment = ALLOWED_STATUS_CHANGES.ASSESSMENT.includes(status);
       return shouldTriggerAssessment;
-      
+
     case EVENT_TYPES.FEEDBACK_STATUS_UPDATED:
       const shouldTriggerFeedback = ALLOWED_STATUS_CHANGES.FEEDBACK.includes(status);
       return shouldTriggerFeedback;
-      
+
+    case EVENT_TYPES.APPLICATION_STATUS_UPDATED:
+      const shouldTriggerApplication = ALLOWED_STATUS_CHANGES.APPLICATION.includes(status);
+      return shouldTriggerApplication;
+
     default:
       return true; // Allow unknown event types by default
   }
@@ -45,7 +51,7 @@ const triggerWebhook = async (eventType, data, tenantId) => {
     // Check if webhook should be triggered based on status
     const status = data.status || data.newStatus;
     const previousStatus = data.previousStatus || data.oldStatus;
-    
+
     if (!shouldTriggerWebhook(eventType, status, previousStatus)) {
       return;
     }
@@ -60,22 +66,22 @@ const triggerWebhook = async (eventType, data, tenantId) => {
       // Query by tenantId field (ObjectId)
       query.tenantId = tenantId;
     }
-    
+
     // First check if there are any integrations (enabled or disabled) for this event
     const allIntegrations = await Integration.find({
       events: eventType,
       ...(tenantId && { tenantId })
     });
-    
-    
+
+
     if (allIntegrations.length === 0) {
       return;
     }
 
     const enabledIntegrations = allIntegrations.filter(integration => integration.enabled);
     const disabledIntegrations = allIntegrations.filter(integration => !integration.enabled);
-    
-    
+
+
     if (enabledIntegrations.length === 0) {
       return;
     }
@@ -138,7 +144,7 @@ const triggerWebhook = async (eventType, data, tenantId) => {
 
           // Determine if the webhook was actually successful (2xx status codes)
           const isSuccess = response.status >= 200 && response.status < 300;
-          
+
           if (isSuccess) {
             successCount++;
           } else {
@@ -169,9 +175,9 @@ const triggerWebhook = async (eventType, data, tenantId) => {
         } catch (error) {
           errorCount++;
           overallSuccess = false;
-          
+
           let errorDetails = {};
-          
+
           if (error.name === "AbortError") {
             errorDetails = {
               type: "timeout",
@@ -238,7 +244,7 @@ const createConsolidatedWebhookLog = async ({ eventType, data, tenantId, webhook
       logId: `INTG-${uuidv4()}`,
       ownerId: "system", // Use system for consolidated logs
       status: overallSuccess ? "success" : "error",
-      message: overallSuccess 
+      message: overallSuccess
         ? `Webhook batch completed for ${eventType}: ${successCount}/${totalWebhooks} successful`
         : `Webhook batch partially failed for ${eventType}: ${successCount}/${totalWebhooks} successful, ${errorCount} failed`,
       serverName: process.env.SERVER_NAME || "backend",
@@ -283,7 +289,7 @@ const createConsolidatedWebhookLog = async ({ eventType, data, tenantId, webhook
 
     const log = new IntegrationLogs(logData);
     await log.save();
-    
+
   } catch (logError) {
     // Don't throw the error to prevent breaking the main webhook flow
   }

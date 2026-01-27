@@ -42,7 +42,7 @@ const ApplicationSchema = new mongoose.Schema(
             enum: [
                 "New",
                 "APPLIED",
-                "SCREENED",
+                "SCREENED", 
                 "INTERVIEWING",
                 "DECISION",
                 "REJECTED",
