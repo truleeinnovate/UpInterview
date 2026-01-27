@@ -4191,7 +4191,19 @@ const RoundFormInterviews = () => {
                   {/* Conditionally show address section only for Face to Face mode */}
                   {interviewMode === "Face to Face" && (
                     <>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center justify-end mb-2">
+                        <button
+                          type="button" // ← ADD THIS
+                          onClick={() => {
+                            // Simply open the popup without toggling
+                            setPopUpOpen(true);
+                          }}
+                          className="text-custom-blue font-semibold hover:underline"
+                        >
+                          Change Address
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3  2xl:grid-cols-3 gap-4">
                         <div
                           className={classNames(
                             "relative p-5 rounded-xl border-2 transition-all duration-200 bg-white",
@@ -4252,19 +4264,6 @@ const RoundFormInterviews = () => {
                           </div>
                         </div>
                       </div>
-
-                      {/* <div> */}
-                      <button
-                        type="button" // ← ADD THIS
-                        onClick={() => {
-                          // Simply open the popup without toggling
-                          setPopUpOpen(true);
-                        }}
-                        className="px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
-                      >
-                        Change Address
-                      </button>
-                      {/* </div> */}
                     </>
                   )}
 
