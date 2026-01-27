@@ -28,6 +28,8 @@ export default function ApplicationView({ application, onBack }) {
     const [showAllResumes, setShowAllResumes] = useState(false);
     const [showUploadResume, setShowUploadResume] = useState(false);
     const candidateId = application.candidateId?._id || application.candidateId;
+    console.log("application",application);
+    
     console.log(candidateId);
     const { candidate: fetchedCandidate, isLoading, refetch } = useCandidateById(candidateId);
     const { data: stats } = useCandidateStats(candidateId);
