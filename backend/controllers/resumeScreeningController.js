@@ -22,14 +22,14 @@ const findExistingCandidate = async ({ email, phone, linkedInUrl, tenantId }) =>
 
     if (orConditions.length === 0) return null;
 
-   return Candidate.findOne({
-    tenantId,
-    $or: [
-        email ? { Email: email } : null,
-        phone ? { Phone: phone } : null,
-        linkedInUrl ? { linkedInUrl } : null
-    ].filter(Boolean)
-});
+    return Candidate.findOne({
+        tenantId,
+        $or: [
+            email ? { Email: email } : null,
+            phone ? { Phone: phone } : null,
+            linkedInUrl ? { linkedInUrl } : null
+        ].filter(Boolean)
+    });
 };
 
 
@@ -143,7 +143,7 @@ exports.screenResume = async (req, res) => {
                     rawText: parsedData.fullText || ''
                 };
 
-                  // ===================== 2. Existing Candidate Check =====================
+                // ===================== 2. Existing Candidate Check =====================
                 const existingCandidate = await findExistingCandidate({
                     email: resumeData.email,
                     phone: resumeData.phone,
@@ -181,11 +181,11 @@ exports.screenResume = async (req, res) => {
                             experienceMatch: aiResult.data.experienceMatch || 0,
                             matchedSkills: aiResult.data.matchedSkills || [],
                             missingSkills: aiResult.data.missingSkills || [],
-                            screeningNotes: aiResult.data.summary || '',
+                            screeningNotes: aiResult.data.analysis || aiResult.data.summary || '',
                             aiRecommendation: aiResult.data.recommendation || 'REVIEW',
                             strengths: aiResult.data.strengths || [],
-                            concerns: aiResult.data.weaknesses || [],
-                            summary: aiResult.data.summary || '',
+                            concerns: aiResult.data.concerns || aiResult.data.weaknesses || [],
+                            summary: aiResult.data.analysis || aiResult.data.summary || '',
                             method: 'AI',
 
                             // New Parsed Data
@@ -234,8 +234,8 @@ exports.screenResume = async (req, res) => {
                 results.push({
                     id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     fileName: file.originalname,
-                     matchStatus: existingCandidate ? 'existing_candidate' : 'new_candidate',
-                     existingCandidateId: existingCandidate?._id || null,
+                    matchStatus: existingCandidate ? 'existing_candidate' : 'new_candidate',
+                    existingCandidateId: existingCandidate?._id || null,
                     // Screening Scores
                     matchPercentage: metadata.score,
                     skillMatch: metadata.skillMatch,
@@ -264,9 +264,9 @@ exports.screenResume = async (req, res) => {
                         screeningNotes: metadata.screeningNotes,
                         aiRecommendation: metadata.aiRecommendation,
                         method: metadata.method,
-                        experience_years: extractedProfile?.experienceYears || (typeof finalExperience === 'string' ? parseFloat(finalExperience) : 0),
+                        experienceYears: extractedProfile?.experienceYears || (typeof finalExperience === 'string' ? parseFloat(finalExperience) : 0),
                         education: finalEducation,
-                        extracted_skills: metadata.matchedSkills.concat(metadata.missingSkills) // combine for display if needed
+                        extractedSkills: metadata.matchedSkills.concat(metadata.missingSkills) // combine for display if needed
                     },
 
                     // Full metadata object for saving later (includes candidate details)
@@ -299,7 +299,7 @@ exports.screenResume = async (req, res) => {
                 });
             }
         }
-        console.log("results",results);
+        console.log("results", results);
 
         res.json({
             success: true,
@@ -308,7 +308,7 @@ exports.screenResume = async (req, res) => {
             message: `Analyzed ${results.length} resumes successfully. ${errors.length} errors.`,
             previewOnly: true
         });
-        
+
 
     } catch (error) {
         console.error("Resume screening error:", error);

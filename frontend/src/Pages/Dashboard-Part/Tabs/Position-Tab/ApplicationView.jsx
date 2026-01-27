@@ -5,9 +5,14 @@ import {
     Star, TrendingUp, MessageSquare, ExternalLink, Download, MapPin, Globe,
     Languages, DollarSign
 } from 'lucide-react';
-import { useCandidateById } from "../../../../apiHooks/useCandidates";
+import {
+    useCandidateById,
+    useCandidateStats
+} from "../../../../apiHooks/useCandidates";
 import { useApplicationMutations } from "../../../../apiHooks/useApplications";
 import ConfirmationPopup from "../Assessment-Tab/ConfirmationPopup";
+
+import ResumeHistoryPopup from './ResumeHistoryPopup';
 
 export default function ApplicationView({ application, onBack }) {
     const [applicationStatus, setApplicationStatus] = useState(application.status || 'APPLIED');
@@ -24,13 +29,18 @@ export default function ApplicationView({ application, onBack }) {
     const [showUploadResume, setShowUploadResume] = useState(false);
     const candidateId = application.candidateId?._id || application.candidateId;
     console.log(candidateId);
-    const { candidate: fetchedCandidate, isLoading } = useCandidateById(candidateId);
+    const { candidate: fetchedCandidate, isLoading, refetch } = useCandidateById(candidateId);
+    const { data: stats } = useCandidateStats(candidateId);
+
     // Use candidate data from the populated application object
     useEffect(() => {
         if (candidateId && fetchedCandidate) {
             setCandidate(fetchedCandidate);
+        } else if (application.candidateId) {
+            // Fallback to application data if fetch fails or loading
+            setCandidate(application.candidateId);
         }
-    }, [candidateId, fetchedCandidate]);
+    }, [fetchedCandidate, application.candidateId, candidateId]);
     // Mock interviews for now - typically would fetch using useInterviewsByApplication hook
     const applicationInterviews = application.interviews || [];
 
@@ -366,15 +376,15 @@ export default function ApplicationView({ application, onBack }) {
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">Total Applications</span>
-                                            <span className="font-bold text-gray-900">1</span>
+                                            <span className="font-bold text-gray-900">{stats?.applications || 0}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">Resumes Uploaded</span>
-                                            <span className="font-bold text-gray-900">3</span>
+                                            <span className="font-bold text-gray-900">{stats?.resumes || 0}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">Interviews Attended</span>
-                                            <span className="font-bold text-gray-900">2</span>
+                                            <span className="font-bold text-gray-900">{stats?.interviews || 0}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -384,7 +394,10 @@ export default function ApplicationView({ application, onBack }) {
                                         <Upload size={16} />
                                         Upload New Resume
                                     </button> */}
-                                    <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-bold transition-colors">
+                                    <button
+                                        onClick={() => setShowAllResumes(true)}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-bold transition-colors"
+                                    >
                                         <FileText size={16} />
                                         View All Resumes
                                     </button>
@@ -887,6 +900,15 @@ export default function ApplicationView({ application, onBack }) {
                 confirmText="Yes, Proceed"
                 cancelText="Cancel"
             />
+
+            {showAllResumes && (
+                <ResumeHistoryPopup
+                    candidateId={candidateId}
+                    candidateName={candidateName}
+                    onClose={() => setShowAllResumes(false)}
+                    onUpdate={refetch}
+                />
+            )}
         </div>
     );
 }

@@ -11,6 +11,9 @@ const {
   checkEmailExists,
   checkPhoneExists,
   checkLinkedInExists,
+  getCandidateResumes,
+  setResumeActive,
+  getCandidateStats
 } = require("../controllers/candidateController.js");
 
 const router = express.Router();
@@ -44,5 +47,12 @@ router.post("/search", searchCandidates);
 router.get("/check-email", checkEmailExists);
 router.get("/check-phone", checkPhoneExists);
 router.get("/check-linkedin", checkLinkedInExists);
+
+// Resume Versioning Routes
+router.get("/:id/resumes", getCandidateResumes);
+router.put("/resume/active", setResumeActive);
+
+// Candidate Stats Route
+router.get("/:id/stats", getCandidateStats);
 
 module.exports = router;

@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
     CheckCircle, X, Mail, Phone, Briefcase,
-    GraduationCap, Award, FileText, AlertTriangle
+    GraduationCap, Award, FileText, AlertTriangle,
+    Check, ChevronRight
 } from 'lucide-react';
 
 import Breadcrumb from '../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/Breadcrumb';
@@ -14,6 +15,8 @@ import { Button } from "./Buttons/Button";
 import {
     useApplicationFilter,
 } from "../apiHooks/useApplications";
+import { calculateCandidateScore } from '../utils/resumeScoring';
+
 // Utility functions
 const getScoreColor = (score) => {
     if (score == null) return 'text-gray-400';
@@ -29,21 +32,24 @@ const getScoreBadgeColor = (score) => {
     return 'bg-red-100 text-red-800';
 };
 
+
+
+
+
 export default function CandidateViewer({
     candidate,
     onClose,
     onAction,
     position,
     source = 'system_internal',
-    totalResults = 1 // Default to 1 (force navigation) if not provided
+
+    totalResults = 1, // Default to 1 (force navigation) if not provided
+    showNavigation = false // Control visibility of Breadcrumb and Info Box
 }) {
     console.log("position", position);
 
     const [showCandidateForm, setShowCandidateForm] = useState(false);
     const isExistingCandidate = candidate.match_status === 'existing';
-
-    const displayScore = candidate.match_percentage;
-    const displaySkillMatch = candidate.skill_match;
 
     const getRecommendation = (score) => {
         if (candidate.screening_result?.recommendation) {
@@ -54,6 +60,13 @@ export default function CandidateViewer({
         if (score >= 60) return 'Moderate match - Consider for interview';
         return 'Weak match - May not meet requirements';
     };
+
+    const scoringData = useMemo(() => {
+        return position ? calculateCandidateScore(candidate, position) : null;
+    }, [candidate, position]);
+
+    const displayScore = scoringData?.score ?? candidate.match_percentage;
+    const displaySkillMatch = scoringData?.skillMatch ?? candidate.skill_match;
     // Fetch existing applications for this candidate
     const { applications: filteredApplications } =
         useApplicationFilter(
@@ -168,7 +181,40 @@ export default function CandidateViewer({
                             </button>
 
                         </div>
-                        <Breadcrumb items={breadcrumbItems} />
+                        {showNavigation && (
+                            <div className="flex items-center justify-start gap-2 bg-gray-50 rounded-lg p-3 mb-2 w-full overflow-x-auto">
+                                {breadcrumbItems.map((item, idx) => {
+                                    const isLast = idx === breadcrumbItems.length - 1;
+                                    const isCompleted = !isLast;
+
+                                    return (
+                                        <React.Fragment key={idx}>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-semibold text-xs flex-shrink-0 ${isCompleted
+                                                    ? 'bg-emerald-500 text-white'
+                                                    : 'bg-custom-blue text-white'
+                                                    }`}>
+                                                    {isCompleted ? <Check className="w-3 h-3" /> : (idx + 1)}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                                        {item.label}
+                                                    </p>
+                                                    {isLast && item.status && (
+                                                        <p className="text-[10px] text-gray-500 truncate">
+                                                            {item.status}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {!isLast && (
+                                                <ChevronRight className="w-3 h-3 text-gray-300 flex-shrink-0 mx-1" />
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -218,6 +264,15 @@ export default function CandidateViewer({
                                                 </div>
                                             )}
 
+                                            {(candidate.current_company || candidate.metadata?.extractedProfile?.currentCompany) && (
+                                                <div className="mt-1">
+                                                    <p className="text-sm text-gray-600">
+                                                        <span className="font-semibold text-gray-700">Current: </span>
+                                                        {candidate.current_company || candidate.metadata?.extractedProfile?.currentCompany}
+                                                    </p>
+                                                </div>
+                                            )}
+
                                             {(candidate.parsed_education || candidate.screening_result?.education) && (
                                                 <div className="pt-5 border-t border-gray-200">
                                                     <div className="flex items-center gap-2.5 mb-2">
@@ -249,15 +304,46 @@ export default function CandidateViewer({
                                                 </div>
                                             )}
 
+                                            {(candidate.certifications || candidate.screening_result?.certifications)?.length > 0 && (
+                                                <div className="pt-5 border-t border-gray-200">
+                                                    <div className="flex items-center gap-2.5 mb-2">
+                                                        <Award size={18} className="text-cyan-700" />
+                                                        <span className="font-semibold">Certifications</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {(candidate.certifications || candidate.screening_result?.certifications).map((cert, i) => (
+                                                            <span
+                                                                key={i}
+                                                                className="px-3 py-1 text-sm bg-[rgb(18,93,115)] text-white rounded-full font-medium"
+                                                            >
+                                                                {cert}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             {candidate.screening_result?.summary && (
                                                 <div className="pt-5 border-t border-gray-200">
                                                     <div className="flex items-center gap-2.5 mb-2">
                                                         <FileText size={18} className="text-cyan-700" />
-                                                        <span className="font-semibold">Resume Summary</span>
+                                                        <span className="font-semibold">Resume Highlights</span>
                                                     </div>
-                                                    <p className="text-sm leading-relaxed text-gray-700">
+                                                    <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
                                                         {candidate.screening_result.summary}
                                                     </p>
+                                                </div>
+                                            )}
+
+                                            {/* Resume File Section */}
+                                            {(candidate.resume_file || candidate.file_name) && (
+                                                <div className="pt-5 border-t border-gray-200">
+                                                    <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+                                                        <span className="text-sm font-medium text-gray-700">Resume File</span>
+                                                        <span className="text-sm text-gray-600 truncate max-w-[200px]">
+                                                            {candidate.resume_file || candidate.file_name}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -294,14 +380,14 @@ export default function CandidateViewer({
                                             </div>
                                         </div>
 
-                                        {candidate.screening_result?.extracted_skills?.length > 0 && (
+                                        {scoringData?.matchedSkills?.length > 0 && (
                                             <div className="bg-green-50 border border-green-200 rounded-xl p-5">
-                                                <p className="font-medium text-green-900 mb-2.5">
-                                                    Matched Skills ({candidate.screening_result.extracted_skills.length})
+                                                <p className="font-semibold text-green-900 mb-2.5 flex items-center gap-2">
+                                                    Matched Skills ({scoringData.matchedSkills.length})
                                                 </p>
                                                 <div className="flex flex-wrap gap-2">
-                                                    {candidate.screening_result.extracted_skills.map((s, i) => (
-                                                        <span key={i} className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                                                    {scoringData.matchedSkills.map((s, i) => (
+                                                        <span key={i} className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full font-medium">
                                                             {s}
                                                         </span>
                                                     ))}
@@ -309,17 +395,17 @@ export default function CandidateViewer({
                                             </div>
                                         )}
 
-                                        {candidate.screening_result?.missingSkills?.length > 0 && (
+                                        {scoringData?.missingRequiredSkills?.length > 0 && (
                                             <div className="bg-red-50 border border-red-200 rounded-xl p-5">
                                                 <div className="flex items-start gap-3">
                                                     <AlertTriangle size={20} className="text-red-600 mt-1 flex-shrink-0" />
                                                     <div>
-                                                        <p className="font-medium text-red-900 mb-2.5">
-                                                            Missing Skills ({candidate.screening_result.missingSkills.length})
+                                                        <p className="font-semibold text-red-900 mb-2.5">
+                                                            Missing Required Skills ({scoringData.missingRequiredSkills.length})
                                                         </p>
                                                         <div className="flex flex-wrap gap-2">
-                                                            {candidate.screening_result.missingSkills.map((s, i) => (
-                                                                <span key={i} className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full">
+                                                            {scoringData.missingRequiredSkills.map((s, i) => (
+                                                                <span key={i} className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full font-medium">
                                                                     {s}
                                                                 </span>
                                                             ))}
@@ -329,12 +415,111 @@ export default function CandidateViewer({
                                             </div>
                                         )}
 
+                                        {/* AI Insights Section */}
+                                        {(candidate.screening_result?.strengths?.length > 0 || candidate.screening_result?.concerns?.length > 0 || candidate.screening_result?.analysis) && (
+                                            <div className="rounded-lg p-4 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
+                                                <p className="text-sm font-semibold mb-2 text-purple-900 flex items-center gap-2">
+                                                    ✨ AI Insights
+                                                </p>
+                                                {candidate.screening_result?.analysis && (
+                                                    <p className="text-sm text-gray-700 mb-3">{candidate.screening_result.analysis}</p>
+                                                )}
+
+                                                {candidate.screening_result?.strengths?.length > 0 && (
+                                                    <div className="mt-3">
+                                                        <p className="text-xs font-semibold text-green-800 mb-1">Key Strengths:</p>
+                                                        <ul className="space-y-1">
+                                                            {candidate.screening_result.strengths.map((strength, index) => (
+                                                                <li key={index} className="flex items-start gap-2">
+                                                                    <span className="text-green-600 text-xs mt-0.5">✓</span>
+                                                                    <span className="text-xs text-gray-700">{strength}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+
+                                                {(candidate.screening_result?.concerns?.length > 0 || candidate.screening_result?.gaps?.length > 0) && (
+                                                    <div className="mt-3">
+                                                        <p className="text-xs font-semibold text-orange-800 mb-1">Potential Concerns:</p>
+                                                        <ul className="space-y-1">
+                                                            {(candidate.screening_result.concerns || candidate.screening_result.gaps).map((concern, index) => (
+                                                                <li key={index} className="flex items-start gap-2">
+                                                                    <span className="text-orange-600 text-xs mt-0.5">⚠</span>
+                                                                    <span className="text-xs text-gray-700">{concern}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
                                         <div className="bg-white border border-cyan-100 rounded-xl p-5">
                                             <p className="font-medium text-cyan-800 mb-2">Recommendation</p>
                                             <p className="text-sm text-gray-700 leading-relaxed">
                                                 {getRecommendation(displayScore)}
                                             </p>
                                         </div>
+
+                                        {/* Detailed Match Scores */}
+                                        {displayScore !== null && scoringData && (
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <div className="flex justify-between text-sm mb-1">
+                                                        <span className="text-gray-600">Overall Match Rate</span>
+                                                        <span className="font-medium text-gray-900">
+                                                            {Math.round((scoringData.matchRate?.overall || 0) * 100)}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                                        <div
+                                                            className="h-2 rounded-full"
+                                                            style={{
+                                                                width: `${Math.round((scoringData.matchRate?.overall || 0) * 100)}%`,
+                                                                backgroundColor: 'rgb(33, 121, 137)'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <div className="flex justify-between text-sm mb-1">
+                                                        <span className="text-gray-600">Required Skills Match</span>
+                                                        <span className="font-medium text-gray-900">
+                                                            {Math.round((scoringData.matchRate?.required || 0) * 100)}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                                        <div
+                                                            className="h-2 rounded-full"
+                                                            style={{
+                                                                width: `${Math.round((scoringData.matchRate?.required || 0) * 100)}%`,
+                                                                backgroundColor: 'rgb(33, 121, 137)'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <div className="flex justify-between text-sm mb-1">
+                                                        <span className="text-gray-600">Overall Score</span>
+                                                        <span className="font-medium text-gray-900">
+                                                            {displayScore}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                                        <div
+                                                            className="h-2 rounded-full"
+                                                            style={{
+                                                                width: `${displayScore}%`,
+                                                                backgroundColor: 'rgb(33, 121, 137)'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* No footer here anymore – moved to global bottom */}
@@ -363,34 +548,36 @@ export default function CandidateViewer({
 
                     {/* ─── Global shared footer (visible in screening mode only) ──────── */}
                     {!showCandidateForm && (
-                        <div className="bg-white px-7 py-3 border-t border-gray-200">
-                            {/* Info text above buttons */}
-                            <div className="bg-blue-50 rounded-lg p-4 mb-5 text-sm text-blue-800">
-                                Proceeding to interview will create an Application and move this candidate to the Applications tab.
+                        showNavigation && (
+                            <div className="bg-white px-7 py-3 border-t border-gray-200">
+                                {/* Info text above buttons */}
+                                <div className="bg-blue-50 rounded-lg p-4 mb-5 text-sm text-blue-800">
+                                    Proceeding to interview will create an Application and move this candidate to the Applications tab.
+                                </div>
+
+                                {/* Buttons */}
+                                <div className="flex justify-end gap-3">
+
+                                    <Button
+                                        variant="outline"
+                                        type="button"
+                                        onClick={onClose}
+                                        className={`text-custom-blue border border-custom-blue transition-colors`}
+                                    >
+                                        Cancel
+                                    </Button>
+
+                                    <LoadingButton
+                                        onClick={handleProceed}
+                                    //   isLoading={isMutationLoading && activeButton === "save"}
+                                    //   loadingText={id ? "Updating..." : "Saving..."}
+                                    >
+                                        {/* {id ? "Update" : "Save"} */}
+                                        Proceed
+                                    </LoadingButton>
+                                </div>
                             </div>
-
-                            {/* Buttons */}
-                            <div className="flex justify-end gap-3">
-
-                                <Button
-                                    variant="outline"
-                                    type="button"
-                                    onClick={onClose}
-                                    className={`text-custom-blue border border-custom-blue transition-colors`}
-                                >
-                                    Cancel
-                                </Button>
-
-                                <LoadingButton
-                                    onClick={handleProceed}
-                                //   isLoading={isMutationLoading && activeButton === "save"}
-                                //   loadingText={id ? "Updating..." : "Saving..."}
-                                >
-                                    {/* {id ? "Update" : "Save"} */}
-                                    Proceed
-                                </LoadingButton>
-                            </div>
-                        </div>
+                        )
                     )}
 
                     {showExistingAppPrompt && (

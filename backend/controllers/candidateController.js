@@ -14,7 +14,7 @@ const {
   CandidateAssessment,
 } = require("../models/Assessment/candidateAssessment.js");
 const { Users } = require("../models/Users");
-const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
+const { Application } = require("../models/Application.js");
 
 // Add a new Candidate
 const addCandidatePostCall = async (req, res) => {
@@ -1006,6 +1006,70 @@ const checkLinkedInExists = async (req, res) => {
 };
 // ----------------------------- Uniqueness validation apis for Email, phone, linkedin ---------------------------------
 
+
+// Get all resumes for a candidate
+const getCandidateResumes = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const resumes = await Resume.find({ candidateId: id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json(resumes);
+  } catch (error) {
+    console.error("Error fetching resumes:", error);
+    res.status(500).json({ message: "Error fetching resumes", error: error.message });
+  }
+};
+
+// Set a resume as active
+const setResumeActive = async (req, res) => {
+  try {
+    const { candidateId, resumeId } = req.body;
+
+    // Deactivate all resumes for this candidate
+    await Resume.updateMany(
+      { candidateId },
+      { $set: { isActive: false } }
+    );
+
+    // Activate the selected resume
+    const updatedResume = await Resume.findByIdAndUpdate(
+      resumeId,
+      { $set: { isActive: true } },
+      { new: true }
+    );
+
+    res.json({ message: "Resume set as active", resume: updatedResume });
+  } catch (error) {
+    console.error("Error setting active resume:", error);
+    res.status(500).json({ message: "Error updating resume status", error: error.message });
+  }
+};
+
+// Get stats for a candidate (applications, resumes, interviews)
+const getCandidateStats = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const candidateId = new mongoose.Types.ObjectId(id);
+
+    const [applicationCount, resumeCount, interviewCount] = await Promise.all([
+      Application.countDocuments({ candidateId }),
+      Resume.countDocuments({ candidateId }),
+      Interview.countDocuments({ candidateId, status: 'Completed' }) // Assuming 'Attended' means Completed
+    ]);
+
+    res.json({
+      applications: applicationCount,
+      resumes: resumeCount,
+      interviews: interviewCount
+    });
+  } catch (error) {
+    console.error("Error fetching candidate stats:", error);
+    res.status(500).json({ message: "Error fetching candidate stats", error: error.message });
+  }
+};
+
 module.exports = {
   getCandidates,
   addCandidatePostCall,
@@ -1019,4 +1083,7 @@ module.exports = {
   checkEmailExists,
   checkPhoneExists,
   checkLinkedInExists,
+  getCandidateResumes,
+  setResumeActive,
+  getCandidateStats,
 };

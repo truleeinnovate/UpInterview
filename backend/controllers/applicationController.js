@@ -180,17 +180,17 @@ const getApplicationsByPosition = async (req, res) => {
                     applicationNumber: 1,
                     status: 1,
                     currentStage: 1,
-                    // Fallback to screeningResult if Application.screeningScore is missing
+                    // Fallback to screeningResult if Application.screeningScore is missing (SWAPPED PRIORITY: Check ScreeningResult first)
                     screeningScore: {
                         $ifNull: [
-                            "$screeningScore",
-                            { $ifNull: ["$screeningResult.metadata.score", 0] }
+                            "$screeningResult.metadata.score",
+                            { $ifNull: ["$screeningScore", 0] }
                         ]
                     },
                     screeningDecision: {
                         $ifNull: [
-                            "$screeningDecision",
-                            "$screeningResult.recommendation"
+                            "$screeningResult.recommendation",
+                            "$screeningDecision"
                         ]
                     },
                     createdAt: 1,
@@ -340,8 +340,8 @@ const createApplication = async (req, res) => {
             ownerId: userId,
             createdBy: userId,
             // vvvv FIX: Save screening data to Application document vvvv
-            screeningScore: screeningData ? (Number(screeningData.matchPercentage || screeningData.score) || 0) : undefined,
-            screeningDecision: screeningData ? (screeningData.recommendation) : undefined,
+            screeningScore: screeningData ? (Number(screeningData.matchPercentage || screeningData.match_percentage || screeningData.score || screeningData.metadata?.score) || 0) : undefined,
+            screeningDecision: screeningData ? (screeningData.recommendation || screeningData.screening_result?.recommendation) : undefined,
         });
 
         // Populate the created application for response
@@ -364,23 +364,35 @@ const createApplication = async (req, res) => {
                 } else {
                     const resumeId = resume._id;
 
+                    // Extract score and other fields from potential snake_case or nested structures
+                    const score = Number(screeningData.matchPercentage || screeningData.match_percentage || screeningData.score || screeningData.metadata?.score) || 0;
+                    const skillMatch = Number(screeningData.skillMatch || screeningData.skill_match) || 0;
+                    const experienceMatch = Number(screeningData.experienceMatch || screeningData.experience_match) || 0;
+
                     const screeningPayload = {
                         resumeId,
                         positionId,
                         tenantId,
                         metadata: {
-                            score: Number(screeningData.matchPercentage || screeningData.score) || 0,
-                            skillMatch: Number(screeningData.skillMatch) || 0,
-                            experienceMatch: Number(screeningData.experienceMatch) || 0,
-                            matchedSkills: screeningData.matchedSkills || screeningData.extractedSkills || [],
-                            missingSkills: screeningData.missingSkills || [],
-                            summary: screeningData.summary || "",
-                            strengths: screeningData.strengths || [],
-                            concerns: screeningData.concerns || screeningData.gaps || [],
-                            method: screeningData.method || "SYSTEM"
+                            score: score,
+                            skillMatch: skillMatch,
+                            experienceMatch: experienceMatch,
+                            matchedSkills: screeningData.matchedSkills || screeningData.extractedSkills || screeningData.screening_result?.extracted_skills || [],
+                            missingSkills: screeningData.missingSkills || screeningData.screening_result?.missingSkills || [],
+                            summary: screeningData.summary || screeningData.screening_result?.summary || "",
+                            strengths: screeningData.strengths || screeningData.screening_result?.strengths || [],
+                            concerns: screeningData.concerns || screeningData.gaps || screeningData.screening_result?.concerns || [],
+                            method: screeningData.method || screeningData.metadata?.method || "SYSTEM",
+                            // Capture additional rich analysis data
+                            languages: screeningData.languages || screeningData.screening_result?.languages || screeningData.metadata?.languages || [],
+                            certifications: screeningData.certifications || screeningData.screening_result?.certifications || screeningData.metadata?.certifications || [],
+                            projects: screeningData.projects || screeningData.screening_result?.projects || screeningData.metadata?.projects || [],
+                            workHistory: screeningData.workHistory || screeningData.screening_result?.workHistory || screeningData.metadata?.workHistory || [],
+                            education: screeningData.education || screeningData.screening_result?.education || screeningData.metadata?.education || "",
+                            experienceYears: screeningData.experienceYears || screeningData.screening_result?.experience_years || screeningData.metadata?.experienceYears || null
                         },
-                        recommendation: screeningData.recommendation || "HOLD",
-                        screenedBy: screeningData.method || "SYSTEM",
+                        recommendation: screeningData.recommendation || screeningData.screening_result?.recommendation || "HOLD",
+                        screenedBy: screeningData.method || screeningData.metadata?.method || "SYSTEM",
                         screenedAt: new Date(),
                         ownerId: userId,
                         createdBy: userId
