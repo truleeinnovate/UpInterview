@@ -72,7 +72,7 @@ const AddCandidateForm = ({
   screeningData = {},
   source = "",
   positionId,
-  shouldCreateApplication = false,   // ← new prop, default false
+  shouldCreateApplication = false, // ← new prop, default false
 }) => {
   console.log("mode", mode);
   console.log("candidateId", candidateId);
@@ -254,7 +254,6 @@ const AddCandidateForm = ({
   // const userId = tokenPayload?.userId;
 
   useEffect(() => {
-
     // IMPORTANT: Skip DB pre-fill when coming from screening — we want screening data instead
     if (source === "candidate-screening") {
       console.log("Skipping DB pre-fill because source is candidate-screening");
@@ -338,89 +337,93 @@ const AddCandidateForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]); // Only depend on id to run when form mode changes
 
+  useEffect(() => {
+    if (source !== "candidate-screening" || !screeningData) {
+      console.log("Screening pre-fill SKIPPED — source or data missing");
+      return;
+    }
 
-useEffect(() => {
-  if (source !== "candidate-screening" || !screeningData) {
-    console.log("Screening pre-fill SKIPPED — source or data missing");
-    return;
-  }
+    console.log("SCREENING PRE-FILL RUNNING — full data:", {
+      skillsCount: screeningData.parsed_skills?.length,
+      experience: screeningData.parsed_experience,
+      education: screeningData.parsed_education,
+      name: screeningData.candidate_name,
+    });
 
-  console.log("SCREENING PRE-FILL RUNNING — full data:", {
-    skillsCount: screeningData.parsed_skills?.length,
-    experience: screeningData.parsed_experience,
-    education: screeningData.parsed_education,
-    name: screeningData.candidate_name
-  });
+    const sd = screeningData;
 
-  const sd = screeningData;
+    const parsedSkills = sd.parsed_skills || [];
+    const parsedExperience = sd.parsed_experience || "";
+    const parsedEducation = sd.parsed_education || "";
 
-  const parsedSkills = sd.parsed_skills || [];
-  const parsedExperience = sd.parsed_experience || '';
-  const parsedEducation = sd.parsed_education || '';
+    // Parse years from "6 Years" string
+    const experienceYears =
+      Number(sd.screening_result?.experience_years) ||
+      parseFloat(parsedExperience.match(/(\d+(\.\d+)?)/)?.[0]) ||
+      0;
 
-  // Parse years from "6 Years" string
-  const experienceYears = 
-    Number(sd.screening_result?.experience_years) ||
-    parseFloat(parsedExperience.match(/(\d+(\.\d+)?)/)?.[0]) ||
-    0;
+    const newFormData = {
+      // ── Name ────────────────────────────────────────
+      FirstName: sd.candidate_name?.split(" ")[0]?.trim() || "",
+      LastName: sd.candidate_name?.split(" ").slice(1).join(" ").trim() || "",
 
-  const newFormData = {
-    // ── Name ────────────────────────────────────────
-    FirstName: sd.candidate_name?.split(' ')[0]?.trim() || '',
-    LastName: sd.candidate_name?.split(' ').slice(1).join(' ').trim() || '',
+      // ── Contact ─────────────────────────────────────
+      Email: sd.candidate_email?.trim() || "",
+      CountryCode: sd.candidate_country_code || "+91",
+      Phone: sd.candidate_phone
+        ? sd.candidate_phone
+            .replace(/^\+\d{1,3}/, "")
+            .replace(/^\d{1,3}/, "")
+            .trim()
+        : "",
 
-    // ── Contact ─────────────────────────────────────
-    Email: sd.candidate_email?.trim() || '',
-    CountryCode: sd.candidate_country_code || '+91',
-    Phone: sd.candidate_phone
-      ? sd.candidate_phone.replace(/^\+\d{1,3}/, '').replace(/^\d{1,3}/, '').trim()
-      : '',
+      // ── Education ───────────────────────────────────
+      HigherQualification:
+        parsedEducation || sd.screening_result?.education || "",
+      UniversityCollege:
+        sd.screening_result?.university ||
+        parsedEducation.match(/University\s+of\s+([\w\s]+)/i)?.[1]?.trim() ||
+        parsedEducation.match(/([\w\s]+)\s+University/i)?.[1]?.trim() ||
+        parsedEducation.split(",").pop()?.trim() ||
+        "",
 
-    // ── Education ───────────────────────────────────
-    HigherQualification: parsedEducation || sd.screening_result?.education || '',
-    UniversityCollege:
-      sd.screening_result?.university ||
-      (parsedEducation.match(/University\s+of\s+([\w\s]+)/i)?.[1]?.trim() ||
-       parsedEducation.match(/([\w\s]+)\s+University/i)?.[1]?.trim() ||
-       parsedEducation.split(',').pop()?.trim() || ''),
+      // ── Experience ──────────────────────────────────
+      CurrentExperience: experienceYears,
+      RelevantExperience: experienceYears,
 
-    // ── Experience ──────────────────────────────────
-    CurrentExperience: experienceYears,
-    RelevantExperience: experienceYears,
+      // ── Skills ──────────────────────────────────────
+      skills:
+        parsedSkills.length > 0
+          ? parsedSkills.map((name) => ({
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "Beginner",
+            }))
+          : (sd.screening_result?.extracted_skills || []).map((name) => ({
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "Beginner",
+            })),
 
-    // ── Skills ──────────────────────────────────────
-    skills: parsedSkills.length > 0 
-      ? parsedSkills.map(name => ({
-          skill: (name || '').trim(),
-          experience: '',
-          expertise: 'Beginner'
-        }))
-      : (sd.screening_result?.extracted_skills || []).map(name => ({
-          skill: (name || '').trim(),
-          experience: '',
-          expertise: 'Beginner'
-        })),
+      linkedInUrl: sd.linkedInUrl || "",
+    };
 
-    linkedInUrl: sd.linkedInUrl || '',
-  };
+    console.log("Setting formData with:", {
+      skills: newFormData.skills.length,
+      experience: newFormData.CurrentExperience,
+      name: `${newFormData.FirstName} ${newFormData.LastName}`,
+    });
 
-  console.log("Setting formData with:", {
-    skills: newFormData.skills.length,
-    experience: newFormData.CurrentExperience,
-    name: `${newFormData.FirstName} ${newFormData.LastName}`
-  });
+    // Apply form data
+    setFormData((prev) => ({ ...prev, ...newFormData }));
 
-  // Apply form data
-  setFormData(prev => ({ ...prev, ...newFormData }));
-
-  // Set skill entries (critical for SkillsField to show them)
-  if (newFormData.skills.length > 0) {
-    console.log("Setting entries to", newFormData.skills.length, "skills");
-    setEntries(newFormData.skills);
-    setAllSelectedSkills(newFormData.skills.map(s => s.skill));
-  }
-
-}, [screeningData, source]);
+    // Set skill entries (critical for SkillsField to show them)
+    if (newFormData.skills.length > 0) {
+      console.log("Setting entries to", newFormData.skills.length, "skills");
+      setEntries(newFormData.skills);
+      setAllSelectedSkills(newFormData.skills.map((s) => s.skill));
+    }
+  }, [screeningData, source]);
 
   // Ensure University/College custom input is shown in edit mode when the saved value
   // is not present in master list (handles the '+ Others' flow gracefully)
@@ -454,10 +457,10 @@ useEffect(() => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry,
       );
       setEntries(updatedEntries);
@@ -636,12 +639,12 @@ useEffect(() => {
       [name]: errorMessage,
       ...(name === "CurrentExperience" && formData.RelevantExperience
         ? {
-          RelevantExperience: getErrorMessage(
-            "RelevantExperience",
-            formData.RelevantExperience,
-            nextFormData,
-          ),
-        }
+            RelevantExperience: getErrorMessage(
+              "RelevantExperience",
+              formData.RelevantExperience,
+              nextFormData,
+            ),
+          }
         : {}),
     }));
   };
@@ -839,15 +842,16 @@ useEffect(() => {
     const payload = {
       ...data,
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
-      ...(source === "candidate-screening" && mode !== "Edit" && {
-        source: "UPLOAD",
-        // Pass full screeningData so backend can store it
-        screeningData: screeningData, // ← direct pass (full object)
-        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
-        parsedSkills: screeningData.parsed_skills || [],
-        parsedExperience: screeningData.parsed_experience || null,
-        parsedEducation: screeningData.parsed_education || null,
-      }),
+      ...(source === "candidate-screening" &&
+        mode !== "Edit" && {
+          source: "UPLOAD",
+          // Pass full screeningData so backend can store it
+          screeningData: screeningData, // ← direct pass (full object)
+          parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+          parsedSkills: screeningData.parsed_skills || [],
+          parsedExperience: screeningData.parsed_experience || null,
+          parsedEducation: screeningData.parsed_education || null,
+        }),
     };
 
     try {
@@ -902,32 +906,43 @@ useEffect(() => {
       // Application + ScreeningResult — only on NEW candidates from screening
       // ────────────────────────────────────────────────
 
-
       // Debug: Log EVERY variable that affects the final decision
       console.log("=== DEBUG: shouldCreateApplicationFinal calculation ===");
       console.log("source:", source);
       console.log("positionId:", positionId ? "exists" : "missing");
       console.log("candidateResponse.status:", candidateResponse.status);
-      console.log("shouldCreateApplication prop (from viewer):", shouldCreateApplication);
+      console.log(
+        "shouldCreateApplication prop (from viewer):",
+        shouldCreateApplication,
+      );
       console.log("candidateResponse full:", candidateResponse); // ← see the real status
 
-      const isSuccess = ["success", "Updated successfully", "no_changes"].includes(candidateResponse.status);
+      const isSuccess = [
+        "success",
+        "Updated successfully",
+        "no_changes",
+      ].includes(candidateResponse.status);
 
       console.log("isSuccess (after checking status):", isSuccess);
 
       const shouldCreateApplicationFinal =
         source === "candidate-screening" &&
-        !!positionId &&                           // make sure it's truthy
+        !!positionId && // make sure it's truthy
         isSuccess &&
-        shouldCreateApplication;                  // from CandidateViewer: !hasActiveApplication
+        shouldCreateApplication; // from CandidateViewer: !hasActiveApplication
 
-      console.log("shouldCreateApplicationFinal FINAL result:", shouldCreateApplicationFinal);
+      console.log(
+        "shouldCreateApplicationFinal FINAL result:",
+        shouldCreateApplicationFinal,
+      );
       console.log("Reason breakdown:");
-      console.log("  - source === 'candidate-screening' →", source === "candidate-screening");
+      console.log(
+        "  - source === 'candidate-screening' →",
+        source === "candidate-screening",
+      );
       console.log("  - !!positionId →", !!positionId);
       console.log("  - isSuccess →", isSuccess);
       console.log("  - shouldCreateApplication →", shouldCreateApplication);
-
 
       // 2. ONLY if from candidate screening → create application
       if (shouldCreateApplicationFinal) {
@@ -959,10 +974,14 @@ useEffect(() => {
 
           const appResult = await createApplication(appPayload);
           console.log("Application & ScreeningResult created:", appResult);
-          notify.success("Application and screening result created successfully");
+          notify.success(
+            "Application and screening result created successfully",
+          );
         } catch (appError) {
           console.error("Application/Screening creation failed:", appError);
-          notify.warning("Candidate saved/updated, but application creation failed");
+          notify.warning(
+            "Candidate saved/updated, but application creation failed",
+          );
         }
       }
       resetFormData();
@@ -1033,8 +1052,8 @@ useEffect(() => {
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save candidate",
+          error.message ||
+          "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1285,38 +1304,69 @@ useEffect(() => {
   };
 
   const saveProject = () => {
-    // Simple validation for the popup fields
     const newProjectErrors = {};
 
-    // Validation Logic
     if (currentProject.responsibilities.length < 200) {
       newProjectErrors.responsibilities =
         "Responsibilities must be at least 200 characters";
     }
 
-    // If there are errors, stop and show them
     if (Object.keys(newProjectErrors).length > 0) {
       setProjectErrors(newProjectErrors);
       return;
     }
 
+    // 1. Clean the text and ensure every line has a bullet point for the DB
+    const cleanedResponsibilities = currentProject.responsibilities
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line !== "")
+      .map((line) => (line.startsWith("•") ? line : `• ${line}`)) // Add bullet if missing
+      .join("\n");
+
+    const projectToSave = {
+      ...currentProject,
+      responsibilities: cleanedResponsibilities,
+    };
+
+    // 2. Use the "projectToSave" variable instead of "currentProject"
     const updatedList = [...formData.workExperience];
 
     if (editingProjectIndex !== null) {
-      updatedList[editingProjectIndex] = currentProject;
+      updatedList[editingProjectIndex] = projectToSave;
     } else {
-      updatedList.push(currentProject);
+      updatedList.push(projectToSave);
     }
 
     setFormData({ ...formData, workExperience: updatedList });
     setIsProjectModalOpen(false);
-    // Reset local state
+
+    // Reset state
     setCurrentProject({
       projectName: "",
       role: "",
       fromDate: "",
       toDate: "",
       responsibilities: "",
+    });
+    setProjectErrors({});
+  };
+
+  // Convert the raw string from DB/State into a clean array for rendering
+  const formatResponsibilitiesToList = (text) => {
+    if (!text) return [];
+    // Splits by newline and removes empty lines or just whitespace
+    return text.split("\n").filter((line) => line.trim() !== "");
+  };
+
+  // Optional: Auto-bullet formatting while typing
+  const handleResponsibilitiesChange = (e) => {
+    const { value } = e.target;
+    // This logic ensures if they press enter, a bullet point could be suggested,
+    // but for simplicity, we'll just save the raw multiline text.
+    setCurrentProject({
+      ...currentProject,
+      responsibilities: value,
     });
   };
 
@@ -1401,7 +1451,7 @@ useEffect(() => {
                 // error={errors.Gender}
                 containerRef={fieldRefs.Gender}
                 label="Gender"
-              // required
+                // required
               />
             </div>
             {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -1801,7 +1851,7 @@ useEffect(() => {
               </div>
 
               {/* Project Cards Display */}
-              <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 {formData?.workExperience?.map((project, index) => (
                   <div
                     key={index}
@@ -1820,7 +1870,7 @@ useEffect(() => {
                       />
                     </div>
                     <h5
-                      className="font-bold text-custom-blue truncate max-w-[260px] mb-1"
+                      className="font-semibold text-custom-blue truncate max-w-[260px] mb-1"
                       title={project?.projectName}
                     >
                       {project?.projectName}
@@ -1836,9 +1886,18 @@ useEffect(() => {
                         {project?.fromDate} - {project?.toDate || "Present"}
                       </p>
                     </div>
-                    <p className="text-sm text-gray-600">
-                      {project?.responsibilities}
-                    </p>
+                    <ul className="list-disc list-inside mt-2 space-y-1 p-4">
+                      {formatResponsibilitiesToList(
+                        project?.responsibilities,
+                      ).map((point, i) => (
+                        <li
+                          key={i}
+                          className="text-sm text-gray-600 break-words leading-relaxed"
+                        >
+                          {point.replace(/^[•\s*-]+/, "")}{" "}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 ))}
               </div>
@@ -1869,8 +1928,9 @@ useEffect(() => {
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${
+                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Cancel
             </Button>
@@ -1980,30 +2040,35 @@ useEffect(() => {
       )}
       {isProjectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black bg-opacity-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-xl p-6 m-4 overflow-y-auto max-h-[90vh]">
             <h3 className="text-xl font-bold mb-4">
               {editingProjectIndex !== null ? "Edit Project" : "Add Project"}
             </h3>
 
             <div className="space-y-4">
-              <InputField
-                label="Project Name"
-                value={currentProject.projectName}
-                onChange={(e) =>
-                  setCurrentProject({
-                    ...currentProject,
-                    projectName: e.target.value,
-                  })
-                }
-              />
-              <InputField
-                label="Role"
-                value={currentProject.role}
-                onChange={(e) =>
-                  setCurrentProject({ ...currentProject, role: e.target.value })
-                }
-              />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                <InputField
+                  label="Project Name"
+                  value={currentProject.projectName}
+                  onChange={(e) =>
+                    setCurrentProject({
+                      ...currentProject,
+                      projectName: e.target.value,
+                    })
+                  }
+                />
+                <InputField
+                  label="Role"
+                  value={currentProject.role}
+                  onChange={(e) =>
+                    setCurrentProject({
+                      ...currentProject,
+                      role: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                 <InputField
                   label="From Date"
                   type="date"
