@@ -27,6 +27,7 @@ import {
   Tag,
   Link,
   Clock,
+  ActivityIcon,
 } from "lucide-react";
 
 import { config } from "../../../../config";
@@ -192,11 +193,11 @@ function Activity({ parentId, parentId2, mode }) {
     switch (type) {
       case "info":
         return {
-          container: "bg-blue-50 hover:bg-blue-100",
-          border: "border-blue-200",
-          timeline: "bg-blue-200",
-          text: "text-blue-800",
-          hover: "hover:border-blue-300",
+          container: "bg-custom-blue/10 hover:bg-custom-blue/20",
+          border: "border-custom-blue/20",
+          timeline: "bg-custom-blue",
+          text: "text-custom-blue",
+          hover: "hover:border-custom-blue/30",
         };
       case "alert":
         return {
@@ -478,7 +479,7 @@ function Activity({ parentId, parentId2, mode }) {
           // </div>
           <div className="space-y-4">
             {/* Step 1: Changed grid-cols-1 to a flex-wrap container */}
-            <div className="flex flex-wrap gap-16">
+            <div className="grid grid-cols-3 gap-3">
               {Object.entries(metadata)
                 .filter(
                   ([key]) =>
@@ -788,145 +789,268 @@ function Activity({ parentId, parentId2, mode }) {
     // v1.0.3 ------------------------------------------------------------------------------->
   };
 
+  const getTheme = (type) => {
+    const themes = {
+      info: { color: "blue", icon: <Info className="w-4 h-4 text-blue-500" /> },
+      alert: {
+        color: "red",
+        icon: <AlertTriangle className="w-4 h-4 text-red-500" />,
+      },
+      update: {
+        color: "emerald",
+        icon: <RefreshCw className="w-4 h-4 text-emerald-500" />,
+      },
+      default: {
+        color: "slate",
+        icon: <ActivityIcon className="w-4 h-4 text-slate-500" />,
+      },
+    };
+    return themes[type] || themes.default;
+  };
+
   // v.0.1 <------------------------------------------------------------------------------------
   return (
     // v1.0.2 <----------------------------------------------------------------------------------------
-    <div className="space-y-6 max-w-full">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:mt-4 gap-4">
-          <h3 className="text-lg font-medium text-gray-900">Feeds</h3>
+    // <div className="space-y-6 max-w-full">
+    //   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    //     <div className="flex flex-col sm:flex-row sm:items-center sm:mt-4 gap-4">
+    //       <h3 className="text-lg font-medium text-gray-900">Feeds</h3>
+    //     </div>
+    //     <div className="flex items-center gap-2 sm:mt-4">
+    //       <div className="relative">
+    //         <button
+    //           className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md border border-gray-200 hover:bg-gray-50"
+    //           onClick={(e) => {
+    //             e.stopPropagation();
+    //             setShowFilters(!showFilters);
+    //           }}
+    //         >
+    //           <Filter className="h-4 w-4" />
+    //           <span>Filter</span>
+    //           <ChevronDown
+    //             className={`h-4 w-4 transition-transform ${
+    //               showFilters ? "rotate-180" : ""
+    //             }`}
+    //           />
+    //         </button>
+    //         {showFilters && (
+    //           <div
+    //             className="absolute mt-2 w-48 sm:w-40 md:left-0 lg:left-0 xl:left-0 2xl:left-0 sm:right-0 bg-white rounded-md shadow-lg border border-gray-200 z-10"
+    //             onClick={(e) => e.stopPropagation()}
+    //           >
+    //             <div className="p-2">
+    //               <div className="text-xs font-medium text-gray-500 mb-2">
+    //                 Feed Type
+    //               </div>
+    //               <div className="space-y-1">
+    //                 {["all", "info", "alert", "update"].map((type) => (
+    //                   <button
+    //                     key={type}
+    //                     className={`w-full text-left px-2 py-1 rounded text-sm ${
+    //                       typeFilter === type
+    //                         ? "bg-custom-blue/10 text-custom-blue"
+    //                         : "text-gray-700 hover:bg-gray-50"
+    //                     }`}
+    //                     onClick={() => {
+    //                       setTypeFilter(type);
+    //                       setShowFilters(false);
+    //                     }}
+    //                   >
+    //                     {type?.charAt(0)?.toUpperCase() + type?.slice(1)}
+    //                   </button>
+    //                 ))}
+    //               </div>
+    //             </div>
+    //           </div>
+    //         )}
+    //       </div>
+    //     </div>
+    //   </div>
+
+    //   <div className="relative">
+    //     <div className="space-y-6">
+    //       {/* v1.0.1 <--------------------------------------------------------------------- */}
+    //       {loading ? (
+    //         <div className="text-center sm:py-20 py-16 text-gray-500">
+    //           Loading feeds...
+    //         </div>
+    //       ) : // v1.0.1 ---------------------------------------------------------------------->
+    //       error ? (
+    //         <div className="text-center py-16 text-red-500">{error}</div>
+    //       ) : filteredFeeds.length > 0 ? (
+    //         filteredFeeds?.map((feed) => {
+    //           const styles = getFeedTypeStyle(feed?.feedType);
+    //           return (
+    //             <div
+    //               key={feed?._id}
+    //               className={`
+    //                 relative sm:px-4 px-8 py-4 rounded-lg border
+    //                 transition-all duration-200 overflow-hidden
+    //                 ${styles.container} ${styles.border} ${styles.hover}
+    //               `}
+    //             >
+    //               {/* v1.0.0 <------------------------------------------------------------------------ */}
+    //               <div className="space-y-2">
+    //                 <div className="flex sm:flex-col flex-row justify-between items-start gap-2">
+    //                   <div className="flex items-center gap-4">
+    //                     {/* <div className="bg-white rounded-full p-2 shadow-sm">
+    //                       {getFeedIcon(feed.feedType, feed?.action)}
+    //                     </div> */}
+    //                     <div className="min-w-0 flex-1">
+    //                       <h4
+    //                         className={`sm:text-xs font-medium ${styles.text} truncate`}
+    //                       >
+    //                         {feed.parentObject === "Position" &&
+    //                         mode === "round" &&
+    //                         feed?.action?.name === "position_created"
+    //                           ? "Position Round Was Created"
+    //                           : feed.parentObject === "Position" &&
+    //                               mode === "round" &&
+    //                               feed?.action?.name === "position_updated"
+    //                             ? "Position Round Was Updated"
+    //                             : feed?.action?.description}
+    //                       </h4>
+    //                       <div className="flex flex-wrap items-center mt-1 gap-2 text-sm text-gray-500">
+    //                         <div className="flex items-center">
+    //                           <span className="flex items-center justify-center w-6 h-6 p-1 bg-white/50 rounded-full mr-1 flex-shrink-0">
+    //                             <User className="w-4 h-4" />
+    //                           </span>
+    //                           <span className="sm:text-xs truncate">
+    //                             {feed?.metadata?.changedBy || "System"}
+    //                           </span>
+    //                         </div>
+    //                         <span className="hidden sm:inline">•</span>
+    //                         <time className="sm:text-xs flex-shrink-0">
+    //                           {formatDate(
+    //                             feed?.metadata?.changedAt || feed?.createdAt,
+    //                           )}
+    //                         </time>
+    //                       </div>
+    //                     </div>
+    //                   </div>
+    //                   <StatusBadge
+    //                     status={feed?.feedType}
+    //                     text={capitalizeFirstLetter(feed?.feedType)}
+    //                   />
+    //                 </div>
+
+    //                 <div
+    //                   className={`${styles.text} bg-white bg-opacity-50 rounded-lg p-4 sm:p-4 overflow-x-auto`}
+    //                 >
+    //                   {renderMetadataContent(feed)}
+    //                   {/* v1.0.0 ---------------------------------------------------------------------------------> */}
+    //                 </div>
+    //               </div>
+    //             </div>
+    //           );
+    //         })
+    //       ) : (
+    //         <div className="text-center py-16 text-gray-500">
+    //           No activity found for the selected filters
+    //         </div>
+    //       )}
+    //     </div>
+    //   </div>
+    // </div>
+    <div className="max-w-5xl mx-auto p-4 md:p-6 bg-slate-50/50 min-h-screen">
+      {/* Header Section */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
+            Feeds
+          </h3>
         </div>
-        <div className="flex items-center gap-2 sm:mt-4">
-          <div className="relative">
-            <button
-              className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md border border-gray-200 hover:bg-gray-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowFilters(!showFilters);
-              }}
-            >
-              <Filter className="h-4 w-4" />
-              <span>Filter</span>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${
-                  showFilters ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-            {showFilters && (
-              <div
-                className="absolute mt-2 w-48 sm:w-40 md:left-0 lg:left-0 xl:left-0 2xl:left-0 sm:right-0 bg-white rounded-md shadow-lg border border-gray-200 z-10"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="p-2">
-                  <div className="text-xs font-medium text-gray-500 mb-2">
-                    Feed Type
-                  </div>
-                  <div className="space-y-1">
-                    {["all", "info", "alert", "update"].map((type) => (
-                      <button
-                        key={type}
-                        className={`w-full text-left px-2 py-1 rounded text-sm ${
-                          typeFilter === type
-                            ? "bg-custom-blue/10 text-custom-blue"
-                            : "text-gray-700 hover:bg-gray-50"
-                        }`}
-                        onClick={() => {
-                          setTypeFilter(type);
-                          setShowFilters(false);
-                        }}
-                      >
-                        {type?.charAt(0)?.toUpperCase() + type?.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowFilters(!showFilters);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-all text-sm font-medium text-slate-700"
+          >
+            <Filter className="w-4 h-4 text-slate-400" />
+            <span>{capitalizeFirstLetter(typeFilter)}</span>
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${showFilters ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {showFilters && (
+            <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-xl shadow-xl z-20 overflow-hidden animate-in fade-in slide-in-from-top-2">
+              {["all", "info", "alert", "update"].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setTypeFilter(type)}
+                  className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${typeFilter === type ? "bg-custom-blue/10 text-custom-blue font-semibold" : "text-slate-600 hover:bg-slate-50"}`}
+                >
+                  {capitalizeFirstLetter(type)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Main Timeline Content */}
       <div className="relative">
-        <div className="absolute left-4 sm:left-8 top-0 bottom-0 w-px bg-gray-200" />
-        <div className="space-y-6">
-          {/* v1.0.1 <--------------------------------------------------------------------- */}
+        {/* Vertical Line */}
+        <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-slate-200" />
+
+        <div className="space-y-8">
           {loading ? (
-            <div className="text-center sm:py-20 py-16 text-gray-500">
-              Loading feeds...
+            <div className="pl-12 py-10 text-slate-400 italic animate-pulse">
+              Synchronizing feed history...
             </div>
-          ) : // v1.0.1 ---------------------------------------------------------------------->
-          error ? (
-            <div className="text-center py-16 text-red-500">{error}</div>
-          ) : filteredFeeds.length > 0 ? (
-            filteredFeeds?.map((feed) => {
-              const styles = getFeedTypeStyle(feed?.feedType);
+          ) : (
+            filteredFeeds.map((feed) => {
+              const theme = getTheme(feed.feedType);
               return (
                 <div
-                  key={feed?._id}
-                  className={`
-                    relative sm:px-4 px-8 py-4 rounded-lg border 
-                    transition-all duration-200 overflow-hidden
-                    ${styles.container} ${styles.border} ${styles.hover}
-                  `}
+                  key={feed._id}
+                  className="relative pl-12 group transition-all"
                 >
-                  {/* v1.0.0 <------------------------------------------------------------------------ */}
-                  <div className="space-y-2">
-                    <div className="flex sm:flex-col flex-row justify-between items-start gap-2">
-                      <div className="flex items-center gap-4">
-                        {/* <div className="bg-white rounded-full p-2 shadow-sm">
-                          {getFeedIcon(feed.feedType, feed?.action)}
-                        </div> */}
-                        <div className="min-w-0 flex-1">
-                          <h4
-                            className={`sm:text-xs font-medium ${styles.text} truncate`}
-                          >
-                            {feed.parentObject === "Position" &&
-                            mode === "round" &&
-                            feed?.action?.name === "position_created"
-                              ? "Position Round Was Created"
-                              : feed.parentObject === "Position" &&
-                                  mode === "round" &&
-                                  feed?.action?.name === "position_updated"
-                                ? "Position Round Was Updated"
-                                : feed?.action?.description}
+                  {/* Timeline Dot/Icon */}
+                  <div className="absolute left-0 top-1 w-10 h-10 bg-white rounded-full border-2 border-slate-100 shadow-sm flex items-center justify-center z-10 group-hover:border-blue-200 transition-colors">
+                    {theme.icon}
+                  </div>
+
+                  {/* Content Card */}
+                  <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow group-hover:border-slate-300">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="p-2 bg-slate-50 rounded-lg">
+                          <User className="w-4 h-4 text-slate-400" />
+                        </span>
+                        <div>
+                          <h4 className="font-bold text-slate-800 text-sm leading-tight">
+                            {feed?.action?.description || "System Action"}
                           </h4>
-                          <div className="flex flex-wrap items-center mt-1 gap-2 text-sm text-gray-500">
-                            <div className="flex items-center">
-                              <User className="mr-1 flex-shrink-0" />
-                              <span className="sm:text-xs truncate">
-                                {feed?.metadata?.changedBy || "System"}
-                              </span>
-                            </div>
-                            <span className="hidden sm:inline">•</span>
-                            <time className="sm:text-xs flex-shrink-0">
-                              {formatDate(
-                                feed?.metadata?.changedAt || feed?.createdAt,
-                              )}
-                            </time>
-                          </div>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            <span className="font-semibold text-slate-700">
+                              {feed?.metadata?.changedBy || "System"}
+                            </span>{" "}
+                            • {formatDate(feed.createdAt)}
+                          </p>
                         </div>
                       </div>
                       <StatusBadge
-                        status={feed?.feedType}
-                        text={capitalizeFirstLetter(feed?.feedType)}
+                        status={feed.feedType}
+                        text={capitalizeFirstLetter(feed.feedType)}
                       />
                     </div>
 
-                    <div
-                      className={`${styles.text} bg-white bg-opacity-50 rounded-lg p-4 sm:p-4 overflow-x-auto`}
-                    >
-                      {renderMetadataContent(feed)}
-                      {/* v1.0.0 ---------------------------------------------------------------------------------> */}
+                    {/* Metadata Content Area */}
+                    <div className="bg-slate-50/50 rounded-md p-4 border border-slate-100">
+                      {/* Your existing renderMetadataContent logic fits here perfectly */}
+                      <div className="text-slate-600 text-sm overflow-x-auto">
+                        {renderMetadataContent(feed)}
+                      </div>
                     </div>
                   </div>
                 </div>
               );
             })
-          ) : (
-            <div className="text-center py-16 text-gray-500">
-              No activity found for the selected filters
-            </div>
           )}
         </div>
       </div>
