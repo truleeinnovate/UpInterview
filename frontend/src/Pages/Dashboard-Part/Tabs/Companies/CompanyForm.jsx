@@ -30,14 +30,6 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
     primaryContactEmail: "",
     description: "",
     status: "active",
-    address: {
-      addressLineOne: "",
-      addressLineTwo: "",
-      city: "",
-      state: "",
-      country: "",
-      zip: "",
-    },
   });
 
   const [errors, setErrors] = useState({});
@@ -57,14 +49,6 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
               primaryContactEmail: data.primaryContactEmail || "",
               description: data.description || "",
               status: data.status || "active",
-              address: {
-                addressLineOne: data.address?.addressLineOne || "",
-                addressLineTwo: data.address?.addressLineTwo || "",
-                city: data.address?.city || "",
-                state: data.address?.state || "",
-                country: data.address?.country || "",
-                zip: data.address?.zip || "",
-              },
             });
           }
         } catch (error) {
@@ -122,17 +106,6 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-  };
-
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      address: {
-        ...prev.address,
-        [name]: value,
-      },
-    }));
   };
 
   const handleSubmit = async (e) => {
@@ -385,11 +358,7 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
       title={mode === "Create" ? "Create New Company" : "Update Company"}
       onClose={onClose}
     >
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col px-4 mb-8"
-        noValidate
-      >
+      <form onSubmit={handleSubmit} className="flex flex-col px-4 mb-8" noValidate>
         <div className="flex-1 space-y-4">
           {/* --- Section 1: Company Information --- */}
           <section className="space-y-4">
@@ -553,96 +522,47 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
           {/* --- Section 3: Address Information --- */}
           <section className="space-y-4 pt-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800">Address</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Address
+              </h3>
             </div>
 
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address Line 1
-                </label>
+              <input
+                type="text"
+                placeholder="Address Line 1"
+                className="w-full h-10 px-4 border border-gray-300 rounded-md outline-none"
+              />
+              <input
+                type="text"
+                placeholder="Address Line 2"
+                className="w-full h-10 px-4 border border-gray-300 rounded-md outline-none"
+              />
+
+              <div className="grid grid-cols-2 gap-6">
                 <input
                   type="text"
-                  placeholder="Address Line 1"
-                  name="addressLineOne"
-                  value={formData.address.addressLineOne}
-                  onChange={handleAddressChange}
+                  placeholder="City"
                   className="w-full h-10 px-4 border border-gray-300 rounded-md outline-none"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address Line 2
-                </label>
                 <input
                   type="text"
-                  placeholder="Address Line 2"
-                  name="addressLineTwo"
-                  value={formData.address.addressLineTwo}
-                  onChange={handleAddressChange}
+                  placeholder="State"
                   className="w-full h-10 px-4 border border-gray-300 rounded-md outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="City"
-                    name="city"
-                    value={formData.address.city}
-                    onChange={handleAddressChange}
-                    className="w-full h-10 px-4 border border-gray-300 rounded-md outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    name="state"
-                    value={formData.address.state}
-                    onChange={handleAddressChange}
-                    placeholder="State"
-                    className="w-full h-10 px-4 border border-gray-300 rounded-md outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    name="country"
-                    value={formData.address.country}
-                    onChange={handleAddressChange}
-                    placeholder="Country"
-                    className="w-full h-10 px-4 border border-gray-300 rounded-md outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ZIP Code
-                  </label>
-                  <input
-                    type="text"
-                    name="zip"
-                    value={formData.address.zip}
-                    onChange={handleAddressChange}
-                    placeholder="ZIP Code"
-                    className="w-full h-10 px-4 border border-gray-300 rounded-md outline-none"
-                  />
-                </div>
+                <input
+                  type="text"
+                  placeholder="Country"
+                  className="w-full h-10 px-4 border border-gray-300 rounded-md outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="ZIP Code"
+                  className="w-full h-10 px-4 border border-gray-300 rounded-md outline-none"
+                />
               </div>
             </div>
           </section>

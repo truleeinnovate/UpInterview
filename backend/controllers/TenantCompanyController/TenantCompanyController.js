@@ -56,7 +56,6 @@ const createCompany = async (req, res) => {
       primaryContactName,
       primaryContactEmail,
       description,
-      address,
     } = req.body;
 
     // 2. Validation
@@ -71,9 +70,11 @@ const createCompany = async (req, res) => {
     // 3. Optional: Check for existing company with same name under this tenant
     const existingCompany = await TenantCompany.findOne({ name, tenantId });
     if (existingCompany) {
-      return res.status(409).json({
-        message: "A company with this name already exists for your account.",
-      });
+      return res
+        .status(409)
+        .json({
+          message: "A company with this name already exists for your account.",
+        });
     }
 
     // 4. Create new instance with all schema fields
@@ -86,7 +87,6 @@ const createCompany = async (req, res) => {
       primaryContactName,
       primaryContactEmail,
       description,
-      address,
     });
 
     const savedCompany = await newCompany.save();

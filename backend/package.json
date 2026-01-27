@@ -43,7 +43,6 @@
     "pm2": "^6.0.13",
     "razorpay": "^2.9.6",
     "streamifier": "^0.1.1",
-    "textract": "^2.5.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

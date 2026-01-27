@@ -191,7 +191,8 @@ const CandidateBulkUpload = ({ onClose }) => {
 
   const handleUpload = async () => {
     const validEntries = csvData.filter((item) => item.isValid);
-    if (validEntries.length === 0 || isProcessing) {
+    if (validEntries.length === 0) {
+      notify.error("No valid rows found to upload.");
       return;
     }
 
@@ -300,7 +301,9 @@ const CandidateBulkUpload = ({ onClose }) => {
               isDragging ? "text-custom-blue" : "text-gray-400"
             }`}
           />
-          <p className="text-sm font-medium text-gray-700">{fileName}</p>
+          <p className="text-sm font-medium text-gray-700">
+            {fileName || "Click to upload or drag and drop"}
+          </p>
           <p className="text-xs text-gray-400 mt-1">
             Click to upload or drag and drop
           </p>
@@ -454,17 +457,8 @@ const CandidateBulkUpload = ({ onClose }) => {
           <LoadingButton
             onClick={handleUpload}
             isLoading={isProcessing}
+            disabled={!csvData.some((r) => r.isValid) || isProcessing}
             loadingText="Uploading..."
-            disabled={
-              csvData.length === 0 ||
-              !csvData.some((r) => r.isValid) ||
-              isProcessing
-            }
-            className={`transition-opacity duration-300 ${
-              csvData.length === 0 || !csvData.some((r) => r.isValid)
-                ? "opacity-50 cursor-not-allowed"
-                : "opacity-100"
-            }`}
           >
             Upload {csvData.filter((r) => r.isValid).length} Candidates
           </LoadingButton>

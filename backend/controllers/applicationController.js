@@ -298,7 +298,7 @@ const createApplication = async (req, res) => {
         if (providedResumeId) {
             resumeId = providedResumeId;
         } else {
-            const resume = await Resume.findOne({ candidateId });
+            const resume = await Resume.findOne({ candidateId }).sort({ createdAt: -1 });
             if (!resume) {
                 console.warn("No resume found — skipping ScreeningResult");
             } else {
@@ -358,7 +358,7 @@ const createApplication = async (req, res) => {
 
         if (type === "candidate-screening" && screeningData) {
             try {
-                 const resume = await Resume.findOne({ candidateId });
+                const resume = await Resume.findOne({ candidateId }).sort({ createdAt: -1 });
                 if (!resume) {
                     console.warn("No resume found for candidate — skipping ScreeningResult");
                 } else {

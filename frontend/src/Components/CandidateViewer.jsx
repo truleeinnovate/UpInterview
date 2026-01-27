@@ -154,6 +154,70 @@ export default function CandidateViewer({
             { label: "Screening", path: "#" }
         ];
 
+    // Prepare initialData for AddCandidateForm
+    // In CandidateViewer.jsx — inside the component
+    const initialFormData = {
+        FirstName: candidate.candidate_name?.split(' ')[0]?.trim() || '',
+        LastName: candidate.candidate_name?.split(' ').slice(1).join(' ').trim() || '',
+        Email: candidate.candidate_email?.trim() || '',
+        // ─── Phone & Country Code ────────────────────────────────────────
+        CountryCode: candidate.candidate_country_code || '+91',  // prefer explicit country code if available
+
+        // Clean phone number — remove country code prefix if present
+        Phone: candidate.candidate_phone
+            ? candidate.candidate_phone
+                .replace(/^\+91/, '')     // remove +91 if present
+                .replace(/^91/, '')       // remove 91 if present
+                .trim()
+            : '',
+
+        // ─── Parsed / Screening-based fields ────────────────────────────────
+
+        // Higher Qualification — prioritize screening_result → parsed_education → fallback empty
+        HigherQualification:
+            candidate.screening_result?.education ||
+            candidate.screening_result?.parsedEducation ||
+            candidate.parsed_education ||
+            '',
+
+        // University / College — try to extract intelligently from education string
+        UniversityCollege:
+            candidate.screening_result?.university ||
+            (candidate.parsed_education?.match(/University\s+of\s+([\w\s]+)/i)?.[1]?.trim() ||
+                candidate.parsed_education?.match(/([\w\s]+)\s+University/i)?.[1]?.trim() ||
+                candidate.parsed_education?.split(',').pop()?.trim() || ''),
+
+        // Experience — parse number safely from string or use screening years
+        CurrentExperience:
+            parseFloat(candidate.parsed_experience?.match(/(\d+(\.\d+)?)/)?.[0]) || // extract first number
+            parseFloat(candidate.screening_result?.experience_years) ||
+            candidate.screening_result?.experienceYears ||
+            0,
+
+        // Relevant Experience — same fallback (you can make different logic later if needed)
+        RelevantExperience:
+            parseFloat(candidate.parsed_experience?.match(/(\d+(\.\d+)?)/)?.[0]) ||
+            parseFloat(candidate.screening_result?.experience_years) ||
+            0,
+
+        // Skills — pre-fill correctly as array of objects
+        // Only pre-fill if parsed_skills exists and is array
+        skills: Array.isArray(candidate.parsed_skills) && candidate.parsed_skills.length > 0
+            ? candidate.parsed_skills.map(skillName => ({
+                skill: skillName.trim(),
+                experience: '',            // leave blank — user fills
+                expertise: 'Beginner'      // default value (change if you have better mapping)
+            }))
+            : [],
+
+        // LinkedIn (if available)
+        linkedInUrl: candidate.linkedInUrl || '',
+
+        // Optional — if form supports these
+        // Gender: candidate.screening_result?.gender || candidate.gender || '',
+        // Date_Of_Birth: candidate.screening_result?.dob || candidate.Date_Of_Birth || '',
+    };
+
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-[90vw] max-w-7xl h-[90vh] flex flex-col overflow-hidden">
@@ -346,6 +410,7 @@ export default function CandidateViewer({
                                                     </div>
                                                 </div>
                                             )}
+
                                         </div>
                                     </div>
                                 </div>
@@ -534,12 +599,11 @@ export default function CandidateViewer({
                                 mode={isExistingCandidate ? "Edit" : "Add"}
                                 isModal={true}
                                 onClose={handleFormClose}
-                                // initialData={initialFormData}
+                                initialData={initialFormData}
                                 screeningData={candidate}
                                 source="candidate-screening"
                                 positionId={position?._id}
                                 candidateId={isExistingCandidate ? candidate.existing_candidate_id : undefined}
-                                shouldCreateApplication={!hasActiveApplication}
 
                             />
                         </div>
