@@ -50,9 +50,7 @@ const AddressesPopup = ({
   //   fetchData();
   // }, [organizationId, isOpen]);
 
-  console.log("isOpen", isOpen);
-
-  console.log("organizationId", organizationId);
+  console.log("address", address);
 
   // Fetch addresses using TanStack Query
   const {
@@ -106,8 +104,12 @@ const AddressesPopup = ({
       setAddress(selectedAddress);
     }
 
+    // Optional: add small delay before closing to let parent re-render
+    setTimeout(() => {
+      onClose();
+    }, 80);
     // 3. Close the popup - this is already correct in your code
-    onClose();
+    // onClose();
   };
 
   if (!isOpen) return null;
@@ -149,7 +151,10 @@ const AddressesPopup = ({
                   onClick={(e) => {
                     e.preventDefault(); // ← ADD THIS
                     e.stopPropagation(); // ← ADD THIS
-                    if (!office.isDefault) {
+                    // if (!office.isDefault) {
+                    //   handleSetDefault(index);
+                    // }
+                    if (address?._id !== office?._id) {
                       handleSetDefault(index);
                     }
                   }}
