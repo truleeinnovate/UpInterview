@@ -147,6 +147,8 @@ function parseAIResponse(responseText) {
                 skillMatch: Math.min(100, Math.max(0, parsed.skillMatch || 0)),
                 experienceMatch: Math.min(100, Math.max(0, parsed.experienceMatch || 0)),
                 summary: parsed.summary || "",
+                professionalSummary: parsed.professionalSummary || parsed.summary || "",
+                keyAchievements: parsed.keyAchievements || "",
                 strengths: parsed.strengths || [],
                 concerns: parsed.concerns || [],
                 matchedSkills: parsed.matchedSkills || [],
@@ -154,7 +156,6 @@ function parseAIResponse(responseText) {
                 recommendation: parsed.recommendation || "HOLD",
                 languages: parsed.languages || [],
                 certifications: parsed.certifications || [],
-                projects: parsed.projects || [],
                 workHistory: parsed.workHistory || [],
                 extractedProfile: parsed.extractedProfile || {}
             };

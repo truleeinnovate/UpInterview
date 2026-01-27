@@ -25,17 +25,22 @@ const resumeSchema = new mongoose.Schema(
             },
         ],
 
+        professionalSummary: String,
+        keyAchievements: String,
+        workExperience: [
+            {
+                projectName: String,
+                role: String,
+                fromDate: String,
+                toDate: String,
+                responsibilities: String,
+            }
+        ],
+
         // Added for dynamic parsing
         certifications: [String],
         languages: [String],
-        projects: [
-            {
-                title: String,
-                description: String,
-                technologies: [String],
-                url: String
-            }
-        ],
+
 
         ImageData: {
             filename: String,

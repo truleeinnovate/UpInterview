@@ -133,23 +133,23 @@ export default function CandidateViewer({
     // Breadcrumb items (single instance at top)
     const breadcrumbItems = showCandidateForm
         ? [
-            { label: "Positions", path: "/positions" },
-            {
-                label: position?.title || "Position",
-                path: position?.id ? `/positions/${position.id}` : "#",
-                status: position?.status || "Opened"
-            },
+            // { label: "Positions", path: "/positions" },
+            // {
+            //     label: position?.title || "Position",
+            //     path: position?.id ? `/positions/${position.id}` : "#",
+            //     status: position?.status || "Opened"
+            // },
             { label: "Candidates", path: "#" },
             { label: "Screening", path: "#" },
             { label: "Create Application", path: "#" }
         ]
         : [
-            { label: "Positions", path: "/positions" },
-            {
-                label: position?.title || "Position",
-                path: position?.id ? `/positions/${position.id}` : "#",
-                status: position?.status || "Opened"
-            },
+            // { label: "Positions", path: "/positions" },
+            // {
+            //     label: position?.title || "Position",
+            //     path: position?.id ? `/positions/${position.id}` : "#",
+            //     status: position?.status || "Opened"
+            // },
             { label: "Candidates", path: "#" },
             { label: "Screening", path: "#" }
         ];
@@ -529,7 +529,7 @@ export default function CandidateViewer({
 
                     ) : (
 
-                        <div className="flex-1 overflow-y-auto bg-gray-50">
+                        <div className="flex-1 overflow-y-auto bg-gray-50 px-12">
                             <AddCandidateForm
                                 mode={isExistingCandidate ? "Edit" : "Add"}
                                 isModal={true}

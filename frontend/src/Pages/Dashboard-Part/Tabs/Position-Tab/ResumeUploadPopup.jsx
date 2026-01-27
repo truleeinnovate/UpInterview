@@ -43,11 +43,11 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
     };
 
     // Breadcrumb items for page navigation
-    const breadcrumbItems = [
-        { label: 'Positions', path: '/position' },
-        { label: positionTitle, path: `/position/view-details/${positionId}` },
-        { label: 'Upload Resumes', path: `/position/view-details/${positionId}/upload-resumes` }
-    ];
+    // const breadcrumbItems = [
+    //     { label: 'Positions', path: '/position' },
+    //     { label: positionTitle, path: `/position/view-details/${positionId}` },
+    //     { label: 'Upload Resumes', path: `/position/view-details/${positionId}/upload-resumes` }
+    // ];
 
     const [currentStep, setCurrentStep] = useState(1);
     const [screeningMethod, setScreeningMethod] = useState('system_internal');
@@ -435,7 +435,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                 </div>
 
                 {/* Breadcrumb */}
-                <Breadcrumb items={breadcrumbItems} />
+                {/* <Breadcrumb items={breadcrumbItems} /> */}
 
                 {/* Page Title */}
                 <div className="mt-4 mb-6">
