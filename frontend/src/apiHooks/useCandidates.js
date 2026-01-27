@@ -326,7 +326,7 @@ export const useCandidateById = (candidateId) => {
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Candidates?.View;
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["candidate", candidateId],
     queryFn: async () => {
       const authToken = Cookies.get("authToken") ?? "";
@@ -354,6 +354,7 @@ export const useCandidateById = (candidateId) => {
     isLoading,
     isError,
     error,
+    refetch,
   };
 };
 
@@ -423,5 +424,17 @@ export const useValidateLinkedIn = (url) => {
     },
     enabled: !!tenantId && !!url && url.includes("linkedin.com"),
     retry: false,
+  });
+};
+
+export const useCandidateStats = (candidateId) => {
+  return useQuery({
+    queryKey: ["candidate-stats", candidateId],
+    queryFn: async () => {
+      const response = await axios.get(`${config.REACT_APP_API_URL}/candidate/${candidateId}/stats`);
+      return response.data;
+    },
+    enabled: !!candidateId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
