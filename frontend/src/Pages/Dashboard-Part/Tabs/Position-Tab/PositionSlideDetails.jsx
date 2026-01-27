@@ -112,8 +112,8 @@ const PositionApplicationsTab = ({ positionId, onOpenApplication }) => {
   const handleOpenApplication = (application) => {
     if (onOpenApplication) {
       onOpenApplication(application);
-    } else if (application.candidateId?._id) {
-      navigate(`/dashboard/candidate/${application.candidateId._id}`);
+    } else if (application.candidateId) {
+      navigate(`/dashboard/candidate/${application.candidateId}`);
     }
   };
 
@@ -182,11 +182,11 @@ const PositionApplicationsTab = ({ positionId, onOpenApplication }) => {
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    {application.candidateId?.FirstName || ""} {application.candidateId?.LastName || "N/A"}
+                    {application.candidate?.FirstName || ""} {application.candidate?.LastName || "N/A"}
                   </div>
-                  {application.candidateId?.Email && (
+                  {application.candidate?.Email && (
                     <div className="text-xs text-gray-500">
-                      {application.candidateId.Email}
+                      {application.candidate.Email}
                     </div>
                   )}
                 </td>
@@ -248,7 +248,8 @@ const PositionCandidatesTab = ({ positionId, position }) => {
   // Map applications to the structure expected by the table (flattening candidateId)
   const formattedCandidates = (apps) => {
     return (Array.isArray(apps) ? apps : []).map((app) => {
-      const candidate = app.candidateId || {};
+      const candidate = app.candidate || {};
+
       return {
         // Properties expected by Candidate component
         id: candidate._id,
