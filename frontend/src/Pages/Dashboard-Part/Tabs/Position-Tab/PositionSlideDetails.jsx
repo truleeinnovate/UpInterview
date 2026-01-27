@@ -299,6 +299,11 @@ const PositionCandidatesTab = ({ positionId, position }) => {
       parsed_education: row.HigherQualification,
       parsed_skills: row.skills.map(s => s.skill || s),
 
+      // Explicitly pass fields that were missing
+      certifications: row.certifications || [],
+      current_company: row.CurrentRole,
+      resume_file: row.Resume || row.fileName || "Resume.pdf",
+
       // Pass the full candidate/application object just in case
       originalData: row
     };
