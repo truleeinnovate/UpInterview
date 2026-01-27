@@ -127,7 +127,7 @@ const PositionApplicationsTab = ({ positionId, onOpenApplication }) => {
 
   if (!applications || applications.length === 0) {
     return (
-      <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 my-6">
+      <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 my-4">
         <Briefcase className="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <p className="text-gray-500">No applications yet. Move candidates to the interview pipeline from the Candidates tab.</p>
       </div>
@@ -338,7 +338,7 @@ const PositionCandidatesTab = ({ positionId, position }) => {
 
   if (applications.length === 0) {
     return (
-      <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+      <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 my-4">
         <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <p className="text-gray-500">No candidates available for this position.</p>
       </div>
@@ -424,7 +424,7 @@ const PositionInterviewsTab = ({ position }) => {
 
   if (!filteredInterviews || filteredInterviews.length === 0) {
     return (
-      <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+      <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 my-4">
         <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <p className="text-gray-500">No interviews scheduled for this position yet.</p>
       </div>

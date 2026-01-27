@@ -191,8 +191,9 @@ exports.screenResume = async (req, res) => {
                             // New Parsed Data
                             languages: aiResult.data.languages || [],
                             certifications: aiResult.data.certifications || [],
-                            projects: aiResult.data.projects || [],
                             workHistory: aiResult.data.workHistory || [],
+                            professionalSummary: aiResult.data.professionalSummary || "",
+                            keyAchievements: aiResult.data.keyAchievements || "",
                             extractedProfile: aiResult.data.extractedProfile || {}
                         };
                         recommendation = aiResult.data.recommendation === 'PROCEED' ? 'PROCEED' :
@@ -584,7 +585,7 @@ function buildSystemMetadata(systemResult) {
     return {
         score: score,
         skillMatch: skillMatchNum,
-        experienceMatch: 0, // System doesn't calculate experience match yet
+        experienceMatch: 0,
         matchedSkills: systemResult.scoringResult?.matchedSkills?.map(s => s.skill || s) || [],
         missingSkills: systemResult.scoringResult?.missingRequiredSkills || [],
         screeningNotes: systemResult.insights?.summary || '',
@@ -592,6 +593,13 @@ function buildSystemMetadata(systemResult) {
         strengths: systemResult.insights?.strengths || [],
         concerns: systemResult.insights?.concerns || [],
         summary: systemResult.insights?.summary || '',
+
+        // System Extracted Data
+        professionalSummary: systemResult.extractedProfile?.professionalSummary || '',
+        workHistory: systemResult.extractedProfile?.workHistory || [],
+        languages: systemResult.extractedProfile?.languages || [],
+        certifications: systemResult.extractedProfile?.certifications || [],
+
         method: 'SYSTEM'
     };
 }

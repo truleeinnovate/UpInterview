@@ -372,9 +372,9 @@ const AddCandidateForm = ({
       CountryCode: sd.candidate_country_code || "+91",
       Phone: sd.candidate_phone
         ? sd.candidate_phone
-            .replace(/^\+\d{1,3}/, "")
-            .replace(/^\d{1,3}/, "")
-            .trim()
+          .replace(/^\+\d{1,3}/, "")
+          .replace(/^\d{1,3}/, "")
+          .trim()
         : "",
 
       // ── Education ───────────────────────────────────
@@ -395,15 +395,28 @@ const AddCandidateForm = ({
       skills:
         parsedSkills.length > 0
           ? parsedSkills.map((name) => ({
-              skill: (name || "").trim(),
-              experience: "",
-              expertise: "Beginner",
-            }))
+            skill: (name || "").trim(),
+            experience: "",
+            expertise: "Beginner",
+          }))
           : (sd.screening_result?.extracted_skills || []).map((name) => ({
-              skill: (name || "").trim(),
-              experience: "",
-              expertise: "Beginner",
-            })),
+            skill: (name || "").trim(),
+            experience: "",
+            expertise: "Beginner",
+          })),
+
+
+
+      // ── New Fields (Resume Analysis) ─────────────────
+      professionalSummary: sd.screening_result?.summary || sd.screening_result?.professionalSummary || "",
+      keyAchievements: sd.screening_result?.strengths?.join("\n• ") ? "• " + sd.screening_result.strengths.join("\n• ") : "",
+      workExperience: sd.screening_result?.workHistory?.map(job => ({
+        projectName: job.company || "",
+        role: job.role || "",
+        fromDate: job.duration ? job.duration.split("-")[0]?.trim() : "",
+        toDate: job.duration ? job.duration.split("-")[1]?.trim() : "",
+        responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities.map(r => `• ${r}`).join("\n") : (job.responsibilities || "")
+      })) || [],
 
       linkedInUrl: sd.linkedInUrl || "",
     };
@@ -457,10 +470,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry,
       );
       setEntries(updatedEntries);
@@ -639,12 +652,12 @@ const AddCandidateForm = ({
       [name]: errorMessage,
       ...(name === "CurrentExperience" && formData.RelevantExperience
         ? {
-            RelevantExperience: getErrorMessage(
-              "RelevantExperience",
-              formData.RelevantExperience,
-              nextFormData,
-            ),
-          }
+          RelevantExperience: getErrorMessage(
+            "RelevantExperience",
+            formData.RelevantExperience,
+            nextFormData,
+          ),
+        }
         : {}),
     }));
   };
@@ -836,6 +849,9 @@ const AddCandidateForm = ({
       ownerId: userId,
       tenantId: orgId,
       linkedInUrl: formData.linkedInUrl,
+      professionalSummary: formData.professionalSummary,
+      keyAchievements: formData.keyAchievements,
+      workExperience: formData.workExperience,
     };
 
     // Add screening metadata for backend storage only
@@ -844,14 +860,14 @@ const AddCandidateForm = ({
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" &&
         mode !== "Edit" && {
-          source: "UPLOAD",
-          // Pass full screeningData so backend can store it
-          screeningData: screeningData, // ← direct pass (full object)
-          parsedJson: screeningData.metadata || screeningData.parsedJson || {},
-          parsedSkills: screeningData.parsed_skills || [],
-          parsedExperience: screeningData.parsed_experience || null,
-          parsedEducation: screeningData.parsed_education || null,
-        }),
+        source: "UPLOAD",
+        // Pass full screeningData so backend can store it
+        screeningData: screeningData, // ← direct pass (full object)
+        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+        parsedSkills: screeningData.parsed_skills || [],
+        parsedExperience: screeningData.parsed_experience || null,
+        parsedEducation: screeningData.parsed_education || null,
+      }),
     };
 
     try {
@@ -1052,8 +1068,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save candidate",
+        error.message ||
+        "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1451,7 +1467,7 @@ const AddCandidateForm = ({
                 // error={errors.Gender}
                 containerRef={fieldRefs.Gender}
                 label="Gender"
-                // required
+              // required
               />
             </div>
             {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -1928,9 +1944,8 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${
-                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               Cancel
             </Button>
@@ -2105,12 +2120,20 @@ const AddCandidateForm = ({
                 <DescriptionField
                   label="Responsibilities"
                   value={currentProject.responsibilities}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const { value } = e.target;
                     setCurrentProject({
                       ...currentProject,
-                      responsibilities: e.target.value,
-                    })
-                  }
+                      responsibilities: value,
+                    });
+                    if (projectErrors.responsibilities && value.length >= 200) {
+                      setProjectErrors((prev) => {
+                        const newErrors = { ...prev };
+                        delete newErrors.responsibilities;
+                        return newErrors;
+                      });
+                    }
+                  }}
                   placeholder="Describe your role and impact in this project..."
                   error={projectErrors.responsibilities}
                   rows={5}

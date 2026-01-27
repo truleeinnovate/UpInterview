@@ -9,6 +9,7 @@ const {
 const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Candidate } = require("../models/candidate.js");
 const { Resume } = require("../models/Resume.js");
+const Role = require("../models/RolesData.js");
 const { Interview } = require("../models/Interview/Interview.js");
 const {
   CandidateAssessment,
@@ -59,6 +60,9 @@ const addCandidatePostCall = async (req, res) => {
       PositionId,
       // Technology,
       linkedInUrl,
+      professionalSummary,
+      keyAchievements,
+      workExperience,
     } = req.body;
 
     // Get ownerId and tenantId from request body
@@ -125,6 +129,9 @@ const addCandidatePostCall = async (req, res) => {
       RelevantExperience,
       CurrentRole,
       skills,
+      professionalSummary,
+      keyAchievements,
+      workExperience,
       ImageData,
       resume: resumeFile,
       source: source || "MANUAL",
@@ -350,6 +357,9 @@ const updateCandidatePatchCall = async (req, res) => {
       "ImageData",
       "resume",
       "source",
+      "professionalSummary",
+      "keyAchievements",
+      "workExperience",
     ];
 
     const candidateUpdateData = { updatedBy: ownerId };
@@ -583,6 +593,9 @@ const getCandidatesData = async (req, res) => {
         },
         ImageData: { $ifNull: ["$activeResume.ImageData", "$ImageData"] },
         CurrentRole: { $ifNull: ["$activeResume.CurrentRole", "$CurrentRole"] },
+        professionalSummary: { $ifNull: ["$activeResume.professionalSummary", "$professionalSummary"] },
+        keyAchievements: { $ifNull: ["$activeResume.keyAchievements", "$keyAchievements"] },
+        workExperience: { $ifNull: ["$activeResume.workExperience", "$workExperience"] },
       },
     });
 
@@ -759,7 +772,7 @@ const getCandidateById = async (req, res) => {
     // Get role details from resume's CurrentRole
     let roleDetails = null;
     if (activeResume?.CurrentRole) {
-      roleDetails = await RoleMaster.findOne({
+      roleDetails = await Role.findOne({
         roleName: activeResume.CurrentRole,
       })
         .select("roleName roleLabel")
@@ -779,6 +792,9 @@ const getCandidateById = async (req, res) => {
         skills: activeResume.skills,
         ImageData: activeResume.ImageData,
         resume: activeResume.resume,
+        professionalSummary: activeResume.professionalSummary,
+        keyAchievements: activeResume.keyAchievements,
+        workExperience: activeResume.workExperience,
       }),
       roleDetails,
       activeResume, // Include full resume object as well
