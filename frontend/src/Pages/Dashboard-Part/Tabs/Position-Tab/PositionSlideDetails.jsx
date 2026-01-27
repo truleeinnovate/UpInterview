@@ -41,6 +41,8 @@ import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { useApplicationsByPosition } from "../../../../apiHooks/useApplications";
 import { Loader2, Eye, User } from "lucide-react";
+import { useInterviews } from "../../../../apiHooks/useInterviews";
+import { usePermissions } from "../../../../Context/PermissionsContext";
 import TableView from "../../../../Components/Shared/Table/TableView";
 import { Mail } from "lucide-react";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
@@ -370,6 +372,143 @@ const PositionCandidatesTab = ({ positionId, position }) => {
         />
       )}
     </>
+  );
+};
+
+// Interviews Tab Component for Position
+const PositionInterviewsTab = ({ position }) => {
+  // Filter interviews by this position's title
+  // useInterviews expects filters.position to be an array of position titles (based on InterviewList usage)
+  const { interviewData, isLoading } = useInterviews(
+    {
+      position: [position?.title],
+    },
+    1, // page
+    100 // limit (fetch enough for a reasonable list)
+  );
+
+  const navigate = useNavigate();
+  const { effectivePermissions } = usePermissions();
+
+  const handleViewInterview = (interview) => {
+    if (effectivePermissions.Interviews?.View) {
+      navigate(`/interviews/${interview._id}`);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'scheduled': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <Loader2 className="w-8 h-8 animate-spin text-custom-blue" />
+      </div>
+    );
+  }
+
+  // Double check filtering on client side in case backend fuzzy matches or returns more
+  const filteredInterviews = interviewData?.filter(i => i.positionId?._id === position._id || i.positionId === position._id) || [];
+
+  if (!filteredInterviews || filteredInterviews.length === 0) {
+    return (
+      <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+        <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <p className="text-gray-500">No interviews scheduled for this position yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden my-6">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interview ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Candidate</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Scheduled Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interviewer</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredInterviews.map((interview) => {
+              const rounds = interview.rounds || [];
+              const currentRound = rounds
+                .filter((round) => ["Scheduled", "RequestSent"].includes(round.status))
+                .sort((a, b) => a.sequence - b.sequence)[0];
+
+              // Fallback to first round if no active round, or just show general info
+              const displayRound = currentRound || rounds[0];
+
+              return (
+                <tr key={interview._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-custom-blue cursor-pointer" onClick={() => handleViewInterview(interview)}>
+                    {interview.interviewCode}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {interview.candidateId?.FirstName} {interview.candidateId?.LastName}
+                    </div>
+                    <div className="text-xs text-gray-500">{interview.candidateId?.Email}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {displayRound ? (
+                      <span className="capitalize">{displayRound.interviewType || displayRound.roundTitle}</span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {displayRound?.dateTime ? (
+                      <span>{displayRound.dateTime.split(" - ")[0]}</span>
+                    ) : (
+                      <span className="text-gray-400">Not Scheduled</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {displayRound?.interviewers && displayRound.interviewers.length > 0 ? (
+                      <div className="flex -space-x-2 overflow-hidden">
+                        {displayRound.interviewers.map((interviewer, idx) => (
+                          <div key={idx} className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-custom-blue text-white flex items-center justify-center text-xs" title={interviewer.name || "Interviewer"}>
+                            {interviewer.name ? interviewer.name.charAt(0).toUpperCase() : "I"}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">Unassigned</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(interview.status)}`}>
+                      {interview.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => handleViewInterview(interview)}
+                      className="text-custom-blue hover:text-custom-blue-dark flex items-center gap-1"
+                    >
+                      <Eye size={16} /> View
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 
@@ -1065,10 +1204,7 @@ const PositionSlideDetails = () => {
 
             {/* Interviews Tab */}
             {activeTab === "Interviews" && (
-              <div className="bg-white rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Interviews</h3>
-                <p className="text-gray-500">Interviews scheduled for this position will appear here.</p>
-              </div>
+              <PositionInterviewsTab position={position} />
             )}
             {/* v1.0.5 <------------------------------- */}
             {activeTab === "Feeds" && (

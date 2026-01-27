@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
     CheckCircle, X, Mail, Phone, Briefcase,
-    GraduationCap, Award, FileText, AlertTriangle
+    GraduationCap, Award, FileText, AlertTriangle,
+    Check, ChevronRight
 } from 'lucide-react';
 
 import Breadcrumb from '../Pages/Dashboard-Part/Tabs/CommonCode-AllTabs/Breadcrumb';
@@ -29,13 +30,19 @@ const getScoreBadgeColor = (score) => {
     return 'bg-red-100 text-red-800';
 };
 
+
+
+
+
 export default function CandidateViewer({
     candidate,
     onClose,
     onAction,
     position,
     source = 'system_internal',
-    totalResults = 1 // Default to 1 (force navigation) if not provided
+
+    totalResults = 1, // Default to 1 (force navigation) if not provided
+    showNavigation = false // Control visibility of Breadcrumb and Info Box
 }) {
     console.log("position", position);
 
@@ -232,7 +239,40 @@ export default function CandidateViewer({
                             </button>
 
                         </div>
-                        <Breadcrumb items={breadcrumbItems} />
+                        {showNavigation && (
+                            <div className="flex items-center justify-start gap-2 bg-gray-50 rounded-lg p-3 mb-2 w-full overflow-x-auto">
+                                {breadcrumbItems.map((item, idx) => {
+                                    const isLast = idx === breadcrumbItems.length - 1;
+                                    const isCompleted = !isLast;
+
+                                    return (
+                                        <React.Fragment key={idx}>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-semibold text-xs flex-shrink-0 ${isCompleted
+                                                        ? 'bg-emerald-500 text-white'
+                                                        : 'bg-custom-blue text-white'
+                                                    }`}>
+                                                    {isCompleted ? <Check className="w-3 h-3" /> : (idx + 1)}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                                        {item.label}
+                                                    </p>
+                                                    {isLast && item.status && (
+                                                        <p className="text-[10px] text-gray-500 truncate">
+                                                            {item.status}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {!isLast && (
+                                                <ChevronRight className="w-3 h-3 text-gray-300 flex-shrink-0 mx-1" />
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -426,34 +466,36 @@ export default function CandidateViewer({
 
                     {/* ─── Global shared footer (visible in screening mode only) ──────── */}
                     {!showCandidateForm && (
-                        <div className="bg-white px-7 py-3 border-t border-gray-200">
-                            {/* Info text above buttons */}
-                            <div className="bg-blue-50 rounded-lg p-4 mb-5 text-sm text-blue-800">
-                                Proceeding to interview will create an Application and move this candidate to the Applications tab.
+                        showNavigation && (
+                            <div className="bg-white px-7 py-3 border-t border-gray-200">
+                                {/* Info text above buttons */}
+                                <div className="bg-blue-50 rounded-lg p-4 mb-5 text-sm text-blue-800">
+                                    Proceeding to interview will create an Application and move this candidate to the Applications tab.
+                                </div>
+
+                                {/* Buttons */}
+                                <div className="flex justify-end gap-3">
+
+                                    <Button
+                                        variant="outline"
+                                        type="button"
+                                        onClick={onClose}
+                                        className={`text-custom-blue border border-custom-blue transition-colors`}
+                                    >
+                                        Cancel
+                                    </Button>
+
+                                    <LoadingButton
+                                        onClick={handleProceed}
+                                    //   isLoading={isMutationLoading && activeButton === "save"}
+                                    //   loadingText={id ? "Updating..." : "Saving..."}
+                                    >
+                                        {/* {id ? "Update" : "Save"} */}
+                                        Proceed
+                                    </LoadingButton>
+                                </div>
                             </div>
-
-                            {/* Buttons */}
-                            <div className="flex justify-end gap-3">
-
-                                <Button
-                                    variant="outline"
-                                    type="button"
-                                    onClick={onClose}
-                                    className={`text-custom-blue border border-custom-blue transition-colors`}
-                                >
-                                    Cancel
-                                </Button>
-
-                                <LoadingButton
-                                    onClick={handleProceed}
-                                //   isLoading={isMutationLoading && activeButton === "save"}
-                                //   loadingText={id ? "Updating..." : "Saving..."}
-                                >
-                                    {/* {id ? "Update" : "Save"} */}
-                                    Proceed
-                                </LoadingButton>
-                            </div>
-                        </div>
+                        )
                     )}
 
                     {showExistingAppPrompt && (

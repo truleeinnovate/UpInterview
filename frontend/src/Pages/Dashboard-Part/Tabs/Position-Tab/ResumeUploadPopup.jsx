@@ -157,8 +157,8 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
             }
 
             const data = await response.json();
-            console.log("response",response);
-            
+            //console.log("response",response);
+
 
             if (!data.success) {
                 throw new Error(data.message || 'Screening failed');
@@ -1095,6 +1095,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                     setViewingResult(null);
                                 }}
                                 source={screeningMethod}
+                                showNavigation={true}
                                 totalResults={screeningResults.length}
                             />
                         )}
