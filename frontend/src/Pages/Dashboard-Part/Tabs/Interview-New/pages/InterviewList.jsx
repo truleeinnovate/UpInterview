@@ -37,7 +37,8 @@ import { notify } from "../../../../../services/toastService.js";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import { getEmptyStateMessage } from "../../../../../utils/EmptyStateMessage/emptyStateMessage.js";
 
-function InterviewList() {
+const InterviewList = ({ interviews, isPositionView }) => {
+  const isEmbedded = isPositionView;
   const { effectivePermissions } = usePermissions();
   const navigate = useNavigate();
   const [selectedPosition, setSelectedPosition] = useState(null);
@@ -70,24 +71,28 @@ function InterviewList() {
     isLoading,
     deleteInterviewMutation,
   } = useInterviews(
-    {
-      searchQuery: debouncedSearch, // Debounced search for fewer requests
-      status: selectedFilters.status,
-      tech: selectedFilters.tech,
-      experienceMin: selectedFilters.experience.min,
-      experienceMax: selectedFilters.experience.max,
-      interviewType: selectedFilters.interviewType,
-      interviewMode: selectedFilters.interviewMode,
-      position: selectedFilters.position,
-      company: selectedFilters.company,
-      roundStatus: selectedFilters.roundStatus,
-      interviewer: selectedFilters.interviewer,
-      createdDate: selectedFilters.createdDate,
-      interviewDateFrom: selectedFilters.interviewDate.from,
-      interviewDateTo: selectedFilters.interviewDate.to,
-    },
-    currentPage + 1,
-    rowsPerPage
+    !isEmbedded
+      ? {
+        searchQuery: debouncedSearch, // Debounced search for fewer requests
+        status: selectedFilters.status,
+        tech: selectedFilters.tech,
+        experienceMin: selectedFilters.experience.min,
+        experienceMax: selectedFilters.experience.max,
+        interviewType: selectedFilters.interviewType,
+        interviewMode: selectedFilters.interviewMode,
+        position: selectedFilters.position,
+        company: selectedFilters.company,
+        roundStatus: selectedFilters.roundStatus,
+        interviewer: selectedFilters.interviewer,
+        createdDate: selectedFilters.createdDate,
+        interviewDateFrom: selectedFilters.interviewDate.from,
+        interviewDateTo: selectedFilters.interviewDate.to,
+      }
+      : {},
+    !isEmbedded ? currentPage + 1 : 1,
+    !isEmbedded ? rowsPerPage : 1000,
+    "interviews",
+    { enabled: !isEmbedded }
   );
 
   const [selectedStatus, setSelectedStatus] = useState([]);
@@ -375,6 +380,50 @@ function InterviewList() {
     }));
   };
 
+  const FilteredData = () => {
+    const data = isEmbedded ? interviews : interviewData;
+    if (!Array.isArray(data)) return [];
+
+    return data.filter((interview) => {
+      // If not embedded, server does filtering, so just return true (or rely on API data)
+      // But if we want client-side search/filter on the passed 'interviews' prop:
+      if (!isEmbedded) return true;
+
+      const fieldsToSearch = [
+        interview.candidateId?.FirstName,
+        interview.candidateId?.LastName,
+        interview.candidateId?.Email,
+        interview.positionId?.title,
+        interview.positionId?.companyname,
+        interview.interviewTitle,
+        interview.interviewType,
+        interview.status,
+        interview.interviewCode,
+      ].filter(Boolean);
+
+      const normalizedQuery = normalizeSpaces(searchQuery);
+
+      // Full name both orders
+      const fullNameNormal = normalizeSpaces(
+        `${interview.candidateId?.FirstName || ""} ${interview.candidateId?.LastName || ""
+        }`
+      );
+      const fullNameReverse = normalizeSpaces(
+        `${interview.candidateId?.LastName || ""} ${interview.candidateId?.FirstName || ""
+        }`
+      );
+
+      const matchesSearchQuery =
+        fieldsToSearch.some((field) =>
+          normalizeSpaces(field).includes(normalizedQuery)
+        ) ||
+        fullNameNormal.includes(normalizedQuery) ||
+        fullNameReverse.includes(normalizedQuery);
+
+      return matchesSearchQuery;
+    });
+  };
+
   // v1.0.1 <------------------------------------------------------------------
   const normalizeSpaces = (str) =>
     str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
@@ -537,7 +586,8 @@ function InterviewList() {
   // };
 
   // Derive total pages from total count (same pattern as Candidate/Position tabs)
-  const totalPages = total > 0 ? Math.ceil(total / rowsPerPage) : 0;
+  const totalCount = isEmbedded ? (interviews?.length || 0) : total;
+  const totalPages = totalCount > 0 ? Math.ceil(totalCount / rowsPerPage) : 0;
   // const nextPage = () => {
   //   if (currentPage < totalPages - 1) {
   //     setCurrentPage((prev) => prev + 1);
@@ -563,9 +613,10 @@ function InterviewList() {
   };
 
   const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, interviewData.length);
+  const endIndex = Math.min(startIndex + rowsPerPage, isEmbedded ? FilteredData().length : interviewData.length);
   // const currentFilteredRows = interviewData.slice(startIndex, endIndex);
-  const currentFilteredRows = interviewData;
+
+  const currentFilteredRows = isEmbedded ? FilteredData() : interviewData;
 
   // ------------------------ Dynamic Empty State Messages using Utility ----------------------
   const isSearchActive = searchQuery.length > 0 || isFilterActive;
@@ -973,7 +1024,7 @@ function InterviewList() {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
+      {!isEmbedded && <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
             <Header
@@ -1000,9 +1051,9 @@ function InterviewList() {
             />
           </div>
         </main>
-      </div>
+      </div>}
       {/* v1.0.3 <--------------------------------------------------------------------------------------- */}
-      <main className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+      <main className={isEmbedded ? "" : "fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background"}>
         {/* v1.0.3 ---------------------------------------------------------------------------------------> */}
         <div className="sm:px-0">
           <motion.div className="bg-white">

@@ -496,7 +496,10 @@ import {
   Plus,
   Clock,
   Target,
+  ExternalLink,
+  Download,
 } from "lucide-react";
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useCandidateById } from "../../../../../apiHooks/useCandidates";
@@ -509,10 +512,127 @@ import { useApplicationsByCandidate } from "../../../../../apiHooks/useApplicati
 import Breadcrumb from "../../../Tabs/CommonCode-AllTabs/Breadcrumb.jsx";
 import { Button } from "../../../../../Components/Buttons/Button.jsx";
 import { Loader2 } from "lucide-react";
+import ApplicationView from "../../Position-Tab/ApplicationView";
+
+// Resumes Tab Component
+const ResumesTab = ({ candidateId, candidateName }) => {
+  const [resumes, setResumes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchResumes = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/candidate/${candidateId}/resumes`);
+        setResumes(response.data);
+      } catch (error) {
+        console.error("Error fetching resumes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (candidateId) {
+      fetchResumes();
+    }
+  }, [candidateId]);
+
+  const handleDownload = (url, filename) => {
+    if (!url) return;
+
+    // Construct full URL if relative
+    let downloadUrl = url;
+    if (!url.startsWith('http') && !url.startsWith('//')) {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const origin = apiUrl.startsWith('http') ? new URL(apiUrl).origin : apiUrl;
+      const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+      downloadUrl = `${origin}/${cleanUrl}`;
+    }
+
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.setAttribute('download', filename || 'resume.pdf');
+    link.setAttribute('target', '_blank');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const formatSize = (bytes) => {
+    if (!bytes) return 'Unknown size';
+    const k = 1024;
+    const dm = 2;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-custom-blue" />
+      </div>
+    );
+  }
+
+  if (resumes.length === 0) {
+    return (
+      <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+        <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <p className="text-lg font-medium text-gray-500">No Resumes Found</p>
+        <p className="text-sm text-gray-400 mt-2">No resumes have been uploaded for this candidate yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {resumes.map((resume, index) => {
+        const versionLabel = resume.version ? `v${resume.version}` : `v${resumes.length - index}`;
+        return (
+          <div
+            key={resume._id}
+            className={`bg-white rounded-lg border ${resume.isActive ? 'border-[rgb(33,121,137)] shadow-sm' : 'border-gray-200'} p-4 transition-all hover:shadow-md`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${resume.isActive ? 'bg-[rgb(33,121,137)] text-white' : 'bg-gray-100 text-gray-500'}`}>
+                  <FileText size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-gray-900">Resume {versionLabel}</span>
+                    {resume.isActive && (
+                      <span className="px-2 py-0.5 text-xs font-bold bg-[rgb(33,121,137)] text-white rounded uppercase tracking-wider">Active</span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                    <span>Uploaded: {new Date(resume.createdAt).toLocaleDateString()}</span>
+                    <span>•</span>
+                    <span>{formatSize(resume.resume?.size)}</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => handleDownload(resume.fileUrl, `${(candidateName || 'Candidate').replace(/\s+/g, '_')}_Resume_${versionLabel}.pdf`)}
+                className="p-2 text-gray-500 hover:text-[rgb(33,121,137)] hover:bg-gray-50 rounded-full transition-colors"
+                title="Download Resume"
+              >
+                <Download size={20} />
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 // Applications Tab Component
-const ApplicationsTab = ({ candidateId }) => {
+const ApplicationsTab = ({ candidateId, onOpenApplication }) => {
   const { applications, isLoading } = useApplicationsByCandidate(candidateId);
+  const navigate = useNavigate();
+  // ... existing helper functions
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -523,17 +643,50 @@ const ApplicationsTab = ({ candidateId }) => {
     });
   };
 
-  const getStatusBadgeClass = (status) => {
-    const statusClasses = {
-      APPLIED: "bg-blue-100 text-blue-800",
-      SCREENED: "bg-purple-100 text-purple-800",
-      INTERVIEWING: "bg-yellow-100 text-yellow-800",
-      OFFERED: "bg-green-100 text-green-800",
-      HIRED: "bg-emerald-100 text-emerald-800",
-      REJECTED: "bg-red-100 text-red-800",
-      WITHDRAWN: "bg-gray-100 text-gray-800",
-    };
-    return statusClasses[status] || "bg-gray-100 text-gray-800";
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'APPLIED':
+        return 'bg-blue-100 text-blue-800';
+      case 'SCREENED':
+        return 'bg-purple-100 text-purple-800';
+      case 'INTERVIEWING':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'OFFERED':
+        return 'bg-orange-100 text-orange-800';
+      case 'REJECTED':
+        return 'bg-red-100 text-red-800';
+      case 'HIRED':
+        return 'bg-green-100 text-green-800';
+      case 'WITHDRAWN':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getScreeningColor = (screening) => {
+    switch (screening) {
+      case 'Strong Yes':
+        return 'text-green-700 font-semibold';
+      case 'Yes':
+        return 'text-green-600';
+      case 'Maybe':
+        return 'text-yellow-600';
+      case 'No':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
+
+  const getMatchColor = (match) => {
+    if (match >= 80) return 'text-green-600 font-semibold';
+    if (match >= 60) return 'text-yellow-600 font-semibold';
+    return 'text-red-600 font-semibold';
+  };
+
+  const handleOpenApplication = (application) => {
+    navigate(`/application/view-details/${application._id}`);
   };
 
   if (isLoading) {
@@ -559,60 +712,99 @@ const ApplicationsTab = ({ candidateId }) => {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden my-4">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Application ID
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Position
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Application #
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Resume
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Match %
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Screening
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Applied Date
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Current Stage
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Interview
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Stage
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Applied Date
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {applications.map((application) => (
               <tr key={application._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <div className="text-sm font-mono text-gray-900">
+                    {application.applicationNumber || "N/A"}
+                  </div>
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    {application.positionId?.title || "N/A"}
+                    {application.positionId?.title || "Unknown"}
                   </div>
                   {application.positionId?.companyname?.companyName && (
-                    <div className="text-sm text-gray-500">
+                    <div className="text-xs text-gray-500">
                       {application.positionId.companyname.companyName}
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm text-gray-600">
-                    {application.applicationNumber || "N/A"}
-                  </span>
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-600">
+                    {application.resumeVersion || "Resume v1"}
+                  </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeClass(
-                      application.status,
-                    )}`}
-                  >
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <div className={`text-sm ${getMatchColor(application.screeningScore || 0)}`}>
+                    {application.screeningScore || 0}%
+                  </div>
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <div className={`text-sm ${getScreeningColor(application.screeningResult || 'Pending')}`}>
+                    {application.screeningResult || "Pending"}
+                  </div>
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                  {formatDate(application.createdAt)}
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {application.currentStage || "N/A"}
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                  {application.interviewStatus || "Not Started"}
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(application.status)}`}>
                     {application.status || "N/A"}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {application.currentStage || "N/A"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDate(application.createdAt)}
+                <td className="px-4 py-4 whitespace-nowrap text-sm">
+                  <button
+                    onClick={() => handleOpenApplication(application)}
+                    className="flex items-center gap-2 px-3 py-1 text-white rounded hover:opacity-90"
+                    style={{ backgroundColor: 'rgb(33, 121, 137)' }}
+                  >
+                    <ExternalLink size={16} />
+                    Open
+                  </button>
                 </td>
               </tr>
             ))}
@@ -629,6 +821,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
   const [candidate, setCandidate] = useState({});
   const [activeTab, setActiveTab] = useState("Overview");
   const params = useParams();
+
+
 
   const id = candidateId || params?.id;
   const { candidate: fetchedCandidate, isLoading } = useCandidateById(id);
@@ -657,6 +851,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
   const tabs = [
     { id: "Overview", name: "Overview" },
     { id: "Applications", name: "Applications" },
+    { id: "Resumes", name: "Resumes" },
     { id: "Feeds", name: "Feeds" },
   ];
 
@@ -667,6 +862,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
       </div>
     );
   }
+
+
 
   const breadcrumbItems = [
     {
@@ -706,11 +903,10 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`${
-                    activeTab === tab.id
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
+                  className={`${activeTab === tab.id
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
                 >
                   {tab.name}
                 </button>
@@ -793,8 +989,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                           <p className="font-medium text-gray-800">
                             {candidate?.Date_Of_Birth
                               ? new Date(
-                                  candidate.Date_Of_Birth,
-                                ).toLocaleDateString()
+                                candidate.Date_Of_Birth,
+                              ).toLocaleDateString()
                               : "N/A"}
                           </p>
                         </div>
@@ -971,11 +1167,24 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
             )}
 
             {activeTab === "Applications" && (
-              <ApplicationsTab candidateId={candidate?._id} />
+              <ApplicationsTab
+                candidateId={candidate._id}
+              />
+            )}
+
+            {activeTab === "Resumes" && (
+              <ResumesTab
+                candidateId={candidate._id}
+                candidateName={`${candidate.FirstName} ${candidate.LastName}`}
+              />
             )}
 
             {activeTab === "Feeds" && (
-              <ActivityComponent parentId={candidate?._id} />
+              <ActivityComponent
+                parentId={candidate?._id}
+                candidateId={candidate._id}
+                candidateName={`${candidate.FirstName} ${candidate.LastName}`} // Pass candidate name
+              />
             )}
           </div>
         </div>

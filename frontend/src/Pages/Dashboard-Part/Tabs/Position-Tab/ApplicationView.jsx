@@ -3,7 +3,7 @@ import {
     ArrowLeft, Mail, Phone, Linkedin, Upload, FileText, X, CheckCircle, Clock,
     XCircle, AlertCircle, Calendar, User, Award, Briefcase, GraduationCap,
     Star, TrendingUp, MessageSquare, ExternalLink, Download, MapPin, Globe,
-    Languages, DollarSign
+    Languages, DollarSign, IndianRupee
 } from 'lucide-react';
 import {
     useCandidateById,
@@ -28,8 +28,8 @@ export default function ApplicationView({ application, onBack }) {
     const [showAllResumes, setShowAllResumes] = useState(false);
     const [showUploadResume, setShowUploadResume] = useState(false);
     const candidateId = application.candidateId?._id || application.candidateId;
-    console.log("application",application);
-    
+    console.log("application", application);
+
     console.log(candidateId);
     const { candidate: fetchedCandidate, isLoading, refetch } = useCandidateById(candidateId);
     const { data: stats } = useCandidateStats(candidateId);
@@ -334,10 +334,10 @@ export default function ApplicationView({ application, onBack }) {
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-3 text-sm">
-                                            <DollarSign size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                                            <IndianRupee size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
                                             <div>
                                                 <div className="text-xs text-gray-500">Expected Salary</div>
-                                                <div className="text-gray-900 font-medium">{candidate.expectedSalary || '$120K - $150K'}</div>
+                                                <div className="text-gray-900 font-medium">{candidate.expectedSalary || '₹120K - ₹150K'}</div>
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-3 text-sm">
@@ -347,13 +347,13 @@ export default function ApplicationView({ application, onBack }) {
                                                 <div className="text-gray-900 font-medium">{candidate.noticePeriod || '2 weeks'}</div>
                                             </div>
                                         </div>
-                                        <div className="flex items-start gap-3 text-sm">
+                                        {/* <div className="flex items-start gap-3 text-sm">
                                             <Award size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
                                             <div>
                                                 <div className="text-xs text-gray-500">Work Authorization</div>
                                                 <div className="text-gray-900 font-medium">{candidate.workAuth || 'US Citizen'}</div>
                                             </div>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </div>
 
@@ -504,39 +504,39 @@ export default function ApplicationView({ application, onBack }) {
                                                 <Award size={16} className="text-yellow-600" />
                                                 Certifications
                                             </h4>
-                                            <div className="space-y-2">
-                                                {(candidate.certifications && candidate.certifications.length > 0 ? candidate.certifications : [
-                                                    "Platform Developer I",
-                                                    "Platform Developer II",
-                                                    "JavaScript Developer I"
-                                                ]).map((cert, i) => (
-                                                    <div key={i} className="flex items-center gap-3 px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-900 text-sm font-medium">
-                                                        <Award size={14} className="text-yellow-600" />
-                                                        {cert}
-                                                    </div>
-                                                ))}
-                                            </div>
+                                            {candidate.certifications && candidate.certifications.length > 0 ? (
+                                                <div className="space-y-2">
+                                                    {candidate.certifications.map((cert, i) => (
+                                                        <div key={i} className="flex items-center gap-3 px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-900 text-sm font-medium">
+                                                            <Award size={14} className="text-yellow-600" />
+                                                            {cert}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-gray-500 italic">No certifications listed.</p>
+                                            )}
                                         </div>
 
                                         <div>
                                             <h4 className="text-sm font-semibold text-gray-700 mb-3">Key Projects</h4>
-                                            <div className="space-y-4">
-                                                {(candidate.projects && candidate.projects.length > 0 ? candidate.projects : [
-                                                    {
-                                                        title: "Enterprise Lightning Migration",
-                                                        desc: "Led the complete migration of legacy Salesforce Classic application to Lightning Experience, including redesigning 40+ custom components and training 500+ users"
-                                                    },
-                                                    {
-                                                        title: "Real-time Integration Platform",
-                                                        desc: "Architected and implemented a real-time integration layer connecting Salesforce with ERP, marketing automation, and customer support systems using REST APIs and Platform Events"
-                                                    }
-                                                ]).map((project, i) => (
-                                                    <div key={i} className="bg-gray-50 rounded-lg border border-gray-200 p-5">
-                                                        <h5 className="text-base font-bold text-gray-900 mb-2">{project.title}</h5>
-                                                        <p className="text-sm text-gray-600 leading-relaxed">{project.desc || project.description}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                            {candidate.projects && candidate.projects.length > 0 ? (
+                                                <div className="space-y-4">
+                                                    {candidate.projects.map((project, i) => (
+                                                        <div key={i} className="bg-gray-50 rounded-lg border border-gray-200 p-5">
+                                                            <div className="flex justify-between items-start mb-2">
+                                                                <h5 className="text-base font-bold text-gray-900">{project.title || project.projectName || project.role || "Untitled Project"}</h5>
+                                                                {project.company && <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">{project.company}</span>}
+                                                            </div>
+                                                            <p className="text-sm text-gray-600 leading-relaxed">
+                                                                {project.desc || project.description || (Array.isArray(project.responsibilities) ? project.responsibilities.join('. ') : project.responsibilities) || "No description provided."}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-gray-500 italic">No key projects listed.</p>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -544,38 +544,16 @@ export default function ApplicationView({ application, onBack }) {
                                 {activeTab === 'workHistory' && (
                                     <div className="space-y-6 relative pl-4 border-l-2 border-gray-200 ml-4">
                                         {(() => {
-                                            const historyToDisplay = (workHistory && workHistory.length > 0) ? workHistory : [
-                                                {
-                                                    role: "Senior Salesforce Developer",
-                                                    company: "Salesforce",
-                                                    duration: "2022 - Present",
-                                                    responsibilities: [
-                                                        "Led migration from Classic to Lightning Experience for 500+ users",
-                                                        "Built complex LWC components with 50+ custom features",
-                                                        "Integrated Salesforce with 10+ external systems using REST/SOAP APIs"
-                                                    ]
-                                                },
-                                                {
-                                                    role: "Salesforce Developer",
-                                                    company: "Accenture",
-                                                    duration: "2019 - 2022",
-                                                    responsibilities: [
-                                                        "Developed custom Apex triggers and classes for business automation",
-                                                        "Created reusable Lightning Web Components for client projects",
-                                                        "Implemented CI/CD pipelines using Salesforce DX"
-                                                    ]
-                                                },
-                                                {
-                                                    role: "Junior Salesforce Developer",
-                                                    company: "Tech Solutions Inc",
-                                                    duration: "2018 - 2019",
-                                                    responsibilities: [
-                                                        "Built Visualforce pages and custom controllers",
-                                                        "Wrote SOQL queries and optimized data retrieval",
-                                                        "Assisted in Salesforce configuration and deployment"
-                                                    ]
-                                                }
+                                            const rawHistory = candidate.workExperience || candidate.workHistory;
+                                            const historyToDisplay = (rawHistory && rawHistory.length > 0) ? rawHistory : [
+                                                // Mock data fallback if needed, or empty
                                             ];
+
+                                            if (!historyToDisplay || historyToDisplay.length === 0) {
+                                                return (
+                                                    <div className="text-gray-500 italic">No work history available.</div>
+                                                );
+                                            }
 
                                             return historyToDisplay.map((job, index) => (
                                                 <div key={index} className="relative pl-6 pb-2">
@@ -583,19 +561,25 @@ export default function ApplicationView({ application, onBack }) {
                                                     <div className="absolute -left-[25px] top-0 w-4 h-4 rounded-full bg-[rgb(33,121,137)] border-4 border-white shadow-sm ring-1 ring-gray-200"></div>
 
                                                     <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                                                        <h4 className="text-lg font-bold text-gray-900 mb-1">{job.role || job.title}</h4>
+                                                        <h4 className="text-lg font-bold text-gray-900 mb-1">{job.role || job.title || "Unknown Role"}</h4>
                                                         <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
                                                             <Briefcase size={14} />
-                                                            <span className="font-medium">{job.company}</span>
+                                                            <span className="font-medium">{job.company || job.projectName || "Unknown Company"}</span>
                                                             <span>•</span>
-                                                            <span>{job.duration || `${job.startDate || ''} - ${job.endDate || 'Present'}`}</span>
+                                                            <span>
+                                                                {job.duration || (job.fromDate ? `${job.fromDate} - ${job.toDate || 'Present'}` : null) || "Date N/A"}
+                                                            </span>
                                                         </div>
 
                                                         {(job.responsibilities || job.description) && (
                                                             <div className="space-y-2">
-                                                                {(Array.isArray(job.responsibilities) ? job.responsibilities : [job.description]).map((resp, i) => (
+                                                                {/* Responsibilities might be a string (from resume parser) or array */}
+                                                                {(Array.isArray(job.responsibilities)
+                                                                    ? job.responsibilities
+                                                                    : (job.responsibilities || job.description || "").split('\n').filter(Boolean)
+                                                                ).map((resp, i) => (
                                                                     <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                                                                        <CheckCircle size={14} className="text-green-500 mt-1 flex-shrink-0" />
+                                                                        {/* <CheckCircle size={14} className="text-green-500 mt-1 flex-shrink-0" /> */}
                                                                         <span>{resp}</span>
                                                                     </div>
                                                                 ))}
@@ -656,25 +640,14 @@ export default function ApplicationView({ application, onBack }) {
                                     </div>
 
                                     <div className="space-y-3 mb-8">
-                                        {(application.screeningResult?.metadata?.strengths?.length > 0
-                                            ? application.screeningResult.metadata.strengths
-                                            : [
-                                                "Strong technical background with relevant experience",
-                                                "Skills align well with position requirements"
-                                            ]
-                                        ).slice(0, 2).map((point, i) => (
+                                        {(application.screeningResult?.metadata?.strengths || []).map((point, i) => (
                                             <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                                                 <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
                                                 <span className="text-sm font-medium text-gray-700">{point}</span>
                                             </div>
                                         ))}
 
-                                        {(application.screeningResult?.metadata?.concerns?.length > 0
-                                            ? application.screeningResult.metadata.concerns
-                                            : [
-                                                "Could benefit from additional training in emerging technologies"
-                                            ]
-                                        ).slice(0, 1).map((point, i) => (
+                                        {(application.screeningResult?.metadata?.concerns || []).map((point, i) => (
                                             <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                                                 <AlertCircle size={18} className="text-yellow-500 flex-shrink-0" />
                                                 <span className="text-sm font-medium text-gray-700">{point}</span>
@@ -688,7 +661,7 @@ export default function ApplicationView({ application, onBack }) {
                                             <div>
                                                 <div className="text-xs font-bold text-blue-900 uppercase mb-2">AI Recommendation</div>
                                                 <p className="text-sm text-gray-700 leading-relaxed italic">
-                                                    "{application.screeningNotes || "Excellent candidate with strong technical expertise and relevant industry experience. Highly recommend proceeding to technical interview round. Skills match closely with position requirements."}"
+                                                    "{application.screeningNotes || application.screeningResult?.metadata?.summary || "No AI recommendation available."}"
                                                 </p>
                                             </div>
                                         </div>
@@ -707,24 +680,7 @@ export default function ApplicationView({ application, onBack }) {
                             <div className="p-6">
                                 {(() => {
                                     // Use dynamic interviews if available, otherwise use static fallback for demo
-                                    const timelineEvents = (application.interviews && application.interviews.length > 0)
-                                        ? application.interviews
-                                        : [
-                                            {
-                                                title: "Round 1: Technical",
-                                                date: "2026-01-12",
-                                                interviewer: "Michael Roberts",
-                                                status: "Completed",
-                                                feedback: "Outstanding Salesforce expertise, especially LWC"
-                                            },
-                                            {
-                                                title: "Round 2: Architecture Review",
-                                                date: "2026-01-13",
-                                                interviewer: "Jennifer Lee",
-                                                status: "Completed",
-                                                feedback: "Great architectural thinking and scalability mindset"
-                                            }
-                                        ];
+                                    const timelineEvents = application.interviews || [];
 
                                     if (timelineEvents.length === 0) {
                                         return (

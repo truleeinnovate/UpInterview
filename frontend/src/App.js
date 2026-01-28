@@ -152,6 +152,9 @@ const PositionForm = lazy(
 const PositionSlideDetails = lazy(
   () => import("./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails"),
 );
+const ApplicationViewWrapper = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Position-Tab/ApplicationViewWrapper"),
+);
 const RoundFormPosition = lazy(
   () =>
     import("./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx"),
@@ -767,6 +770,12 @@ const MainAppRoutes = ({
                 element={<ResumeUploadPage />}
               />
             )}
+
+            {/* Application View Route */}
+            <Route
+              path="/application/view-details/:id"
+              element={<ApplicationViewWrapper />}
+            />
 
             {/* Mock Interview Routes */}
             {hasPermission("MockInterviews") && (

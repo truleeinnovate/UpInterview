@@ -36,6 +36,7 @@ const DropdownWithSearchField = forwardRef(
       onInputChange,
       onMenuScrollToBottom,
       emptyMessage,
+      isClearable = false, // Add isClearable prop
     },
     ref,
   ) => {
@@ -329,6 +330,7 @@ const DropdownWithSearchField = forwardRef(
               closeMenuOnScroll={false}
               isLoading={loading}
               emptyMessage={emptyMessage}
+              isClearable={isClearable}
             />
           </div>
         ) : (
@@ -346,11 +348,10 @@ const DropdownWithSearchField = forwardRef(
                 }
               }}
               className={`block w-full rounded-md shadow-sm h-10 px-3 sm:text-sm border
-                            ${
-                              error
-                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                : "border-gray-300 focus:ring-red-300"
-                            }
+                            ${error
+                  ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                  : "border-gray-300 focus:ring-red-300"
+                }
                             focus:outline-gray-300
                         `}
               placeholder={placeholder ? placeholder : `Enter Custom ${label}`}

@@ -13,6 +13,7 @@ import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
 import { useCandidates } from "../../../../../apiHooks/useCandidates";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
+import { useFilteredApplications } from "../../../../../apiHooks/useApplications.js";
 import LoadingButton from "../../../../../Components/LoadingButton";
 import { useInterviewTemplates } from "../../../../../apiHooks/useInterviewTemplates.js";
 import {
@@ -151,7 +152,58 @@ const InterviewForm = () => {
   const [showPositionModal, setShowPositionModal] = useState(false);
   const [from360, setFrom360] = useState(false);
 
+
   const [rounds, setRounds] = useState([]);
+
+  // Application Filtering State
+  const [applicationId, setApplicationId] = useState("");
+  const { applications: filteredApplications, isLoading: applicationsLoading } = useFilteredApplications({
+    status: "New,APPLIED,SCREENED", // Match strict enum casing from Application model
+    tenantId: orgId
+  });
+
+  const handleApplicationChange = (appId) => {
+    setApplicationId(appId);
+
+    if (appId) {
+      const selectedApp = filteredApplications.find(app => app._id === appId);
+      if (selectedApp) {
+        setCandidateId(selectedApp.candidateId?._id || selectedApp.candidateId);
+        setPositionId(selectedApp.positionId?._id || selectedApp.positionId);
+        // Clear errors
+        setCandidateError("");
+        setPositionError("");
+      }
+    } else {
+      // If cleared, maybe reset? Or keep as is?
+      // User said "we can remove selceted options also"
+      // I will reset them to allow manual selection again
+      setCandidateId("");
+      setPositionId("");
+    }
+  };
+
+  // <---------------------- Manual Selection Validation
+  const [manualValidationMsg, setManualValidationMsg] = useState("");
+  const { applications: existingApplications } = useFilteredApplications({
+    candidateId: !applicationId ? candidateId : null,
+    positionId: !applicationId ? positionId : null,
+    tenantId: orgId
+  });
+
+  useEffect(() => {
+    setManualValidationMsg("");
+    if (!applicationId && candidateId && positionId && existingApplications?.length > 0) {
+      const app = existingApplications[0]; // Assuming one app per candidate-position pair
+      const allowedStatuses = ["New", "APPLIED", "SCREENED"];
+
+      if (!allowedStatuses.includes(app.status)) {
+        setManualValidationMsg(`Cannot create interview: Application exists in '${app.status}' status. Only New, Applied, or Screened applications can proceed.`);
+      }
+    }
+  }, [applicationId, candidateId, positionId, existingApplications]);
+  // Manual Selection Validation ---------------------->
+
 
   // Filter positions to show only "opened" status
   const filteredPositionData =
@@ -469,6 +521,10 @@ const InterviewForm = () => {
       hasError = true;
     }
 
+    if (manualValidationMsg) {
+      return;
+    }
+
     if (hasError) {
       return;
     }
@@ -482,6 +538,9 @@ const InterviewForm = () => {
         throw new Error("Selected template not found");
       }
 
+      // Determine application ID to link (manual selection or dropdown)
+      const appToLink = applicationId || existingApplications?.[0]?._id;
+
       // Use createInterview mutation from useInterviews hook
       const result = await createInterview({
         candidateId,
@@ -491,6 +550,7 @@ const InterviewForm = () => {
         templateId,
         externalId,
         allowParallelScheduling,
+        applicationId: appToLink, // Pass determined application ID
         id, // interviewId
       });
 
@@ -532,13 +592,13 @@ const InterviewForm = () => {
               { label: "Interviews", path: "/interviews" },
               ...(isEditing && interview
                 ? [
-                    {
-                      label: interview?.candidateId?.LastName || "Interview",
-                      path: `/interviews/${id}`,
-                      status: interview.status,
-                    },
-                    { label: "Edit Interview", path: "" },
-                  ]
+                  {
+                    label: interview?.candidateId?.LastName || "Interview",
+                    path: `/interviews/${id}`,
+                    status: interview.status,
+                  },
+                  { label: "Edit Interview", path: "" },
+                ]
                 : [{ label: "New Interview", path: "" }]),
             ]}
           />
@@ -623,7 +683,41 @@ const InterviewForm = () => {
                   </div>
                 )}
 
+
                 <div className="space-y-6">
+                  {/* Application Dropdown */}
+                  <div>
+                    <DropdownWithSearchField
+                      label="Link Application (Optional)"
+                      name="applicationId"
+                      value={applicationId || ""}
+                      options={
+                        filteredApplications?.map((app) => {
+                          const candidateName = app.candidateId
+                            ? `${app.candidateId.FirstName} ${app.candidateId.LastName}`
+                            : "Unknown Candidate";
+                          const positionTitle = app.positionId?.title || "Unknown Position";
+                          return {
+                            value: app._id,
+                            label: `${app.applicationNumber} - ${candidateName} for ${positionTitle} (${app.status})`,
+                            application: app, // Store full object for easy access
+                          };
+                        }) || []
+                      }
+                      onChange={(e) => {
+                        const value = e?.target?.value || e?.value;
+                        handleApplicationChange(value);
+                      }}
+                      loading={applicationsLoading}
+                      placeholder="Select an application to auto-fill details..."
+                      isClearable={true}
+                    />
+                    {applicationId && (
+                      <p className="mt-1 text-xs text-blue-600">
+                        * Candidate and Position are locked because an application is selected.
+                      </p>
+                    )}
+                  </div>
                   <div>
                     <DropdownWithSearchField
                       label="Candidate"
@@ -632,9 +726,8 @@ const InterviewForm = () => {
                       options={[
                         ...(candidateData?.map((candidate) => ({
                           value: candidate._id,
-                          label: `${candidate.FirstName || ""} ${
-                            candidate.LastName || ""
-                          } (${candidate.Email || ""})`,
+                          label: `${candidate.FirstName || ""} ${candidate.LastName || ""
+                            } (${candidate.Email || ""})`,
                         })) || []),
                         {
                           value: "add_new",
@@ -658,7 +751,7 @@ const InterviewForm = () => {
                       }}
                       onMenuScrollToBottom={handleCandidateMenuScrollToBottom}
                       error={candidateError}
-                      //disabled={candidatesLoading && !candidateData?.length}
+                      disabled={!!applicationId || (candidatesLoading && !candidateData?.length)}
                       loading={candidatesLoading}
                       required={true}
                       isMulti={false}
@@ -698,8 +791,8 @@ const InterviewForm = () => {
                         }
                       }}
                       onMenuScrollToBottom={handlePositionMenuScrollToBottom}
-                      error={positionError}
-                      //disabled={positionsLoading && !positionData?.length}
+                      error={positionError || manualValidationMsg} // Show validation error here
+                      disabled={!!applicationId || (positionsLoading && !positionData?.length)}
                       loading={positionsLoading}
                       required={true}
                       isMulti={false}
@@ -741,8 +834,8 @@ const InterviewForm = () => {
                           .map((template) => {
                             const titleLabel = capitalizeFirstLetter(
                               template.title ||
-                                template.type ||
-                                "Unnamed Template",
+                              template.type ||
+                              "Unnamed Template",
                             );
 
                             return {
@@ -819,7 +912,7 @@ const InterviewForm = () => {
                             <div
                               className={`flex items-center px-4 py-2 border rounded-lg shadow-sm min-w-[200px]  `}
 
-                              // ${index === rounds.length - 1 ? "bg-blue-50 border-blue-400" : "bg-white border-gray-200"}
+                            // ${index === rounds.length - 1 ? "bg-blue-50 border-blue-400" : "bg-white border-gray-200"}
                             >
                               {/* Step number circle */}
                               <div className="flex items-center justify-center w-6 h-6 rounded-full border border-gray-400 text-xs font-medium text-gray-600 mr-3">
@@ -856,17 +949,15 @@ const InterviewForm = () => {
                       onClick={() =>
                         setAllowParallelScheduling(!allowParallelScheduling)
                       }
-                      className={`${
-                        allowParallelScheduling ? "bg-teal-600" : "bg-gray-200"
-                      } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2`}
+                      className={`${allowParallelScheduling ? "bg-teal-600" : "bg-gray-200"
+                        } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2`}
                     >
                       <span
                         aria-hidden="true"
-                        className={`${
-                          allowParallelScheduling
-                            ? "translate-x-5"
-                            : "translate-x-0"
-                        } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                        className={`${allowParallelScheduling
+                          ? "translate-x-5"
+                          : "translate-x-0"
+                          } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                       />
                     </button>
                   </div>

@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const interviewSchema = new mongoose.Schema({
     candidateId: { type: mongoose.Schema.Types.ObjectId, ref: 'Candidate' }, // Reference Candidate Schema
     positionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Position' }, // Reference Position Schema
+    applicationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Application' }, // Linked Application
     templateId: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewTemplate' },
     // status: String, // draft --> if accept - inprogress - after all rounds selected or rejected
     status: {

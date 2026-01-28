@@ -18,6 +18,7 @@ const mongoose = require("mongoose");
 const app = express();
 const qs = require("qs");
 const axios = require("axios");
+const path = require("path");
 const startAgenda = require("./agenda/startAgenda");
 startAgenda();
 
@@ -26,6 +27,9 @@ app.set("trust proxy", 1);
 
 // ✅ Parse cookies
 app.use(cookieParser());
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const config = require("./config.js");
 

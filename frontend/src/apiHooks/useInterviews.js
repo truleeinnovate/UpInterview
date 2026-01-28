@@ -12,6 +12,7 @@ export const useInterviews = (
   page,
   limit,
   type = "interviews",
+  options = {}
 ) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
@@ -20,15 +21,15 @@ export const useInterviews = (
   const initialLoad = useRef(true);
 
   const params =
-    // useMemo(() => (
-    {
-      ...filters,
+  // useMemo(() => (
+  {
+    ...filters,
 
-      page: page,
-      limit: limit,
-      type: type,
-      upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
-    };
+    page: page,
+    limit: limit,
+    type: type,
+    upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
+  };
   //console.log("params", params);
 
   // ),
@@ -68,7 +69,7 @@ export const useInterviews = (
       // return response?.data
       // return interviewsWithCandidates;
     },
-    enabled: !!hasViewPermission,
+    enabled: !!hasViewPermission && (options?.enabled !== false),
     retry: 1,
     staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
     cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
@@ -143,6 +144,7 @@ export const useInterviews = (
       externalId,
       id,
       allowParallelScheduling,
+      applicationId, // <--- Add this
     }) => {
       const interviewData = {
         candidateId,
@@ -151,6 +153,7 @@ export const useInterviews = (
         userId,
         ...(templateId && { templateId }),
         ...(externalId && { externalId }),
+        ...(applicationId && { applicationId }), // <--- Add this
         allowParallelScheduling,
         status: "Draft",
       };

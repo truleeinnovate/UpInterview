@@ -277,6 +277,7 @@ const createInterview = async (req, res) => {
       currentReason, // Added currentReason
       externalId,
       allowParallelScheduling,
+      applicationId, // <--- Added applicationId
     } = req.body;
     let candidate = null;
 
@@ -317,6 +318,7 @@ const createInterview = async (req, res) => {
       status,
       externalId,
       allowParallelScheduling: allowParallelScheduling || false,
+      applicationId: applicationId || undefined, // <--- Save applicationId
     };
 
     // Generate interviewCode for new interview with tenant ID
@@ -468,12 +470,19 @@ const createInterview = async (req, res) => {
     try {
       const position = await Position.findById(positionId).lean();
 
-      // Check if application already exists
-      const existingApp = await Application.findOne({
-        candidateId,
-        positionId,
-        tenantId: orgId,
-      });
+      // Check if application already exists - logic updated to prioritize applicationId
+      let existingApp;
+      if (applicationId) {
+        existingApp = await Application.findById(applicationId);
+      }
+
+      if (!existingApp) {
+        existingApp = await Application.findOne({
+          candidateId,
+          positionId,
+          tenantId: orgId,
+        });
+      }
 
       if (!existingApp) {
         // Get candidate for application number generation
@@ -489,35 +498,46 @@ const createInterview = async (req, res) => {
         // Validate companyId - only use if it's a valid ObjectId, not a string
         const companyId =
           position?.companyname &&
-          mongoose.Types.ObjectId.isValid(position.companyname)
+            mongoose.Types.ObjectId.isValid(position.companyname)
             ? position.companyname
             : null;
 
-        await Application.create({
+        const newApp = await Application.create({
           applicationNumber,
           candidateId,
           positionId,
           tenantId: orgId,
           companyId,
           interviewId: interview._id,
-          status: "NEW",
+          status: "INTERVIEWING", // Directly set to INTERVIEWING as we are creating an interview
           currentStage: "Interview Created",
           ownerId: userId,
           createdBy: userId,
         });
+
+        // <--- BACK-POPULATE applicationId to Interview
+        await Interview.findByIdAndUpdate(interview._id, {
+          applicationId: newApp._id
+        });
+
         console.log(
           "[INTERVIEW] Application created with number:",
           applicationNumber,
         );
       } else {
-        // Update existing application with interview reference if needed
-        if (!existingApp.interviewId) {
-          await Application.findByIdAndUpdate(existingApp._id, {
-            interviewId: interview._id,
-            status: "INTERVIEWING",
-            currentStage: "Interview Created",
-          });
-        }
+        // Update existing application with interview reference and status
+        // Always update status to INTERVIEWING when a new interview is created
+        await Application.findByIdAndUpdate(existingApp._id, {
+          interviewId: interview._id,
+          status: "INTERVIEWING",
+          currentStage: "Interview Created",
+        });
+
+        // <--- BACK-POPULATE applicationId to Interview (even if existing)
+        await Interview.findByIdAndUpdate(interview._id, {
+          applicationId: existingApp._id
+        });
+
         console.log(
           "[INTERVIEW] Application already exists for candidate:",
           candidateId,
@@ -2322,26 +2342,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-          from: "mockinterviews",
-          localField: "mockInterviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        }
+        from: "mockinterviews",
+        localField: "mockInterviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      }
       : {
-          from: "interviews",
-          localField: "interviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        };
+        from: "interviews",
+        localField: "interviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2363,23 +2383,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-            {
-              $addFields: {
-                mainTenantIdNormalized: {
-                  $cond: [
-                    {
-                      $and: [
-                        { $ne: ["$mainInterview.tenantId", null] },
-                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                      ],
-                    },
-                    { $toObjectId: "$mainInterview.tenantId" },
-                    null,
-                  ],
-                },
+          {
+            $addFields: {
+              mainTenantIdNormalized: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ["$mainInterview.tenantId", null] },
+                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                    ],
+                  },
+                  { $toObjectId: "$mainInterview.tenantId" },
+                  null,
+                ],
               },
             },
-          ]
+          },
+        ]
         : []),
       // Lookup tenant for organization info
       {
@@ -2847,6 +2867,7 @@ const getInterviewDataforOrg = async (req, res) => {
         },
       })
       .populate("templateId")
+      .populate("applicationId") // <--- Added this
       .lean();
 
     if (!interview) {
