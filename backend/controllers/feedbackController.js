@@ -929,7 +929,7 @@ const getFeedbackByContactIdRoundId = async (req, res) => {
   try {
     const { contactId, roundId, interviewType } = req.query;
 
-    console.log("req.query", req.query);
+    console.log("req.query getFeedbackByContactIdRoundId", req.query);
     if (!contactId || !roundId || !interviewType) {
       return res.status(400).json({
         error: "contactId and roundId and interviewType are required",

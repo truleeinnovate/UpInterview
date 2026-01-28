@@ -91,6 +91,10 @@ export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
         return null;
       }
 
+      console.log("roundId", roundId);
+      console.log("interviewerId", interviewerId);
+      console.log("interviewType", interviewType);
+
       // Build URL with query parameters
       // let url = `${process.env.REACT_APP_API_URL}/feedback/round/${roundId}`;
       // if (interviewerId) {

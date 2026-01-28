@@ -17,6 +17,7 @@ import {
   useMockInterviewById,
   useUpdateRoundStatus,
 } from "../../apiHooks/useMockInterviews";
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // Determine which sections to show based on roleInfo
@@ -54,7 +55,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     [location.search],
   );
   const isMockInterview = urlData?.interviewType === "mockinterview";
-  console.log("isMockInterview", isMockInterview);
+  // console.log("isMockInterview", isMockInterview);
   // const { data, isLoading } = useInterviewDetails({
   //   roundId: urlData.interviewRoundId,
   // });
@@ -82,7 +83,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   const interviewRoundData =
     interviewData?.rounds[0] || mockinterview?.rounds[0] || {};
 
-  console.log("interviewRoundData:", interviewRoundData);
+  // console.log("interviewRoundData:", interviewRoundData);
 
   const currentStatus = interviewRoundData?.status;
 
@@ -93,20 +94,20 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // Function to update interview status to "in-progress"
   const updateInterviewStatus = async (role) => {
     try {
-      console.log("Updating status...", role);
+      // console.log("Updating status...", role);
       setIsUpdatingStatus(true);
-      const normalizedRole = role?.toLowerCase() || "";
+      const normalizedRole = capitalizeFirstLetter(role) || "";
 
       const payload = {
         roundId: interviewRoundData?._id,
         interviewId: interviewRoundData?.interviewId,
         action: "InProgress",
-        role: role,
+        role: capitalizeFirstLetter(role),
         userId: urlData?.interviewerId,
         History_Type: "Histoy_Handling",
         joined:
-          (normalizedRole === "interviewer" && true) ||
-          (normalizedRole === "scheduler" && true),
+          (normalizedRole === "Interviewer" && true) ||
+          (normalizedRole === "Scheduler" && true),
       };
 
       let response;
@@ -121,7 +122,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
         response = await updateRoundStatus(payload);
       }
 
-      console.log("response", response);
+      // console.log("response", response);
       return response;
 
       // console.log("Status update response:", response);
@@ -140,10 +141,23 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     // if (role === "interviewer") {
     try {
       // Wait for the API call to succeed
-      await updateInterviewStatus(role);
+      let response = await updateInterviewStatus(role);
 
-      // Only proceed if API call was successful
-      onRoleSelect(role);
+      console.log("Status update response:", response);
+
+      if (response?.success === true) {
+        if (interviewRoundData?.meetPlatform === "platform") {
+          const currentUrl = new URL(window.location.href);
+
+          // change only the path
+          currentUrl.pathname = "/video-call";
+
+          window.open(currentUrl.toString(), "_blank");
+        } else {
+          // Only proceed if API call was successful
+          onRoleSelect(role);
+        }
+      }
     } catch (error) {
       // Handle the error - don't call onRoleSelect
       console.error("Failed to update interview status:", error);
@@ -376,10 +390,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     <div className="bg-gradient-to-br from-[#217989] to-[#1a616e] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl py-8 sm:px-4 md:px-4 px-8 w-full max-w-8xl">
         <div className="text-center mb-6">
-          {console.log(
+          {/* {console.log(
             "interviewRoundData?.meetPlatform near video preview ",
             interviewRoundData?.meetPlatform,
-          )}
+          )} */}
           {interviewRoundData?.meetPlatform === "platform" ? (
             <div className="bg-gray-900 rounded-2xl shadow-2xl overflow-hidden mb-8 max-w-2xl mx-auto">
               <div className="relative aspect-video bg-black">
@@ -603,18 +617,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
               <button
                 onClick={() => {
-                  if (interviewRoundData?.meetPlatform === "platform") {
-                    const currentUrl = new URL(window.location.href);
-
-                    // change only the path
-                    currentUrl.pathname = "/video-call";
-
-                    window.open(currentUrl.toString(), "_blank");
-                  } else {
-                    handleRoleSelect(
-                      urlData?.isInterviewer ? "interviewer" : "scheduler",
-                    );
-                  }
+                  handleRoleSelect(
+                    urlData?.isInterviewer ? "interviewer" : "scheduler",
+                  );
+                  // }
                 }}
                 className={`w-full sm:text-sm md:text-sm ${
                   isButtonEnabled && isFinalStatus

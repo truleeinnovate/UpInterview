@@ -47,6 +47,8 @@ export function MeetingContainer({
   const { setSelectedMic, setSelectedWebcam, setSelectedSpeaker } =
     useMeetingAppContext();
 
+  // console.log("candidateData MeetingContainer", candidateData);
+
   const [uniqueParticipants, setUniqueParticipants] = useState(new Set());
 
   const ParticipantMicStream = memo(({ participantId }) => {
@@ -130,12 +132,12 @@ export function MeetingContainer({
   const sideBarContainerWidth = isXLDesktop
     ? 400
     : isLGDesktop
-    ? 360
-    : isTab
-    ? 320
-    : isMobile
-    ? 280
-    : 240;
+      ? 360
+      : isTab
+        ? 320
+        : isMobile
+          ? 280
+          : 240;
 
   useEffect(() => {
     containerRef.current?.offsetHeight &&
@@ -208,7 +210,7 @@ export function MeetingContainer({
     new Audio(
       isCriticalError
         ? "https://static.videosdk.live/prebuilt/notification_critical_err.mp3"
-        : "https://static.videosdk.live/prebuilt/notification_err.mp3"
+        : "https://static.videosdk.live/prebuilt/notification_err.mp3",
     ).play();
 
     setMeetingErrorVisible(true);
@@ -278,7 +280,7 @@ export function MeetingContainer({
 
       if (!isLocal) {
         new Audio(
-          "https://static.videosdk.live/prebuilt/notification.mp3"
+          "https://static.videosdk.live/prebuilt/notification.mp3",
         ).play();
       }
     },
@@ -342,7 +344,7 @@ export function MeetingContainer({
       if (event.origin !== window.location.origin) return;
       if (event.data?.type === "PANEL_DATA") {
         // Handle any initialization if needed
-        console.log("Received panel data:", event.data);
+        // console.log("Received panel data:", event.data);
       }
     };
 
@@ -424,22 +426,31 @@ export function MeetingContainer({
                       <div className="flex flex-col h-full">
                         {/* Horizontal PiP Participants - Top strip below navbar */}
                         <div className="h-32 bg-gray-800 border-b border-gray-600 flex flex-row gap-2 overflow-x-auto p-2">
-                          {Array.from(uniqueParticipants).map((participantId) => (
-                            <div
-                              key={`pip-${participantId}`}
-                              className="relative flex-shrink-0 h-full"
-                              style={{
-                                width: "320px", // Fixed width for each participant
-                              }}
-                            >
-                              <ParticipantView participantId={participantId} />
-                              <ParticipantMicStream participantId={participantId} />
-                            </div>
-                          ))}
+                          {Array.from(uniqueParticipants).map(
+                            (participantId) => (
+                              <div
+                                key={`pip-${participantId}`}
+                                className="relative flex-shrink-0 h-full"
+                                style={{
+                                  width: "320px", // Fixed width for each participant
+                                }}
+                              >
+                                <ParticipantView
+                                  participantId={participantId}
+                                />
+                                <ParticipantMicStream
+                                  participantId={participantId}
+                                />
+                              </div>
+                            ),
+                          )}
                         </div>
                         {/* Main presentation area */}
                         <div className="flex-1 relative">
-                          <PresenterView height={containerHeight - bottomBarHeight - 128} /> {/* Adjust for h-32 (~128px) */}
+                          <PresenterView
+                            height={containerHeight - bottomBarHeight - 128}
+                          />{" "}
+                          {/* Adjust for h-32 (~128px) */}
                         </div>
                       </div>
                     ) : (
@@ -450,14 +461,14 @@ export function MeetingContainer({
                             uniqueParticipants.size === 1
                               ? "1fr"
                               : uniqueParticipants.size === 2
-                              ? "1fr 1fr"
-                              : "1fr 1fr 1fr",
+                                ? "1fr 1fr"
+                                : "1fr 1fr 1fr",
                           gridTemplateRows:
                             uniqueParticipants.size <= 3
                               ? "1fr"
                               : uniqueParticipants.size <= 6
-                              ? "1fr 1fr"
-                              : "1fr 1fr 1fr",
+                                ? "1fr 1fr"
+                                : "1fr 1fr 1fr",
                         }}
                       >
                         {Array.from(uniqueParticipants).map((participantId) => (

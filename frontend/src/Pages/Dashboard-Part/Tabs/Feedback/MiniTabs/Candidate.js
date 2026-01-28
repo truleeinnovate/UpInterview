@@ -20,7 +20,7 @@ import {
   // useCandidateDetails,
 } from "../../../../../apiHooks/useVideoCall";
 
-import { useFeedbackData } from "../../../../../apiHooks/useFeedbacks";
+// import { useFeedbackData } from "../../../../../apiHooks/useFeedbacks";
 import { useMockInterviewById } from "../../../../../apiHooks/useMockInterviews";
 import { useInterviews } from "../../../../../apiHooks/useInterviews";
 // import { Users, Video, LogOut, User, MessageSquare, FileText } from 'lucide-react';

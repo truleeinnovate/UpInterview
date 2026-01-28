@@ -81,7 +81,7 @@ const CandidateView = () =>
       isMockLoading,
       isError: isMockError,
     } = useMockInterviewById({
-      mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+      mockInterviewRoundId: isMockInterview ? urlData?.interviewRoundId : null,
       enabled: isMockInterview,
     });
 
@@ -90,17 +90,19 @@ const CandidateView = () =>
       isLoading: isInterviewLoading,
       isError: interviewError,
     } = useInterviewDetails({
-      roundId: !isMockInterview ? urlData.interviewRoundId : null,
+      roundId: !isMockInterview ? urlData?.interviewRoundId : null,
       enabled: !isMockInterview,
     });
-    // console.log("interviewData", interviewData);
-    // console.log("mockinterview", mockinterview);
 
-    const candidateData = interviewData?.candidateId || mockinterview || {};
-    const positionData = isMockInterview ? interviewData?.positionId : {};
-    const interviewRoundData =
-      interviewData?.rounds[0] || mockinterview?.rounds[0] || {};
-    // console.log("interviewRoundData", candidateData);
+    const candidateData = isMockInterview
+      ? mockinterview
+      : interviewData?.candidateId || {};
+
+    const positionData = isMockInterview ? {} : interviewData?.positionId;
+
+    const interviewRoundData = isMockInterview
+      ? mockinterview?.rounds[0]
+      : interviewData?.rounds[0] || {};
 
     // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
     const parseCustomDateTime = (dateTimeStr) => {
@@ -575,7 +577,7 @@ const CandidateView = () =>
                             Company
                           </p>
                           <p className="sm:text-sm md:text-sm text-base font-semibold text-gray-900">
-                            {positionData?.companyname || "Not Available"}
+                            {positionData?.companyname?.name || "Not Available"}
                           </p>
                         </div>
                       )}

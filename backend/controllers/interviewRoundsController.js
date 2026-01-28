@@ -274,19 +274,30 @@ const saveInterviewRound = async (req, res) => {
     // ================= HISTORY (CREATE FLOW) =================
 
     //history should be update after creation of round
-    const historyUpdate = buildSmartRoundUpdate({
+    const historyUpdate = await buildSmartRoundUpdate({
       body: otherRoundData,
       actingAsUserId: interview?.ownerId,
       isCreate: true,
     });
 
-    // console.log("historyUpdate", historyUpdate);
+    console.log("historyUpdate", historyUpdate);
 
+    // if (historyUpdate) {
+    //   await InterviewRounds.findByIdAndUpdate(savedRound._id, historyUpdate, {
+    //     new: true,
+    //   });
+    // }
+
+    let updatedRound = savedRound;
     if (historyUpdate) {
-      await InterviewRounds.findByIdAndUpdate(savedRound._id, historyUpdate, {
-        new: true,
-      });
+      updatedRound = await InterviewRounds.findByIdAndUpdate(
+        savedRound._id,
+        historyUpdate,
+        { new: true },
+      );
     }
+
+    console.log("updatedRound InterviewRounds", updatedRound);
 
     if (
       interview &&
@@ -580,8 +591,13 @@ const updateInterviewRound = async (req, res) => {
     });
   }
 
+  console.log("incomingRound", incomingRound);
+
   //after round create in post meeting id will update using this if condtion
-  if (incomingRound.meetingId || incomingRound.meetPlatform) {
+  if (
+    (incomingRound.meetingId || incomingRound.meetPlatform) &&
+    updateType === "MEETING_UPDATE"
+  ) {
     const updateOps = { $set: {} };
 
     if (incomingRound.meetingId)
@@ -612,8 +628,8 @@ const updateInterviewRound = async (req, res) => {
     incomingKeys.length > 0 &&
     incomingKeys.every((key) => ["instructions", "sequence"].includes(key));
 
-  const hasOnlyQuestionsChange =
-    incomingKeys.length === 0 && hasQuestionsUpdate;
+  const hasOnlyQuestionsChange = incomingKeys.length === 0;
+  // && hasQuestionsUpdate;
 
   if (
     (hasOnlySafeChanges || hasOnlyQuestionsChange) &&
@@ -650,9 +666,9 @@ const updateInterviewRound = async (req, res) => {
     }
 
     // Handle questions update
-    if (hasQuestionsUpdate) {
-      await handleInterviewQuestions(interviewId, roundId, questions);
-    }
+    // if (hasQuestionsUpdate) {
+    await handleInterviewQuestions(interviewId, roundId, questions);
+    // }
 
     // Apply round field updates if any
     if (Object.keys(updateOps.$set).length > 0) {
@@ -951,6 +967,8 @@ const updateInterviewRound = async (req, res) => {
         (h) => h.action === "Scheduled",
       );
 
+      console.log("starting round status:", generateMeetingLink);
+
       const scheduleAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
 
       updatePayload.$set.status = scheduleAction;
@@ -1040,6 +1058,8 @@ const updateInterviewRound = async (req, res) => {
     // }
   }
 
+  console.log("updatePayload:", updatePayload);
+
   // === DATE/TIME CHANGE (always save if sent) ===
   if (req.body.round?.dateTime) {
     updatePayload.$set.dateTime = req.body.round.dateTime;
@@ -1064,7 +1084,7 @@ const updateInterviewRound = async (req, res) => {
     updatePayload.$set.status &&
     updatePayload.$set.status !== existingRound.status
   ) {
-    smartUpdate = buildSmartRoundUpdate({
+    smartUpdate = await buildSmartRoundUpdate({
       existingRound,
       body: {
         selectedInterviewers: req.body.round?.selectedInterviewers || [],
@@ -1077,7 +1097,7 @@ const updateInterviewRound = async (req, res) => {
       changes,
     });
   }
-
+  console.log("ending round status:", generateMeetingLink);
   // merging history from both updates interviwers and date time change
   function mergeUpdates(a, b) {
     const out = {};
@@ -1278,7 +1298,7 @@ const updateInterviewRoundStatus = async (req, res) => {
 
     const isParticipantUpdate = req.body?.role || req.body?.joined;
 
-    console.log("req.body", req.body);
+    console.log("req.body isParticipantUpdate", req.body);
 
     if (!roundId || (!action && !isParticipantUpdate)) {
       return res.status(400).json({
@@ -1286,6 +1306,7 @@ const updateInterviewRoundStatus = async (req, res) => {
         message: "roundId and action are required",
       });
     }
+    console.log("isParticipantUpdate", isParticipantUpdate);
 
     const existingRound = await InterviewRounds.findById(roundId)
       .populate("interviewId", "title candidateName")
@@ -1477,14 +1498,17 @@ const updateInterviewRoundStatus = async (req, res) => {
     if (req.body?.History_Type === "Histoy_Handling") {
       // Special handling: only create history if conditions are met
       const participants = existingRound.participants || [];
+
+      console.log("participants", participants);
       const isHistoryHandled = participants.some(
         (p) => p.role === "Interviewer" || p.role === "Scheduler",
       );
+      console.log("isHistoryHandled", isHistoryHandled);
 
       if (!isHistoryHandled && action === "InProgress") {
         // ONE-TIME SPECIAL HISTORY CREATION
         const smartBody = {
-          status: newStatus,
+          status: action,
           interviewerType: existingRound.interviewerType,
           selectedInterviewers: existingRound.interviewers,
           currentActionReason: reasonCode || null,
@@ -1695,8 +1719,8 @@ const updateInterviewRoundStatus = async (req, res) => {
     // Safety check
     if (!finalUpdate || (!finalUpdate.$set && !finalUpdate.$push)) {
       return res
-        .status(400)
-        .json({ success: false, message: "Nothing to update" });
+        .status(200)
+        .json({ success: true, message: "Nothing to update" });
     }
 
     if (req.body?.roundOutcome) {
@@ -1834,6 +1858,8 @@ async function buildSmartRoundUpdate({
       });
     }
 
+    console.log("update update", update);
+
     return update;
   }
 
@@ -1895,18 +1921,26 @@ async function buildSmartRoundUpdate({
   //     null;
 
   //   /* ---------- INTERNAL ---------- */
-  //   if (isInternal) {
-  //     if (
-  //       ["Scheduled", "Rescheduled", "Cancelled", "Draft"].includes(body.status)
-  //     ) {
-  //       addHistory({
-  //         action: body.status,
-  //         scheduledAt: body.dateTime || existingRound.dateTime,
-  //         reasonCode: update.$set.currentActionReason,
-  //         comment: body.comments,
-  //       });
-  //     }
-  //   }
+  if (isInternal && body?.status !== existingRound?.status) {
+    if (
+      ["Scheduled", "Rescheduled", "Cancelled", "Draft"].includes(body.status)
+    ) {
+      update.$set.previousAction = existingRound.currentAction || null;
+      update.$set.currentAction = body.status;
+      update.$set.status = body.status;
+      update.$set.currentActionReason =
+        body.currentActionReason ||
+        body.rescheduleReason ||
+        body.cancellationReason ||
+        null;
+      addHistory({
+        action: body.status,
+        scheduledAt: body.dateTime || existingRound.dateTime,
+        reasonCode: update.$set.currentActionReason,
+        comment: body.comments,
+      });
+    }
+  }
 
   //   /* ---------- EXTERNAL ---------- */
   //   if (isExternal) {
@@ -2128,7 +2162,8 @@ async function detectRoundChanges({
     anyChange: false,
   };
 
-  // console.log("detectRoundChanges", { existingRound, incomingRound });
+  console.log("detectRoundChanges", incomingRound);
+  console.log("detectRoundChanges", existingRound);
 
   // 1. Status change
   if (incomingRound.status && incomingRound.status !== existingRound.status) {

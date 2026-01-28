@@ -18,9 +18,9 @@ import {
 // import { useInterviews } from "../apiHooks/useInterviews";
 import { JoiningScreen } from "./components/screens/JoiningScreen";
 
-
 import { useInterviews } from "../apiHooks/useInterviews";
 import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
+import { useMockInterviewById } from "../apiHooks/useMockInterviews";
 // import { extractUrlData } from "../apiHooks/useVideoCall";
 
 const Dashboard = () => {
@@ -40,35 +40,59 @@ const Dashboard = () => {
   // const { useInterviewDetails } = useInterviews();
 
   const isMobile = window.matchMedia(
-    "only screen and (max-width: 768px)"
+    "only screen and (max-width: 768px)",
   ).matches;
 
   const { useInterviewDetails } = useInterviews();
 
   const location = useLocation();
 
-  console.log('location.search:', location.search)
+  // console.log("location.search:", location.search);
 
   const urlData = useMemo(
     () => extractUrlData(location.search),
-    [location.search]
+    [location.search],
   );
+
+  const isMockInterview = urlData?.interviewType === "mockinterview";
+
+  // ✅ ALWAYS call hooks
+  const {
+    mockInterview: mockinterview,
+    isMockLoading,
+    isError: isMockError,
+  } = useMockInterviewById({
+    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+    enabled: isMockInterview, // ✅ THIS LINE
+    // mockInterviewId: null,
+  });
 
   // urlData.isCandidate ? { roundId: urlData.interviewRoundId } : {}
-  const { data, isLoading } = useInterviewDetails(
-    { roundId: urlData.interviewRoundId }
-  );
+  const {
+    data: interviewData,
+    isLoading: isInterviewLoading,
+    isError: interviewError,
+  } = useInterviewDetails({
+    roundId: !isMockInterview ? urlData?.interviewRoundId : null,
+    enabled: !isMockInterview,
+  });
 
-  console.log("location.search from dashboard main url", urlData);
+  // console.log("location.search from dashboard main url", urlData);
 
-  const candidateData = data?.candidateId || {};
-  const positionData = data?.positionId || {};
-  const interviewRoundData = data?.rounds[0] || {};
+  // const candidateData = interviewData?.candidateId || {};
+  // const positionData = interviewData?.positionId || {};
+  const candidateData = isMockInterview
+    ? mockinterview
+    : interviewData?.candidateId || {};
 
-  console.log("data", data);
-  console.log("candidateData1", candidateData);
-  console.log("positionData1", positionData);
-  console.log("interviewRoundData1", interviewRoundData);
+  const positionData = isMockInterview ? {} : interviewData?.positionId;
+
+  const interviewRoundData = interviewData?.rounds[0] || {};
+
+  // console.log("data", interviewData);
+  // console.log("candidateData1", candidateData);
+  // console.log("positionData1", positionData);
+  // console.log("interviewRoundData1", interviewRoundData);
 
   const navigate = useNavigate();
   const [isAuthChecking, setIsAuthChecking] = useState(true);
@@ -80,10 +104,12 @@ const Dashboard = () => {
     data: contactData,
     isLoading: preAuthLoading,
     isError: preAuthError,
-  } = useContactDetails(
-    !urlData.isCandidate ? urlData?.interviewerId : null,
-    !urlData.isCandidate ? urlData?.interviewRoundId : null
-  );
+  } = useContactDetails({
+    contactId: !urlData.isCandidate ? urlData?.interviewerId : null,
+    roundId: !urlData.isCandidate ? urlData?.interviewRoundId : null,
+    interviewType: urlData?.interviewType || null,
+    // !urlData.isCandidate ? urlData?.interviewType : null,
+  });
 
   // === 1. Better handling of contactData (including API-level errors) ===
   useEffect(() => {
@@ -136,17 +162,21 @@ const Dashboard = () => {
     if (candidateData && urlData.meetLink) {
       candidateData.meetingLink = urlData.meetLink;
     }
-  }, [candidateData, urlData.meetLink]);
+  }, [urlData.meetLink]);
 
-   useEffect(() => {
+  useEffect(() => {
     if (interviewRoundData?.meetPlatform && !meetingId) {
-      console.log(
-        "Setting meetingId from candidateData:",
-        interviewRoundData.meetingId
-      );
+      // console.log(
+      //   "Setting meetingId from candidateData:",
+      //   interviewRoundData.meetingId,
+      // );
       setMeetingId(interviewRoundData.meetingId);
     }
-  }, [interviewRoundData?.meetPlatform, interviewRoundData?.meetingId, meetingId])
+  }, [
+    interviewRoundData?.meetPlatform,
+    interviewRoundData?.meetingId,
+    meetingId,
+  ]);
 
   // 1. Initialize meeting - SIMPLIFIED VERSION
   useEffect(() => {
@@ -199,10 +229,10 @@ const Dashboard = () => {
     };
   }, [isMobile]);
 
-    // 8. Auto-join when everything is ready
+  // 8. Auto-join when everything is ready
   useEffect(() => {
     if (isInitialized && token && meetingId) {
-      console.log("All conditions met for joining meeting");
+      // console.log("All conditions met for joining meeting");
       // The meeting will join automatically with joinOnLoad: true
       setMeetingStarted(true);
     }
@@ -241,7 +271,7 @@ const Dashboard = () => {
       const decryptedOwnerId = decryptParam(encryptedOwnerId);
       if (!decryptedOwnerId) {
         setAuthError(
-          "Invalid meeting link: unable to decrypt owner information"
+          "Invalid meeting link: unable to decrypt owner information",
         );
         setIsAuthChecking(false);
         return false;
@@ -262,9 +292,7 @@ const Dashboard = () => {
     }
   };
 
-  const isAnyLoading =
-    preAuthLoading ||
-    isAuthChecking;
+  const isAnyLoading = preAuthLoading || isAuthChecking;
   const anyError = authError;
 
   if (isAnyLoading) {
@@ -296,8 +324,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
- 
 
   // 2. Extract URL data
   // const [decodedData, setDecodedData] = useState(null);
@@ -420,8 +446,6 @@ const Dashboard = () => {
 
   //   // Meeting will join through MeetingProvider
   // };
-
-
 
   return (
     <>

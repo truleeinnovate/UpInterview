@@ -26,16 +26,16 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
     actionType === "Cancel"
       ? "Cancelled"
       : actionType === "NoShow"
-      ? "NoShow"
-      : roundStatus;
+        ? "NoShow"
+        : roundStatus;
 
   // Action label for display
   const actionLabel =
     actionType === "Cancel"
       ? "Cancelled"
       : actionType === "NoShow"
-      ? "Marked as No Show"
-      : "Rescheduled";
+        ? "Marked as No Show"
+        : "Rescheduled";
 
   useEffect(() => {
     if (!dateTime || !policyRoundStatus) return;
@@ -49,7 +49,7 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
         if (res?.success) {
           setPolicyData(res.policy);
           setHoursBefore(res.hoursBefore); // Keep full decimal for accurate display
-          console.log("Settlement Policy response", res);
+          // console.log("Settlement Policy response", res);
         } else {
           setError(true);
         }
@@ -107,8 +107,8 @@ const SettlementPolicyWarning = ({ dateTime, roundStatus, actionType }) => {
           {actionType === "Cancel"
             ? "cancel"
             : actionType === "NoShow"
-            ? "mark as no show"
-            : "reschedule"}
+              ? "mark as no show"
+              : "reschedule"}
         </strong>{" "}
         a confirmed <strong>external interview</strong>.
       </p>
@@ -171,10 +171,10 @@ const DateChangeConfirmationModal = ({
   const [otherText, setOtherText] = useState("");
   const [roundOutcome, setRoundOutcome] = useState("");
 
-  console.log("selectedInterviewType", selectedInterviewType);
-  console.log("status", status);
-  console.log("combinedDateTime", combinedDateTime);
-  console.log("actionType", actionType);
+  // console.log("selectedInterviewType", selectedInterviewType);
+  // console.log("status", status);
+  // console.log("combinedDateTime", combinedDateTime);
+  // console.log("actionType", actionType);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -210,14 +210,14 @@ const DateChangeConfirmationModal = ({
   const reasonOptions = isCancelAction
     ? CANCEL_OPTIONS
     : isNoShowAction
-    ? NO_SHOW_OPTIONS
-    : isRejectAction
-    ? REJECT_OPTIONS
-    : isEvaluatedAction
-    ? EVALUATED_OPTIONS
-    : isWithdrawAction
-    ? WITHDRAW_OPTIONS
-    : [];
+      ? NO_SHOW_OPTIONS
+      : isRejectAction
+        ? REJECT_OPTIONS
+        : isEvaluatedAction
+          ? EVALUATED_OPTIONS
+          : isWithdrawAction
+            ? WITHDRAW_OPTIONS
+            : [];
 
   const dropdownOptions = reasonOptions.map((opt) => ({
     value: opt.value,
@@ -324,12 +324,12 @@ const DateChangeConfirmationModal = ({
                       {isCancelAction
                         ? "cancel"
                         : isNoShowAction
-                        ? "mark as no show"
-                        : isRejectAction
-                        ? "reject"
-                        : isWithdrawAction
-                        ? "withdraw"
-                        : "mark as evaluated"}
+                          ? "mark as no show"
+                          : isRejectAction
+                            ? "reject"
+                            : isWithdrawAction
+                              ? "withdraw"
+                              : "mark as evaluated"}
                     </strong>{" "}
                     this {isRejectAction ? "candidate" : "round"}.
                   </p>
@@ -343,18 +343,18 @@ const DateChangeConfirmationModal = ({
                   {isCancelAction
                     ? "Cancellation"
                     : isNoShowAction
-                    ? "No Show"
-                    : isRejectAction
-                    ? "Rejection"
-                    : isWithdrawAction
-                    ? "Withdrawal"
-                    : "Evaluation"}
+                      ? "No Show"
+                      : isRejectAction
+                        ? "Rejection"
+                        : isWithdrawAction
+                          ? "Withdrawal"
+                          : "Evaluation"}
                 </label>
                 <DropdownSelect
                   options={dropdownOptions}
                   value={
                     dropdownOptions.find(
-                      (opt) => opt.value === selectedReason
+                      (opt) => opt.value === selectedReason,
                     ) || null
                   }
                   onChange={(selectedOption) => {
@@ -395,7 +395,7 @@ const DateChangeConfirmationModal = ({
                     options={ROUND_OUTCOME_OPTIONS}
                     value={
                       ROUND_OUTCOME_OPTIONS.find(
-                        (opt) => opt.value === roundOutcome
+                        (opt) => opt.value === roundOutcome,
                       ) || null
                     }
                     onChange={(selectedOption) => {
