@@ -80,7 +80,7 @@ export const extractUrlData = (search) => {
 // };
 
 // Custom hook for pre-auth contact details
-export const useContactDetails = (contactId, roundId, interviewType) => {
+export const useContactDetails = ({ contactId, roundId, interviewType }) => {
   return useQuery({
     queryKey: ["contactDetails", contactId, roundId],
     queryFn: async () => {

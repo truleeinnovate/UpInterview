@@ -92,14 +92,21 @@ const InterviewActions = ({
 
   // const candidateData = data?.candidateId || {};
   // const positionData = data?.positionId || {};
-  const interviewData = interview?.rounds[0] || mockInterview?.rounds[0] || {};
-  const participants =
-    interview?.participants || mockInterview?.rounds[0]?.participants || [];
+  const interviewData = isMockInterview
+    ? mockInterview?.rounds[0]
+    : interview?.rounds[0] || {};
+  const participants = interviewData?.participants;
+  // interviewData?.rounds[0]?.participants ||
+  // mockInterview?.rounds[0]?.participants ||
+  // [];
+
+  // console.log()
   const isCandidateJoined = participants.some(
     (p) => p.role === "Candidate" && p.status === "Joined",
   );
+  // console.log("isCandidateJoined", isCandidateJoined);
 
-  console.log("interviewData interviewData", mockInterview);
+  // console.log("interviewData interviewData", interviewData);
 
   // Function to check if a participant is interviewer Joined
   const isInterviewerJoined = (userId) =>
@@ -160,7 +167,7 @@ const InterviewActions = ({
   // const canCancel = currentTime <= endTime;
   const canRaiseIssue = startTime;
 
-  const currentStatus = interviewData?.interviewRound?.status;
+  const currentStatus = interviewData?.status;
 
   const isFinalStatus = [
     "Completed",
@@ -193,8 +200,8 @@ const InterviewActions = ({
     try {
       // Build the payload based on status
       const payload = {
-        roundId: interviewData?.interviewRound?._id,
-        interviewId: interviewData?.interviewRound?.interviewId,
+        roundId: interviewData?._id,
+        interviewId: interviewData?.interviewId,
         action: newStatus,
       };
 
@@ -304,7 +311,7 @@ const InterviewActions = ({
         setActionInProgress(false);
       } else if (interviewerJoinedReasonModalOpen && change) {
         await handleStatusChange(
-          interviewData?.interviewRound?.status,
+          interviewData?.status,
           reason,
           comment || null,
           "InterviewerJoined",
@@ -316,7 +323,7 @@ const InterviewActions = ({
       // selectedReasonModalOpen status handling
       else if (candidateJoinedReasonModalOpen && change) {
         await handleStatusChange(
-          interviewData?.interviewRound?.status,
+          interviewData?.status,
           reason,
           comment || null,
           "CandidateJoined",
@@ -679,7 +686,7 @@ const InterviewActions = ({
         }}
         onConfirm={handleCancelWithReason}
         confirmLabel="Confirm Cancel"
-        roundData={interviewData?.interviewRound}
+        roundData={interviewData}
         showPolicyInfo={true}
       />
 
@@ -715,7 +722,7 @@ const InterviewActions = ({
         <SupportForm
           onClose={closeModal}
           FeedbackIssueType="FeedbackInterviewTechIssue"
-          roundId={interviewData?.interviewRound?._id}
+          roundId={interviewData?._id}
         />
       )}
     </div>

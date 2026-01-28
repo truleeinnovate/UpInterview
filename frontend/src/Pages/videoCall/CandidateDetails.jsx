@@ -164,9 +164,9 @@ const CandidateDetails = ({
                 <p className="text-sm font-medium text-gray-500">Company</p>
                 <p
                   className="text-sm text-gray-900 truncate max-w-[200px]"
-                  title={positionData?.companyname}
+                  title={positionData?.companyname?.name}
                 >
-                  {positionData?.companyname}
+                  {positionData?.companyname?.name}
                 </p>
               </div>
             </div>

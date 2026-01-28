@@ -67,11 +67,11 @@ function JoinMeeting() {
     data: contactData,
     isLoading: preAuthLoading,
     isError: preAuthError,
-  } = useContactDetails(
-    !urlData.isCandidate ? urlData?.interviewerId : null,
-    !urlData.isCandidate ? urlData?.interviewRoundId : null,
-    urlData?.interviewType,
-  );
+  } = useContactDetails({
+    contactId: !urlData.isCandidate ? urlData?.interviewerId : null,
+    roundId: !urlData.isCandidate ? urlData?.interviewRoundId : null,
+    interviewType: urlData?.interviewType,
+  });
 
   // console.log("contactData", contactData);
 
@@ -153,7 +153,7 @@ function JoinMeeting() {
       !isAuthChecking && !urlData.isCandidate ? urlData.interviewRoundId : null,
     interviewerId:
       !isAuthChecking && !urlData.isCandidate ? urlData.interviewerId : null,
-    interviewType: !urlData.isCandidate ? urlData.interviewType : null,
+    interviewType: urlData?.interviewType,
   });
 
   // === 1. Better handling of contactData (including API-level errors) ===

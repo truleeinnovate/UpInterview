@@ -109,7 +109,7 @@ const FeedbackForm = ({
   } = useFeedbackData({
     roundId: !urlData.isCandidate ? urlData.interviewRoundId : null,
     interviewerId: !urlData.isCandidate ? urlData.interviewerId : null,
-    interviewType: !urlData.isCandidate ? urlData.interviewType : null,
+    interviewType: urlData?.interviewType,
   });
 
   const isMockInterview = urlData?.interviewType === "mockinterview";
@@ -138,7 +138,9 @@ const FeedbackForm = ({
     enabled: !isMockInterview,
   });
 
-  const candidateData = interviewData?.candidateId || mockinterview || {};
+  const candidateData = isMockInterview
+    ? mockinterview
+    : interviewData?.candidateId || {};
 
   const feedbackData = useMemo(() => {
     return locationFeedback || feedbackDatas || {};

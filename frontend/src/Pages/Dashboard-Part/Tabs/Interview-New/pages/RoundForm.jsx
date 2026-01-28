@@ -348,7 +348,7 @@ const RoundFormInterviews = () => {
     }
   }, [interviewMode, address, response]);
 
-  console.log("Address:", address);
+  // console.log("Address:", address);
 
   const handleAssessmentMenuScrollToBottom = () => {
     if (isAssessmentQueryLoading) return;
@@ -471,7 +471,7 @@ const RoundFormInterviews = () => {
           endTime.setMinutes(endTime.getMinutes() + newDuration);
           end = endTime;
         } catch (error) {
-          console.error("Error processing scheduled date:", error);
+          // console.error("Error processing scheduled date:", error);
           return; // Exit on error
         }
       }
@@ -479,7 +479,7 @@ const RoundFormInterviews = () => {
       if (start && end) {
         // Additional validation before setting state
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-          console.warn("Invalid start or end time calculated");
+          // console.warn("Invalid start or end time calculated");
           return;
         }
 
@@ -649,7 +649,7 @@ const RoundFormInterviews = () => {
     e?.preventDefault();
     e?.stopPropagation();
 
-    console.log("Removing question with ID:", questionId);
+    // console.log("Removing question with ID:", questionId);
 
     setInterviewQuestionsList((prev) =>
       prev.filter((question) => {
@@ -878,7 +878,12 @@ const RoundFormInterviews = () => {
         roundEditData.interviewMode.slice(1)
       : "";
 
-    setSelectedMeetingPlatform(roundEditData?.meetPlatform || "");
+    if (roundEditData?.meetPlatform) {
+      setSelectedMeetingPlatform(roundEditData?.meetPlatform || "");
+    } else {
+      setSelectedMeetingPlatform(data?.data?.defaultProvider);
+    }
+
     setInterviewMode(normalizedMode);
     setSelectedInterviewType(roundEditData.interviewerType || null);
     setInterviewQuestionsList(roundEditData.questions || []);
@@ -1106,7 +1111,7 @@ const RoundFormInterviews = () => {
         fieldName === "sequence" ||
         fieldName === "questions"
       ) {
-        console.log("Editable field in edit mode: 2", fieldName);
+        // console.log("Editable field in edit mode: 2", fieldName);
         return false; // These are editable
       }
       return true; // Everything else is disabled
@@ -1131,7 +1136,7 @@ const RoundFormInterviews = () => {
         // ||
         // category === "interviewers"
       ) {
-        console.log("Editable field in edit mode: datetime", fieldName);
+        // console.log("Editable field in edit mode: datetime", fieldName);
         // console.log("Editable field in reschedule:", fieldName, category);
         // console.log("Editable field in reschedule:", category);
         return false; // These are editable
@@ -1363,7 +1368,7 @@ const RoundFormInterviews = () => {
   // CHANGE 1: Modify handleConfirmDateChange to return the new values
   const handleConfirmDateChange = () => {
     if (!pendingDateChange) return;
-    console.log("Confirming date change:", pendingDateChange);
+    // console.log("Confirming date change:", pendingDateChange);
 
     // Clear interviewers when confirmed (for both internal and external)
     if (externalInterviewers.length > 0) {
@@ -1709,13 +1714,13 @@ const RoundFormInterviews = () => {
   // };
 
   const handleClearAllInterviewers = () => {
-    console.log("Clearing all interviewers...");
-    console.log(
-      "Before clear - internal:",
-      internalInterviewers.length,
-      "external:",
-      externalInterviewers.length,
-    );
+    // console.log("Clearing all interviewers...");
+    // console.log(
+    //   "Before clear - internal:",
+    //   internalInterviewers.length,
+    //   "external:",
+    //   externalInterviewers.length,
+    // );
 
     setInternalInterviewers([]);
     setExternalInterviewers([]);
@@ -2049,7 +2054,7 @@ const RoundFormInterviews = () => {
         }
       }
 
-      console.log("payload", payload);
+      // console.log("payload", payload);
 
       // console.log("=== PAYLOAD DEBUG ===");
       // console.log("roundData.dateTime:", roundData.dateTime);
@@ -2068,13 +2073,19 @@ const RoundFormInterviews = () => {
       } else {
         response = await saveInterviewRound(payload);
       }
-      // console.log("response generateMeetingLink", response.generateMeetingLink);
+      console.log("response generateMeetingLink", response);
+
+      console.log("selectedMeetingPlatform", selectedMeetingPlatform);
+
+      console.log("roundData", roundData);
 
       // meeting gerating google or zoom etc......
       // After successful round create/update
       if (response.status === "ok") {
         const roundIdToUse =
           response.savedRound?._id || response.updatedRound?._id || roundId;
+
+        console.log("roundIdToUse", roundIdToUse);
 
         // Only generate meeting if backend says so
         if (
@@ -2166,6 +2177,7 @@ const RoundFormInterviews = () => {
                   participant_video: false,
                 },
               };
+              console.log("zoomPayload", zoomPayload);
 
               meetingLink = await createMeeting(
                 "zoommeet",
@@ -2197,8 +2209,9 @@ const RoundFormInterviews = () => {
                   meetPlatform: selectedMeetingPlatform,
                 },
               };
+              console.log("meetingPayload", meetingPayload);
 
-              await updateInterviewRound(meetingPayload);
+              response = await updateInterviewRound(meetingPayload);
 
               setMeetingCreationProgress("Meeting link saved successfully!");
             }
@@ -2238,6 +2251,8 @@ const RoundFormInterviews = () => {
       //   // successMessages.length * 1000 + 500
       //   // changes-confirmed
       // }
+
+      console.log("response", response);
 
       // === FINAL SUCCESS ===
       notify.success("Round saved successfully!");
@@ -2708,7 +2723,7 @@ const RoundFormInterviews = () => {
                             const newMode = e.target.value;
                             const oldMode = interviewMode;
 
-                            console.log("Mode change:", oldMode, "→", newMode);
+                            // console.log("Mode change:", oldMode, "→", newMode);
 
                             // Clear external interviewers when switching to Face to Face
                             if (

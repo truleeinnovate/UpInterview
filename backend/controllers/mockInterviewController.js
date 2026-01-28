@@ -1631,8 +1631,8 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     // Safety check
     if (!finalUpdate || (!finalUpdate.$set && !finalUpdate.$push)) {
       return res
-        .status(400)
-        .json({ success: false, message: "Nothing to update" });
+        .status(204)
+        .json({ success: true, message: "Nothing to update" });
     }
 
     if (req.body?.roundOutcome) {
