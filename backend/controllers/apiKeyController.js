@@ -104,7 +104,9 @@ exports.createApiKey = asyncHandler(async (req, res) => {
       "candidates:bulk",
       "positions:read",
       "positions:write",
-      "positions:bulk"
+      "positions:bulk",
+      "ats:read",
+      "ats:write"
     ];
     const invalidPermissions = permissions.filter(
       (p) => !validPermissions.includes(p)
