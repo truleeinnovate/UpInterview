@@ -30,6 +30,7 @@ const getErrorMessage = (field, value, formData) => {
     invalidPhone: "Invalid Phone number",
     CurrentRole: "Current Role is required",
     // Technology: "Technology is required",
+
   };
 
   if (!value) {
@@ -85,6 +86,36 @@ const validateCandidateForm = (formData, entries, errors) => {
       formIsValid = false;
     }
   });
+
+  // ── Salary cross-validation (final check) ─────────────────────────
+  if (formData.minSalary || formData.maxSalary) {
+    const minSalaryVal = formData.minSalary ? parseInt(formData.minSalary, 10) : NaN;
+    const maxSalaryVal = formData.maxSalary ? parseInt(formData.maxSalary, 10) : NaN;
+
+    const hasMin = !Number.isNaN(minSalaryVal);
+    const hasMax = !Number.isNaN(maxSalaryVal);
+
+    if (hasMin && minSalaryVal < 0) {
+      newErrors.minSalary = "Minimum salary cannot be negative";
+      formIsValid = false;
+    }
+    if (hasMax && maxSalaryVal < 0) {
+      newErrors.maxSalary = "Maximum salary cannot be negative";
+      formIsValid = false;
+    }
+
+    if (hasMin && hasMax) {
+      if (minSalaryVal === maxSalaryVal) {
+        newErrors.minSalary = "Min and Max Salary cannot be equal";
+        newErrors.maxSalary = "Min and Max Salary cannot be equal";
+        formIsValid = false;
+      } else if (minSalaryVal > maxSalaryVal) {
+        newErrors.minSalary = "Min Salary cannot be greater than Max Salary";
+        newErrors.maxSalary = "Max Salary cannot be less than Min Salary";
+        formIsValid = false;
+      }
+    }
+  }
 
   // Skills validation:
   // - First 3 rows are mandatory: all fields must be filled

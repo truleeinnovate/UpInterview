@@ -193,6 +193,18 @@ const AddCandidateForm = ({
 
   // const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
   const genderOptions = ["Male", "Female"];
+  // Near other options (useMemo or direct const)
+  const noticePeriodOptions = [
+    { value: "Immediate", label: "Immediate (0 days)" },
+    { value: "7days", label: "7 Days" },
+    { value: "15days", label: "15 Days" },
+    { value: "30days", label: "30 Days" },
+    { value: "45days", label: "45 Days" },
+    { value: "60days", label: "60 Days" },
+    { value: "90days", label: "90 Days" },
+    { value: "Morethan90days", label: "More than 90 Days" },
+    { value: "Negotiable", label: "Negotiable" },
+  ];
 
   // ----------------------------- new fields ----------------
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -228,10 +240,11 @@ const AddCandidateForm = ({
     keyAchievements: useRef(null),
     workExperience: useRef(null),
     location: useRef(null),
-    salaryMin: useRef(null),
-    salaryMax: useRef(null),
+    minSalary: useRef(null),
+    maxSalary: useRef(null),
     languages: useRef(null),
     certifications: useRef(null),
+    noticePeriod: useRef(null),
   };
 
   // v1.0.3 --------------------------------------------------------------------------->
@@ -255,11 +268,12 @@ const AddCandidateForm = ({
     keyAchievements: "",
     workExperience: [],
     location: "",
-    salaryMin: "",
-    salaryMax: "",
+    maxSalary: "",
+    minSalary: "",
     languages: [],
     certifications: [],
-    // Technology: "",
+    noticePeriod: ""
+
   });
   const [errors, setErrors] = useState({});
 
@@ -277,28 +291,6 @@ const AddCandidateForm = ({
   // --------------------------------------- new fields version 2 -----------------------
   const [certInput, setCertInput] = useState("");
 
-  const handleSalaryChange = (e) => {
-    const { name, value } = e.target;
-    if (/^\d*$/.test(value)) {
-      const nextFormData = { ...formData, [name]: value };
-      setFormData(nextFormData);
-
-      // Validate salary range
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        const min = parseFloat(nextFormData.salaryMin);
-        const max = parseFloat(nextFormData.salaryMax);
-
-        if (min && max && max < min) {
-          newErrors.salaryMax = "Max salary cannot be less than min salary";
-        } else {
-          // Remove the error if the condition is no longer met
-          delete newErrors.salaryMax;
-        }
-        return newErrors;
-      });
-    }
-  };
 
   const handleCertKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -402,10 +394,11 @@ const AddCandidateForm = ({
         keyAchievements: selectedCandidate.keyAchievements || "",
         workExperience: selectedCandidate.workExperience || [],
         location: selectedCandidate?.location || "",
-        salaryMin: selectedCandidate?.salaryMin || "",
-        salaryMax: selectedCandidate?.salaryMax || "",
+        minSalary: selectedCandidate?.minSalary || "",
+        maxSalary: selectedCandidate?.maxSalary || "",
         languages: selectedCandidate?.languages || [],
         certifications: selectedCandidate?.certifications || [],
+        noticePeriod: selectedCandidate?.noticePeriod || "",
       });
 
       if (selectedCandidate.ImageData?.filename) {
@@ -493,9 +486,9 @@ const AddCandidateForm = ({
       CountryCode: sd.candidate_country_code || "+91",
       Phone: sd.candidate_phone
         ? sd.candidate_phone
-            .replace(/^\+\d{1,3}/, "")
-            .replace(/^\d{1,3}/, "")
-            .trim()
+          .replace(/^\+\d{1,3}/, "")
+          .replace(/^\d{1,3}/, "")
+          .trim()
         : "",
 
       // ── Education ───────────────────────────────────
@@ -516,15 +509,15 @@ const AddCandidateForm = ({
       skills:
         parsedSkills.length > 0
           ? parsedSkills.map((name) => ({
-              skill: (name || "").trim(),
-              experience: "",
-              expertise: "Beginner",
-            }))
+            skill: (name || "").trim(),
+            experience: "",
+            expertise: "Beginner",
+          }))
           : (sd.screening_result?.extracted_skills || []).map((name) => ({
-              skill: (name || "").trim(),
-              experience: "",
-              expertise: "Beginner",
-            })),
+            skill: (name || "").trim(),
+            experience: "",
+            expertise: "Beginner",
+          })),
 
       // ── New Fields (Resume Analysis) ─────────────────
       professionalSummary:
@@ -597,10 +590,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry,
       );
       setEntries(updatedEntries);
@@ -800,15 +793,33 @@ const AddCandidateForm = ({
         );
       }
 
-      // Salary Validation (in case these ever route through handleChange)
-      const min = parseFloat(nextFormData.salaryMin);
-      const max = parseFloat(nextFormData.salaryMax);
-      if (min && max && max < min) {
-        newErrors.salaryMax = "Max salary cannot be less than min salary";
-      } else if (
-        newErrors.salaryMax === "Max salary cannot be less than min salary"
-      ) {
-        delete newErrors.salaryMax;
+      // Live cross-field validation: Salary (keys are minsalary/maxsalary in validation)
+      // Inside setErrors callback
+      if (name === "minSalary" || name === "maxSalary") {
+        const minVal = Number(nextFormData.minSalary);
+        const maxVal = Number(nextFormData.maxSalary);
+        const hasMin = !Number.isNaN(minVal) && nextFormData.minSalary !== "";
+        const hasMax = !Number.isNaN(maxVal) && nextFormData.maxSalary !== "";
+
+        delete newErrors.minSalary;
+        delete newErrors.maxSalary;
+
+        if (hasMin && minVal < 0) {
+          newErrors.minSalary = "Minimum salary cannot be negative";
+        }
+        if (hasMax && maxVal < 0) {
+          newErrors.maxSalary = "Maximum salary cannot be negative";
+        }
+
+        if (hasMin && hasMax) {
+          if (minVal === maxVal) {
+            newErrors.minSalary = "Min and Max Salary cannot be equal";
+            newErrors.maxSalary = "Min and Max Salary cannot be equal";
+          } else if (minVal > maxVal) {
+            newErrors.minSalary = "Min Salary cannot be greater than Max Salary";
+            newErrors.maxSalary = "Max Salary cannot be less than Min Salary";
+          }
+        }
       }
 
       return newErrors;
@@ -840,6 +851,7 @@ const AddCandidateForm = ({
       CountryCode: "+91",
       // Technology: "",
       linkedInUrl: "",
+
     });
 
     setErrors({});
@@ -955,12 +967,11 @@ const AddCandidateForm = ({
         "Key Achievements must be at least 150 characters.";
     }
 
-    if (formData.salaryMin && formData.salaryMax) {
-      if (parseFloat(formData.salaryMax) < parseFloat(formData.salaryMin)) {
+    if (formData.minSalary && formData.minSalary) {   // ← BUG: checking same field twice
+      if (parseFloat(formData.salaryMax) < parseFloat(formData.minSalary)) {   // ← wrong field name
         newErrors.salaryMax = "Max salary cannot be less than min salary";
       }
     }
-
     // 3.uniqueness
     if (!formIsValid || linkedInError || hasUniquenessConflict) {
       setErrors(newErrors);
@@ -998,7 +1009,10 @@ const AddCandidateForm = ({
         experience: entry.experience,
         expertise: entry.expertise,
       }));
-
+    const cleanedWorkExperience = formData.workExperience.map(project => {
+      const { _id, ...cleanProject } = project; // remove _id if present
+      return cleanProject;
+    });
     const data = {
       FirstName: formData.FirstName,
       LastName: formData.LastName,
@@ -1022,7 +1036,14 @@ const AddCandidateForm = ({
       // keyAchievements: formData.keyAchievements,
       professionalSummary: formatToBulletPoints(formData.professionalSummary),
       keyAchievements: formatToBulletPoints(formData.keyAchievements),
-      workExperience: formData.workExperience,
+      workExperience: cleanedWorkExperience,
+
+      location: formData.location || undefined,
+      minSalary: formData.minSalary ? Number(formData.minSalary) : undefined,
+      maxSalary: formData.maxSalary ? Number(formData.maxSalary) : undefined,
+      languages: formData.languages?.filter(lang => lang.trim() !== "") || [],          // remove empty strings
+      certifications: formData.certifications?.filter(Boolean) || [],
+      noticePeriod: formData.noticePeriod || undefined,
     };
 
     // Add screening metadata for backend storage only
@@ -1031,14 +1052,14 @@ const AddCandidateForm = ({
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" &&
         mode !== "Edit" && {
-          source: "UPLOAD",
-          // Pass full screeningData so backend can store it
-          screeningData: screeningData, // ← direct pass (full object)
-          parsedJson: screeningData.metadata || screeningData.parsedJson || {},
-          parsedSkills: screeningData.parsed_skills || [],
-          parsedExperience: screeningData.parsed_experience || null,
-          parsedEducation: screeningData.parsed_education || null,
-        }),
+        source: "UPLOAD",
+        // Pass full screeningData so backend can store it
+        screeningData: screeningData, // ← direct pass (full object)
+        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+        parsedSkills: screeningData.parsed_skills || [],
+        parsedExperience: screeningData.parsed_experience || null,
+        parsedEducation: screeningData.parsed_education || null,
+      }),
     };
 
     try {
@@ -1239,8 +1260,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save candidate",
+        error.message ||
+        "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1281,6 +1302,11 @@ const AddCandidateForm = ({
     () => genderOptions.map((g) => ({ value: g, label: g })),
     [],
   );
+  const noticePeriodOptionsRS = useMemo(
+    () => noticePeriodOptions.map((g) => ({ value: g, label: g })),
+    [],
+  );
+
 
   // const qualificationOptionsRS =
   //   qualifications?.map((q) => ({
@@ -1653,7 +1679,7 @@ const AddCandidateForm = ({
                 // error={errors.Gender}
                 containerRef={fieldRefs.Gender}
                 label="Gender"
-                // required
+              // required
               />
             </div>
             {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -1694,7 +1720,105 @@ const AddCandidateForm = ({
                 error={errors.linkedInUrl}
               />
             </div>
+            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+              {/* v1.0.7 --------------------------------------------------------------------------------------> */}
+              Candidate Expectations / Availability
+            </p>
 
+
+
+            {/* New Fields: Location, Salary, Languages */}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
+              <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
+                <IncreaseAndDecreaseField
+                  value={formData.minSalary}
+                  onChange={handleChange}
+                  inputRef={fieldRefs.minSalary}
+                  error={errors.minSalary}
+                  min={0}
+                  max={1000000000}
+                  label="Min Salary (Annual)"
+                  name="minSalary"
+                  placeholder="₹ Min Salary (Annual)"
+                />
+                <IncreaseAndDecreaseField
+                  value={formData.maxSalary}
+                  onChange={handleChange}
+                  min={0}
+                  max={1000000000}
+                  inputRef={fieldRefs.maxSalary}
+                  error={errors.maxSalary}
+                  label="Max Salary (Annual)"
+                  name="maxSalary"
+                  placeholder="₹ Max Salary (Annual)"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <DropdownWithSearchField
+                  label="Current Location"
+                  name="location"
+                  value={formData.location}
+                  options={locationOptionsRS}
+                  onChange={(e) => {
+                    const { value } = e.target;
+                    setFormData((prev) => ({ ...prev, location: value }));
+                    if (errors.location) {
+                      setErrors((prev) => ({ ...prev, location: "" }));
+                    }
+                  }}
+                  placeholder="Select Location"
+                  isCustomName={isCustomLocation}
+                  setIsCustomName={setIsCustomLocation}
+                  onMenuOpen={loadLocations}
+                  loading={isLocationsFetching}
+                  containerRef={fieldRefs.location} // Ensure you add this ref to your fieldRefs object
+                />
+
+
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+              <InputField
+                label="Languages (comma separated)"
+                name="languages"
+                value={
+                  Array.isArray(formData?.languages)
+                    ? formData.languages.join(", ")
+                    : ""
+                }
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  const languageArray = inputValue
+                    .split(",")
+                    .map((lang) => lang.trimStart());
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    languages: languageArray,
+                  }));
+                }}
+                onBlur={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    languages: prev.languages
+                      .map((lang) => lang.trim())
+                      .filter(Boolean),
+                  }));
+                }}
+                placeholder="e.g. English, Telugu, Hindi"
+              />
+              <DropdownWithSearchField
+                value={formData.noticePeriod}
+                options={noticePeriodOptions}
+                onChange={handleChange}
+                name="noticePeriod"
+                label="Notice Period"
+                placeholder="Select Notice Period"
+                containerRef={fieldRefs.noticePeriod}
+                required
+                error={errors.noticePeriod}
+              />
+            </div>
             {/* v1.0.7 <-------------------------------------------------------------------------------------- */}
             {/* <p className="text-lg font-semibold col-span-2"> */}
             <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
@@ -1750,6 +1874,7 @@ const AddCandidateForm = ({
               Experience Details
             </p>
 
+            {/* Current Role */}
             <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
               <IncreaseAndDecreaseField
                 value={formData.CurrentExperience}
@@ -1770,9 +1895,6 @@ const AddCandidateForm = ({
                 required
               />
             </div>
-
-            {/* Current Role */}
-
             <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
               <DropdownWithSearchField
                 value={formData.CurrentRole}
@@ -1815,90 +1937,7 @@ const AddCandidateForm = ({
             </div>
           </div>
 
-          {/* New Fields: Location, Salary, Languages */}
-          <div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="relative">
-                <span className="absolute left-3 top-[34px] text-gray-500">
-                  ₹
-                </span>
-                <InputField
-                  label="Min Salary (Annual)"
-                  name="salaryMin"
-                  value={formData?.salaryMin}
-                  onChange={handleSalaryChange}
-                  className="pl-7"
-                  placeholder="Enter Min Salary (Annual)"
-                  error={errors.salaryMin}
-                />
-              </div>
-              <div className="relative">
-                <span className="absolute left-3 top-[34px] text-gray-500">
-                  ₹
-                </span>
-                <InputField
-                  label="Max Salary (Annual)"
-                  name="salaryMax"
-                  value={formData?.salaryMax}
-                  onChange={handleSalaryChange}
-                  className="pl-7"
-                  placeholder="Enter Max Salary (Annual)"
-                  error={errors.salaryMax}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <DropdownWithSearchField
-                label="Location"
-                name="location"
-                value={formData.location}
-                options={locationOptionsRS}
-                onChange={(e) => {
-                  const { value } = e.target;
-                  setFormData((prev) => ({ ...prev, location: value }));
-                  if (errors.location) {
-                    setErrors((prev) => ({ ...prev, location: "" }));
-                  }
-                }}
-                placeholder="Select Location"
-                isCustomName={isCustomLocation}
-                setIsCustomName={setIsCustomLocation}
-                onMenuOpen={loadLocations}
-                loading={isLocationsFetching}
-                containerRef={fieldRefs.location} // Ensure you add this ref to your fieldRefs object
-              />
 
-              <InputField
-                label="Languages (comma separated)"
-                name="languages"
-                value={
-                  Array.isArray(formData?.languages)
-                    ? formData.languages.join(", ")
-                    : ""
-                }
-                onChange={(e) => {
-                  const inputValue = e.target.value;
-                  const languageArray = inputValue
-                    .split(",")
-                    .map((lang) => lang.trimStart());
-
-                  setFormData((prev) => ({
-                    ...prev,
-                    languages: languageArray,
-                  }));
-                }}
-                onBlur={() => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    languages: prev.languages
-                      .map((lang) => lang.trim())
-                      .filter(Boolean),
-                  }));
-                }}
-                placeholder="e.g. English, Telugu, Hindi"
-              />
-            </div>
-          </div>
           <div>
             <SkillsField
               ref={fieldRefs.skills}
@@ -2084,7 +2123,7 @@ const AddCandidateForm = ({
               disabled={formData?.certifications?.length >= 10}
             />
 
-            
+
             {/* Tag Display Area */}
             <div className="flex flex-wrap gap-2 mb-2 mt-3">
               {formData.certifications?.map((cert, index) => (
@@ -2185,7 +2224,7 @@ const AddCandidateForm = ({
               {/* Project Cards Display */}
               <div className="grid grid-cols-1 gap-4">
                 {formData?.workExperience &&
-                formData.workExperience.length > 0 ? (
+                  formData.workExperience.length > 0 ? (
                   formData.workExperience.map((project, index) => (
                     <div
                       key={index}
@@ -2291,9 +2330,8 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${
-                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               Cancel
             </Button>

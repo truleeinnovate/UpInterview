@@ -1637,6 +1637,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           max={1000000000}
                           label="Min Salary (Annual)"
                           name="minSalary"
+                           placeholder="₹ Min Salary (Annual)"
                           // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
@@ -1648,6 +1649,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           error={errors.maxsalary}
                           label="Max Salary (Annual)"
                           name="maxSalary"
+                           placeholder="₹ Max Salary (Annual)"
                           // required={formData.minSalary ? true : false}
                         />
                       </div>

@@ -37,10 +37,6 @@ const resumeSchema = new mongoose.Schema(
             }
         ],
 
-        // Added for dynamic parsing
-        certifications: [String],
-        languages: [String],
-
 
         ImageData: {
             filename: String,

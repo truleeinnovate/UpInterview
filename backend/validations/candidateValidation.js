@@ -57,6 +57,51 @@ const candidateValidationSchema = Joi.object({
     "string.empty": "Current Role is required",
     "any.required": "Current Role is required",
   }),
+
+  // ── NEW FIELDS ───────────────────────────────────────────────────────
+  location: Joi.string()
+    .trim()
+    .max(200)
+    .optional()
+    .allow("", null),
+
+  minSalary: Joi.number()
+    .min(0)
+    .optional()
+    .allow(null, ""),
+
+  maxSalary: Joi.number()
+    .min(Joi.ref("minSalary")) // optional: enforce max >= min
+    .optional()
+    .allow(null, ""),
+
+  languages: Joi.array()
+    .items(Joi.string().trim().max(100))
+    .optional()
+    .allow(null),
+
+  certifications: Joi.array()
+    .items(Joi.string().trim().max(200))
+    .optional()
+    .allow(null),
+
+  noticePeriod: Joi.string()
+    .valid(
+      "Immediate",
+      "7days",
+      "15days",
+      "30days",
+      "45days",
+      "60days",
+      "90days",
+      "Morethan90days",
+      "Negotiable"
+    )
+    .optional()
+    .allow("", null)
+    .messages({
+      "any.only": "Invalid notice period value",
+    }),
   // Technology: Joi.string().required().messages({
   //   "string.empty": "Technology is required",
   //   "any.required": "Technology is required",
@@ -118,6 +163,7 @@ const candidateValidationSchema = Joi.object({
   workExperience: Joi.array()
     .items(
       Joi.object({
+        _id: Joi.string().optional(),
         projectName: Joi.string().optional().allow(""),
         role: Joi.string().optional().allow(""),
         fromDate: Joi.string().optional().allow(""),
