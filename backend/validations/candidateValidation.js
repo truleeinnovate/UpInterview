@@ -96,22 +96,22 @@ const candidateValidationSchema = Joi.object({
     }),
 
   professionalSummary: Joi.string()
-    .min(250)
+    .min(200)
     .max(1500)
     .optional()
     .allow("", null)
     .messages({
-      "string.min": "Professional Summary must be at least 250 characters",
+      "string.min": "Professional Summary must be at least 200 characters",
       "string.max": "Professional Summary cannot exceed 1500 characters",
     }),
 
   keyAchievements: Joi.string()
-    .min(200)
+    .min(150)
     .max(1000)
     .optional()
     .allow("", null)
     .messages({
-      "string.min": "Key Achievements must be at least 200 characters",
+      "string.min": "Key Achievements must be at least 150 characters",
       "string.max": "Key Achievements cannot exceed 1000 characters",
     }),
 
@@ -123,12 +123,12 @@ const candidateValidationSchema = Joi.object({
         fromDate: Joi.string().optional().allow(""),
         toDate: Joi.string().optional().allow(""),
         responsibilities: Joi.string()
-          .min(200)
+          .min(150)
           .max(1000)
           .optional()
           .allow("")
           .messages({
-            "string.min": "Responsibilities must be at least 200 characters",
+            "string.min": "Responsibilities must be at least 150 characters",
             "string.max": "Responsibilities cannot exceed 1000 characters",
           }),
       })

@@ -51,7 +51,15 @@ import { scrollToFirstError } from "../../../../utils/ScrollToFirstError/scrollT
 // v1.0.3 ----------------------------------------------------------------------------------->
 
 import { notify } from "../../../../services/toastService";
-import { ArrowLeft, Dot, Edit, ExternalLink, Info, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Briefcase,
+  Dot,
+  Edit,
+  ExternalLink,
+  Info,
+  X,
+} from "lucide-react";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import IncreaseAndDecreaseField from "../../../../Components/FormFields/IncreaseAndDecreaseField";
@@ -83,13 +91,16 @@ const AddCandidateForm = ({
     colleges,
     qualifications,
     currentRoles,
+    locations,
     loadSkills,
     loadColleges,
     loadQualifications,
     loadCurrentRoles,
+    loadLocations,
     isQualificationsFetching,
     isCollegesFetching,
     isCurrentRolesFetching,
+    isLocationsFetching,
   } = useMasterData({}, pageType);
 
   // Get user token information
@@ -216,6 +227,11 @@ const AddCandidateForm = ({
     professionalSummary: useRef(null),
     keyAchievements: useRef(null),
     workExperience: useRef(null),
+    location: useRef(null),
+    salaryMin: useRef(null),
+    salaryMax: useRef(null),
+    languages: useRef(null),
+    certifications: useRef(null),
   };
 
   // v1.0.3 --------------------------------------------------------------------------->
@@ -238,6 +254,11 @@ const AddCandidateForm = ({
     professionalSummary: "",
     keyAchievements: "",
     workExperience: [],
+    location: "",
+    salaryMin: "",
+    salaryMax: "",
+    languages: [],
+    certifications: [],
     // Technology: "",
   });
   const [errors, setErrors] = useState({});
@@ -252,6 +273,101 @@ const AddCandidateForm = ({
   // const authToken = Cookies.get("authToken");
   // const tokenPayload = decodeJwt(authToken);
   // const userId = tokenPayload?.userId;
+
+  // --------------------------------------- new fields version 2 -----------------------
+  const [certInput, setCertInput] = useState("");
+
+  const handleSalaryChange = (e) => {
+    const { name, value } = e.target;
+    if (/^\d*$/.test(value)) {
+      const nextFormData = { ...formData, [name]: value };
+      setFormData(nextFormData);
+
+      // Validate salary range
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        const min = parseFloat(nextFormData.salaryMin);
+        const max = parseFloat(nextFormData.salaryMax);
+
+        if (min && max && max < min) {
+          newErrors.salaryMax = "Max salary cannot be less than min salary";
+        } else {
+          // Remove the error if the condition is no longer met
+          delete newErrors.salaryMax;
+        }
+        return newErrors;
+      });
+    }
+  };
+
+  const handleCertKeyDown = (e) => {
+    if (e.key === "Enter") {
+      // Stop the form from submitting
+      e.preventDefault();
+      e.stopPropagation();
+
+      const newCert = certInput.trim();
+
+      if (newCert) {
+        if (formData.certifications.length >= 10) {
+          notify.warning("Maximum 10 certifications allowed");
+          return;
+        }
+
+        if (
+          formData.certifications.some(
+            (c) => c.toLowerCase() === newCert.toLowerCase(),
+          )
+        ) {
+          notify.info("This certification is already added");
+          return;
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          certifications: [...prev.certifications, newCert],
+        }));
+
+        // Clear the input
+        setCertInput("");
+      }
+    }
+  };
+
+  const removeCert = (certToRemove) => {
+    setFormData((prev) => ({
+      ...prev,
+      certifications: prev.certifications.filter((c) => c !== certToRemove),
+    }));
+  };
+
+  // Inside AddCandidateForm component
+  const [isCustomLocation, setIsCustomLocation] = useState(false);
+
+  // Memoize location options from master data
+  const locationOptionsRS = useMemo(
+    () =>
+      (locations || [])
+        .map((l) => ({
+          value: l?.LocationName,
+          label: l?.LocationName,
+        }))
+        .concat([{ value: "__other__", label: "+ Others" }]),
+    [locations],
+  );
+
+  // Effect to handle custom location display in Edit mode
+  useEffect(() => {
+    const saved = (formData.location || "").trim();
+    if (!saved || !Array.isArray(locations) || locations.length === 0) return;
+
+    const list = locations.map((l) =>
+      (l?.LocationName || "").trim().toLowerCase(),
+    );
+    const existsInList = list.includes(saved.toLowerCase());
+    setIsCustomLocation(!existsInList);
+  }, [locations, formData.location]);
+  // --------------------------------------- new fields version 2 -----------------------
 
   useEffect(() => {
     // IMPORTANT: Skip DB pre-fill when coming from screening — we want screening data instead
@@ -285,6 +401,11 @@ const AddCandidateForm = ({
         professionalSummary: selectedCandidate.professionalSummary || "",
         keyAchievements: selectedCandidate.keyAchievements || "",
         workExperience: selectedCandidate.workExperience || [],
+        location: selectedCandidate?.location || "",
+        salaryMin: selectedCandidate?.salaryMin || "",
+        salaryMax: selectedCandidate?.salaryMax || "",
+        languages: selectedCandidate?.languages || [],
+        certifications: selectedCandidate?.certifications || [],
       });
 
       if (selectedCandidate.ImageData?.filename) {
@@ -372,9 +493,9 @@ const AddCandidateForm = ({
       CountryCode: sd.candidate_country_code || "+91",
       Phone: sd.candidate_phone
         ? sd.candidate_phone
-          .replace(/^\+\d{1,3}/, "")
-          .replace(/^\d{1,3}/, "")
-          .trim()
+            .replace(/^\+\d{1,3}/, "")
+            .replace(/^\d{1,3}/, "")
+            .trim()
         : "",
 
       // ── Education ───────────────────────────────────
@@ -395,28 +516,34 @@ const AddCandidateForm = ({
       skills:
         parsedSkills.length > 0
           ? parsedSkills.map((name) => ({
-            skill: (name || "").trim(),
-            experience: "",
-            expertise: "Beginner",
-          }))
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "Beginner",
+            }))
           : (sd.screening_result?.extracted_skills || []).map((name) => ({
-            skill: (name || "").trim(),
-            experience: "",
-            expertise: "Beginner",
-          })),
-
-
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "Beginner",
+            })),
 
       // ── New Fields (Resume Analysis) ─────────────────
-      professionalSummary: sd.screening_result?.summary || sd.screening_result?.professionalSummary || "",
-      keyAchievements: sd.screening_result?.strengths?.join("\n• ") ? "• " + sd.screening_result.strengths.join("\n• ") : "",
-      workExperience: sd.screening_result?.workHistory?.map(job => ({
-        projectName: job.company || "",
-        role: job.role || "",
-        fromDate: job.duration ? job.duration.split("-")[0]?.trim() : "",
-        toDate: job.duration ? job.duration.split("-")[1]?.trim() : "",
-        responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities.map(r => `• ${r}`).join("\n") : (job.responsibilities || "")
-      })) || [],
+      professionalSummary:
+        sd.screening_result?.summary ||
+        sd.screening_result?.professionalSummary ||
+        "",
+      keyAchievements: sd.screening_result?.strengths?.join("\n• ")
+        ? "• " + sd.screening_result.strengths.join("\n• ")
+        : "",
+      workExperience:
+        sd.screening_result?.workHistory?.map((job) => ({
+          projectName: job.company || "",
+          role: job.role || "",
+          fromDate: job.duration ? job.duration.split("-")[0]?.trim() : "",
+          toDate: job.duration ? job.duration.split("-")[1]?.trim() : "",
+          responsibilities: Array.isArray(job.responsibilities)
+            ? job.responsibilities.map((r) => `• ${r}`).join("\n")
+            : job.responsibilities || "",
+        })) || [],
 
       linkedInUrl: sd.linkedInUrl || "",
     };
@@ -470,10 +597,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry,
       );
       setEntries(updatedEntries);
@@ -629,6 +756,7 @@ const AddCandidateForm = ({
   };
 
   // -------------------------------------------------------------------------->
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     // Build next form data so cross-field validation can use the latest values
@@ -647,19 +775,44 @@ const AddCandidateForm = ({
 
     setFormData(nextFormData);
     // Update this field's error, and if CurrentExperience changed, also revalidate RelevantExperience
-    setErrors((prev) => ({
-      ...prev,
-      [name]: errorMessage,
-      ...(name === "CurrentExperience" && formData.RelevantExperience
-        ? {
-          RelevantExperience: getErrorMessage(
-            "RelevantExperience",
-            formData.RelevantExperience,
-            nextFormData,
-          ),
-        }
-        : {}),
-    }));
+    // setErrors((prev) => ({
+    //   ...prev,
+    //   [name]: errorMessage,
+    //   ...(name === "CurrentExperience" && formData.RelevantExperience
+    //     ? {
+    //         RelevantExperience: getErrorMessage(
+    //           "RelevantExperience",
+    //           formData.RelevantExperience,
+    //           nextFormData,
+    //         ),
+    //       }
+    //     : {}),
+    // }));
+    setErrors((prev) => {
+      const newErrors = { ...prev, [name]: errorMessage };
+
+      // Revalidate Relevant Experience if Total Experience changes
+      if (name === "CurrentExperience" && formData.RelevantExperience) {
+        newErrors.RelevantExperience = getErrorMessage(
+          "RelevantExperience",
+          formData.RelevantExperience,
+          nextFormData,
+        );
+      }
+
+      // Salary Validation (in case these ever route through handleChange)
+      const min = parseFloat(nextFormData.salaryMin);
+      const max = parseFloat(nextFormData.salaryMax);
+      if (min && max && max < min) {
+        newErrors.salaryMax = "Max salary cannot be less than min salary";
+      } else if (
+        newErrors.salaryMax === "Max salary cannot be less than min salary"
+      ) {
+        delete newErrors.salaryMax;
+      }
+
+      return newErrors;
+    });
   };
 
   const handleDateChange = (date) => {
@@ -742,6 +895,16 @@ const AddCandidateForm = ({
     }
   };
 
+  const formatToBulletPoints = (text) => {
+    if (!text) return "";
+    return text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line !== "")
+      .map((line) => (line.startsWith("•") ? line : `• ${line}`))
+      .join("\n");
+  };
+
   const handleSubmit = async (e, isAddCandidate = false) => {
     e.preventDefault();
 
@@ -781,15 +944,21 @@ const AddCandidateForm = ({
 
     if (
       formData.professionalSummary &&
-      formData.professionalSummary.length < 250
+      formData.professionalSummary.length < 200
     ) {
       newErrors.professionalSummary =
-        "Professional Summary must be at least 250 characters.";
+        "Professional Summary must be at least 200 characters.";
     }
 
-    if (formData.keyAchievements && formData.keyAchievements.length < 200) {
+    if (formData.keyAchievements && formData.keyAchievements.length < 150) {
       newErrors.keyAchievements =
-        "Key Achievements must be at least 200 characters.";
+        "Key Achievements must be at least 150 characters.";
+    }
+
+    if (formData.salaryMin && formData.salaryMax) {
+      if (parseFloat(formData.salaryMax) < parseFloat(formData.salaryMin)) {
+        newErrors.salaryMax = "Max salary cannot be less than min salary";
+      }
     }
 
     // 3.uniqueness
@@ -849,8 +1018,10 @@ const AddCandidateForm = ({
       ownerId: userId,
       tenantId: orgId,
       linkedInUrl: formData.linkedInUrl,
-      professionalSummary: formData.professionalSummary,
-      keyAchievements: formData.keyAchievements,
+      // professionalSummary: formData.professionalSummary,
+      // keyAchievements: formData.keyAchievements,
+      professionalSummary: formatToBulletPoints(formData.professionalSummary),
+      keyAchievements: formatToBulletPoints(formData.keyAchievements),
       workExperience: formData.workExperience,
     };
 
@@ -860,14 +1031,14 @@ const AddCandidateForm = ({
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" &&
         mode !== "Edit" && {
-        source: "UPLOAD",
-        // Pass full screeningData so backend can store it
-        screeningData: screeningData, // ← direct pass (full object)
-        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
-        parsedSkills: screeningData.parsed_skills || [],
-        parsedExperience: screeningData.parsed_experience || null,
-        parsedEducation: screeningData.parsed_education || null,
-      }),
+          source: "UPLOAD",
+          // Pass full screeningData so backend can store it
+          screeningData: screeningData, // ← direct pass (full object)
+          parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+          parsedSkills: screeningData.parsed_skills || [],
+          parsedExperience: screeningData.parsed_experience || null,
+          parsedEducation: screeningData.parsed_education || null,
+        }),
     };
 
     try {
@@ -1068,8 +1239,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save candidate",
+          error.message ||
+          "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1322,9 +1493,24 @@ const AddCandidateForm = ({
   const saveProject = () => {
     const newProjectErrors = {};
 
-    if (currentProject.responsibilities.length < 200) {
+    if (!currentProject.projectName || !currentProject.projectName.trim()) {
+      newProjectErrors.projectName = "Project Name is required";
+    }
+
+    if (!currentProject.role || !currentProject.role.trim()) {
+      newProjectErrors.role = "Role is required";
+    }
+
+    // If both dates exist, ensure End Date is strictly after Start Date
+    if (currentProject.fromDate && currentProject.toDate) {
+      if (currentProject.toDate <= currentProject.fromDate) {
+        newProjectErrors.toDate = "End Date must be later than Start Date";
+      }
+    }
+
+    if (currentProject.responsibilities.length < 150) {
       newProjectErrors.responsibilities =
-        "Responsibilities must be at least 200 characters";
+        "Responsibilities must be at least 150 characters";
     }
 
     if (Object.keys(newProjectErrors).length > 0) {
@@ -1467,7 +1653,7 @@ const AddCandidateForm = ({
                 // error={errors.Gender}
                 containerRef={fieldRefs.Gender}
                 label="Gender"
-              // required
+                // required
               />
             </div>
             {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -1626,6 +1812,91 @@ const AddCandidateForm = ({
                     onMenuOpen={loadCurrentRoles}
                     loading={isCurrentRolesFetching}
                   /> */}
+            </div>
+          </div>
+
+          {/* New Fields: Location, Salary, Languages */}
+          <div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="relative">
+                <span className="absolute left-3 top-[34px] text-gray-500">
+                  ₹
+                </span>
+                <InputField
+                  label="Min Salary (Annual)"
+                  name="salaryMin"
+                  value={formData?.salaryMin}
+                  onChange={handleSalaryChange}
+                  className="pl-7"
+                  placeholder="Enter Min Salary (Annual)"
+                  error={errors.salaryMin}
+                />
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-[34px] text-gray-500">
+                  ₹
+                </span>
+                <InputField
+                  label="Max Salary (Annual)"
+                  name="salaryMax"
+                  value={formData?.salaryMax}
+                  onChange={handleSalaryChange}
+                  className="pl-7"
+                  placeholder="Enter Max Salary (Annual)"
+                  error={errors.salaryMax}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <DropdownWithSearchField
+                label="Location"
+                name="location"
+                value={formData.location}
+                options={locationOptionsRS}
+                onChange={(e) => {
+                  const { value } = e.target;
+                  setFormData((prev) => ({ ...prev, location: value }));
+                  if (errors.location) {
+                    setErrors((prev) => ({ ...prev, location: "" }));
+                  }
+                }}
+                placeholder="Select Location"
+                isCustomName={isCustomLocation}
+                setIsCustomName={setIsCustomLocation}
+                onMenuOpen={loadLocations}
+                loading={isLocationsFetching}
+                containerRef={fieldRefs.location} // Ensure you add this ref to your fieldRefs object
+              />
+
+              <InputField
+                label="Languages (comma separated)"
+                name="languages"
+                value={
+                  Array.isArray(formData?.languages)
+                    ? formData.languages.join(", ")
+                    : ""
+                }
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  const languageArray = inputValue
+                    .split(",")
+                    .map((lang) => lang.trimStart());
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    languages: languageArray,
+                  }));
+                }}
+                onBlur={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    languages: prev.languages
+                      .map((lang) => lang.trim())
+                      .filter(Boolean),
+                  }));
+                }}
+                placeholder="e.g. English, Telugu, Hindi"
+              />
             </div>
           </div>
           <div>
@@ -1792,6 +2063,45 @@ const AddCandidateForm = ({
             />
           </div>
 
+          {/* Certifications Tags */}
+          <div className="mb-4">
+            <label className="text-sm font-medium text-gray-700 mb-1 block">
+              Certifications ({formData?.certifications?.length}/10)
+            </label>
+
+            {/* The Input Field */}
+            <InputField
+              name="text"
+              value={certInput}
+              onChange={(e) => setCertInput(e.target.value)}
+              placeholder={
+                formData?.certifications?.length >= 10
+                  ? "Limit reached"
+                  : "Type certification and press Enter"
+              }
+              // IMPORTANT: Ensure your InputField component passes this to the internal <input>
+              onKeyDown={handleCertKeyDown}
+              disabled={formData?.certifications?.length >= 10}
+            />
+
+            
+            {/* Tag Display Area */}
+            <div className="flex flex-wrap gap-2 mb-2 mt-3">
+              {formData.certifications?.map((cert, index) => (
+                <span
+                  key={index}
+                  className="flex items-center gap-1 bg-custom-blue/10 text-custom-blue px-3 py-1 rounded-full text-sm font-medium border border-blue-200"
+                >
+                  {cert}
+                  <X
+                    className="w-3 h-3 cursor-pointer hover:text-red-500"
+                    onClick={() => removeCert(cert)}
+                  />
+                </span>
+              ))}
+            </div>
+          </div>
+
           {/* External ID Field - Only show for organization users */}
           {isOrganization && (
             <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
@@ -1835,15 +2145,21 @@ const AddCandidateForm = ({
             {/* Professional Summary */}
             <div className="col-span-2 mb-4">
               <DescriptionField
-                label="Professional Summary"
+                label="Professional Summary (one per line)"
                 name="professionalSummary"
                 value={formData.professionalSummary}
                 onChange={handleChange}
                 inputRef={fieldRefs.professionalSummary}
                 error={errors.professionalSummary}
-                placeholder="Briefly describe your professional background..."
-                rows={4}
-                minLength={250}
+                // placeholder="Briefly describe your professional background..."
+                placeholder="Experienced Full-Stack Developer with over 8 years of expertise in building scalable web applications.
+                Proven track record of leading technical teams and delivering high-impact software solutions.
+                Specialized in React, Node.js, and Cloud Infrastructure with a focus on performance.
+                Committed to writing clean, maintainable code and implementing robust CI/CD pipelines.
+                Adept at collaborating with stakeholders to translate business needs into technical roadmaps.
+                Passionate about mentoring developers and staying at the forefront of emerging technologies."
+                rows={6}
+                minLength={200}
                 maxLength={1500}
               />
             </div>
@@ -1868,54 +2184,79 @@ const AddCandidateForm = ({
 
               {/* Project Cards Display */}
               <div className="grid grid-cols-1 gap-4">
-                {formData?.workExperience?.map((project, index) => (
-                  <div
-                    key={index}
-                    className="border rounded-lg p-4 bg-gray-50 relative group"
-                  >
-                    <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Edit
-                        title="Edit Project"
-                        className="w-4 h-4 cursor-pointer text-custom-blue"
-                        onClick={() => handleEditProject(index)}
-                      />
-                      <X
-                        title="Delete Project"
-                        className="w-4 h-4 cursor-pointer text-red-600"
-                        onClick={() => handleDeleteProject(index)}
-                      />
-                    </div>
-                    <h5
-                      className="font-semibold text-custom-blue truncate max-w-[260px] mb-1"
-                      title={project?.projectName}
+                {formData?.workExperience &&
+                formData.workExperience.length > 0 ? (
+                  formData.workExperience.map((project, index) => (
+                    <div
+                      key={index}
+                      className="border rounded-lg p-4 bg-gray-50 relative group"
                     >
-                      {project?.projectName}
-                    </h5>
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-sm text-gray-800 font-semibold truncate max-w-[260px]">
-                        {project?.role}
-                      </p>
-
-                      <Dot className="w-4 h-4 text-gray-600" />
-
-                      <p className="text-xs text-gray-600">
-                        {project?.fromDate} - {project?.toDate || "Present"}
-                      </p>
+                      <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Edit
+                          title="Edit Project"
+                          className="w-4 h-4 cursor-pointer text-custom-blue"
+                          onClick={() => handleEditProject(index)}
+                        />
+                        <X
+                          title="Delete Project"
+                          className="w-4 h-4 cursor-pointer text-red-600"
+                          onClick={() => handleDeleteProject(index)}
+                        />
+                      </div>
+                      <h5
+                        className="font-medium text-md text-gray-800 truncate max-w-[260px] mb-1"
+                        title={project?.projectName}
+                      >
+                        {project?.projectName}
+                      </h5>
+                      <div className="flex items-center gap-1 mb-1">
+                        <div className="flex items-center gap-2">
+                          <Briefcase className="text-gray-700 h-4 w-4" />
+                          <p className="text-xs text-gray-700 font-semibold truncate max-w-[260px]">
+                            {project?.role}
+                          </p>
+                        </div>
+                        <Dot className="w-4 h-4 text-gray-700" />
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs text-gray-700">
+                            {project?.fromDate?.split("-")[0]}
+                          </p>
+                          -
+                          <p className="text-xs text-gray-700">
+                            {project?.toDate
+                              ? project.toDate.split("-")[0]
+                              : "Present"}
+                          </p>
+                        </div>
+                      </div>
+                      <ul className="list-disc list-inside mt-2 space-y-1 p-4">
+                        {formatResponsibilitiesToList(
+                          project?.responsibilities,
+                        ).map((point, i) => (
+                          <li
+                            key={i}
+                            className="text-sm text-gray-600 break-words leading-relaxed"
+                          >
+                            {point.replace(/^[•\s*-]+/, "")}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <ul className="list-disc list-inside mt-2 space-y-1 p-4">
-                      {formatResponsibilitiesToList(
-                        project?.responsibilities,
-                      ).map((point, i) => (
-                        <li
-                          key={i}
-                          className="text-sm text-gray-600 break-words leading-relaxed"
-                        >
-                          {point.replace(/^[•\s*-]+/, "")}{" "}
-                        </li>
-                      ))}
-                    </ul>
+                  ))
+                ) : (
+                  /* Empty State Card */
+                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg p-8 bg-gray-50/50">
+                    <span className="bg-white p-3 rounded-full shadow-sm mb-3">
+                      <FaPlus className="text-gray-400 w-5 h-5" />
+                    </span>
+                    <p className="text-sm font-medium text-gray-500">
+                      No projects added yet
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Click the "Add Project" to get started.
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -1928,9 +2269,15 @@ const AddCandidateForm = ({
                 onChange={handleChange}
                 inputRef={fieldRefs.keyAchievements}
                 error={errors.keyAchievements}
-                placeholder="List your major career milestones..."
-                rows={3}
-                minLength={200}
+                // placeholder="List your major career milestones..."
+                placeholder="Led a team to deliver a $2M digital transformation project.
+                Optimized queries, reducing page load times by 40%.
+                Implemented a new process that increased retention by 15%.
+                Mentored 5 junior developers into full-stack roles.
+                Migrated legacy architecture to cloud microservices.
+                Awarded 'Employee of the Year' for project excellence."
+                rows={6}
+                minLength={150}
                 maxLength={1000}
               />
             </div>
@@ -1944,8 +2291,9 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${
+                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Cancel
             </Button>
@@ -2080,6 +2428,8 @@ const AddCandidateForm = ({
                       projectName: e.target.value,
                     })
                   }
+                  error={projectErrors.projectName}
+                  required
                 />
                 <InputField
                   label="Role"
@@ -2090,12 +2440,14 @@ const AddCandidateForm = ({
                       role: e.target.value,
                     })
                   }
+                  error={projectErrors.role}
+                  required
                 />
               </div>
               <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                 <InputField
-                  label="From Date"
-                  type="date"
+                  label="Duration From"
+                  type="month"
                   value={currentProject.fromDate}
                   onChange={(e) =>
                     setCurrentProject({
@@ -2103,22 +2455,35 @@ const AddCandidateForm = ({
                       fromDate: e.target.value,
                     })
                   }
+                  error={projectErrors.fromDate}
                 />
                 <InputField
-                  label="To Date"
-                  type="date"
+                  label="Duration To"
+                  type="month"
                   value={currentProject.toDate}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const newToDate = e.target.value;
                     setCurrentProject({
                       ...currentProject,
-                      toDate: e.target.value,
-                    })
-                  }
+                      toDate: newToDate,
+                    });
+
+                    if (
+                      currentProject.fromDate &&
+                      newToDate > currentProject.fromDate
+                    ) {
+                      setProjectErrors((prev) => {
+                        const { toDate, ...rest } = prev;
+                        return rest;
+                      });
+                    }
+                  }}
+                  error={projectErrors.toDate}
                 />
               </div>
               <div>
                 <DescriptionField
-                  label="Responsibilities"
+                  label="Responsibilities (one per line)"
                   value={currentProject.responsibilities}
                   onChange={(e) => {
                     const { value } = e.target;
@@ -2134,11 +2499,18 @@ const AddCandidateForm = ({
                       });
                     }
                   }}
-                  placeholder="Describe your role and impact in this project..."
+                  // placeholder="Describe your role and impact in this project..."
+                  placeholder="Developed UI components using React and Tailwind.
+                  Collaborated with APIs to optimize data flow.
+                  Led the migration of state management to Redux.
+                  Fixed critical bugs to improve system stability.
+                  Conducted code reviews for the development team.
+                  Wrote technical docs to streamline onboarding"
                   error={projectErrors.responsibilities}
-                  rows={5}
-                  minLength={200}
+                  rows={6}
+                  minLength={150}
                   maxLength={1000}
+                  required
                 />
               </div>
             </div>
@@ -2146,7 +2518,10 @@ const AddCandidateForm = ({
             <div className="flex justify-end gap-3 mt-6">
               <Button
                 variant="outline"
-                onClick={() => setIsProjectModalOpen(false)}
+                onClick={() => {
+                  setIsProjectModalOpen(false);
+                  setProjectErrors({});
+                }}
               >
                 Cancel
               </Button>
