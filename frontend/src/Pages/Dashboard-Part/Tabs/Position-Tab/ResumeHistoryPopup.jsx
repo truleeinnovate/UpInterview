@@ -132,7 +132,7 @@ const ResumeHistoryPopup = ({ candidateId, candidateName, onClose, onUpdate }) =
                                                     <Download size={20} />
                                                 </button>
 
-                                                {!resume.isActive && (
+                                                {/* {!resume.isActive && (
                                                     <button
                                                         onClick={() => handleSetActive(resume._id)}
                                                         disabled={updatingId === resume._id}
@@ -140,7 +140,7 @@ const ResumeHistoryPopup = ({ candidateId, candidateName, onClose, onUpdate }) =
                                                     >
                                                         {updatingId === resume._id ? 'Updating...' : 'Set Active'}
                                                     </button>
-                                                )}
+                                                )} */}
                                             </div>
                                         </div>
                                     </div>
@@ -151,7 +151,7 @@ const ResumeHistoryPopup = ({ candidateId, candidateName, onClose, onUpdate }) =
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t bg-gray-50 flex justify-center">
+                <div className="px-6 py-4 border-t bg-gray-50 flex justify-end">
                     <button
                         onClick={onClose}
                         className="px-8 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-colors"

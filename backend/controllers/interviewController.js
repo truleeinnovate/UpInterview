@@ -277,6 +277,7 @@ const createInterview = async (req, res) => {
       currentReason, // Added currentReason
       externalId,
       allowParallelScheduling,
+      applicationId, // <--- Added applicationId
     } = req.body;
     let candidate = null;
 
@@ -317,6 +318,7 @@ const createInterview = async (req, res) => {
       status,
       externalId,
       allowParallelScheduling: allowParallelScheduling || false,
+      applicationId: applicationId || undefined, // <--- Save applicationId
     };
 
     // Generate interviewCode for new interview with tenant ID
@@ -489,22 +491,28 @@ const createInterview = async (req, res) => {
         // Validate companyId - only use if it's a valid ObjectId, not a string
         const companyId =
           position?.companyname &&
-          mongoose.Types.ObjectId.isValid(position.companyname)
+            mongoose.Types.ObjectId.isValid(position.companyname)
             ? position.companyname
             : null;
 
-        await Application.create({
+        const newApp = await Application.create({
           applicationNumber,
           candidateId,
           positionId,
           tenantId: orgId,
           companyId,
           interviewId: interview._id,
-          status: "NEW",
+          status: "New", // Fixed casing from "NEW"
           currentStage: "Interview Created",
           ownerId: userId,
           createdBy: userId,
         });
+
+        // <--- BACK-POPULATE applicationId to Interview
+        await Interview.findByIdAndUpdate(interview._id, {
+          applicationId: newApp._id
+        });
+
         console.log(
           "[INTERVIEW] Application created with number:",
           applicationNumber,
@@ -518,6 +526,12 @@ const createInterview = async (req, res) => {
             currentStage: "Interview Created",
           });
         }
+
+        // <--- BACK-POPULATE applicationId to Interview (even if existing)
+        await Interview.findByIdAndUpdate(interview._id, {
+          applicationId: existingApp._id
+        });
+
         console.log(
           "[INTERVIEW] Application already exists for candidate:",
           candidateId,
@@ -2322,26 +2336,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-          from: "mockinterviews",
-          localField: "mockInterviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        }
+        from: "mockinterviews",
+        localField: "mockInterviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      }
       : {
-          from: "interviews",
-          localField: "interviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        };
+        from: "interviews",
+        localField: "interviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2363,23 +2377,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-            {
-              $addFields: {
-                mainTenantIdNormalized: {
-                  $cond: [
-                    {
-                      $and: [
-                        { $ne: ["$mainInterview.tenantId", null] },
-                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                      ],
-                    },
-                    { $toObjectId: "$mainInterview.tenantId" },
-                    null,
-                  ],
-                },
+          {
+            $addFields: {
+              mainTenantIdNormalized: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ["$mainInterview.tenantId", null] },
+                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                    ],
+                  },
+                  { $toObjectId: "$mainInterview.tenantId" },
+                  null,
+                ],
               },
             },
-          ]
+          },
+        ]
         : []),
       // Lookup tenant for organization info
       {
@@ -2847,6 +2861,7 @@ const getInterviewDataforOrg = async (req, res) => {
         },
       })
       .populate("templateId")
+      .populate("applicationId") // <--- Added this
       .lean();
 
     if (!interview) {

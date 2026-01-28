@@ -7,6 +7,8 @@ const { Candidate } = require("../models/candidate.js");
 const { generateApplicationNumber } = require("../services/uniqueIdGeneratorService");
 const { ScreeningResult } = require("../models/ScreeningResult");
 const { Resume } = require("../models/Resume.js");
+const { Interview } = require("../models/Interview/Interview.js");
+const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
 const { screenResumeWithAI } = require("../services/resumeScreening/aiScreeningService");
 const { triggerWebhook, EVENT_TYPES } = require("../services/webhookService");
 
@@ -33,7 +35,7 @@ const getApplicationsByCandidate = async (req, res) => {
             })
             .populate("candidateId", "FirstName LastName Email")
             .populate("interviewId", "interviewCode status")
-            .sort({ createdAt: -1 })
+            .sort({ _id: -1 })
             .lean();
 
         console.log("[APPLICATION] Found", applications.length, "applications");
@@ -60,127 +62,174 @@ const getApplicationsByCandidate = async (req, res) => {
  * Get all applications for a specific position with enriched candidate data
  */
 const getApplicationsByPosition = async (req, res) => {
-  try {
-    const { positionId } = req.params;
+    try {
+        const { positionId } = req.params;
 
-    if (!positionId || !mongoose.Types.ObjectId.isValid(positionId)) {
-      return res.status(400).json({ message: "Valid Position ID is required" });
+        if (!positionId || !mongoose.Types.ObjectId.isValid(positionId)) {
+            return res.status(400).json({ message: "Valid Position ID is required" });
+        }
+
+        // 1️⃣ Get applications
+        const applications = await Application.find({ positionId })
+            .populate("candidateId")
+            .populate("positionId")
+            .populate("interviewId")
+            .lean();
+
+        if (!applications.length) {
+            return res.status(200).json({
+                success: true,
+                data: [],
+                total: 0
+            });
+        }
+
+        // 2️⃣ Collect candidate + resume ids
+        const candidateIds = applications
+            .map(a => a.candidateId?._id)
+            .filter(Boolean);
+
+        const resumes = await Resume.find({
+            candidateId: { $in: candidateIds },
+            isActive: true
+        }).lean();
+
+        const resumeMap = {};
+        resumes.forEach(r => {
+            resumeMap[r.candidateId.toString()] = r;
+        });
+
+        // 3️⃣ Collect resume ids
+        const resumeIds = resumes.map(r => r._id);
+
+        const screeningResults = await ScreeningResult.find({
+            resumeId: { $in: resumeIds },
+            positionId
+        }).lean();
+
+        const screeningMap = {};
+        screeningResults.forEach(s => {
+            screeningMap[s.resumeId.toString()] = s;
+        });
+
+        // 4️⃣ Fetch Interviews and Rounds
+        const interviews = await Interview.find({
+            candidateId: { $in: candidateIds },
+            positionId: positionId
+        }).lean();
+
+        const interviewIds = interviews.map(i => i._id);
+        const interviewMap = {};
+        interviews.forEach(i => {
+            interviewMap[i.candidateId.toString()] = i;
+        });
+
+        const rounds = await InterviewRounds.find({
+            interviewId: { $in: interviewIds }
+        })
+            .populate("interviewers", "FirstName LastName")
+            .sort({ sequence: 1 })
+            .lean();
+
+        const roundsMap = {};
+        rounds.forEach(r => {
+            const iId = r.interviewId.toString();
+            if (!roundsMap[iId]) {
+                roundsMap[iId] = [];
+            }
+            roundsMap[iId].push(r);
+        });
+
+        // 5️⃣ Build FINAL RESPONSE (frontend-safe)
+        const finalData = applications.map(app => {
+            const candidate = app.candidateId;
+            const resume = resumeMap[candidate?._id?.toString()];
+            const screening = resume
+                ? screeningMap[resume._id.toString()]
+                : null;
+
+            const interview = interviewMap[candidate?._id?.toString()];
+            const interviewRounds = interview ? (roundsMap[interview._id.toString()] || []) : [];
+
+            return {
+                _id: app._id,
+                applicationNumber: app.applicationNumber,
+                status: app.status,
+                currentStage: app.currentStage,
+                createdAt: app.createdAt,
+
+                screeningScore: screening?.metadata?.score ?? 0,
+                screeningDecision: screening?.recommendation ?? null,
+                screeningNotes: screening?.metadata?.summary ?? screening?.metadata?.aiRecommendation ?? null,
+                screeningResult: screening ? {
+                    metadata: screening.metadata,
+                    recommendation: screening.recommendation
+                } : null,
+
+                positionId: app.positionId
+                    ? {
+                        _id: app.positionId._id,
+                        title: app.positionId.title,
+                        status: app.positionId.status
+                    }
+                    : null,
+
+                interviewId: app.interviewId
+                    ? {
+                        _id: app.interviewId._id,
+                        interviewCode: app.interviewId.interviewCode,
+                        status: app.interviewId.status
+                    }
+                    : null,
+
+                candidateId: candidate?._id,
+
+                candidate: candidate
+                    ? {
+                        _id: candidate._id,
+                        FirstName: candidate.FirstName,
+                        LastName: candidate.LastName,
+                        Email: candidate.Email,
+                        Phone: candidate.Phone,
+                        CountryCode: candidate.CountryCode,
+
+                        HigherQualification: resume?.HigherQualification ?? "Not Provided",
+                        CurrentExperience: resume?.CurrentExperience ?? 0,
+                        skills: resume?.skills ?? [],
+                        resumeId: resume?._id,
+                        profileJSON: resume?.parsedJson,
+                        certifications: (resume?.certifications?.length ? resume.certifications : (resume?.parsedJson?.certifications ?? [])),
+                        languages: (resume?.languages?.length ? resume.languages : (resume?.parsedJson?.languages ?? [])),
+                        workExperience: (resume?.workExperience?.length ? resume.workExperience : (resume?.parsedJson?.workExperience ?? [])),
+                        projects: (resume?.projects?.length ? resume.projects : (resume?.parsedJson?.projects ?? resume?.parsedJson?.Projects ?? []))
+                    }
+                    : null,
+
+                interviews: interviewRounds.map(r => ({
+                    id: r._id,
+                    title: r.roundTitle || `Round ${r.sequence}`,
+                    date: r.dateTime || r.createdAt,
+                    interviewer: r.interviewers?.map(i => `${i.FirstName} ${i.LastName}`).join(", ") || "Not Assigned",
+                    status: r.status,
+                    feedback: r.comments || r.roundOutcome || "No feedback available"
+                }))
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: finalData,
+            total: finalData.length
+        });
+
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch applications",
+            error: error.message
+        });
     }
-
-    // 1️⃣ Get applications
-    const applications = await Application.find({ positionId })
-      .populate("candidateId")
-      .populate("positionId")
-      .populate("interviewId")
-      .lean();
-
-    if (!applications.length) {
-      return res.status(200).json({
-        success: true,
-        data: [],
-        total: 0
-      });
-    }
-
-    // 2️⃣ Collect candidate + resume ids
-    const candidateIds = applications
-      .map(a => a.candidateId?._id)
-      .filter(Boolean);
-
-    const resumes = await Resume.find({
-      candidateId: { $in: candidateIds },
-      isActive: true
-    }).lean();
-
-    const resumeMap = {};
-    resumes.forEach(r => {
-      resumeMap[r.candidateId.toString()] = r;
-    });
-
-    // 3️⃣ Collect resume ids
-    const resumeIds = resumes.map(r => r._id);
-
-    const screeningResults = await ScreeningResult.find({
-      resumeId: { $in: resumeIds },
-      positionId
-    }).lean();
-
-    const screeningMap = {};
-    screeningResults.forEach(s => {
-      screeningMap[s.resumeId.toString()] = s;
-    });
-
-    // 4️⃣ Build FINAL RESPONSE (frontend-safe)
-    const finalData = applications.map(app => {
-      const candidate = app.candidateId;
-      const resume = resumeMap[candidate?._id?.toString()];
-      const screening = resume
-        ? screeningMap[resume._id.toString()]
-        : null;
-
-      return {
-        _id: app._id,
-        applicationNumber: app.applicationNumber,
-        status: app.status,
-        currentStage: app.currentStage,
-        createdAt: app.createdAt,
-
-        screeningScore: screening?.metadata?.score ?? 0,
-        screeningDecision: screening?.recommendation ?? null,
-
-        positionId: app.positionId
-          ? {
-              _id: app.positionId._id,
-              title: app.positionId.title,
-              status: app.positionId.status
-            }
-          : null,
-
-        interviewId: app.interviewId
-          ? {
-              _id: app.interviewId._id,
-              interviewCode: app.interviewId.interviewCode,
-              status: app.interviewId.status
-            }
-          : null,
-
-        candidateId: candidate?._id,
-
-        candidate: candidate
-          ? {
-              _id: candidate._id,
-              FirstName: candidate.FirstName,
-              LastName: candidate.LastName,
-              Email: candidate.Email,
-              Phone: candidate.Phone,
-              CountryCode: candidate.CountryCode,
-
-              HigherQualification: resume?.HigherQualification ?? "Not Provided",
-              CurrentExperience: resume?.CurrentExperience ?? 0,
-              skills: resume?.skills ?? [],
-              resumeId: resume?._id,
-              profileJSON: resume?.parsedJson,
-              certifications: resume?.certifications,
-              languages: resume?.languages
-            }
-          : null
-      };
-    });
-
-    res.status(200).json({
-      success: true,
-      data: finalData,
-      total: finalData.length
-    });
-
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch applications",
-      error: error.message
-    });
-  }
 };
 
 
@@ -476,23 +525,42 @@ const getApplicationById = async (req, res) => {
  */
 const filterApplications = async (req, res) => {
     try {
-        const { candidateId, positionId } = req.query;
+        const { candidateId, positionId, status, tenantId: queryTenantId } = req.query;
 
-        console.log("Filtering applications with:", { candidateId, positionId });
+        // Get tenant from auth context or query
+        const tenantId = res.locals.auth?.actingAsTenantId || queryTenantId;
 
-        if (!candidateId || !positionId) {
-            return res.status(400).json({
-                message: "Both candidateId and positionId are required for filtering"
-            });
+        console.log("Filtering applications with:", { candidateId, positionId, status, tenantId });
+
+        const query = {};
+
+        if (tenantId) {
+            query.tenantId = tenantId;
         }
 
-        const query = {
-            candidateId: new mongoose.Types.ObjectId(candidateId),
-            positionId: new mongoose.Types.ObjectId(positionId)
-        };
+        if (candidateId) {
+            query.candidateId = new mongoose.Types.ObjectId(candidateId);
+        }
+
+        if (positionId) {
+            query.positionId = new mongoose.Types.ObjectId(positionId);
+        }
+
+        if (status) {
+            const statuses = status.split(",").map(s => s.trim());
+            if (statuses.length > 0) {
+                query.status = { $in: statuses };
+            }
+        }
+
+        // if (!candidateId && !positionId && !status && !tenantId) {
+        //     return res.status(400).json({
+        //         message: "At least one filter (candidateId, positionId, status, or tenantId) is required"
+        //     });
+        // }
 
         const applications = await Application.find(query)
-        .sort({ _id: -1 })
+            .sort({ _id: -1 })
             .populate({
                 path: "positionId",
                 select: "title status companyname",

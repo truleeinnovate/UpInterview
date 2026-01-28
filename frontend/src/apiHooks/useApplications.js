@@ -6,6 +6,39 @@ import { config } from "../config";
 import Cookies from "js-cookie";
 
 /**
+ * Hook to fetch single application by ID
+ */
+export const useApplicationById = (applicationId) => {
+    const {
+        data: responseData,
+        isLoading,
+        isError,
+        error,
+        refetch,
+    } = useQuery({
+        queryKey: ["application", applicationId],
+        queryFn: async () => {
+            const response = await axios.get(
+                `${config.REACT_APP_API_URL}/application/${applicationId}`
+            );
+            return response.data;
+        },
+        enabled: !!applicationId,
+        retry: 1,
+        staleTime: 1000 * 30,
+        refetchOnWindowFocus: false,
+    });
+
+    return {
+        application: responseData?.data || {},
+        isLoading,
+        isError,
+        error,
+        refetch,
+    };
+};
+
+/**
  * Hook to fetch applications by candidate ID
  */
 export const useApplicationsByCandidate = (candidateId) => {
@@ -79,43 +112,43 @@ export const useApplicationsByPosition = (positionId) => {
  * Hook for application mutations (create, update)
  */
 export const useApplicationMutations = () => {
-  const queryClient = useQueryClient();
-  const authToken = Cookies.get("authToken") ?? "";
+    const queryClient = useQueryClient();
+    const authToken = Cookies.get("authToken") ?? "";
 
-  // Create application mutation
-  const createMutation = useMutation({
-    mutationFn: async (applicationData) => {
-      const response = await axios.post(
-        `${config.REACT_APP_API_URL}/application`,
-        applicationData,
-        {
-          headers: authToken
-            ? {
-                Authorization: `Bearer ${authToken}`,
-              }
-            : undefined,
-          withCredentials: true,
-        }
-      );
+    // Create application mutation
+    const createMutation = useMutation({
+        mutationFn: async (applicationData) => {
+            const response = await axios.post(
+                `${config.REACT_APP_API_URL}/application`,
+                applicationData,
+                {
+                    headers: authToken
+                        ? {
+                            Authorization: `Bearer ${authToken}`,
+                        }
+                        : undefined,
+                    withCredentials: true,
+                }
+            );
 
-      return response.data;
-    },
+            return response.data;
+        },
 
-    onSuccess: (data, variables) => {
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({
-        queryKey: ["applications", "candidate", variables.candidateId],
-      });
+        onSuccess: (data, variables) => {
+            // Invalidate relevant queries
+            queryClient.invalidateQueries({
+                queryKey: ["applications", "candidate", variables.candidateId],
+            });
 
-      queryClient.invalidateQueries({
-        queryKey: ["applications", "position", variables.positionId],
-      });
-    },
+            queryClient.invalidateQueries({
+                queryKey: ["applications", "position", variables.positionId],
+            });
+        },
 
-    onError: (error) => {
-      console.error("Error creating application:", error);
-    },
-  });
+        onError: (error) => {
+            console.error("Error creating application:", error);
+        },
+    });
 
     // Update application mutation
     const updateMutation = useMutation({
@@ -188,6 +221,51 @@ export const useApplicationFilter = (candidateId, positionId) => {
             return response.data;
         },
         enabled: !!candidateId && !!positionId,
+        retry: 1,
+        staleTime: 1000 * 30,
+        refetchOnWindowFocus: false,
+    });
+
+    return {
+        applications: responseData?.data || [],
+        total: responseData?.total || 0,
+        isLoading,
+        isError,
+        error,
+        refetch,
+    };
+};
+
+/**
+ * Hook to filter applications with flexible criteria (status, tenant, candidate, position)
+ */
+export const useFilteredApplications = (filters = {}) => {
+    const {
+        data: responseData,
+        isLoading,
+        isError,
+        error,
+        refetch,
+    } = useQuery({
+        queryKey: ["applications", "filtered", filters],
+        queryFn: async () => {
+            const params = {};
+            if (filters.candidateId) params.candidateId = filters.candidateId;
+            if (filters.positionId) params.positionId = filters.positionId;
+            if (filters.status) params.status = filters.status; // Comma separated string
+            if (filters.tenantId) params.tenantId = filters.tenantId;
+
+            // If no filters provided, maybe return empty or all?
+            // For now, let's assume at least one filter is usually desired, but the backend handles empty query by returning all (if we allowed it).
+            // Backend currently checks if filters are present.
+
+            const response = await axios.get(
+                `${config.REACT_APP_API_URL}/application/filter`,
+                { params }
+            );
+            return response.data;
+        },
+        enabled: Object.keys(filters).length > 0, // Only fetch if filters are provided
         retry: 1,
         staleTime: 1000 * 30,
         refetchOnWindowFocus: false,
