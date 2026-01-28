@@ -528,7 +528,7 @@ export default function ApplicationView({ application, onBack }) {
                                                                 <h5 className="text-base font-bold text-gray-900">{project.title || project.projectName || project.role || "Untitled Project"}</h5>
                                                                 {project.company && <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">{project.company}</span>}
                                                             </div>
-                                                            <p className="text-sm text-gray-600 leading-relaxed">
+                                                            <p className="text-sm text-gray-600 leading-relaxed break-words whitespace-pre-wrap">
                                                                 {project.desc || project.description || (Array.isArray(project.responsibilities) ? project.responsibilities.join('. ') : project.responsibilities) || "No description provided."}
                                                             </p>
                                                         </div>
@@ -580,7 +580,7 @@ export default function ApplicationView({ application, onBack }) {
                                                                 ).map((resp, i) => (
                                                                     <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
                                                                         {/* <CheckCircle size={14} className="text-green-500 mt-1 flex-shrink-0" /> */}
-                                                                        <span>{resp}</span>
+                                                                        <span className="break-words whitespace-pre-wrap w-full">{resp}</span>
                                                                     </div>
                                                                 ))}
                                                             </div>
@@ -828,14 +828,18 @@ export default function ApplicationView({ application, onBack }) {
                                             <Calendar size={16} className="text-gray-600 flex-shrink-0" />
                                             <div>
                                                 <div className="text-xs text-gray-500">Applied</div>
-                                                <div className="text-sm font-medium text-gray-900">{new Date(application.createdAt).toLocaleDateString()}</div>
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {application.createdAt ? new Date(application.createdAt).toLocaleString() : 'N/A'}
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                             <Clock size={16} className="text-gray-600 flex-shrink-0" />
                                             <div>
                                                 <div className="text-xs text-gray-500">Last Updated</div>
-                                                <div className="text-sm font-medium text-gray-900">{new Date(application.updatedAt).toLocaleDateString()}</div>
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {application.updatedAt ? new Date(application.updatedAt).toLocaleString() : 'N/A'}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
