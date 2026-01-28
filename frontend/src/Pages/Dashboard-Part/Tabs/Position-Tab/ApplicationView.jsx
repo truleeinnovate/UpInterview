@@ -3,7 +3,7 @@ import {
     ArrowLeft, Mail, Phone, Linkedin, Upload, FileText, X, CheckCircle, Clock,
     XCircle, AlertCircle, Calendar, User, Award, Briefcase, GraduationCap,
     Star, TrendingUp, MessageSquare, ExternalLink, Download, MapPin, Globe,
-    Languages, DollarSign, IndianRupee
+    Languages, DollarSign, IndianRupee,School
 } from 'lucide-react';
 import {
     useCandidateById,
@@ -13,6 +13,8 @@ import { useApplicationMutations } from "../../../../apiHooks/useApplications";
 import ConfirmationPopup from "../Assessment-Tab/ConfirmationPopup";
 
 import ResumeHistoryPopup from './ResumeHistoryPopup';
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+
 
 export default function ApplicationView({ application, onBack }) {
     const [applicationStatus, setApplicationStatus] = useState(application.status || 'APPLIED');
@@ -318,42 +320,74 @@ export default function ApplicationView({ application, onBack }) {
 
                                 <div className="mb-6 pt-6 border-t">
                                     <h4 className="text-sm font-semibold text-gray-700 mb-3">Additional Details</h4>
-                                    <div className="space-y-3">
+                                    <div className="space-y-4">
+                                        {/* Education / Qualification */}
                                         <div className="flex items-start gap-3 text-sm">
-                                            <GraduationCap size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                                            <GraduationCap size={16} className="text-custom-blue mt-0.5 flex-shrink-0" />
                                             <div>
-                                                <div className="text-xs text-gray-500">Education</div>
-                                                <div className="text-gray-900 font-medium">{candidate.education || 'BS Computer Science'}</div>
+                                                <div className="text-xs text-gray-500">Highest Qualification</div>
+                                                <div className="text-gray-900 font-medium">
+                                                    {candidate?.HigherQualification || "N/A"}
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {/* University / College */}
                                         <div className="flex items-start gap-3 text-sm">
-                                            <Languages size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                                            <School size={16} className="text-custom-blue mt-0.5 flex-shrink-0" />
                                             <div>
+                                                <div className="text-xs text-gray-500">University / College</div>
+                                                <div className="text-gray-900 font-medium">
+                                                    {candidate?.UniversityCollege || "N/A"}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Languages – handles array like the main example */}
+                                        <div className="flex items-start gap-3 text-sm">
+                                            <Languages size={16} className="text-custom-blue mt-0.5 flex-shrink-0" />
+                                            <div className="min-w-0">
                                                 <div className="text-xs text-gray-500">Languages</div>
-                                                <div className="text-gray-900 font-medium">{candidate.languages || 'English, Spanish'}</div>
+                                                <div
+                                                    className="text-gray-900 font-medium truncate"
+                                                    title={
+                                                        Array.isArray(candidate?.languages)
+                                                            ? candidate.languages.map(lang => capitalizeFirstLetter(lang)).join(", ")
+                                                            : "N/A"
+                                                    }
+                                                >
+                                                    {Array.isArray(candidate?.languages) && candidate.languages.length > 0
+                                                        ? candidate.languages
+                                                            .map(lang => capitalizeFirstLetter(lang))
+                                                            .join(", ")
+                                                        : "N/A"}
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {/* Expected Salary – shows range like main example */}
                                         <div className="flex items-start gap-3 text-sm">
-                                            <IndianRupee size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                                            <IndianRupee size={16} className="text-custom-blue mt-0.5 flex-shrink-0" />
                                             <div>
-                                                <div className="text-xs text-gray-500">Expected Salary</div>
-                                                <div className="text-gray-900 font-medium">{candidate.expectedSalary || '₹120K - ₹150K'}</div>
+                                                <div className="text-xs text-gray-500">Salary Expectation (Annual)</div>
+                                                <div className="text-gray-900 font-medium">
+                                                    {candidate?.minSalary || candidate?.maxSalary
+                                                        ? `${candidate?.minSalary || "N/A"} – ${candidate?.maxSalary || "N/A"}`
+                                                        : "N/A"}
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {/* Notice Period */}
                                         <div className="flex items-start gap-3 text-sm">
-                                            <Clock size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                                            <Clock size={16} className="text-custom-blue mt-0.5 flex-shrink-0" />
                                             <div>
                                                 <div className="text-xs text-gray-500">Notice Period</div>
-                                                <div className="text-gray-900 font-medium">{candidate.noticePeriod || '2 weeks'}</div>
+                                                <div className="text-gray-900 font-medium">
+                                                    {candidate?.noticePeriod || "N/A"}
+                                                </div>
                                             </div>
                                         </div>
-                                        {/* <div className="flex items-start gap-3 text-sm">
-                                            <Award size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
-                                            <div>
-                                                <div className="text-xs text-gray-500">Work Authorization</div>
-                                                <div className="text-gray-900 font-medium">{candidate.workAuth || 'US Citizen'}</div>
-                                            </div>
-                                        </div> */}
                                     </div>
                                 </div>
 

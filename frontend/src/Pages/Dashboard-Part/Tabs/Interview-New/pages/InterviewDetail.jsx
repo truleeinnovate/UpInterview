@@ -860,10 +860,8 @@ const InterviewDetail = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1">
                           <span className="font-medium truncate">
-                            {candidate?.LastName
-                              ? candidate.LastName.charAt(0).toUpperCase() +
-                              candidate.LastName.slice(1)
-                              : "Unknown"}
+                            {capitalizeFirstLetter(candidate?.FirstName)}{" "}
+                            {capitalizeFirstLetter(candidate?.LastName)}
                           </span>
                           {candidate && (
                             <button
@@ -984,15 +982,15 @@ const InterviewDetail = () => {
                         type="button"
                         disabled
                         className={`${interview?.allowParallelScheduling
-                            ? "bg-teal-600"
-                            : "bg-gray-200"
+                          ? "bg-teal-600"
+                          : "bg-gray-200"
                           } relative inline-flex h-6 w-11 flex-shrink-0 cursor-not-allowed rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
                       >
                         <span
                           aria-hidden="true"
                           className={`${interview?.allowParallelScheduling
-                              ? "translate-x-5"
-                              : "translate-x-0"
+                            ? "translate-x-5"
+                            : "translate-x-0"
                             } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
                         />
                       </button>

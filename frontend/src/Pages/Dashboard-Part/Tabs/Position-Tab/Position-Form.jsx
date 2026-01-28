@@ -555,10 +555,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       if (!exists) {
         const selectedTitleLabel = selectedTemplate.title
           ? selectedTemplate.title.charAt(0).toUpperCase() +
-            selectedTemplate.title.slice(1)
+          selectedTemplate.title.slice(1)
           : selectedTemplate.type
             ? selectedTemplate.type.charAt(0).toUpperCase() +
-              selectedTemplate.type.slice(1)
+            selectedTemplate.type.slice(1)
             : "Unnamed Template";
 
         baseOptions.push({
@@ -583,7 +583,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
               >
                 {selectedTemplate.type
                   ? selectedTemplate.type.charAt(0).toUpperCase() +
-                    selectedTemplate.type.slice(1)
+                  selectedTemplate.type.slice(1)
                   : ""}
               </span>
             </div>
@@ -652,7 +652,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           // If either is empty, clear cross-field errors
           if (
             next.minexperience ===
-              "Min Experience cannot be greater than Max" ||
+            "Min Experience cannot be greater than Max" ||
             next.minexperience === "Min and Max Experience cannot be equal"
           )
             next.minexperience = "";
@@ -703,7 +703,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           } else {
             if (
               next.minsalary ===
-                "Minimum Salary cannot be greater than Maximum" ||
+              "Minimum Salary cannot be greater than Maximum" ||
               next.minsalary === "Minimum and Maximum Salary cannot be equal"
             )
               next.minsalary = "";
@@ -728,10 +728,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry,
       );
       setEntries(updatedEntries);
@@ -969,8 +969,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save position",
+        error.message ||
+        "Failed to save position",
       );
 
       if (error.response && error.response.status === 400) {
@@ -1633,24 +1633,24 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           onChange={handleChange}
                           inputRef={fieldRefs.minSalary}
                           error={errors.minsalary}
-                          min={0}
-                          max={1000000000}
+                          min={50000}            // 5 digits minimum
+                          max={999999999}        // 9 digits maximum
                           label="Min Salary (Annual)"
                           name="minSalary"
-                           placeholder="₹ Min Salary (Annual)"
-                          // required={formData.maxSalary ? true : false}
+                          placeholder="₹ Min Salary (Annual)"
+                        // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
                           value={formData.maxSalary}
                           onChange={handleChange}
-                          min={0}
-                          max={1000000000}
+                          min={50000}            // 5 digits minimum
+                          max={999999999}        // 9 digits maximum
                           inputRef={fieldRefs.maxSalary}
                           error={errors.maxsalary}
                           label="Max Salary (Annual)"
                           name="maxSalary"
-                           placeholder="₹ Max Salary (Annual)"
-                          // required={formData.minSalary ? true : false}
+                          placeholder="₹ Max Salary (Annual)"
+                        // required={formData.minSalary ? true : false}
                         />
                       </div>
                     </div>
@@ -1667,7 +1667,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         max={100}
                         label="No. of Positions"
                         name="NoofPositions"
-                        // required
+                      // required
                       />
 
                       <div>
@@ -1749,7 +1749,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             const resolvedTemplate =
                               fromList ||
                               (selectedTemplate &&
-                              selectedTemplate._id === templateId
+                                selectedTemplate._id === templateId
                                 ? selectedTemplate
                                 : null);
 

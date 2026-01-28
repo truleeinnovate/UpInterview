@@ -691,7 +691,7 @@ const InterviewForm = () => {
                     <>
                       <div>
                         <DropdownWithSearchField
-                          label="Link Application"
+                          label="Application ID"
                           name="applicationId"
                           value={applicationId || ""}
                           options={
@@ -717,7 +717,7 @@ const InterviewForm = () => {
                         />
                         {applicationId && (
                           <p className="mt-1 text-xs">
-                            * Candidate and Position are locked because an application is selected.
+                          Candidate and Position fields are read-only, as they are derived from the selected Application.
                           </p>
                         )}
                       </div>
