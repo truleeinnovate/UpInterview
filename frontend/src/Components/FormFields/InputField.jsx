@@ -7,6 +7,7 @@ const InputField = React.forwardRef(
       onChange,
       onFocus,
       onBlur,
+      onKeyDown,
       name,
       inputRef,
       error,
@@ -23,7 +24,7 @@ const InputField = React.forwardRef(
       autoComplete,
       className = "",
     },
-    ref
+    ref,
   ) => {
     const computedPlaceholder = placeholder ?? `Enter ${label}`;
     const computedId = id || name;
@@ -47,6 +48,7 @@ const InputField = React.forwardRef(
           value={value}
           onChange={onChange}
           onBlur={onBlur}
+          onKeyDown={onKeyDown}
           disabled={disabled}
           readOnly={readOnly}
           required={required}
@@ -64,7 +66,7 @@ const InputField = React.forwardRef(
         {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
       </div>
     );
-  }
+  },
 );
 
 export default InputField;
