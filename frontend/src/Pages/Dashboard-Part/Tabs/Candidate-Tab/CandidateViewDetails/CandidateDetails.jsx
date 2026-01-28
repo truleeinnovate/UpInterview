@@ -867,7 +867,7 @@ const WorkExperience = ({ candidate }) => {
                 key={i}
                 className="text-sm text-gray-600 break-words leading-relaxed"
               >
-                {point?.replace(/^[•\s*-]+/, "")}
+                {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
               </li>
             ),
           )}
@@ -914,7 +914,7 @@ const WorkExperience = ({ candidate }) => {
                       key={i}
                       className="text-sm text-gray-600 break-words leading-relaxed"
                     >
-                      {point?.replace(/^[•\s*-]+/, "")}
+                      {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
                     </li>
                   ),
                 )}
@@ -936,7 +936,7 @@ const WorkExperience = ({ candidate }) => {
                 key={i}
                 className="text-sm text-gray-600 break-words leading-relaxed"
               >
-                {point?.replace(/^[•\s*-]+/, "")}
+                {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
               </li>
             ),
           )}
@@ -946,25 +946,21 @@ const WorkExperience = ({ candidate }) => {
   ];
 
   return (
-    <div className="w-full space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
+    <div className="w-full space-y-8 relative">
       {sections?.map((section, index) => (
         <div
           key={index}
-          className="relative flex items-start gap-4 group is-active mb-8"
+          className="w-full bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
         >
-          <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-gray-50 shadow shrink-0 z-10 mt-1">
-            {section?.icon}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-gray-50 rounded-lg">{section?.icon}</div>
+            <h4 className="font-bold text-gray-800 text-lg">
+              {section?.title}
+            </h4>
           </div>
-          <div className="w-full bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-bold text-gray-800 text-lg">
-                {section?.title}
-              </h4>
-            </div>
 
-            <div className="text-sm text-gray-600 leading-relaxed">
-              {section?.content}
-            </div>
+          <div className="text-sm text-gray-600 leading-relaxed">
+            {section?.content}
           </div>
         </div>
       ))}
@@ -1029,11 +1025,6 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
       status: candidate?.status,
     },
   ];
-
-  console.log(
-    "FETCHED CANDIDATE ===========================> ",
-    fetchedCandidate,
-  );
 
   return (
     <div className="fixed top-[62px] left-0 right-0 bottom-0 z-40 bg-gray-50 flex flex-col overflow-hidden">
@@ -1266,13 +1257,19 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                               className="font-medium text-sm text-gray-800 truncate"
                               title={
                                 Array.isArray(candidate?.languages)
-                                  ? candidate.languages.join(", ")
+                                  ? candidate.languages
+                                      .map((lang) =>
+                                        capitalizeFirstLetter(lang),
+                                      )
+                                      .join(", ")
                                   : "N/A"
                               }
                             >
                               {Array.isArray(candidate?.languages) &&
                               candidate.languages.length > 0
-                                ? candidate.languages.join(", ")
+                                ? candidate.languages
+                                    .map((lang) => capitalizeFirstLetter(lang))
+                                    .join(", ")
                                 : "N/A"}
                             </p>
                           </div>
@@ -1420,7 +1417,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                   </div>
                 </div>
                 {/* Certifications */}
-                <div className="bg-white rounded-xl sm:shadow-none shadow-sm sm:border-none border border-gray-100 sm:p-0 p-6">
+                {/* <div className="bg-white rounded-xl sm:shadow-none shadow-sm sm:border-none border border-gray-100 sm:p-0 p-6">
                   <h4 className="text-lg font-semibold text-gray-800 mb-4">
                     Certifications
                   </h4>
@@ -1433,7 +1430,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                           className="bg-custom-blue/10 border border-custom-blue/30 rounded-full px-4 py-2 flex items-center shadow-sm hover:shadow-md transition-shadow"
                         >
                           <span className="text-sm font-medium text-custom-blue">
-                            {cert}
+                            {capitalizeFirstLetter(cert)}
                           </span>
                         </div>
                       ))
@@ -1441,6 +1438,36 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                       <span className="text-sm text-gray-500 italic">
                         No certifications listed
                       </span>
+                    )}
+                  </div>
+                </div> */}
+                <div className="bg-white rounded-xl sm:shadow-none shadow-sm sm:border-none border border-gray-100 sm:p-0 p-6">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-6">
+                    Certifications
+                  </h4>
+                  <div className="relative border-l-2 border-gray-100 ml-3 space-y-6">
+                    {Array.isArray(candidate?.certifications) &&
+                    candidate?.certifications?.length > 0 ? (
+                      candidate?.certifications?.map((cert, index) => (
+                        <div key={index} className="relative pl-8">
+                          <div className="absolute -left-[16px] top-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center ring-4 ring-white">
+                            <Award className="w-4 h-4 text-custom-blue" />
+                          </div>
+                          <div className="bg-white border border-gray-200 rounded-md p-4 shadow-sm hover:shadow-md transition-shadow group">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-semibold text-gray-800 group-hover:text-custom-blue transition-colors">
+                                {capitalizeFirstLetter(cert)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="pl-8">
+                        <span className="text-sm text-gray-500 italic">
+                          No certifications listed
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>
