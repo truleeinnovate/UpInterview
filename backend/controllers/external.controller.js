@@ -1404,7 +1404,7 @@ exports.atsStatusSync = async (req, res) => {
       });
     }
 
-    const { id, applicationId, applicationStatus, atsStatus, source, dateTime } = req.body;
+    const { id, applicationNumber, applicationStatus, atsStatus, source, dateTime } = req.body;
 
     // Validate request body
     if (!applicationStatus || !atsStatus) {
@@ -1414,26 +1414,25 @@ exports.atsStatusSync = async (req, res) => {
       });
     }
 
-    // Use the provided applicationId or id (both are MongoDB _id)
-    const targetApplicationId = applicationId || id;
+    // Use the provided applicationNumber or id (both should be applicationNumber)
+    const targetApplicationNumber = applicationNumber || id;
 
-    if (!targetApplicationId) {
+    if (!targetApplicationNumber) {
       return res.status(400).json({
         success: false,
-        error: "applicationId or id is required",
+        error: "applicationNumber or id is required",
       });
     }
 
-    console.log(`[ATS SYNC] Starting status sync from ${source} for application ${targetApplicationId} in tenant: ${tenantId}`);
+    console.log(`[ATS SYNC] Starting status sync from ${source} for application number ${targetApplicationNumber} in tenant: ${tenantId}`);
 
     const { Application } = require("../models/Application.js");
     const { triggerWebhook, EVENT_TYPES } = require("../services/webhookService");
 
-    // Find the specific application to update
+    // Find the specific application to update by applicationNumber only
     const application = await Application.findOne({ 
-      _id: targetApplicationId, 
-      tenantId 
-    }).populate("candidateId positionId");
+      applicationNumber: targetApplicationNumber
+    });
 
     if (!application) {
       return res.status(404).json({
@@ -1506,20 +1505,14 @@ exports.atsStatusSync = async (req, res) => {
       updatedApplications.push({
         id: updatedApplication._id.toString(),
         applicationNumber: updatedApplication.applicationNumber,
-        candidate: {
-          id: updatedApplication.candidateId?._id?.toString(),
-          firstName: updatedApplication.candidateId?.firstName,
-          lastName: updatedApplication.candidateId?.lastName,
-          email: updatedApplication.candidateId?.email
-        },
-        position: {
-          id: updatedApplication.positionId?._id?.toString(),
-          title: updatedApplication.positionId?.title
-        },
-        status: updatedApplication.status,
-        currentStage: updatedApplication.currentStage,
+        applicationStatus: updatedApplication.status,
+        atsStatus: atsStatus,
+        source: source,
+        createdBy: updatedApplication.createdBy,
         createdAt: updatedApplication.createdAt,
-        updatedAt: updatedApplication.updatedAt
+        updatedAt: updatedApplication.updatedAt,
+        __v: updatedApplication.__v,
+        updatedBy: updatedApplication.updatedBy
       });
 
       console.log(`[ATS SYNC] Successfully updated application ${application._id}: ${previousStatus} -> ${applicationStatus}`);
@@ -1540,7 +1533,7 @@ exports.atsStatusSync = async (req, res) => {
       ownerId: userId,
       processName: "External ATS Status Sync",
       requestBody: {
-        applicationId: targetApplicationId,
+        applicationNumber: targetApplicationNumber,
         applicationStatus,
         atsStatus,
         source,

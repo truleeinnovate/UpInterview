@@ -399,7 +399,7 @@ const DocumentationTab = () => {
       headers: ["X-API-Key: your_api_key", "Content-Type: application/json"],
       body: {
         id: "65a9c0e2f4d3a1b2c3d4e5f6",
-        applicationId: "65a9c0e2f4d3a1b2c3d4e5f6",
+        applicationNumber: "APP-2024-001",
         applicationStatus: "DECISION",
         atsStatus: "ACCEPTED", 
         source: "Greenhouse",
@@ -408,21 +408,15 @@ const DocumentationTab = () => {
       response: [
         {
           id: "65a9c0e2f4d3a1b2c3d4e5f6",
-          applicationNumber: "APP-2024-001",
-          candidate: {
-            id: "65a9c0e2f4d3a1b2c3d4e5f7",
-            firstName: "John",
-            lastName: "Doe",
-            email: "john.doe@example.com"
-          },
-          position: {
-            id: "65a9c0e2f4d3a1b2c3d4e5f8",
-            title: "Senior Software Engineer"
-          },
-          status: "DECISION",
-          currentStage: "Offer Released",
-          createdAt: "2026-01-28T11:00:00.000Z",
-          updatedAt: "2026-01-28T11:00:00.000Z"
+          applicationNumber: "SDFSD-SEN-2026-0007",
+          applicationStatus: "DECISION",
+          atsStatus: "ACCEPTED",
+          source: "Greenhouse",
+          createdBy: "690476c619e21b301df0f403",
+          createdAt: "2026-01-28T07:18:33.819+00:00",
+          updatedAt: "2026-01-28T07:48:12.210+00:00",
+          __v: 0,
+          updatedBy: "690476c619e21b301df0f403"
         }
       ],
     },

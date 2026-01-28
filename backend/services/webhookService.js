@@ -10,6 +10,9 @@ const EVENT_TYPES = {
   ASSESSMENT_STATUS_UPDATED: "assessment.status.updated",
   FEEDBACK_STATUS_UPDATED: "feedback.status.updated",
   APPLICATION_STATUS_UPDATED: "application.status.updated",
+  INTERVIEW_CREATED: "interview.created",
+  ASSESSMENT_CREATED: "assessment.created",
+  FEEDBACK_CREATED: "feedback.created",
 };
 
 // Define allowed status changes for webhook triggers
@@ -17,7 +20,7 @@ const ALLOWED_STATUS_CHANGES = {
   INTERVIEW: ['RequestSent', 'Scheduled', 'Rescheduled', 'Completed', 'Rejected', 'Selected', 'Cancelled', 'NoShow'],
   ASSESSMENT: ['scheduled', 'cancelled', 'completed', 'expired', 'failed'],
   FEEDBACK: ['submitted'],
-  APPLICATION: ['SCREENED', 'INTERVIEWING', 'DECISION', 'REJECTED', 'WITHDRAWN']
+  APPLICATION: ['New'] // Only trigger for 'New' status
 };
 
 // Helper function to check if status change should trigger webhook
