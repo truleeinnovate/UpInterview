@@ -1719,111 +1719,32 @@ const AddCandidateForm = ({
                 placeholder="https://linkedin.com/in/username"
                 error={errors.linkedInUrl}
               />
-            </div>
-            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-              {/* v1.0.7 --------------------------------------------------------------------------------------> */}
-              Candidate Expectations / Availability
-            </p>
-
-
-
-            {/* New Fields: Location, Salary, Languages */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
-              <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
-                <IncreaseAndDecreaseField
-                  value={formData.minSalary}
-                  onChange={handleChange}
-                  inputRef={fieldRefs.minSalary}
-                  error={errors.minSalary}
-                  min={0}
-                  max={1000000000}
-                  label="Min Salary (Annual)"
-                  name="minSalary"
-                  placeholder="₹ Min Salary (Annual)"
-                />
-                <IncreaseAndDecreaseField
-                  value={formData.maxSalary}
-                  onChange={handleChange}
-                  min={0}
-                  max={1000000000}
-                  inputRef={fieldRefs.maxSalary}
-                  error={errors.maxSalary}
-                  label="Max Salary (Annual)"
-                  name="maxSalary"
-                  placeholder="₹ Max Salary (Annual)"
-                />
-              </div>
-              <div className="grid grid-cols-1 gap-4">
-                <DropdownWithSearchField
-                  label="Current Location"
-                  name="location"
-                  value={formData.location}
-                  options={locationOptionsRS}
-                  onChange={(e) => {
-                    const { value } = e.target;
-                    setFormData((prev) => ({ ...prev, location: value }));
-                    if (errors.location) {
-                      setErrors((prev) => ({ ...prev, location: "" }));
-                    }
-                  }}
-                  placeholder="Select Location"
-                  isCustomName={isCustomLocation}
-                  setIsCustomName={setIsCustomLocation}
-                  onMenuOpen={loadLocations}
-                  loading={isLocationsFetching}
-                  containerRef={fieldRefs.location} // Ensure you add this ref to your fieldRefs object
-                />
-
-
-              </div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-              <InputField
-                label="Languages (comma separated)"
-                name="languages"
-                value={
-                  Array.isArray(formData?.languages)
-                    ? formData.languages.join(", ")
-                    : ""
-                }
-                onChange={(e) => {
-                  const inputValue = e.target.value;
-                  const languageArray = inputValue
-                    .split(",")
-                    .map((lang) => lang.trimStart());
-
-                  setFormData((prev) => ({
-                    ...prev,
-                    languages: languageArray,
-                  }));
-                }}
-                onBlur={() => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    languages: prev.languages
-                      .map((lang) => lang.trim())
-                      .filter(Boolean),
-                  }));
-                }}
-                placeholder="e.g. English, Telugu, Hindi"
-              />
               <DropdownWithSearchField
-                value={formData.noticePeriod}
-                options={noticePeriodOptions}
-                onChange={handleChange}
-                name="noticePeriod"
-                label="Notice Period"
-                placeholder="Select Notice Period"
-                containerRef={fieldRefs.noticePeriod}
-                required
-                error={errors.noticePeriod}
+                label="Current Location"
+                name="location"
+                value={formData.location}
+                options={locationOptionsRS}
+                onChange={(e) => {
+                  const { value } = e.target;
+                  setFormData((prev) => ({ ...prev, location: value }));
+                  if (errors.location) {
+                    setErrors((prev) => ({ ...prev, location: "" }));
+                  }
+                }}
+                placeholder="Select Location"
+                isCustomName={isCustomLocation}
+                setIsCustomName={setIsCustomLocation}
+                onMenuOpen={loadLocations}
+                loading={isLocationsFetching}
+                containerRef={fieldRefs.location} // Ensure you add this ref to your fieldRefs object
               />
             </div>
+
             {/* v1.0.7 <-------------------------------------------------------------------------------------- */}
             {/* <p className="text-lg font-semibold col-span-2"> */}
             <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
               {/* v1.0.7 --------------------------------------------------------------------------------------> */}
-              Education Details
+              Education & Experience Details
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
@@ -1869,10 +1790,6 @@ const AddCandidateForm = ({
             {/* --------v1.0.1----->*/}
             {/* v1.0.7 <----------------------------------------------------------------------------------- */}
             {/* <p className="text-lg font-semibold col-span-2"> */}
-            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-              {/* v1.0.7 -----------------------------------------------------------------------------------> */}
-              Experience Details
-            </p>
 
             {/* Current Role */}
             <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
@@ -1935,6 +1852,116 @@ const AddCandidateForm = ({
                     loading={isCurrentRolesFetching}
                   /> */}
             </div>
+
+            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+              {/* v1.0.7 --------------------------------------------------------------------------------------> */}
+              Additional Details
+            </p>
+
+
+
+            {/* New Fields: Location, Salary, Languages */}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
+              <InputField
+                label="Languages (comma separated)"
+                name="languages"
+                value={
+                  Array.isArray(formData?.languages)
+                    ? formData.languages.join(", ")
+                    : ""
+                }
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  const languageArray = inputValue
+                    .split(",")
+                    .map((lang) => lang.trimStart());
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    languages: languageArray,
+                  }));
+                }}
+                onBlur={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    languages: prev.languages
+                      .map((lang) => lang.trim())
+                      .filter(Boolean),
+                  }));
+                }}
+                placeholder="e.g. English, Telugu, Hindi"
+              />
+              <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
+                <IncreaseAndDecreaseField
+                  value={formData.minSalary}
+                  onChange={handleChange}
+                  inputRef={fieldRefs.minSalary}
+                  error={errors.minSalary}
+                  min={50000}            // 5 digits minimum
+                  max={999999999}        // 9 digits maximum
+                  label="Min Salary (Annual)"
+                  name="minSalary"
+                  placeholder="₹ Min Salary (Annual)"
+                />
+                <IncreaseAndDecreaseField
+                  value={formData.maxSalary}
+                  onChange={handleChange}
+                  min={50000}            // 5 digits minimum
+                  max={999999999}        // 9 digits maximum
+                  inputRef={fieldRefs.maxSalary}
+                  error={errors.maxSalary}
+                  label="Max Salary (Annual)"
+                  name="maxSalary"
+                  placeholder="₹ Max Salary (Annual)"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+
+              <DropdownWithSearchField
+                value={formData.noticePeriod}
+                options={noticePeriodOptions}
+                onChange={handleChange}
+                name="noticePeriod"
+                label="Notice Period"
+                placeholder="Select Notice Period"
+                containerRef={fieldRefs.noticePeriod}
+                error={errors.noticePeriod}
+              />
+
+              {/* External ID */}
+              <div>
+                <div className="flex items-center gap-2 mb-1 relative">
+                  <label className="text-sm font-medium text-gray-700">
+                    External ID
+                  </label>
+                  <div className="relative tooltip-container">
+                    <Info
+                      className="w-4 h-4 text-gray-400 cursor-pointer"
+                      onClick={() => setShowTooltip(!showTooltip)}
+                    />
+                    {showTooltip && (
+                      <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
+                        External System Reference Id
+                        <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <InputField
+                  value={formData.externalId}
+                  onChange={handleChange}
+                  inputRef={fieldRefs.externalId}
+                  error={errors.externalId}
+                  name="externalId"
+                  placeholder="External System Reference Id"
+                />
+              </div>
+
+            </div>
+
+
           </div>
 
 
@@ -2141,39 +2168,7 @@ const AddCandidateForm = ({
             </div>
           </div>
 
-          {/* External ID Field - Only show for organization users */}
-          {isOrganization && (
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-              <div className="-mt-5 mb-3">
-                <div className="flex items-center gap-2 mb-1 relative">
-                  <label className="text-sm font-medium text-gray-700">
-                    External ID
-                  </label>
-                  <div className="relative tooltip-container">
-                    <Info
-                      className="w-4 h-4 text-gray-400 cursor-pointer"
-                      onClick={() => setShowTooltip(!showTooltip)}
-                    />
-                    {showTooltip && (
-                      <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
-                        External System Reference Id
-                        <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <InputField
-                  value={formData.externalId}
-                  onChange={handleChange}
-                  inputRef={fieldRefs.externalId}
-                  error={errors.externalId}
-                  label=""
-                  name="externalId"
-                  placeholder="External System Reference Id"
-                />
-              </div>
-            </div>
-          )}
+
 
           {/* Work Experience Heading */}
           <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
@@ -2302,7 +2297,7 @@ const AddCandidateForm = ({
             {/* Key Achievements */}
             <div className="col-span-2">
               <DescriptionField
-                label="Key Achievements"
+                label="Key Achievements (one per line)"
                 name="keyAchievements"
                 value={formData.keyAchievements}
                 onChange={handleChange}

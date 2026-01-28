@@ -25,6 +25,8 @@ import {
   BarChart3,
   FileText,
   ExternalLink,
+    IndianRupee,
+  
 } from "lucide-react";
 import Modal from "react-modal";
 import InterviewProgress from "../Interview-New/components/InterviewProgress";
@@ -614,6 +616,19 @@ const PositionSlideDetails = () => {
       </div>
     );
   }
+    const formatToK = (value) => {
+    // Handle null, undefined, empty string, invalid input
+    if (value == null || value === '') return 'N/A';
+
+    const num = Number(value);
+    if (isNaN(num) || num <= 0) return 'N/A';
+
+    // For values < 1000 we can show full number or still use K — your choice
+    if (num < 1000) return num.toLocaleString('en-IN');
+
+    const inThousands = Math.round(num / 1000);
+    return `${inThousands}K`;
+  };
 
   // Get user token information and check organization field
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -803,21 +818,25 @@ const PositionSlideDetails = () => {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-start gap-3">
-                            <span className="text-custom-blue font-bold text-sm">₹</span>
-                            <div>
-                              <p className="text-sm text-gray-500">Salary Range (Annual)</p>
-                              <p className="font-medium text-gray-800">
-                                {position?.minSalary && position?.maxSalary
-                                  ? `₹${position.minSalary?.toLocaleString()} - ₹${position.maxSalary?.toLocaleString()}`
-                                  : position?.minSalary
-                                    ? `₹${position.minSalary?.toLocaleString()} - Not Disclosed`
-                                    : position?.maxSalary
-                                      ? `₹0 - ₹${position.maxSalary?.toLocaleString()}`
-                                      : "Not Disclosed"}
-                              </p>
-                            </div>
+                           <div className="flex items-start gap-3">
+                          <IndianRupee className="w-4 h-4 text-custom-blue mt-1" />
+                          <div>
+                            <p className="text-xs text-gray-500">
+                              Salary Expectation (Annual)
+                            </p>
+
+                            <p className="flex items-center gap-1 text-sm font-medium text-gray-800">
+                              {position?.minSalary != null || position?.maxSalary != null ? (
+                                <>
+                                  {formatToK(position?.minSalary ?? 0)} – {formatToK(position?.maxSalary ?? 0)}
+                                </>
+                              ) : (
+                                "N/A"
+                              )}
+                            </p>
                           </div>
+
+                        </div>
                           <div className="flex items-start gap-3">
                             <FileText className="w-4 h-4 text-custom-blue mt-0.5" />
                             <div>
@@ -825,15 +844,15 @@ const PositionSlideDetails = () => {
                               <p className="font-medium text-gray-800">{position?.templateId?.title || "Not Assigned"}</p>
                             </div>
                           </div>
-                          {position?.externalId && (
+                          {/* {position?.externalId && ( */}
                             <div className="flex items-start gap-3">
                               <span className="text-custom-blue font-bold text-sm">#</span>
                               <div>
                                 <p className="text-sm text-gray-500">External ID</p>
-                                <p className="font-medium text-gray-800">{position.externalId}</p>
+                                <p className="font-medium text-gray-800">{position.externalId || "N/A"} </p>
                               </div>
                             </div>
-                          )}
+                          {/* )} */}
                         </div>
                       </div>
 

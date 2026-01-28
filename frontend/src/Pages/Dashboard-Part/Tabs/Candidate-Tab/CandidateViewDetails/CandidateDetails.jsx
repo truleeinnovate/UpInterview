@@ -875,7 +875,7 @@ const WorkExperience = ({ candidate }) => {
       ),
     },
     {
-      title: "Work Experience",
+      title: "Projects",
       icon: <Briefcase size={20} className="text-green-600" />,
       content: (
         <div className="space-y-4">
@@ -1013,6 +1013,19 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
       </div>
     );
   }
+  const formatToK = (value) => {
+    // Handle null, undefined, empty string, invalid input
+    if (value == null || value === '') return 'N/A';
+
+    const num = Number(value);
+    if (isNaN(num) || num <= 0) return 'N/A';
+
+    // For values < 1000 we can show full number or still use K — your choice
+    if (num < 1000) return num.toLocaleString('en-IN');
+
+    const inThousands = Math.round(num / 1000);
+    return `${inThousands}K`;
+  };
 
   const breadcrumbItems = [
     {
@@ -1052,11 +1065,10 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`${
-                    activeTab === tab.id
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
+                  className={`${activeTab === tab.id
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
                 >
                   {tab.name}
                 </button>
@@ -1145,8 +1157,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                             <p className="font-medium text-sm text-gray-800">
                               {candidate?.Date_Of_Birth
                                 ? new Date(
-                                    candidate.Date_Of_Birth,
-                                  ).toLocaleDateString()
+                                  candidate.Date_Of_Birth,
+                                ).toLocaleDateString()
                                 : "N/A"}
                             </p>
                           </div>
@@ -1197,13 +1209,26 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                             <circle cx="4" cy="4" r="2" />
                           </svg>
                           <div>
-                            <p className="text-xs text-gray-500">
-                              LinkedIn Url
-                            </p>
-                            <p className="font-medium text-sm text-gray-800">
-                              {candidate?.linkedInUrl || "N/A"}
-                            </p>
+                            <p className="text-xs text-gray-500">LinkedIn Url</p>
+
+                            {candidate?.linkedInUrl ? (
+                              <a
+                                href={
+                                  candidate.linkedInUrl.startsWith("http")
+                                    ? candidate.linkedInUrl
+                                    : `https://${candidate.linkedInUrl}`
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-medium text-sm text-blue-600 hover:underline break-all"
+                              >
+                                {candidate.linkedInUrl}
+                              </a>
+                            ) : (
+                              <p className="font-medium text-sm text-gray-800">N/A</p>
+                            )}
                           </div>
+
                         </div>
                       </div>
                     </div>
@@ -1213,83 +1238,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                   <div className="bg-gray-50 rounded-lg p-5 border border-gray-100">
                     <div className="mb-6">
                       <h4 className="font-bold text-gray-800 mb-4">
-                        Candidate Expectations / Availability
-                      </h4>
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-3">
-                          <IndianRupee className="w-4 h-4 text-custom-blue mt-1" />
-                          <div>
-                            <p className="text-xs text-gray-500">
-                              Minimum Salary (Annual)
-                            </p>
-                            <p className="flex items-center text-sm gap-1 font-medium text-gray-800">
-                              {candidate?.minSalary || "N/A"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <IndianRupee className="w-4 h-4 text-custom-blue mt-1" />
-                          <div>
-                            <p className="text-xs text-gray-500">
-                              Maximum Salary (Annual)
-                            </p>
-                            <p className="flex items-center text-sm gap-1 font-medium text-gray-800">
-                              {candidate?.maxSalary || "N/A"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <MapPin className="w-4 h-4 text-custom-blue mt-1" />
-                          <div className="overflow-hidden">
-                            <p className="text-xs text-gray-500">
-                              Current Location
-                            </p>
-                            <p className="font-medium text-sm text-gray-800 truncate">
-                              {candidate?.location || "N/A"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <Languages className="w-4 h-4 text-custom-blue mt-1" />
-                          <div className="overflow-hidden">
-                            <p className="text-xs text-gray-500">Languages</p>
-                            <p
-                              className="font-medium text-sm text-gray-800 truncate"
-                              title={
-                                Array.isArray(candidate?.languages)
-                                  ? candidate.languages
-                                      .map((lang) =>
-                                        capitalizeFirstLetter(lang),
-                                      )
-                                      .join(", ")
-                                  : "N/A"
-                              }
-                            >
-                              {Array.isArray(candidate?.languages) &&
-                              candidate.languages.length > 0
-                                ? candidate.languages
-                                    .map((lang) => capitalizeFirstLetter(lang))
-                                    .join(", ")
-                                : "N/A"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <Clock className="w-4 h-4 text-custom-blue mt-1" />
-                          <div className="overflow-hidden">
-                            <p className="text-xs text-gray-500">
-                              Notice Period
-                            </p>
-                            <p className="font-medium text-sm text-gray-800 truncate">
-                              {candidate?.noticePeriod || "N/A"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mb-6">
-                      <h4 className="font-bold text-gray-800 mb-4">
-                        Education & Career
+                        Education & Experience Details
                       </h4>
                       <div className="grid grid-cols-1 gap-6">
                         <div className="flex gap-3">
@@ -1314,35 +1263,9 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Experience Details */}
-                  <div className="bg-gray-50 rounded-lg p-6">
                     <div className="mb-6">
-                      <h4 className="font-bold text-gray-800 mb-4">
-                        Experience Details
-                      </h4>
                       <div className="grid grid-cols-1 gap-6">
-                        <div className="flex gap-3">
-                          <GraduationCap className="w-5 h-5 text-custom-blue" />
-                          <div>
-                            <p className="text-xs text-gray-500">
-                              Qualification
-                            </p>
-                            <p className="font-medium text-sm text-gray-800">
-                              {candidate?.HigherQualification || "N/A"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-3">
-                          <School className="w-5 h-5 text-custom-blue" />
-                          <div>
-                            <p className="text-xs text-gray-500">University</p>
-                            <p className="font-medium text-sm text-gray-800">
-                              {candidate?.UniversityCollege || "N/A"}
-                            </p>
-                          </div>
-                        </div>
                         <div className="flex items-start gap-3">
                           <Briefcase className="w-4 h-4 text-custom-blue mt-1" />
                           <div>
@@ -1378,6 +1301,96 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                         </div>
                       </div>
                     </div>
+
+
+                  </div>
+
+                  {/* Experience Details */}
+                  <div className="bg-gray-50 rounded-lg p-6">
+                    <div className="mb-6">
+                      <h4 className="font-bold text-gray-800 mb-4">
+                        Additional Details
+                      </h4>
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <MapPin className="w-4 h-4 text-custom-blue mt-1" />
+                          <div className="overflow-hidden">
+                            <p className="text-xs text-gray-500">
+                              Current Location
+                            </p>
+                            <p className="font-medium text-sm text-gray-800 truncate">
+                              {candidate?.location || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <Languages className="w-4 h-4 text-custom-blue mt-1" />
+                          <div className="overflow-hidden">
+                            <p className="text-xs text-gray-500">Languages</p>
+                            <p
+                              className="font-medium text-sm text-gray-800 truncate"
+                              title={
+                                Array.isArray(candidate?.languages)
+                                  ? candidate.languages
+                                    .map((lang) =>
+                                      capitalizeFirstLetter(lang),
+                                    )
+                                    .join(", ")
+                                  : "N/A"
+                              }
+                            >
+                              {Array.isArray(candidate?.languages) &&
+                                candidate.languages.length > 0
+                                ? candidate.languages
+                                  .map((lang) => capitalizeFirstLetter(lang))
+                                  .join(", ")
+                                : "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <IndianRupee className="w-4 h-4 text-custom-blue mt-1" />
+                          <div>
+                            <p className="text-xs text-gray-500">
+                              Salary Expectation (Annual)
+                            </p>
+
+                            <p className="flex items-center gap-1 text-sm font-medium text-gray-800">
+                              {candidate?.minSalary != null || candidate?.maxSalary != null ? (
+                                <>
+                                  {formatToK(candidate?.minSalary ?? 0)} – {formatToK(candidate?.maxSalary ?? 0)}
+                                </>
+                              ) : (
+                                "N/A"
+                              )}
+                            </p>
+                          </div>
+
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <Clock className="w-4 h-4 text-custom-blue mt-1" />
+                          <div className="overflow-hidden">
+                            <p className="text-xs text-gray-500">
+                              Notice Period
+                            </p>
+                            <p className="font-medium text-sm text-gray-800 truncate">
+                              {candidate?.noticePeriod || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <span className="text-custom-blue font-bold text-sm">#</span>
+                          <div>
+                            <p className="text-sm text-gray-500">External ID</p>
+                            <p className="font-medium text-gray-800">{candidate.externalId || "N/A"} </p>
+                          </div>
+                        </div>
+
+
+
+                      </div>
+                    </div>
+
                   </div>
                 </div>
                 {/* Skills Section - Standard List Style */}
@@ -1447,7 +1460,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                   </h4>
                   <div className="relative border-l-2 border-gray-100 ml-3 space-y-6">
                     {Array.isArray(candidate?.certifications) &&
-                    candidate?.certifications?.length > 0 ? (
+                      candidate?.certifications?.length > 0 ? (
                       candidate?.certifications?.map((cert, index) => (
                         <div key={index} className="relative pl-8">
                           <div className="absolute -left-[16px] top-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center ring-4 ring-white">
