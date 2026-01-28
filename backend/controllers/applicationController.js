@@ -351,6 +351,25 @@ const createApplication = async (req, res) => {
             }
         }
 
+        // Trigger webhook for application creation (mansoor)
+        try {
+            const webhookPayload = {
+                applicationNumber: populatedApplication.applicationNumber,
+                status: populatedApplication.status,
+                createdAt: populatedApplication.createdAt,
+                event: "application.created",
+            };
+            await triggerWebhook(
+                EVENT_TYPES.APPLICATION_STATUS_UPDATED,
+                webhookPayload,
+                populatedApplication.tenantId
+            );
+            console.log(`[APPLICATION WEBHOOK] Triggering creation webhook for application ${populatedApplication._id}`);
+        } catch (webhookError) {
+            console.error("[APPLICATION WEBHOOK] Error triggering application creation webhook:", webhookError);
+            // Do NOT fail the response — just log
+        }
+
         // Final success response
         res.status(201).json({
             success: true,
@@ -664,43 +683,6 @@ const updateApplicationStatus = async (req, res) => {
 
         if (!updatedApplication) {
             return res.status(404).json({ message: "Application not found" });
-        }
-
-        // Trigger webhook for application status update
-        try {
-            const webhookPayload = {
-                applicationId: updatedApplication._id,
-                applicationNumber: updatedApplication.applicationNumber,
-                tenantId: updatedApplication.tenantId,
-                ownerId: updatedApplication.ownerId,
-                candidateId: updatedApplication.candidateId,
-                positionId: updatedApplication.positionId,
-                interviewId: updatedApplication.interviewId,
-                status: updatedApplication.status,
-                currentStage: updatedApplication.currentStage,
-                previousStatus: originalApplication.status, // old status before update
-                previousStage: originalApplication.currentStage, // old stage before update
-                updatedAt: updatedApplication.updatedAt,
-                event: "application.status.updated",
-            };
-
-            console.log(
-                `[APPLICATION WEBHOOK] Triggering status update webhook for application ${updatedApplication._id} with status: ${updatedApplication.status}`
-            );
-            await triggerWebhook(
-                EVENT_TYPES.APPLICATION_STATUS_UPDATED,
-                webhookPayload,
-                updatedApplication.tenantId
-            );
-            console.log(
-                `[APPLICATION WEBHOOK] Status update webhook sent successfully for application ${updatedApplication._id}`
-            );
-        } catch (webhookError) {
-            console.error(
-                "[APPLICATION WEBHOOK] Error triggering application status update webhook:",
-                webhookError
-            );
-            // Continue execution even if webhook fails
         }
 
         res.status(200).json({
