@@ -391,6 +391,41 @@ const DocumentationTab = () => {
         },
       ],
     },
+    // ATS Status Sync Endpoint
+    {
+      method: "POST",
+      path: "/api/external/ats/status-sync",
+      description: "ATS Status is read-only - Sync application status from external ATS system",
+      headers: ["X-API-Key: your_api_key", "Content-Type: application/json"],
+      body: {
+        id: "65a9c0e2f4d3a1b2c3d4e5f6",
+        applicationId: "65a9c0e2f4d3a1b2c3d4e5f6",
+        applicationStatus: "DECISION",
+        atsStatus: "ACCEPTED", 
+        source: "Greenhouse",
+        dateTime: "28-01-2026 10:30:00"
+      },
+      response: [
+        {
+          id: "65a9c0e2f4d3a1b2c3d4e5f6",
+          applicationNumber: "APP-2024-001",
+          candidate: {
+            id: "65a9c0e2f4d3a1b2c3d4e5f7",
+            firstName: "John",
+            lastName: "Doe",
+            email: "john.doe@example.com"
+          },
+          position: {
+            id: "65a9c0e2f4d3a1b2c3d4e5f8",
+            title: "Senior Software Engineer"
+          },
+          status: "DECISION",
+          currentStage: "Offer Released",
+          createdAt: "2026-01-28T11:00:00.000Z",
+          updatedAt: "2026-01-28T11:00:00.000Z"
+        }
+      ],
+    },
     // {
     //   method: "POST",
     //   path: "/api/external/interviews",

@@ -17,4 +17,8 @@ router.get('/positions', loggingService.integrationLoggingMiddleware, externalCo
 router.post('/positions', verifyApiKey, loggingService.integrationLoggingMiddleware, externalController.createPosition);
 router.post('/positions/bulk', verifyApiKey, loggingService.integrationLoggingMiddleware, externalController.bulkCreatePositions);
 
+// ATS Integration routes
+router.get('/ats', loggingService.integrationLoggingMiddleware, externalController.getAtsData);
+router.post('/ats/status-sync', verifyApiKey, loggingService.integrationLoggingMiddleware, externalController.atsStatusSync);
+
 module.exports = router;

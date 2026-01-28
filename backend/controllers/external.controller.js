@@ -1253,3 +1253,332 @@ exports.getPositions = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get ATS Data - Read-only endpoint to fetch application data with ATS sync info
+ */
+exports.getAtsData = async (req, res) => {
+  try {
+    const authResult = await getTenantAndUserFromApiKey(req);
+    
+    if (authResult.error) {
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External Get ATS Data",
+        message: authResult.error,
+        status: "error",
+        integrationName: "external-api",
+        flowType: "get-ats-data",
+      };
+      return res.status(401).json({
+        success: false,
+        error: authResult.error,
+      });
+    }
+    
+    const { tenantId, userId, apiKey } = authResult;
+    
+    // Check if the API key has ats:read permission
+    if (!checkApiKeyPermission(apiKey, 'ats:read')) {
+      res.locals.logData = {
+        ownerId: userId,
+        processName: "External Get ATS Data",
+        message: "API key does not have ats:read permission",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "get-ats-data",
+      };
+      return res.status(403).json({
+        success: false,
+        error: "API key does not have ats:read permission",
+      });
+    }
+
+    const { Application } = require("../models/Application.js");
+    
+    const applications = await Application.find({ tenantId })
+      .populate("candidateId", "firstName lastName email")
+      .populate("positionId", "title")
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    const responseData = applications.map(app => ({
+      id: app._id,
+      applicationNumber: app.applicationNumber,
+      candidate: {
+        id: app.candidateId?._id,
+        firstName: app.candidateId?.firstName,
+        lastName: app.candidateId?.lastName,
+        email: app.candidateId?.email
+      },
+      position: {
+        id: app.positionId?._id,
+        title: app.positionId?.title
+      },
+      status: app.status,
+      currentStage: app.currentStage,
+      updatedAt: app.updatedAt
+    }));
+
+    res.locals.logData = {
+      ownerId: userId,
+      processName: "External Get ATS Data",
+      responseBody: { count: responseData.length },
+      message: `Successfully retrieved ${responseData.length} applications`,
+      status: "success",
+      integrationName: "external-api",
+      flowType: "get-ats-data",
+    };
+
+    res.status(200).json({
+      success: true,
+      message: "ATS data retrieved successfully",
+      data: responseData
+    });
+
+  } catch (error) {
+    console.error("[ATS GET] Error fetching ATS data:", error);
+
+    res.locals.logData = {
+      ownerId: req.user?._id || "external_api",
+      processName: "External Get ATS Data",
+      message: error.message,
+      status: "error",
+      integrationName: "external-api",
+      flowType: "get-ats-data",
+    };
+
+    res.status(500).json({
+      success: false,
+      error: "Internal server error while fetching ATS data",
+      details: error.message,
+      code: 500,
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
+/**
+ * ATS Status Sync - Sync application status from external ATS system (read-only)
+ */
+exports.atsStatusSync = async (req, res) => {
+  const startTime = Date.now();
+  
+  try {
+    // Use API key validation instead of cookies
+    const authResult = await getTenantAndUserFromApiKey(req);
+    
+    if (authResult.error) {
+      // Generate logs for the error
+      res.locals.logData = {
+        ownerId: "system",
+        processName: "External ATS Status Sync",
+        requestBody: req.body,
+        message: authResult.error,
+        status: "error",
+        integrationName: "external-api",
+        flowType: "ats-status-sync",
+      };
+      return res.status(401).json({
+        success: false,
+        error: authResult.error,
+      });
+    }
+    
+    const { tenantId, userId, apiKey } = authResult;
+    
+    // Check if the API key has ats:write permission
+    if (!checkApiKeyPermission(apiKey, 'ats:write')) {
+      res.locals.logData = {
+        ownerId: userId,
+        processName: "External ATS Status Sync",
+        requestBody: req.body,
+        message: "API key does not have ats:write permission",
+        status: "error",
+        integrationName: "external-api",
+        flowType: "ats-status-sync",
+      };
+      return res.status(403).json({
+        success: false,
+        error: "API key does not have ats:write permission",
+      });
+    }
+
+    const { id, applicationId, applicationStatus, atsStatus, source, dateTime } = req.body;
+
+    // Validate request body
+    if (!applicationStatus || !atsStatus) {
+      return res.status(400).json({
+        success: false,
+        error: "applicationStatus and atsStatus are required",
+      });
+    }
+
+    // Use the provided applicationId or id (both are MongoDB _id)
+    const targetApplicationId = applicationId || id;
+
+    if (!targetApplicationId) {
+      return res.status(400).json({
+        success: false,
+        error: "applicationId or id is required",
+      });
+    }
+
+    console.log(`[ATS SYNC] Starting status sync from ${source} for application ${targetApplicationId} in tenant: ${tenantId}`);
+
+    const { Application } = require("../models/Application.js");
+    const { triggerWebhook, EVENT_TYPES } = require("../services/webhookService");
+
+    // Find the specific application to update
+    const application = await Application.findOne({ 
+      _id: targetApplicationId, 
+      tenantId 
+    }).populate("candidateId positionId");
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        error: "Application not found",
+      });
+    }
+
+    const updatedApplications = [];
+
+    // Process the specific application status update
+    try {
+      // Store previous values for webhook
+      const previousStatus = application.status;
+      const previousStage = application.currentStage;
+
+      // Update application status
+      const updateData = {
+        status: applicationStatus,
+        updatedBy: userId,
+        updatedAt: new Date(),
+      };
+
+      // Add ATS sync metadata
+      updateData.atsSyncData = {
+        atsStatus: atsStatus,
+        source: source,
+        dateTime: dateTime,
+        syncTimestamp: new Date().toISOString()
+      };
+
+      // Update the application
+      const updatedApplication = await Application.findByIdAndUpdate(
+        application._id,
+        updateData,
+        { new: true }
+      ).populate("candidateId positionId");
+
+      // Trigger webhook for application status update
+      try {
+        const webhookPayload = {
+          applicationId: updatedApplication._id,
+          applicationNumber: updatedApplication.applicationNumber,
+          tenantId: updatedApplication.tenantId,
+          ownerId: updatedApplication.ownerId,
+          candidateId: updatedApplication.candidateId,
+          positionId: updatedApplication.positionId,
+          interviewId: updatedApplication.interviewId,
+          status: updatedApplication.status,
+          currentStage: updatedApplication.currentStage,
+          previousStatus: previousStatus,
+          previousStage: previousStage,
+          updatedAt: updatedApplication.updatedAt,
+          event: "application.status.updated",
+          syncSource: source,
+          atsStatus: atsStatus
+        };
+
+        await triggerWebhook(
+          EVENT_TYPES.APPLICATION_STATUS_UPDATED,
+          webhookPayload,
+          updatedApplication.tenantId
+        );
+        console.log(`[ATS SYNC] Webhook triggered for application ${updatedApplication._id}`);
+      } catch (webhookError) {
+        console.error("[ATS SYNC] Error triggering webhook:", webhookError);
+        // Continue execution even if webhook fails
+      }
+
+      updatedApplications.push({
+        id: updatedApplication._id.toString(),
+        applicationNumber: updatedApplication.applicationNumber,
+        candidate: {
+          id: updatedApplication.candidateId?._id?.toString(),
+          firstName: updatedApplication.candidateId?.firstName,
+          lastName: updatedApplication.candidateId?.lastName,
+          email: updatedApplication.candidateId?.email
+        },
+        position: {
+          id: updatedApplication.positionId?._id?.toString(),
+          title: updatedApplication.positionId?.title
+        },
+        status: updatedApplication.status,
+        currentStage: updatedApplication.currentStage,
+        createdAt: updatedApplication.createdAt,
+        updatedAt: updatedApplication.updatedAt
+      });
+
+      console.log(`[ATS SYNC] Successfully updated application ${application._id}: ${previousStatus} -> ${applicationStatus}`);
+
+    } catch (error) {
+      console.error(`[ATS SYNC] Error processing application ${targetApplicationId}:`, error);
+      return res.status(500).json({
+        success: false,
+        error: "Error updating application status",
+        details: error.message
+      });
+    }
+
+    const syncDuration = `${((Date.now() - startTime) / 1000).toFixed(2)}s`;
+
+    // Generate logs for success
+    res.locals.logData = {
+      ownerId: userId,
+      processName: "External ATS Status Sync",
+      requestBody: {
+        applicationId: targetApplicationId,
+        applicationStatus,
+        atsStatus,
+        source,
+        dateTime
+      },
+      responseBody: {
+        total: updatedApplications.length,
+        syncDuration
+      },
+      message: `ATS status sync completed: ${updatedApplications.length} applications updated`,
+      status: "success",
+      integrationName: "external-api",
+      flowType: "ats-status-sync",
+    };
+
+    res.status(200).json(updatedApplications);
+
+  } catch (error) {
+    console.error("[ATS SYNC] Error in status sync:", error);
+
+    // Generate logs for error
+    res.locals.logData = {
+      ownerId: req.user?._id || "external_api",
+      processName: "External ATS Status Sync",
+      requestBody: req.body,
+      message: error.message,
+      status: "error",
+      integrationName: "external-api",
+      flowType: "ats-status-sync",
+    };
+
+    res.status(500).json({
+      success: false,
+      error: "Internal server error during ATS status sync",
+      details: error.message,
+      code: 500,
+      suggestion: "Please try again or contact support if the problem persists",
+      timestamp: new Date().toISOString()
+    });
+  }
+};

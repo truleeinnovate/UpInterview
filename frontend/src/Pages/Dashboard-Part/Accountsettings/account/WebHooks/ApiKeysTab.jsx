@@ -390,6 +390,24 @@ const ApiKeysTab = () => {
                         ))}
                       </div>
                     </div>
+                    <div>
+                      <p className="text-xs text-gray-600 mb-2">ATS Integration</p>
+                      <div className="flex flex-wrap gap-4">
+                        {["ats:read", "ats:write"].map((permission) => (
+                          <label key={permission} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={formData.permissions.includes(permission)}
+                              onChange={() => handlePermissionChange(permission)}
+                              className="rounded border-gray-300 accent-custom-blue text-custom-blue shadow-sm focus:border-brand-300 focus:ring focus:ring-brand-200 focus:ring-opacity-50"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">
+                              {permission.split(':')[1]}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
 

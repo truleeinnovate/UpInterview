@@ -20,7 +20,9 @@ const apiKeySchema = new mongoose.Schema(
         // Candidate Management
         'candidates:read', 'candidates:write', 'candidates:bulk',
         // Position Management
-        'positions:read', 'positions:write', 'positions:bulk'
+        'positions:read', 'positions:write', 'positions:bulk',
+        // ATS Integration
+        'ats:read', 'ats:write'
       ],
       required: true
     }],
