@@ -470,12 +470,19 @@ const createInterview = async (req, res) => {
     try {
       const position = await Position.findById(positionId).lean();
 
-      // Check if application already exists
-      const existingApp = await Application.findOne({
-        candidateId,
-        positionId,
-        tenantId: orgId,
-      });
+      // Check if application already exists - logic updated to prioritize applicationId
+      let existingApp;
+      if (applicationId) {
+        existingApp = await Application.findById(applicationId);
+      }
+
+      if (!existingApp) {
+        existingApp = await Application.findOne({
+          candidateId,
+          positionId,
+          tenantId: orgId,
+        });
+      }
 
       if (!existingApp) {
         // Get candidate for application number generation
@@ -502,7 +509,7 @@ const createInterview = async (req, res) => {
           tenantId: orgId,
           companyId,
           interviewId: interview._id,
-          status: "New", // Fixed casing from "NEW"
+          status: "INTERVIEWING", // Directly set to INTERVIEWING as we are creating an interview
           currentStage: "Interview Created",
           ownerId: userId,
           createdBy: userId,
@@ -518,14 +525,13 @@ const createInterview = async (req, res) => {
           applicationNumber,
         );
       } else {
-        // Update existing application with interview reference if needed
-        if (!existingApp.interviewId) {
-          await Application.findByIdAndUpdate(existingApp._id, {
-            interviewId: interview._id,
-            status: "INTERVIEWING",
-            currentStage: "Interview Created",
-          });
-        }
+        // Update existing application with interview reference and status
+        // Always update status to INTERVIEWING when a new interview is created
+        await Application.findByIdAndUpdate(existingApp._id, {
+          interviewId: interview._id,
+          status: "INTERVIEWING",
+          currentStage: "Interview Created",
+        });
 
         // <--- BACK-POPULATE applicationId to Interview (even if existing)
         await Interview.findByIdAndUpdate(interview._id, {
