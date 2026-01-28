@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
@@ -28,7 +29,7 @@ import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.
 import { notify } from "../../../../../services/toastService.js";
 import { Info } from "lucide-react";
 import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
-import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
+
 // v1.0.3 ----------------------------------------------------------->
 
 // Custom Dropdown Component
@@ -699,7 +700,7 @@ const InterviewForm = () => {
                           const positionTitle = app.positionId?.title || "Unknown Position";
                           return {
                             value: app._id,
-                            label: `${app.applicationNumber} - ${candidateName} for ${positionTitle} (${app.status})`,
+                            label: `${app.applicationNumber} (${capitalizeFirstLetter(app.status?.toLowerCase())})`,
                             application: app, // Store full object for easy access
                           };
                         }) || []
@@ -713,7 +714,7 @@ const InterviewForm = () => {
                       isClearable={true}
                     />
                     {applicationId && (
-                      <p className="mt-1 text-xs text-blue-600">
+                      <p className="mt-1 text-xs">
                         * Candidate and Position are locked because an application is selected.
                       </p>
                     )}

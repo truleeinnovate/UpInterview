@@ -603,7 +603,7 @@ const ResumesTab = ({ candidateId, candidateName }) => {
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-gray-900">Resume {versionLabel}</span>
                     {resume.isActive && (
-                      <span className="px-2 py-0.5 text-xs font-bold bg-[rgb(33,121,137)] text-white rounded uppercase tracking-wider">Active</span>
+                      <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>
                     )}
                   </div>
                   <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
