@@ -10,6 +10,12 @@ const candidateSchema = new mongoose.Schema(
     Date_Of_Birth: Date,
     Gender: String,
     linkedInUrl: String,
+    location: String,
+    maxSalary: String,
+    minSalary: String,
+    languages: [String],
+    certifications: [String],
+    noticePeriod: String,
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },

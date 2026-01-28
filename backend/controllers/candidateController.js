@@ -63,6 +63,13 @@ const addCandidatePostCall = async (req, res) => {
       professionalSummary,
       keyAchievements,
       workExperience,
+      location,
+      maxSalary,
+      minSalary,
+      languages,
+      certifications,
+      noticePeriod
+
     } = req.body;
 
     // Get ownerId and tenantId from request body
@@ -111,6 +118,12 @@ const addCandidatePostCall = async (req, res) => {
       tenantId,
       createdBy: ownerId,
       linkedInUrl,
+      location,
+      minSalary: minSalary ? Number(minSalary) : null,
+      maxSalary: maxSalary ? Number(maxSalary) : null,
+      languages: Array.isArray(languages) ? languages : [],
+      certifications: Array.isArray(certifications) ? certifications : [],
+      noticePeriod,
     });
 
     await newCandidate.save();
@@ -242,6 +255,8 @@ const updateCandidatePatchCall = async (req, res) => {
       });
     }
 
+
+
     //  this is venkatesh code
     //res.locals.loggedByController = true;
     //----v1.0.1---->
@@ -274,29 +289,41 @@ const updateCandidatePatchCall = async (req, res) => {
     };
 
     // ✅ Compare current values with updateFields to identify changes // changed by Ranjith
+    // ✅ Compare current values with updateFields to identify changes
     const changes = Object.entries(updateFields)
       .filter(([key, newValue]) => {
         const oldValue = currentCandidate[key];
 
-        // ✅ Skip when both old & new are empty  // added by Ranjith
+        // Skip when both old & new are empty/undefined
         if (isEmptyValue(oldValue) && isEmptyValue(newValue)) {
           return false;
         }
 
-        // Normalize PositionId (convert to string for comparison)
+        // Normalize PositionId
         if (key === "PositionId") {
           return oldValue?.toString() !== newValue?.toString();
         }
 
-        // Handle arrays (e.g., `skills`)
+        // Handle arrays (skills, languages, certifications, workExperience)
         if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+          // Safe guard: skip if either is empty or malformed
+          if (!oldValue.length || !newValue.length) {
+            return true; // Treat as changed if one is empty
+          }
+
           const normalizeArray = (array) =>
             array
+              .filter(item => item && typeof item === 'object') // skip invalid items
               .map((item) => {
-                const { _id, ...rest } = item; // Ignore _id for comparison
+                const { _id, ...rest } = item;
                 return rest;
               })
-              .sort((a, b) => a.skill.localeCompare(b.skill));
+              .sort((a, b) => {
+                // Safe localeCompare – fallback to string comparison if skill missing
+                const aSkill = (a.skill || '').toString();
+                const bSkill = (b.skill || '').toString();
+                return aSkill.localeCompare(bSkill);
+              });
 
           return (
             JSON.stringify(normalizeArray(oldValue)) !==
@@ -306,18 +333,13 @@ const updateCandidatePatchCall = async (req, res) => {
 
         // Handle dates
         if (
-          (oldValue instanceof Date ||
-            new Date(oldValue).toString() !== "Invalid Date") &&
-          (newValue instanceof Date ||
-            new Date(newValue).toString() !== "Invalid Date")
+          (oldValue instanceof Date || new Date(oldValue).toString() !== "Invalid Date") &&
+          (newValue instanceof Date || new Date(newValue).toString() !== "Invalid Date")
         ) {
-          return (
-            new Date(oldValue).toISOString() !==
-            new Date(newValue).toISOString()
-          );
+          return new Date(oldValue).toISOString() !== new Date(newValue).toISOString();
         }
 
-        // Default comparison for strings, numbers, etc.
+        // Default comparison
         return oldValue !== newValue;
       })
       .map(([key, newValue]) => ({
@@ -346,6 +368,12 @@ const updateCandidatePatchCall = async (req, res) => {
       "Gender",
       "externalId",
       "linkedInUrl",
+      "location",
+      "maxSalary",
+      "minSalary",
+      "languages",
+      "certifications",
+      "noticePeriod"
     ];
     const resumeFields = [
       "HigherQualification",
