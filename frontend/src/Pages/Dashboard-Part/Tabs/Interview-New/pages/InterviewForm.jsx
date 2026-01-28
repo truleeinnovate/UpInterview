@@ -686,39 +686,50 @@ const InterviewForm = () => {
 
 
                 <div className="space-y-6">
-                  {/* Application Dropdown */}
-                  <div>
-                    <DropdownWithSearchField
-                      label="Link Application (Optional)"
-                      name="applicationId"
-                      value={applicationId || ""}
-                      options={
-                        filteredApplications?.map((app) => {
-                          const candidateName = app.candidateId
-                            ? `${app.candidateId.FirstName} ${app.candidateId.LastName}`
-                            : "Unknown Candidate";
-                          const positionTitle = app.positionId?.title || "Unknown Position";
-                          return {
-                            value: app._id,
-                            label: `${app.applicationNumber} (${capitalizeFirstLetter(app.status?.toLowerCase())})`,
-                            application: app, // Store full object for easy access
-                          };
-                        }) || []
-                      }
-                      onChange={(e) => {
-                        const value = e?.target?.value || e?.value;
-                        handleApplicationChange(value);
-                      }}
-                      loading={applicationsLoading}
-                      placeholder="Select an application to auto-fill details..."
-                      isClearable={true}
-                    />
-                    {applicationId && (
-                      <p className="mt-1 text-xs">
-                        * Candidate and Position are locked because an application is selected.
-                      </p>
-                    )}
-                  </div>
+                  {/* Application Dropdown - Only for Organization Users */}
+                  {isOrganization && (
+                    <>
+                      <div>
+                        <DropdownWithSearchField
+                          label="Link Application"
+                          name="applicationId"
+                          value={applicationId || ""}
+                          options={
+                            filteredApplications?.map((app) => {
+                              const candidateName = app.candidateId
+                                ? `${app.candidateId.FirstName} ${app.candidateId.LastName}`
+                                : "Unknown Candidate";
+                              const positionTitle = app.positionId?.title || "Unknown Position";
+                              return {
+                                value: app._id,
+                                label: `${app.applicationNumber} (${capitalizeFirstLetter(app.status?.toLowerCase())})`,
+                                application: app, // Store full object for easy access
+                              };
+                            }) || []
+                          }
+                          onChange={(e) => {
+                            const value = e?.target?.value || e?.value;
+                            handleApplicationChange(value);
+                          }}
+                          loading={applicationsLoading}
+                          placeholder="Select an application to auto-fill details..."
+                          isClearable={true}
+                        />
+                        {applicationId && (
+                          <p className="mt-1 text-xs">
+                            * Candidate and Position are locked because an application is selected.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Divider */}
+                      <div className="relative flex py-1 items-center">
+                        <div className="flex-grow border-t border-gray-200"></div>
+                        <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase tracking-wider font-medium bg-white px-2">OR</span>
+                        <div className="flex-grow border-t border-gray-200"></div>
+                      </div>
+                    </>
+                  )}
                   <div>
                     <DropdownWithSearchField
                       label="Candidate"
