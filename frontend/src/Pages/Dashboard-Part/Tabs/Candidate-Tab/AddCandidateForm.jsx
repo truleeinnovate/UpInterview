@@ -275,7 +275,6 @@ const AddCandidateForm = ({
   // const userId = tokenPayload?.userId;
 
   // --------------------------------------- new fields version 2 -----------------------
-
   const [certInput, setCertInput] = useState("");
 
   const handleSalaryChange = (e) => {
