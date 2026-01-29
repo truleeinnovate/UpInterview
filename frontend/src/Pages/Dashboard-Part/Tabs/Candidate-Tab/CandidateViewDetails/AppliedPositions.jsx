@@ -11,7 +11,7 @@ const AppliedPositions = ({ positions }) => {
     const handleViewDetails = (position) => {
         const positionId = position?.positionId;
         if (!positionId) return;
-        navigate(`/position/view-details/${positionId}`);
+        navigate(`/positions/view-details/${positionId}`);
     };
 
     return (

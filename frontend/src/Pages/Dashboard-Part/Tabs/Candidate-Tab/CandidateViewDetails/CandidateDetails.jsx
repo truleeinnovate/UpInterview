@@ -1030,11 +1030,11 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
   const breadcrumbItems = [
     {
       label: "Candidate",
-      path: "/candidate",
+      path: "/candidates",
     },
     {
       label: candidate?.title || "Candidate Details",
-      path: `/candidate/view-details/${id}`,
+      path: `/candidates/view-details/${id}`,
       status: candidate?.status,
     },
   ];
@@ -1112,7 +1112,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                     <Button
                       title="Edit Candidate"
                       onClick={() =>
-                        navigate(`/candidate/edit/${candidate._id}`)
+                        navigate(`/candidates/edit/${candidate._id}`)
                       }
                       className="inline-flex items-center border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                     >

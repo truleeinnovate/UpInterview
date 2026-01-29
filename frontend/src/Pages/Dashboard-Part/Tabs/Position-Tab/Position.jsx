@@ -489,7 +489,7 @@ const PositionTab = () => {
 
   const handleView = (position) => {
     if (effectivePermissions.Positions?.View) {
-      navigate(`/position/view-details/${position._id}`, {
+      navigate(`/positions/view-details/${position._id}`, {
         state: { from: location.pathname },
       });
     }
@@ -497,7 +497,7 @@ const PositionTab = () => {
   // <---------------------- v1.0.0
   const handleEdit = (position) => {
     if (effectivePermissions.Positions?.Edit) {
-      navigate(`/position/edit-position/${position._id}`);
+      navigate(`/positions/edit-position/${position._id}`);
     }
   };
 
@@ -860,7 +860,7 @@ const PositionTab = () => {
           <div className="sm:px-0">
             <Header
               title="Positions"
-              onAddClick={() => navigate("/position/new-position")}
+              onAddClick={() => navigate("/positions/new-position")}
               addButtonText="Add Position"
               canCreate={effectivePermissions.Positions?.Create}
             />

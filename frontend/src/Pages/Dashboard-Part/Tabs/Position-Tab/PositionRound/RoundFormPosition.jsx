@@ -1016,10 +1016,10 @@ function RoundFormPosition() {
 
   // Create breadcrumb items with status
   const breadcrumbItems = isPositionContext && [
-    { label: "Positions", path: "/position" },
+    { label: "Positions", path: "/positions" },
     {
       label: position?.title || "Position",
-      path: `/position/view-details/${contextId}`,
+      path: `/positions/view-details/${contextId}`,
     },
     // { label: isEditing ? `Edit ${roundEditData?.roundTitle || 'Round'}` : 'Add New Round', path: '' }
   ];

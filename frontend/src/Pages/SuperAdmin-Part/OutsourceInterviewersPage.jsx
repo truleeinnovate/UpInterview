@@ -426,7 +426,7 @@ function OutsourceInterviewersPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              item?._id && navigate(`/candidate/${item._id}`);
+              item?._id && navigate(`/candidates/${item._id}`);
             }}
             className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
             title="360° View"

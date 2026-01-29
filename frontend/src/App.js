@@ -698,7 +698,7 @@ const MainAppRoutes = ({
 
             {/* Candidate Routes */}
             {hasPermission("Candidates") && (
-              <Route path="/candidate" element={<CandidateTab />}>
+              <Route path="/candidates" element={<CandidateTab />}>
                 <Route index element={null} />
                 {hasPermission("Candidates", "Create") && (
                   <Route
@@ -735,26 +735,26 @@ const MainAppRoutes = ({
 
             {/* Position Routes */}
             {hasPermission("Positions") && (
-              <Route path="/position" element={<Position />} />
+              <Route path="/positions" element={<Position />} />
             )}
             {hasPermission("Positions", "Create") && (
-              <Route path="/position/new-position" element={<PositionForm />} />
+              <Route path="/positions/new-position" element={<PositionForm />} />
             )}
             {hasPermission("Positions", "Edit") && (
               <Route
-                path="/position/edit-position/:id"
+                path="/positions/edit-position/:id"
                 element={<PositionForm />}
               />
             )}
             {hasPermission("Positions") && (
               <Route
-                path="/position/view-details/:id"
+                path="/positions/view-details/:id"
                 element={<PositionSlideDetails />}
               />
             )}
             {hasPermission("Positions", "Create") && (
               <Route
-                path="/position/view-details/:id/rounds/new"
+                path="/positions/view-details/:id/rounds/new"
                 element={<RoundFormPosition />}
               />
             )}
@@ -766,7 +766,7 @@ const MainAppRoutes = ({
             )}
             {hasPermission("Positions") && (
               <Route
-                path="/position/view-details/:id/upload-resumes"
+                path="/positions/view-details/:id/upload-resumes"
                 element={<ResumeUploadPage />}
               />
             )}
@@ -780,7 +780,7 @@ const MainAppRoutes = ({
             {/* Mock Interview Routes */}
             {hasPermission("MockInterviews") && (
               <>
-                <Route path="/mock-interview" element={<MockInterview />} />
+                <Route path="/mock-interviews" element={<MockInterview />} />
                 {hasPermission("MockInterviews", "Create") && (
                   <Route
                     path="/mock-interview-create"
@@ -789,7 +789,7 @@ const MainAppRoutes = ({
                 )}
                 {hasPermission("MockInterviews", "Edit") && (
                   <Route
-                    path="/mock-interview/:id/edit"
+                    path="/mock-interviews/:id/edit"
                     element={<MockSchedulelater />}
                   />
                 )}
@@ -1208,9 +1208,9 @@ const MainAppRoutes = ({
             {/* Feedbacks */}
             {hasPermission("Feedback") && (
               <>
-                <Route path="/feedback" element={<FeedbackTab />} />
+                <Route path="/feedbacks" element={<FeedbackTab />} />
                 <Route
-                  path="/feedback/view/:id"
+                  path="/feedbacks/view/:id"
                   element={
                     <>
                       <FeedbackFormModel /> <FeedbackTab />
@@ -1218,7 +1218,7 @@ const MainAppRoutes = ({
                   }
                 />
                 <Route
-                  path="/feedback/edit/:id"
+                  path="/feedbacks/edit/:id"
                   element={
                     <>
                       <FeedbackFormModel /> <FeedbackTab />

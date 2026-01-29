@@ -171,7 +171,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
         if (candidateId) {
           try {
             const candidateResponse = await axios.get(
-              `${config.REACT_APP_API_URL}/candidate/details/${candidateId}`,
+              `${config.REACT_APP_API_URL}/candidates/details/${candidateId}`,
               {
                 headers: {
                   Authorization: `Bearer ${authToken}`,

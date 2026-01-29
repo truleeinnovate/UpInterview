@@ -239,7 +239,29 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
 
     // Handle Face-to-Face interviews
     if (isFaceToFace && type !== "mockinterview") {
-      // Get face-to-face template
+
+      // ──────────────────────────────────────────────
+      //   Address lookup
+      // ──────────────────────────────────────────────
+      let faceToFaceAddress = "Address not provided";
+
+      if (round.addressId) {
+        const selectedOffice = tenant.offices?.find(
+          office => office._id?.toString() === round.addressId?.toString()
+        );
+
+        if (selectedOffice) {
+          faceToFaceAddress = [
+            selectedOffice.address?.trim(),
+            selectedOffice.city?.trim(),
+            selectedOffice.state?.trim(),
+            selectedOffice.zip?.trim(),
+            selectedOffice.country?.trim()
+          ]
+            .filter(Boolean)
+            .join(", ") || selectedOffice.address || "Address not provided";
+        }
+      }
 
       const templateCategory =
         tenant.type === "individual"
@@ -266,7 +288,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{roundTitle}}/g, roundTitle)
           .replace(/{{dateTime}}/g, startDateTime)
           .replace(/{{duration}}/g, duration)
-          .replace(/{{address}}/g, address)
+          .replace(/{{address}}/g, faceToFaceAddress)
           .replace(/{{instructions}}/g, instructions)
           .replace(/{{supportEmail}}/g, supportEmail)
           .replace(/{{orgCompanyName}}/g, tenantCompanyName)
@@ -321,7 +343,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             .replace(/{{roundTitle}}/g, roundTitle)
             .replace(/{{dateTime}}/g, startDateTime)
             .replace(/{{duration}}/g, duration)
-            .replace(/{{address}}/g, address)
+            .replace(/{{address}}/g, faceToFaceAddress)
             .replace(/{{instructions}}/g, instructions)
             .replace(/{{supportEmail}}/g, supportEmail)
             .replace(/{{orgCompanyName}}/g, tenantCompanyName)
@@ -376,7 +398,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{roundTitle}}/g, roundTitle)
           .replace(/{{dateTime}}/g, startDateTime)
           .replace(/{{duration}}/g, duration)
-          .replace(/{{address}}/g, address)
+          .replace(/{{address}}/g, faceToFaceAddress)
           .replace(/{{instructions}}/g, instructions)
           .replace(/{{supportEmail}}/g, supportEmail)
           .replace(/{{orgCompanyName}}/g, tenantCompanyName)

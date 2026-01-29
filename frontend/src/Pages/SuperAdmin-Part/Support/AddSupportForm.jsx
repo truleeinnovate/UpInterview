@@ -622,14 +622,14 @@ const AddSupportForm = ({ mode }) => {
       // Handle navigation based on mode
       switch (mode) {
         case "Edit":
-          navigate(`/candidate`);
+          navigate(`/candidates`);
           break;
         case "Candidate Edit":
-          navigate(`/candidate/${id || candidateId}`);
+          navigate(`/candidates/${id || candidateId}`);
 
           break;
         default: // Create mode
-          navigate("/candidate");
+          navigate("/candidates");
       }
 
       resetFormData();

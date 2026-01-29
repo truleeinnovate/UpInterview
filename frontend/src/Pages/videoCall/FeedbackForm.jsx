@@ -1285,7 +1285,7 @@ const FeedbackForm = ({
         });
       }
 
-      navigate("/feedback");
+      navigate("/feedbacks");
     } catch (error) {
       console.error("💥 Error submitting feedback:", error);
       alert("Failed to submit feedback. Please try again.");
@@ -1446,7 +1446,7 @@ const FeedbackForm = ({
                 setAutoSaveFeedbackId(data.data._id);
               }
               notify.success("Feedback saved as draft!");
-              navigate("/feedback");
+              navigate("/feedbacks");
             } else {
               notify.error("Failed to save feedback as draft: " + data.message);
             }

@@ -304,12 +304,12 @@ const CombinedNavbar = React.memo(() => {
       // Effective user navigation items - only direct links
       return [
         {
-          path: "/candidate",
+          path: "/candidates",
           label: "Candidates",
           permissionKey: "Candidates.ViewTab",
         },
         {
-          path: "/position",
+          path: "/positions",
           label: "Positions",
           permissionKey: "Positions.ViewTab",
         },
@@ -442,7 +442,7 @@ const CombinedNavbar = React.memo(() => {
           permissionKey: "QuestionBank.ViewTab",
         },
         {
-          path: "/feedback",
+          path: "/feedbacks",
           label: "Feedback",
           permissionKey: "Feedback.ViewTab",
         },
@@ -1200,20 +1200,20 @@ const CombinedNavbar = React.memo(() => {
                   <>
                     {enhancedCheckPermission("Candidates") && (
                       <NavLink
-                        to="/candidate"
+                        to="/candidates"
                         className={`h-full flex items-center relative px-1 ${
-                          isActive("/candidate")
+                          isActive("/candidates")
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
-                          navigate("/candidate");
+                          navigate("/candidates");
                         }}
                       >
                         Candidates
-                        {isActive("/candidate") && (
+                        {isActive("/candidates") && (
                           <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                         )}
                       </NavLink>
@@ -1221,20 +1221,20 @@ const CombinedNavbar = React.memo(() => {
 
                     {enhancedCheckPermission("Positions") && (
                       <NavLink
-                        to="/position"
+                        to="/positions"
                         className={`h-full flex items-center relative px-1 ${
-                          isActive("/position")
+                          isActive("/positions")
                             ? "text-custom-blue font-bold"
                             : "text-gray-600 hover:text-custom-blue"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
                           closeAllDropdowns();
-                          navigate("/position");
+                          navigate("/positions");
                         }}
                       >
                         Positions
-                        {isActive("/position") && (
+                        {isActive("/positions") && (
                           <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                         )}
                       </NavLink>
@@ -1432,7 +1432,7 @@ const CombinedNavbar = React.memo(() => {
                           )}
                           {(isActive("/analytics") ||
                             isActive("/support-desk") ||
-                            isActive("/feedback") ||
+                            isActive("/feedbacks") ||
                             isActive("/question-bank") ||
                             isActive("/companies") || 
                             isActive("/my-teams") || 
@@ -1466,7 +1466,7 @@ const CombinedNavbar = React.memo(() => {
                                   : []),
                                
                                 ...(enhancedCheckPermission("Feedback")
-                                  ? [{ to: "/feedback", label: "Feedback" }]
+                                  ? [{ to: "/feedbacks", label: "Feedback" }]
                                   : []),
                                 ...(enhancedCheckPermission("SupportDesk")
                                   ? [
@@ -1782,9 +1782,9 @@ const CombinedNavbar = React.memo(() => {
                   <>
                     {enhancedCheckPermission("Candidates") && (
                       <NavLink
-                        to="/candidate"
+                        to="/candidates"
                         className={`block px-4 py-3 rounded-md ${
-                          isActive("/candidate")
+                          isActive("/candidates")
                             ? "bg-gray-100 text-custom-blue font-bold"
                             : "text-gray-600 hover:bg-gray-100"
                         }`}
@@ -1792,7 +1792,7 @@ const CombinedNavbar = React.memo(() => {
                           e.preventDefault();
                           closeAllDropdowns();
                           toggleSidebar();
-                          navigate("/candidate");
+                          navigate("/candidates");
                         }}
                       >
                         Candidates
@@ -1801,9 +1801,9 @@ const CombinedNavbar = React.memo(() => {
 
                     {enhancedCheckPermission("Positions") && (
                       <NavLink
-                        to="/position"
+                        to="/positions"
                         className={`block px-4 py-3 rounded-md ${
-                          isActive("/position")
+                          isActive("/positions")
                             ? "bg-gray-100 text-custom-blue font-bold"
                             : "text-gray-600 hover:bg-gray-100"
                         }`}
@@ -1811,7 +1811,7 @@ const CombinedNavbar = React.memo(() => {
                           e.preventDefault();
                           closeAllDropdowns();
                           toggleSidebar();
-                          navigate("/position");
+                          navigate("/positions");
                         }}
                       >
                         Positions
@@ -1957,7 +1957,7 @@ const CombinedNavbar = React.memo(() => {
                             isActive("/analytics") ||
 
                             isActive("/support-desk") ||
-                            isActive("/feedback") ||
+                            isActive("/feedbacks") ||
                             isActive("/companies") || 
                             isActive("/my-teams") || 
                             isActive("/interviewer-tags") ||
@@ -2000,7 +2000,7 @@ const CombinedNavbar = React.memo(() => {
                                   : []),
                                
                                 ...(enhancedCheckPermission("Feedback")
-                                  ? [{ to: "/feedback", label: "Feedback" }]
+                                  ? [{ to: "/feedbacks", label: "Feedback" }]
                                   : []),
                                 ...(enhancedCheckPermission("SupportDesk")
                                   ? [

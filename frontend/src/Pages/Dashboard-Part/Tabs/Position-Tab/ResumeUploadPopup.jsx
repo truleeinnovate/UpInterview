@@ -38,7 +38,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
         if (propOnClose) {
             propOnClose();
         } else {
-            navigate(`/position/view-details/${positionId}`);
+            navigate(`/positions/view-details/${positionId}`);
         }
     };
 
