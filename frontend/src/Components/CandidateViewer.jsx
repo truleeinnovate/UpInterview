@@ -52,8 +52,18 @@ export default function CandidateViewer({
     const isExistingCandidate = candidate.match_status === 'existing';
 
     const getRecommendation = (score) => {
-        if (candidate.screening_result?.recommendation) {
-            return candidate.screening_result.recommendation;
+        let rec = candidate.screening_result?.recommendation;
+
+        // Fallback for nested parsedJson structure
+        if (!rec && candidate.parsedJson?.screening_result?.recommendation) {
+            rec = candidate.parsedJson.screening_result.recommendation;
+        }
+
+        if (rec) {
+            if (typeof rec === 'object') {
+                return rec.recommendation || rec.summary || 'Review manually';
+            }
+            return String(rec); // Ensure string
         }
         if (score == null) return 'Review manually - no automated score available';
         if (score >= 80) return 'Strong match - Highly recommended for interview';
@@ -93,6 +103,8 @@ export default function CandidateViewer({
 
 
 
+
+    const [creationSuccessData, setCreationSuccessData] = useState(null);
     const [showExistingAppPrompt, setShowExistingAppPrompt] = useState(false);
 
     const [isProceeding, setIsProceeding] = useState(false);
@@ -113,6 +125,14 @@ export default function CandidateViewer({
     const navigate = useNavigate();
 
     const handleFormClose = (savedData) => {
+        // vvv Detect success from AddCandidateForm vvv
+        if (savedData?.createdApplication) {
+            console.log("Creation Success Data:", savedData); // Add debugging
+            setCreationSuccessData(savedData);
+            setShowCandidateForm(false);
+            return; // Stay in the popup
+        }
+
         setShowCandidateForm(false);
         // Close the entire CandidateViewer popup after form is closed
         onClose();
@@ -151,7 +171,8 @@ export default function CandidateViewer({
             //     status: position?.status || "Opened"
             // },
             { label: "Candidates", path: "#" },
-            { label: "Screening", path: "#" }
+            { label: "Screening", path: "#" },
+            { label: "Create Application", path: "#" }
         ];
 
     return createPortal(
@@ -222,311 +243,343 @@ export default function CandidateViewer({
                 <div className="flex-1 flex flex-col overflow-hidden">
 
                     {!showCandidateForm ? (
+                        creationSuccessData ? (
+                            // Success View
+                            <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+                                <div className="bg-white rounded-2xl p-10 shadow-lg max-w-lg w-full border border-gray-100">
+                                    <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                                        <CheckCircle className="w-10 h-10 text-green-600" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                                        Application Created Successfully
+                                    </h3>
+                                    <p className="text-gray-500 mb-8">
+                                        The candidate has been successfully screened and an application has been created.
+                                    </p>
 
-                        <div className="flex-1 overflow-y-auto min-h-0 bg-gray-50">
-
-                            <div className="flex min-h-full">
-                                {/* Left - Candidate Profile */}
-                                <div className="w-1/2 border-r border-gray-200 bg-white">
-                                    <div className="p-7 space-y-7">
-                                        <h3 className="text-xl font-bold text-gray-900">Candidate Profile</h3>
-
-                                        <div className="space-y-6">
-                                            <div>
-                                                <h4 className="text-2xl font-bold text-gray-900 mb-3">
-                                                    {candidate.candidate_name || 'Unknown'}
-                                                </h4>
-                                                <div className="space-y-2.5 text-gray-700">
-                                                    {candidate.candidate_email && (
-                                                        <div className="flex items-center gap-3">
-                                                            <Mail size={18} />
-                                                            <span>{candidate.candidate_email}</span>
-                                                        </div>
-                                                    )}
-                                                    {candidate.candidate_phone && (
-                                                        <div className="flex items-center gap-3">
-                                                            <Phone size={18} />
-                                                            <span>{candidate.candidate_phone}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {candidate.parsed_experience && (
-                                                <div className="pt-5 border-t border-gray-200">
-                                                    <div className="flex items-center gap-2.5 mb-2">
-                                                        <Briefcase size={18} className="text-cyan-700" />
-                                                        <span className="font-semibold">Experience</span>
-                                                    </div>
-                                                    <p className="text-sm leading-relaxed whitespace-pre-line">
-                                                        {candidate.parsed_experience}
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                            {(candidate.current_company || candidate.metadata?.extractedProfile?.currentCompany) && (
-                                                <div className="mt-1">
-                                                    <p className="text-sm text-gray-600">
-                                                        <span className="font-semibold text-gray-700">Current: </span>
-                                                        {candidate.current_company || candidate.metadata?.extractedProfile?.currentCompany}
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                            {(candidate.parsed_education || candidate.screening_result?.education) && (
-                                                <div className="pt-5 border-t border-gray-200">
-                                                    <div className="flex items-center gap-2.5 mb-2">
-                                                        <GraduationCap size={18} className="text-cyan-700" />
-                                                        <span className="font-semibold">Education</span>
-                                                    </div>
-                                                    <p className="text-sm leading-relaxed">
-                                                        {candidate.parsed_education || candidate.screening_result?.education || 'Not specified'}
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                            {candidate.parsed_skills?.length > 0 && (
-                                                <div className="pt-5 border-t border-gray-200">
-                                                    <div className="flex items-center gap-2.5 mb-2">
-                                                        <Award size={18} className="text-cyan-700" />
-                                                        <span className="font-semibold">Skills</span>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {candidate.parsed_skills.map((skill, i) => (
-                                                            <span
-                                                                key={i}
-                                                                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full border border-gray-200"
-                                                            >
-                                                                {skill}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {(candidate.certifications || candidate.screening_result?.certifications)?.length > 0 && (
-                                                <div className="pt-5 border-t border-gray-200">
-                                                    <div className="flex items-center gap-2.5 mb-2">
-                                                        <Award size={18} className="text-cyan-700" />
-                                                        <span className="font-semibold">Certifications</span>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {(candidate.certifications || candidate.screening_result?.certifications).map((cert, i) => (
-                                                            <span
-                                                                key={i}
-                                                                className="px-3 py-1 text-sm bg-[rgb(18,93,115)] text-white rounded-full font-medium"
-                                                            >
-                                                                {cert}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {candidate.screening_result?.summary && (
-                                                <div className="pt-5 border-t border-gray-200">
-                                                    <div className="flex items-center gap-2.5 mb-2">
-                                                        <FileText size={18} className="text-cyan-700" />
-                                                        <span className="font-semibold">Resume Highlights</span>
-                                                    </div>
-                                                    <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
-                                                        {candidate.screening_result.summary}
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                            {/* Resume File Section */}
-                                            {(candidate.resume_file || candidate.file_name) && (
-                                                <div className="pt-5 border-t border-gray-200">
-                                                    <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
-                                                        <span className="text-sm font-medium text-gray-700">Resume File</span>
-                                                        <span className="text-sm text-gray-600 truncate max-w-[200px]">
-                                                            {candidate.resume_file || candidate.file_name}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            )}
+                                    <div className="bg-gray-50 rounded-xl p-4 mb-8 text-left border border-gray-200">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-sm text-gray-500">Application ID</span>
+                                            <span className="font-mono font-medium text-gray-900 bg-white px-2 py-1 rounded border border-gray-200 text-xs">
+                                                {creationSuccessData.createdApplication?.applicationNumber || 'N/A'}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm text-gray-500">Candidate</span>
+                                            <span className="font-medium text-gray-900 text-sm">
+                                                <span className="font-medium text-gray-900 text-sm">
+                                                    {creationSuccessData.candidate?.FirstName || creationSuccessData.FirstName} {creationSuccessData.candidate?.LastName || creationSuccessData.LastName}
+                                                </span>
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        ) : (
+                            <div className="flex-1 overflow-y-auto min-h-0 bg-gray-50">
+                                <div className="flex min-h-full">
+                                    {/* Left - Candidate Profile */}
+                                    <div className="w-1/2 border-r border-gray-200 bg-white">
+                                        <div className="p-7 space-y-7">
+                                            <h3 className="text-xl font-bold text-gray-900">Candidate Profile</h3>
 
-                                {/* Right - Analysis */}
-                                <div className="w-1/2 flex flex-col bg-gray-50">
-                                    <div className="flex-1 p-7 space-y-6">
-                                        {/* Dynamic heading based on source */}
-                                        <h3 className="text-xl font-bold text-gray-900">
-                                            {analysisHeading}
-                                        </h3>
-
-                                        <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-                                            <p className="text-gray-600 mb-1">Match Score</p>
-                                            <p className={`text-6xl font-extrabold ${getScoreColor(displayScore)}`}>
-                                                {displayScore != null ? `${displayScore}%` : '—'}
-                                            </p>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="bg-white rounded-xl border p-5 shadow-sm">
-                                                <p className="text-sm text-gray-600 mb-1.5">Skill Match</p>
-                                                <span className={`px-4 py-1.5 rounded-full text-sm font-medium ${getScoreBadgeColor(displaySkillMatch)}`}>
-                                                    {displaySkillMatch != null ? `${displaySkillMatch}%` : 'N/A'}
-                                                </span>
-                                            </div>
-                                            <div className="bg-white rounded-xl border p-5 shadow-sm">
-                                                <p className="text-sm text-gray-600 mb-1.5">Status</p>
-                                                <p className="text-lg font-semibold capitalize">
-                                                    {candidate.match_status?.replaceAll('_', ' ') || 'New'}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {scoringData?.matchedSkills?.length > 0 && (
-                                            <div className="bg-green-50 border border-green-200 rounded-xl p-5">
-                                                <p className="font-semibold text-green-900 mb-2.5 flex items-center gap-2">
-                                                    Matched Skills ({scoringData.matchedSkills.length})
-                                                </p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {scoringData.matchedSkills.map((s, i) => (
-                                                        <span key={i} className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full font-medium">
-                                                            {s}
-                                                        </span>
-                                                    ))}
+                                            <div className="space-y-6">
+                                                <div>
+                                                    <h4 className="text-2xl font-bold text-gray-900 mb-3">
+                                                        {candidate.candidate_name || 'Unknown'}
+                                                    </h4>
+                                                    <div className="space-y-2.5 text-gray-700">
+                                                        {candidate.candidate_email && (
+                                                            <div className="flex items-center gap-3">
+                                                                <Mail size={18} />
+                                                                <span>{candidate.candidate_email}</span>
+                                                            </div>
+                                                        )}
+                                                        {candidate.candidate_phone && (
+                                                            <div className="flex items-center gap-3">
+                                                                <Phone size={18} />
+                                                                <span>{candidate.candidate_phone}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
 
-                                        {scoringData?.missingRequiredSkills?.length > 0 && (
-                                            <div className="bg-red-50 border border-red-200 rounded-xl p-5">
-                                                <div className="flex items-start gap-3">
-                                                    <AlertTriangle size={20} className="text-red-600 mt-1 flex-shrink-0" />
-                                                    <div>
-                                                        <p className="font-semibold text-red-900 mb-2.5">
-                                                            Missing Required Skills ({scoringData.missingRequiredSkills.length})
+                                                {candidate.parsed_experience && (
+                                                    <div className="pt-5 border-t border-gray-200">
+                                                        <div className="flex items-center gap-2.5 mb-2">
+                                                            <Briefcase size={18} className="text-cyan-700" />
+                                                            <span className="font-semibold">Experience</span>
+                                                        </div>
+                                                        <p className="text-sm leading-relaxed whitespace-pre-line">
+                                                            {candidate.parsed_experience}
                                                         </p>
+                                                    </div>
+                                                )}
+
+                                                {(candidate.current_company || candidate.metadata?.extractedProfile?.currentCompany) && (
+                                                    <div className="mt-1">
+                                                        <p className="text-sm text-gray-600">
+                                                            <span className="font-semibold text-gray-700">Current: </span>
+                                                            {candidate.current_company || candidate.metadata?.extractedProfile?.currentCompany}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {(candidate.parsed_education || candidate.screening_result?.education) && (
+                                                    <div className="pt-5 border-t border-gray-200">
+                                                        <div className="flex items-center gap-2.5 mb-2">
+                                                            <GraduationCap size={18} className="text-cyan-700" />
+                                                            <span className="font-semibold">Education</span>
+                                                        </div>
+                                                        <p className="text-sm leading-relaxed">
+                                                            {candidate.parsed_education || candidate.screening_result?.education || 'Not specified'}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {candidate.parsed_skills?.length > 0 && (
+                                                    <div className="pt-5 border-t border-gray-200">
+                                                        <div className="flex items-center gap-2.5 mb-2">
+                                                            <Award size={18} className="text-cyan-700" />
+                                                            <span className="font-semibold">Skills</span>
+                                                        </div>
                                                         <div className="flex flex-wrap gap-2">
-                                                            {scoringData.missingRequiredSkills.map((s, i) => (
-                                                                <span key={i} className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full font-medium">
-                                                                    {s}
+                                                            {candidate.parsed_skills.map((skill, i) => (
+                                                                <span
+                                                                    key={i}
+                                                                    className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full border border-gray-200"
+                                                                >
+                                                                    {skill}
                                                                 </span>
                                                             ))}
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* AI Insights Section */}
-                                        {(candidate.screening_result?.strengths?.length > 0 || candidate.screening_result?.concerns?.length > 0 || candidate.screening_result?.analysis) && (
-                                            <div className="rounded-lg p-4 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
-                                                <p className="text-sm font-semibold mb-2 text-purple-900 flex items-center gap-2">
-                                                    ✨ AI Insights
-                                                </p>
-                                                {candidate.screening_result?.analysis && (
-                                                    <p className="text-sm text-gray-700 mb-3">{candidate.screening_result.analysis}</p>
                                                 )}
 
-                                                {candidate.screening_result?.strengths?.length > 0 && (
-                                                    <div className="mt-3">
-                                                        <p className="text-xs font-semibold text-green-800 mb-1">Key Strengths:</p>
-                                                        <ul className="space-y-1">
-                                                            {candidate.screening_result.strengths.map((strength, index) => (
-                                                                <li key={index} className="flex items-start gap-2">
-                                                                    <span className="text-green-600 text-xs mt-0.5">✓</span>
-                                                                    <span className="text-xs text-gray-700">{strength}</span>
-                                                                </li>
+                                                {(candidate.certifications || candidate.screening_result?.certifications)?.length > 0 && (
+                                                    <div className="pt-5 border-t border-gray-200">
+                                                        <div className="flex items-center gap-2.5 mb-2">
+                                                            <Award size={18} className="text-cyan-700" />
+                                                            <span className="font-semibold">Certifications</span>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {(candidate.certifications || candidate.screening_result?.certifications).map((cert, i) => (
+                                                                <span
+                                                                    key={i}
+                                                                    className="px-3 py-1 text-sm bg-[rgb(18,93,115)] text-white rounded-full font-medium"
+                                                                >
+                                                                    {cert}
+                                                                </span>
                                                             ))}
-                                                        </ul>
+                                                        </div>
                                                     </div>
                                                 )}
 
-                                                {(candidate.screening_result?.concerns?.length > 0 || candidate.screening_result?.gaps?.length > 0) && (
-                                                    <div className="mt-3">
-                                                        <p className="text-xs font-semibold text-orange-800 mb-1">Potential Concerns:</p>
-                                                        <ul className="space-y-1">
-                                                            {(candidate.screening_result.concerns || candidate.screening_result.gaps).map((concern, index) => (
-                                                                <li key={index} className="flex items-start gap-2">
-                                                                    <span className="text-orange-600 text-xs mt-0.5">⚠</span>
-                                                                    <span className="text-xs text-gray-700">{concern}</span>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
+                                                {candidate.screening_result?.summary && (
+                                                    <div className="pt-5 border-t border-gray-200">
+                                                        <div className="flex items-center gap-2.5 mb-2">
+                                                            <FileText size={18} className="text-cyan-700" />
+                                                            <span className="font-semibold">Resume Highlights</span>
+                                                        </div>
+                                                        <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
+                                                            {candidate.screening_result.summary}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {/* Resume File Section */}
+                                                {(candidate.resume_file || candidate.file_name) && (
+                                                    <div className="pt-5 border-t border-gray-200">
+                                                        <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+                                                            <span className="text-sm font-medium text-gray-700">Resume File</span>
+                                                            <span className="text-sm text-gray-600 truncate max-w-[200px]">
+                                                                {candidate.resume_file || candidate.file_name}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
-                                        )}
-
-                                        <div className="bg-white border border-cyan-100 rounded-xl p-5">
-                                            <p className="font-medium text-cyan-800 mb-2">Recommendation</p>
-                                            <p className="text-sm text-gray-700 leading-relaxed">
-                                                {getRecommendation(displayScore)}
-                                            </p>
                                         </div>
-
-                                        {/* Detailed Match Scores */}
-                                        {displayScore !== null && scoringData && (
-                                            <div className="space-y-3">
-                                                <div>
-                                                    <div className="flex justify-between text-sm mb-1">
-                                                        <span className="text-gray-600">Overall Match Rate</span>
-                                                        <span className="font-medium text-gray-900">
-                                                            {Math.round((scoringData.matchRate?.overall || 0) * 100)}%
-                                                        </span>
-                                                    </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div
-                                                            className="h-2 rounded-full"
-                                                            style={{
-                                                                width: `${Math.round((scoringData.matchRate?.overall || 0) * 100)}%`,
-                                                                backgroundColor: 'rgb(33, 121, 137)'
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <div className="flex justify-between text-sm mb-1">
-                                                        <span className="text-gray-600">Required Skills Match</span>
-                                                        <span className="font-medium text-gray-900">
-                                                            {Math.round((scoringData.matchRate?.required || 0) * 100)}%
-                                                        </span>
-                                                    </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div
-                                                            className="h-2 rounded-full"
-                                                            style={{
-                                                                width: `${Math.round((scoringData.matchRate?.required || 0) * 100)}%`,
-                                                                backgroundColor: 'rgb(33, 121, 137)'
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <div className="flex justify-between text-sm mb-1">
-                                                        <span className="text-gray-600">Overall Score</span>
-                                                        <span className="font-medium text-gray-900">
-                                                            {displayScore}%
-                                                        </span>
-                                                    </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div
-                                                            className="h-2 rounded-full"
-                                                            style={{
-                                                                width: `${displayScore}%`,
-                                                                backgroundColor: 'rgb(33, 121, 137)'
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
 
-                                    {/* No footer here anymore – moved to global bottom */}
+                                    {/* Right - Analysis */}
+                                    <div className="w-1/2 flex flex-col bg-gray-50">
+                                        <div className="flex-1 p-7 space-y-6">
+                                            {/* Dynamic heading based on source */}
+                                            <h3 className="text-xl font-bold text-gray-900">
+                                                {analysisHeading}
+                                            </h3>
+
+                                            <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
+                                                <p className="text-gray-600 mb-1">Match Score</p>
+                                                <p className={`text-6xl font-extrabold ${getScoreColor(displayScore)}`}>
+                                                    {displayScore != null ? `${displayScore}%` : '—'}
+                                                </p>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="bg-white rounded-xl border p-5 shadow-sm">
+                                                    <p className="text-sm text-gray-600 mb-1.5">Skill Match</p>
+                                                    <span className={`px-4 py-1.5 rounded-full text-sm font-medium ${getScoreBadgeColor(displaySkillMatch)}`}>
+                                                        {displaySkillMatch != null ? `${displaySkillMatch}%` : 'N/A'}
+                                                    </span>
+                                                </div>
+                                                <div className="bg-white rounded-xl border p-5 shadow-sm">
+                                                    <p className="text-sm text-gray-600 mb-1.5">Status</p>
+                                                    <p className="text-lg font-semibold capitalize">
+                                                        {candidate.match_status?.replaceAll('_', ' ') || 'New'}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {scoringData?.matchedSkills?.length > 0 && (
+                                                <div className="bg-green-50 border border-green-200 rounded-xl p-5">
+                                                    <p className="font-semibold text-green-900 mb-2.5 flex items-center gap-2">
+                                                        Matched Skills ({scoringData.matchedSkills.length})
+                                                    </p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {scoringData.matchedSkills.map((s, i) => (
+                                                            <span key={i} className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full font-medium">
+                                                                {s}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {scoringData?.missingRequiredSkills?.length > 0 && (
+                                                <div className="bg-red-50 border border-red-200 rounded-xl p-5">
+                                                    <div className="flex items-start gap-3">
+                                                        <AlertTriangle size={20} className="text-red-600 mt-1 flex-shrink-0" />
+                                                        <div>
+                                                            <p className="font-semibold text-red-900 mb-2.5">
+                                                                Missing Required Skills ({scoringData.missingRequiredSkills.length})
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {scoringData.missingRequiredSkills.map((s, i) => (
+                                                                    <span key={i} className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full font-medium">
+                                                                        {s}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* AI Insights Section */}
+                                            {(candidate.screening_result?.strengths?.length > 0 || candidate.screening_result?.concerns?.length > 0 || candidate.screening_result?.analysis) && (
+                                                <div className="rounded-lg p-4 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
+                                                    <p className="text-sm font-semibold mb-2 text-purple-900 flex items-center gap-2">
+                                                        ✨ AI Insights
+                                                    </p>
+                                                    {candidate.screening_result?.analysis && (
+                                                        <p className="text-sm text-gray-700 mb-3">{candidate.screening_result.analysis}</p>
+                                                    )}
+
+                                                    {candidate.screening_result?.strengths?.length > 0 && (
+                                                        <div className="mt-3">
+                                                            <p className="text-xs font-semibold text-green-800 mb-1">Key Strengths:</p>
+                                                            <ul className="space-y-1">
+                                                                {candidate.screening_result.strengths.map((strength, index) => (
+                                                                    <li key={index} className="flex items-start gap-2">
+                                                                        <span className="text-green-600 text-xs mt-0.5">✓</span>
+                                                                        <span className="text-xs text-gray-700">{strength}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+
+                                                    {(candidate.screening_result?.concerns?.length > 0 || candidate.screening_result?.gaps?.length > 0) && (
+                                                        <div className="mt-3">
+                                                            <p className="text-xs font-semibold text-orange-800 mb-1">Potential Concerns:</p>
+                                                            <ul className="space-y-1">
+                                                                {(candidate.screening_result.concerns || candidate.screening_result.gaps).map((concern, index) => (
+                                                                    <li key={index} className="flex items-start gap-2">
+                                                                        <span className="text-orange-600 text-xs mt-0.5">⚠</span>
+                                                                        <span className="text-xs text-gray-700">{concern}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="bg-white border border-cyan-100 rounded-xl p-5">
+                                                <p className="font-medium text-cyan-800 mb-2">Recommendation</p>
+                                                <p className="text-sm text-gray-700 leading-relaxed">
+                                                    {getRecommendation(displayScore)}
+                                                </p>
+                                            </div>
+
+                                            {/* Detailed Match Scores */}
+                                            {displayScore !== null && scoringData && (
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <div className="flex justify-between text-sm mb-1">
+                                                            <span className="text-gray-600">Overall Match Rate</span>
+                                                            <span className="font-medium text-gray-900">
+                                                                {Math.round((scoringData.matchRate?.overall || 0) * 100)}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                                            <div
+                                                                className="h-2 rounded-full"
+                                                                style={{
+                                                                    width: `${Math.round((scoringData.matchRate?.overall || 0) * 100)}%`,
+                                                                    backgroundColor: 'rgb(33, 121, 137)'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <div className="flex justify-between text-sm mb-1">
+                                                            <span className="text-gray-600">Required Skills Match</span>
+                                                            <span className="font-medium text-gray-900">
+                                                                {Math.round((scoringData.matchRate?.required || 0) * 100)}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                                            <div
+                                                                className="h-2 rounded-full"
+                                                                style={{
+                                                                    width: `${Math.round((scoringData.matchRate?.required || 0) * 100)}%`,
+                                                                    backgroundColor: 'rgb(33, 121, 137)'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <div className="flex justify-between text-sm mb-1">
+                                                            <span className="text-gray-600">Overall Score</span>
+                                                            <span className="font-medium text-gray-900">
+                                                                {displayScore}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                                            <div
+                                                                className="h-2 rounded-full"
+                                                                style={{
+                                                                    width: `${displayScore}%`,
+                                                                    backgroundColor: 'rgb(33, 121, 137)'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* No footer here anymore – moved to global bottom */}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
+                        )
                     ) : (
 
                         <div className="flex-1 overflow-y-auto bg-gray-50 px-12">
@@ -547,7 +600,7 @@ export default function CandidateViewer({
                     )}
 
                     {/* ─── Global shared footer (visible in screening mode only) ──────── */}
-                    {!showCandidateForm && (
+                    {!showCandidateForm && !creationSuccessData && (
                         showNavigation && (
                             <div className="bg-white px-7 py-3 border-t border-gray-200">
                                 {/* Info text above buttons */}
@@ -627,8 +680,8 @@ export default function CandidateViewer({
 
 
                 </div>
-            </div>
-        </div>,
+            </div >
+        </div >,
         document.body
     );
 }

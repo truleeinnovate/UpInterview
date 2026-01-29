@@ -16,6 +16,7 @@ const {
 } = require("../models/Assessment/candidateAssessment.js");
 const { Users } = require("../models/Users");
 const { Application } = require("../models/Application.js");
+const { ScreeningResult } = require("../models/ScreeningResult.js");
 
 // Add a new Candidate
 const addCandidatePostCall = async (req, res) => {
@@ -439,6 +440,28 @@ const updateCandidatePatchCall = async (req, res) => {
 
         await newResume.save();
         console.log(`✅ [updateCandidatePatchCall] New Resume version ${(currentResume.version || 1) + 1} created successfully`);
+
+        // Clone existing ScreeningResults for the new resume version
+        try {
+          const previousScreeningResults = await ScreeningResult.find({ resumeId: currentResume._id });
+
+          if (previousScreeningResults.length > 0) {
+            const newScreeningResults = previousScreeningResults.map(result => {
+              const { _id, createdAt, updatedAt, __v, ...data } = result.toObject();
+              return {
+                ...data,
+                resumeId: newResume._id,
+                // Optionally mark that this was carried over?
+              };
+            });
+
+            await ScreeningResult.insertMany(newScreeningResults);
+            console.log(`✅ [updateCandidatePatchCall] Carried over ${newScreeningResults.length} screening results to new resume version`);
+          }
+        } catch (srError) {
+          console.error("⚠️ [updateCandidatePatchCall] Failed to clone screening results:", srError);
+          // Non-blocking error - we still return success for candidate update
+        }
       } else {
         // If no active resume exists, create a new one (version 1)
         const newResume = new Resume({

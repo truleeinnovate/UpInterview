@@ -3,7 +3,7 @@ import {
     ArrowLeft, Mail, Phone, Linkedin, Upload, FileText, X, CheckCircle, Clock,
     XCircle, AlertCircle, Calendar, User, Award, Briefcase, GraduationCap,
     Star, TrendingUp, MessageSquare, ExternalLink, Download, MapPin, Globe,
-    Languages, DollarSign, IndianRupee,School
+    Languages, DollarSign, IndianRupee, School
 } from 'lucide-react';
 import {
     useCandidateById,
@@ -272,7 +272,7 @@ export default function ApplicationView({ application, onBack }) {
                                         <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                             <MapPin size={14} className="text-gray-600" />
                                         </div>
-                                        <span className="text-gray-900">{candidate.CurrentLocation || 'San Francisco, CA'}</span>
+                                        <span className="text-gray-900">{candidate.location || 'N/A'}</span>
                                     </div>
                                     {candidateLinkedin && (
                                         <div className="flex items-center gap-3 text-sm">
@@ -552,7 +552,7 @@ export default function ApplicationView({ application, onBack }) {
                                             )}
                                         </div>
 
-                                        <div>
+                                        {/* <div>
                                             <h4 className="text-sm font-semibold text-gray-700 mb-3">Key Projects</h4>
                                             {candidate.projects && candidate.projects.length > 0 ? (
                                                 <div className="space-y-4">
@@ -571,7 +571,7 @@ export default function ApplicationView({ application, onBack }) {
                                             ) : (
                                                 <p className="text-sm text-gray-500 italic">No key projects listed.</p>
                                             )}
-                                        </div>
+                                        </div> */}
                                     </div>
                                 )}
 
