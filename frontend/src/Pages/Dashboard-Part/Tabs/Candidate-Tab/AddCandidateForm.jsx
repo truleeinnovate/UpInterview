@@ -1153,6 +1153,7 @@ const AddCandidateForm = ({
       console.log("  - shouldCreateApplication →", shouldCreateApplication);
 
       // 2. ONLY if from candidate screening → create application
+      let appResult = null;
       if (shouldCreateApplicationFinal) {
         try {
           let candidateIdForApp;
@@ -1180,7 +1181,7 @@ const AddCandidateForm = ({
             resumeId: candidateResponse.data?.resumeId,
           };
 
-          const appResult = await createApplication(appPayload);
+          appResult = await createApplication(appPayload);
           console.log("Application & ScreeningResult created:", appResult);
           notify.success(
             "Application and screening result created successfully",
@@ -1203,7 +1204,7 @@ const AddCandidateForm = ({
         // setTimeout(() => {
         // If it's a modal, call the onClose function with the new candidate data
         if (isModal && onClose) {
-          onClose(candidateResponse.data);
+          onClose({ ...candidateResponse.data, createdApplication: appResult });
           if (candidateResponse.status === "success") {
             notify.success("Candidate added successfully");
           } else if (

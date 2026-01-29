@@ -1009,27 +1009,11 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                         <td className="p-3">
                                                             <div className="flex items-center gap-1">
                                                                 <button
-                                                                    className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                                                    className="px-3 py-1.5 text-sm font-medium text-custom-blue hover:bg-custom-blue/5 border border-custom-blue/20 rounded-lg transition-colors whitespace-nowrap"
                                                                     onClick={() => setViewingResult(result)}
-                                                                    title="View Details"
+                                                                    title="View / Proceed"
                                                                 >
-                                                                    <Eye className="w-4 h-4" />
-                                                                </button>
-                                                                {/* {result.match_status !== 'duplicate' && (
-                                                                    <button
-                                                                        className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
-                                                                        onClick={() => toggleSelect(result.id)}
-                                                                        title="Select Candidate"
-                                                                    >
-                                                                        <UserPlus className="w-4 h-4" />
-                                                                    </button>
-                                                                )} */}
-                                                                <button
-                                                                    className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                                                                    onClick={() => discardResult(result.id)}
-                                                                    title="Discard"
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
+                                                                    View / Proceed
                                                                 </button>
                                                             </div>
                                                         </td>

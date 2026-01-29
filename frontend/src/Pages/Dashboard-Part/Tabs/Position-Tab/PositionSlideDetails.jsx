@@ -25,8 +25,8 @@ import {
   BarChart3,
   FileText,
   ExternalLink,
-    IndianRupee,
-  
+  IndianRupee,
+
 } from "lucide-react";
 import Modal from "react-modal";
 import InterviewProgress from "../Interview-New/components/InterviewProgress";
@@ -204,8 +204,8 @@ const PositionApplicationsTab = ({ positionId, onOpenApplication }) => {
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
-                  <div className={`text-sm ${getScreeningColor(application.screeningResult || 'Pending')}`}>
-                    {application.screeningResult || "Pending"}
+                  <div className={`text-sm ${getScreeningColor(typeof application.screeningResult === 'object' ? (application.screeningResult?.recommendation || 'Pending') : (application.screeningResult || 'Pending'))}`}>
+                    {typeof application.screeningResult === 'object' ? (application.screeningResult?.recommendation || "Pending") : (application.screeningResult || "Pending")}
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
@@ -616,7 +616,7 @@ const PositionSlideDetails = () => {
       </div>
     );
   }
-    const formatToK = (value) => {
+  const formatToK = (value) => {
     // Handle null, undefined, empty string, invalid input
     if (value == null || value === '') return 'N/A';
 
@@ -818,25 +818,25 @@ const PositionSlideDetails = () => {
                               </p>
                             </div>
                           </div>
-                           <div className="flex items-start gap-3">
-                          <IndianRupee className="w-4 h-4 text-custom-blue mt-1" />
-                          <div>
-                            <p className="text-xs text-gray-500">
-                              Salary Expectation (Annual)
-                            </p>
+                          <div className="flex items-start gap-3">
+                            <IndianRupee className="w-4 h-4 text-custom-blue mt-1" />
+                            <div>
+                              <p className="text-xs text-gray-500">
+                                Salary Expectation (Annual)
+                              </p>
 
-                            <p className="flex items-center gap-1 text-sm font-medium text-gray-800">
-                              {position?.minSalary != null || position?.maxSalary != null ? (
-                                <>
-                                  {formatToK(position?.minSalary ?? 0)} – {formatToK(position?.maxSalary ?? 0)}
-                                </>
-                              ) : (
-                                "N/A"
-                              )}
-                            </p>
+                              <p className="flex items-center gap-1 text-sm font-medium text-gray-800">
+                                {position?.minSalary != null || position?.maxSalary != null ? (
+                                  <>
+                                    {formatToK(position?.minSalary ?? 0)} – {formatToK(position?.maxSalary ?? 0)}
+                                  </>
+                                ) : (
+                                  "N/A"
+                                )}
+                              </p>
+                            </div>
+
                           </div>
-
-                        </div>
                           <div className="flex items-start gap-3">
                             <FileText className="w-4 h-4 text-custom-blue mt-0.5" />
                             <div>
@@ -845,13 +845,13 @@ const PositionSlideDetails = () => {
                             </div>
                           </div>
                           {/* {position?.externalId && ( */}
-                            <div className="flex items-start gap-3">
-                              <span className="text-custom-blue font-bold text-sm">#</span>
-                              <div>
-                                <p className="text-sm text-gray-500">External ID</p>
-                                <p className="font-medium text-gray-800">{position.externalId || "N/A"} </p>
-                              </div>
+                          <div className="flex items-start gap-3">
+                            <span className="text-custom-blue font-bold text-sm">#</span>
+                            <div>
+                              <p className="text-sm text-gray-500">External ID</p>
+                              <p className="font-medium text-gray-800">{position.externalId || "N/A"} </p>
                             </div>
+                          </div>
                           {/* )} */}
                         </div>
                       </div>
