@@ -855,93 +855,254 @@ const WorkExperience = ({ candidate }) => {
     return text.split("\n").filter((line) => line.trim() !== "");
   };
 
+  // const sections = [
+  //   {
+  //     title: "Professional Summary",
+  //     icon: <FileText size={20} className="text-custom-blue" />,
+  //     content: (
+  //       <ul className="list-disc list-inside space-y-1">
+  //         {formatResponsibilitiesToList(candidate?.professionalSummary)?.map(
+  //           (point, i) => (
+  //             <li
+  //               key={i}
+  //               className="text-sm text-gray-600 break-words leading-relaxed"
+  //             >
+  //               {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
+  //             </li>
+  //           ),
+  //         )}
+  //       </ul>
+  //     ),
+  //   },
+  //   {
+  //     title: "Projects",
+  //     icon: <Briefcase size={20} className="text-green-600" />,
+  //     content: (
+  //       <div className="space-y-4">
+  //         {candidate.workExperience?.map((project, index) => (
+  //           <div key={index} className="relative group">
+  //             <h5
+  //               className="font-medium text-md text-gray-800 truncate max-w-[260px] mb-1"
+  //               title={project?.projectName}
+  //             >
+  //               {capitalizeFirstLetter(project?.projectName)}
+  //             </h5>
+
+  //             <div className="flex items-center gap-1 mb-1">
+  //               <div className="flex items-center gap-2">
+  //                 <Briefcase className="text-gray-700 h-4 w-4" />
+  //                 <p className="text-xs text-gray-700 font-semibold truncate max-w-[260px]">
+  //                   {capitalizeFirstLetter(project?.role)}
+  //                 </p>
+  //               </div>
+  //               <Dot className="w-4 h-4 text-gray-700" />
+  //               <div className="flex items-center gap-1">
+  //                 <p className="text-xs text-gray-700">
+  //                   {project?.fromDate?.split("-")[0]}
+  //                 </p>
+  //                 <span className="text-xs text-gray-700">-</span>
+  //                 <p className="text-xs text-gray-700">
+  //                   {project?.toDate ? project.toDate.split("-")[0] : "Present"}
+  //                 </p>
+  //               </div>
+  //             </div>
+
+  //             <ul className="list-disc list-inside mt-2 space-y-1 p-4">
+  //               {formatResponsibilitiesToList(project?.responsibilities)?.map(
+  //                 (point, i) => (
+  //                   <li
+  //                     key={i}
+  //                     className="text-sm text-gray-600 break-words leading-relaxed"
+  //                   >
+  //                     {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
+  //                   </li>
+  //                 ),
+  //               )}
+  //             </ul>
+  //           </div>
+  //         ))}
+  //       </div>
+  //     ),
+  //     isExperience: true,
+  //   },
+  //   {
+  //     title: "Key Achievements",
+  //     icon: <Award size={20} className="text-purple-600" />,
+  //     content: (
+  //       <ul className="list-disc list-inside space-y-1">
+  //         {formatResponsibilitiesToList(candidate?.keyAchievements)?.map(
+  //           (point, i) => (
+  //             <li
+  //               key={i}
+  //               className="text-sm text-gray-600 break-words leading-relaxed"
+  //             >
+  //               {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
+  //             </li>
+  //           ),
+  //         )}
+  //       </ul>
+  //     ),
+  //   },
+  // ];
+
+  const EmptyState = ({ message }) => (
+    <p className="text-sm text-gray-400 italic py-2 ml-1">{message}</p>
+  );
+
   const sections = [
     {
       title: "Professional Summary",
       icon: <FileText size={20} className="text-custom-blue" />,
-      content: (
-        <ul className="list-disc list-inside space-y-1">
-          {formatResponsibilitiesToList(candidate?.professionalSummary)?.map(
-            (point, i) => (
-              <li
-                key={i}
-                className="text-sm text-gray-600 break-words leading-relaxed"
-              >
-                {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
-              </li>
-            ),
-          )}
-        </ul>
-      ),
+      content:
+        formatResponsibilitiesToList(candidate?.professionalSummary).length >
+        0 ? (
+          <ul className="list-disc list-inside space-y-1">
+            {formatResponsibilitiesToList(candidate?.professionalSummary).map(
+              (point, i) => (
+                <li
+                  key={i}
+                  className="text-sm text-gray-600 break-words leading-relaxed"
+                >
+                  {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
+                </li>
+              ),
+            )}
+          </ul>
+        ) : (
+          <EmptyState message="No professional summary provided." />
+        ),
     },
+    // {
+    //   title: "Projects",
+    //   icon: <Briefcase size={20} className="text-green-600" />,
+    //   content:
+    //     candidate.workExperience?.length > 0 ? (
+    //       <div className="space-y-4">
+    //         {candidate.workExperience.map((project, index) => (
+    //           <div key={index} className="relative group">
+    //             <h5
+    //               className="font-medium text-md text-gray-800 truncate max-w-[260px] mb-1"
+    //               title={project?.projectName}
+    //             >
+    //               {capitalizeFirstLetter(project?.projectName)}
+    //             </h5>
+    //             <div className="flex items-center gap-1 mb-1">
+    //               <div className="flex items-center gap-2">
+    //                 <Briefcase className="text-gray-700 h-4 w-4" />
+    //                 <p className="text-xs text-gray-700 font-semibold truncate max-w-[260px]">
+    //                   {capitalizeFirstLetter(project?.role)}
+    //                 </p>
+    //               </div>
+    //               <Dot className="w-4 h-4 text-gray-700" />
+    //               <div className="flex items-center gap-1">
+    //                 <p className="text-xs text-gray-700">
+    //                   {project?.fromDate?.split("-")[0]}
+    //                 </p>
+    //                 <span className="text-xs text-gray-700">-</span>
+    //                 <p className="text-xs text-gray-700">
+    //                   {project?.toDate
+    //                     ? project.toDate.split("-")[0]
+    //                     : "Present"}
+    //                 </p>
+    //               </div>
+    //             </div>
+    //             <ul className="list-disc list-inside mt-2 space-y-1 p-4">
+    //               {formatResponsibilitiesToList(project?.responsibilities).map(
+    //                 (point, i) => (
+    //                   <li
+    //                     key={i}
+    //                     className="text-sm text-gray-600 break-words leading-relaxed"
+    //                   >
+    //                     {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
+    //                   </li>
+    //                 ),
+    //               )}
+    //             </ul>
+    //           </div>
+    //         ))}
+    //       </div>
+    //     ) : (
+    //       <EmptyState message="No projects listed." />
+    //     ),
+    // },
     {
       title: "Projects",
       icon: <Briefcase size={20} className="text-green-600" />,
-      content: (
-        <div className="space-y-4">
-          {candidate.workExperience?.map((project, index) => (
-            <div key={index} className="relative group">
-              <h5
-                className="font-medium text-md text-gray-800 truncate max-w-[260px] mb-1"
-                title={project?.projectName}
-              >
-                {capitalizeFirstLetter(project?.projectName)}
-              </h5>
+      content:
+        candidate.workExperience?.length > 0 ? (
+          /* Timeline Container */
+          <div className="space-y-8 relative before:absolute before:inset-0 before:left-2.5 before:h-full before:w-0.5 before:bg-gray-100">
+            {candidate.workExperience.map((project, index) => (
+              <div key={index} className="relative pl-8 group">
+                {/* Timeline Dot Marker */}
+                <div className="absolute left-1 top-0 w-4 h-4 rounded-full border-2 border-custom-blue bg-white group-hover:border-custom-blue/90 transition-colors z-10" />
 
-              <div className="flex items-center gap-1 mb-1">
-                <div className="flex items-center gap-2">
-                  <Briefcase className="text-gray-700 h-4 w-4" />
-                  <p className="text-xs text-gray-700 font-semibold truncate max-w-[260px]">
-                    {capitalizeFirstLetter(project?.role)}
-                  </p>
+                <h5
+                  className="font-bold text-md text-gray-800 truncate max-w-[260px] mb-1"
+                  title={project?.projectName}
+                >
+                  {capitalizeFirstLetter(project?.projectName)}
+                </h5>
+
+                <div className="flex items-center gap-1 mb-1">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="text-gray-500 h-3.5 w-3.5" />
+                    <p className="text-xs text-gray-700 font-semibold truncate max-w-[200px]">
+                      {capitalizeFirstLetter(project?.role)}
+                    </p>
+                  </div>
+                  <Dot className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <span>{project?.fromDate?.split("-")[0]}</span>
+                    <span>-</span>
+                    <span>
+                      {project?.toDate
+                        ? project.toDate.split("-")[0]
+                        : "Present"}
+                    </span>
+                  </div>
                 </div>
-                <Dot className="w-4 h-4 text-gray-700" />
-                <div className="flex items-center gap-1">
-                  <p className="text-xs text-gray-700">
-                    {project?.fromDate?.split("-")[0]}
-                  </p>
-                  <span className="text-xs text-gray-700">-</span>
-                  <p className="text-xs text-gray-700">
-                    {project?.toDate ? project.toDate.split("-")[0] : "Present"}
-                  </p>
-                </div>
+
+                {/* Responsibilities list with slightly adjusted padding for timeline alignment */}
+                <ul className="list-disc list-inside mt-3 space-y-1.5">
+                  {formatResponsibilitiesToList(project?.responsibilities).map(
+                    (point, i) => (
+                      <li
+                        key={i}
+                        className="text-sm text-gray-600 break-words leading-relaxed pl-1"
+                      >
+                        {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
+                      </li>
+                    ),
+                  )}
+                </ul>
               </div>
-
-              <ul className="list-disc list-inside mt-2 space-y-1 p-4">
-                {formatResponsibilitiesToList(project?.responsibilities)?.map(
-                  (point, i) => (
-                    <li
-                      key={i}
-                      className="text-sm text-gray-600 break-words leading-relaxed"
-                    >
-                      {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
-                    </li>
-                  ),
-                )}
-              </ul>
-            </div>
-          ))}
-        </div>
-      ),
-      isExperience: true,
+            ))}
+          </div>
+        ) : (
+          <EmptyState message="No projects listed." />
+        ),
     },
     {
       title: "Key Achievements",
       icon: <Award size={20} className="text-purple-600" />,
-      content: (
-        <ul className="list-disc list-inside space-y-1">
-          {formatResponsibilitiesToList(candidate?.keyAchievements)?.map(
-            (point, i) => (
-              <li
-                key={i}
-                className="text-sm text-gray-600 break-words leading-relaxed"
-              >
-                {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
-              </li>
-            ),
-          )}
-        </ul>
-      ),
+      content:
+        formatResponsibilitiesToList(candidate?.keyAchievements).length > 0 ? (
+          <ul className="list-disc list-inside space-y-1">
+            {formatResponsibilitiesToList(candidate?.keyAchievements).map(
+              (point, i) => (
+                <li
+                  key={i}
+                  className="text-sm text-gray-600 break-words leading-relaxed"
+                >
+                  {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
+                </li>
+              ),
+            )}
+          </ul>
+        ) : (
+          <EmptyState message="No key achievements provided." />
+        ),
     },
   ];
 
@@ -1013,17 +1174,21 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
       </div>
     );
   }
+
   const formatToK = (value) => {
     // Handle null, undefined, empty string, invalid input
-    if (value == null || value === '') return 'N/A';
+    if (value == null || value === "") return "N/A";
 
     const num = Number(value);
-    if (isNaN(num) || num <= 0) return 'N/A';
+    if (isNaN(num) || num <= 0) return "N/A";
 
     // For values < 1000 we can show full number or still use K — your choice
-    if (num < 1000) return num.toLocaleString('en-IN');
+    if (num < 1000) return num.toLocaleString("en-IN");
 
-    const inThousands = Math.round(num / 1000);
+    // const inThousands = Math.round(num / 1000);
+
+    // Shows 1 decimal place if it exists, e.g., 85.5K instead of 86K
+    const inThousands = (num / 1000).toFixed(num % 1000 === 0 ? 0 : 1);
     return `${inThousands}K`;
   };
 
@@ -1038,6 +1203,23 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
       status: candidate?.status,
     },
   ];
+
+  const noticePeriodOptions = [
+    { value: "Immediate", label: "Immediate (0 days)" },
+    { value: "7days", label: "7 Days" },
+    { value: "15days", label: "15 Days" },
+    { value: "30days", label: "30 Days" },
+    { value: "45days", label: "45 Days" },
+    { value: "60days", label: "60 Days" },
+    { value: "90days", label: "90 Days" },
+    { value: "Morethan90days", label: "More than 90 Days" },
+    { value: "Negotiable", label: "Negotiable" },
+  ];
+
+  const getNoticePeriodLabel = (value) => {
+    const option = noticePeriodOptions.find((opt) => opt.value === value);
+    return option ? option.label : value || "N/A";
+  };
 
   return (
     <div className="fixed top-[62px] left-0 right-0 bottom-0 z-40 bg-gray-50 flex flex-col overflow-hidden">
@@ -1065,10 +1247,11 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`${activeTab === tab.id
-                    ? "border-custom-blue text-custom-blue"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
+                  className={`${
+                    activeTab === tab.id
+                      ? "border-custom-blue text-custom-blue"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
                 >
                   {tab.name}
                 </button>
@@ -1157,8 +1340,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                             <p className="font-medium text-sm text-gray-800">
                               {candidate?.Date_Of_Birth
                                 ? new Date(
-                                  candidate.Date_Of_Birth,
-                                ).toLocaleDateString()
+                                    candidate.Date_Of_Birth,
+                                  ).toLocaleDateString()
                                 : "N/A"}
                             </p>
                           </div>
@@ -1209,7 +1392,9 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                             <circle cx="4" cy="4" r="2" />
                           </svg>
                           <div>
-                            <p className="text-xs text-gray-500">LinkedIn Url</p>
+                            <p className="text-xs text-gray-500">
+                              LinkedIn Url
+                            </p>
 
                             {candidate?.linkedInUrl ? (
                               <a
@@ -1225,10 +1410,11 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                                 {candidate.linkedInUrl}
                               </a>
                             ) : (
-                              <p className="font-medium text-sm text-gray-800">N/A</p>
+                              <p className="font-medium text-sm text-gray-800">
+                                N/A
+                              </p>
                             )}
                           </div>
-
                         </div>
                       </div>
                     </div>
@@ -1273,7 +1459,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                               Current Role
                             </p>
                             <p className="font-medium text-sm text-gray-800">
-                              {candidate?.CurrentRole || "N/A"}
+                              {candidate?.roleDetails?.roleLabel || "N/A"}
                             </p>
                           </div>
                         </div>
@@ -1301,8 +1487,6 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                         </div>
                       </div>
                     </div>
-
-
                   </div>
 
                   {/* Experience Details */}
@@ -1332,18 +1516,18 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                               title={
                                 Array.isArray(candidate?.languages)
                                   ? candidate.languages
-                                    .map((lang) =>
-                                      capitalizeFirstLetter(lang),
-                                    )
-                                    .join(", ")
+                                      .map((lang) =>
+                                        capitalizeFirstLetter(lang),
+                                      )
+                                      .join(", ")
                                   : "N/A"
                               }
                             >
                               {Array.isArray(candidate?.languages) &&
-                                candidate.languages.length > 0
+                              candidate.languages.length > 0
                                 ? candidate.languages
-                                  .map((lang) => capitalizeFirstLetter(lang))
-                                  .join(", ")
+                                    .map((lang) => capitalizeFirstLetter(lang))
+                                    .join(", ")
                                 : "N/A"}
                             </p>
                           </div>
@@ -1356,16 +1540,17 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                             </p>
 
                             <p className="flex items-center gap-1 text-sm font-medium text-gray-800">
-                              {candidate?.minSalary != null || candidate?.maxSalary != null ? (
+                              {candidate?.minSalary != null ||
+                              candidate?.maxSalary != null ? (
                                 <>
-                                  {formatToK(candidate?.minSalary ?? 0)} – {formatToK(candidate?.maxSalary ?? 0)}
+                                  {formatToK(candidate?.minSalary ?? 0)} –{" "}
+                                  {formatToK(candidate?.maxSalary ?? 0)}
                                 </>
                               ) : (
                                 "N/A"
                               )}
                             </p>
                           </div>
-
                         </div>
                         <div className="flex items-start gap-3">
                           <Clock className="w-4 h-4 text-custom-blue mt-1" />
@@ -1374,23 +1559,23 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                               Notice Period
                             </p>
                             <p className="font-medium text-sm text-gray-800 truncate">
-                              {candidate?.noticePeriod || "N/A"}
+                              {getNoticePeriodLabel(candidate?.noticePeriod)}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start gap-3">
-                          <span className="text-custom-blue font-bold text-sm">#</span>
+                          <span className="text-custom-blue font-bold text-sm">
+                            #
+                          </span>
                           <div>
                             <p className="text-sm text-gray-500">External ID</p>
-                            <p className="font-medium text-gray-800">{candidate.externalId || "N/A"} </p>
+                            <p className="font-medium text-gray-800">
+                              {candidate.externalId || "N/A"}{" "}
+                            </p>
                           </div>
                         </div>
-
-
-
                       </div>
                     </div>
-
                   </div>
                 </div>
                 {/* Skills Section - Standard List Style */}
@@ -1460,7 +1645,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                   </h4>
                   <div className="relative border-l-2 border-gray-100 ml-3 space-y-6">
                     {Array.isArray(candidate?.certifications) &&
-                      candidate?.certifications?.length > 0 ? (
+                    candidate?.certifications?.length > 0 ? (
                       candidate?.certifications?.map((cert, index) => (
                         <div key={index} className="relative pl-8">
                           <div className="absolute -left-[16px] top-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center ring-4 ring-white">

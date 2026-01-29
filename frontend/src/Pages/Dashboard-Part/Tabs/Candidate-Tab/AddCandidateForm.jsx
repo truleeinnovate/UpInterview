@@ -272,8 +272,7 @@ const AddCandidateForm = ({
     minSalary: "",
     languages: [],
     certifications: [],
-    noticePeriod: ""
-
+    noticePeriod: "",
   });
   const [errors, setErrors] = useState({});
 
@@ -290,7 +289,6 @@ const AddCandidateForm = ({
 
   // --------------------------------------- new fields version 2 -----------------------
   const [certInput, setCertInput] = useState("");
-
 
   const handleCertKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -486,9 +484,9 @@ const AddCandidateForm = ({
       CountryCode: sd.candidate_country_code || "+91",
       Phone: sd.candidate_phone
         ? sd.candidate_phone
-          .replace(/^\+\d{1,3}/, "")
-          .replace(/^\d{1,3}/, "")
-          .trim()
+            .replace(/^\+\d{1,3}/, "")
+            .replace(/^\d{1,3}/, "")
+            .trim()
         : "",
 
       // ── Education ───────────────────────────────────
@@ -509,15 +507,15 @@ const AddCandidateForm = ({
       skills:
         parsedSkills.length > 0
           ? parsedSkills.map((name) => ({
-            skill: (name || "").trim(),
-            experience: "",
-            expertise: "Beginner",
-          }))
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "Beginner",
+            }))
           : (sd.screening_result?.extracted_skills || []).map((name) => ({
-            skill: (name || "").trim(),
-            experience: "",
-            expertise: "Beginner",
-          })),
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "Beginner",
+            })),
 
       // ── New Fields (Resume Analysis) ─────────────────
       professionalSummary:
@@ -590,10 +588,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry,
       );
       setEntries(updatedEntries);
@@ -816,7 +814,8 @@ const AddCandidateForm = ({
             newErrors.minSalary = "Min and Max Salary cannot be equal";
             newErrors.maxSalary = "Min and Max Salary cannot be equal";
           } else if (minVal > maxVal) {
-            newErrors.minSalary = "Min Salary cannot be greater than Max Salary";
+            newErrors.minSalary =
+              "Min Salary cannot be greater than Max Salary";
             newErrors.maxSalary = "Max Salary cannot be less than Min Salary";
           }
         }
@@ -851,7 +850,6 @@ const AddCandidateForm = ({
       CountryCode: "+91",
       // Technology: "",
       linkedInUrl: "",
-
     });
 
     setErrors({});
@@ -917,6 +915,16 @@ const AddCandidateForm = ({
       .join("\n");
   };
 
+  const formatForStorage = (text) => {
+    if (!text) return "";
+    return text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line !== "")
+      .map((line) => line.replace(/^[•\s*-]+/, ""))
+      .join("\n");
+  };
+
   const handleSubmit = async (e, isAddCandidate = false) => {
     e.preventDefault();
 
@@ -967,8 +975,10 @@ const AddCandidateForm = ({
         "Key Achievements must be at least 150 characters.";
     }
 
-    if (formData.minSalary && formData.minSalary) {   // ← BUG: checking same field twice
-      if (parseFloat(formData.salaryMax) < parseFloat(formData.minSalary)) {   // ← wrong field name
+    if (formData.minSalary && formData.minSalary) {
+      // ← BUG: checking same field twice
+      if (parseFloat(formData.salaryMax) < parseFloat(formData.minSalary)) {
+        // ← wrong field name
         newErrors.salaryMax = "Max salary cannot be less than min salary";
       }
     }
@@ -1009,7 +1019,7 @@ const AddCandidateForm = ({
         experience: entry.experience,
         expertise: entry.expertise,
       }));
-    const cleanedWorkExperience = formData.workExperience.map(project => {
+    const cleanedWorkExperience = formData.workExperience.map((project) => {
       const { _id, ...cleanProject } = project; // remove _id if present
       return cleanProject;
     });
@@ -1034,14 +1044,14 @@ const AddCandidateForm = ({
       linkedInUrl: formData.linkedInUrl,
       // professionalSummary: formData.professionalSummary,
       // keyAchievements: formData.keyAchievements,
-      professionalSummary: formatToBulletPoints(formData.professionalSummary),
-      keyAchievements: formatToBulletPoints(formData.keyAchievements),
+      professionalSummary: formatForStorage(formData.professionalSummary),
+      keyAchievements: formatForStorage(formData.keyAchievements),
       workExperience: cleanedWorkExperience,
 
       location: formData.location || undefined,
       minSalary: formData.minSalary ? Number(formData.minSalary) : undefined,
       maxSalary: formData.maxSalary ? Number(formData.maxSalary) : undefined,
-      languages: formData.languages?.filter(lang => lang.trim() !== "") || [],          // remove empty strings
+      languages: formData.languages?.filter((lang) => lang.trim() !== "") || [], // remove empty strings
       certifications: formData.certifications?.filter(Boolean) || [],
       noticePeriod: formData.noticePeriod || undefined,
     };
@@ -1052,14 +1062,14 @@ const AddCandidateForm = ({
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" &&
         mode !== "Edit" && {
-        source: "UPLOAD",
-        // Pass full screeningData so backend can store it
-        screeningData: screeningData, // ← direct pass (full object)
-        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
-        parsedSkills: screeningData.parsed_skills || [],
-        parsedExperience: screeningData.parsed_experience || null,
-        parsedEducation: screeningData.parsed_education || null,
-      }),
+          source: "UPLOAD",
+          // Pass full screeningData so backend can store it
+          screeningData: screeningData, // ← direct pass (full object)
+          parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+          parsedSkills: screeningData.parsed_skills || [],
+          parsedExperience: screeningData.parsed_experience || null,
+          parsedEducation: screeningData.parsed_education || null,
+        }),
     };
 
     try {
@@ -1260,8 +1270,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save candidate",
+          error.message ||
+          "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1306,7 +1316,6 @@ const AddCandidateForm = ({
     () => noticePeriodOptions.map((g) => ({ value: g, label: g })),
     [],
   );
-
 
   // const qualificationOptionsRS =
   //   qualifications?.map((q) => ({
@@ -1528,9 +1537,22 @@ const AddCandidateForm = ({
     }
 
     // If both dates exist, ensure End Date is strictly after Start Date
+    // if (currentProject.fromDate && currentProject.toDate) {
+    //   if (currentProject.toDate <= currentProject.fromDate) {
+    //     newProjectErrors.toDate = "Duration To must be later than Duration From";
+    //   }
+    // }
+
+    const today = new Date();
+    const currentYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+
     if (currentProject.fromDate && currentProject.toDate) {
       if (currentProject.toDate <= currentProject.fromDate) {
         newProjectErrors.toDate = "End Date must be later than Start Date";
+      }
+
+      if (currentProject.toDate > currentYearMonth) {
+        newProjectErrors.toDate = "End date cannot be in the future.";
       }
     }
 
@@ -1545,11 +1567,17 @@ const AddCandidateForm = ({
     }
 
     // 1. Clean the text and ensure every line has a bullet point for the DB
+    // const cleanedResponsibilities = currentProject.responsibilities
+    //   .split("\n")
+    //   .map((line) => line.trim())
+    //   .filter((line) => line !== "")
+    //   .map((line) => (line.startsWith("•") ? line : `• ${line}`)) // Add bullet if missing
+    //   .join("\n");
     const cleanedResponsibilities = currentProject.responsibilities
       .split("\n")
       .map((line) => line.trim())
+      .map((line) => line.replace(/^[•\s*-]+/, ""))
       .filter((line) => line !== "")
-      .map((line) => (line.startsWith("•") ? line : `• ${line}`)) // Add bullet if missing
       .join("\n");
 
     const projectToSave = {
@@ -1585,17 +1613,6 @@ const AddCandidateForm = ({
     if (!text) return [];
     // Splits by newline and removes empty lines or just whitespace
     return text.split("\n").filter((line) => line.trim() !== "");
-  };
-
-  // Optional: Auto-bullet formatting while typing
-  const handleResponsibilitiesChange = (e) => {
-    const { value } = e.target;
-    // This logic ensures if they press enter, a bullet point could be suggested,
-    // but for simplicity, we'll just save the raw multiline text.
-    setCurrentProject({
-      ...currentProject,
-      responsibilities: value,
-    });
   };
 
   // The form content (this part is shared)
@@ -1679,7 +1696,7 @@ const AddCandidateForm = ({
                 // error={errors.Gender}
                 containerRef={fieldRefs.Gender}
                 label="Gender"
-              // required
+                // required
               />
             </div>
             {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -1858,8 +1875,6 @@ const AddCandidateForm = ({
               Additional Details
             </p>
 
-
-
             {/* New Fields: Location, Salary, Languages */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
               <InputField
@@ -1897,27 +1912,26 @@ const AddCandidateForm = ({
                   onChange={handleChange}
                   inputRef={fieldRefs.minSalary}
                   error={errors.minSalary}
-                  min={50000}            // 5 digits minimum
-                  max={999999999}        // 9 digits maximum
+                  min={50000} // 5 digits minimum
+                  max={999999999} // 9 digits maximum
                   label="Min Salary (Annual)"
                   name="minSalary"
-                  placeholder="₹ Min Salary (Annual)"
+                  placeholder="Min Salary (Annual)"
                 />
                 <IncreaseAndDecreaseField
                   value={formData.maxSalary}
                   onChange={handleChange}
-                  min={50000}            // 5 digits minimum
-                  max={999999999}        // 9 digits maximum
+                  min={50000} // 5 digits minimum
+                  max={999999999} // 9 digits maximum
                   inputRef={fieldRefs.maxSalary}
                   error={errors.maxSalary}
                   label="Max Salary (Annual)"
                   name="maxSalary"
-                  placeholder="₹ Max Salary (Annual)"
+                  placeholder="Max Salary (Annual)"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-6">
-
               <DropdownWithSearchField
                 value={formData.noticePeriod}
                 options={noticePeriodOptions}
@@ -1958,12 +1972,8 @@ const AddCandidateForm = ({
                   placeholder="External System Reference Id"
                 />
               </div>
-
             </div>
-
-
           </div>
-
 
           <div>
             <SkillsField
@@ -2150,25 +2160,24 @@ const AddCandidateForm = ({
               disabled={formData?.certifications?.length >= 10}
             />
 
-
             {/* Tag Display Area */}
             <div className="flex flex-wrap gap-2 mb-2 mt-3">
               {formData.certifications?.map((cert, index) => (
-                <span
-                  key={index}
-                  className="flex items-center gap-1 bg-custom-blue/10 text-custom-blue px-3 py-1 rounded-full text-sm font-medium border border-blue-200"
-                >
-                  {cert}
-                  <X
-                    className="w-3 h-3 cursor-pointer hover:text-red-500"
+                <div className="flex items-center justify-center gap-2 bg-custom-blue/10 text-custom-blue px-3 py-2 rounded-full border border-blue-200">
+                  <p key={index} className="text-sm font-medium leading-none">
+                    {cert}
+                  </p>
+                  <button
+                    type="button"
+                    className="flex items-center justify-center mt-[1px]"
                     onClick={() => removeCert(cert)}
-                  />
-                </span>
+                  >
+                    <X className="w-3 h-3 cursor-pointer text-red-500" />
+                  </button>
+                </div>
               ))}
             </div>
           </div>
-
-
 
           {/* Work Experience Heading */}
           <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
@@ -2219,7 +2228,7 @@ const AddCandidateForm = ({
               {/* Project Cards Display */}
               <div className="grid grid-cols-1 gap-4">
                 {formData?.workExperience &&
-                  formData.workExperience.length > 0 ? (
+                formData.workExperience.length > 0 ? (
                   formData.workExperience.map((project, index) => (
                     <div
                       key={index}
@@ -2325,8 +2334,9 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${
+                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Cancel
             </Button>
