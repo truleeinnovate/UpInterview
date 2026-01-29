@@ -5,6 +5,30 @@ const DocumentationTab = () => {
   const [expandedEndpoints, setExpandedEndpoints] = useState({});
   const [expandedGetEndpoints, setExpandedGetEndpoints] = useState({});
 
+  const renderBodyWithComments = (body) => {
+    const bodyString = JSON.stringify(body, null, 2);
+    // Add //required comments for specific fields
+    return bodyString
+      // Candidate fields
+      .replace(/"FirstName": "([^"]+)"/g, '"FirstName": "$1" //required')
+      .replace(/"LastName": "([^"]+)"/g, '"LastName": "$1" //required')
+      .replace(/"Email": "([^"]+)"/g, '"Email": "$1" //required')
+      .replace(/"Phone": "([^"]+)"/g, '"Phone": "$1" //required')
+      .replace(/"HigherQualification": "([^"]+)"/g, '"HigherQualification": "$1" //required')
+      .replace(/"CurrentExperience": ([^,]+)/g, '"CurrentExperience": $1 //required')
+      .replace(/"RelevantExperience": ([^,]+)/g, '"RelevantExperience": $1 //required')
+      .replace(/"CurrentRole": "([^"]+)"/g, '"CurrentRole": "$1" //required')
+      .replace(/"skills": \[/g, '"skills": [ //required')
+      // Position fields
+      .replace(/"title": "([^"]+)"/g, '"title": "$1" //required')
+      .replace(/"companyname": "([^"]+)"/g, '"companyname": "$1" //required')
+      .replace(/"jobDescription": "([^"]+)"/g, '"jobDescription": "$1" //required')
+      .replace(/"requirements": "([^"]+)"/g, '"requirements": "$1" //required')
+      .replace(/"minexperience": ([^,]+)/g, '"minexperience": $1 //required')
+      .replace(/"maxexperience": ([^,]+)/g, '"maxexperience": $1 //required')
+      .replace(/"Location": "([^"]+)"/g, '"Location": "$1" //required');
+  };
+
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
   };
@@ -31,19 +55,20 @@ const DocumentationTab = () => {
       description: "Create a new candidate",
       headers: ["X-API-Key: your_api_key", "Content-Type: application/json"],
       body: {
-        FirstName: "John",
-        LastName: "Doe",
-        Email: "john.doe@example.com",
-        Phone: "9876543210",
+        FirstName: "John", //required
+        LastName: "Doe", //required
+        Email: "john.doe@example.com", //required
+        Phone: "9876543210", //required
         CountryCode: "+91",
         Date_Of_Birth: "1998-05-20",
         Gender: "Male",
-        HigherQualification: "B.Tech",
+        HigherQualification: "B.Tech", //required
         UniversityCollege: "IIT Hyderabad",
-        CurrentExperience: 4,
-        RelevantExperience: 3,
-        CurrentRole: "Software Engineer",
-        skills: [
+        CurrentExperience: 4, //required
+        RelevantExperience: 3, //required
+        CurrentRole: "Software Engineer", //required
+        skills: 
+        [ //required
           {
             skill: "React",
             experience: "3 Years",
@@ -100,18 +125,19 @@ const DocumentationTab = () => {
       headers: ["X-API-Key: your_api_key", "Content-Type: application/json"],
       body: [
         {
-          FirstName: "John",
-          LastName: "Doe",
-          Email: "john.doe@example.com",
-          Phone: "9876543210",
+          FirstName: "John", //required
+          LastName: "Doe", //required
+          Email: "john.doe@example.com", //required
+          Phone: "9876543210", //required
           CountryCode: "+91",
           Gender: "Male",
-          HigherQualification: "B.Tech",
+          HigherQualification: "B.Tech", //required
           UniversityCollege: "IIT Hyderabad",
-          CurrentExperience: 4,
-          RelevantExperience: 3,
-          CurrentRole: "Software Engineer",
-          skills: [
+          CurrentExperience: 4, //required
+          RelevantExperience: 3, //required
+          CurrentRole: "Software Engineer", //required
+          skills:
+           [ //required
             {
               skill: "React",
               experience: "3 Years",
@@ -121,18 +147,18 @@ const DocumentationTab = () => {
           externalId: "HRMS_1001",
         },
         {
-          FirstName: "Jane",
-          LastName: "Smith",
-          Email: "jane.smith@example.com",
-          Phone: "9876543222",
+          FirstName: "Jane", //required
+          LastName: "Smith", //required
+          Email: "jane.smith@example.com", //required
+          Phone: "9876543222", //required
           CountryCode: "+91",
           Gender: "Female",
-          HigherQualification: "MBA",
+          HigherQualification: "MBA", //required
           UniversityCollege: "IIM Bangalore",
-          CurrentExperience: 6,
-          RelevantExperience: 5,
-          CurrentRole: "Product Manager",
-          skills: [
+          CurrentExperience: 6, //required
+          RelevantExperience: 5, //required
+          CurrentRole: "Product Manager", //required
+          skills: [ //required
             {
               skill: "Product Management",
               experience: "5 Years",
@@ -266,13 +292,14 @@ const DocumentationTab = () => {
       description: "Create a new position",
       headers: ["X-API-Key: your_api_key", "Content-Type: application/json"],
       body: {
-        title: "Senior Software Engineer",
-        companyname: "UpInterview",
-        jobDescription: "Looking for experienced backend engineer",
-        minexperience: 3,
-        maxexperience: 7,
-        Location: "Remote",
-        skills: [
+        title: "Senior Software Engineer", //required
+        companyname: "UpInterview", //required
+        jobDescription: "Looking for experienced backend engineer", //required
+        requirements: "5+ years of Node.js experience\nStrong database skills\nTeam leadership experience", //required
+        minexperience: 3, //required
+        maxexperience: 7, //required
+        Location: "Remote", //required
+        skills: [ //required
           {
             skill: "Node.js",
             experience: "4 Years",
@@ -395,15 +422,14 @@ const DocumentationTab = () => {
     {
       method: "POST",
       path: "/api/external/ats/status-sync",
-      description: "ATS Status is read-only - Sync application status from external ATS system",
+      description: "ATS Status - Sync application status from external ATS system",
       headers: ["X-API-Key: your_api_key", "Content-Type: application/json"],
       body: {
-        id: "65a9c0e2f4d3a1b2c3d4e5f6",
         applicationNumber: "APP-2024-001",
         applicationStatus: "DECISION",
         atsStatus: "ACCEPTED", 
         source: "Greenhouse",
-        dateTime: "28-01-2026 10:30:00"
+        externalId: "APP-2024-001",
       },
       response: [
         {
@@ -412,6 +438,7 @@ const DocumentationTab = () => {
           applicationStatus: "DECISION",
           atsStatus: "ACCEPTED",
           source: "Greenhouse",
+          externalId: "APP-2024-001",
           createdBy: "690476c619e21b301df0f403",
           createdAt: "2026-01-28T07:18:33.819+00:00",
           updatedAt: "2026-01-28T07:48:12.210+00:00",
@@ -830,7 +857,7 @@ const DocumentationTab = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-600 text-sm">
-                      Fetch candidate data using email, upId, or externalId
+                      Fetch candidate data using email, id, or externalId
                     </span>
                     {expandedGetEndpoints[0] ? (
                       <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -855,9 +882,9 @@ const DocumentationTab = () => {
                           <code>/api/external/candidates?email=example@gmail.com</code>
                         </div>
                         <div className="bg-gray-100 p-3 rounded text-sm">
-                          <p className="font-medium text-gray-900 mb-1">upId</p>
+                          <p className="font-medium text-gray-900 mb-1">id</p>
                           <p className="text-gray-600 mb-2">Fetch by internal ID</p>
-                          <code>/api/external/candidates?upId=12345</code>
+                          <code>/api/external/candidates?id=12345</code>
                         </div>
                         <div className="bg-gray-100 p-3 rounded text-sm">
                           <p className="font-medium text-gray-900 mb-1">externalId</p>
@@ -882,11 +909,11 @@ const DocumentationTab = () => {
                         </div>
                         <div className="bg-gray-100 p-3 rounded text-sm">
                           <p className="text-xs text-gray-600 mb-1">
-                            Fetch by upId
+                            Fetch by id
                           </p>
                           <code>
                             GET
-                            /api/external/candidates?upId=6579ab23dfc0123a4c16bc11
+                            /api/external/candidates?id=6579ab23dfc0123a4c16bc11
                           </code>
                         </div>
                         <div className="bg-gray-100 p-3 rounded text-sm">
@@ -944,7 +971,7 @@ const DocumentationTab = () => {
     ],
     "count": 1,
     "query": {
-      "upId": "69267b56da0a7431f50d5fe9"
+      "id": "69267b56da0a7431f50d5fe9"
     },
     "retrievedAt": "2025-12-03T11:30:25.211Z"
   }
@@ -974,7 +1001,7 @@ const DocumentationTab = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-600 text-sm">
-                      Fetch position data using upId or externalId
+                      Fetch position data using id or externalId
                     </span>
                     {expandedGetEndpoints[1] ? (
                       <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -994,9 +1021,9 @@ const DocumentationTab = () => {
                       </h4>
                       <div className="space-y-2">
                         <div className="bg-gray-100 p-3 rounded text-sm">
-                          <p className="font-medium text-gray-900 mb-1">upId</p>
+                          <p className="font-medium text-gray-900 mb-1">id</p>
                           <p className="text-gray-600 mb-2">Fetch by internal ID</p>
-                          <code>/api/external/positions?upId=12345</code>
+                          <code>/api/external/positions?id=12345</code>
                         </div>
                         <div className="bg-gray-100 p-3 rounded text-sm">
                           <p className="font-medium text-gray-900 mb-1">externalId</p>
@@ -1013,11 +1040,11 @@ const DocumentationTab = () => {
                       <div className="space-y-3">
                         <div className="bg-gray-100 p-3 rounded text-sm">
                           <p className="text-xs text-gray-600 mb-1">
-                            Fetch by upId
+                            Fetch by id
                           </p>
                           <code>
                             GET
-                            /api/external/positions?upId=6579ab23dfc0123a4c16bc11
+                            /api/external/positions?id=6579ab23dfc0123a4c16bc11
                           </code>
                         </div>
                         <div className="bg-gray-100 p-3 rounded text-sm">
@@ -1034,7 +1061,7 @@ const DocumentationTab = () => {
                           </p>
                           <code>
                             GET
-                            /api/external/positions?upId=6579ab23dfc0123a4c16bc11&externalId=HRMS-POS-001
+                            /api/external/positions?id=6579ab23dfc0123a4c16bc11&externalId=HRMS-POS-001
                           </code>
                         </div>
                       </div>
@@ -1067,7 +1094,7 @@ const DocumentationTab = () => {
     ],
     "count": 1,
     "query": {
-      "upId": "69267b56da0a7431f50d5fe9"
+      "id": "69267b56da0a7431f50d5fe9"
     },
     "retrievedAt": "2025-12-03T11:30:25.211Z"
   }
@@ -1142,7 +1169,7 @@ const DocumentationTab = () => {
                           Request Body
                         </h4>
                         <div className="bg-gray-100 p-3 rounded text-sm">
-                          <pre>{JSON.stringify(endpoint.body, null, 2)}</pre>
+                          <pre>{renderBodyWithComments(endpoint.body)}</pre>
                         </div>
                       </div>
 
