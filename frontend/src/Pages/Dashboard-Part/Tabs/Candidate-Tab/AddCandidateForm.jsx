@@ -539,6 +539,9 @@ const AddCandidateForm = ({
         })) || [],
 
       linkedInUrl: sd.linkedInUrl || "",
+
+      // ── Resume File ──────────────────────────────────
+      resume: sd.resume_file || null,
     };
 
     console.log("Setting formData with:", {
