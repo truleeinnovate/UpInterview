@@ -268,23 +268,12 @@ function AssessmentResultView({
           </div>
 
           <div className="divide-y divide-gray-200 max-h-[calc(100vh-116px)] overflow-y-auto">
-            {assessmentQuestions?.sections?.map((section, index) => {
-              const candidateSection = candidate.sections.find(
-                (candSec) =>
-                  candSec.sectionId?.toString() === section._id?.toString()
-              );
-              const answerCount =
-                candidateSection?.Answers.filter((a) => !a.isAnswerLater)
-                  .length || 0;
-              const sectionPass = isEachSection
-                ? candidateSection?.totalScore >=
-                (candidateSection?.passScore || 0)
-                : true;
-              // <-------------------------------v1.0.1
-
+            {candidate.sections.map((candidateSection, index) => {
+              console.log('Candidate section data:', candidateSection);
+              
               return (
                 <div
-                  key={section.sectionName || index}
+                  key={candidateSection._id || index}
                   className="last:border-b-0"
                 >
                   <div
@@ -293,24 +282,24 @@ function AssessmentResultView({
                   >
                     <div>
                       <h4 className="font-medium text-gray-800 text-sm">
-                        {section.sectionName}
+                        Section {index + 1}
                       </h4>
                       <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 text-xs text-gray-600">
                         <span>
-                          Questions: {answerCount}/
-                          {section.questions?.length || 0}
+                          Questions: {candidateSection.Answers.filter((a) => !a.isAnswerLater).length}
+                          /{candidateSection.Answers.length}
                         </span>
                         <span>
-                          Score: {candidateSection?.totalScore || 0}
+                          Score: {candidateSection.totalScore}
                           {isEachSection &&
-                            `/${candidateSection?.passScore || 0}`}
+                            `/${candidateSection.passScore || 0}`}
                         </span>
                         {isEachSection && (
                           <span
-                            className={`font-medium ${sectionPass ? "text-green-600" : "text-red-600"
+                            className={`font-medium ${candidateSection.sectionResult === "pass" ? "text-green-600" : "text-red-600"
                               }`}
                           >
-                            {sectionPass ? "Passed" : "Failed"}
+                            {candidateSection.sectionResult === "pass" ? "Passed" : "Failed"}
                           </span>
                         )}
                       </div>
@@ -326,19 +315,19 @@ function AssessmentResultView({
 
                   {toggleStates[index] && (
                     <div className="p-4 space-y-4">
-                      {section.questions?.map((question, qIndex) => {
-                        const answer = candidateSection?.Answers.find(
-                          (ans) =>
-                            ans.questionId.toString() ===
-                            question._id.toString()
-                        );
-                        const isCorrect = answer?.isCorrect;
-                        const userAnswer = answer?.userAnswer || "Not Answered";
-                        const marks = answer?.score ?? 0;
+                      {candidateSection.Answers.map((answer, qIndex) => {
+                        const isCorrect = answer.isCorrect;
+                        const userAnswer = answer.userAnswer || "Not Answered";
+                        const marks = answer.score ?? 0;
+                        
+                        // Find the corresponding question from assessmentQuestions to get the score
+                        const questionScore = assessmentQuestions?.sections
+                          ?.flatMap(section => section.questions || [])
+                          ?.find(q => q._id === answer.questionId)?.score || 0;
 
                         return (
                           <div
-                            key={question._id}
+                            key={answer._id}
                             className="p-4 border border-gray-200 rounded-lg text-sm"
                           >
                             <div className="flex items-start">
@@ -347,8 +336,7 @@ function AssessmentResultView({
                               </div>
                               <div className="flex-1">
                                 <h5 className="font-medium text-gray-800 mb-3">
-                                  {question.snapshot?.questionText ||
-                                    "Question not available"}
+                                  Question {qIndex + 1}
                                 </h5>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
@@ -357,8 +345,7 @@ function AssessmentResultView({
                                       Correct Answer
                                     </p>
                                     <p className="font-medium break-words whitespace-pre-wrap">
-                                      {question.snapshot?.correctAnswer ||
-                                        "N/A"}
+                                      {answer.correctAnswer || "N/A"}
                                     </p>
                                   </div>
                                   <div>
@@ -383,7 +370,7 @@ function AssessmentResultView({
                                     <p className="text-xs text-gray-500">
                                       Marks
                                     </p>
-                                    <p className="font-medium">{question.score || 0}</p>
+                                    <p className="font-medium">{questionScore}</p>
                                   </div>
                                   <div>
                                     <p className="text-xs text-gray-500">

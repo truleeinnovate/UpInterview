@@ -978,20 +978,20 @@ exports.createPosition = async (req, res) => {
 };
 
 /**
- * Fetch candidates by email, upId, or externalId
+ * Fetch candidates by email, id, or externalId
  */
 exports.getCandidates = async (req, res) => {
   try {
-    const { email, upId, externalId } = req.query;
+    const { email, id, externalId } = req.query;
     
     // Validate that at least one query parameter is provided
-    if (!email && !upId && !externalId) {
+    if (!email && !id && !externalId) {
       // Generate error log
       res.locals.logData = {
         ownerId: "system",
         processName: "External Get Candidates",
         requestQuery: req.query,
-        message: "Missing query parameters - at least one of email, upId, or externalId must be provided",
+        message: "Missing query parameters - at least one of email, id, or externalId must be provided",
         status: "error",
         integrationName: "external-api",
         flowType: "get-candidates",
@@ -999,9 +999,9 @@ exports.getCandidates = async (req, res) => {
       return res.status(400).json({
         success: false,
         error: "Missing Query Parameters",
-        message: "At least one of email, upId, or externalId must be provided",
+        message: "At least one of email, id, or externalId must be provided",
         code: 400,
-        suggestion: "Provide email, upId, or externalId as query parameter"
+        suggestion: "Provide email, id, or externalId as query parameter"
       });
     }
 
@@ -1011,8 +1011,8 @@ exports.getCandidates = async (req, res) => {
     if (email) {
       query.Email = email;
     }
-    if (upId) {
-      query._id = upId;
+    if (id) {
+      query._id = id;
     }
     if (externalId) {
       query.externalId = externalId;
@@ -1087,11 +1087,11 @@ exports.getCandidates = async (req, res) => {
       return res.status(400).json({
         success: false,
         error: "Invalid ID Format",
-        message: "Invalid upId format provided",
+        message: "Invalid id format provided",
         code: 400,
         field: error.path,
         value: error.value,
-        suggestion: "Provide a valid MongoDB ObjectId for upId"
+        suggestion: "Provide a valid MongoDB ObjectId for id"
       });
     }
 
@@ -1118,20 +1118,20 @@ exports.getCandidates = async (req, res) => {
 };
 
 /**
- * Fetch positions by upId or externalId
+ * Fetch positions by id or externalId
  */
 exports.getPositions = async (req, res) => {
   try {
-    const { upId, externalId } = req.query;
+    const { id, externalId } = req.query;
     
     // Validate that at least one query parameter is provided
-    if (!upId && !externalId) {
+    if (!id && !externalId) {
       // Generate error log
       res.locals.logData = {
         ownerId: "system",
         processName: "External Get Positions",
         requestQuery: req.query,
-        message: "Missing query parameters - at least one of upId or externalId must be provided",
+        message: "Missing query parameters - at least one of id or externalId must be provided",
         status: "error",
         integrationName: "external-api",
         flowType: "get-positions",
@@ -1139,17 +1139,17 @@ exports.getPositions = async (req, res) => {
       return res.status(400).json({
         success: false,
         error: "Missing Query Parameters",
-        message: "At least one of upId or externalId must be provided",
+        message: "At least one of id or externalId must be provided",
         code: 400,
-        suggestion: "Provide upId or externalId as query parameter"
+        suggestion: "Provide id or externalId as query parameter"
       });
     }
 
     // Build query object
     const query = {};
     
-    if (upId) {
-      query._id = upId;
+    if (id) {
+      query._id = id;
     }
     if (externalId) {
       query.externalId = externalId;
@@ -1224,11 +1224,11 @@ exports.getPositions = async (req, res) => {
       return res.status(400).json({
         success: false,
         error: "Invalid ID Format",
-        message: "Invalid upId format provided",
+        message: "Invalid id format provided",
         code: 400,
         field: error.path,
         value: error.value,
-        suggestion: "Provide a valid MongoDB ObjectId for upId"
+        suggestion: "Provide a valid MongoDB ObjectId for id"
       });
     }
 
@@ -1384,9 +1384,9 @@ exports.atsStatusSync = async (req, res) => {
         error: authResult.error,
       });
     }
-    
+
     const { tenantId, userId, apiKey } = authResult;
-    
+
     // Check if the API key has ats:write permission
     if (!checkApiKeyPermission(apiKey, 'ats:write')) {
       res.locals.logData = {
@@ -1404,7 +1404,7 @@ exports.atsStatusSync = async (req, res) => {
       });
     }
 
-    const { id, applicationNumber, applicationStatus, atsStatus, source, dateTime } = req.body;
+    const { externalId, applicationNumber, applicationStatus, atsStatus, source } = req.body;
 
     // Validate request body
     if (!applicationStatus || !atsStatus) {
@@ -1414,15 +1414,18 @@ exports.atsStatusSync = async (req, res) => {
       });
     }
 
-    // Use the provided applicationNumber or id (both should be applicationNumber)
-    const targetApplicationNumber = applicationNumber || id;
+    // Use the provided applicationNumber only
+    const targetApplicationNumber = applicationNumber;
 
     if (!targetApplicationNumber) {
       return res.status(400).json({
         success: false,
-        error: "applicationNumber or id is required",
+        error: "applicationNumber is required",
       });
     }
+
+    // Use current timestamp for dateTime
+    const currentDateTime = new Date().toISOString();
 
     console.log(`[ATS SYNC] Starting status sync from ${source} for application number ${targetApplicationNumber} in tenant: ${tenantId}`);
 
@@ -1460,7 +1463,7 @@ exports.atsStatusSync = async (req, res) => {
       updateData.atsSyncData = {
         atsStatus: atsStatus,
         source: source,
-        dateTime: dateTime,
+        dateTime: currentDateTime,
         syncTimestamp: new Date().toISOString()
       };
 
@@ -1504,6 +1507,7 @@ exports.atsStatusSync = async (req, res) => {
 
       updatedApplications.push({
         id: updatedApplication._id.toString(),
+        externalId: updatedApplication.externalId,
         applicationNumber: updatedApplication.applicationNumber,
         applicationStatus: updatedApplication.status,
         atsStatus: atsStatus,
@@ -1518,7 +1522,7 @@ exports.atsStatusSync = async (req, res) => {
       console.log(`[ATS SYNC] Successfully updated application ${application._id}: ${previousStatus} -> ${applicationStatus}`);
 
     } catch (error) {
-      console.error(`[ATS SYNC] Error processing application ${targetApplicationId}:`, error);
+      console.error(`[ATS SYNC] Error processing application ${targetApplicationNumber}:`, error);
       return res.status(500).json({
         success: false,
         error: "Error updating application status",
@@ -1533,11 +1537,11 @@ exports.atsStatusSync = async (req, res) => {
       ownerId: userId,
       processName: "External ATS Status Sync",
       requestBody: {
-        applicationNumber: targetApplicationNumber,
+        externalId: externalId,
+        applicationNumber: applicationNumber,
         applicationStatus,
         atsStatus,
-        source,
-        dateTime
+        source
       },
       responseBody: {
         total: updatedApplications.length,
