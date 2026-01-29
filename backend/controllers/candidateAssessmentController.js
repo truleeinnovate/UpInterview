@@ -16,6 +16,7 @@ const {
 const {
   handleAssessmentStatusChange,
 } = require("../services/assessmentUsageService");
+const { InterviewRounds } = require("../models/Interview/InterviewRounds.js");
 
 exports.getCandidateAssessmentBasedOnId = async (req, res) => {
   try {
@@ -25,11 +26,9 @@ exports.getCandidateAssessmentBasedOnId = async (req, res) => {
     }
     const document = await CandidateAssessment.findById(id);
     if (!document) {
-      return res
-        .status(400)
-        .send({
-          message: `no document found for given candidate assessment id:${id}`,
-        });
+      return res.status(400).send({
+        message: `no document found for given candidate assessment id:${id}`,
+      });
     }
     return res.status(200).send({
       message: "Retrieved candidate Assessment",
@@ -64,7 +63,7 @@ exports.getPublicCandidateDetailsByAssessmentId = async (req, res) => {
     }
 
     const candidateAssessment = await CandidateAssessment.findById(
-      candidateAssessmentId
+      candidateAssessmentId,
     ).select("candidateId");
 
     if (!candidateAssessment) {
@@ -74,9 +73,7 @@ exports.getPublicCandidateDetailsByAssessmentId = async (req, res) => {
       });
     }
 
-    const candidate = await Candidate.findById(
-      candidateAssessment.candidateId
-    )
+    const candidate = await Candidate.findById(candidateAssessment.candidateId)
       .select("FirstName LastName Email Phone")
       .lean();
 
@@ -91,7 +88,9 @@ exports.getPublicCandidateDetailsByAssessmentId = async (req, res) => {
     const activeResume = await Resume.findOne({
       candidateId: candidateAssessment.candidateId,
       isActive: true,
-    }).select("ImageData").lean();
+    })
+      .select("ImageData")
+      .lean();
 
     const publicCandidate = {
       _id: candidate._id,
@@ -106,7 +105,7 @@ exports.getPublicCandidateDetailsByAssessmentId = async (req, res) => {
   } catch (error) {
     console.error(
       "[CandidateAssessment] Error fetching public candidate details:",
-      error
+      error,
     );
     return res.status(500).json({
       success: false,
@@ -176,7 +175,7 @@ function verifyAnswer(question, selectedAnswer) {
     return false;
   }
   const normalizeAnswer = (answer) => {
-    if (answer === null || answer === undefined) return '';
+    if (answer === null || answer === undefined) return "";
     return String(answer).trim().toLowerCase();
   };
   const normalizedSelected = normalizeAnswer(selectedAnswer);
@@ -184,22 +183,23 @@ function verifyAnswer(question, selectedAnswer) {
   let isCorrect = false;
 
   switch (questionType) {
-    case 'MCQ':
-    case 'Multiple Choice':
+    case "MCQ":
+    case "Multiple Choice":
       isCorrect = normalizedSelected === normalizedCorrect;
       break;
 
-    case 'Short Answer':
-    case 'Long Answer':
+    case "Short Answer":
+    case "Long Answer":
       isCorrect = normalizedSelected === normalizedCorrect;
       break;
 
-    case 'Number':
-    case 'Numeric':
-      isCorrect = parseFloat(normalizedSelected) === parseFloat(normalizedCorrect);
+    case "Number":
+    case "Numeric":
+      isCorrect =
+        parseFloat(normalizedSelected) === parseFloat(normalizedCorrect);
       break;
 
-    case 'Boolean':
+    case "Boolean":
       isCorrect = Boolean(normalizedSelected) === Boolean(normalizedCorrect);
       break;
 
@@ -220,7 +220,7 @@ exports.submitCandidateAssessment = async (req, res) => {
       candidateId,
       status,
       sections,
-      submittedAt
+      submittedAt,
     } = req.body;
 
     // Input validation
@@ -233,8 +233,8 @@ exports.submitCandidateAssessment = async (req, res) => {
     }
 
     let candidateAssessment = await CandidateAssessment.findById(
-      new mongoose.Types.ObjectId(candidateAssessmentId)
-    ).populate('scheduledAssessmentId');
+      new mongoose.Types.ObjectId(candidateAssessmentId),
+    ).populate("scheduledAssessmentId");
 
     if (!candidateAssessment) {
       return res.status(404).json({
@@ -245,12 +245,10 @@ exports.submitCandidateAssessment = async (req, res) => {
 
     const processedSections = await Promise.all(
       sections.map(async (section, sectionIndex) => {
-
         console.log("section", section);
 
         const processedAnswers = await Promise.all(
           section.questions.map(async (question) => {
-
             const isCorrect = question.isCorrect;
             const score = question.score || 0;
 
@@ -261,14 +259,18 @@ exports.submitCandidateAssessment = async (req, res) => {
               isCorrect,
               score,
               isAnswerLater: question.isAnswerLater || false,
-              submittedAt: new Date(question.submittedAt || Date.now())
+              submittedAt: new Date(question.submittedAt || Date.now()),
             };
-          })
+          }),
         );
 
-        const sectionScore = processedAnswers.reduce((sum, answer) => sum + (answer.score || 0), 0);
+        const sectionScore = processedAnswers.reduce(
+          (sum, answer) => sum + (answer.score || 0),
+          0,
+        );
         const sectionPassScore = Number(section.passScore) || 0;
-        const sectionResult = sectionScore >= sectionPassScore ? "pass" : "fail";
+        const sectionResult =
+          sectionScore >= sectionPassScore ? "pass" : "fail";
 
         return {
           sectionId: section.sectionId,
@@ -277,17 +279,22 @@ exports.submitCandidateAssessment = async (req, res) => {
           passScore: sectionPassScore,
           sectionResult,
           sectionPassed: sectionResult === "pass",
-          Answers: processedAnswers  // FIX: Only Answers (removed questions)
+          Answers: processedAnswers, // FIX: Only Answers (removed questions)
         };
-      })
+      }),
     );
 
     // Calculate overall assessment result
-    const totalScore = processedSections.reduce((total, section) => total + section.totalScore, 0);
-    const allSectionsPassed = processedSections.every(section => section.sectionResult === 'pass');
-    const overallResult = allSectionsPassed ? 'pass' : 'fail';
+    const totalScore = processedSections.reduce(
+      (total, section) => total + section.totalScore,
+      0,
+    );
+    const allSectionsPassed = processedSections.every(
+      (section) => section.sectionResult === "pass",
+    );
+    const overallResult = allSectionsPassed ? "pass" : "fail";
     const remainingTime = req.body.remainingTime || null;
-    
+
     // Update candidate assessment
     const oldStatus = candidateAssessment.status;
     const updateData = {
@@ -298,18 +305,39 @@ exports.submitCandidateAssessment = async (req, res) => {
       endedAt: new Date(),
       remainingTime,
       overallResult,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     const updatedAssessment = await CandidateAssessment.findByIdAndUpdate(
       candidateAssessmentId,
       { $set: updateData },
-      { new: true }
-    ).populate('scheduledAssessmentId');
+      { new: true },
+    ).populate("scheduledAssessmentId");
 
     if (!updatedAssessment) {
       throw new Error("Failed to update candidate assessment");
     }
+
+    const interviewRound = await InterviewRounds.findOne({
+      scheduleAssessmentId: scheduledAssessmentId,
+    });
+
+    if (interviewRound && interviewRound.status !== updatedAssessment.status) {
+      const newStatus = "Evaluated";
+      await InterviewRounds.findByIdAndUpdate(
+        interviewRound._id,
+        {
+          $set: {
+            status: newStatus,
+            currentAction: newStatus,
+            previousAction: interviewRound.status,
+          },
+        },
+        { new: true },
+      );
+    }
+
+    // await reorderInterviewRounds(interviewRounds[0].interviewId);
 
     // Process notifications
     if (oldStatus !== updatedAssessment.status) {
@@ -317,13 +345,13 @@ exports.submitCandidateAssessment = async (req, res) => {
         await createAssessmentStatusUpdateNotification(
           updatedAssessment,
           oldStatus,
-          updatedAssessment.status
+          updatedAssessment.status,
         );
 
         await handleAssessmentStatusChange(
           updatedAssessment._id,
           oldStatus,
-          updatedAssessment.status
+          updatedAssessment.status,
         );
 
         await createAssessmentSubmissionNotification(updatedAssessment);
@@ -337,23 +365,22 @@ exports.submitCandidateAssessment = async (req, res) => {
       message: "Assessment submitted successfully",
       data: updatedAssessment,
     });
-
   } catch (error) {
     console.error("Error in submitCandidateAssessment:", {
       error: error.message,
       stack: error.stack,
       name: error.name,
-      code: error.code
+      code: error.code,
     });
 
     // More specific error messages based on error type
     let errorMessage = "Failed to submit assessment";
     let statusCode = 500;
 
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       errorMessage = `Validation error: ${error.message}`;
       statusCode = 400;
-    } else if (error.name === 'MongoError' && error.code === 112) {
+    } else if (error.name === "MongoError" && error.code === 112) {
       errorMessage = "Database write operation conflict. Please try again.";
       statusCode = 409; // Conflict
     }
@@ -398,12 +425,12 @@ exports.extendCandidateAssessment = async (req, res) => {
     for (const candidateAssessmentId of candidateAssessmentIds) {
       try {
         const candidateAssessment = await CandidateAssessment.findById(
-          candidateAssessmentId
+          candidateAssessmentId,
         );
 
         if (!candidateAssessment) {
           errors.push(
-            `Candidate assessment not found: ${candidateAssessmentId}`
+            `Candidate assessment not found: ${candidateAssessmentId}`,
           );
           continue;
         }
@@ -412,11 +439,11 @@ exports.extendCandidateAssessment = async (req, res) => {
         // Allow only 1 extension per assessment
         if (
           ["completed", "cancelled", "extended"].includes(
-            candidateAssessment.status
+            candidateAssessment.status,
           )
         ) {
           errors.push(
-            `Assessment ${candidateAssessmentId} cannot be extended (status: ${candidateAssessment.status})`
+            `Assessment ${candidateAssessmentId} cannot be extended (status: ${candidateAssessment.status})`,
           );
           continue;
         }
@@ -431,8 +458,8 @@ exports.extendCandidateAssessment = async (req, res) => {
         if (hoursUntilExpiry < 24 || hoursUntilExpiry > 72) {
           errors.push(
             `Assessment ${candidateAssessmentId} can only be extended 24-72 hours before expiry. Current time until expiry: ${Math.round(
-              hoursUntilExpiry
-            )} hours`
+              hoursUntilExpiry,
+            )} hours`,
           );
           continue;
         }
@@ -440,7 +467,7 @@ exports.extendCandidateAssessment = async (req, res) => {
         // Calculate new expiry date
         const currentExpiry = new Date(candidateAssessment.expiryAt);
         const newExpiry = new Date(
-          currentExpiry.getTime() + extensionDays * 24 * 60 * 60 * 1000
+          currentExpiry.getTime() + extensionDays * 24 * 60 * 60 * 1000,
         );
 
         // Update the candidate assessment
@@ -450,18 +477,40 @@ exports.extendCandidateAssessment = async (req, res) => {
 
         await candidateAssessment.save();
 
+        const interviewRound = await InterviewRounds.findOne({
+          scheduleAssessmentId: candidateAssessment?.scheduledAssessmentId,
+        });
+
+        if (
+          interviewRound &&
+          interviewRound.status !== candidateAssessment.status
+        ) {
+          // const newStatus = "Evaluated";
+          await InterviewRounds.findByIdAndUpdate(
+            interviewRound._id,
+            {
+              $set: {
+                status: candidateAssessment.status,
+                currentAction: candidateAssessment.status,
+                previousAction: interviewRound.status,
+              },
+            },
+            { new: true },
+          );
+        }
+
         // Create notification for status update
         if (oldStatus !== "extended") {
           try {
             await createAssessmentStatusUpdateNotification(
               candidateAssessment,
               oldStatus,
-              "extended"
+              "extended",
             );
           } catch (notificationError) {
             console.error(
               "[ASSESSMENT] Error creating extension notification:",
-              notificationError
+              notificationError,
             );
           }
         }
@@ -474,10 +523,10 @@ exports.extendCandidateAssessment = async (req, res) => {
       } catch (error) {
         console.error(
           `Error extending assessment ${candidateAssessmentId}:`,
-          error
+          error,
         );
         errors.push(
-          `Failed to extend assessment ${candidateAssessmentId}: ${error.message}`
+          `Failed to extend assessment ${candidateAssessmentId}: ${error.message}`,
         );
       }
     }
@@ -548,12 +597,12 @@ exports.cancelCandidateAssessments = async (req, res) => {
     for (const candidateAssessmentId of candidateAssessmentIds) {
       try {
         const candidateAssessment = await CandidateAssessment.findById(
-          candidateAssessmentId
+          candidateAssessmentId,
         );
 
         if (!candidateAssessment) {
           errors.push(
-            `Candidate assessment not found: ${candidateAssessmentId}`
+            `Candidate assessment not found: ${candidateAssessmentId}`,
           );
           continue;
         }
@@ -562,7 +611,7 @@ exports.cancelCandidateAssessments = async (req, res) => {
         // Allow cancelling extended assessments (1 chance to cancel)
         if (["completed", "cancelled"].includes(candidateAssessment.status)) {
           errors.push(
-            `Assessment ${candidateAssessmentId} cannot be cancelled (status: ${candidateAssessment.status})`
+            `Assessment ${candidateAssessmentId} cannot be cancelled (status: ${candidateAssessment.status})`,
           );
           continue;
         }
@@ -574,18 +623,40 @@ exports.cancelCandidateAssessments = async (req, res) => {
 
         await candidateAssessment.save();
 
+        const interviewRound = await InterviewRounds.findOne({
+          scheduleAssessmentId: candidateAssessment?.scheduledAssessmentId,
+        });
+
+        if (
+          interviewRound &&
+          interviewRound.status !== candidateAssessment.status
+        ) {
+          // const newStatus = "Evaluated";
+          await InterviewRounds.findByIdAndUpdate(
+            interviewRound._id,
+            {
+              $set: {
+                status: candidateAssessment.status,
+                currentAction: candidateAssessment.status,
+                previousAction: interviewRound.status,
+              },
+            },
+            { new: true },
+          );
+        }
+
         // Create notification for cancellation
         if (oldStatus !== "cancelled") {
           try {
             await createAssessmentStatusUpdateNotification(
               candidateAssessment,
               oldStatus,
-              "cancelled"
+              "cancelled",
             );
           } catch (notificationError) {
             console.error(
               "[ASSESSMENT] Error creating cancellation notification:",
-              notificationError
+              notificationError,
             );
           }
 
@@ -594,12 +665,12 @@ exports.cancelCandidateAssessments = async (req, res) => {
             await handleAssessmentStatusChange(
               candidateAssessmentId,
               oldStatus,
-              "cancelled"
+              "cancelled",
             );
           } catch (usageError) {
             console.error(
               "[ASSESSMENT] Error updating assessment usage:",
-              usageError
+              usageError,
             );
             // Continue execution even if usage update fails
           }
@@ -612,10 +683,10 @@ exports.cancelCandidateAssessments = async (req, res) => {
       } catch (error) {
         console.error(
           `Error cancelling assessment ${candidateAssessmentId}:`,
-          error
+          error,
         );
         errors.push(
-          `Failed to cancel assessment ${candidateAssessmentId}: ${error.message}`
+          `Failed to cancel assessment ${candidateAssessmentId}: ${error.message}`,
         );
       }
     }
@@ -664,9 +735,8 @@ exports.cancelCandidateAssessments = async (req, res) => {
 // Function to update schedule assessment status based on candidate assessment statuses
 exports.updateScheduleAssessmentStatus = async (scheduleAssessmentId) => {
   try {
-    const scheduleAssessment = await ScheduleAssessment.findById(
-      scheduleAssessmentId
-    );
+    const scheduleAssessment =
+      await ScheduleAssessment.findById(scheduleAssessmentId);
     if (!scheduleAssessment) {
       return null;
     }
@@ -695,7 +765,7 @@ exports.updateScheduleAssessmentStatus = async (scheduleAssessmentId) => {
       "pass",
     ];
     const allHaveFinalStatus = candidateStatuses.every((status) =>
-      finalStatuses.includes(status)
+      finalStatuses.includes(status),
     );
 
     if (allHaveFinalStatus) {
@@ -745,7 +815,7 @@ exports.updateScheduleAssessmentStatus = async (scheduleAssessmentId) => {
   } catch (error) {
     console.error(
       `Error updating schedule assessment status for ${scheduleAssessmentId}:`,
-      error
+      error,
     );
     throw error;
   }
@@ -766,9 +836,8 @@ exports.updateScheduleStatus = async (req, res) => {
       });
     }
 
-    const updatedSchedule = await exports.updateScheduleAssessmentStatus(
-      scheduleAssessmentId
-    );
+    const updatedSchedule =
+      await exports.updateScheduleAssessmentStatus(scheduleAssessmentId);
 
     if (!updatedSchedule) {
       return res.status(404).json({
@@ -852,12 +921,12 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
             await createAssessmentStatusUpdateNotification(
               assessment,
               oldStatus,
-              "expired"
+              "expired",
             );
           } catch (notificationError) {
             console.error(
               "[ASSESSMENT] Error creating expiry notification:",
-              notificationError
+              notificationError,
             );
           }
 
@@ -866,12 +935,12 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
             await handleAssessmentStatusChange(
               assessment._id,
               oldStatus,
-              "expired"
+              "expired",
             );
           } catch (usageError) {
             console.error(
               "[ASSESSMENT] Error updating assessment usage:",
-              usageError
+              usageError,
             );
             // Continue execution even if usage update fails
           }
@@ -879,15 +948,16 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
 
         updatedAssessments.push({
           id: assessment._id,
-          candidateName: `${assessment.candidateId?.FirstName || ""} ${assessment.candidateId?.LastName || ""
-            }`.trim(),
+          candidateName: `${assessment.candidateId?.FirstName || ""} ${
+            assessment.candidateId?.LastName || ""
+          }`.trim(),
           email: assessment.candidateId?.Email || "N/A",
           expiredAt: assessment.expiryAt,
         });
 
         // Update schedule assessment status after candidate assessment update
         await exports.updateScheduleAssessmentStatus(
-          assessment.scheduledAssessmentId
+          assessment.scheduledAssessmentId,
         );
       } catch (error) {
         failedUpdates.push({
@@ -909,7 +979,7 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
     for (const schedule of scheduleAssessments) {
       try {
         const updatedSchedule = await exports.updateScheduleAssessmentStatus(
-          schedule._id
+          schedule._id,
         );
         if (updatedSchedule && updatedSchedule.status !== schedule.status) {
           updatedSchedules.push({
@@ -991,7 +1061,7 @@ exports.updateAllScheduleStatuses = async (req, res) => {
     for (const schedule of scheduleAssessments) {
       try {
         const updatedSchedule = await exports.updateScheduleAssessmentStatus(
-          schedule._id
+          schedule._id,
         );
         if (updatedSchedule && updatedSchedule.status !== schedule.status) {
           results.push({
@@ -1054,7 +1124,7 @@ exports.runScheduleAssessmentStatusUpdateJob = async () => {
     for (const schedule of scheduleAssessments) {
       try {
         const updatedSchedule = await exports.updateScheduleAssessmentStatus(
-          schedule._id
+          schedule._id,
         );
         if (updatedSchedule && updatedSchedule.status !== schedule.status) {
           results.push({
