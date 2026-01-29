@@ -39,7 +39,8 @@ const Header = ({
       )} */}
       <div className="flex items-center gap-2">
         {/* Render Bulk Upload button only if the prop is passed */}
-        {onBulkUploadClick && (
+        {/* dont remove this code -ashraf */}
+        {/* {onBulkUploadClick && (
           <Button
             onClick={onBulkUploadClick}
             size="sm"
@@ -49,7 +50,7 @@ const Header = ({
             <Upload className="h-4 w-4 mr-1" />
             Bulk Upload
           </Button>
-        )}
+        )} */}
 
         {canCreate && (
           <Button

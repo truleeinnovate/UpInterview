@@ -254,7 +254,7 @@ export default function CandidateViewer({
                                         Application Created Successfully
                                     </h3>
                                     <p className="text-gray-500 mb-8">
-                                        The candidate has been successfully screened and an application has been created.
+                                        Candidate has been successfully screened and an application has been created.
                                     </p>
 
                                     <div className="bg-gray-50 rounded-xl p-4 mb-8 text-left border border-gray-200">
@@ -412,7 +412,7 @@ export default function CandidateViewer({
 
                                             <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
                                                 <p className="text-gray-600 mb-1">Match Score</p>
-                                                <p className={`text-6xl font-extrabold ${getScoreColor(displayScore)}`}>
+                                                <p className={`text-4xl font-extrabold ${getScoreColor(displayScore)}`}>
                                                     {displayScore != null ? `${displayScore}%` : '—'}
                                                 </p>
                                             </div>
@@ -602,11 +602,11 @@ export default function CandidateViewer({
                     {/* ─── Global shared footer (visible in screening mode only) ──────── */}
                     {!showCandidateForm && !creationSuccessData && (
                         showNavigation && (
-                            <div className="bg-white px-7 py-3 border-t border-gray-200">
+                            <div className="bg-white px-7 py-3">
                                 {/* Info text above buttons */}
-                                <div className="bg-blue-50 rounded-lg p-4 mb-5 text-sm text-blue-800">
+                                {/* <div className="bg-blue-50 rounded-lg p-4 mb-5 text-sm text-blue-800">
                                     Proceeding to interview will create an Application and move this candidate to the Applications tab.
-                                </div>
+                                </div> */}
 
                                 {/* Buttons */}
                                 <div className="flex justify-end gap-3">

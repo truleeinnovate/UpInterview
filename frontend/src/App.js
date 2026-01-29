@@ -1208,9 +1208,9 @@ const MainAppRoutes = ({
             {/* Feedbacks */}
             {hasPermission("Feedback") && (
               <>
-                <Route path="/feedbacks" element={<FeedbackTab />} />
+                <Route path="/feedback" element={<FeedbackTab />} />
                 <Route
-                  path="/feedbacks/view/:id"
+                  path="/feedback/view/:id"
                   element={
                     <>
                       <FeedbackFormModel /> <FeedbackTab />
@@ -1218,7 +1218,7 @@ const MainAppRoutes = ({
                   }
                 />
                 <Route
-                  path="/feedbacks/edit/:id"
+                  path="/feedback/edit/:id"
                   element={
                     <>
                       <FeedbackFormModel /> <FeedbackTab />
