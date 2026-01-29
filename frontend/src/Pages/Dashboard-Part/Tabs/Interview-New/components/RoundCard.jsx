@@ -1079,6 +1079,7 @@ const RoundCard = ({
       canResendLink: false,
       canShareLink: false,
       canNoShow: false,
+      // canSkipped: true,
     },
     Skipped: {
       canEdit: false,
@@ -1939,7 +1940,10 @@ const RoundCard = ({
                         onClick={() => onEdit(round, { isEdit: true })}
                         className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
                       >
-                        <Edit className="h-4 w-4 mr-1" /> Edit Round
+                        <Edit className="h-4 w-4 mr-1" />
+                        {round?.status === "Draft"
+                          ? "Edit & Schedule"
+                          : "Edit Round"}
                       </button>
                     )}
 

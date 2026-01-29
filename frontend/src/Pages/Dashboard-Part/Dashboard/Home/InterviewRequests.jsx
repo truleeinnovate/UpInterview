@@ -63,7 +63,7 @@ const InterviewRequests = () => {
   useEffect(() => {
     if (contactData?.length > 0) {
       const matched = contactData.find(
-        (contact) => contact.ownerId?.toString() === ownerId
+        (contact) => contact.ownerId?.toString() === ownerId,
       );
       if (matched) {
         setContacts(contactData);
@@ -104,7 +104,7 @@ const InterviewRequests = () => {
       if (!selectedContact?._id) return [];
       const res = await axios.get(
         `${config.REACT_APP_API_URL}/interviewrequest/requests`,
-        { params: { interviewerId: selectedContact._id } }
+        { params: { interviewerId: selectedContact._id } },
       );
       return res.data;
     },
@@ -124,12 +124,29 @@ const InterviewRequests = () => {
         roundId,
       });
     },
-    onSuccess: async () => {
+    onSuccess: async (data, variables) => {
       // Refetch interview requests after success
+      // await queryClient.invalidateQueries([
+      //   "interviewRequests",
+      //   selectedContact?._id,
+      // ]);
+
+      console.log("data data", data);
+
+      // 1. Refetch interview requests
       await queryClient.invalidateQueries([
         "interviewRequests",
         selectedContact?._id,
       ]);
+
+      // 2. Invalidate ALL interviews and interview-details since we don't have interviewId in response
+      await queryClient.invalidateQueries(["interviews"]);
+      await queryClient.invalidateQueries(["interview-details"]);
+
+      // 3. If you need to close the popup after acceptance
+      if (selectedRequest?.id === variables.requestId) {
+        setSelectedRequest(null);
+      }
     },
     onError: async (err) => {
       console.error("Failed to accept interview request", err);
@@ -155,7 +172,7 @@ const InterviewRequests = () => {
       { requestId, contactId, roundId },
       {
         onSettled: () => setAcceptingId(null), // Reset after success/error
-      }
+      },
     );
   };
 
@@ -230,7 +247,7 @@ const InterviewRequests = () => {
                       title={request.roundDetails?.roundTitle || "N/A"}
                     >
                       {capitalizeFirstLetter(
-                        request.roundDetails?.roundTitle
+                        request.roundDetails?.roundTitle,
                       ) || "N/A"}
                     </h4>
                     {!request.isMockInterview && (
@@ -239,7 +256,7 @@ const InterviewRequests = () => {
                         title={request.positionDetails?.title || "N/A"}
                       >
                         {capitalizeFirstLetter(
-                          request.positionDetails?.title
+                          request.positionDetails?.title,
                         ) || "N/A"}
                       </p>
                     )}
@@ -250,8 +267,8 @@ const InterviewRequests = () => {
                     request.urgency === "High"
                       ? "bg-red-100 text-red-600"
                       : request.urgency === "Medium"
-                      ? "bg-yellow-100 text-yellow-600"
-                      : "bg-green-100 text-green-600"
+                        ? "bg-yellow-100 text-yellow-600"
+                        : "bg-green-100 text-green-600"
                   }`}
                 >
                   {capitalizeFirstLetter(request.urgency)}
@@ -267,7 +284,7 @@ const InterviewRequests = () => {
                     />
                     <span className="text-xs text-gray-600 w-full truncate">
                       {capitalizeFirstLetter(
-                        request.positionDetails?.companyname
+                        request.positionDetails?.companyname,
                       ) || "N/A"}
                     </span>
                   </div>
@@ -329,7 +346,7 @@ const InterviewRequests = () => {
                         handleAccept(
                           request.id,
                           request.interviewerId,
-                          request.roundId
+                          request.roundId,
                         )
                       }
                       disabled={acceptingId === request.id}
@@ -348,14 +365,14 @@ const InterviewRequests = () => {
                         request.status === "accepted"
                           ? "bg-green-600"
                           : request.status === "declined"
-                          ? "bg-red-500"
-                          : request.status === "expired"
-                          ? "bg-gray-500"
-                          : request.status === "cancelled"
-                          ? "bg-orange-500"
-                          : request.status === "withdrawn"
-                          ? "bg-amber-600"
-                          : "bg-gray-400"
+                            ? "bg-red-500"
+                            : request.status === "expired"
+                              ? "bg-gray-500"
+                              : request.status === "cancelled"
+                                ? "bg-orange-500"
+                                : request.status === "withdrawn"
+                                  ? "bg-amber-600"
+                                  : "bg-gray-400"
                       }`}
                     >
                       {capitalizeFirstLetter(request?.status)}
@@ -387,7 +404,7 @@ const InterviewRequests = () => {
                         <p className="text-sm text-gray-500">Candidate</p>
                         <p className="text-gray-700">
                           {capitalizeFirstLetter(
-                            selectedRequest.candidateDetails?.name
+                            selectedRequest.candidateDetails?.name,
                           ) || "N/A"}
                         </p>
                       </div>
@@ -402,7 +419,7 @@ const InterviewRequests = () => {
                             <p className="text-sm text-gray-500">Position</p>
                             <p className="text-gray-700">
                               {capitalizeFirstLetter(
-                                selectedRequest.positionDetails?.title
+                                selectedRequest.positionDetails?.title,
                               ) || "N/A"}
                             </p>
                           </div>
@@ -415,7 +432,7 @@ const InterviewRequests = () => {
                             <p className="text-sm text-gray-500">Company</p>
                             <p className="text-gray-700">
                               {capitalizeFirstLetter(
-                                selectedRequest.positionDetails?.companyname
+                                selectedRequest.positionDetails?.companyname,
                               ) || "N/A"}
                             </p>
                           </div>
@@ -510,7 +527,7 @@ const InterviewRequests = () => {
                           <p className="text-sm text-gray-500">Round Title</p>
                           <p className="text-gray-700">
                             {capitalizeFirstLetter(
-                              selectedRequest.roundDetails.roundTitle
+                              selectedRequest.roundDetails.roundTitle,
                             )}
                           </p>
                         </div>
@@ -556,7 +573,7 @@ const InterviewRequests = () => {
                     handleAccept(
                       selectedRequest.id,
                       selectedRequest.interviewerId,
-                      selectedRequest.roundId
+                      selectedRequest.roundId,
                     )
                   }
                   disabled={acceptingId === selectedRequest.id}
@@ -577,14 +594,14 @@ const InterviewRequests = () => {
                     selectedRequest.status === "accepted"
                       ? "bg-green-600"
                       : selectedRequest.status === "declined"
-                      ? "bg-red-500"
-                      : selectedRequest.status === "expired"
-                      ? "bg-gray-500"
-                      : selectedRequest.status === "cancelled"
-                      ? "bg-orange-500"
-                      : selectedRequest.status === "withdrawn"
-                      ? "bg-amber-600"
-                      : "bg-gray-400"
+                        ? "bg-red-500"
+                        : selectedRequest.status === "expired"
+                          ? "bg-gray-500"
+                          : selectedRequest.status === "cancelled"
+                            ? "bg-orange-500"
+                            : selectedRequest.status === "withdrawn"
+                              ? "bg-amber-600"
+                              : "bg-gray-400"
                   }`}
                 >
                   {capitalizeFirstLetter(selectedRequest?.status)}
@@ -642,7 +659,7 @@ const InterviewRequests = () => {
                             "N/A"
                           } - ${
                             capitalizeFirstLetter(
-                              req.positionDetails?.companyname
+                              req.positionDetails?.companyname,
                             ) || "N/A"
                           }`}
                         >
@@ -650,7 +667,7 @@ const InterviewRequests = () => {
                             "N/A"}{" "}
                           -{" "}
                           {capitalizeFirstLetter(
-                            req.positionDetails?.companyname
+                            req.positionDetails?.companyname,
                           ) || "N/A"}
                         </p>
                       )}
@@ -664,8 +681,8 @@ const InterviewRequests = () => {
                         req.urgency === "High"
                           ? "bg-red-100 text-red-600"
                           : req.urgency === "Medium"
-                          ? "bg-yellow-100 text-yellow-600"
-                          : "bg-green-100 text-green-600"
+                            ? "bg-yellow-100 text-yellow-600"
+                            : "bg-green-100 text-green-600"
                       }`}
                     >
                       {capitalizeFirstLetter(req.urgency)}
@@ -701,14 +718,14 @@ const InterviewRequests = () => {
                           req.status === "accepted"
                             ? "bg-green-600"
                             : req.status === "declined"
-                            ? "bg-red-500"
-                            : req.status === "expired"
-                            ? "bg-gray-500"
-                            : req.status === "cancelled"
-                            ? "bg-orange-500"
-                            : req.status === "withdrawn"
-                            ? "bg-amber-600"
-                            : "bg-gray-400"
+                              ? "bg-red-500"
+                              : req.status === "expired"
+                                ? "bg-gray-500"
+                                : req.status === "cancelled"
+                                  ? "bg-orange-500"
+                                  : req.status === "withdrawn"
+                                    ? "bg-amber-600"
+                                    : "bg-gray-400"
                         }`}
                       >
                         {capitalizeFirstLetter(req?.status)}

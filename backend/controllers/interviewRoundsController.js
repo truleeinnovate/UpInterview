@@ -126,7 +126,7 @@ const saveInterviewRound = async (req, res) => {
       if (hasInterviewers && hasDateTime) {
         finalStatus = "Scheduled"; // First scheduling
         generateMeetingLink = true;
-        // await scheduleOrRescheduleNoShow(round);
+        await scheduleOrRescheduleNoShow(round);
       }
     }
 
@@ -975,7 +975,7 @@ const updateInterviewRound = async (req, res) => {
       shouldSendInternalEmail = true; // First scheduling → send email
       shouldcreateRequestFlow = true;
       generateMeetingLink = true;
-      // await scheduleOrRescheduleNoShow(round);
+      await scheduleOrRescheduleNoShow(round);
     }
     //  else if (
     //   wasScheduledBefore &&

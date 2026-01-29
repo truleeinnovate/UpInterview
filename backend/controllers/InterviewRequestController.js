@@ -678,7 +678,7 @@ exports.acceptInterviewRequest = async (req, res) => {
         actingAsUserId: req.user?._id || null,
         changes,
       });
-      // await scheduleOrRescheduleNoShow(round);//calling agenda to trigger round
+      await scheduleOrRescheduleNoShow(round); //calling agenda to trigger round
 
       // ✅ IMPORTANT: atomic update (NO manual history push)
       if (updatePayload) {

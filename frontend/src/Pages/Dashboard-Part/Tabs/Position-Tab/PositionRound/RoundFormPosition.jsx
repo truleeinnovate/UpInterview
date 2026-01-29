@@ -1637,29 +1637,36 @@ function RoundFormPosition() {
                       {/* Select Interviewers */}
                       {/* <div> */}
 
-                      {/* ── Required Interviewer Tags Section ── */}
-                      <div className="mb-6 mt-6">
-                        <div className="space-y-1.5 mb-3">
-                          <h3 className="text-base font-semibold text-gray-800">
-                            Required Interviewer Tags
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            Select tags to match interviewers with specific
-                            expertise for this round
-                          </p>
-                        </div>
+                      {organization && (
+                        <>
+                          {/* ── Required Interviewer Tags Section ── */}
+                          <div className="mb-6 mt-6">
+                            <div className="space-y-1.5 mb-3">
+                              <h3 className="text-base font-semibold text-gray-800">
+                                Required Interviewer Tags
+                              </h3>
+                              <p className="text-sm text-gray-600">
+                                Select tags to match interviewers with specific
+                                expertise for this round
+                              </p>
+                            </div>
 
-                        <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-                          {tagsData.map((tag) => {
-                            const isSelected = selectedTagIds.includes(tag._id);
-                            return (
-                              <button
-                                key={tag._id}
-                                type="button"
-                                onClick={() =>
-                                  toggleSelection(tag._id, setSelectedTagIds)
-                                }
-                                className={`
+                            <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+                              {tagsData.map((tag) => {
+                                const isSelected = selectedTagIds.includes(
+                                  tag._id,
+                                );
+                                return (
+                                  <button
+                                    key={tag._id}
+                                    type="button"
+                                    onClick={() =>
+                                      toggleSelection(
+                                        tag._id,
+                                        setSelectedTagIds,
+                                      )
+                                    }
+                                    className={`
             flex items-center gap-1.5 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
@@ -1669,46 +1676,51 @@ function RoundFormPosition() {
                 : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
             }
           `}
-                                style={{ "--tag-color": tag.color }}
-                              >
-                                <span
-                                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                                  style={{
-                                    backgroundColor: tag.color,
-                                  }}
-                                />
-                                <span className="text-black">{tag.name}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
+                                    style={{ "--tag-color": tag.color }}
+                                  >
+                                    <span
+                                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                      style={{
+                                        backgroundColor: tag.color,
+                                      }}
+                                    />
+                                    <span className="text-black">
+                                      {tag.name}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
 
-                      {/* ── Preferred Teams Section ── */}
-                      <div className="mb-6">
-                        <div className="space-y-1.5 mb-3">
-                          <h3 className="text-base font-semibold text-gray-800">
-                            Preferred Teams
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            Optionally select teams to prioritize interviewers
-                            from specific groups
-                          </p>
-                        </div>
+                          {/* ── Preferred Teams Section ── */}
+                          <div className="mb-6">
+                            <div className="space-y-1.5 mb-3">
+                              <h3 className="text-base font-semibold text-gray-800">
+                                Preferred Teams
+                              </h3>
+                              <p className="text-sm text-gray-600">
+                                Optionally select teams to prioritize
+                                interviewers from specific groups
+                              </p>
+                            </div>
 
-                        <div className="flex flex-wrap gap-x-3 gap-y-3">
-                          {teamsData.map((team) => {
-                            const isSelected = selectedTeamIds.includes(
-                              team._id,
-                            );
-                            return (
-                              <button
-                                key={team._id}
-                                type="button"
-                                onClick={() =>
-                                  toggleSelection(team._id, setSelectedTeamIds)
-                                }
-                                className={`
+                            <div className="flex flex-wrap gap-x-3 gap-y-3">
+                              {teamsData.map((team) => {
+                                const isSelected = selectedTeamIds.includes(
+                                  team._id,
+                                );
+                                return (
+                                  <button
+                                    key={team._id}
+                                    type="button"
+                                    onClick={() =>
+                                      toggleSelection(
+                                        team._id,
+                                        setSelectedTeamIds,
+                                      )
+                                    }
+                                    className={`
             flex items-center gap-2 
             px-4 py-2 rounded-full text-sm font-medium
             border transition-all duration-150
@@ -1718,14 +1730,18 @@ function RoundFormPosition() {
                 : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
             }
           `}
-                              >
-                                <span className="text-base">👥</span>
-                                <span className="text-black">{team.name}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
+                                  >
+                                    <span className="text-base">👥</span>
+                                    <span className="text-black">
+                                      {team.name}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </>
+                      )}
 
                       <div className="flex justify-between items-center mb-2">
                         <label className="block text-sm font-medium text-gray-700">

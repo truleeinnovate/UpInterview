@@ -134,8 +134,10 @@ const interviewRoundSchema = new mongoose.Schema(
     // noShowJobId: {
     //   type: mongoose.Schema.Types.ObjectId, // Agenda job _id is ObjectId
     //   default: null,
-    //   sparse: true,
+    //   // sparse: true,
     // },
+
+    noShowJobId: { type: String, default: null },
 
     // Track last and current actions + reasons
     /* ------------------------------------
@@ -257,23 +259,50 @@ interviewRoundSchema.post("findOneAndUpdate", async function (doc) {
   }
 });
 
-// const { scheduleOrRescheduleNoShow } = require(
-//   "../../services/interviews/roundNoShowScheduler"
-// );
+const {
+  scheduleOrRescheduleNoShow,
+} = require("../../services/interviews/roundNoShowScheduler");
 
-// // After create
-// interviewRoundSchema.post("save", async function (doc) {
-//   if (doc.isNew || doc.isModified("dateTime") || doc.isModified("status")) {
-//     await scheduleOrRescheduleNoShow(doc);
-//   }
-// });
+// After create
+interviewRoundSchema.post("save", async function (doc) {
+  // Skip if this is just a noShowJobId update
+  if (
+    this.isModified("noShowJobId") &&
+    !this.isModified("dateTime") &&
+    !this.isModified("status")
+  ) {
+    return;
+  }
 
-// // After update
-// interviewRoundSchema.post("findOneAndUpdate", async function (doc) {
-//   if (doc) {
-//     await scheduleOrRescheduleNoShow(doc);
-//   }
-// });
+  if (doc.isNew || doc.isModified("dateTime") || doc.isModified("status")) {
+    await scheduleOrRescheduleNoShow(doc);
+  }
+});
+
+// After update
+interviewRoundSchema.post("findOneAndUpdate", async function (doc) {
+  // if (doc) {
+  //   await scheduleOrRescheduleNoShow(doc);
+  // }
+
+  if (!doc) return;
+
+  // Check if the update was for scheduling-relevant fields
+  const update = this.getUpdate();
+  const isSchedulingUpdate =
+    update.$set?.dateTime ||
+    update.$set?.status ||
+    update.$set?.interviewerType;
+
+  // Skip if only noShowJobId was updated
+  if (!isSchedulingUpdate && update.$set?.noShowJobId) {
+    return;
+  }
+
+  if (isSchedulingUpdate) {
+    await scheduleOrRescheduleNoShow(doc);
+  }
+});
 
 const InterviewRounds = mongoose.model("InterviewRounds", interviewRoundSchema);
 module.exports = { InterviewRounds };
