@@ -442,7 +442,7 @@ const CombinedNavbar = React.memo(() => {
           permissionKey: "QuestionBank.ViewTab",
         },
         {
-          path: "/feedbacks",
+          path: "/feedback",
           label: "Feedback",
           permissionKey: "Feedback.ViewTab",
         },
@@ -1432,7 +1432,7 @@ const CombinedNavbar = React.memo(() => {
                           )}
                           {(isActive("/analytics") ||
                             isActive("/support-desk") ||
-                            isActive("/feedbacks") ||
+                            isActive("/feedback") ||
                             isActive("/question-bank") ||
                             isActive("/companies") || 
                             isActive("/my-teams") || 
@@ -1466,7 +1466,7 @@ const CombinedNavbar = React.memo(() => {
                                   : []),
                                
                                 ...(enhancedCheckPermission("Feedback")
-                                  ? [{ to: "/feedbacks", label: "Feedback" }]
+                                  ? [{ to: "/feedback", label: "Feedback" }]
                                   : []),
                                 ...(enhancedCheckPermission("SupportDesk")
                                   ? [
@@ -1957,7 +1957,7 @@ const CombinedNavbar = React.memo(() => {
                             isActive("/analytics") ||
 
                             isActive("/support-desk") ||
-                            isActive("/feedbacks") ||
+                            isActive("/feedback") ||
                             isActive("/companies") || 
                             isActive("/my-teams") || 
                             isActive("/interviewer-tags") ||
@@ -2000,7 +2000,7 @@ const CombinedNavbar = React.memo(() => {
                                   : []),
                                
                                 ...(enhancedCheckPermission("Feedback")
-                                  ? [{ to: "/feedbacks", label: "Feedback" }]
+                                  ? [{ to: "/feedback", label: "Feedback" }]
                                   : []),
                                 ...(enhancedCheckPermission("SupportDesk")
                                   ? [
