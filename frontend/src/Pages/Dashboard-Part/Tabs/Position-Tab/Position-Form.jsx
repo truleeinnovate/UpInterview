@@ -175,10 +175,6 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   const { id } = useParams();
   const { position: selectedPosition, isLoading: isPositionLoading } =
     usePositionById(id);
-  console.log(
-    "SELECTED POSITION ===============================> ",
-    selectedPosition,
-  );
 
   // Fetch the position's linked interview template by id instead of
   // relying on the paginated/filtered templatesData list.
@@ -1637,7 +1633,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           max={999999999}        // 9 digits maximum
                           label="Min Salary (Annual)"
                           name="minSalary"
-                          placeholder="₹ Min Salary (Annual)"
+                          placeholder="Min Salary (Annual)"
                         // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
@@ -1649,7 +1645,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           error={errors.maxsalary}
                           label="Max Salary (Annual)"
                           name="maxSalary"
-                          placeholder="₹ Max Salary (Annual)"
+                          placeholder="Max Salary (Annual)"
                         // required={formData.minSalary ? true : false}
                         />
                       </div>

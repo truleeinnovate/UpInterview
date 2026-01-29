@@ -1017,7 +1017,7 @@ function Activity({ parentId, parentId2, mode }) {
 
                   {/* Content Card */}
                   <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow group-hover:border-slate-300">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                    <div className="flex flex-row sm:flex-col md:flex-col justify-between gap-3 mb-4">
                       <div className="flex items-center gap-3">
                         <span className="p-2 bg-slate-50 rounded-lg">
                           <User className="w-4 h-4 text-slate-400" />
@@ -1034,10 +1034,12 @@ function Activity({ parentId, parentId2, mode }) {
                           </p>
                         </div>
                       </div>
-                      <StatusBadge
-                        status={feed.feedType}
-                        text={capitalizeFirstLetter(feed.feedType)}
-                      />
+                      <div>
+                        <StatusBadge
+                          status={feed?.feedType}
+                          text={capitalizeFirstLetter(feed?.feedType)}
+                        />
+                      </div>
                     </div>
 
                     {/* Metadata Content Area */}

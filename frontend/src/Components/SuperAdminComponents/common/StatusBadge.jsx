@@ -31,6 +31,8 @@
       case "opened":
       case "normal":
       case "scheduled":
+      case "info":
+      case "update":
         return "bg-custom-blue/10 text-custom-blue rounded-full px-2 py-1 font-semibold";
       case "pending":
       case "awaiting":
@@ -46,6 +48,7 @@
       case "in progress":
       case "inprogress":
       case "medium":
+      case "alert":
         return "badge-warning px-2 py-1 rounded-full font-semibold";
       case "inactive":
       case "failed":

@@ -10,6 +10,7 @@ const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Candidate } = require("../models/candidate.js");
 const { Resume } = require("../models/Resume.js");
 const Role = require("../models/RolesData.js");
+const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
 const { Interview } = require("../models/Interview/Interview.js");
 const {
   CandidateAssessment,
@@ -823,7 +824,12 @@ const getCandidateById = async (req, res) => {
     // Get role details from resume's CurrentRole
     let roleDetails = null;
     if (activeResume?.CurrentRole) {
-      roleDetails = await Role.findOne({
+      // roleDetails = await Role.findOne({
+      //   roleName: activeResume.CurrentRole,
+      // })
+      //   .select("roleName roleLabel")
+      //   .lean();
+      roleDetails = await RoleMaster.findOne({
         roleName: activeResume.CurrentRole,
       })
         .select("roleName roleLabel")
