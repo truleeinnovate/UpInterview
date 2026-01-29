@@ -192,13 +192,14 @@ function AssessmentsTab({ assessment }) {
       // <-------------------------------v1.0.3
       expiryAt: candidate.expiryAt,
       // ------------------------------v1.0.3 >
+      createdAt: candidate.createdAt,
       result:
         candidate.status === "completed"
           ? assessment.passScoreBy === "Each Section"
             ? "N/A"
             : candidate.totalScore >= (assessment?.passScore || 0)
-            ? "pass"
-            : "fail"
+              ? "pass"
+              : "fail"
           : null,
       Phone: candidate.candidateId?.Phone || "N/A",
       CountryCode: candidate.candidateId?.CountryCode || "N/A",
@@ -253,11 +254,10 @@ function AssessmentsTab({ assessment }) {
                     </span> */}
                       {/* //<---------------------- v1.0.0 */}
                       <span
-                        className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                          schedule.status === "scheduled"
+                        className={`px-2.5 py-1 text-xs font-medium rounded-full ${schedule.status === "scheduled"
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-100 text-gray-800"
-                        }`}
+                          }`}
                       >
                         {schedule.status.charAt(0).toUpperCase() +
                           schedule.status.slice(1)}
@@ -275,11 +275,10 @@ function AssessmentsTab({ assessment }) {
                           }
                         }}
                         disabled={shouldDisableActionButtons(schedule)}
-                        className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                          shouldDisableActionButtons(schedule)
+                        className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${shouldDisableActionButtons(schedule)
                             ? "text-gray-400 bg-gray-100 cursor-not-allowed"
                             : "text-custom-blue bg-blue-100 hover:bg-custom-blue/10 focus:ring-custom-blue"
-                        }`}
+                          }`}
                         title={
                           shouldDisableActionButtons(schedule)
                             ? "Action not available for this status"
@@ -297,11 +296,10 @@ function AssessmentsTab({ assessment }) {
                           }
                         }}
                         disabled={shouldDisableActionButtons(schedule)}
-                        className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                          shouldDisableActionButtons(schedule)
+                        className={`flex items-center px-3 py-1.5 sm:text-xs text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${shouldDisableActionButtons(schedule)
                             ? "text-gray-400 bg-gray-100 cursor-not-allowed"
                             : "text-red-700 bg-red-100 hover:bg-red-200 focus:ring-red-500"
-                        }`}
+                          }`}
                         title={
                           shouldDisableActionButtons(schedule)
                             ? "Action not available for this status"
@@ -359,8 +357,8 @@ function AssessmentsTab({ assessment }) {
           isOpen={isShareOpen}
           onCloseshare={() => setIsShareOpen(false)}
           assessment={assessment}
-          // AssessmentTitle={assessment?.AssessmentTitle}
-          // assessmentId={assessment._id}
+        // AssessmentTitle={assessment?.AssessmentTitle}
+        // assessmentId={assessment._id}
         />
       )}
       {/* <---------------------- v1.0.3 */}

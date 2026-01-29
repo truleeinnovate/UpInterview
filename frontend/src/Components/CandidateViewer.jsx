@@ -159,8 +159,8 @@ export default function CandidateViewer({
             //     path: position?.id ? `/positions/${position.id}` : "#",
             //     status: position?.status || "Opened"
             // },
-            { label: "Candidates", path: "#" },
-            { label: "Screening", path: "#" },
+            // { label: "Candidates", path: "#" },
+            { label: "Candidate Screening", path: "#" },
             { label: "Create Application", path: "#" }
         ]
         : [
@@ -170,8 +170,8 @@ export default function CandidateViewer({
             //     path: position?.id ? `/positions/${position.id}` : "#",
             //     status: position?.status || "Opened"
             // },
-            { label: "Candidates", path: "#" },
-            { label: "Screening", path: "#" },
+            // { label: "Candidates", path: "#" },
+            { label: "Candidate Screening", path: "#" },
             { label: "Create Application", path: "#" }
         ];
 
