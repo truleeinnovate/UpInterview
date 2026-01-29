@@ -504,13 +504,13 @@ const Feedback = () => {
   };
 
   const handleView = (feedback) => {
-    navigate(`/feedback/view/${feedback._id}`, {
+    navigate(`/feedbacks/view/${feedback._id}`, {
       state: { feedback: { ...feedback }, mode: "view" },
     });
   };
 
   const handleEdit = (feedback) => {
-    navigate(`/feedback/edit/${feedback._id}`, {
+    navigate(`/feedbacks/edit/${feedback._id}`, {
       state: { feedback: { ...feedback }, mode: "edit" },
     });
   };

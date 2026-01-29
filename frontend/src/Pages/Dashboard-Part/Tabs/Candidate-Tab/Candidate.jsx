@@ -731,7 +731,7 @@ function Candidate({
                             from: `/assessment-details/${row?.assessmentId}`,
                             assessmentId: row?.assessmentId,
                           }
-                          : { from: "/candidate" },
+                          : { from: "/candidates" },
                       }
                     )
                   }
@@ -1444,7 +1444,7 @@ function Candidate({
           icon: <Eye className="w-4 h-4 text-custom-blue" />,
           onClick: (row) => {
             if (isPositionView) {
-              navigate(`/candidate/view-details/${row._id}`, {
+              navigate(`/candidates/view-details/${row._id}`, {
                 state: { from: "position" },
               });
               return;
@@ -1460,7 +1460,7 @@ function Candidate({
                     from: `/assessment-details/${row?.assessmentId}`,
                     assessmentId: row?.assessmentId,
                   }
-                  : { from: "/candidate" },
+                  : { from: "/candidates" },
               }
             );
           },
@@ -1490,7 +1490,7 @@ function Candidate({
           label: "Edit",
           icon: <Pencil className="w-4 h-4 text-green-600" />,
           onClick: (item, e) => {
-            navigate(`/candidate/edit/${item._id}`);
+            navigate(`/candidates/edit/${item._id}`);
           },
         },
       ]

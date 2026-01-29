@@ -456,7 +456,7 @@ const ShareAssessment = ({
   const handleAddNewCandidateClick = () => {
     setShowMainContent(false);
     // <------------------------------- v1.0.0
-    navigate("/candidate/new");
+    navigate("/candidates/new");
     // ------------------------------ v1.0.0 >
   };
 

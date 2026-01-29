@@ -573,11 +573,11 @@ const PositionSlideDetails = () => {
   const breadcrumbItems = [
     {
       label: "Positions",
-      path: "/position",
+      path: "/positions",
     },
     {
       label: position?.title || "Position",
-      path: `/position/view-details/${id}`,
+      path: `/positions/view-details/${id}`,
       status: position?.status,
     },
   ];
@@ -651,7 +651,7 @@ const PositionSlideDetails = () => {
             <div className="flex flex-row sm:items-center justify-between gap-4 sm:gap-0 mb-6 sm:mb-8 pt-6">
               <button
                 onClick={() =>
-                  mode === "Interview" ? navigate(-1) : navigate("/position")
+                  mode === "Interview" ? navigate(-1) : navigate("/positions")
                 }
                 // onClick={() => navigate("/position")}
                 className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
@@ -713,7 +713,7 @@ const PositionSlideDetails = () => {
                   {/* Right Side - Action Buttons */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <Link
-                      to={`/position/edit-position/${position?._id}`}
+                      to={`/positions/edit-position/${position?._id}`}
                       state={{ from: location.pathname }}
                       className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                     >
@@ -721,7 +721,7 @@ const PositionSlideDetails = () => {
                       Edit Position
                     </Link>
                     <button
-                      onClick={() => navigate(`/position/view-details/${id}/upload-resumes`)}
+                      onClick={() => navigate(`/positions/view-details/${id}/upload-resumes`)}
                       className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                     >
                       <Plus className="h-4 w-4 mr-1.5" />

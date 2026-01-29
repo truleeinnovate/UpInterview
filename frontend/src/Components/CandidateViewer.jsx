@@ -140,7 +140,7 @@ export default function CandidateViewer({
         // If we saved successfully (savedData present) and have a position, go to Candidates tab
         // ONLY if totalResults is 1. If > 1, we want to stay on the screening list.
         if (savedData && position?._id && totalResults === 1) {
-            navigate(`/position/view-details/${position._id}`, {
+            navigate(`/positions/view-details/${position._id}`, {
                 state: { activeTab: 'Candidates' }
             });
         }

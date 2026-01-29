@@ -156,7 +156,7 @@ const InterviewList = ({ interviews, isPositionView }) => {
 
   const handleView = (candidate) => {
     if (effectivePermissions.Candidates?.View && candidate?._id) {
-      navigate(`/candidate/view-details/${candidate._id}`);
+      navigate(`/candidates/view-details/${candidate._id}`);
     }
   };
 
@@ -978,7 +978,7 @@ const InterviewList = ({ interviews, isPositionView }) => {
           icon: <CircleUser className="w-4 h-4 text-purple-600" />,
           onClick: (item) =>
             item.candidateId &&
-            navigate(`/candidate/view-details/${item.candidateId._id}`),
+            navigate(`/candidates/view-details/${item.candidateId._id}`),
         },
       ]
       : []),

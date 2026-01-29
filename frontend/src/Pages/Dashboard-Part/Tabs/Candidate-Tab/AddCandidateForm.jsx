@@ -902,7 +902,7 @@ const AddCandidateForm = ({
         navigate(-1); // `/candidate`
         break;
       case "Candidate Edit":
-        navigate(`/candidate/${id}`);
+        navigate(`/candidates/${id}`);
         break;
       default:
         // navigate("/candidate");
@@ -1235,11 +1235,11 @@ const AddCandidateForm = ({
             notify.success("Candidate updated successfully");
             break;
           case "Candidate Edit":
-            navigate(`/candidate/${id}`);
+            navigate(`/candidates/${id}`);
             notify.success("Candidate updated successfully");
             break;
           default:
-            navigate("/candidate");
+            navigate("/candidates");
             if (candidateResponse.status === "success") {
               notify.success("Candidate added successfully");
             } else if (
