@@ -1011,9 +1011,9 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                                                 <button
                                                                     className="px-3 py-1.5 text-sm font-medium text-custom-blue hover:bg-custom-blue/5 border border-custom-blue/20 rounded-lg transition-colors whitespace-nowrap"
                                                                     onClick={() => setViewingResult(result)}
-                                                                    title="View / Proceed"
+                                                                    title="View & Proceed"
                                                                 >
-                                                                    View / Proceed
+                                                                    View & Proceed
                                                                 </button>
                                                             </div>
                                                         </td>

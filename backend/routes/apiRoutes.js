@@ -1546,6 +1546,45 @@ router.get(
                 .populate("candidateId")
                 .lean();
 
+              // <-------------------------------v1.0.9
+              // Fetch Resume data for candidates (skills, experience moved from Candidate)
+              const candidateIds = candidateAssessments
+                .filter((ca) => ca.candidateId?._id)
+                .map((ca) => ca.candidateId._id);
+
+              if (candidateIds.length > 0) {
+                const resumes = await Resume.find({
+                  candidateId: { $in: candidateIds },
+                  isActive: true,
+                })
+                  .select(
+                    "candidateId skills CurrentExperience HigherQualification ImageData"
+                  )
+                  .lean();
+
+                const resumeMap = {};
+                resumes.forEach((r) => {
+                  resumeMap[String(r.candidateId)] = r;
+                });
+
+                // Merge Resume data into candidate assessments
+                candidateAssessments.forEach((ca) => {
+                  if (ca.candidateId?._id) {
+                    const resume = resumeMap[String(ca.candidateId._id)];
+                    if (resume) {
+                      ca.candidateId = {
+                        ...ca.candidateId,
+                        skills: resume.skills,
+                        CurrentExperience: resume.CurrentExperience,
+                        HigherQualification: resume.HigherQualification,
+                        ImageData: resume.ImageData,
+                      };
+                    }
+                  }
+                });
+              }
+              // ------------------------------v1.0.9 >
+
               const schedulesWithCandidates = scheduledAssessments.map(
                 (schedule) => {
                   const candidates = candidateAssessments.filter(
@@ -1632,6 +1671,45 @@ router.get(
               .populate("candidateId")
               .lean();
 
+            // <-------------------------------v1.0.9
+            // Fetch Resume data for candidates (skills, experience moved from Candidate)
+            const candidateIds = candidateAssessments
+              .filter((ca) => ca.candidateId?._id)
+              .map((ca) => ca.candidateId._id);
+
+            if (candidateIds.length > 0) {
+              const resumes = await Resume.find({
+                candidateId: { $in: candidateIds },
+                isActive: true,
+              })
+                .select(
+                  "candidateId skills CurrentExperience HigherQualification ImageData"
+                )
+                .lean();
+
+              const resumeMap = {};
+              resumes.forEach((r) => {
+                resumeMap[String(r.candidateId)] = r;
+              });
+
+              // Merge Resume data into candidate assessments
+              candidateAssessments.forEach((ca) => {
+                if (ca.candidateId?._id) {
+                  const resume = resumeMap[String(ca.candidateId._id)];
+                  if (resume) {
+                    ca.candidateId = {
+                      ...ca.candidateId,
+                      skills: resume.skills,
+                      CurrentExperience: resume.CurrentExperience,
+                      HigherQualification: resume.HigherQualification,
+                      ImageData: resume.ImageData,
+                    };
+                  }
+                }
+              });
+            }
+            // ------------------------------v1.0.9 >
+
             const schedulesWithCandidates = scheduledAssessments.map(
               (schedule) => {
                 const candidates = candidateAssessments.filter(
@@ -1715,6 +1793,45 @@ router.get(
             })
               .populate("candidateId")
               .lean();
+
+            // <-------------------------------v1.0.9
+            // Fetch Resume data for candidates (skills, experience moved from Candidate)
+            const candidateIds = candidateAssessments
+              .filter((ca) => ca.candidateId?._id)
+              .map((ca) => ca.candidateId._id);
+
+            if (candidateIds.length > 0) {
+              const resumes = await Resume.find({
+                candidateId: { $in: candidateIds },
+                isActive: true,
+              })
+                .select(
+                  "candidateId skills CurrentExperience HigherQualification ImageData"
+                )
+                .lean();
+
+              const resumeMap = {};
+              resumes.forEach((r) => {
+                resumeMap[String(r.candidateId)] = r;
+              });
+
+              // Merge Resume data into candidate assessments
+              candidateAssessments.forEach((ca) => {
+                if (ca.candidateId?._id) {
+                  const resume = resumeMap[String(ca.candidateId._id)];
+                  if (resume) {
+                    ca.candidateId = {
+                      ...ca.candidateId,
+                      skills: resume.skills,
+                      CurrentExperience: resume.CurrentExperience,
+                      HigherQualification: resume.HigherQualification,
+                      ImageData: resume.ImageData,
+                    };
+                  }
+                }
+              });
+            }
+            // ------------------------------v1.0.9 >
 
             const schedulesWithCandidates = scheduledAssessments.map(
               (schedule) => {
