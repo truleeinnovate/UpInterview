@@ -907,7 +907,6 @@ const getCandidateById = async (req, res) => {
         RelevantExperience: activeResume.RelevantExperience,
         CurrentRole: activeResume.CurrentRole,
         skills: activeResume.skills,
-        ImageData: activeResume.ImageData,
         resume: activeResume.resume,
         professionalSummary: activeResume.professionalSummary,
         keyAchievements: activeResume.keyAchievements,

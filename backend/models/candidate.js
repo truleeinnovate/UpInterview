@@ -16,6 +16,14 @@ const candidateSchema = new mongoose.Schema(
     languages: [String],
     certifications: [String],
     noticePeriod: String,
+    ImageData: {
+      filename: String,
+      path: String,
+      contentType: String,
+      publicId: String,
+      fileSize: Number,
+      uploadDate: Date,
+    },
 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
@@ -24,7 +32,7 @@ const candidateSchema = new mongoose.Schema(
     // Mansoor: added external id for creating the external id only from the external hrms applications
     externalId: { type: String, sparse: true, index: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Add indexes to candidate schema
