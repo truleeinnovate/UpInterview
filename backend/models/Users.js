@@ -43,6 +43,7 @@ const UsersSchema = new mongoose.Schema({
 UsersSchema.index({ tenantId: 1 });
 UsersSchema.index({ email: 1 });
 UsersSchema.index({ roleId: 1 });
+UsersSchema.index({ tenantId: 1, createdAt: -1 });
 
 const Users = mongoose.model('Users', UsersSchema);
 module.exports = { Users };
