@@ -66,10 +66,10 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const menuRef = useRef(null);
 
   const mainActions = kanbanActions.filter((a) =>
-    ["view", "edit"].includes(a.key)
+    ["view", "edit"].includes(a.key),
   );
   const overflowActions = kanbanActions.filter(
-    (a) => !["view", "edit"].includes(a.key)
+    (a) => !["view", "edit"].includes(a.key),
   );
 
   //  Close menu when clicking outside
@@ -217,7 +217,7 @@ function Candidate({
   const pageType = "adminPortal";
   const { skills, qualifications, currentRoles, colleges } = useMasterData(
     {},
-    pageType
+    pageType,
   );
 
   const [showBulkUpload, setShowBulkUpload] = useState(false);
@@ -255,7 +255,7 @@ function Candidate({
   // v1.0.6 <--------------------------------------------------------
   // v1.0.7 <--------------------------------------------------------
   useScrollLock(
-    showDeleteConfirmModal || view === "table" || view === "kanban"
+    showDeleteConfirmModal || view === "table" || view === "kanban",
   );
   // v1.0.7 -------------------------------------------------------->
   // v1.0.6 -------------------------------------------------------->
@@ -278,7 +278,7 @@ function Candidate({
   const handleDeleteCandidate = async () => {
     try {
       let res = await deleteCandidateData(
-        deleteCandidate?._id || deleteCandidate?.id || "N/A"
+        deleteCandidate?._id || deleteCandidate?.id || "N/A",
       );
 
       // ✅ If API returns success
@@ -334,7 +334,7 @@ function Candidate({
       // Don't show resend button for completed, cancelled, failed, or pass statuses
       const status = candidate.status?.toString().toLowerCase().trim();
       const canResend = !["completed", "cancelled", "failed", "pass"].includes(
-        status
+        status,
       );
       return canResend;
     }
@@ -374,7 +374,7 @@ function Candidate({
       setExperience(selectedFilters.experience);
       //<-----v1.0.4--------
       setRelevantExperience(
-        selectedFilters.relevantExperience || { min: "", max: "" }
+        selectedFilters.relevantExperience || { min: "", max: "" },
       );
       setSelectedRoles(selectedFilters.roles || []);
       setSelectedUniversities(selectedFilters.universities || []);
@@ -410,13 +410,13 @@ function Candidate({
     setSelectedStatus((prev) =>
       prev.includes(status)
         ? prev.filter((s) => s !== status)
-        : [...prev, status]
+        : [...prev, status],
     );
   };
 
   const handleTechToggle = (tech) => {
     setSelectedTech((prev) =>
-      prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech]
+      prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech],
     );
   };
 
@@ -425,7 +425,7 @@ function Candidate({
     setSelectedRoles((prev) =>
       prev.includes(roleName)
         ? prev.filter((r) => r !== roleName)
-        : [...prev, roleName]
+        : [...prev, roleName],
     );
   };
 
@@ -433,7 +433,7 @@ function Candidate({
     setSelectedUniversities((prev) =>
       prev.includes(universityName)
         ? prev.filter((u) => u !== universityName)
-        : [...prev, universityName]
+        : [...prev, universityName],
     );
   };
   //-----v1.0.4-------->
@@ -483,7 +483,8 @@ function Candidate({
     setFilterPopupOpen(false);
   };
 
-  const dataToUse = (isAssessmentView || isPositionView) ? candidates : candidateData;
+  const dataToUse =
+    isAssessmentView || isPositionView ? candidates : candidateData;
 
   const handleApplyFilters = () => {
     const filters = {
@@ -508,15 +509,15 @@ function Candidate({
     setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 ||
-      filters.tech.length > 0 ||
-      filters.experience.min ||
-      //<-----v1.0.4--------
-      filters.experience.max ||
-      filters.roles.length > 0 ||
-      filters.universities.length > 0 ||
-      filters.relevantExperience.min ||
-      filters.relevantExperience.max ||
-      !!filters.createdDate
+        filters.tech.length > 0 ||
+        filters.experience.min ||
+        //<-----v1.0.4--------
+        filters.experience.max ||
+        filters.roles.length > 0 ||
+        filters.universities.length > 0 ||
+        filters.relevantExperience.min ||
+        filters.relevantExperience.max ||
+        !!filters.createdDate,
       //-----v1.0.4-------->
     );
     setFilterPopupOpen(false);
@@ -549,7 +550,7 @@ function Candidate({
       const matchesTech =
         selectedFilters.tech.length === 0 ||
         user.skills?.some((skill) =>
-          selectedFilters.tech.includes(skill.skill)
+          selectedFilters.tech.includes(skill.skill),
         );
       const matchesExperience =
         (!selectedFilters.experience.min ||
@@ -579,16 +580,16 @@ function Candidate({
       const normalizedQuery = normalizeSpaces(searchQuery);
 
       const fullNameNormal = normalizeSpaces(
-        `${user.FirstName || ""} ${user.LastName || ""}`
+        `${user.FirstName || ""} ${user.LastName || ""}`,
       );
 
       const fullNameReverse = normalizeSpaces(
-        `${user.LastName || ""} ${user.FirstName || ""}`
+        `${user.LastName || ""} ${user.FirstName || ""}`,
       );
 
       const matchesSearchQuery =
         fieldsToSearch.some((field) =>
-          normalizeSpaces(field).includes(normalizedQuery)
+          normalizeSpaces(field).includes(normalizedQuery),
         ) ||
         fullNameNormal.includes(normalizedQuery) ||
         fullNameReverse.includes(normalizedQuery);
@@ -677,7 +678,7 @@ function Candidate({
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "Candidates"
+    "Candidates",
   );
   // v2.0.2 ----------------------------------------------------------------------------->
 
@@ -723,17 +724,17 @@ function Candidate({
                       isAssessmentView
                         ? `/assessment/${row?.assessmentId}/view-details/${row?._id}`
                         : // `/assessments/candidate-details/${row._id}`
-                        effectivePermissions.Candidates?.View &&
-                        `view-details/${row._id}`,
+                          effectivePermissions.Candidates?.View &&
+                            `view-details/${row._id}`,
                       {
                         state: isAssessmentView
                           ? {
-                            from: `/assessment-details/${row?.assessmentId}`,
-                            assessmentId: row?.assessmentId,
-                          }
+                              from: `/assessment-details/${row?.assessmentId}`,
+                              assessmentId: row?.assessmentId,
+                            }
                           : { from: "/candidates" },
-                      }
-                    )
+                      },
+                    );
                   }
                   //  effectivePermissions.Candidates?.View && navigate(`view-details/${row._id}`)
                 }
@@ -834,80 +835,80 @@ function Candidate({
     // Add status column only for assessment view
     ...(isAssessmentView
       ? [
-        {
-          key: "status",
-          header: "Status",
-          render: (value, row) => {
-            const status = row.status || "pending";
-            return (
-              <span
-                className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                  status
-                )}`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </span>
-            );
-          },
-        },
-        {
-          key: "expiryAt",
-          header: "Expiry Date",
-          render: (value, row) => {
-            const status = (row.status || "pending").toLowerCase();
-
-            // ── Special cases ────────────────────────────────────────
-
-            if (status === "expired") {
+          {
+            key: "status",
+            header: "Status",
+            render: (value, row) => {
+              const status = row.status || "pending";
               return (
-                <div className="text-sm">
-                  <div className="font-medium text-red-700">Expired</div>
-                  {row.expiryAt && (
-                    <div className="text-xs text-red-600/70">
-                      {new Date(row.expiryAt).toLocaleDateString()}
-                    </div>
-                  )}
-                </div>
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                    status,
+                  )}`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </span>
               );
-            }
+            },
+          },
+          {
+            key: "expiryAt",
+            header: "Expiry Date",
+            render: (value, row) => {
+              const status = (row.status || "pending").toLowerCase();
 
-            if (["completed", "pass", "fail"].includes(status)) {
-              if (row.endedAt) {
+              // ── Special cases ────────────────────────────────────────
+
+              if (status === "expired") {
                 return (
                   <div className="text-sm">
-                    <div className="font-medium text-gray-900">
-                      {new Date(row.endedAt).toLocaleDateString()}
-                    </div>
-                    <div className="text-xs text-gray-500">Completed</div>
+                    <div className="font-medium text-red-700">Expired</div>
+                    {row.expiryAt && (
+                      <div className="text-xs text-red-600/70">
+                        {new Date(row.expiryAt).toLocaleDateString()}
+                      </div>
+                    )}
                   </div>
                 );
               }
-              return <span className="text-gray-600 text-sm">Completed</span>;
-            }
 
-            if (status === "cancelled") {
+              if (["completed", "pass", "fail"].includes(status)) {
+                if (row.endedAt) {
+                  return (
+                    <div className="text-sm">
+                      <div className="font-medium text-gray-900">
+                        {new Date(row.endedAt).toLocaleDateString()}
+                      </div>
+                      <div className="text-xs text-gray-500">Completed</div>
+                    </div>
+                  );
+                }
+                return <span className="text-gray-600 text-sm">Completed</span>;
+              }
+
+              if (status === "cancelled") {
+                return (
+                  <span className="text-gray-500 text-sm font-medium">
+                    Cancelled
+                  </span>
+                );
+              }
+
+              // ── All other statuses (pending, in_progress, extended...) ──
+              // Just show the expiry date — NO remaining time
+
+              if (!row.expiryAt) {
+                return <span className="text-gray-400 text-sm">N/A</span>;
+              }
+
               return (
-                <span className="text-gray-500 text-sm font-medium">
-                  Cancelled
-                </span>
+                <div className="text-sm font-medium text-gray-900">
+                  {new Date(row.expiryAt).toLocaleDateString()}
+                </div>
               );
-            }
-
-            // ── All other statuses (pending, in_progress, extended...) ──
-            // Just show the expiry date — NO remaining time
-
-            if (!row.expiryAt) {
-              return <span className="text-gray-400 text-sm">N/A</span>;
-            }
-
-            return (
-              <div className="text-sm font-medium text-gray-900">
-                {new Date(row.expiryAt).toLocaleDateString()}
-              </div>
-            );
+            },
           },
-        },
-      ]
+        ]
       : []),
     // ------------------------------ v1.0.2 >
   ];
@@ -916,160 +917,159 @@ function Candidate({
   const tableActions = [
     ...(effectivePermissions.Candidates?.View
       ? [
-        {
-          key: "view",
-          label: "View Details",
-          icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: (row) => {
-            if (isPositionView) {
-              navigate(`/candidate/view-details/${row._id}`, {
-                state: { from: "position" },
-              });
-              return;
-            }
-            navigate(
-              isAssessmentView
-                ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
-                : // `/assessments/candidate-details/${row._id}`
-                `view-details/${row._id}`,
-              {
-                state: isAssessmentView
-                  ? {
-                    from: `/assessment-details/${row?.assessmentId}`,
-                    assessmentId: row?.assessmentId,
-                  }
-                  : { from: "/candidate" },
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: (row) => {
+              if (isPositionView) {
+                navigate(`/candidate/view-details/${row._id}`, {
+                  state: { from: "position" },
+                });
+                return;
               }
-            );
+              navigate(
+                isAssessmentView
+                  ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
+                  : // `/assessments/candidate-details/${row._id}`
+                    `view-details/${row._id}`,
+                {
+                  state: isAssessmentView
+                    ? {
+                        from: `/assessment-details/${row?.assessmentId}`,
+                        assessmentId: row?.assessmentId,
+                      }
+                    : { from: "/candidate" },
+                },
+              );
+            },
+            // navigate(
+            //   isAssessmentView
+            //     ? `candidate-details/${row._id}`
+            //     : `view-details/${row._id}`,
+            //   {
+            //     state: isAssessmentView
+            //       ? {
+            //           from: `/assessment-details/${row?.assessmentId}`,
+            //           assessmentId: row?.assessmentId,
+            //         }
+            //       : { from: "/candidate" },
+            //   }
+            // ),
           },
-          // navigate(
-          //   isAssessmentView
-          //     ? `candidate-details/${row._id}`
-          //     : `view-details/${row._id}`,
-          //   {
-          //     state: isAssessmentView
-          //       ? {
-          //           from: `/assessment-details/${row?.assessmentId}`,
-          //           assessmentId: row?.assessmentId,
-          //         }
-          //       : { from: "/candidate" },
-          //   }
-          // ),
-        },
-      ]
+        ]
       : []),
 
     // <---------------------- New actions for Position View in Table
     ...(isPositionView
       ? [
-        {
-          key: "screening",
-          label: "Screening View",
-          icon: <Eye className="w-4 h-4 text-indigo-600" />,
-          onClick: (item) => {
-            if (extraActions?.onScreeningView) {
-              extraActions.onScreeningView(item);
-            }
+          {
+            key: "screening",
+            label: "Screening View",
+            icon: <Eye className="w-4 h-4 text-indigo-600" />,
+            onClick: (item) => {
+              if (extraActions?.onScreeningView) {
+                extraActions.onScreeningView(item);
+              }
+            },
           },
-        },
-        {
-          key: "profile",
-          label: "Profile View",
-          icon: <CircleUser className="w-4 h-4 text-custom-blue" />,
-          onClick: (item) => {
-            if (extraActions?.onProfileView) {
-              extraActions.onProfileView(item);
-            }
+          {
+            key: "profile",
+            label: "Profile View",
+            icon: <CircleUser className="w-4 h-4 text-custom-blue" />,
+            onClick: (item) => {
+              if (extraActions?.onProfileView) {
+                extraActions.onProfileView(item);
+              }
+            },
           },
-        },
-      ]
+        ]
       : []),
     // ---------------------->
 
-
     ...(!isAssessmentView
       ? [
-        {
-          key: "360-view",
-          label: "360° View",
-          icon: <CircleUser className="w-4 h-4 text-purple-600" />,
-          onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
-        },
-        ...(effectivePermissions.Candidates?.Edit
-          ? [
-            {
-              key: "edit",
-              label: "Edit",
-              icon: <Pencil className="w-4 h-4 text-green-600" />,
-              onClick: (row) => navigate(`/candidate/edit/${row._id}`),
-            },
-          ]
-          : []),
-        ...(effectivePermissions.Candidates?.Delete
-          ? [
-            {
-              key: "delete",
-              label: "Delete",
-              icon: <Trash className="w-4 h-4 text-red-600" />,
-              // onClick: (row) => navigate(`delete/${row._id}`),
-              onClick: (row) => {
-                setShowDeleteConfirmModal(true);
-                setDeleteCandidate(row);
-              },
-            },
-          ]
-          : []),
-      ]
+          {
+            key: "360-view",
+            label: "360° View",
+            icon: <CircleUser className="w-4 h-4 text-purple-600" />,
+            onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+          },
+          ...(effectivePermissions.Candidates?.Edit
+            ? [
+                {
+                  key: "edit",
+                  label: "Edit",
+                  icon: <Pencil className="w-4 h-4 text-green-600" />,
+                  onClick: (row) => navigate(`/candidates/edit/${row._id}`),
+                },
+              ]
+            : []),
+          ...(effectivePermissions.Candidates?.Delete
+            ? [
+                {
+                  key: "delete",
+                  label: "Delete",
+                  icon: <Trash className="w-4 h-4 text-red-600" />,
+                  // onClick: (row) => navigate(`delete/${row._id}`),
+                  onClick: (row) => {
+                    setShowDeleteConfirmModal(true);
+                    setDeleteCandidate(row);
+                  },
+                },
+              ]
+            : []),
+        ]
       : []),
 
     ...(isAssessmentView
       ? [
-        // <-------------------------------v1.0.1
-        // Only show resend link for candidates that can be resent
-        {
-          key: "resend-link",
-          label: "Resend Link",
-          icon: (row) => {
-            const isLoading = resendLoading[row.id];
-            return isLoading ? (
-              <div className="w-4 h-4 flex items-center justify-center">
-                <svg
-                  className="animate-spin h-4 w-4 text-custom-blue"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              </div>
-            ) : (
-              <Mail className="w-4 h-4 text-custom-blue" />
-            );
+          // <-------------------------------v1.0.1
+          // Only show resend link for candidates that can be resent
+          {
+            key: "resend-link",
+            label: "Resend Link",
+            icon: (row) => {
+              const isLoading = resendLoading[row.id];
+              return isLoading ? (
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <svg
+                    className="animate-spin h-4 w-4 text-custom-blue"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </div>
+              ) : (
+                <Mail className="w-4 h-4 text-custom-blue" />
+              );
+            },
+            onClick: (row) => {
+              if (!resendLoading[row.id]) {
+                onResendLink(row.id);
+              }
+            },
+            show: (row) => {
+              const result = shouldShowButton(row, "resend");
+              return result;
+            },
+            disabled: (row) => resendLoading[row.id],
           },
-          onClick: (row) => {
-            if (!resendLoading[row.id]) {
-              onResendLink(row.id);
-            }
-          },
-          show: (row) => {
-            const result = shouldShowButton(row, "resend");
-            return result;
-          },
-          disabled: (row) => resendLoading[row.id],
-        },
-      ]
+        ]
       : []),
     // ------------------------------v1.0.1 >
   ];
@@ -1233,21 +1233,29 @@ function Candidate({
   // Helper for Application Status Colors
   const getApplicationStatusColor = (status) => {
     switch (status) {
-      case 'APPLIED': return 'bg-blue-100 text-blue-800';
-      case 'SCREENED': return 'bg-purple-100 text-purple-800';
-      case 'INTERVIEWING': return 'bg-yellow-100 text-yellow-800';
-      case 'OFFERED': return 'bg-orange-100 text-orange-800';
-      case 'REJECTED': return 'bg-red-100 text-red-800';
-      case 'HIRED': return 'bg-green-100 text-green-800';
-      case 'WITHDRAWN': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "APPLIED":
+        return "bg-blue-100 text-blue-800";
+      case "SCREENED":
+        return "bg-purple-100 text-purple-800";
+      case "INTERVIEWING":
+        return "bg-yellow-100 text-yellow-800";
+      case "OFFERED":
+        return "bg-orange-100 text-orange-800";
+      case "REJECTED":
+        return "bg-red-100 text-red-800";
+      case "HIRED":
+        return "bg-green-100 text-green-800";
+      case "WITHDRAWN":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getMatchColor = (match) => {
-    if (match >= 80) return 'text-green-600 font-bold';
-    if (match >= 60) return 'text-yellow-600 font-bold';
-    return 'text-red-600 font-bold';
+    if (match >= 80) return "text-green-600 font-bold";
+    if (match >= 60) return "text-yellow-600 font-bold";
+    return "text-red-600 font-bold";
   };
 
   // Specific columns for Position View
@@ -1256,14 +1264,19 @@ function Candidate({
       key: "name",
       header: "Candidate Name",
       render: (value, row) => (
-        <div className="flex items-center" title={`${row?.FirstName} ${row?.LastName}`}>
+        <div
+          className="flex items-center"
+          title={`${row?.FirstName} ${row?.LastName}`}
+        >
           <div className="h-8 w-8 flex-shrink-0">
             {row?.ImageData ? (
               <img
                 className="h-8 w-8 rounded-full object-cover"
                 src={row?.ImageData?.path || null}
                 alt={row?.FirstName || "Candidate"}
-                onError={(e) => { e.target.src = "/default-profile.png"; }}
+                onError={(e) => {
+                  e.target.src = "/default-profile.png";
+                }}
               />
             ) : (
               <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
@@ -1281,7 +1294,9 @@ function Candidate({
                 }
               }}
             >
-              {capitalizeFirstLetter(row?.FirstName) + " " + capitalizeFirstLetter(row.LastName)}
+              {capitalizeFirstLetter(row?.FirstName) +
+                " " +
+                capitalizeFirstLetter(row.LastName)}
             </div>
             <div className="text-xs text-gray-500 truncate max-w-[140px]">
               {row.CountryCode || ""} {row.Phone || "N/A"}
@@ -1296,7 +1311,9 @@ function Candidate({
       render: (value) => (
         <div className="flex items-center gap-2" title={value}>
           <Mail className="w-4 h-4 text-gray-500" />
-          <span className="truncate max-w-[140px] cursor-default">{value || "Not Provided"}</span>
+          <span className="truncate max-w-[140px] cursor-default">
+            {value || "Not Provided"}
+          </span>
         </div>
       ),
     },
@@ -1309,9 +1326,7 @@ function Candidate({
       key: "screeningScore",
       header: "Score",
       render: (value) => (
-        <span className={getMatchColor(value || 0)}>
-          {value || 0}%
-        </span>
+        <span className={getMatchColor(value || 0)}>{value || 0}%</span>
       ),
     },
     {
@@ -1347,19 +1362,19 @@ function Candidate({
     {
       key: "CurrentExperience",
       header: "Experience",
-      render: (value) => (
-        <span>{value ? `${value} years` : "N/A"}</span>
-      ),
+      render: (value) => <span>{value ? `${value} years` : "N/A"}</span>,
     },
     {
       key: "applicationStatus",
       header: "Status",
       render: (value) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getApplicationStatusColor(value)}`}>
+        <span
+          className={`px-2 py-1 text-xs font-medium rounded-full ${getApplicationStatusColor(value)}`}
+        >
           {value || "N/A"}
         </span>
       ),
-    }
+    },
   ];
 
   const columnsToUse = isPositionView ? positionColumns : tableColumns;
@@ -1395,6 +1410,43 @@ function Candidate({
         ) || "N/A",
     },
     // v2.0.0 ------------------------------------------------------------->
+    // {
+    //   key: "skills",
+    //   header: "Skills",
+    //   render: (skills) =>
+    //     skills && skills.length > 0 ? (
+    //       <div
+    //         className="flex flex-wrap gap-1 cursor-default"
+    //         title={skills?.map((skill) => skill.skill)?.join(", ")}
+    //       >
+    //         {skills?.length > 0 && (
+    //           <div className="flex flex-wrap gap-1">
+    //             {skills?.length > 0 ? (
+    //               <div>
+    //                 <span className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue text-xs rounded-full">
+    //                   {skills[0].skill?.length > 12
+    //                     ? skills[0].skill.slice(0, 12) + "..."
+    //                     : skills[0].skill}
+    //                 </span>
+    //                 {skills.length > 2 && (
+    //                   <span
+    //                     className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full cursor-default"
+    //                     title={skills.map((s) => s.skill).join(", ")}
+    //                   >
+    //                     +{skills.length - 2}
+    //                   </span>
+    //                 )}
+    //               </div>
+    //             ) : (
+    //               <span className="text-gray-400 text-xs">No Skills</span>
+    //             )}
+    //           </div>
+    //         )}
+    //       </div>
+    //     ) : (
+    //       "N/A"
+    //     ),
+    // },
     {
       key: "skills",
       header: "Skills",
@@ -1407,18 +1459,33 @@ function Candidate({
             {skills?.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {skills?.length > 0 ? (
-                  <div>
+                  <div className="flex gap-1">
+                    {/* First skill */}
                     <span className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue text-xs rounded-full">
-                      {skills[0].skill?.length > 12
-                        ? skills[0].skill.slice(0, 12) + "..."
+                      {skills[0].skill?.length > 9
+                        ? skills[0].skill.slice(0, 9) + "..."
                         : skills[0].skill}
                     </span>
-                    {skills.length > 1 && (
+
+                    {/* Second skill */}
+                    {skills[1] && (
+                      <span className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue text-xs rounded-full">
+                        {skills[1].skill?.length > 8
+                          ? skills[1].skill.slice(0, 8) + "..."
+                          : skills[1].skill}
+                      </span>
+                    )}
+
+                    {/* Remaining count */}
+                    {skills.length > 2 && (
                       <span
                         className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full cursor-default"
-                        title={skills.map((s) => s.skill).join(", ")}
+                        title={skills
+                          .slice(2)
+                          .map((s) => s.skill)
+                          .join(", ")}
                       >
-                        +{skills.length - 1}
+                        +{skills.length - 2}
                       </span>
                     )}
                   </div>
@@ -1438,123 +1505,123 @@ function Candidate({
     // View Details
     ...(effectivePermissions.Candidates?.View
       ? [
-        {
-          key: "view",
-          label: "View Details",
-          icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: (row) => {
-            if (isPositionView) {
-              navigate(`/candidates/view-details/${row._id}`, {
-                state: { from: "position" },
-              });
-              return;
-            }
-            navigate(
-              isAssessmentView
-                ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
-                : // `/assessments/candidate-details/${row._id}`
-                `view-details/${row._id}`,
-              {
-                state: isAssessmentView
-                  ? {
-                    from: `/assessment-details/${row?.assessmentId}`,
-                    assessmentId: row?.assessmentId,
-                  }
-                  : { from: "/candidates" },
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: (row) => {
+              if (isPositionView) {
+                navigate(`/candidates/view-details/${row._id}`, {
+                  state: { from: "position" },
+                });
+                return;
               }
-            );
+              navigate(
+                isAssessmentView
+                  ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
+                  : // `/assessments/candidate-details/${row._id}`
+                    `view-details/${row._id}`,
+                {
+                  state: isAssessmentView
+                    ? {
+                        from: `/assessment-details/${row?.assessmentId}`,
+                        assessmentId: row?.assessmentId,
+                      }
+                    : { from: "/candidates" },
+                },
+              );
+            },
           },
-        },
-      ]
+        ]
       : []),
 
     // 360° View (only if not assessment view)
     ...(!isAssessmentView
       ? [
-        {
-          key: "360view",
-          label: "360° View",
-          icon: <CircleUser className="w-4 h-4 text-purple-600" />,
-          onClick: (item, e) => {
-            item?._id && navigate(`/candidate/${item._id}`);
+          {
+            key: "360view",
+            label: "360° View",
+            icon: <CircleUser className="w-4 h-4 text-purple-600" />,
+            onClick: (item, e) => {
+              item?._id && navigate(`/candidate/${item._id}`);
+            },
           },
-        },
-      ]
+        ]
       : []),
 
     // Edit (only if not assessment view)
     ...(!isAssessmentView && effectivePermissions.Candidates?.Edit
       ? [
-        {
-          key: "edit",
-          label: "Edit",
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: (item, e) => {
-            navigate(`/candidates/edit/${item._id}`);
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (item, e) => {
+              navigate(`/candidates/edit/${item._id}`);
+            },
           },
-        },
-      ]
+        ]
       : []),
 
     // Resend Link (only if in assessment view)
     ...(isAssessmentView
       ? [
-        {
-          key: "resend",
-          label: "Resend Link",
-          icon: <Mail className="w-4 h-4 text-custom-blue" />,
-          isVisible: (item) => shouldShowButton(item, "resend"),
-          onClick: (item, e) => {
-            if (!resendLoading[item.id]) {
-              onResendLink(item.id);
-            }
+          {
+            key: "resend",
+            label: "Resend Link",
+            icon: <Mail className="w-4 h-4 text-custom-blue" />,
+            isVisible: (item) => shouldShowButton(item, "resend"),
+            onClick: (item, e) => {
+              if (!resendLoading[item.id]) {
+                onResendLink(item.id);
+              }
+            },
+            loading: (item) => resendLoading[item.id],
+            disabled: (item) => resendLoading[item.id],
           },
-          loading: (item) => resendLoading[item.id],
-          disabled: (item) => resendLoading[item.id],
-        },
-      ]
+        ]
       : []),
 
     // <---------------------- New actions for Position View
     ...(isPositionView
       ? [
-        {
-          key: "screening",
-          label: "Screening View",
-          icon: <Eye className="w-4 h-4 text-indigo-600" />,
-          onClick: (item) => {
-            if (extraActions?.onScreeningView) {
-              extraActions.onScreeningView(item);
-            }
+          {
+            key: "screening",
+            label: "Screening View",
+            icon: <Eye className="w-4 h-4 text-indigo-600" />,
+            onClick: (item) => {
+              if (extraActions?.onScreeningView) {
+                extraActions.onScreeningView(item);
+              }
+            },
           },
-        },
-        {
-          key: "profile",
-          label: "Profile View",
-          icon: <CircleUser className="w-4 h-4 text-custom-blue" />,
-          onClick: (item) => {
-            if (extraActions?.onProfileView) {
-              extraActions.onProfileView(item);
-            }
+          {
+            key: "profile",
+            label: "Profile View",
+            icon: <CircleUser className="w-4 h-4 text-custom-blue" />,
+            onClick: (item) => {
+              if (extraActions?.onProfileView) {
+                extraActions.onProfileView(item);
+              }
+            },
           },
-        },
-      ]
+        ]
       : []),
     // ---------------------->
 
     // Delete
     ...(effectivePermissions.Candidates?.Delete
       ? [
-        {
-          key: "delete",
-          label: "Delete",
-          icon: <Trash className="w-4 h-4 text-red-600" />,
-          onClick: (item) => {
-            setShowDeleteConfirmModal(true);
-            setDeleteCandidate(item);
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (item) => {
+              setShowDeleteConfirmModal(true);
+              setDeleteCandidate(item);
+            },
           },
-        },
-      ]
+        ]
       : []),
   ];
   // v1.0.8 ------------------------------------------------------------------------------>
@@ -1607,7 +1674,7 @@ function Candidate({
               ? ""
               : "fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background"
           }
-        // v1.0.7 ---------------------------------------------------------->
+          // v1.0.7 ---------------------------------------------------------->
         >
           <div className="sm:px-0">
             <motion.div className="bg-white">
@@ -1636,17 +1703,17 @@ function Candidate({
                       data={currentFilteredRows.map((candidate) => ({
                         ...candidate,
                         id: candidate._id,
-                        title: `${candidate?.FirstName || ""} ${candidate?.LastName || ""
-                          }`.trim(),
-                        firstName: `${(candidate?.FirstName || "").charAt(0).toUpperCase() +
+                        title: `${candidate?.FirstName || ""} ${
+                          candidate?.LastName || ""
+                        }`.trim(),
+                        firstName: `${
+                          (candidate?.FirstName || "").charAt(0).toUpperCase() +
                           (candidate?.FirstName || "").slice(1)
-                          } ${(candidate?.LastName || "").charAt(0).toUpperCase() +
+                        } ${
+                          (candidate?.LastName || "").charAt(0).toUpperCase() +
                           (candidate?.LastName || "").slice(1)
-                          }`.trim(),
-                        subTitle:
-                          candidate?.CurrentRole ||
-                          candidate?.CurrentExperience ||
-                          "N/A",
+                        }`.trim(),
+                        subTitle: candidate?.currentRoleLabel || "N/A",
                         avatar: candidate?.ImageData?.path || null,
                         navigateTo: isAssessmentView
                           ? `/${candidate?.assessmentId}/view-details/${candidate._id}`
@@ -1697,23 +1764,24 @@ function Candidate({
                           {qualifications?.length > 0 ? (
                             qualifications.map((q, index) => (
                               <label
-                                key={`${q._id ||
+                                key={`${
+                                  q._id ||
                                   q.QualificationName ||
                                   "qualification"
-                                  }-${index}`}
+                                }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
                                   type="checkbox"
                                   checked={selectedStatus.includes(
-                                    q.QualificationName
+                                    q.QualificationName,
                                   )}
                                   onChange={() =>
                                     handleStatusToggle(q.QualificationName)
                                   }
                                   // v1.0.3 <--------------------------------------------------------------
                                   className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                // v1.0.3 -------------------------------------------------------------->
+                                  // v1.0.3 -------------------------------------------------------------->
                                 />
                                 <span className="text-sm">
                                   {q.QualificationName}
@@ -1747,21 +1815,22 @@ function Candidate({
                           {skills?.length > 0 ? (
                             skills.map((skill, index) => (
                               <label
-                                key={`${skill._id || skill.SkillName || "skill"
-                                  }-${index}`}
+                                key={`${
+                                  skill._id || skill.SkillName || "skill"
+                                }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
                                   type="checkbox"
                                   checked={selectedTech.includes(
-                                    skill.SkillName
+                                    skill.SkillName,
                                   )}
                                   onChange={() =>
                                     handleTechToggle(skill.SkillName)
                                   }
                                   // v1.0.3 <--------------------------------------------------------------
                                   className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                // v1.0.3 -------------------------------------------------------------->
+                                  // v1.0.3 -------------------------------------------------------------->
                                 />
                                 <span className="text-sm">
                                   {skill.SkillName}
@@ -1904,14 +1973,15 @@ function Candidate({
                           {currentRoles?.length > 0 ? (
                             currentRoles.map((role, index) => (
                               <label
-                                key={`${role._id || role.roleName || "role"
-                                  }-${index}`}
+                                key={`${
+                                  role._id || role.roleName || "role"
+                                }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
                                   type="checkbox"
                                   checked={selectedRoles.includes(
-                                    role.roleName
+                                    role.roleName,
                                   )}
                                   onChange={() =>
                                     handleRoleToggle(role.roleName)
@@ -1950,20 +2020,21 @@ function Candidate({
                           {colleges?.length > 0 ? (
                             colleges.map((college, index) => (
                               <label
-                                key={`${college._id ||
+                                key={`${
+                                  college._id ||
                                   college.University_CollegeName ||
                                   "college"
-                                  }-${index}`}
+                                }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
                                   type="checkbox"
                                   checked={selectedUniversities.includes(
-                                    college.University_CollegeName
+                                    college.University_CollegeName,
                                   )}
                                   onChange={() =>
                                     handleUniversityToggle(
-                                      college.University_CollegeName
+                                      college.University_CollegeName,
                                     )
                                   }
                                   className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"

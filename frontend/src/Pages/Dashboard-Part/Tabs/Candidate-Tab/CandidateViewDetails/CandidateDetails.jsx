@@ -545,6 +545,8 @@ const ResumesTab = ({ candidateId, candidateName }) => {
     }
   }, [candidateId]);
 
+  console.log("RESUMES ===========================> ", resumes);
+
   const handleDownload = (url, filename) => {
     if (!url) return;
 
@@ -855,98 +857,8 @@ const WorkExperience = ({ candidate }) => {
     return text.split("\n").filter((line) => line.trim() !== "");
   };
 
-  // const sections = [
-  //   {
-  //     title: "Professional Summary",
-  //     icon: <FileText size={20} className="text-custom-blue" />,
-  //     content: (
-  //       <ul className="list-disc list-inside space-y-1">
-  //         {formatResponsibilitiesToList(candidate?.professionalSummary)?.map(
-  //           (point, i) => (
-  //             <li
-  //               key={i}
-  //               className="text-sm text-gray-600 break-words leading-relaxed"
-  //             >
-  //               {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
-  //             </li>
-  //           ),
-  //         )}
-  //       </ul>
-  //     ),
-  //   },
-  //   {
-  //     title: "Projects",
-  //     icon: <Briefcase size={20} className="text-green-600" />,
-  //     content: (
-  //       <div className="space-y-4">
-  //         {candidate.workExperience?.map((project, index) => (
-  //           <div key={index} className="relative group">
-  //             <h5
-  //               className="font-medium text-md text-gray-800 truncate max-w-[260px] mb-1"
-  //               title={project?.projectName}
-  //             >
-  //               {capitalizeFirstLetter(project?.projectName)}
-  //             </h5>
-
-  //             <div className="flex items-center gap-1 mb-1">
-  //               <div className="flex items-center gap-2">
-  //                 <Briefcase className="text-gray-700 h-4 w-4" />
-  //                 <p className="text-xs text-gray-700 font-semibold truncate max-w-[260px]">
-  //                   {capitalizeFirstLetter(project?.role)}
-  //                 </p>
-  //               </div>
-  //               <Dot className="w-4 h-4 text-gray-700" />
-  //               <div className="flex items-center gap-1">
-  //                 <p className="text-xs text-gray-700">
-  //                   {project?.fromDate?.split("-")[0]}
-  //                 </p>
-  //                 <span className="text-xs text-gray-700">-</span>
-  //                 <p className="text-xs text-gray-700">
-  //                   {project?.toDate ? project.toDate.split("-")[0] : "Present"}
-  //                 </p>
-  //               </div>
-  //             </div>
-
-  //             <ul className="list-disc list-inside mt-2 space-y-1 p-4">
-  //               {formatResponsibilitiesToList(project?.responsibilities)?.map(
-  //                 (point, i) => (
-  //                   <li
-  //                     key={i}
-  //                     className="text-sm text-gray-600 break-words leading-relaxed"
-  //                   >
-  //                     {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
-  //                   </li>
-  //                 ),
-  //               )}
-  //             </ul>
-  //           </div>
-  //         ))}
-  //       </div>
-  //     ),
-  //     isExperience: true,
-  //   },
-  //   {
-  //     title: "Key Achievements",
-  //     icon: <Award size={20} className="text-purple-600" />,
-  //     content: (
-  //       <ul className="list-disc list-inside space-y-1">
-  //         {formatResponsibilitiesToList(candidate?.keyAchievements)?.map(
-  //           (point, i) => (
-  //             <li
-  //               key={i}
-  //               className="text-sm text-gray-600 break-words leading-relaxed"
-  //             >
-  //               {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
-  //             </li>
-  //           ),
-  //         )}
-  //       </ul>
-  //     ),
-  //   },
-  // ];
-
   const EmptyState = ({ message }) => (
-    <p className="text-sm text-gray-400 italic py-2 ml-1">{message}</p>
+    <p className="text-sm text-gray-400 italic py-2 ml-4">{message}</p>
   );
 
   const sections = [
@@ -956,7 +868,7 @@ const WorkExperience = ({ candidate }) => {
       content:
         formatResponsibilitiesToList(candidate?.professionalSummary).length >
         0 ? (
-          <ul className="list-disc list-inside space-y-1">
+          <ul className="list-disc list-inside space-y-1 ml-4">
             {formatResponsibilitiesToList(candidate?.professionalSummary).map(
               (point, i) => (
                 <li
@@ -972,66 +884,13 @@ const WorkExperience = ({ candidate }) => {
           <EmptyState message="No professional summary provided." />
         ),
     },
-    // {
-    //   title: "Projects",
-    //   icon: <Briefcase size={20} className="text-green-600" />,
-    //   content:
-    //     candidate.workExperience?.length > 0 ? (
-    //       <div className="space-y-4">
-    //         {candidate.workExperience.map((project, index) => (
-    //           <div key={index} className="relative group">
-    //             <h5
-    //               className="font-medium text-md text-gray-800 truncate max-w-[260px] mb-1"
-    //               title={project?.projectName}
-    //             >
-    //               {capitalizeFirstLetter(project?.projectName)}
-    //             </h5>
-    //             <div className="flex items-center gap-1 mb-1">
-    //               <div className="flex items-center gap-2">
-    //                 <Briefcase className="text-gray-700 h-4 w-4" />
-    //                 <p className="text-xs text-gray-700 font-semibold truncate max-w-[260px]">
-    //                   {capitalizeFirstLetter(project?.role)}
-    //                 </p>
-    //               </div>
-    //               <Dot className="w-4 h-4 text-gray-700" />
-    //               <div className="flex items-center gap-1">
-    //                 <p className="text-xs text-gray-700">
-    //                   {project?.fromDate?.split("-")[0]}
-    //                 </p>
-    //                 <span className="text-xs text-gray-700">-</span>
-    //                 <p className="text-xs text-gray-700">
-    //                   {project?.toDate
-    //                     ? project.toDate.split("-")[0]
-    //                     : "Present"}
-    //                 </p>
-    //               </div>
-    //             </div>
-    //             <ul className="list-disc list-inside mt-2 space-y-1 p-4">
-    //               {formatResponsibilitiesToList(project?.responsibilities).map(
-    //                 (point, i) => (
-    //                   <li
-    //                     key={i}
-    //                     className="text-sm text-gray-600 break-words leading-relaxed"
-    //                   >
-    //                     {capitalizeFirstLetter(point?.replace(/^[•\s*-]+/, ""))}
-    //                   </li>
-    //                 ),
-    //               )}
-    //             </ul>
-    //           </div>
-    //         ))}
-    //       </div>
-    //     ) : (
-    //       <EmptyState message="No projects listed." />
-    //     ),
-    // },
     {
       title: "Projects",
       icon: <Briefcase size={20} className="text-green-600" />,
       content:
         candidate.workExperience?.length > 0 ? (
           /* Timeline Container */
-          <div className="space-y-8 relative before:absolute before:inset-0 before:left-2.5 before:h-full before:w-0.5 before:bg-gray-100">
+          <div className="space-y-8 relative before:absolute before:inset-0 before:left-2.5 before:h-full before:w-0.5 before:bg-gray-100 ml-1.5">
             {candidate.workExperience.map((project, index) => (
               <div key={index} className="relative pl-8 group">
                 {/* Timeline Dot Marker */}
@@ -1088,7 +947,7 @@ const WorkExperience = ({ candidate }) => {
       icon: <Award size={20} className="text-purple-600" />,
       content:
         formatResponsibilitiesToList(candidate?.keyAchievements).length > 0 ? (
-          <ul className="list-disc list-inside space-y-1">
+          <ul className="list-disc list-inside space-y-1 ml-4">
             {formatResponsibilitiesToList(candidate?.keyAchievements).map(
               (point, i) => (
                 <li
@@ -1615,38 +1474,15 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                   </div>
                 </div>
                 {/* Certifications */}
-                {/* <div className="bg-white rounded-xl sm:shadow-none shadow-sm sm:border-none border border-gray-100 sm:p-0 p-6">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                    Certifications
-                  </h4>
-                  <div className="flex flex-wrap gap-3">
-                    {Array.isArray(candidate?.certifications) &&
-                    candidate?.certifications?.length > 0 ? (
-                      candidate?.certifications?.map((cert, index) => (
-                        <div
-                          key={index}
-                          className="bg-custom-blue/10 border border-custom-blue/30 rounded-full px-4 py-2 flex items-center shadow-sm hover:shadow-md transition-shadow"
-                        >
-                          <span className="text-sm font-medium text-custom-blue">
-                            {capitalizeFirstLetter(cert)}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <span className="text-sm text-gray-500 italic">
-                        No certifications listed
-                      </span>
-                    )}
-                  </div>
-                </div> */}
                 <div className="bg-white rounded-xl sm:shadow-none shadow-sm sm:border-none border border-gray-100 sm:p-0 p-6">
                   <h4 className="text-lg font-semibold text-gray-800 mb-6">
                     Certifications
                   </h4>
-                  <div className="relative border-l-2 border-gray-100 ml-3 space-y-6">
-                    {Array.isArray(candidate?.certifications) &&
-                    candidate?.certifications?.length > 0 ? (
-                      candidate?.certifications?.map((cert, index) => (
+
+                  {Array.isArray(candidate?.certifications) &&
+                  candidate?.certifications?.length > 0 ? (
+                    <div className="relative border-l-2 border-gray-100 ml-3 space-y-6">
+                      {candidate.certifications.map((cert, index) => (
                         <div key={index} className="relative pl-8">
                           <div className="absolute -left-[16px] top-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center ring-4 ring-white">
                             <Award className="w-4 h-4 text-custom-blue" />
@@ -1659,22 +1495,22 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                             </div>
                           </div>
                         </div>
-                      ))
-                    ) : (
-                      <div className="pl-8">
-                        <span className="text-sm text-gray-500 italic">
-                          No certifications listed
-                        </span>
-                      </div>
-                    )}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="ml-3">
+                      <span className="text-sm text-gray-500 italic">
+                        No certifications listed
+                      </span>
+                    </div>
+                  )}
                 </div>
                 {/* Work Experience */}
                 <div className="bg-white rounded-xl sm:shadow-none shadow-sm sm:border-none border border-gray-100 sm:p-0 p-6">
                   <h4 className="text-lg font-semibold text-gray-800 mb-4">
                     Work Experience
                   </h4>
-                  <div className="flex flex-wrap sm:gap-4 gap-2">
+                  <div>
                     <WorkExperience candidate={fetchedCandidate} />
                   </div>
                 </div>

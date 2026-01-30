@@ -55,10 +55,10 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const menuRef = useRef(null);
 
   const mainActions = kanbanActions.filter((a) =>
-    ["view", "edit"].includes(a.key)
+    ["view", "edit"].includes(a.key),
   );
   const overflowActions = kanbanActions.filter(
-    (a) => !["view", "edit"].includes(a.key)
+    (a) => !["view", "edit"].includes(a.key),
   );
 
   //  Close menu when clicking outside
@@ -256,7 +256,7 @@ const PositionTab = () => {
     try {
       // console.log("deletePosition", deletePosition);
       let res = await deletePositionMutation(
-        deletePosition?._id || deletePosition?.id || "N/A"
+        deletePosition?._id || deletePosition?.id || "N/A",
       );
 
       if (res?.status === "success") {
@@ -339,14 +339,14 @@ const PositionTab = () => {
         selectedFilters.salaryMin !== undefined &&
           selectedFilters.salaryMin !== null
           ? String(selectedFilters.salaryMin)
-          : ""
+          : "",
       );
       setSalaryMax(
         // Add this block
         selectedFilters.salaryMax !== undefined &&
           selectedFilters.salaryMax !== null
           ? String(selectedFilters.salaryMax)
-          : ""
+          : "",
       );
       setCreatedDatePreset(selectedFilters.createdDate || "");
       setIsLocationOpen(false);
@@ -367,13 +367,13 @@ const PositionTab = () => {
     setSelectedLocation((prev) =>
       prev.includes(location)
         ? prev.filter((l) => l !== location)
-        : [...prev, location]
+        : [...prev, location],
     );
   };
 
   const handleTechToggle = (tech) => {
     setSelectedTech((prev) =>
-      prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech]
+      prev.includes(tech) ? prev.filter((t) => t !== tech) : [...prev, tech],
     );
   };
 
@@ -382,7 +382,7 @@ const PositionTab = () => {
     setSelectedCompany((prev) =>
       prev.includes(company)
         ? prev.filter((c) => c !== company)
-        : [...prev, company]
+        : [...prev, company],
     );
   };
   //-----v1.03----->
@@ -436,13 +436,13 @@ const PositionTab = () => {
     setCurrentPage(0);
     setIsFilterActive(
       filters.location.length > 0 ||
-      filters.tech.length > 0 ||
-      filters.company.length > 0 ||
-      filters.experience.min > 0 ||
-      filters.experience.max < 15 ||
-      filters.salaryMin > 0 ||
-      filters.salaryMax > 0 ||
-      !!filters.createdDate
+        filters.tech.length > 0 ||
+        filters.company.length > 0 ||
+        filters.experience.min > 0 ||
+        filters.experience.max < 15 ||
+        filters.salaryMin > 0 ||
+        filters.salaryMax > 0 ||
+        !!filters.createdDate,
     );
     setFilterPopupOpen(false);
   };
@@ -565,7 +565,7 @@ const PositionTab = () => {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "Positions"
+    "Positions",
   );
   // v2.0.1 ------------------------------------------------------------------------------->
 
@@ -679,44 +679,44 @@ const PositionTab = () => {
   const tableActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-        {
-          key: "view",
-          label: "View Details",
-          icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: (row) => handleView(row),
-        },
-      ]
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: (row) => handleView(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-        //<----v1.02-----
-        {
-          key: "change_status",
-          label: "Change Status",
-          icon: <Repeat className="w-4 h-4 text-green-600" />,
-          onClick: (row) => openStatusModal(row),
-        },
-        //----v1.02----->
-        {
-          key: "edit",
-          label: "Edit",
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: (row) => handleEdit(row),
-        },
-      ]
+          //<----v1.02-----
+          {
+            key: "change_status",
+            label: "Change Status",
+            icon: <Repeat className="w-4 h-4 text-green-600" />,
+            onClick: (row) => openStatusModal(row),
+          },
+          //----v1.02----->
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => handleEdit(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-        {
-          key: "delete",
-          label: "Delete",
-          icon: <Trash className="w-4 h-4 text-red-600" />,
-          onClick: (row) => {
-            setShowDeleteConfirmModal(true);
-            setDeletePosition(row);
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (row) => {
+              setShowDeleteConfirmModal(true);
+              setDeletePosition(row);
+            },
           },
-        },
-      ]
+        ]
       : []),
   ];
   // v1.0.5 <----------------------------------------------------------------------------------
@@ -767,17 +767,27 @@ const PositionTab = () => {
             {skills?.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {skills?.length > 0 ? (
-                  <span className="px-2 py-0.5 bg-blue-100 bg-custom-blue/10 text-custom-blue text-xs rounded-full">
-                    {skills[0].skill?.length > 12
-                      ? skills[0].skill.slice(0, 12) + "..."
-                      : skills[0].skill}
-                  </span>
+                  <div className="flex gap-1">
+                    <span className="px-2 py-0.5 bg-blue-100 bg-custom-blue/10 text-custom-blue text-xs rounded-full">
+                      {skills[0].skill?.length > 9
+                        ? skills[0].skill.slice(0, 9) + "..."
+                        : skills[0].skill}
+                    </span>
+                    {/* Second skill */}
+                    {skills[1] && (
+                      <span className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue text-xs rounded-full">
+                        {skills[1].skill?.length > 8
+                          ? skills[1].skill.slice(0, 8) + "..."
+                          : skills[1].skill}
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   <span className="text-gray-400 text-xs">No Skills</span>
                 )}
-                {skills?.length > 1 && (
+                {skills?.length > 2 && (
                   <span className="text-gray-500 text-xs">
-                    +{skills.length - 1}
+                    +{skills.length - 2}
                   </span>
                 )}
               </div>
@@ -792,47 +802,47 @@ const PositionTab = () => {
   const kanbanActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-        {
-          key: "view",
-          label: "View Details",
-          icon: <Eye className="w-4 h-4 text-custom-blue" />,
-          onClick: (row) => handleView(row),
-        },
-      ]
+          {
+            key: "view",
+            label: "View Details",
+            icon: <Eye className="w-4 h-4 text-custom-blue" />,
+            onClick: (row) => handleView(row),
+          },
+        ]
       : []),
 
     ...(effectivePermissions.Positions?.Edit
       ? [
-        {
-          key: "change_status",
-          label: "Change Status",
-          icon: <Repeat className="w-4 h-4 text-green-600" />,
-          onClick: (row) => openStatusModal(row),
-        },
-      ]
+          {
+            key: "change_status",
+            label: "Change Status",
+            icon: <Repeat className="w-4 h-4 text-green-600" />,
+            onClick: (row) => openStatusModal(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-        {
-          key: "edit",
-          label: "Edit",
-          icon: <Pencil className="w-4 h-4 text-green-600" />,
-          onClick: (row) => handleEdit(row),
-        },
-      ]
+          {
+            key: "edit",
+            label: "Edit",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: (row) => handleEdit(row),
+          },
+        ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-        {
-          key: "delete",
-          label: "Delete",
-          icon: <Trash className="w-4 h-4 text-red-600" />,
-          onClick: (row) => {
-            setShowDeleteConfirmModal(true);
-            setDeletePosition(row);
+          {
+            key: "delete",
+            label: "Delete",
+            icon: <Trash className="w-4 h-4 text-red-600" />,
+            onClick: (row) => {
+              setShowDeleteConfirmModal(true);
+              setDeletePosition(row);
+            },
           },
-        },
-      ]
+        ]
       : []),
   ];
   // v1.0.8 ---------------------------------------------------------------------------------->
@@ -1003,7 +1013,7 @@ const PositionTab = () => {
                                 onChange={() => handleLocationToggle(location)}
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                              // v1.0.1 --------------------------------------------------------------->
+                                // v1.0.1 --------------------------------------------------------------->
                               />
                               <span className="text-sm">{location}</span>
                             </label>
@@ -1044,7 +1054,7 @@ const PositionTab = () => {
                                 }
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                              // v1.0.1 <---------------------------------------------------------------
+                                // v1.0.1 <---------------------------------------------------------------
                               />
                               <span className="text-sm">{skill.SkillName}</span>
                             </label>

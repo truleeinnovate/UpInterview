@@ -458,6 +458,34 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
                   placeholder="https://company.com"
                 />
               </div>
+              {/* Status Toggle */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <div className="flex items-center gap-3 h-10">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        status:
+                          prev.status === "active" ? "inactive" : "active",
+                      }))
+                    }
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.status === "active" ? "bg-custom-blue" : "bg-gray-300"}`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.status === "active" ? "translate-x-6" : "translate-x-1"}`}
+                    />
+                  </button>
+                  <span
+                    className={`text-sm font-medium ${formData.status === "active" ? "text-custom-blue" : "text-gray-500"}`}
+                  >
+                    {formData.status === "active" ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Full Width Description */}
@@ -522,33 +550,6 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
               </div>
             </div>
           </section>
-          {/* Status Toggle */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <div className="flex items-center gap-3 h-10">
-              <button
-                type="button"
-                onClick={() =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    status: prev.status === "active" ? "inactive" : "active",
-                  }))
-                }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.status === "active" ? "bg-custom-blue" : "bg-gray-300"}`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.status === "active" ? "translate-x-6" : "translate-x-1"}`}
-                />
-              </button>
-              <span
-                className={`text-sm font-medium ${formData.status === "active" ? "text-custom-blue" : "text-gray-500"}`}
-              >
-                {formData.status === "active" ? "Active" : "Inactive"}
-              </span>
-            </div>
-          </div>
 
           {/* --- Section 3: Address Information --- */}
           <section className="space-y-4 pt-4">
@@ -585,7 +586,7 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid sm:grid-cols-1 grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     City
@@ -615,7 +616,7 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid sm:grid-cols-1 grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Country
