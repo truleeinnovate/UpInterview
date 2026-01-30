@@ -91,7 +91,7 @@ function RoundFormTemplates() {
 
   const [formData, setFormData] = useState({
     roundTitle: "",
-    interviewMode: "",
+    interviewMode: "Virtual",
     sequence: 1,
     duration: 60,
     selectedInterviewType: null,

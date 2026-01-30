@@ -6,7 +6,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react"; //<----v1.0.1-----
 import {
-  // X,
+  X,
   Star,
   ExternalLink,
   ChevronDown,
@@ -16,6 +16,7 @@ import {
   Info,
   Clock,
   Users,
+
   // Expand,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
@@ -35,7 +36,8 @@ import useInterviewers from "../../../../../../hooks/useInterviewers.js";
 import { useIndividualLogin } from "../../../../../../apiHooks/useIndividualLogin.js";
 import { useTenantTaxConfig } from "../../../../../../apiHooks/useTenantTaxConfig";
 import { capitalizeFirstLetter } from "../../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
-
+import DropdownWithSearchField from "../../../../../../Components/FormFields/DropdownWithSearchField.jsx";
+import { useMasterData } from "../../../../../../apiHooks/useMasterData.js";
 const OutsourcedInterviewerCard = ({
   interviewer,
   isSelected,
@@ -58,11 +60,11 @@ const OutsourcedInterviewerCard = ({
   const company = interviewer?.contact?.industry || "Freelancer";
   console.log(
     "CURRENT ROLE ==========================================> ",
-    CurrentRole
+    CurrentRole,
   );
   console.log(
     "INTERVIEWS ============================================>",
-    interviewer
+    interviewer,
   );
 
   // ✅ New logic: get rate based on candidate experience
@@ -281,6 +283,16 @@ function OutsourcedInterviewerModal({
   //   // isMockInterview,
   //   // positionData?.skills,
   // });
+  const pageType = "adminPortal";
+  const {
+    skills: skillsData,
+    loadSkills,
+    isSkillsFetching,
+  } = useMasterData({}, pageType);
+  const [skillInput, setSkillInput] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  const skillsPopupRef = useRef(null);
+  const skillsInputRef = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [rateRange, setRateRange] = useState(["", ""]);
@@ -288,13 +300,19 @@ function OutsourcedInterviewerModal({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedInterviewer, setSelectedInterviewer] = useState(null);
   const [selectedInterviewersLocal, setSelectedInterviewersLocal] = useState(
-    previousSelectedInterviewers || []
+    previousSelectedInterviewers || [],
   );
   const requestSentRef = useRef(false);
   const [filteredInterviewers, setFilteredInterviewers] = useState([]);
   const [baseInterviewers, setBaseInterviewers] = useState([]);
   const [showWalletModal, setShowWalletModal] = useState(false); //<----v1.0.1-----
+  // Compute available balance (balance - holdAmount) for gating outsourced selections
+  const walletRawBalance = Number(walletBalance?.balance || 0);
+  const walletHoldAmount = Number(walletBalance?.holdAmount || 0);
+  const availableBalance = walletRawBalance;
+  const [isOpen, setIsOpen] = useState(false);
 
+  const [isRateApplied, setIsRateApplied] = useState(false);
   // Fetch tenant tax configuration (GST, service charge, etc.)
   const { data: tenantTaxConfig } = useTenantTaxConfig();
   const gstRate =
@@ -348,7 +366,7 @@ function OutsourcedInterviewerModal({
     const fetchInterviewers = async (
       skills,
       candidateExperience,
-      currentRole
+      currentRole,
       // positionSkills,
       // positionMinExperience,
       // positionMaxExperience,
@@ -375,7 +393,7 @@ function OutsourcedInterviewerModal({
         }
 
         const externalInterviewers = response?.filter(
-          (interviewer) => interviewer.type === "external"
+          (interviewer) => interviewer.type === "external",
         );
         // console.log(
         //   "🌐 External Interviewers count:",
@@ -672,7 +690,7 @@ function OutsourcedInterviewerModal({
                     interviewer.contact?.firstName ||
                     interviewer.contact?.UserName ||
                     "Unknown"
-                  }`
+                  }`,
                 );
                 console.log("📝 Interviewer's Skills:", interviewerSkills);
 
@@ -686,13 +704,13 @@ function OutsourcedInterviewerModal({
                   .map((skill) =>
                     typeof skill === "string"
                       ? skill.toLowerCase()
-                      : (skill?.skill || "").toLowerCase()
+                      : (skill?.skill || "").toLowerCase(),
                   )
                   .filter((skill) => skill); // Remove empty strings
 
                 console.log(
                   "🔠 Interviewer's normalized skills:",
-                  interviewerSkillsLower
+                  interviewerSkillsLower,
                 );
 
                 // Check if any of the required skills match the interviewer's skills
@@ -702,7 +720,7 @@ function OutsourcedInterviewerModal({
                   if (!requiredSkillName) {
                     console.log(
                       "⚠️ Required skill has no name:",
-                      requiredSkill
+                      requiredSkill,
                     );
                     return false;
                   }
@@ -711,7 +729,7 @@ function OutsourcedInterviewerModal({
                     interviewerSkillsLower.includes(requiredSkillName);
                   if (matchFound) {
                     console.log(
-                      `✅ Found matching skill: ${requiredSkillName}`
+                      `✅ Found matching skill: ${requiredSkillName}`,
                     );
                   }
                   return matchFound;
@@ -720,25 +738,25 @@ function OutsourcedInterviewerModal({
                 console.log(
                   `🎯 ${
                     interviewer.contact?.firstName || "Unknown"
-                  } Skill Match Status: ${hasMatchingSkill}`
+                  } Skill Match Status: ${hasMatchingSkill}`,
                 );
                 return hasMatchingSkill;
-              }
+              },
             );
           } else {
             console.log(
-              "ℹ️ No skills provided, showing all external interviewers"
+              "ℹ️ No skills provided, showing all external interviewers",
             );
           }
 
           // Filter for approved interviewers
           const approvedInterviewers = skillFilteredInterviewers.filter(
-            (interviewer) => interviewer.contact?.status === "approved"
+            (interviewer) => interviewer.contact?.status === "approved",
           );
 
           console.log(
             "✅ Approved interviewers count:",
-            approvedInterviewers.length
+            approvedInterviewers.length,
           );
           console.log("✅ Approved interviewers:", approvedInterviewers);
 
@@ -803,7 +821,7 @@ function OutsourcedInterviewerModal({
 
               return day.timeSlots?.some((timeSlot) => {
                 const availabilityStartMinutes = timeToMinutes(
-                  timeSlot.startTime
+                  timeSlot.startTime,
                 );
                 const availabilityEndMinutes = timeToMinutes(timeSlot.endTime);
 
@@ -813,7 +831,7 @@ function OutsourcedInterviewerModal({
                 );
               });
             });
-          }
+          },
         );
 
         // console.log(
@@ -838,7 +856,7 @@ function OutsourcedInterviewerModal({
             //   } | Interviewer Tech: ${interviewerTech} | Candidate Tech: ${candidateTech} | Match: ${isMatch}`
             // );
             return isMatch;
-          }
+          },
         );
 
         const nonTechMatchedInterviewers = availableInterviewers.filter(
@@ -848,7 +866,7 @@ function OutsourcedInterviewerModal({
               ?.trim();
             const candidateTech = currentRole?.toLowerCase()?.trim();
             return interviewerTech !== candidateTech;
-          }
+          },
         );
 
         // console.log(
@@ -896,7 +914,7 @@ function OutsourcedInterviewerModal({
                   return (
                     posSkill?.toLowerCase() === interviewerSkill?.toLowerCase()
                   );
-                })
+                }),
             );
             // const matchingSkills = interviewerSkills.filter(
             //   (interviewerSkill) =>
@@ -919,19 +937,19 @@ function OutsourcedInterviewerModal({
         // 3️⃣ Apply skill matching for both groups
         const techMatchedWithSkills = calculateSkillMatches(
           techMatchedInterviewers,
-          "Tech-Matched"
+          "Tech-Matched",
         );
         const nonTechMatchedWithSkills = calculateSkillMatches(
           nonTechMatchedInterviewers,
-          "Non-Tech-Matched"
+          "Non-Tech-Matched",
         );
 
         // 4️⃣ Keep only those with ≥1 skill match
         const techSkillFiltered = techMatchedWithSkills.filter(
-          (i) => i.matchedSkills > 0
+          (i) => i.matchedSkills > 0,
         );
         const nonTechSkillFiltered = nonTechMatchedWithSkills.filter(
-          (i) => i.matchedSkills > 0
+          (i) => i.matchedSkills > 0,
         );
 
         // console.log("✅ Tech+Skill Matched Interviewers:", techSkillFiltered);
@@ -942,11 +960,11 @@ function OutsourcedInterviewerModal({
 
         // 5️⃣ Sort both lists by matched skill count (descending)
         const sortedTechSkillMatched = techSkillFiltered.sort(
-          (a, b) => b.matchedSkills - a.matchedSkills
+          (a, b) => b.matchedSkills - a.matchedSkills,
         );
         // console.log("asdas sortedTechSkillMatched", sortedTechSkillMatched);
         const sortedSkillOnlyMatched = nonTechSkillFiltered.sort(
-          (a, b) => b.matchedSkills - a.matchedSkills
+          (a, b) => b.matchedSkills - a.matchedSkills,
         );
         // console.log("asdas sortedSkillOnlyMatched", sortedSkillOnlyMatched);
 
@@ -968,19 +986,19 @@ function OutsourcedInterviewerModal({
 
         // 7️⃣ Filter only approved
         const approvedInterviewers = combinedInterviewers.filter(
-          (i) => i.contact?.status === "approved"
+          (i) => i.contact?.status === "approved",
         );
 
         // 8️⃣ Remove logged-in user
         const finalInterviewers = approvedInterviewers.filter(
-          (i) => i.contact?._id?.toString() !== userId?.toString()
+          (i) => i.contact?._id?.toString() !== userId?.toString(),
         );
 
         // 🧠 Step: Filter by experience match (interviewer's experience >= candidate's experience)
         const experienceFiltered = approvedInterviewers.filter(
           (interviewer) => {
             const interviewerExp = parseFloat(
-              interviewer.contact?.yearsOfExperience
+              interviewer.contact?.yearsOfExperience,
             );
             const candidateExp = parseFloat(candidateExperience);
 
@@ -995,7 +1013,7 @@ function OutsourcedInterviewerModal({
             // );
 
             return isEligible;
-          }
+          },
         );
 
         // console.log(
@@ -1067,7 +1085,7 @@ function OutsourcedInterviewerModal({
       const skills = interviewer?.contact?.skills || [];
       const hourlyRate = getExperienceBasedRateValue(
         interviewer.contact,
-        candidateExperience
+        candidateExperience,
       );
 
       const searchMatch =
@@ -1076,7 +1094,7 @@ function OutsourcedInterviewerModal({
         professionalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
         company.toLowerCase().includes(searchTerm.toLowerCase()) ||
         skills.some((skill) =>
-          skill?.toLowerCase().includes(searchTerm.toLowerCase())
+          skill?.toLowerCase().includes(searchTerm.toLowerCase()),
         );
 
       const rateMatch =
@@ -1095,6 +1113,90 @@ function OutsourcedInterviewerModal({
     skills,
     candidateExperience,
   ]);
+
+  useEffect(() => {
+    const getExperienceBasedRateValue = (contact, experience) => {
+      const rates = contact?.rates;
+      if (!rates) return 0;
+      let selectedLevel = null;
+      if (experience >= 1 && experience <= 3) selectedLevel = "junior";
+      else if (experience > 3 && experience <= 6) selectedLevel = "mid";
+      else if (experience > 6) selectedLevel = "senior";
+      let rate = rates[selectedLevel]?.inr || 0;
+      if (rate === 0) {
+        if (selectedLevel === "senior")
+          rate = rates.mid?.inr || rates.junior?.inr || 0;
+        else if (selectedLevel === "mid") rate = rates.junior?.inr || 0;
+      }
+      return rate;
+    };
+    let filtered = baseInterviewers; // Start with existing base filtered data (no change to prior filtering)
+
+    // STEP 1: If user has selected skills → calculate matched count & sort by it first (highest matches come first)
+    if (selectedSkills.length > 0) {
+      const selectedSkillsLower = selectedSkills.map((s) =>
+        s.toLowerCase().trim(),
+      );
+
+      filtered = baseInterviewers
+        .map((interviewer) => {
+          const interviewerSkills = (interviewer.contact?.skills || [])
+            .map((skill) =>
+              typeof skill === "string" ? skill : skill?.skill || "",
+            )
+            .map((s) => s.toLowerCase().trim());
+
+          const matchedCount = interviewerSkills.filter((skill) =>
+            selectedSkillsLower.includes(skill),
+          ).length;
+
+          return { ...interviewer, matchedSkillsCount: matchedCount };
+        })
+        .sort((a, b) => b.matchedSkillsCount - a.matchedSkillsCount); // Highest matches first
+    } // If no skills, filtered remains as baseInterviewers (no sorting/change)
+
+    // STEP 2: Now apply search + rate filter on the (already skill-sorted or original) list
+    filtered = filtered.filter((interviewer) => {
+      const firstName = interviewer?.contact?.firstName ?? "";
+      const lastName = interviewer?.contact?.lastName ?? "";
+      const fullName = `${firstName} ${lastName}`.trim() || "Unnamed";
+      const professionalTitle =
+        interviewer?.contact?.professionalTitle ||
+        interviewer?.contact?.CurrentRole ||
+        "";
+      const company = interviewer?.contact?.industry || "";
+      const skills = interviewer?.contact?.skills || [];
+      const hourlyRate = getExperienceBasedRateValue(
+        interviewer.contact,
+        candidateExperience,
+      );
+      const searchMatch =
+        searchTerm.trim() === "" ||
+        fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        professionalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        skills.some((skill) =>
+          (typeof skill === "string" ? skill : skill?.skill || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()),
+        );
+      const rateMatch =
+        hourlyRate >= appliedRateRange[0] &&
+        (appliedRateRange[1] === Infinity || hourlyRate <= appliedRateRange[1]);
+      return searchMatch && rateMatch;
+    });
+
+    setFilteredInterviewers(filtered);
+  }, [
+    searchTerm,
+    appliedRateRange,
+    navigatedfrom,
+    baseInterviewers,
+    skills,
+    candidateExperience,
+    selectedSkills, // ← Added dependency: Re-run when selectedSkills change
+  ]);
+  // CHANGE END: This useEffect replacement integrates skill-based sorting without affecting existing filters.
 
   // const handleSelectClick = (interviewer) => {
   //   console.log("Selected or removed interviewer:", interviewer);
@@ -1163,11 +1265,6 @@ function OutsourcedInterviewerModal({
 
   console.log("Selected Interviewers:", selectedInterviewersLocal);
 
-  // Compute available balance (balance - holdAmount) for gating outsourced selections
-  const walletRawBalance = Number(walletBalance?.balance || 0);
-  const walletHoldAmount = Number(walletBalance?.holdAmount || 0);
-  const availableBalance = walletRawBalance;
-
   const handleProceed = () => {
     //<----v1.0.1-----
     //<-----v1.0.4-----Venkatesh---- Updated to calculate required amount based on experience level
@@ -1223,7 +1320,7 @@ function OutsourcedInterviewerModal({
       grossRequiredAmount,
       "(GST rate:",
       gstRate,
-      ")"
+      ")",
     );
 
     // && grossRequiredAmount !== 0
@@ -1237,17 +1334,13 @@ function OutsourcedInterviewerModal({
       //const currentBalance = Number(availableBalance || 0).toFixed(2);
       notify.error(
         `Your available wallet balance is less than the highest interviewer hourly rate (including GST).\nRequired: ₹${required}\nPlease add funds to proceed.`,
-        { autoClose: 60000 }
+        { autoClose: 60000 },
       );
       // setTimeout(() => setShowWalletModal(true), 1000); // Removed auto-open in favor of manual Top Up button
     }
     //----v1.0.1----->
     //-----v1.0.4-----Venkatesh---->
   };
-
-  const [isOpen, setIsOpen] = useState(false);
-
-  const [isRateApplied, setIsRateApplied] = useState(false);
 
   const handleApplyRateFilter = () => {
     const minVal = parseInt(rateRange[0]) || 0;
@@ -1267,6 +1360,23 @@ function OutsourcedInterviewerModal({
     setRateRange(["", ""]);
     setAppliedRateRange([0, Infinity]);
     setIsRateApplied(false);
+  };
+
+  const handleAddSkill = () => {
+    const value = skillInput.trim();
+
+    if (!value) return;
+
+    setSelectedSkills((prev) => {
+      // prevent duplicates (case-insensitive)
+      if (prev.some((s) => s.toLowerCase() === value.toLowerCase())) {
+        return prev;
+      }
+
+      return [...prev, value];
+    });
+
+    setSkillInput("");
   };
 
   console.log("filteredInterviewers", filteredInterviewers);
@@ -1358,8 +1468,142 @@ function OutsourcedInterviewerModal({
               )}
             </div>
 
-            <div className="flex flex-row items-center  justify-between mt-4 gap-4">
-              <div className="w-full mt-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 mt-4">
+              {/* Search Input - Full width on mobile, spans 2 columns on medium, 1 on large */}
+              <div className="md:col-span-2 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Search professionals
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, role, company, or skills..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base placeholder-gray-500 transition-all duration-200 hover:border-gray-400"
+                  />
+                </div>
+              </div>
+
+              {/* Skills Dropdown */}
+              <div className="min-w-[220px] max-w-xs w-full sm:w-auto">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Filter by Skills
+                </label>
+                <input
+                  type="text"
+                  value={skillInput}
+                  placeholder="Type skill & press Enter"
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddSkill();
+                    }
+                  }}
+                  className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Hourly Rate Range */}
+              <div className="md:col-span-1 lg:col-span-1">
+                <div className="flex flex-col h-full">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Hourly Rate Range ($)
+                  </label>
+
+                  <div className="flex flex-col sm:flex-row items-stretch gap-3 flex-1">
+                    <div className="flex items-center gap-2 flex-1">
+                      {/* Min Input */}
+                      <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          value={rateRange[0]}
+                          onChange={(e) =>
+                            setRateRange([e.target.value, rateRange[1]])
+                          }
+                          className="w-full pl-8 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 hover:border-gray-400"
+                          placeholder="Min"
+                          min="0"
+                          step="1"
+                        />
+                      </div>
+
+                      <span className="text-gray-400 font-medium shrink-0">
+                        —
+                      </span>
+
+                      {/* Max Input */}
+                      <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          value={rateRange[1]}
+                          onChange={(e) =>
+                            setRateRange([rateRange[0], e.target.value])
+                          }
+                          className="w-full pl-8 pr-3 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 hover:border-gray-400"
+                          placeholder="Max"
+                          min="0"
+                          step="1"
+                        />
+                      </div>
+
+                      {/* Dynamic Button */}
+                      <button
+                        className={`px-3 py-2  rounded-md text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                          isRateApplied
+                            ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 hover:border-red-300"
+                            : "bg-custom-blue text-white  "
+                        }`}
+                        onClick={
+                          isRateApplied
+                            ? handleClearRateFilter
+                            : handleApplyRateFilter
+                        }
+                      >
+                        {isRateApplied ? "Clear Filter" : "Apply Filter"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Selected Skills */}
+            {selectedSkills.length > 0 && (
+              <div className="flex mt-4 flex-wrap items-center gap-1.5">
+                <span className="text-xs text-gray-500 mr-1">Skills:</span>
+
+                {selectedSkills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800"
+                  >
+                    {skill}
+                    <button
+                      onClick={() =>
+                        setSelectedSkills((prev) =>
+                          prev.filter((s) => s !== skill),
+                        )
+                      }
+                      className="ml-1 text-gray-500 hover:text-red-500"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* <div className="flex flex-row items-center  justify-between mt-4 gap-4">
+              <div className="w-[30%] mt-5">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
@@ -1372,6 +1616,42 @@ function OutsourcedInterviewerModal({
                 </div>
               </div>
 
+           
+              <div className=" w-[40px]  sm:w-auto" ref={skillsPopupRef}>
+                <DropdownWithSearchField
+                  ref={skillsInputRef}
+                  value={null}
+                  options={
+                    skillsData
+                      ?.filter(
+                        (skill) =>
+                          !selectedSkills.some(
+                            (s) => s.SkillName === skill.SkillName,
+                          ),
+                      )
+                      .map((skill) => ({
+                        value: skill.SkillName,
+                        label: skill.SkillName,
+                      })) || []
+                  }
+                  onChange={(option) => {
+                    if (!option) return;
+
+                    const value = option?.value || option?.target?.value;
+                    if (!value) return;
+
+                    setSelectedSkills((prev) => {
+                      // prevent duplicates
+                      if (prev.some((s) => s.SkillName === value)) return prev;
+                      return [...prev, { SkillName: value }];
+                    });
+                  }}
+                  onMenuOpen={loadSkills}
+                  loading={isSkillsFetching}
+                  placeholder="Add skill"
+                />
+              </div>
+
               <div className="flex flex-col w-full">
                 <label className="flex text-sm font-medium text-gray-700 mb-1 md:mb-2">
                   Hourly Rate Range
@@ -1379,7 +1659,7 @@ function OutsourcedInterviewerModal({
 
                 <div className="flex justify-between">
                   <div className="flex items-center space-x-1.5 w-2/3">
-                    {/* MIN Input */}
+              
                     <input
                       type="number"
                       value={rateRange[0]}
@@ -1393,7 +1673,7 @@ function OutsourcedInterviewerModal({
 
                     <span className="text-gray-500">-</span>
 
-                    {/* MAX Input */}
+                    
                     <input
                       type="number"
                       value={rateRange[1]}
@@ -1406,7 +1686,7 @@ function OutsourcedInterviewerModal({
                     />
                   </div>
 
-                  {/* ✅ Dynamic Button */}
+                
                   {isRateApplied ? (
                     <button
                       className="px-5 py-1 ml-3 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm font-medium"
@@ -1424,10 +1704,9 @@ function OutsourcedInterviewerModal({
                   )}
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
 
-          {/* Scrollable Data Section */}
           {/* v1.0.3 <--------------------------------------------------------------------- */}
           <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
             <div
@@ -1485,7 +1764,6 @@ function OutsourcedInterviewerModal({
             )}
           </div>
 
-          {/* Fixed Footer (Hidden when navigatedfrom is 'dashboard') */}
           {navigatedfrom !== "dashboard" && (
             // <div className="flex justify-end mt-5 mr-6">
             <div className="fixed bottom-0 left-0 right-0   py-4 px-6 ">

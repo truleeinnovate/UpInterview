@@ -75,7 +75,7 @@ export const InterviewerCard = ({
     typeof interviewer.contactId === "object"
   ) {
     const user = interviewer?.contactDetails || interviewer?.contactId;
-    console.log("user user", user);
+    // console.log("user user", user);
     const userName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
     if (userName) displayName = userName;
     if (user.email) displayEmail = user.email;
@@ -85,7 +85,10 @@ export const InterviewerCard = ({
 
   // Calculate available slots from contactDetails.availability
   const getAvailableSlotsInfo = () => {
-    const availability = interviewer?.contactDetails?.availability || [];
+    const availability =
+      interviewer?.contactId?.availability[0]?.availability ||
+      interviewer?.contactDetails?.availability[0]?.availability ||
+      [];
 
     if (availability.length === 0) {
       return {
@@ -115,7 +118,12 @@ export const InterviewerCard = ({
         `bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow h-full flex flex-col justify-between`
       }
     >
-      <div>
+      <div
+        className={
+          from === "outsource-interview" &&
+          "flex flex-col justify-between w-full"
+        }
+      >
         <div className="flex justify-between items-start mb-4">
           <div className="flex gap-4">
             {displayAvatar ? (
@@ -229,6 +237,7 @@ export const InterviewerCard = ({
         </div>
 
         {/* Available Slots - Updated to show actual data */}
+        {/* <div className="w-full "> */}
         <div
           className={`rounded-lg p-3 mb-4 flex items-start gap-2 ${slotsInfo.hasSlots ? "bg-green-50" : "bg-blue-50"}`}
         >
@@ -254,6 +263,7 @@ export const InterviewerCard = ({
             )}
           </div>
         </div>
+        {/* </div> */}
       </div>
       {from !== "outsource-interview" && (
         <div className="flex justify-between items-center pt-2 mt-auto">

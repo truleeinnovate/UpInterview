@@ -199,8 +199,8 @@ const RoundFormInterviews = () => {
   // const { groups } = useCustomContext();
   // Get groups data and mutations from TanStack Query
   // const { data: groups = [] } = useGroupsQuery();
-  const { data: tagsData = [] } = useInterviewerTags({ active_only: true });
-  const { data: teamsData = [] } = useTeamsQuery();
+  // const { data: tagsData = [] } = useInterviewerTags({ active_only: true });
+  // const { data: teamsData = [] } = useTeamsQuery();
   const { checkInternalInterviewUsage, isChecking } =
     useInternalInterviewUsage();
   // v1.0.2 <-----------------------------------------
@@ -254,7 +254,7 @@ const RoundFormInterviews = () => {
   const navigate = useNavigate();
   const [roundTitle, setRoundTitle] = useState("");
   const [customRoundTitle, setCustomRoundTitle] = useState("");
-  const [interviewMode, setInterviewMode] = useState("");
+  const [interviewMode, setInterviewMode] = useState("Virtual");
   const [status, setStatus] = useState("");
   const [instructions, setInstructions] = useState("");
   const [sequence, setSequence] = useState(1);
