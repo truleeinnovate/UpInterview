@@ -37,6 +37,7 @@ const DropdownWithSearchField = forwardRef(
       onMenuScrollToBottom,
       emptyMessage,
       isClearable = false, // Add isClearable prop
+      formatOptionLabel, // Allow custom option rendering
     },
     ref,
   ) => {
@@ -331,6 +332,7 @@ const DropdownWithSearchField = forwardRef(
               isLoading={loading}
               emptyMessage={emptyMessage}
               isClearable={isClearable}
+              formatOptionLabel={formatOptionLabel}
             />
           </div>
         ) : (

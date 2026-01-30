@@ -205,6 +205,11 @@ export default function ApplicationView({ application, onBack }) {
         // Mock additional resumes for UI demo
     ];
 
+    // Determine screening method (AI vs System)
+    const isAiScreening = application.screeningResult?.method === 'AI';
+    const analysisTitle = isAiScreening ? "AI Screening & Match Analysis" : "System Screening & Match Analysis";
+    const recommendationTitle = isAiScreening ? "AI Recommendation" : "System Recommendation";
+
     return (
         <div>
             <div className="max-w-[1800px] mx-auto px-6 py-8">
@@ -632,7 +637,7 @@ export default function ApplicationView({ application, onBack }) {
                             <div className="bg-gray-50 px-6 py-4 border-b">
                                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                     <TrendingUp size={20} />
-                                    AI Screening & Match Analysis
+                                    {analysisTitle}
                                 </h3>
                             </div>
                             <div className="p-6">
@@ -693,7 +698,7 @@ export default function ApplicationView({ application, onBack }) {
                                         <div className="flex items-start gap-3">
                                             <MessageSquare size={20} className="text-blue-600 mt-0.5 flex-shrink-0" />
                                             <div>
-                                                <div className="text-xs font-bold text-blue-900 uppercase mb-2">AI Recommendation</div>
+                                                <div className="text-xs font-bold text-blue-900 uppercase mb-2">{recommendationTitle}</div>
                                                 <p className="text-sm text-gray-700 leading-relaxed italic">
                                                     "{application.screeningNotes || application.screeningResult?.metadata?.summary || "No AI recommendation available."}"
                                                 </p>

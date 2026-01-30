@@ -81,6 +81,7 @@ const AddCandidateForm = ({
   source = "",
   positionId,
   shouldCreateApplication = false, // ← new prop, default false
+  onSaveStart, // ← new callback
 }) => {
   console.log("mode", mode);
   console.log("candidateId", candidateId);
@@ -484,9 +485,9 @@ const AddCandidateForm = ({
       CountryCode: sd.candidate_country_code || "+91",
       Phone: sd.candidate_phone
         ? sd.candidate_phone
-            .replace(/^\+\d{1,3}/, "")
-            .replace(/^\d{1,3}/, "")
-            .trim()
+          .replace(/^\+\d{1,3}/, "")
+          .replace(/^\d{1,3}/, "")
+          .trim()
         : "",
 
       // ── Education ───────────────────────────────────
@@ -507,15 +508,15 @@ const AddCandidateForm = ({
       skills:
         parsedSkills.length > 0
           ? parsedSkills.map((name) => ({
-              skill: (name || "").trim(),
-              experience: "",
-              expertise: "Beginner",
-            }))
+            skill: (name || "").trim(),
+            experience: "",
+            expertise: "Beginner",
+          }))
           : (sd.screening_result?.extracted_skills || []).map((name) => ({
-              skill: (name || "").trim(),
-              experience: "",
-              expertise: "Beginner",
-            })),
+            skill: (name || "").trim(),
+            experience: "",
+            expertise: "Beginner",
+          })),
 
       // ── New Fields (Resume Analysis) ─────────────────
       professionalSummary:
@@ -591,10 +592,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry,
       );
       setEntries(updatedEntries);
@@ -1065,14 +1066,14 @@ const AddCandidateForm = ({
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" &&
         mode !== "Edit" && {
-          source: "UPLOAD",
-          // Pass full screeningData so backend can store it
-          screeningData: screeningData, // ← direct pass (full object)
-          parsedJson: screeningData.metadata || screeningData.parsedJson || {},
-          parsedSkills: screeningData.parsed_skills || [],
-          parsedExperience: screeningData.parsed_experience || null,
-          parsedEducation: screeningData.parsed_education || null,
-        }),
+        source: "UPLOAD",
+        // Pass full screeningData so backend can store it
+        screeningData: screeningData, // ← direct pass (full object)
+        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+        parsedSkills: screeningData.parsed_skills || [],
+        parsedExperience: screeningData.parsed_experience || null,
+        parsedEducation: screeningData.parsed_education || null,
+      }),
     };
 
     try {
@@ -1274,8 +1275,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save candidate",
+        error.message ||
+        "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1700,7 +1701,7 @@ const AddCandidateForm = ({
                 // error={errors.Gender}
                 containerRef={fieldRefs.Gender}
                 label="Gender"
-                // required
+              // required
               />
             </div>
             {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -2232,7 +2233,7 @@ const AddCandidateForm = ({
               {/* Project Cards Display */}
               <div className="grid grid-cols-1 gap-4">
                 {formData?.workExperience &&
-                formData.workExperience.length > 0 ? (
+                  formData.workExperience.length > 0 ? (
                   formData.workExperience.map((project, index) => (
                     <div
                       key={index}
@@ -2338,15 +2339,17 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${
-                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               Cancel
             </Button>
 
             <LoadingButton
-              onClick={handleSubmit}
+              onClick={(e) => {
+                if (onSaveStart && isModal) onSaveStart();
+                handleSubmit(e);
+              }}
               isLoading={isMutationLoading && activeButton === "save"}
               loadingText={id ? "Updating..." : "Saving..."}
             >

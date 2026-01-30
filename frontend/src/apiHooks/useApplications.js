@@ -143,6 +143,11 @@ export const useApplicationMutations = () => {
             queryClient.invalidateQueries({
                 queryKey: ["applications", "position", variables.positionId],
             });
+
+            // FIX: Also invalidate the filter query used by CandidateViewer
+            queryClient.invalidateQueries({
+                queryKey: ["applications", "filter"],
+            });
         },
 
         onError: (error) => {

@@ -55,6 +55,7 @@ import Candidate from "../Candidate-Tab/Candidate";
 import ApplicationView from "./ApplicationView";
 import ProfileViewer from "../Candidate-Tab/CandidateViewDetails/ProfileViewer";
 import InterviewList from "../Interview-New/pages/InterviewList";
+import { notify } from "../../../../services/toastService";
 
 // Applications Tab Component for Position
 const PositionApplicationsTab = ({ positionId, onOpenApplication }) => {
@@ -721,7 +722,13 @@ const PositionSlideDetails = () => {
                       Edit Position
                     </Link>
                     <button
-                      onClick={() => navigate(`/positions/view-details/${id}/upload-resumes`)}
+                      onClick={() => {
+                        if (position?.status !== "opened") {
+                          notify.error("Position needs to be open to upload resumes");
+                          return;
+                        }
+                        navigate(`/positions/view-details/${id}/upload-resumes`);
+                      }}
                       className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                     >
                       <Plus className="h-4 w-4 mr-1.5" />

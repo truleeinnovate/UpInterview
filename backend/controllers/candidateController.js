@@ -280,8 +280,10 @@ const updateCandidatePatchCall = async (req, res) => {
       return res.status(404).json({ message: "Candidate not found" });
     }
 
-    // ✅ Utility function to detect empty values  // added by Ranjith
+    // Fetch active resume for comparison
+    const currentResume = await Resume.findOne({ candidateId, isActive: true }).lean();
 
+    // ✅ Utility function to detect empty values
     const isEmptyValue = (val) => {
       return (
         val === null ||
@@ -290,74 +292,74 @@ const updateCandidatePatchCall = async (req, res) => {
       );
     };
 
-    // ✅ Compare current values with updateFields to identify changes // changed by Ranjith
-    // ✅ Compare current values with updateFields to identify changes
-    const changes = Object.entries(updateFields)
-      .filter(([key, newValue]) => {
-        const oldValue = currentCandidate[key];
+    // Helper to normalize arrays for comparison
+    const normalizeArray = (array) => {
+      if (!Array.isArray(array)) return [];
+      return array
+        .filter(item => item && typeof item === 'object') // skip invalid items
+        .map((item) => {
+          const { _id, ...rest } = item;
+          return rest;
+        })
+        .sort((a, b) => {
+          // Safe localeCompare – fallback to string comparison if skill missing
+          const aSkill = (a.skill || '').toString();
+          const bSkill = (b.skill || '').toString();
+          return aSkill.localeCompare(bSkill);
+        });
+    };
 
-        // Skip when both old & new are empty/undefined
-        if (isEmptyValue(oldValue) && isEmptyValue(newValue)) {
-          return false;
+    // Helper to check if two values are different
+    const isDifferent = (oldValue, newValue, key) => {
+      // Skip when both old & new are empty/undefined
+      if (isEmptyValue(oldValue) && isEmptyValue(newValue)) {
+        return false;
+      }
+
+      // Normalize PositionId
+      if (key === "PositionId") {
+        return oldValue?.toString() !== newValue?.toString();
+      }
+
+      // Handle arrays (skills, languages, certifications, workExperience)
+      if (Array.isArray(oldValue) || Array.isArray(newValue)) {
+        const oldArr = Array.isArray(oldValue) ? oldValue : [];
+        const newArr = Array.isArray(newValue) ? newValue : [];
+
+        // Simple arrays of strings (languages, certifications)
+        if (key === 'languages' || key === 'certifications') {
+          return JSON.stringify(oldArr.sort()) !== JSON.stringify(newArr.sort());
         }
 
-        // Normalize PositionId
-        if (key === "PositionId") {
-          return oldValue?.toString() !== newValue?.toString();
+        // Object arrays (skills, workExperience)
+        return (
+          JSON.stringify(normalizeArray(oldArr)) !==
+          JSON.stringify(normalizeArray(newArr))
+        );
+      }
+
+      // Handle dates
+      if (
+        (oldValue instanceof Date || (typeof oldValue === 'string' && !isNaN(Date.parse(oldValue)))) &&
+        (newValue instanceof Date || (typeof newValue === 'string' && !isNaN(Date.parse(newValue))))
+      ) {
+        // Should check if it's actually a date field or just looks like one?
+        // For now, if both parse to valid dates, compare ISO strings
+        // But be careful with non-date strings that might parse as dates (though unlikely with Joi validation)
+        // Better to rely on specific key names if possible, but generic is okay for now if defensive.
+        // Actually, let's rely on loose equality for strings if date parsing is ambiguous.
+        // But Date objects need .getTime() or .toISOString()
+        const d1 = new Date(oldValue);
+        const d2 = new Date(newValue);
+        if (!isNaN(d1) && !isNaN(d2)) {
+          return d1.toISOString() !== d2.toISOString();
         }
+      }
 
-        // Handle arrays (skills, languages, certifications, workExperience)
-        if (Array.isArray(oldValue) && Array.isArray(newValue)) {
-          // Safe guard: skip if either is empty or malformed
-          if (!oldValue.length || !newValue.length) {
-            return true; // Treat as changed if one is empty
-          }
+      // Default comparison
+      return oldValue !== newValue;
+    };
 
-          const normalizeArray = (array) =>
-            array
-              .filter(item => item && typeof item === 'object') // skip invalid items
-              .map((item) => {
-                const { _id, ...rest } = item;
-                return rest;
-              })
-              .sort((a, b) => {
-                // Safe localeCompare – fallback to string comparison if skill missing
-                const aSkill = (a.skill || '').toString();
-                const bSkill = (b.skill || '').toString();
-                return aSkill.localeCompare(bSkill);
-              });
-
-          return (
-            JSON.stringify(normalizeArray(oldValue)) !==
-            JSON.stringify(normalizeArray(newValue))
-          );
-        }
-
-        // Handle dates
-        if (
-          (oldValue instanceof Date || new Date(oldValue).toString() !== "Invalid Date") &&
-          (newValue instanceof Date || new Date(newValue).toString() !== "Invalid Date")
-        ) {
-          return new Date(oldValue).toISOString() !== new Date(newValue).toISOString();
-        }
-
-        // Default comparison
-        return oldValue !== newValue;
-      })
-      .map(([key, newValue]) => ({
-        fieldName: key,
-        oldValue: currentCandidate[key],
-        newValue,
-      }));
-
-    // If no changes detected, return early
-    if (changes.length === 0) {
-      return res.status(200).json({
-        status: "no_changes",
-        message: "No changes detected",
-        data: null,
-      });
-    }
 
     // Separate candidate fields and resume fields
     const candidateFields = [
@@ -395,40 +397,94 @@ const updateCandidatePatchCall = async (req, res) => {
     const candidateUpdateData = { updatedBy: ownerId };
     const resumeUpdateData = { updatedBy: ownerId };
 
+    const candidateChanges = [];
+    const resumeChanges = [];
+
+    // Process Candidate Fields
     Object.keys(updateFields).forEach((key) => {
       if (candidateFields.includes(key)) {
-        candidateUpdateData[key] = updateFields[key];
-      } else if (resumeFields.includes(key)) {
-        resumeUpdateData[key] = updateFields[key];
+        const newValue = updateFields[key];
+        const oldValue = currentCandidate[key];
+
+        if (isDifferent(oldValue, newValue, key)) {
+          candidateUpdateData[key] = newValue;
+          candidateChanges.push({ fieldName: key, oldValue, newValue });
+        }
+      }
+      // Process Resume Fields
+      else if (resumeFields.includes(key)) {
+        const newValue = updateFields[key];
+        // Compare against currentResume if it exists, otherwise it's a change (new)
+        const oldValue = currentResume ? currentResume[key] : undefined;
+
+        // For ImageData and resume file, we might need special handling if they are objects
+        // But assuming isDifferent handles internal object structure or we rely on reference if not deep equal
+        // For simple fix, let's trust isDifferent or modify it to handle deep object compare if needed.
+        // The normalizeArray handles skills/workExp. 
+        // ImageData/resume are objects { path, filename ... }. Strict equality check won't work if new object created.
+        // But usually file upload returns new object only if new file uploaded.
+        // If "resume" field is passed as same object structure, JSON.stringify might work.
+        // Let's add object comparison to isDifferent if needed.
+
+        let changed = false;
+        if (!currentResume) {
+          changed = !isEmptyValue(newValue); // If no resume, any non-empty value is a change
+        } else {
+          // Deep compare for objects like ImageData, resume
+          if (typeof newValue === 'object' && newValue !== null && !Array.isArray(newValue) && !(newValue instanceof Date)) {
+            // Excluding special keys if any?
+            const oldObj = oldValue || {};
+            // Simple JSON stringify for now - might be expensive but safe for these small objects
+            changed = JSON.stringify(newValue) !== JSON.stringify(oldObj);
+          } else {
+            changed = isDifferent(oldValue, newValue, key);
+          }
+        }
+
+        if (changed) {
+          resumeUpdateData[key] = newValue;
+          resumeChanges.push({ fieldName: key, oldValue, newValue });
+        }
       }
     });
 
-    // Update Candidate
-    const updatedCandidate = await Candidate.findByIdAndUpdate(
-      candidateId,
-      candidateUpdateData,
-      { new: true, runValidators: true },
-    );
-
-    if (!updatedCandidate) {
-      return res
-        .status(404)
-        .json({ message: "Candidate not found after update" });
+    // If no changes detected at all, return early
+    if (candidateChanges.length === 0 && resumeChanges.length === 0) {
+      return res.status(200).json({
+        status: "no_changes",
+        message: "No changes detected",
+        data: null,
+      });
     }
 
-    // Update or create Resume if resume fields are present
+    let updatedCandidate = currentCandidate;
+
+    // Update Candidate if there are candidate changes
+    if (candidateChanges.length > 0) {
+      updatedCandidate = await Candidate.findByIdAndUpdate(
+        candidateId,
+        candidateUpdateData,
+        { new: true, runValidators: true },
+      );
+
+      if (!updatedCandidate) {
+        return res
+          .status(404)
+          .json({ message: "Candidate not found after update" });
+      }
+    }
+
+    // Update or create Resume if resume changes are present
+    // Check keys > 1 because updatedBy is always there
     if (Object.keys(resumeUpdateData).length > 1) {
-      // Find the current active resume
-      const currentResume = await Resume.findOne({ candidateId, isActive: true });
 
       if (currentResume) {
         // Deactivate the current resume
-        currentResume.isActive = false;
-        await currentResume.save();
+        await Resume.findByIdAndUpdate(currentResume._id, { isActive: false });
 
         // Create a new resume version merging old data with new updates
         // We need to exclude _id and createdAt/updatedAt from the old resume copy
-        const { _id, createdAt, updatedAt, __v, ...oldResumeData } = currentResume.toObject();
+        const { _id, createdAt, updatedAt, __v, ...oldResumeData } = currentResume; // currentResume is lean()
 
         const newResume = new Resume({
           ...oldResumeData,      // Copy existing data
@@ -480,6 +536,8 @@ const updateCandidatePatchCall = async (req, res) => {
       }
     }
 
+    const allChanges = [...candidateChanges, ...resumeChanges];
+
     // Generate feed
     res.locals.feedData = {
       tenantId,
@@ -494,13 +552,15 @@ const updateCandidatePatchCall = async (req, res) => {
       parentObject: "Candidate",
       metadata: req.body,
       severity: res.statusCode >= 500 ? "high" : "low",
-      fieldMessage: changes.map(({ fieldName, oldValue, newValue }) => ({
+      fieldMessage: allChanges.map(({ fieldName, oldValue, newValue }) => ({
         fieldName,
         message: isEmptyValue(oldValue)
-          ? isEmptyValue(newValue)
-          : `${fieldName} updated from `, // '${oldValue}' to '${newValue}'
+          ? isEmptyValue(newValue) // Should ideally say "set to" or similar
+            ? `${fieldName} updated`
+            : `${fieldName} set to ${JSON.stringify(newValue)}`
+          : `${fieldName} updated`, // Simplified message
       })),
-      history: changes,
+      history: allChanges,
     };
     // Generate logs
     res.locals.logData = {

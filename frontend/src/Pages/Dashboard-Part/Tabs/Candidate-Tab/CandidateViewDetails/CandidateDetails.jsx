@@ -466,7 +466,7 @@
 //         onClose={onCloseSlide}
 //         id={candidate._id}
 //         showEdit
-//         onEdit={() => navigate(`/candidate/edit/${candidate._id}`)}
+//         onEdit={() => navigate(`/candidates/edit/${candidate._id}`)}
 //         showExternal
 //       >
 //         {content}
@@ -955,7 +955,7 @@ const WorkExperience = ({ candidate }) => {
       icon: <FileText size={20} className="text-custom-blue" />,
       content:
         formatResponsibilitiesToList(candidate?.professionalSummary).length >
-        0 ? (
+          0 ? (
           <ul className="list-disc list-inside space-y-1">
             {formatResponsibilitiesToList(candidate?.professionalSummary).map(
               (point, i) => (
@@ -1247,11 +1247,10 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`${
-                    activeTab === tab.id
+                  className={`${activeTab === tab.id
                       ? "border-custom-blue text-custom-blue"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
+                    } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
                 >
                   {tab.name}
                 </button>
@@ -1340,8 +1339,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                             <p className="font-medium text-sm text-gray-800">
                               {candidate?.Date_Of_Birth
                                 ? new Date(
-                                    candidate.Date_Of_Birth,
-                                  ).toLocaleDateString()
+                                  candidate.Date_Of_Birth,
+                                ).toLocaleDateString()
                                 : "N/A"}
                             </p>
                           </div>
@@ -1516,18 +1515,18 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                               title={
                                 Array.isArray(candidate?.languages)
                                   ? candidate.languages
-                                      .map((lang) =>
-                                        capitalizeFirstLetter(lang),
-                                      )
-                                      .join(", ")
+                                    .map((lang) =>
+                                      capitalizeFirstLetter(lang),
+                                    )
+                                    .join(", ")
                                   : "N/A"
                               }
                             >
                               {Array.isArray(candidate?.languages) &&
-                              candidate.languages.length > 0
+                                candidate.languages.length > 0
                                 ? candidate.languages
-                                    .map((lang) => capitalizeFirstLetter(lang))
-                                    .join(", ")
+                                  .map((lang) => capitalizeFirstLetter(lang))
+                                  .join(", ")
                                 : "N/A"}
                             </p>
                           </div>
@@ -1541,7 +1540,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
 
                             <p className="flex items-center gap-1 text-sm font-medium text-gray-800">
                               {candidate?.minSalary != null ||
-                              candidate?.maxSalary != null ? (
+                                candidate?.maxSalary != null ? (
                                 <>
                                   {formatToK(candidate?.minSalary ?? 0)} –{" "}
                                   {formatToK(candidate?.maxSalary ?? 0)}
@@ -1645,7 +1644,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                   </h4>
                   <div className="relative border-l-2 border-gray-100 ml-3 space-y-6">
                     {Array.isArray(candidate?.certifications) &&
-                    candidate?.certifications?.length > 0 ? (
+                      candidate?.certifications?.length > 0 ? (
                       candidate?.certifications?.map((cert, index) => (
                         <div key={index} className="relative pl-8">
                           <div className="absolute -left-[16px] top-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center ring-4 ring-white">

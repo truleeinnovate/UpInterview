@@ -1001,7 +1001,7 @@ function Candidate({
               key: "edit",
               label: "Edit",
               icon: <Pencil className="w-4 h-4 text-green-600" />,
-              onClick: (row) => navigate(`/candidate/edit/${row._id}`),
+              onClick: (row) => navigate(`/candidates/edit/${row._id}`),
             },
           ]
           : []),
