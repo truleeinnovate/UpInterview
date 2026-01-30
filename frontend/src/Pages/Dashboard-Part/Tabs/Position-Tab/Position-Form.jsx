@@ -41,6 +41,7 @@ import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx"
 import { useCompanies } from "../../../../apiHooks/TenantCompany/useTenantCompanies.js"; // Add this import
 import CompanyForm from "../Companies/CompanyForm.jsx";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
+import { Button } from "../../../../Components/Buttons/Button";
 
 const PositionForm = ({ mode, onClose, isModal = false }) => {
   // <---------------------------------------------------------------
@@ -551,10 +552,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       if (!exists) {
         const selectedTitleLabel = selectedTemplate.title
           ? selectedTemplate.title.charAt(0).toUpperCase() +
-          selectedTemplate.title.slice(1)
+            selectedTemplate.title.slice(1)
           : selectedTemplate.type
             ? selectedTemplate.type.charAt(0).toUpperCase() +
-            selectedTemplate.type.slice(1)
+              selectedTemplate.type.slice(1)
             : "Unnamed Template";
 
         baseOptions.push({
@@ -579,7 +580,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
               >
                 {selectedTemplate.type
                   ? selectedTemplate.type.charAt(0).toUpperCase() +
-                  selectedTemplate.type.slice(1)
+                    selectedTemplate.type.slice(1)
                   : ""}
               </span>
             </div>
@@ -648,7 +649,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           // If either is empty, clear cross-field errors
           if (
             next.minexperience ===
-            "Min Experience cannot be greater than Max" ||
+              "Min Experience cannot be greater than Max" ||
             next.minexperience === "Min and Max Experience cannot be equal"
           )
             next.minexperience = "";
@@ -699,7 +700,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           } else {
             if (
               next.minsalary ===
-              "Minimum Salary cannot be greater than Maximum" ||
+                "Minimum Salary cannot be greater than Maximum" ||
               next.minsalary === "Minimum and Maximum Salary cannot be equal"
             )
               next.minsalary = "";
@@ -724,10 +725,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry,
       );
       setEntries(updatedEntries);
@@ -965,8 +966,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save position",
+          error.message ||
+          "Failed to save position",
       );
 
       if (error.response && error.response.status === 400) {
@@ -1629,24 +1630,24 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           onChange={handleChange}
                           inputRef={fieldRefs.minSalary}
                           error={errors.minsalary}
-                          min={50000}            // 5 digits minimum
-                          max={999999999}        // 9 digits maximum
+                          min={50000} // 5 digits minimum
+                          max={999999999} // 9 digits maximum
                           label="Min Salary (Annual)"
                           name="minSalary"
                           placeholder="Min Salary (Annual)"
-                        // required={formData.maxSalary ? true : false}
+                          // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
                           value={formData.maxSalary}
                           onChange={handleChange}
-                          min={50000}            // 5 digits minimum
-                          max={999999999}        // 9 digits maximum
+                          min={50000} // 5 digits minimum
+                          max={999999999} // 9 digits maximum
                           inputRef={fieldRefs.maxSalary}
                           error={errors.maxsalary}
                           label="Max Salary (Annual)"
                           name="maxSalary"
                           placeholder="Max Salary (Annual)"
-                        // required={formData.minSalary ? true : false}
+                          // required={formData.minSalary ? true : false}
                         />
                       </div>
                     </div>
@@ -1663,7 +1664,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                         max={100}
                         label="No. of Positions"
                         name="NoofPositions"
-                      // required
+                        // required
                       />
 
                       <div>
@@ -1745,7 +1746,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                             const resolvedTemplate =
                               fromList ||
                               (selectedTemplate &&
-                                selectedTemplate._id === templateId
+                              selectedTemplate._id === templateId
                                 ? selectedTemplate
                                 : null);
 
@@ -2070,8 +2071,9 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
                   {/* v1.0.4 <---------------------------------------------------- */}
                   <div className="flex justify-end items-center px-0 py-4 gap-2">
                     {/* v1.0.4 ----------------------------------------------------> */}
-                    <button
-                      className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50"
+                    <Button
+                      variant="outline"
+                      className="text-custom-blue border border-custom-blue"
                       type="button"
                       onClick={() => {
                         // If it's a modal, call the onClose function
@@ -2094,7 +2096,7 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
                       }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                     <LoadingButton
                       onClick={(e) => handleSubmit(e, "BasicDetailsSave")}
                       isLoading={isMutationLoading}

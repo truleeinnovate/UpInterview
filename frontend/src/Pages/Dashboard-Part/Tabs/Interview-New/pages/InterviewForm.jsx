@@ -29,6 +29,7 @@ import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.
 import { notify } from "../../../../../services/toastService.js";
 import { Info } from "lucide-react";
 import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
+import { Button } from "../../../../../Components/Buttons/Button.jsx";
 
 // v1.0.3 ----------------------------------------------------------->
 
@@ -1029,13 +1030,14 @@ const InterviewForm = () => {
                   {/* v1.0.6  -  Ranjith  -  rounds shown as horizontal stepper pathway   // v1.0.6 <-----------------------------------> */}
 
                   <div className="flex justify-end space-x-3">
-                    <button
+                    <Button
+                      variant="outline"
                       type="button"
                       onClick={() => navigate(-1)}
-                      className="px-4 py-2 border border-custom-blue rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="border border-custom-blue rounded-md text-gray-700 bg-white hover:bg-gray-50"
                     >
                       Cancel
-                    </button>
+                    </Button>
                     <LoadingButton
                       onClick={handleSubmit}
                       isLoading={isMutationLoading}
