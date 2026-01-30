@@ -652,14 +652,15 @@ const ResumesTab = ({ candidateId, candidateName }) => {
                       <span>Uploaded:</span>
                       {new Date(resume.createdAt).toLocaleDateString()}
                     </span>
-                    {resume?.resume?.fileSize && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-gray-500 text-sm">•</span>
-                        <span className="text-gray-500 text-sm">
-                          {formatSize(resume?.resume?.fileSize)}
-                        </span>
-                      </div>
-                    )}
+                    {resume?.source === "UPLOAD" &&
+                      resume?.resume?.fileSize && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-500 text-sm">•</span>
+                          <span className="text-gray-500 text-sm">
+                            {formatSize(resume?.resume?.fileSize)}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
