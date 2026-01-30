@@ -360,6 +360,8 @@ const AddCandidateForm = ({
   }, [locations, formData.location]);
   // --------------------------------------- new fields version 2 -----------------------
 
+  console.log("SELECTED CANDIDATE ==============================> ", selectedCandidate);
+
   useEffect(() => {
     // IMPORTANT: Skip DB pre-fill when coming from screening — we want screening data instead
     if (source === "candidate-screening") {

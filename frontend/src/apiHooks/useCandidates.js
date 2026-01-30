@@ -78,7 +78,7 @@ export const useCandidates = (filters = {}) => {
       // const candidateId = response.data.data._id;
       const candidate = response.data?.data; // candidate may be undefined
       // v1.0.1 <----------------------------------------------------------------------
-      const candidateId = candidate?._id || id; // only defined if changes occurred
+      const candidateId = candidate?.candidate?._id || id; // only defined if changes occurred
       // v1.0.0 ---------------------------------------------------------------------->
       // console.log("candidateId", candidateId);
 
@@ -97,11 +97,13 @@ export const useCandidates = (filters = {}) => {
         // --- Resume ---
         // Delete resume if removed
         if (isResumeRemoved && !resumeFile) {
-          await uploadFile(null, "resume", "candidate", candidateId);
+          // await uploadFile(null, "resume", "candidate", candidateId);
+          await uploadFile(null, "resume", "resume", candidateId);
         }
         // Upload new resume
         else if (resumeFile instanceof File) {
-          await uploadFile(resumeFile, "resume", "candidate", candidateId);
+          // await uploadFile(resumeFile, "resume", "candidate", candidateId);
+          await uploadFile(resumeFile, "resume", "resume", candidateId);
         }
       }
 

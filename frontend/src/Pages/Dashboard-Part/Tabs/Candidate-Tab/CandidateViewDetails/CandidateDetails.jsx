@@ -545,38 +545,57 @@ const ResumesTab = ({ candidateId, candidateName }) => {
     }
   }, [candidateId]);
 
-  console.log("RESUMES ===========================> ", resumes);
-
-  const handleDownload = (url, filename) => {
-    if (!url) return;
-
-    // Construct full URL if relative
-    let downloadUrl = url;
-    if (!url.startsWith("http") && !url.startsWith("//")) {
-      const apiUrl = process.env.REACT_APP_API_URL;
-      const origin = apiUrl.startsWith("http")
-        ? new URL(apiUrl).origin
-        : apiUrl;
-      const cleanUrl = url.startsWith("/") ? url.slice(1) : url;
-      downloadUrl = `${origin}/${cleanUrl}`;
+  const handleDownload = async (url, filename) => {
+    if (!url) {
+      console.error("No URL provided for download");
+      return;
     }
 
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.setAttribute("download", filename || "resume.pdf");
-    link.setAttribute("target", "_blank");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename || "resume.pdf";
+
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+      window.open(url, "_blank");
+    }
+  };
+
+  const handlePreview = (url) => {
+    if (!url) return;
+    window.open(url, "_blank");
   };
 
   const formatSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
     if (!bytes) return "Unknown size";
+
     const k = 1024;
-    const dm = 2;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const dm = 2; // Decimal places
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
+
+    // Calculate which unit index to use
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+
+    // Ensure we don't exceed the array length
+    const unitIndex = i < sizes.length ? i : sizes.length - 1;
+
+    return (
+      parseFloat((bytes / Math.pow(k, unitIndex)).toFixed(dm)) +
+      " " +
+      sizes[unitIndex]
+    );
   };
 
   if (loading) {
@@ -629,27 +648,46 @@ const ResumesTab = ({ candidateId, candidateName }) => {
                     )}
                   </div>
                   <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                    <span>
-                      Uploaded:{" "}
+                    <span className="flex items-center gap-1 text-gray-500 text-sm">
+                      <span>Uploaded:</span>
                       {new Date(resume.createdAt).toLocaleDateString()}
                     </span>
-                    <span>•</span>
-                    <span>{formatSize(resume.resume?.size)}</span>
+                    {resume?.source === "UPLOAD" &&
+                      resume?.resume?.fileSize && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-500 text-sm">•</span>
+                          <span className="text-gray-500 text-sm">
+                            {formatSize(resume?.resume?.fileSize)}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() =>
-                  handleDownload(
-                    resume.fileUrl,
-                    `${(candidateName || "Candidate").replace(/\s+/g, "_")}_Resume_${versionLabel}.pdf`,
-                  )
-                }
-                className="p-2 text-gray-500 hover:text-[rgb(33,121,137)] hover:bg-gray-50 rounded-full transition-colors"
-                title="Download Resume"
-              >
-                <Download size={20} />
-              </button>
+              {resume?.source === "UPLOAD" && (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handlePreview(resume.resume?.path)}
+                    className="text-sm text-gray-500 hover:text-[rgb(33,121,137)] hover:underline cursor-pointer transition-colors max-w-[200px] truncate"
+                    title="Preview Resume"
+                  >
+                    {resume?.resume?.filename}
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleDownload(
+                        // resume.fileUrl,
+                        resume.resume?.path,
+                        `${(candidateName || "Candidate").replace(/\s+/g, "_")}_Resume_${versionLabel}.pdf`,
+                      )
+                    }
+                    className="p-2 text-gray-500 hover:text-[rgb(33,121,137)] hover:bg-gray-50 rounded-full transition-colors"
+                    title="Download Resume"
+                  >
+                    <Download size={20} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1106,10 +1144,11 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`${activeTab === tab.id
+                  className={`${
+                    activeTab === tab.id
                       ? "border-custom-blue text-custom-blue"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
+                  } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
                 >
                   {tab.name}
                 </button>
@@ -1198,8 +1237,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                             <p className="font-medium text-sm text-gray-800">
                               {candidate?.Date_Of_Birth
                                 ? new Date(
-                                  candidate.Date_Of_Birth,
-                                ).toLocaleDateString()
+                                    candidate.Date_Of_Birth,
+                                  ).toLocaleDateString()
                                 : "N/A"}
                             </p>
                           </div>
@@ -1374,18 +1413,18 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                               title={
                                 Array.isArray(candidate?.languages)
                                   ? candidate.languages
-                                    .map((lang) =>
-                                      capitalizeFirstLetter(lang),
-                                    )
-                                    .join(", ")
+                                      .map((lang) =>
+                                        capitalizeFirstLetter(lang),
+                                      )
+                                      .join(", ")
                                   : "N/A"
                               }
                             >
                               {Array.isArray(candidate?.languages) &&
-                                candidate.languages.length > 0
+                              candidate.languages.length > 0
                                 ? candidate.languages
-                                  .map((lang) => capitalizeFirstLetter(lang))
-                                  .join(", ")
+                                    .map((lang) => capitalizeFirstLetter(lang))
+                                    .join(", ")
                                 : "N/A"}
                             </p>
                           </div>
@@ -1399,7 +1438,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
 
                             <p className="flex items-center gap-1 text-sm font-medium text-gray-800">
                               {candidate?.minSalary != null ||
-                                candidate?.maxSalary != null ? (
+                              candidate?.maxSalary != null ? (
                                 <>
                                   {formatToK(candidate?.minSalary ?? 0)} –{" "}
                                   {formatToK(candidate?.maxSalary ?? 0)}

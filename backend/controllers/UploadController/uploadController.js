@@ -1,14 +1,18 @@
 // v1.0.0 - Ashok - change in delete file
 const cloudinary = require("../../utils/cloudinary");
 const { Candidate } = require("../../models/candidate.js");
+const { Resume } = require("../../models/Resume.js");
 const { Contacts } = require("../../models/Contacts");
 const Tenant = require("../../models/Tenant");
 const SupportUser = require("../../models/SupportUser");
-const { MockInterview } = require("../../models/Mockinterview/mockinterview.js");
+const {
+  MockInterview,
+} = require("../../models/Mockinterview/mockinterview.js");
 const uploadToCloudinary = require("../../utils/uploadToCloudinary");
 
 const entityModels = {
   candidate: Candidate,
+  resume: Resume,
   contact: Contacts,
   organization: Tenant,
   support: SupportUser,
@@ -18,6 +22,8 @@ const entityModels = {
 const fieldMap = {
   candidate: {
     image: { field: "ImageData", resourceType: "image" },
+  },
+  resume: {
     resume: { field: "resume", resourceType: "raw" },
   },
   contact: {
@@ -77,7 +83,13 @@ const uploadHandler = async (req, res) => {
 
     const { field, resourceType } = fieldConfig;
 
-    const instance = await Model.findById(entityId);
+    // const instance = await Model.findById(entityId);
+    let instance;
+    if (entity === "resume") {
+      instance = await Model.findOne({ candidateId: entityId });
+    } else {
+      instance = await Model.findById(entityId);
+    }
     if (!instance) {
       return res.status(404).json({ error: `${entity} not found` });
     }
@@ -130,13 +142,12 @@ const uploadHandler = async (req, res) => {
       await deleteFromCloudinary(prevFile.publicId, resourceType);
     }
 
-
     // Upload to Cloudinary
     const folder = `${entity}/${entityId}/${type}`;
     const result = await uploadToCloudinary(
       file.buffer,
       file.originalname,
-      folder
+      folder,
     );
 
     instance[field] = {
