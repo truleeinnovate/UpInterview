@@ -525,9 +525,7 @@ const InternalInterviews = ({
   return (
     // v1.0.3 <----------------------------------------------------------------------------------
     <SidebarPopup
-      title={`Select Internal  individuals
-       
-      `}
+      title={`Internal Interviewers`}
       //   ${
       //   viewType === "individuals" ? "Individuals" : "Groups"
       // }
