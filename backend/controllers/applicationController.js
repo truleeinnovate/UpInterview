@@ -127,7 +127,7 @@ const getApplicationsByPosition = async (req, res) => {
         const rounds = await InterviewRounds.find({
             interviewId: { $in: interviewIds }
         })
-            .populate("interviewers", "FirstName LastName")
+            .populate("interviewers", "FirstName LastName firstName lastName")
             .sort({ sequence: 1 })
             .lean();
 
@@ -163,7 +163,8 @@ const getApplicationsByPosition = async (req, res) => {
                 screeningNotes: screening?.metadata?.summary ?? screening?.metadata?.aiRecommendation ?? null,
                 screeningResult: screening ? {
                     metadata: screening.metadata,
-                    recommendation: screening.recommendation
+                    recommendation: screening.recommendation,
+                    method: screening.screenedBy // Include method (AI vs System)
                 } : null,
 
                 positionId: app.positionId
@@ -209,7 +210,7 @@ const getApplicationsByPosition = async (req, res) => {
                     id: r._id,
                     title: r.roundTitle || `Round ${r.sequence}`,
                     date: r.dateTime || r.createdAt,
-                    interviewer: r.interviewers?.map(i => `${i.FirstName} ${i.LastName}`).join(", ") || "Not Assigned",
+                    interviewer: r.interviewers?.map(i => `${i.FirstName || i.firstName} ${i.LastName || i.lastName}`).join(", ") || "Not Assigned",
                     status: r.status,
                     feedback: r.comments || r.roundOutcome || "No feedback available"
                 }))
@@ -593,10 +594,45 @@ const filterApplications = async (req, res) => {
             // .sort({ createdAt: -1 })
             .lean();
 
+        // 🟢 ENRICHMENT: Fetch Screening Results for these applications
+        const candidateIds = applications.map(app => app.candidateId?._id).filter(Boolean);
+
+        // Fetch resumes to link to screening results
+        const resumes = await Resume.find({
+            candidateId: { $in: candidateIds },
+            isActive: true
+        }).lean();
+        const resumeMap = {};
+        resumes.forEach(r => resumeMap[r.candidateId.toString()] = r);
+        const resumeIds = resumes.map(r => r._id);
+
+        // Fetch Screening Results
+        const screeningResults = await ScreeningResult.find({
+            resumeId: { $in: resumeIds },
+            positionId: positionId || { $in: applications.map(a => a.positionId._id) } // Handle if positionId is not in filter
+        }).lean();
+        const screeningMap = {};
+        screeningResults.forEach(s => screeningMap[s.resumeId.toString()] = s);
+
+        // Enrich the application objects
+        const enrichedApplications = applications.map(app => {
+            const resume = resumeMap[app.candidateId?._id?.toString()];
+            const screening = resume ? screeningMap[resume._id.toString()] : null;
+
+            return {
+                ...app,
+                screeningResult: screening ? {
+                    metadata: screening.metadata,
+                    recommendation: screening.recommendation,
+                    method: screening.screenedBy // Include method (AI vs System)
+                } : null
+            };
+        });
+
         res.status(200).json({
             success: true,
-            data: applications,
-            total: applications.length,
+            data: enrichedApplications,
+            total: enrichedApplications.length,
         });
 
     } catch (error) {

@@ -1066,7 +1066,28 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                             <CandidateViewer
                                 candidate={viewingResult}
                                 position={fetchedPosition}
-                                onClose={() => setViewingResult(null)}
+                                onClose={(data) => {
+                                    // If we received data (e.g. newly created app/candidate), update the local list state
+                                    if (data?.createdApplication || data?.candidate) {
+                                        setScreeningResults(prev => prev.map(item => {
+                                            if (item.id === viewingResult.id) {
+                                                console.log("Updating Item in List:", item.id, "With data:", data);
+                                                return {
+                                                    ...item,
+                                                    // Safely extract ID (handle if candidateId is populated object)
+                                                    existing_candidate_id: data.candidate?._id ||
+                                                        data.createdApplication?.candidateId?._id ||
+                                                        data.createdApplication?.candidateId ||
+                                                        item.existing_candidate_id,
+                                                    match_status: 'existing',
+                                                    // Update other fields if needed, e.g. status
+                                                };
+                                            }
+                                            return item;
+                                        }));
+                                    }
+                                    setViewingResult(null);
+                                }}
                                 onAction={(action, id) => {
                                     // Handle actions from the sidebar
                                     if (action === 'proceed') {

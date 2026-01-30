@@ -78,10 +78,10 @@ export default function CandidateViewer({
     const displayScore = scoringData?.score ?? candidate.match_percentage;
     const displaySkillMatch = scoringData?.skillMatch ?? candidate.skill_match;
     // Fetch existing applications for this candidate
-    const { applications: filteredApplications } =
+    const { applications: filteredApplications, refetch: refetchApplications } =
         useApplicationFilter(
             candidate?.existing_candidate_id,
-            position?._id                     // ← add ? here too
+            position?._id
         );
 
     console.log("useApplicationFilter called with:", {
@@ -108,23 +108,45 @@ export default function CandidateViewer({
     const [showExistingAppPrompt, setShowExistingAppPrompt] = useState(false);
 
     const [isProceeding, setIsProceeding] = useState(false);
+    const [isSavingApplication, setIsSavingApplication] = useState(false); // New state for loading
 
-    const handleProceed = () => {
+    const handleProceed = async () => {
         if (isProceeding) return;
         setIsProceeding(true);
 
-        if (hasActiveApplication) {
-            setShowExistingAppPrompt(true);
-            setIsProceeding(false);
-            return;
+        try {
+            // Failsafe: Re-check applications from server before proceeding
+            const { data: freshData } = await refetchApplications();
+            // detailed check logic matching hasActiveApplication useMemo
+            const freshApps = freshData?.data || [];
+            const freshHasActive = freshApps.some(app =>
+                !["REJECTED", "WITHDRAWN"].includes(app.status)
+            );
+
+            if (freshHasActive || hasActiveApplication) {
+                setShowExistingAppPrompt(true);
+                setIsProceeding(false);
+                return;
+            }
+
+            setShowCandidateForm(true);
+        } catch (err) {
+            console.error("Error refreshing applications checking proceed:", err);
+            // Fallback to existing state check
+            if (hasActiveApplication) {
+                setShowExistingAppPrompt(true);
+                setIsProceeding(false);
+                return;
+            }
+            setShowCandidateForm(true);
         }
-        setShowCandidateForm(true);
     };
 
 
     const navigate = useNavigate();
 
     const handleFormClose = (savedData) => {
+        setIsSavingApplication(false); // Reset loading state
         // vvv Detect success from AddCandidateForm vvv
         if (savedData?.createdApplication) {
             console.log("Creation Success Data:", savedData); // Add debugging
@@ -146,8 +168,15 @@ export default function CandidateViewer({
         }
     };
 
+    // Reset state when candidate changes (fixes re-open issue)
+    React.useEffect(() => {
+        setCreationSuccessData(null);
+        setShowCandidateForm(false);
+        setIsSavingApplication(false);
+    }, [candidate]);
+
     // Dynamic heading based on source
-    const analysisHeading = source === 'ai_claude'
+    const analysisHeading = (source === 'ai_claude' || candidate.screening_result?.method === 'AI')
         ? "AI Screening Analysis"
         : "System Screening Analysis";
     // Breadcrumb items (single instance at top)
@@ -194,7 +223,7 @@ export default function CandidateViewer({
                             </div>
 
                             <button
-                                onClick={onClose}
+                                onClick={() => onClose(creationSuccessData)}
                                 className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0 mt-1"
                                 aria-label="Close"
                             >
@@ -202,7 +231,7 @@ export default function CandidateViewer({
                             </button>
 
                         </div>
-                        {showNavigation && (
+                        {showNavigation && !creationSuccessData && (
                             <div className="flex items-center justify-start gap-2 bg-gray-50 rounded-lg p-3 mb-2 w-full overflow-x-auto">
                                 {breadcrumbItems.map((item, idx) => {
                                     const isLast = idx === breadcrumbItems.length - 1;
@@ -243,7 +272,20 @@ export default function CandidateViewer({
                 <div className="flex-1 flex flex-col overflow-hidden">
 
                     {!showCandidateForm ? (
-                        creationSuccessData ? (
+                        isSavingApplication ? (
+                            // Loading View
+                            <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+                                <div className="bg-white rounded-2xl p-10 shadow-lg max-w-sm w-full border border-gray-100 flex flex-col items-center">
+                                    <div className="w-12 h-12 border-4 border-custom-blue border-t-transparent rounded-full animate-spin mb-4"></div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-1">
+                                        Creating Application...
+                                    </h3>
+                                    <p className="text-sm text-gray-500">
+                                        Please wait while we process the application.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : creationSuccessData ? (
                             // Success View
                             <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
                                 <div className="bg-white rounded-2xl p-10 shadow-lg max-w-lg w-full border border-gray-100">
@@ -261,14 +303,14 @@ export default function CandidateViewer({
                                         <div className="flex justify-between items-center mb-2">
                                             <span className="text-sm text-gray-500">Application ID</span>
                                             <span className="font-mono font-medium text-gray-900 bg-white px-2 py-1 rounded border border-gray-200 text-xs">
-                                                {creationSuccessData.createdApplication?.applicationNumber || 'N/A'}
+                                                {creationSuccessData.createdApplication?.data?.application?.applicationNumber || creationSuccessData.createdApplication?.application?.applicationNumber || 'N/A'}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-sm text-gray-500">Candidate</span>
                                             <span className="font-medium text-gray-900 text-sm">
                                                 <span className="font-medium text-gray-900 text-sm">
-                                                    {creationSuccessData.candidate?.FirstName || creationSuccessData.FirstName} {creationSuccessData.candidate?.LastName || creationSuccessData.LastName}
+                                                    {creationSuccessData.data?.FirstName || creationSuccessData.candidate?.FirstName || creationSuccessData.FirstName} {creationSuccessData.data?.LastName || creationSuccessData.candidate?.LastName || creationSuccessData.LastName}
                                                 </span>
                                             </span>
                                         </div>
@@ -467,44 +509,57 @@ export default function CandidateViewer({
                                                 </div>
                                             )}
 
-                                            {/* AI Insights Section */}
+                                            {/* Insights Section - Dynamic (AI vs System) */}
                                             {(candidate.screening_result?.strengths?.length > 0 || candidate.screening_result?.concerns?.length > 0 || candidate.screening_result?.analysis) && (
-                                                <div className="rounded-lg p-4 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
-                                                    <p className="text-sm font-semibold mb-2 text-purple-900 flex items-center gap-2">
-                                                        ✨ AI Insights
-                                                    </p>
-                                                    {candidate.screening_result?.analysis && (
-                                                        <p className="text-sm text-gray-700 mb-3">{candidate.screening_result.analysis}</p>
-                                                    )}
+                                                (() => {
+                                                    const isAi = source === 'ai_claude' || candidate.screening_result?.method === 'AI';
+                                                    const containerClass = isAi
+                                                        ? "bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200"
+                                                        : "bg-blue-50 border border-blue-200";
 
-                                                    {candidate.screening_result?.strengths?.length > 0 && (
-                                                        <div className="mt-3">
-                                                            <p className="text-xs font-semibold text-green-800 mb-1">Key Strengths:</p>
-                                                            <ul className="space-y-1">
-                                                                {candidate.screening_result.strengths.map((strength, index) => (
-                                                                    <li key={index} className="flex items-start gap-2">
-                                                                        <span className="text-green-600 text-xs mt-0.5">✓</span>
-                                                                        <span className="text-xs text-gray-700">{strength}</span>
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        </div>
-                                                    )}
+                                                    const titleColor = isAi ? "text-purple-900" : "text-blue-900";
+                                                    const icon = isAi ? "✨" : "📊";
+                                                    const title = isAi ? "AI Insights" : "System Analysis";
 
-                                                    {(candidate.screening_result?.concerns?.length > 0 || candidate.screening_result?.gaps?.length > 0) && (
-                                                        <div className="mt-3">
-                                                            <p className="text-xs font-semibold text-orange-800 mb-1">Potential Concerns:</p>
-                                                            <ul className="space-y-1">
-                                                                {(candidate.screening_result.concerns || candidate.screening_result.gaps).map((concern, index) => (
-                                                                    <li key={index} className="flex items-start gap-2">
-                                                                        <span className="text-orange-600 text-xs mt-0.5">⚠</span>
-                                                                        <span className="text-xs text-gray-700">{concern}</span>
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
+                                                    return (
+                                                        <div className={`rounded-lg p-4 ${containerClass}`}>
+                                                            <p className={`text-sm font-semibold mb-2 ${titleColor} flex items-center gap-2`}>
+                                                                <span>{icon}</span> {title}
+                                                            </p>
+                                                            {candidate.screening_result?.analysis && (
+                                                                <p className="text-sm text-gray-700 mb-3">{candidate.screening_result.analysis}</p>
+                                                            )}
+
+                                                            {candidate.screening_result?.strengths?.length > 0 && (
+                                                                <div className="mt-3">
+                                                                    <p className="text-xs font-semibold text-green-800 mb-1">Key Strengths:</p>
+                                                                    <ul className="space-y-1">
+                                                                        {candidate.screening_result.strengths.map((strength, index) => (
+                                                                            <li key={index} className="flex items-start gap-2">
+                                                                                <span className="text-green-600 text-xs mt-0.5">✓</span>
+                                                                                <span className="text-xs text-gray-700">{strength}</span>
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+
+                                                            {(candidate.screening_result?.concerns?.length > 0 || candidate.screening_result?.gaps?.length > 0) && (
+                                                                <div className="mt-3">
+                                                                    <p className="text-xs font-semibold text-orange-800 mb-1">Potential Concerns:</p>
+                                                                    <ul className="space-y-1">
+                                                                        {(candidate.screening_result.concerns || candidate.screening_result.gaps).map((concern, index) => (
+                                                                            <li key={index} className="flex items-start gap-2">
+                                                                                <span className="text-orange-600 text-xs mt-0.5">⚠</span>
+                                                                                <span className="text-xs text-gray-700">{concern}</span>
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    )}
-                                                </div>
+                                                    );
+                                                })()
                                             )}
 
                                             <div className="bg-white border border-cyan-100 rounded-xl p-5">
@@ -574,9 +629,41 @@ export default function CandidateViewer({
                                             )}
                                         </div>
 
-                                        {/* No footer here anymore – moved to global bottom */}
                                     </div>
                                 </div>
+                                {/* ─── Global shared footer (visible in screening mode only) ──────── */}
+                                {!showCandidateForm && !creationSuccessData && !isSavingApplication && (
+                                    showNavigation && (
+                                        <div className="bg-white px-7 py-3">
+                                            {/* Info text above buttons */}
+                                            {/* <div className="bg-blue-50 rounded-lg p-4 mb-5 text-sm text-blue-800">
+                                    Proceeding to interview will create an Application and move this candidate to the Applications tab.
+                                </div> */}
+
+                                            {/* Buttons */}
+                                            <div className="flex justify-end gap-3">
+
+                                                <Button
+                                                    variant="outline"
+                                                    type="button"
+                                                    onClick={onClose}
+                                                    className={`text-custom-blue border border-custom-blue transition-colors`}
+                                                >
+                                                    Cancel
+                                                </Button>
+
+                                                <LoadingButton
+                                                    onClick={handleProceed}
+                                                //   isLoading={isMutationLoading && activeButton === "save"}
+                                                //   loadingText={id ? "Updating..." : "Saving..."}
+                                                >
+                                                    {/* {id ? "Update" : "Save"} */}
+                                                    Proceed
+                                                </LoadingButton>
+                                            </div>
+                                        </div>
+                                    )
+                                )}
                             </div>
 
                         )
@@ -593,45 +680,16 @@ export default function CandidateViewer({
                                 positionId={position?._id}
                                 candidateId={isExistingCandidate ? candidate.existing_candidate_id : undefined}
                                 shouldCreateApplication={!hasActiveApplication}
-
+                                // Add handler for start saving
+                                onSaveStart={() => setIsSavingApplication(true)}
                             />
+
+
                         </div>
 
                     )}
 
-                    {/* ─── Global shared footer (visible in screening mode only) ──────── */}
-                    {!showCandidateForm && !creationSuccessData && (
-                        showNavigation && (
-                            <div className="bg-white px-7 py-3">
-                                {/* Info text above buttons */}
-                                {/* <div className="bg-blue-50 rounded-lg p-4 mb-5 text-sm text-blue-800">
-                                    Proceeding to interview will create an Application and move this candidate to the Applications tab.
-                                </div> */}
 
-                                {/* Buttons */}
-                                <div className="flex justify-end gap-3">
-
-                                    <Button
-                                        variant="outline"
-                                        type="button"
-                                        onClick={onClose}
-                                        className={`text-custom-blue border border-custom-blue transition-colors`}
-                                    >
-                                        Cancel
-                                    </Button>
-
-                                    <LoadingButton
-                                        onClick={handleProceed}
-                                    //   isLoading={isMutationLoading && activeButton === "save"}
-                                    //   loadingText={id ? "Updating..." : "Saving..."}
-                                    >
-                                        {/* {id ? "Update" : "Save"} */}
-                                        Proceed
-                                    </LoadingButton>
-                                </div>
-                            </div>
-                        )
-                    )}
 
                     {showExistingAppPrompt && (
                         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
@@ -662,7 +720,7 @@ export default function CandidateViewer({
                                             ) || filteredApplications[0];
 
                                             if (activeApp && position?._id) {
-                                                navigate(`/position/view-details/${position._id}`, {
+                                                navigate(`/positions/view-details/${position._id}`, {
                                                     state: {
                                                         activeTab: 'Applications', // Ensure Applications tab is active
                                                         application: activeApp     // Pass application to open it directly

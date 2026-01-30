@@ -50,10 +50,12 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
     // Show ALL positions in dropdown (no filtering)
     const positionOptions = useMemo(() => {
         if (!positions) return [];
-        return positions.map((pos) => ({
-            value: pos._id,
-            label: pos.title + (pos.companyname?.companyName ? ` - ${pos.companyname.companyName}` : ""),
-        }));
+        return positions
+            .filter((pos) => pos.status === "opened")
+            .map((pos) => ({
+                value: pos._id,
+                label: pos.title + (pos.companyname?.companyName ? ` - ${pos.companyname.companyName}` : ""),
+            }));
     }, [positions]);
 
     // Filter logic is now handled by the API hook `useApplicationFilter`
@@ -148,7 +150,7 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
             {/* Sidebar Popup */}
             <div className="relative bg-white shadow-xl w-full sm:w-full md:w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2 h-screen flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 z-10">
+                <div className="sticky top-0 bg-white px-6 py-4 z-10">
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <span className="p-2 bg-indigo-100 rounded-xl text-custom-blue">

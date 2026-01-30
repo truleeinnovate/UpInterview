@@ -26,7 +26,12 @@ const DocumentationTab = () => {
       .replace(/"requirements": "([^"]+)"/g, '"requirements": "$1" //required')
       .replace(/"minexperience": ([^,]+)/g, '"minexperience": $1 //required')
       .replace(/"maxexperience": ([^,]+)/g, '"maxexperience": $1 //required')
-      .replace(/"Location": "([^"]+)"/g, '"Location": "$1" //required');
+      .replace(/"Location": "([^"]+)"/g, '"Location": "$1" //required')
+      // ATS Status Sync fields
+      .replace(/"applicationNumber": "([^"]+)"/g, '"applicationNumber": "$1" //required')
+      .replace(/"applicationStatus": "([^"]+)"/g, '"applicationStatus": "$1" //required')
+      .replace(/"atsStatus": "([^"]+)"/g, '"atsStatus": "$1" //required')
+      .replace(/"source": "([^"]+)"/g, '"source": "$1" //required');
   };
 
   const copyToClipboard = (text) => {
@@ -295,7 +300,7 @@ const DocumentationTab = () => {
         title: "Senior Software Engineer", //required
         companyname: "UpInterview", //required
         jobDescription: "Looking for experienced backend engineer", //required
-        requirements: "5+ years of Node.js experience\nStrong database skills\nTeam leadership experience", //required
+        requirements: "5+ years of Node.js experience", //required
         minexperience: 3, //required
         maxexperience: 7, //required
         Location: "Remote", //required
@@ -313,6 +318,7 @@ const DocumentationTab = () => {
         title: "Senior Software Engineer",
         companyname: "UpInterview",
         jobDescription: "Looking for experienced backend engineer",
+        requirements: "5+ years of Node.js experience",
         minexperience: 3,
         maxexperience: 7,
         Location: "Remote",
@@ -339,13 +345,14 @@ const DocumentationTab = () => {
       headers: ["X-API-Key: your_api_key", "Content-Type: application/json"],
       body: [
         {
-          title: "Frontend Developer",
-          companyname: "UpInterview",
-          jobDescription: "Looking for experienced frontend developer with React expertise",
-          minexperience: 2,
-          maxexperience: 5,
-          Location: "Remote",
-          skills: [
+          title: "Frontend Developer", //required
+          companyname: "UpInterview", //required
+          jobDescription: "Looking for experienced frontend developer with React expertise", //required
+          requirements: "3+ years of React experience", //required
+          minexperience: 2, //required
+          maxexperience: 5, //required
+          Location: "Remote", //required
+          skills: [ //required
             {
               skill: "React",
               experience: "3 Years",
@@ -355,13 +362,14 @@ const DocumentationTab = () => {
           externalId: "POS_101",
         },
         {
-          title: "Backend Developer",
-          companyname: "UpInterview",
-          jobDescription: "Looking for experienced backend developer with Node.js expertise",
-          minexperience: 3,
-          maxexperience: 6,
-          Location: "Bangalore",
-          skills: [
+          title: "Backend Developer", //required
+          companyname: "UpInterview", //required
+          jobDescription: "Looking for experienced backend developer with Node.js expertise", //required
+          requirements: "4+ years of Node.js experience", //required
+          minexperience: 3, //required
+          maxexperience: 6, //required
+          Location: "Bangalore", //required
+          skills: [ //required
             {
               skill: "Node.js",
               experience: "4 Years",
@@ -377,6 +385,7 @@ const DocumentationTab = () => {
           title: "Frontend Developer",
           companyname: "UpInterview",
           jobDescription: "Looking for experienced frontend developer with React expertise",
+          requirements: "3+ years of React experience",
           minexperience: 2,
           maxexperience: 5,
           Location: "Remote",
@@ -399,6 +408,7 @@ const DocumentationTab = () => {
           title: "Backend Developer",
           companyname: "UpInterview",
           jobDescription: "Looking for experienced backend developer with Node.js expertise",
+          requirements: "4+ years of Node.js experience",
           minexperience: 3,
           maxexperience: 6,
           Location: "Bangalore",
@@ -425,11 +435,11 @@ const DocumentationTab = () => {
       description: "ATS Status - Sync application status from external ATS system",
       headers: ["X-API-Key: your_api_key", "Content-Type: application/json"],
       body: {
-        applicationNumber: "APP-2024-001",
-        applicationStatus: "DECISION",
-        atsStatus: "ACCEPTED", 
-        source: "Greenhouse",
-        externalId: "APP-2024-001",
+        applicationNumber: "APP-2024-001", //required
+        applicationStatus: "DECISION", //required
+        atsStatus: "ACCEPTED", //required
+        source: "Greenhouse", //required
+        externalId: "APP-2024-001"
       },
       response: [
         {

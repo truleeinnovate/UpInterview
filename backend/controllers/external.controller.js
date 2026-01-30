@@ -650,7 +650,7 @@ exports.bulkCreatePositions = async (req, res) => {
     }
 
     // Validate each position has required fields
-    const requiredFields = ['title', 'companyName', 'location'];
+    const requiredFields = ['title', 'companyname', 'jobDescription', 'requirements', 'minexperience', 'maxexperience', 'Location', 'skills'];
     const validationErrors = [];
     
     req.body.forEach((position, index) => {
@@ -681,7 +681,7 @@ exports.bulkCreatePositions = async (req, res) => {
         message: "Some positions have missing required fields",
         code: 400,
         details: validationErrors,
-        suggestion: "Ensure all positions have title, companyName, and location"
+        suggestion: "Ensure all positions have title, companyname, jobDescription, requirements, minexperience, maxexperience, Location, and skills"
       });
     }
 
@@ -702,6 +702,7 @@ exports.bulkCreatePositions = async (req, res) => {
       title: position.title,
       companyname: position.companyname,
       jobDescription: position.jobDescription,
+      requirements: position.requirements,
       minexperience: position.minexperience,
       maxexperience: position.maxexperience,
       Location: position.Location,
@@ -905,6 +906,7 @@ exports.createPosition = async (req, res) => {
       title: position.title,
       companyname: position.companyname,
       jobDescription: position.jobDescription,
+      requirements: position.requirements,
       minexperience: position.minexperience,
       maxexperience: position.maxexperience,
       Location: position.Location,
@@ -1407,22 +1409,21 @@ exports.atsStatusSync = async (req, res) => {
     const { externalId, applicationNumber, applicationStatus, atsStatus, source } = req.body;
 
     // Validate request body
-    if (!applicationStatus || !atsStatus) {
+    const requiredFields = ['applicationNumber', 'applicationStatus', 'atsStatus', 'source'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
       return res.status(400).json({
         success: false,
-        error: "applicationStatus and atsStatus are required",
+        error: "Missing required fields",
+        message: `${missingFields.join(', ')} are required`,
+        code: 400,
+        missingFields: missingFields
       });
     }
 
     // Use the provided applicationNumber only
     const targetApplicationNumber = applicationNumber;
-
-    if (!targetApplicationNumber) {
-      return res.status(400).json({
-        success: false,
-        error: "applicationNumber is required",
-      });
-    }
 
     // Use current timestamp for dateTime
     const currentDateTime = new Date().toISOString();
