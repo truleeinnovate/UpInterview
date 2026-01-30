@@ -693,19 +693,12 @@ const InterviewForm = () => {
                         <DropdownWithSearchField
                           label="Application ID"
                           name="applicationId"
-                          value={applicationId || ""}
                           options={
-                            filteredApplications?.map((app) => {
-                              const candidateName = app.candidateId
-                                ? `${app.candidateId.FirstName} ${app.candidateId.LastName}`
-                                : "Unknown Candidate";
-                              const positionTitle = app.positionId?.title || "Unknown Position";
-                              return {
-                                value: app._id,
-                                label: `${app.applicationNumber} (${capitalizeFirstLetter(app.status?.toLowerCase())})`,
-                                application: app, // Store full object for easy access
-                              };
-                            }) || []
+                            filteredApplications?.map((app) => ({
+                              value: app._id,
+                              label: app.applicationNumber, // Searchable text (clean)
+                              application: app,
+                            })) || []
                           }
                           onChange={(e) => {
                             const value = e?.target?.value || e?.value;
@@ -714,10 +707,38 @@ const InterviewForm = () => {
                           loading={applicationsLoading}
                           placeholder="Select an application to auto-fill details..."
                           isClearable={true}
+                          formatOptionLabel={(option) => {
+                            const app = option.application;
+                            if (!app) return option.label;
+
+                            const statusColors = {
+                              NEW: "bg-blue-100 text-blue-800",
+                              APPLIED: "bg-blue-100 text-blue-800",
+                              SCREENED: "bg-purple-100 text-purple-800",
+                              INTERVIEWING: "bg-yellow-100 text-yellow-800",
+                              OFFERED: "bg-green-100 text-green-800",
+                              HIRED: "bg-emerald-100 text-emerald-800",
+                              REJECTED: "bg-red-100 text-red-800",
+                              WITHDRAWN: "bg-gray-100 text-gray-800",
+                              OPENED: "bg-blue-100 text-blue-800",
+                            };
+
+                            const statusKey = app.status?.toUpperCase() || "NEW";
+                            const badgeClass = statusColors[statusKey] || "bg-gray-100 text-gray-800";
+
+                            return (
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-gray-900">{app.applicationNumber}</span>
+                                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${badgeClass}`}>
+                                  {capitalizeFirstLetter(app.status?.toLowerCase() || "")}
+                                </span>
+                              </div>
+                            );
+                          }}
                         />
                         {applicationId && (
                           <p className="mt-1 text-xs">
-                          Candidate and Position fields are read-only, as they are derived from the selected Application.
+                            Candidate and Position fields are read-only, as they are derived from the selected Application.
                           </p>
                         )}
                       </div>

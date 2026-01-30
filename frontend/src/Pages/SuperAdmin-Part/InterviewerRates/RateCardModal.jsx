@@ -248,10 +248,9 @@ const CsvDropZone = ({ onDataLoad }) => {
       </label>
       <div
         className={`flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl cursor-pointer transition p-6 text-center 
-          ${
-            dragActive
-              ? "border-green-500 bg-green-50"
-              : "border-custom-blue bg-custom-blue/5 hover:bg-custom-blue/10"
+          ${dragActive
+            ? "border-green-500 bg-green-50"
+            : "border-custom-blue bg-custom-blue/5 hover:bg-custom-blue/10"
           }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -293,11 +292,10 @@ const CsvDropZone = ({ onDataLoad }) => {
             type="button"
             onClick={handleUpload}
             disabled={loading}
-            className={`px-4 py-1 text-sm font-medium text-white rounded ${
-              loading
+            className={`px-4 py-1 text-sm font-medium text-white rounded ${loading
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-custom-blue hover:bg-custom-blue-dark"
-            }`}
+              }`}
           >
             {loading ? "Uploading..." : "Upload"}
           </button>
@@ -448,8 +446,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
         roleName: Array.isArray(rateCard.roleName)
           ? rateCard.roleName
           : rateCard.roleName
-          ? [rateCard.roleName]
-          : [],
+            ? [rateCard.roleName]
+            : [],
         levels: sanitizedLevels,
         discountMockInterview: rateCard.discountMockInterview,
         defaultCurrency: rateCard.defaultCurrency,
@@ -491,15 +489,15 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
       levels: prev.levels.map((level, index) =>
         index === levelIndex
           ? {
-              ...level,
-              rateRange: {
-                ...level.rateRange,
-                [currency]: {
-                  ...level.rateRange[currency],
-                  [type]: parseFloat(value) || 0,
-                },
+            ...level,
+            rateRange: {
+              ...level.rateRange,
+              [currency]: {
+                ...level.rateRange[currency],
+                [type]: parseFloat(value) || 0,
               },
-            }
+            },
+          }
           : level
       ),
     }));
@@ -775,9 +773,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-end z-50">
       <div
-        className={`bg-white h-screen overflow-y-auto transition-all duration-300 ${
-          isExpanded ? "w-full" : "w-1/2"
-        }`}
+        className={`bg-white h-screen overflow-y-auto transition-all duration-300 ${isExpanded ? "w-full" : "w-1/2"
+          }`}
       >
         {/* v1.0.0 <--------------------------------------------- */}
         <div className="bg-white sticky top-0 p-6 z-50">
@@ -791,8 +788,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                 {currentMode === "view"
                   ? "Rate Card"
                   : rateCard
-                  ? "Edit Rate Card"
-                  : "Create Rate Card"}
+                    ? "Edit Rate Card"
+                    : "Create Rate Card"}
               </h2>
               <p className="text-gray-500 mt-1">
                 {/* {rateCard
@@ -801,14 +798,14 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                 {currentMode === "view"
                   ? "Interviewer rate information"
                   : rateCard
-                  ? "Update interviewer rate information"
-                  : "Add new interviewer rate card"}
+                    ? "Update interviewer rate information"
+                    : "Add new interviewer rate card"}
               </p>
             </div>
 
             <div className="flex space-x-2">
               <button
-                // onClick={() => navigate(`/candidate/edit/${candidate._id}`)}
+                // onClick={() => navigate(`/candidates/edit/${candidate._id}`)}
                 onClick={() => setCurrentMode("edit")}
                 className={`${currentMode === "view" ? "" : "hidden"}`}
                 title="Edit"
@@ -849,9 +846,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
             </h3>
 
             <div
-              className={`grid gap-4 ${
-                isExpanded ? "grid-cols-2" : "grid-cols-2"
-              }`}
+              className={`grid gap-4 ${isExpanded ? "grid-cols-2" : "grid-cols-2"
+                }`}
             >
               {/* v1.0.2 <---------------------------------------------------------------------------------- */}
               {/* v1.0.1 <------------------------------------------------------------------------------ */}
@@ -897,9 +893,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
 
             {/* v1.0.1 <----------------------------------------------------------- */}
             <div
-              className={`grid gap-4 mt-4 ${
-                isExpanded ? "grid-cols-2" : "grid-cols-2"
-              }`}
+              className={`grid gap-4 mt-4 ${isExpanded ? "grid-cols-2" : "grid-cols-2"
+                }`}
             >
               {/*  v1.0.1 <--------------------------------------------------------------------------- */}
               <div className="flex flex-col">
@@ -947,9 +942,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                   disabled={currentMode === "view"}
                 /> */}
                 <label
-                  className={`inline-flex items-center cursor-pointer ${
-                    currentMode === "view" ? "cursor-not-allowed" : ""
-                  }`}
+                  className={`inline-flex items-center cursor-pointer ${currentMode === "view" ? "cursor-not-allowed" : ""
+                    }`}
                 >
                   <span className="ml-2 text-sm font-medium text-gray-700 mr-6">
                     Rate Card Status
@@ -969,10 +963,9 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                       after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white 
                       after:border after:rounded-full after:h-5 after:w-5 after:transition-all
                       peer-checked:after:translate-x-full
-                      ${
-                        currentMode === "view"
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
+                      ${currentMode === "view"
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
                       }`}
                   ></div>
                 </label>
@@ -999,10 +992,9 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                 type="button"
                 onClick={addLevel}
                 // v1.0.0 <--------------------------------------------------------------------------------------------------------------------------
-                className={`inline-flex items-center px-3 py-1 bg-custom-blue text-white text-sm font-medium rounded-md hover:bg-teal-700 ${
-                  currentMode === "view" ? "hidden" : ""
-                }`}
-                // v1.0.0 -------------------------------------------------------------------------------------------------------------------------->
+                className={`inline-flex items-center px-3 py-1 bg-custom-blue text-white text-sm font-medium rounded-md hover:bg-teal-700 ${currentMode === "view" ? "hidden" : ""
+                  }`}
+              // v1.0.0 -------------------------------------------------------------------------------------------------------------------------->
               >
                 <Plus className="mr-1 h-4 w-4" />
                 Add Level
@@ -1070,9 +1062,8 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
                   </div>
 
                   <div
-                    className={`grid gap-4 ${
-                      isExpanded ? "grid-cols-4" : "grid-cols-2"
-                    }`}
+                    className={`grid gap-4 ${isExpanded ? "grid-cols-4" : "grid-cols-2"
+                      }`}
                   >
                     <div>
                       {/* v1.0.0 <---------------------------------------------------------------------- */}
@@ -1163,27 +1154,24 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
           {/* Form Actions */}
           {/* v1.0.0 <-------------------------------------------------------------- */}
           <div
-            className={`flex space-x-3 ${
-              currentMode === "view" ? "hidden" : ""
-            } ${isExpanded ? "justify-center" : ""}`}
+            className={`flex space-x-3 ${currentMode === "view" ? "hidden" : ""
+              } ${isExpanded ? "justify-center" : ""}`}
           >
             {/* v1.0.2 <--------------------------------------------------------------------------------------------------------------------------- */}
             <button
               disabled={currentMode === "view"}
               type="button"
               onClick={onClose}
-              className={`inline-flex items-center justify-center px-4 py-2 bg-white text-custom-blue border border-custom-blue font-medium rounded-md hover:bg-gray-50 focus:outline-none ${
-                isExpanded ? "px-8" : "flex-1"
-              }`}
+              className={`inline-flex items-center justify-center px-4 py-2 bg-white text-custom-blue border border-custom-blue font-medium rounded-md hover:bg-gray-50 focus:outline-none ${isExpanded ? "px-8" : "flex-1"
+                }`}
             >
               Cancel
             </button>
             <button
               disabled={currentMode === "view"}
               type="submit"
-              className={`inline-flex items-center justify-center px-4 py-2 bg-custom-blue text-white font-medium rounded-md hover:bg-custom-blue focus:outline-none ${
-                isExpanded ? "px-8" : "flex-1"
-              }`}
+              className={`inline-flex items-center justify-center px-4 py-2 bg-custom-blue text-white font-medium rounded-md hover:bg-custom-blue focus:outline-none ${isExpanded ? "px-8" : "flex-1"
+                }`}
             >
               {rateCard ? "Update Rate Card" : "Create Rate Card"}
             </button>
