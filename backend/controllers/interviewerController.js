@@ -45,7 +45,7 @@ const getAllInterviewers = async (req, res) => {
     const totalPages = Math.ceil(totalItems / limitNum);
 
     // Get interviewer users with pagination
-    const users = await Users.find()
+    const users = await Users.find({ tenantId })
       .select(
         "_id firstName lastName email profileId status roleId isFreelancer isAddedTeam createdAt",
       )
@@ -93,17 +93,17 @@ const getAllInterviewers = async (req, res) => {
       return {
         user: user
           ? {
-              _id: user?._id,
-              //   firstName: user?.firstName,
-              //   lastName: user?.lastName,
-              //   email: user?.email,
-              status: user?.status,
-              role: user?.roleId,
-              profileId: user?.profileId,
-              isFreelancer: user?.isFreelancer,
-              isAddedTeam: user?.isAddedTeam,
-              createdAt: user?.createdAt,
-            }
+            _id: user?._id,
+            //   firstName: user?.firstName,
+            //   lastName: user?.lastName,
+            //   email: user?.email,
+            status: user?.status,
+            role: user?.roleId,
+            profileId: user?.profileId,
+            isFreelancer: user?.isFreelancer,
+            isAddedTeam: user?.isAddedTeam,
+            createdAt: user?.createdAt,
+          }
           : null,
         contactDetails: {
           _id: contact?.contactId?._id,
