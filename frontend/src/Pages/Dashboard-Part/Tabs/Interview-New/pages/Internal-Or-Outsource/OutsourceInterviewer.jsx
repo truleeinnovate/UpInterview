@@ -119,11 +119,10 @@ const OutsourcedInterviewerCard = ({
 
   return (
     <div
-      className={`bg-white rounded-lg border ${
-        isSelected
+      className={`bg-white rounded-lg border ${isSelected
           ? "border-orange-500 ring-2 ring-orange-200"
           : "border-gray-200"
-      } p-4 shadow-sm hover:shadow-md transition-all`}
+        } p-4 shadow-sm hover:shadow-md transition-all`}
     >
       <div className="w-full">
         <div className="flex items-center gap-3 w-full">
@@ -131,7 +130,7 @@ const OutsourcedInterviewerCard = ({
             <InterviewerAvatar interviewer={interviewer} size="lg" />
           </div>
           <div className="flex sm:flex-col items-start sm:justify-start justify-between w-full">
-            <div className="sm:ml-0 ml-3">
+            <div className="sm:ml-0">
               <h3 className="text-base font-medium truncate sm:max-w-[200px] md:max-w-[220px] lg:max-w-[280px] xl:max-w-[340px] 2xl:max-w-[360px] text-gray-900">
                 {capitalizeFirstLetter(fullName)}
               </h3>
@@ -140,15 +139,7 @@ const OutsourcedInterviewerCard = ({
                   {capitalizeFirstLetter(CurrentRole)}
                 </p>
               )}
-              <p
-                className="text-sm text-gray-500 truncate sm:max-w-[200px] md:max-w-[260px] lg:max-w-[300px] xl:max-w-[360px] 2xl:max-w-[400px] cursor-default"
-                title={capitalizeFirstLetter(professionalTitle)}
-              >
-                {capitalizeFirstLetter(professionalTitle)}
-              </p>
-              <p className="text-xs text-orange-600">
-                {capitalizeFirstLetter(company)}
-              </p>
+
             </div>
             <div className="flex items-center space-x-2 gap-2">
               <div className="flex items-center">
@@ -167,10 +158,18 @@ const OutsourcedInterviewerCard = ({
       {/* v1.0.3 -----------------------------------------------------------------------> */}
 
       <div className="mt-3">
+        {/* <p
+          className="text-sm text-gray-500 truncate sm:max-w-[200px] md:max-w-[260px] lg:max-w-[300px] xl:max-w-[360px] 2xl:max-w-[400px] cursor-default"
+          title={capitalizeFirstLetter(professionalTitle)}
+        >
+          {capitalizeFirstLetter(professionalTitle)}
+        </p> */}
+        <p className="text-xs text-orange-600 mb-2">
+          {capitalizeFirstLetter(company)}
+        </p>
         <div
-          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${
-            isExpanded ? "line-clamp-none" : "line-clamp-2"
-          }`}
+          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${isExpanded ? "line-clamp-none" : "line-clamp-4"
+            }`}
         >
           {capitalizeFirstLetter(introduction)}
         </div>
@@ -686,10 +685,9 @@ function OutsourcedInterviewerModal({
               (interviewer) => {
                 const interviewerSkills = interviewer.contact?.skills || [];
                 console.log(
-                  `👤 Checking interviewer: ${
-                    interviewer.contact?.firstName ||
-                    interviewer.contact?.UserName ||
-                    "Unknown"
+                  `👤 Checking interviewer: ${interviewer.contact?.firstName ||
+                  interviewer.contact?.UserName ||
+                  "Unknown"
                   }`,
                 );
                 console.log("📝 Interviewer's Skills:", interviewerSkills);
@@ -736,8 +734,7 @@ function OutsourcedInterviewerModal({
                 });
 
                 console.log(
-                  `🎯 ${
-                    interviewer.contact?.firstName || "Unknown"
+                  `🎯 ${interviewer.contact?.firstName || "Unknown"
                   } Skill Match Status: ${hasMatchingSkill}`,
                 );
                 return hasMatchingSkill;
@@ -1386,7 +1383,7 @@ function OutsourcedInterviewerModal({
       <Toaster />
       {/* v1.0.2 <-------------------------------------------------------------------------- */}
       <SidebarPopup
-        title="Select Outsourced Interviewers"
+        title="Outsourced Interviewers"
         onClose={onClose}
         setIsFullscreen={setIsFullscreen}
       >
@@ -1396,11 +1393,10 @@ function OutsourcedInterviewerModal({
               Available Balance:
             </span>
             <span
-              className={`text-sm font-bold ${
-                availableBalance >= maxHourlyRate
+              className={`text-sm font-bold ${availableBalance >= maxHourlyRate
                   ? "text-green-600"
                   : "text-red-600"
-              }`}
+                }`}
             >
               ₹{Number(availableBalance || 0).toFixed(2)}
             </span>
@@ -1557,11 +1553,10 @@ function OutsourcedInterviewerModal({
 
                       {/* Dynamic Button */}
                       <button
-                        className={`px-3 py-2  rounded-md text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                          isRateApplied
+                        className={`px-3 py-2  rounded-md text-sm font-medium whitespace-nowrap transition-all duration-200 ${isRateApplied
                             ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 hover:border-red-300"
                             : "bg-custom-blue text-white  "
-                        }`}
+                          }`}
                         onClick={
                           isRateApplied
                             ? handleClearRateFilter
@@ -1710,11 +1705,10 @@ function OutsourcedInterviewerModal({
           {/* v1.0.3 <--------------------------------------------------------------------- */}
           <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
             <div
-              className={`grid gap-4 ${
-                isFullscreen
+              className={`grid gap-4 ${isFullscreen
                   ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
                   : "grid-cols-1"
-              }`}
+                }`}
             >
               {filteredInterviewers.map((interviewer) => (
                 // <OutsourcedInterviewerCard
