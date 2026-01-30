@@ -116,7 +116,7 @@ function RoundFormPosition() {
     assessmentTemplate: { assessmentId: "", assessmentName: "" },
     roundTitle: "",
     customRoundTitle: "",
-    interviewMode: "",
+    interviewMode: "Virtual",
     selectedQuestions: [],
     instructions: "",
     sequence: 1,
@@ -858,9 +858,6 @@ function RoundFormPosition() {
     return { isValid: !hasErrors, newErrors };
     // v1.0.0 ----------------------------------------------------------------------------------->
   };
-
-  console.log("selectedTagIds", selectedTagIds);
-  console.log("selectedTeamIds", selectedTeamIds);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

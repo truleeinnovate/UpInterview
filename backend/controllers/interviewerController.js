@@ -72,10 +72,19 @@ const getAllInterviewers = async (req, res) => {
     const contacts = await Interviewer.find(filter)
       .populate("tag_ids", "name color category")
       .populate("team_id", "name color")
-      .populate(
-        "contactId",
-        "_id firstName lastName email currentRole imageData rating",
-      )
+      .populate({
+        path: "contactId",
+        select:
+          "firstName lastName email currentRole imageData rating skills availability",
+        populate: {
+          path: "availability",
+          model: "InterviewAvailability",
+        },
+      })
+      // .populate(
+      //   "contactId",
+      //   "_id firstName lastName email currentRole imageData rating skills",
+      // )
       .sort(sortBy)
       .skip(skip)
       .limit(limitNum)
@@ -93,17 +102,17 @@ const getAllInterviewers = async (req, res) => {
       return {
         user: user
           ? {
-            _id: user?._id,
-            //   firstName: user?.firstName,
-            //   lastName: user?.lastName,
-            //   email: user?.email,
-            status: user?.status,
-            role: user?.roleId,
-            profileId: user?.profileId,
-            isFreelancer: user?.isFreelancer,
-            isAddedTeam: user?.isAddedTeam,
-            createdAt: user?.createdAt,
-          }
+              _id: user?._id,
+              //   firstName: user?.firstName,
+              //   lastName: user?.lastName,
+              //   email: user?.email,
+              status: user?.status,
+              role: user?.roleId,
+              profileId: user?.profileId,
+              isFreelancer: user?.isFreelancer,
+              isAddedTeam: user?.isAddedTeam,
+              createdAt: user?.createdAt,
+            }
           : null,
         contactDetails: {
           _id: contact?.contactId?._id,
@@ -114,7 +123,7 @@ const getAllInterviewers = async (req, res) => {
           currentRole: contact?.contactId?.currentRole,
           imageData: contact?.contactId?.imageData,
           rating: contact?.contactId?.rating,
-          availability: contact.availability || [],
+          availability: contact.contactId?.availability || [],
           //   status: contact?.contactId?.status,
           //   skills: contact?.contactId?.skills || [],
           //   timeZone: contact?.contactId?.timeZone,
@@ -205,12 +214,23 @@ const getAllInterviewersData = async (req, res) => {
     const interviewers = await Interviewer.find(filter)
       .populate("tag_ids", "name color category")
       .populate("team_id", "name color")
-      .populate(
-        "contactId",
-        "firstName lastName email currentRole imageData rating",
-      )
+      .populate({
+        path: "contactId",
+        select:
+          "firstName lastName email currentRole imageData rating skills availability",
+        populate: {
+          path: "availability",
+          model: "InterviewAvailability",
+        },
+      })
+      // .populate(
+      //   "contactId",
+      //   "firstName lastName email currentRole imageData rating skills",
+      // )
       .sort({ createdAt: -1 })
       .lean();
+
+    console.log("interviewers", interviewers);
 
     return res.status(200).json(interviewers);
   } catch (error) {
