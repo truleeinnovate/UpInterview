@@ -140,23 +140,25 @@ const Dashboard = () => {
 
   // === 2. Trigger authentication ONLY after pre-auth succeeds ===
   useEffect(() => {
-    // Candidate links skip all auth
     if (urlData.isCandidate) {
       setIsAuthChecking(false);
       return;
     }
 
-    // For interviewer/scheduler: wait for pre-auth to finish successfully
-    if (!preAuthLoading && !preAuthError && contactData && !contactData.error) {
+    // Only run check when we have both contactData AND authType
+    if (
+      !preAuthLoading &&
+      !preAuthError &&
+      contactData &&
+      !contactData.error &&
+      authType !== null
+    ) {
       const authenticated = checkAuthentication();
       if (authenticated) {
         setIsAuthChecking(false);
       }
-      // If not authenticated - checkAuthentication() already handles redirect/error
     }
-
-    // If pre-auth failed or loading - do nothing (loading spinner will show)
-  }, [preAuthLoading, preAuthError, contactData, urlData]);
+  }, [preAuthLoading, preAuthError, contactData, authType, urlData]);
 
   useEffect(() => {
     if (candidateData && urlData.meetLink) {
