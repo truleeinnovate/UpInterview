@@ -193,8 +193,8 @@ const DateChangeConfirmationModal = ({
 
   if (!isOpen) return null;
 
-  const isExternal = selectedInterviewType === "External";
-  const isInternal = selectedInterviewType === "Internal";
+  const isExternal = selectedInterviewType === "External" || isMockInterview;
+  const isInternal = selectedInterviewType === "Internal" && !isMockInterview;
   const isRequestSent = status === "RequestSent";
   const isScheduledOrReschedule = ["Scheduled", "Rescheduled"].includes(status);
 
