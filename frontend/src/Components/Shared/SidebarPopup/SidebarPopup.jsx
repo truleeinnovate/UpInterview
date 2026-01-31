@@ -29,7 +29,6 @@ function SidebarPopup({
   editPath, // optional route prefix for edit
   headerAction, // custom header action buttons
 }) {
-  
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
 
@@ -49,7 +48,7 @@ function SidebarPopup({
       navigate(`${editPath}/${id}`); // fallback to route path
     } else {
       console.warn(
-        "No onEdit or editPath provided for SidebarPopup edit action."
+        "No onEdit or editPath provided for SidebarPopup edit action.",
       );
     }
   };
@@ -67,7 +66,11 @@ function SidebarPopup({
         className={`relative bg-white shadow-xl overflow-hidden transition-all duration-300 max-w-full h-screen flex flex-col ${
           isExpanded
             ? "w-full"
-            : "w-full sm:w-full md:w-full lg:w-full xl:w-1/2 2xl:w-1/2"
+            : // : `${`w-full sm:w-full md:w-full `title === "out" ? : }`
+              "w-full sm:w-full md:w-full " +
+              (title === "Outsourced Interviewers"
+                ? "lg:w-7/12 xl:w-7/12 2xl:w-7/12"
+                : "lg:w-1/2 xl:w-1/2 2xl:w-1/2")
         }`}
       >
         {/* Header */}

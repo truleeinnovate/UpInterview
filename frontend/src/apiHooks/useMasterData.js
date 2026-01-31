@@ -15,7 +15,7 @@ const useOnDemandQuery = (
   // type,
   staleTime = ONE_WEEK,
   retry = 1,
-  enabled = true
+  enabled = true,
 ) =>
   useQuery({
     queryKey: ["masterData", type, key, pageType, paramsData],
@@ -30,7 +30,7 @@ const useOnDemandQuery = (
         `${config.REACT_APP_API_URL}/master-data/${type}`,
         {
           params,
-        }
+        },
       );
       return res?.data;
     },
@@ -47,7 +47,7 @@ const sortByAlphabet = (data, field) => {
   return [...data].sort((a, b) =>
     (a?.[field] || "").localeCompare(b?.[field] || "", "en", {
       sensitivity: "base",
-    })
+    }),
   );
 };
 
@@ -58,7 +58,7 @@ const maybeSortByAlphabet = (data, field, shouldSort) => {
   return [...data].sort((a, b) =>
     (a?.[field] || "").localeCompare(b?.[field] || "", "en", {
       sensitivity: "base",
-    })
+    }),
   );
 };
 
@@ -73,7 +73,7 @@ export const useMasterData = (paramsData, pageType, type) => {
   const isSuperAdminTable = pageType === "Super Admin" && !!type;
   const shouldEnable = (key) => !isSuperAdminTable || key === type;
 
-  console.log("shouldEnable", paramsData, pageType, type);
+  // console.log("shouldEnable", paramsData, pageType, type);
 
   // Individual queries for each master list (all disabled by default)
   const locationsQ = useOnDemandQuery(
@@ -84,7 +84,7 @@ export const useMasterData = (paramsData, pageType, type) => {
 
     staleTime,
     retry,
-    shouldEnable("locations")
+    shouldEnable("locations"),
   );
   const industriesQ = useOnDemandQuery(
     "industries",
@@ -94,7 +94,7 @@ export const useMasterData = (paramsData, pageType, type) => {
 
     staleTime,
     retry,
-    shouldEnable("industries")
+    shouldEnable("industries"),
   );
   const rolesQ = useOnDemandQuery(
     "roles",
@@ -104,7 +104,7 @@ export const useMasterData = (paramsData, pageType, type) => {
 
     staleTime,
     retry,
-    shouldEnable("roles")
+    shouldEnable("roles"),
   );
   const skillsQ = useOnDemandQuery(
     "skills",
@@ -114,7 +114,7 @@ export const useMasterData = (paramsData, pageType, type) => {
 
     staleTime,
     retry,
-    shouldEnable("skills")
+    shouldEnable("skills"),
   );
   const technologiesQ = useOnDemandQuery(
     "technology",
@@ -124,7 +124,7 @@ export const useMasterData = (paramsData, pageType, type) => {
 
     staleTime,
     retry,
-    shouldEnable("technology")
+    shouldEnable("technology"),
   );
   const qualificationsQ = useOnDemandQuery(
     "qualification",
@@ -134,7 +134,7 @@ export const useMasterData = (paramsData, pageType, type) => {
 
     staleTime,
     retry,
-    shouldEnable("qualification")
+    shouldEnable("qualification"),
   );
   const collegesQ = useOnDemandQuery(
     "universitycollege",
@@ -144,7 +144,7 @@ export const useMasterData = (paramsData, pageType, type) => {
 
     staleTime,
     retry,
-    shouldEnable("universitycollege")
+    shouldEnable("universitycollege"),
   );
   const companiesQ = useOnDemandQuery(
     "company",
@@ -154,7 +154,7 @@ export const useMasterData = (paramsData, pageType, type) => {
 
     staleTime,
     retry,
-    shouldEnable("company")
+    shouldEnable("company"),
   );
   const categoryQ = useOnDemandQuery(
     "category",
@@ -164,7 +164,7 @@ export const useMasterData = (paramsData, pageType, type) => {
 
     staleTime,
     retry,
-    shouldEnable("category")
+    shouldEnable("category"),
   );
 
   // Aggregate helpers (backward compatible fields and combined states)

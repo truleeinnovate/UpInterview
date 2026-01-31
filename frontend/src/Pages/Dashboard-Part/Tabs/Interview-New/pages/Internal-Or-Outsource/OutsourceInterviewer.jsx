@@ -38,6 +38,9 @@ import { useTenantTaxConfig } from "../../../../../../apiHooks/useTenantTaxConfi
 import { capitalizeFirstLetter } from "../../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import DropdownWithSearchField from "../../../../../../Components/FormFields/DropdownWithSearchField.jsx";
 import { useMasterData } from "../../../../../../apiHooks/useMasterData.js";
+import { ReactComponent as LuFilterX } from "../../../../../../icons/LuFilterX.svg";
+import { ReactComponent as LuFilter } from "../../../../../../icons/LuFilter.svg";
+
 const OutsourcedInterviewerCard = ({
   interviewer,
   isSelected,
@@ -58,14 +61,14 @@ const OutsourcedInterviewerCard = ({
   // "Interviewer";
   const CurrentRole = interviewer?.contact?.roleLabel;
   const company = interviewer?.contact?.industry || "Freelancer";
-  console.log(
-    "CURRENT ROLE ==========================================> ",
-    CurrentRole,
-  );
-  console.log(
-    "INTERVIEWS ============================================>",
-    interviewer,
-  );
+  // console.log(
+  //   "CURRENT ROLE ==========================================> ",
+  //   CurrentRole,
+  // );
+  // console.log(
+  //   "INTERVIEWS ============================================>",
+  //   interviewer,
+  // );
 
   // ✅ New logic: get rate based on candidate experience
   const getExperienceBasedRate = () => {
@@ -119,10 +122,11 @@ const OutsourcedInterviewerCard = ({
 
   return (
     <div
-      className={`bg-white rounded-lg border ${isSelected
+      className={`bg-white rounded-lg border  ${
+        isSelected
           ? "border-orange-500 ring-2 ring-orange-200"
           : "border-gray-200"
-        } p-4 shadow-sm hover:shadow-md transition-all`}
+      } p-4 shadow-sm hover:shadow-md transition-all`}
     >
       <div className="w-full">
         <div className="flex items-center gap-3 w-full">
@@ -139,7 +143,6 @@ const OutsourcedInterviewerCard = ({
                   {capitalizeFirstLetter(CurrentRole)}
                 </p>
               )}
-
             </div>
             <div className="flex items-center space-x-2 gap-2">
               <div className="flex items-center">
@@ -148,9 +151,9 @@ const OutsourcedInterviewerCard = ({
                   {rating}
                 </span>
               </div>
-              <span className="text-xs font-medium text-gray-700">
+              {/* <span className="text-xs font-medium text-gray-700">
                 {hourlyRate}
-              </span>
+              </span> */}
             </div>
           </div>
         </div>
@@ -168,8 +171,9 @@ const OutsourcedInterviewerCard = ({
           {capitalizeFirstLetter(company)}
         </p>
         <div
-          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${isExpanded ? "line-clamp-none" : "line-clamp-4"
-            }`}
+          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${
+            isExpanded ? "line-clamp-none" : "line-clamp-4"
+          }`}
         >
           {capitalizeFirstLetter(introduction)}
         </div>
@@ -192,12 +196,22 @@ const OutsourcedInterviewerCard = ({
 
       <div className="mt-3">
         <div className="flex flex-wrap gap-1">
-          {skillsArray.slice(0, 3).map((skill, index) => (
+          {/* {skillsArray.slice(0, 3).map((skill, index) => (
             <span
               key={index}
               className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
             >
               {typeof skill === "string" ? skill : skill?.skill || "Skill"}
+            </span>
+          ))} */}
+          {skillsArray.slice(0, 3).map((skill, index) => (
+            <span
+              key={index}
+              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+            >
+              {typeof skill === "string"
+                ? skill
+                : skill?.skill || skill?.SkillName || "Skill"}
             </span>
           ))}
           {skillsArray.length > 3 && (
@@ -208,11 +222,37 @@ const OutsourcedInterviewerCard = ({
         </div>
       </div>
 
-      <div className="mt-4 flex justify-end items-center">
-        {/* <div className="flex items-center text-sm text-gray-600">
-                    <Clock className="h-4 w-4 mr-1 text-gray-400" /> Avg. response:{" "}
-                    {avgResponseTime}
-                </div> */}
+      <div className="flex w-full mt-4 justify-end ">
+        <div className="flex w-full  justify-between items-center">
+          <div>
+            <span className="text-xs font-medium text-gray-700">
+              {hourlyRate}
+            </span>
+          </div>
+
+          {navigatedfrom !== "dashboard" && (
+            <div className="flex items-center space-x-2 ml-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onViewDetails}
+                className="text-custom-blue hover:text-custom-blue/80"
+              >
+                <ExternalLink className="h-3 w-3 mr-1" /> View Details
+              </Button>
+              <Button
+                variant={isSelected ? "destructive" : "customblue"}
+                size="sm"
+                onClick={onSelect}
+              >
+                {isSelected ? "Remove" : "Select"}
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+      {/* <div className="mt-4 flex justify-end items-center">
+        
         {navigatedfrom !== "dashboard" && (
           <div className="flex items-center space-x-2">
             <Button
@@ -232,7 +272,7 @@ const OutsourcedInterviewerCard = ({
             </Button>
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };
@@ -285,7 +325,10 @@ function OutsourcedInterviewerModal({
   const pageType = "adminPortal";
   const {
     skills: skillsData,
+    currentRoles,
+    loadCurrentRoles,
     loadSkills,
+    isCurrentRolesFetching,
     isSkillsFetching,
   } = useMasterData({}, pageType);
   const [skillInput, setSkillInput] = useState("");
@@ -293,7 +336,7 @@ function OutsourcedInterviewerModal({
   const skillsPopupRef = useRef(null);
   const skillsInputRef = useRef(null);
 
-  const [searchTerm, setSearchTerm] = useState("");
+  // const [searchTerm, setSearchTerm] = useState("");
   const [rateRange, setRateRange] = useState(["", ""]);
   const [appliedRateRange, setAppliedRateRange] = useState([0, Infinity]);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -310,8 +353,18 @@ function OutsourcedInterviewerModal({
   const walletHoldAmount = Number(walletBalance?.holdAmount || 0);
   const availableBalance = walletRawBalance;
   const [isOpen, setIsOpen] = useState(false);
-
+  const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(true);
   const [isRateApplied, setIsRateApplied] = useState(false);
+
+  // Add this state to track if all filters should be applied
+  const [isFiltersApplied, setIsFiltersApplied] = useState(false);
+  const [tempSearchTerm, setTempSearchTerm] = useState("");
+  const [tempSelectedSkills, setTempSelectedSkills] = useState([]);
+  const [tempRateRange, setTempRateRange] = useState(["", ""]);
+  // Add to existing state declarations
+  // const [tempSelectedRole, setTempSelectedRole] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
+
   // Fetch tenant tax configuration (GST, service charge, etc.)
   const { data: tenantTaxConfig } = useTenantTaxConfig();
   const gstRate =
@@ -339,8 +392,21 @@ function OutsourcedInterviewerModal({
   }, [contacts]);
   //----v1.0.1----->
 
-  // console.log("maxHourlyRate===", maxHourlyRate);
-  //console.log("🔍 Filtering interviewers...", interviewers);
+  // Initialize temp states when component mounts
+  // useEffect(() => {
+  //   // setTempSearchTerm(searchTerm);
+  //   setSelectedRole(selectedRole); // This is correct - uses uppercase 'P'
+  //   setTempSelectedSkills([...tempSelectedSkills]);
+  //   setTempRateRange([...rateRange]);
+  // }, []);
+
+  // REPLACE WITH:
+  useEffect(() => {
+    setSelectedRole("");
+    setTempSelectedSkills([]);
+    setTempRateRange(["", ""]);
+  }, []);
+
   // Fetch and filter interviewers based on skills and availability added by Ranjith
   useEffect(() => {
     // console.log("🔄 useEffect triggered - Starting interviewer filtering");
@@ -679,15 +745,16 @@ function OutsourcedInterviewerModal({
 
           // Apply skill filtering only if skills are provided
           if (skills && Array.isArray(skills) && skills.length > 0) {
-            console.log("🔧 Applying skill filtering with skills:", skills);
+            // console.log("🔧 Applying skill filtering with skills:", skills);
 
             skillFilteredInterviewers = filteredByOwnerId.filter(
               (interviewer) => {
                 const interviewerSkills = interviewer.contact?.skills || [];
                 console.log(
-                  `👤 Checking interviewer: ${interviewer.contact?.firstName ||
-                  interviewer.contact?.UserName ||
-                  "Unknown"
+                  `👤 Checking interviewer: ${
+                    interviewer.contact?.firstName ||
+                    interviewer.contact?.UserName ||
+                    "Unknown"
                   }`,
                 );
                 console.log("📝 Interviewer's Skills:", interviewerSkills);
@@ -734,7 +801,8 @@ function OutsourcedInterviewerModal({
                 });
 
                 console.log(
-                  `🎯 ${interviewer.contact?.firstName || "Unknown"
+                  `🎯 ${
+                    interviewer.contact?.firstName || "Unknown"
                   } Skill Match Status: ${hasMatchingSkill}`,
                 );
                 return hasMatchingSkill;
@@ -1068,7 +1136,7 @@ function OutsourcedInterviewerModal({
       return rate;
     };
 
-    const filtered = baseInterviewers.filter((interviewer) => {
+    let filtered = baseInterviewers.filter((interviewer) => {
       const firstName = interviewer?.contact?.firstName ?? "";
       const lastName = interviewer?.contact?.lastName ?? "";
 
@@ -1085,25 +1153,43 @@ function OutsourcedInterviewerModal({
         candidateExperience,
       );
 
-      const searchMatch =
-        searchTerm.trim() === "" ||
-        fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        professionalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        skills.some((skill) =>
-          skill?.toLowerCase().includes(searchTerm.toLowerCase()),
-        );
+      // const searchMatch =
+      // searchTerm.trim() === "" ||
+      // fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      // professionalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      // company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      // skills.some((skill) =>
+      //   skill?.toLowerCase().includes(searchTerm.toLowerCase()),
+      // );
+
+      // Apply role filtering if role is selected - FIXED
+
+      // ✅ ROLE FILTER (OUTSIDE of filter callback)
+      if (selectedRole) {
+        // Changed from tempSelectedRole
+        filtered = filtered.filter((interviewer) => {
+          const interviewerRole =
+            interviewer.contact?.roleLabel ||
+            interviewer.contact?.roleName ||
+            interviewer.roleLabel ||
+            interviewer.roleName ||
+            "";
+
+          return interviewerRole.toLowerCase() === selectedRole.toLowerCase(); // Changed from tempSelectedRole
+        });
+      }
 
       const rateMatch =
         hourlyRate >= appliedRateRange[0] &&
         (appliedRateRange[1] === Infinity || hourlyRate <= appliedRateRange[1]);
-
-      return searchMatch && rateMatch;
+      return rateMatch;
+      // return rateMatch;
     });
 
     setFilteredInterviewers(filtered);
   }, [
-    searchTerm,
+    // searchTerm,
+    selectedRole,
     appliedRateRange,
     navigatedfrom,
     baseInterviewers,
@@ -1111,7 +1197,10 @@ function OutsourcedInterviewerModal({
     candidateExperience,
   ]);
 
+  // Modify the existing useEffect to only run when filters are applied
   useEffect(() => {
+    if (!isFiltersApplied) return;
+
     const getExperienceBasedRateValue = (contact, experience) => {
       const rates = contact?.rates;
       if (!rates) return 0;
@@ -1127,19 +1216,42 @@ function OutsourcedInterviewerModal({
       }
       return rate;
     };
-    let filtered = baseInterviewers; // Start with existing base filtered data (no change to prior filtering)
 
-    // STEP 1: If user has selected skills → calculate matched count & sort by it first (highest matches come first)
-    if (selectedSkills.length > 0) {
-      const selectedSkillsLower = selectedSkills.map((s) =>
-        s.toLowerCase().trim(),
-      );
+    let filtered = baseInterviewers;
+
+    // ✅ ROLE FILTER (OUTSIDE of filter callback)
+    if (selectedRole) {
+      // Changed from tempSelectedRole
+      filtered = filtered.filter((interviewer) => {
+        const interviewerRole =
+          interviewer.contact?.roleLabel ||
+          interviewer.contact?.roleName ||
+          interviewer.roleLabel ||
+          interviewer.roleName ||
+          "";
+
+        return interviewerRole.toLowerCase() === selectedRole.toLowerCase(); // Changed from tempSelectedRole
+      });
+    }
+
+    // Apply skill filtering if skills are selected
+    if (tempSelectedSkills.length > 0) {
+      const selectedSkillsLower = tempSelectedSkills
+        .map((s) => {
+          const skillName = s?.SkillName || s?.skill || s;
+          return typeof skillName === "string"
+            ? skillName.toLowerCase().trim()
+            : "";
+        })
+        .filter(Boolean);
 
       filtered = baseInterviewers
         .map((interviewer) => {
           const interviewerSkills = (interviewer.contact?.skills || [])
             .map((skill) =>
-              typeof skill === "string" ? skill : skill?.skill || "",
+              typeof skill === "string"
+                ? skill
+                : skill?.skill || skill?.SkillName || "",
             )
             .map((s) => s.toLowerCase().trim());
 
@@ -1149,10 +1261,10 @@ function OutsourcedInterviewerModal({
 
           return { ...interviewer, matchedSkillsCount: matchedCount };
         })
-        .sort((a, b) => b.matchedSkillsCount - a.matchedSkillsCount); // Highest matches first
-    } // If no skills, filtered remains as baseInterviewers (no sorting/change)
+        .sort((a, b) => b.matchedSkillsCount - a.matchedSkillsCount);
+    }
 
-    // STEP 2: Now apply search + rate filter on the (already skill-sorted or original) list
+    // Apply search and rate filtering
     filtered = filtered.filter((interviewer) => {
       const firstName = interviewer?.contact?.firstName ?? "";
       const lastName = interviewer?.contact?.lastName ?? "";
@@ -1167,31 +1279,38 @@ function OutsourcedInterviewerModal({
         interviewer.contact,
         candidateExperience,
       );
-      const searchMatch =
-        searchTerm.trim() === "" ||
-        fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        professionalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        skills.some((skill) =>
-          (typeof skill === "string" ? skill : skill?.skill || "")
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()),
-        );
+
+      // Search match
+      // const searchMatch =
+      //   // searchTerm.trim() === "" ||
+      //   // fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      //   // professionalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      //   // company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      //   skills.some((skill) => {
+      //     const skillName =
+      //       typeof skill === "string"
+      //         ? skill
+      //         : skill?.skill || skill?.SkillName || "";
+      //     return skillName.toLowerCase().includes(searchTerm.toLowerCase());
+      //   });
+
+      // Rate match
       const rateMatch =
         hourlyRate >= appliedRateRange[0] &&
         (appliedRateRange[1] === Infinity || hourlyRate <= appliedRateRange[1]);
-      return searchMatch && rateMatch;
+
+      return rateMatch;
     });
 
     setFilteredInterviewers(filtered);
   }, [
-    searchTerm,
+    // searchTerm,
+    selectedRole,
     appliedRateRange,
-    navigatedfrom,
+    tempSelectedSkills,
     baseInterviewers,
-    skills,
     candidateExperience,
-    selectedSkills, // ← Added dependency: Re-run when selectedSkills change
+    isFiltersApplied, // Only run when filters are applied
   ]);
   // CHANGE END: This useEffect replacement integrates skill-based sorting without affecting existing filters.
 
@@ -1339,42 +1458,98 @@ function OutsourcedInterviewerModal({
     //-----v1.0.4-----Venkatesh---->
   };
 
-  const handleApplyRateFilter = () => {
-    const minVal = parseInt(rateRange[0]) || 0;
-    const maxVal = parseInt(rateRange[1]) || Infinity;
+  // const handleApplyRateFilter = () => {
+  //   const minVal = parseInt(rateRange[0]) || 0;
+  //   const maxVal = parseInt(rateRange[1]) || Infinity;
 
+  //   setAppliedRateRange([minVal, maxVal]);
+
+  //   // If min is empty, visually show 0
+  //   setRateRange([rateRange[0] === "" ? "0" : rateRange[0], rateRange[1]]);
+
+  //   // ✅ Change button to "Clear"
+  //   setIsRateApplied(true);
+  // };
+
+  // const handleClearRateFilter = () => {
+  //   // ✅ Reset everything
+  //   setRateRange(["", ""]);
+  //   setAppliedRateRange([0, Infinity]);
+  //   setIsRateApplied(false);
+  // };
+
+  // Function to handle applying all filters
+  const handleApplyRateFilter = () => {
+    // Apply search term
+    // setSearchTerm(tempSearchTerm);
+
+    // Apply role filter - store it in selectedRole for actual filtering
+    // setSelectedRole(selectedRole);
+
+    // Apply skills
+    setTempSelectedSkills([...tempSelectedSkills]);
+
+    // Apply rate range
+    const minVal = parseInt(tempRateRange[0]) || 0;
+    const maxVal = parseInt(tempRateRange[1]) || Infinity;
+    setRateRange([
+      tempRateRange[0] === "" ? "0" : tempRateRange[0],
+      tempRateRange[1],
+    ]);
     setAppliedRateRange([minVal, maxVal]);
 
-    // If min is empty, visually show 0
-    setRateRange([rateRange[0] === "" ? "0" : rateRange[0], rateRange[1]]);
-
-    // ✅ Change button to "Clear"
+    // Mark filters as applied
+    setIsFiltersApplied(true);
     setIsRateApplied(true);
   };
 
+  // Function to clear all filters
   const handleClearRateFilter = () => {
-    // ✅ Reset everything
+    // Clear role
+    setSelectedRole("");
+    // setSelectedRole("");
+
+    // Clear search
+    // setTempSearchTerm("");
+    // setSearchTerm("");
+
+    // Clear skills
+    setTempSelectedSkills([]);
+    // setTempSelectedSkills([]);
+
+    // Clear rate range
+    setTempRateRange(["", ""]);
     setRateRange(["", ""]);
     setAppliedRateRange([0, Infinity]);
+
+    // Reset filter states
+    setIsFiltersApplied(false);
     setIsRateApplied(false);
+
+    // Reset filtered interviewers to base interviewers
+    setFilteredInterviewers(baseInterviewers);
   };
 
-  const handleAddSkill = () => {
-    const value = skillInput.trim();
+  // const handleAddSkill = () => {
+  //   const value = skillInput.trim();
 
-    if (!value) return;
+  //   if (!value) return;
 
-    setSelectedSkills((prev) => {
-      // prevent duplicates (case-insensitive)
-      if (prev.some((s) => s.toLowerCase() === value.toLowerCase())) {
-        return prev;
-      }
+  //   setTempSelectedSkills((prev) => {
+  //     // prevent duplicates (case-insensitive)
+  //     if (prev.some((s) => s.toLowerCase() === value.toLowerCase())) {
+  //       return prev;
+  //     }
 
-      return [...prev, value];
-    });
+  //     return [...prev, value];
+  //   });
 
-    setSkillInput("");
-  };
+  //   setSkillInput("");
+  // };
+
+  console.log("currentRoles===", currentRoles);
+
+  console.log("selectedRole...", selectedRole);
 
   console.log("filteredInterviewers", filteredInterviewers);
 
@@ -1387,27 +1562,6 @@ function OutsourcedInterviewerModal({
         onClose={onClose}
         setIsFullscreen={setIsFullscreen}
       >
-        <div className="w-full flex justify-end">
-          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-lg border border-gray-200 mr-6">
-            <span className="text-sm font-medium text-gray-600">
-              Available Balance:
-            </span>
-            <span
-              className={`text-sm font-bold ${availableBalance >= maxHourlyRate
-                  ? "text-green-600"
-                  : "text-red-600"
-                }`}
-            >
-              ₹{Number(availableBalance || 0).toFixed(2)}
-            </span>
-            <button
-              onClick={() => setShowWalletModal(true)}
-              className="ml-3 text-xs bg-custom-blue text-white px-2.5 py-1 rounded hover:bg-custom-blue/90 transition-colors font-medium"
-            >
-              Top Up
-            </button>
-          </div>
-        </div>
         {/* v1.0.3 <------------------------- */}
         <div className="pb-10">
           {/* v1.0.3 -------------------------> */}
@@ -1464,136 +1618,272 @@ function OutsourcedInterviewerModal({
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 mt-4">
-              {/* Search Input - Full width on mobile, spans 2 columns on medium, 1 on large */}
-              <div className="md:col-span-2 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Search professionals
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="Search by name, role, company, or skills..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base placeholder-gray-500 transition-all duration-200 hover:border-gray-400"
+            <div className="w-full flex justify-end  items-center mt-4">
+              <div className="flex items-center  bg-gray-50 px-3 py-1 rounded-lg border border-gray-200 mr-3">
+                <span className="text-sm font-medium text-gray-600">
+                  Available Balance:
+                </span>
+                <span
+                  className={`text-sm font-bold ${
+                    availableBalance >= maxHourlyRate
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  ₹{Number(availableBalance || 0).toFixed(2)}
+                </span>
+                <button
+                  onClick={() => setShowWalletModal(true)}
+                  className="ml-3 text-xs bg-custom-blue text-white px-2.5 py-1 rounded hover:bg-custom-blue/90 transition-colors font-medium"
+                >
+                  Top Up
+                </button>
+              </div>
+              <span className="cursor-pointer px-3 py-1 text-xl border rounded-md p-2">
+                {isFilterPopupOpen ? (
+                  <LuFilterX
+                    // className="cursor-pointer"
+                    onClick={() => setIsFilterPopupOpen(false)}
                   />
-                </div>
-              </div>
+                ) : (
+                  <LuFilter
+                    // className="cursor-pointer"
+                    onClick={() => setIsFilterPopupOpen(true)}
+                  />
+                )}
+              </span>
+            </div>
 
-              {/* Skills Dropdown */}
-              <div className="min-w-[220px] max-w-xs w-full sm:w-auto">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Filter by Skills
-                </label>
-                <input
-                  type="text"
-                  value={skillInput}
-                  placeholder="Type skill & press Enter"
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddSkill();
-                    }
-                  }}
-                  className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Hourly Rate Range */}
-              <div className="md:col-span-1 lg:col-span-1">
-                <div className="flex flex-col h-full">
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Hourly Rate Range ($)
-                  </label>
-
-                  <div className="flex flex-col sm:flex-row items-stretch gap-3 flex-1">
-                    <div className="flex items-center gap-2 flex-1">
-                      {/* Min Input */}
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                          $
-                        </span>
-                        <input
-                          type="number"
-                          value={rateRange[0]}
-                          onChange={(e) =>
-                            setRateRange([e.target.value, rateRange[1]])
-                          }
-                          className="w-full pl-8 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 hover:border-gray-400"
-                          placeholder="Min"
-                          min="0"
-                          step="1"
-                        />
-                      </div>
-
-                      <span className="text-gray-400 font-medium shrink-0">
-                        —
-                      </span>
-
-                      {/* Max Input */}
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                          $
-                        </span>
-                        <input
-                          type="number"
-                          value={rateRange[1]}
-                          onChange={(e) =>
-                            setRateRange([rateRange[0], e.target.value])
-                          }
-                          className="w-full pl-8 pr-3 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 hover:border-gray-400"
-                          placeholder="Max"
-                          min="0"
-                          step="1"
-                        />
-                      </div>
-
-                      {/* Dynamic Button */}
-                      <button
-                        className={`px-3 py-2  rounded-md text-sm font-medium whitespace-nowrap transition-all duration-200 ${isRateApplied
-                            ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 hover:border-red-300"
-                            : "bg-custom-blue text-white  "
-                          }`}
-                        onClick={
-                          isRateApplied
-                            ? handleClearRateFilter
-                            : handleApplyRateFilter
+            {isFilterPopupOpen && (
+              <div className="border border-gray-200 rounded-sm p-3 bg-white shadow-sm">
+                <div className="grid   rounded-sm  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 mt-4">
+                  {/* Role Filter - Add this new field */}
+                  <div className="md:col-span-2 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Filter by Role
+                    </label>
+                    <DropdownWithSearchField
+                      value={
+                        selectedRole
+                          ? {
+                              value: selectedRole,
+                              label:
+                                currentRoles?.find(
+                                  (r) => r.roleName === selectedRole,
+                                )?.roleLabel || selectedRole,
+                            }
+                          : null
+                      }
+                      options={
+                        currentRoles?.map((role) => ({
+                          value: role.roleName,
+                          label: role.roleLabel,
+                        })) || []
+                      }
+                      onChange={(option) => {
+                        if (!option) {
+                          setSelectedRole("");
+                          return;
                         }
-                      >
-                        {isRateApplied ? "Clear Filter" : "Apply Filter"}
-                      </button>
+                        setSelectedRole(option.value);
+                      }}
+                      onMenuOpen={loadCurrentRoles}
+                      loading={isCurrentRolesFetching}
+                      placeholder="Select role"
+                      isClearable={true}
+                    />
+                  </div>
+
+                  {/* Skills Dropdown */}
+                  <div className="min-w-[120px] max-w-xs w-full sm:w-auto">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Filter by Skills
+                    </label>
+                    {/* <input
+                      type="text"
+                      value={skillInput}
+                      placeholder="Type skill & press Enter"
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddSkill();
+                        }
+                      }}
+                      className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                    /> */}
+                    <DropdownWithSearchField
+                      ref={skillsInputRef}
+                      value={null}
+                      options={
+                        skillsData
+                          ?.filter(
+                            (skill) =>
+                              !tempSelectedSkills.some(
+                                (s) => s.SkillName === skill.SkillName,
+                              ),
+                          )
+                          .map((skill) => ({
+                            value: skill.SkillName,
+                            label: skill.SkillName,
+                          })) || []
+                      }
+                      onChange={(option) => {
+                        if (!option) return;
+
+                        const value = option?.value || option?.target?.value;
+                        if (!value) return;
+
+                        setTempSelectedSkills((prev) => {
+                          // prevent duplicates
+                          if (prev.some((s) => s.SkillName === value))
+                            return prev;
+                          return [...prev, { SkillName: value }];
+                        });
+                      }}
+                      onMenuOpen={loadSkills}
+                      loading={isSkillsFetching}
+                      placeholder="Add skill"
+                    />
+                  </div>
+
+                  {/* Hourly Rate Range */}
+                  <div className="md:col-span-1 lg:col-span-1">
+                    <div className="flex flex-col h-full">
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Hourly Rate Range ($)
+                      </label>
+
+                      <div className="flex flex-col sm:flex-row items-stretch gap-3 flex-1">
+                        <div className="flex items-center gap-2 flex-1">
+                          {/* Min Input */}
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                              $
+                            </span>
+                            <input
+                              type="number"
+                              value={tempRateRange[0]}
+                              onChange={(e) =>
+                                setTempRateRange([
+                                  e.target.value,
+                                  tempRateRange[1],
+                                ])
+                              }
+                              // value={rateRange[0]}
+                              // onChange={(e) =>
+                              //   setRateRange([e.target.value, rateRange[1]])
+                              // }
+                              className="w-full pl-8 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 hover:border-gray-400"
+                              placeholder="Min"
+                              min="0"
+                              step="1"
+                            />
+                          </div>
+
+                          <span className="text-gray-400 font-medium shrink-0">
+                            —
+                          </span>
+
+                          {/* Max Input */}
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                              $
+                            </span>
+                            <input
+                              type="number"
+                              value={tempRateRange[1]}
+                              onChange={(e) =>
+                                setTempRateRange([
+                                  tempRateRange[0],
+                                  e.target.value,
+                                ])
+                              }
+                              // value={rateRange[1]}
+                              // onChange={(e) =>
+                              //   setRateRange([rateRange[0], e.target.value])
+                              // }
+                              className="w-full pl-8 pr-3 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 hover:border-gray-400"
+                              placeholder="Max"
+                              min="0"
+                              step="1"
+                            />
+                          </div>
+
+                          {/* Dynamic Button */}
+                          <button
+                            className={`px-3 py-2  rounded-md text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                              isFiltersApplied
+                                ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 hover:border-red-300"
+                                : "bg-custom-blue text-white  "
+                            }`}
+                            onClick={
+                              isFiltersApplied
+                                ? handleClearRateFilter
+                                : handleApplyRateFilter
+                            }
+                          >
+                            {isFiltersApplied ? "Clear Filter" : "Apply Filter"}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Selected Skills */}
-            {selectedSkills.length > 0 && (
-              <div className="flex mt-4 flex-wrap items-center gap-1.5">
-                <span className="text-xs text-gray-500 mr-1">Skills:</span>
+                {/* Selected Skills */}
+                {tempSelectedSkills.length > 0 && (
+                  <div className="flex mt-4 flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-gray-500 mr-1">Skills:</span>
 
-                {selectedSkills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800"
-                  >
-                    {skill}
-                    <button
-                      onClick={() =>
-                        setSelectedSkills((prev) =>
-                          prev.filter((s) => s !== skill),
-                        )
-                      }
-                      className="ml-1 text-gray-500 hover:text-red-500"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                ))}
+                    {tempSelectedSkills.map((skill) => {
+                      // Extract skill name from either object or string
+                      const skillName =
+                        skill?.SkillName || skill?.skill || skill;
+
+                      return (
+                        <span
+                          key={skillName}
+                          className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800"
+                        >
+                          {skillName}
+                          <button
+                            onClick={() =>
+                              setTempSelectedSkills((prev) =>
+                                prev.filter((s) => {
+                                  const sName = s?.SkillName || s?.skill || s;
+                                  return sName !== skillName;
+                                }),
+                              )
+                            }
+                            className="ml-1 text-gray-500 hover:text-red-500"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Show selected role */}
+                {selectedRole && (
+                  <div className="flex mt-4 flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-gray-500 mr-1">Role:</span>
+                    <span className="flex items-center gap-1 rounded-full bg-blue-100 border px-2.5 py-1 text-xs text-blue-800">
+                      {currentRoles?.find((r) => r.roleName === selectedRole)
+                        ?.roleLabel || selectedRole}
+                      <button
+                        onClick={() => {
+                          setSelectedRole("");
+                        }}
+                        className="ml-1 text-blue-500 hover:text-red-500"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1705,10 +1995,11 @@ function OutsourcedInterviewerModal({
           {/* v1.0.3 <--------------------------------------------------------------------- */}
           <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
             <div
-              className={`grid gap-4 ${isFullscreen
+              className={`grid gap-4 ${
+                isFullscreen
                   ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-                  : "grid-cols-1"
-                }`}
+                  : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+              }`}
             >
               {filteredInterviewers.map((interviewer) => (
                 // <OutsourcedInterviewerCard

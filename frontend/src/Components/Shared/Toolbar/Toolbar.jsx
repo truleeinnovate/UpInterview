@@ -15,7 +15,30 @@ import { ReactComponent as LuFilterX } from "../../../icons/LuFilterX.svg";
 import { ReactComponent as FaList } from "../../../icons/FaList.svg";
 import { useMediaQuery } from "react-responsive";
 
-const Toolbar = ({
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * Toolbar component that displays view toggle icons, search input, pagination info, and pagination controls.
+ * It also displays a filter icon if showFilter is true.
+ *
+ * @param {string} view - the current view (table or kanban)
+ * @param {function} setView - a function to set the view to table or kanban
+ * @param {string} searchQuery - the current search query
+ * @param {function} onSearch - a function to handle search input change
+ * @param {number} currentPage - the current page number (0-indexed)
+ * @param {number} totalPages - the total number of pages
+ * @param {function} onPrevPage - a function to handle previous page click
+ * @param {function} onNextPage - a function to handle next page click
+ * @param {function} onFilterClick - a function to handle filter icon click
+ * @param {boolean} isFilterActive - whether the filter is active or not
+ * @param {boolean} isFilterPopupOpen - whether the filter popup is open or not
+ * @param {number} dataLength - the length of the data
+ * @param {boolean} showViewToggles - whether to show view toggle icons or not
+ * @param {string} searchPlaceholder - the search input placeholder
+ * @param {React.MutableRefObject} filterIconRef - a ref to attach to the filter icon
+ * @param {React.ReactNode} startContent - optional start content (e.g., dropdown)
+ * @param {boolean} showFilter - whether to show the filter icon or not
+ */
+/*******  2e8687cd-da2c-44fe-b0c6-e39e38392383  *******/ const Toolbar = ({
   view,
   setView,
   searchQuery,
@@ -39,7 +62,8 @@ const Toolbar = ({
   const isTablet = useMediaQuery({ maxWidth: 320 });
   // v1.0.1 ------------------------------------------------------------------->
   // v1.0.0 -------------------------------------------------------->
-  const safeTotalPages = typeof totalPages === 'number' && totalPages > 0 ? totalPages : 0;
+  const safeTotalPages =
+    typeof totalPages === "number" && totalPages > 0 ? totalPages : 0;
   const displayCurrentPage = safeTotalPages === 0 ? 0 : currentPage + 1;
   return (
     <motion.div
@@ -118,7 +142,7 @@ const Toolbar = ({
           <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
             <span
               onClick={onPrevPage}
-              className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 0 || safeTotalPages === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+              className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 0 || safeTotalPages === 0 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
             >
               <IoIosArrowBack />
             </span>
@@ -127,7 +151,7 @@ const Toolbar = ({
           <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
             <span
               onClick={onNextPage}
-              className={`border p-2 text-xl rounded-md cursor-pointer ${safeTotalPages === 0 || currentPage + 1 >= safeTotalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+              className={`border p-2 text-xl rounded-md cursor-pointer ${safeTotalPages === 0 || currentPage + 1 >= safeTotalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
             >
               <IoIosArrowForward />
             </span>
