@@ -68,7 +68,8 @@ function SidebarPopup({
             ? "w-full"
             : // : `${`w-full sm:w-full md:w-full `title === "out" ? : }`
               "w-full sm:w-full md:w-full " +
-              (title === "Outsourced Interviewers"
+              (title === "Outsourced Interviewers" ||
+              title === "Internal Interviewers"
                 ? "lg:w-7/12 xl:w-7/12 2xl:w-7/12"
                 : "lg:w-1/2 xl:w-1/2 2xl:w-1/2")
         }`}

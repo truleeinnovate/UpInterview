@@ -5,7 +5,7 @@
 // v1.0.4  -  Ashok   -  fixed alignment issues
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Search, X, ChevronDown, Clock } from "lucide-react";
+import { Search, X, ChevronDown, Clock, ChevronUp } from "lucide-react";
 import useInterviewers from "../../../../../../hooks/useInterviewers";
 // v1.0.1 <------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
@@ -725,7 +725,7 @@ const InternalInterviews = ({
       <div className="flex flex-col h-full">
         {/* <------------------------------- v1.0.0  */}
 
-        <div className="w-full flex justify-end  items-center mt-4">
+        {/* <div className="w-full flex justify-end  items-center mt-4">
           <span className="cursor-pointer px-3 py-1 text-xl border rounded-md p-2">
             {isFilterPopupOpen ? (
               <LuFilterX
@@ -739,10 +739,26 @@ const InternalInterviews = ({
               />
             )}
           </span>
+        </div> */}
+        {/* Filter Toggle Button with Arrow */}
+        <div className="w-full flex justify-end items-center mt-4">
+          <button
+            className="cursor-pointer px-3 py-2 text-xl border rounded-md relative flex items-center justify-center w-10 h-10"
+            onClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
+          >
+            {isFilterPopupOpen ? (
+              <div className="relative">
+                <LuFilterX className="cursor-pointer" />
+                <ChevronUp className="absolute -bottom-8  -right-1 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50 " />
+              </div>
+            ) : (
+              <LuFilter className="cursor-pointer" />
+            )}
+          </button>
         </div>
 
         {isFilterPopupOpen && (
-          <div className=" border p-3 rounded-lg shadow-sm bg-white gap-4 mt-4">
+          <div className=" border ring-opacity-5  ring-1 ring-black right-0 -mr-2 z-30 p-3 rounded-lg shadow-sm bg-white gap-4 mt-4">
             {/* Header */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 mt-4">
               {/* RIGHT SECTION — SEARCH */}

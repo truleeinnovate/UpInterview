@@ -1618,44 +1618,24 @@ function OutsourcedInterviewerModal({
               )}
             </div>
 
-            <div className="w-full flex justify-end  items-center mt-4">
-              <div className="flex items-center  bg-gray-50 px-3 py-1 rounded-lg border border-gray-200 mr-3">
-                <span className="text-sm font-medium text-gray-600">
-                  Available Balance:
-                </span>
-                <span
-                  className={`text-sm font-bold ${
-                    availableBalance >= maxHourlyRate
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  ₹{Number(availableBalance || 0).toFixed(2)}
-                </span>
-                <button
-                  onClick={() => setShowWalletModal(true)}
-                  className="ml-3 text-xs bg-custom-blue text-white px-2.5 py-1 rounded hover:bg-custom-blue/90 transition-colors font-medium"
-                >
-                  Top Up
-                </button>
-              </div>
-              <span className="cursor-pointer px-3 py-1 text-xl border rounded-md p-2">
+            <div className="w-full flex justify-end items-center mt-4">
+              <button
+                className="cursor-pointer px-3 py-2 text-xl border rounded-md relative flex items-center justify-center w-10 h-10"
+                onClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
+              >
                 {isFilterPopupOpen ? (
-                  <LuFilterX
-                    // className="cursor-pointer"
-                    onClick={() => setIsFilterPopupOpen(false)}
-                  />
+                  <div className="relative">
+                    <LuFilterX className="cursor-pointer" />
+                    <ChevronUp className="absolute -bottom-8  -right-1 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50 " />
+                  </div>
                 ) : (
-                  <LuFilter
-                    // className="cursor-pointer"
-                    onClick={() => setIsFilterPopupOpen(true)}
-                  />
+                  <LuFilter className="cursor-pointer" />
                 )}
-              </span>
+              </button>
             </div>
 
             {isFilterPopupOpen && (
-              <div className="border border-gray-200 rounded-sm p-3 bg-white shadow-sm">
+              <div className="border mt-4 border-gray-200 rounded-sm p-3 bg-white shadow-sm">
                 <div className="grid   rounded-sm  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 mt-4">
                   {/* Role Filter - Add this new field */}
                   <div className="md:col-span-2 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
