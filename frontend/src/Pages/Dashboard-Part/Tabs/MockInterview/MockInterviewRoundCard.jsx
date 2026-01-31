@@ -287,10 +287,10 @@ const MoockRoundCard = ({
       ? Array.isArray(round?.interviewers) && round.interviewers.length > 0
         ? round.interviewers
         : Array.isArray(round?.pendingOutsourceRequests)
-        ? round.pendingOutsourceRequests
+          ? round.pendingOutsourceRequests
             .map((req) => req.interviewerId)
             .filter(Boolean)
-        : []
+          : []
       : [];
 
   const roundActionPermissions = {
@@ -502,9 +502,8 @@ const MoockRoundCard = ({
   return (
     <>
       <div
-        className={`bg-white rounded-lg ${
-          !hideHeader && "shadow-md"
-        } overflow-hidden ${isActive ? "ring-2 ring-blue-500" : ""}`}
+        className={`bg-white rounded-lg ${!hideHeader && "shadow-md"
+          } overflow-hidden ${isActive ? "ring-2 ring-blue-500" : ""}`}
       >
         <div className="p-5">
           <>
@@ -792,6 +791,7 @@ const MoockRoundCard = ({
         combinedDateTime={round?.dateTime}
         actionType="NoShow"
         isLoading={isNoShowingRound}
+        isMockInterview={true}
       />
       <DateChangeConfirmationModal
         isOpen={rejectReasonModalOpen}
@@ -805,6 +805,7 @@ const MoockRoundCard = ({
         combinedDateTime={round?.dateTime}
         actionType="Reject"
         isLoading={false}
+        isMockInterview={true}
       />
 
       <DateChangeConfirmationModal
@@ -819,6 +820,7 @@ const MoockRoundCard = ({
         combinedDateTime={round?.dateTime}
         actionType="Complete"
         isLoading={false}
+        isMockInterview={true}
       />
 
       <DateChangeConfirmationModal
@@ -833,6 +835,7 @@ const MoockRoundCard = ({
         combinedDateTime={round?.dateTime}
         actionType="Evaluated"
         isLoading={false}
+        isMockInterview={true}
       />
 
       <DateChangeConfirmationModal
@@ -846,6 +849,7 @@ const MoockRoundCard = ({
         combinedDateTime={round?.dateTime}
         actionType="Cancel"
         isLoading={isCancellingRound}
+        isMockInterview={true}
       />
 
       {showRejectionModal && (

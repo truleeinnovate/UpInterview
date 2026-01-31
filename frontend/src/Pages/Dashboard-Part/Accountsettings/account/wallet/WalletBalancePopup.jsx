@@ -6,10 +6,12 @@ import { useNavigate } from "react-router-dom";
 //import { calculatePendingBalance } from "./Wallet";
 // v1.0.1 <---------------------------------------------------------
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.1 --------------------------------------------------------->
 // Modal.setAppElement('#root');
 
 const WalletBalancePopup = ({ walletBalance, onClose }) => {
+  useScrollLock(true);
   const navigate = useNavigate();
 
   //const pendingBalance = calculatePendingBalance(walletBalance);

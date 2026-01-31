@@ -11,6 +11,7 @@ const {
   computeBaseGstGross,
   normalizePercentage,
 } = require("./taxConfigUtil");
+const moment = require("moment");
 
 /**
  * High-level semantic transaction kinds used by business logic.
@@ -894,29 +895,56 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
     }
 
     // 2. Load the interview round
-    const roundDoc = await InterviewRounds.findById(roundId).lean();
-    if (!roundDoc) {
-      console.log("[processAutoSettlement] Interview round not found:", roundId);
-      return null;
-    }
+    const isMock = Boolean(acceptedRequest.isMockInterview);
 
-    // 3. Load the interview to get company and position details
-    const interview = await Interview.findById(roundDoc.interviewId).lean();
-    if (!interview) {
-      console.log("[processAutoSettlement] Interview not found for round:", roundId);
-      return null;
-    }
-
-    // Get position details
+    let roundDoc = null;
+    let interview = null;
     let positionTitle = "Position";
     let companyName = "Organization";
-    if (interview.positionId) {
-      const position = await Position.findById(interview.positionId).lean();
-      if (position) {
-        positionTitle = position.title || "Position";
-        companyName = position.companyname || "Organization";
+
+    if (isMock) {
+      const { MockInterviewRound } = require("../models/Mockinterview/mockinterviewRound");
+      const { MockInterview } = require("../models/Mockinterview/mockinterview");
+
+      roundDoc = await MockInterviewRound.findById(roundId).lean();
+      if (!roundDoc) {
+        console.log("[processAutoSettlement] Mock Interview round not found:", roundId);
+        return null;
+      }
+
+      interview = await MockInterview.findById(roundDoc.mockInterviewId).lean();
+      // Mock interviews might not have Position/Company concept same as Interviews
+      // Use defaults or derive from MockInterview data if available
+      // Usually Mock interviews are B2C (candidate pays), but if organization is involved:
+      positionTitle = "Mock Interview";
+      companyName = "Mock Interview"; // Or fetch tenant name if needed
+
+    } else {
+      const roundDocFetch = await InterviewRounds.findById(roundId).lean();
+      roundDoc = roundDocFetch;
+
+      if (!roundDoc) {
+        console.log("[processAutoSettlement] Interview round not found:", roundId);
+        return null;
+      }
+
+      interview = await Interview.findById(roundDoc.interviewId).lean();
+
+      // Get position details
+      if (interview && interview.positionId) {
+        const position = await Position.findById(interview.positionId).lean();
+        if (position) {
+          positionTitle = position.title || "Position";
+          companyName = position.companyname || "Organization";
+        }
       }
     }
+
+    if (!interview) {
+      console.log("[processAutoSettlement] Interview/MockInterview not found for round:", roundId);
+      return null;
+    }
+
 
     // Get round title
     const roundTitle = roundDoc.roundTitle || "Interview Round";
@@ -959,34 +987,64 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
       payPercent = 100;
       settlementScenario = "completed";
       appliedPolicyName = "completed";
+      console.log(`[processAutoSettlement] Action Completed. Logic: PayPercent=${payPercent}, Base=${baseAmount}`);
     } else if (action === "Cancelled") {
       // Calculate hours before interview
-      // dateTime format: "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
+      // Calculate hours before interview
       let scheduledTime = null;
-      if (roundDoc.dateTime && typeof roundDoc.dateTime === "string") {
+      const moment = require("moment"); // Ensure moment is available
+
+      if (roundDoc.dateTime) {
         try {
-          // Extract start time: "04-01-2026 08:58 PM - 09:58 PM" → "04-01-2026 08:58 PM"
-          const dateTimeStr = roundDoc.dateTime.split(" - ")[0].trim();
-          // Parse "DD-MM-YYYY HH:MM AM/PM"
-          const match = dateTimeStr.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)$/i);
-          if (match) {
-            const [, day, month, year, hours, minutes, period] = match;
-            let hour = parseInt(hours, 10);
-            if (period.toUpperCase() === "PM" && hour !== 12) hour += 12;
-            if (period.toUpperCase() === "AM" && hour === 12) hour = 0;
-            scheduledTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hour, parseInt(minutes));
+          // Handle if dateTime is already a Date object
+          if (roundDoc.dateTime instanceof Date) {
+            scheduledTime = roundDoc.dateTime;
+          }
+          // Handle if dateTime is a string
+          else if (typeof roundDoc.dateTime === "string") {
+            // Try parsing with moment using flexible formats
+            // Common formats: "DD-MM-YYYY hh:mm A", ISO strings, etc.
+            const dateTimeStr = roundDoc.dateTime.split(" - ")[0].trim();
+            const m = moment(dateTimeStr, [
+              "DD-MM-YYYY hh:mm A",
+              "DD-MM-YYYY h:mm A",
+              "MM-DD-YYYY hh:mm A", // Added to match Controller
+              "YYYY-MM-DD hh:mm A",
+              "YYYY-MM-DD h:mm A",
+              "YYYY-MM-DD HH:mm",   // Added to match Controller
+              "DD/MM/YYYY hh:mm A",
+              "DD/MM/YYYY h:mm A",
+              "MM/DD/YYYY hh:mm A",
+              "MM/DD/YYYY h:mm A",
+              "MMM DD, YYYY hh:mm A", // Added to match Controller
+              moment.ISO_8601
+            ]);
+
+            if (m.isValid()) {
+              scheduledTime = m.toDate();
+            } else {
+              // Last attempt: try lax parsing
+              const mLax = moment(dateTimeStr);
+              if (mLax.isValid()) scheduledTime = mLax.toDate();
+              else console.warn("[processAutoSettlement] Moment failed to parse dateTime:", roundDoc.dateTime);
+            }
           }
         } catch (e) {
           console.warn("[processAutoSettlement] Error parsing dateTime:", e);
         }
       }
+
       const actionTime = new Date();
 
       let hoursBefore = null;
       if (scheduledTime && !isNaN(scheduledTime.getTime())) {
         hoursBefore = (scheduledTime.getTime() - actionTime.getTime()) / (1000 * 60 * 60);
+        // If scheduled time is in the past (e.g. no-show reported late), treat as 0 hours before
         if (hoursBefore < 0) hoursBefore = 0;
       }
+
+      console.log(`[processAutoSettlement] Time calc: Scheduled=${scheduledTime}, Now=${actionTime}, HoursBefore=${hoursBefore}`);
+
 
       const isMockInterview = Boolean(acceptedRequest.isMockInterview);
 
@@ -1005,21 +1063,32 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
         appliedPolicyName = "no_policy_found";
       }
     } else if (action === "Rescheduled") {
+      const moment = require("moment");
       // Calculate hours before interview for reschedule policy
       let scheduledTime = null;
-      if (roundDoc.dateTime && typeof roundDoc.dateTime === "string") {
+      if (roundDoc.dateTime) {
         try {
-          const dateTimeStr = roundDoc.dateTime.split(" - ")[0].trim();
-          const match = dateTimeStr.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)$/i);
-          if (match) {
-            const [, day, month, year, hours, minutes, period] = match;
-            let hour = parseInt(hours, 10);
-            if (period.toUpperCase() === "PM" && hour !== 12) hour += 12;
-            if (period.toUpperCase() === "AM" && hour === 12) hour = 0;
-            scheduledTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hour, parseInt(minutes));
+          if (roundDoc.dateTime instanceof Date) {
+            scheduledTime = roundDoc.dateTime;
+          } else if (typeof roundDoc.dateTime === "string") {
+            const dateTimeStr = roundDoc.dateTime.split(" - ")[0].trim();
+            const m = moment(dateTimeStr, [
+              "DD-MM-YYYY hh:mm A", "DD-MM-YYYY h:mm A",
+              "MM-DD-YYYY hh:mm A", // Added to match Controller
+              "YYYY-MM-DD hh:mm A", "YYYY-MM-DD h:mm A",
+              "YYYY-MM-DD HH:mm",   // Added to match Controller
+              "DD/MM/YYYY hh:mm A", "DD/MM/YYYY h:mm A",
+              "MMM DD, YYYY hh:mm A", // Added to match Controller
+              moment.ISO_8601
+            ]);
+            if (m.isValid()) scheduledTime = m.toDate();
+            else {
+              const mLax = moment(dateTimeStr);
+              if (mLax.isValid()) scheduledTime = mLax.toDate();
+            }
           }
         } catch (e) {
-          console.warn("[processAutoSettlement] Error parsing dateTime for reschedule:", e);
+          console.warn("Error parsing reschedule date", e);
         }
       }
       const actionTime = new Date();
@@ -1038,7 +1107,8 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
       if (policy) {
         payPercent = typeof policy.interviewerPayoutPercentage === "number"
           ? policy.interviewerPayoutPercentage
-          : 0;
+          : 0; // Default 0 for reschedule usually
+
         // Store platformFeePercentage from policy for reschedule-specific calculation
         // This will be used instead of the general service charge
         settlementScenario = policy.policyName || "reschedule_policy_applied";

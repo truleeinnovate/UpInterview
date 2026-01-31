@@ -1,4 +1,5 @@
 const { InterviewPolicy } = require("../models/InterviewPolicy");
+const moment = require("moment");
 
 /**
  * Core function to find an InterviewPolicy row for settlement,
@@ -100,56 +101,48 @@ const getSettlementPolicy = async (req, res) => {
       typeof dateTime === "string" &&
       dateTime.trim()
     ) {
-      // Expecting format like: "04-01-2026 12:09 PM - 01:09 PM"
-      const match = dateTime.match(
-        /^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)\s+-\s+\d{1,2}:\d{2}\s+(AM|PM)$/
-      );
+      console.log("[getSettlementPolicy] Processing dateTime:", dateTime);
 
-      if (match) {
-        let [, day, month, year, hour, minute, ampm] = match;
+      // Try parsing with moment first as it's more robust
+      // Format: "DD-MM-YYYY hh:mm A - ..." or similar
+      // We only care about the START time which is the first part
+      const startTimeStr = dateTime.split("-")[0] + "-" + dateTime.split("-")[1] + "-" + dateTime.split("-")[2];
+      // Wait, the format is "DD-MM-YYYY hh:mm A - hh:mm A"
+      // Split by " - " to get start and end parts
+      const parts = dateTime.split(" - ");
+      if (parts.length >= 1) {
+        const startStr = parts[0]; // "DD-MM-YYYY hh:mm A"
 
-        let hours = parseInt(hour, 10);
-        if (ampm === "PM" && hours !== 12) hours += 12;
-        if (ampm === "AM" && hours === 12) hours = 0;
+        // Parse using moment with expected format - try multiple common formats
+        // DD-MM-YYYY is standard here, but fallback to others just in case
+        const formats = [
+          "DD-MM-YYYY hh:mm A",
+          "MM-DD-YYYY hh:mm A",
+          "YYYY-MM-DD hh:mm A",
+          "YYYY-MM-DD HH:mm",
+          "MMM DD, YYYY hh:mm A" // e.g. Jan 01, 2026 10:00 AM
+        ];
+        const momentDate = moment(startStr, formats);
 
-        // IST offset is +5:30 (330 minutes or 5.5 hours)
-        // Create date in UTC by subtracting IST offset from the local time components
-        // This ensures consistent behavior regardless of server timezone
-        const IST_OFFSET_MINUTES = 330; // +5:30 = 330 minutes
+        if (momentDate.isValid()) {
+          const scheduledTime = momentDate.toDate();
+          const now = new Date();
 
-        // Create UTC date by treating the input as IST
-        // First create the date as if it were UTC, then adjust for IST offset
-        const scheduledTimeUTC = new Date(Date.UTC(
-          parseInt(year, 10),
-          parseInt(month, 10) - 1,
-          parseInt(day, 10),
-          hours,
-          parseInt(minute, 10)
-        ));
+          // Calculate difference in hours
+          let diffHours = (scheduledTime - now) / (1000 * 60 * 60);
 
-        // Subtract IST offset to convert IST to UTC
-        scheduledTimeUTC.setMinutes(scheduledTimeUTC.getMinutes() - IST_OFFSET_MINUTES);
-
-        // Get current time in UTC
-        const actionTimeUTC = new Date();
-
-        if (
-          scheduledTimeUTC &&
-          !isNaN(scheduledTimeUTC.getTime()) &&
-          actionTimeUTC &&
-          !isNaN(actionTimeUTC.getTime())
-        ) {
-          let diffHours =
-            (scheduledTimeUTC.getTime() - actionTimeUTC.getTime()) / (1000 * 60 * 60);
-
-          if (!isNaN(diffHours) && diffHours < 0) {
-            diffHours = 0;
-          }
-
+          if (diffHours < 0) diffHours = 0;
           effectiveHoursBefore = diffHours;
+
+          console.log(`[getSettlementPolicy] Parsed successfully. Hours before: ${effectiveHoursBefore}`);
+        } else {
+          console.warn("[getSettlementPolicy] Moment failed to parse:", startStr);
+          // Fallback to original regex or just log error
         }
       }
     }
+
+    console.log(`[getSettlementPolicy] lookup params: isMock=${parsedIsMockInterview}, status=${roundStatus}, hours=${effectiveHoursBefore}`);
 
     if (!roundStatus) {
       return res.status(400).json({

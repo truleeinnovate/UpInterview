@@ -20,8 +20,10 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { useScrollLock } from '../../../../../apiHooks/scrollHook/useScrollLock';
 
 const WalletTransactionPopup = ({ transaction, onClose }) => {
+  useScrollLock(true);
   const navigate = useNavigate();
 
   // Helper function to format transaction type for display

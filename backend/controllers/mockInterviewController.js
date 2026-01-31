@@ -12,6 +12,7 @@ const {
   validateMockInterview,
   validateMockInterviewUpdate,
 } = require("../validations/mockInterviewValidation");
+const FeedbackModel = require("../models/feedback"); // Import FeedbackModel
 const {
   // sendOutsourceInterviewRequestEmails,
   sendInterviewRoundCancellationEmails,
@@ -1193,7 +1194,7 @@ exports.updateMockInterviewRound = async (req, res) => {
     if (shouldcreateRequestFlow && hasSelectedInterviewers) {
       await handleInterviewerRequestFlow({
         interviewId: mockInterviewId,
-        round: savedRound,
+        round: updatedRound,
         selectedInterviewers: req.body.round?.selectedInterviewers,
         isMockInterview: true,
       });
@@ -1663,7 +1664,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => {} }), locals: {} },
+        { status: () => ({ json: () => { } }), locals: {} },
       );
     }
 
