@@ -20,7 +20,7 @@ const AppViewMore = ({ isModalOpen, closeModal }) => {
     const apps = [
         { to: "/internalinterview", icon: <FcBusinessman className="text-4xl" />, title: "Internal Interviews", description: "Internal interviews are conducted by internal team members" },
         { to: "/outsourceinterview", icon: <IoMdLaptop className="text-4xl" />, title: "Outsource Interviews", description: "Outsource interviews are conducted by external interviewers." },
-        { to: "/mock-interview", icon: <LuFileSearch className="text-4xl" />, title: "Mock Interviews", description: "Practice interviews for skill improvement and confidence building." },
+        { to: "/mock-interviews", icon: <LuFileSearch className="text-4xl" />, title: "Mock Interviews", description: "Practice interviews for skill improvement and confidence building." },
         { to: "/assessment", icon: <LuFileSearch className="text-4xl" />, title: "Assessments", description: "Simplify evaluations with our user-friendly assessment app." },
         { to: "/interview-question", icon: <BsQuestionCircle className="text-4xl" />, title: "Question Bank", description: "Explore questions easily with our Question Bank app." },
         { to: "/candidates", icon: <IoIosPerson className="text-4xl" />, title: "Candidates", description: "Manage candidates easily with our Candidates app." },

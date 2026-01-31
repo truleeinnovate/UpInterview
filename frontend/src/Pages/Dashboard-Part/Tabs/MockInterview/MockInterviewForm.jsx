@@ -1657,7 +1657,7 @@ const MockSchedulelater = () => {
       notify.success(
         mockEdit ? "Mock interview updated!" : "Mock interview scheduled!",
       );
-      navigate("/mock-interview");
+      navigate("/mock-interviews");
     } catch (error) {
       console.error("Mock Interview Submit Error:", error);
       const backendMsg = error.response?.data?.message;
