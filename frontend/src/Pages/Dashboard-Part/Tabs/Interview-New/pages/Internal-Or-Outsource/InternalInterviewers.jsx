@@ -5,7 +5,7 @@
 // v1.0.4  -  Ashok   -  fixed alignment issues
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Search, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, X, ChevronDown, Clock } from "lucide-react";
 import useInterviewers from "../../../../../../hooks/useInterviewers";
 // v1.0.1 <------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
@@ -20,9 +20,208 @@ import {
   useAllInterviewers,
   useInterviewerTags,
 } from "../../../../../../apiHooks/useInterviewers.js";
-import { InterviewerCard } from "../../../Interviewers/Interviewers.jsx";
+// import { InterviewerCard } from "../../../Interviewers/Interviewers.jsx";
 import { useMasterData } from "../../../../../../apiHooks/useMasterData.js";
 import DropdownWithSearchField from "../../../../../../Components/FormFields/DropdownWithSearchField.jsx";
+import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
+import InterviewerAvatar from "../../../CommonCode-AllTabs/InterviewerAvatar.jsx";
+import { ReactComponent as LuFilterX } from "../../../../../../icons/LuFilterX.svg";
+import { ReactComponent as LuFilter } from "../../../../../../icons/LuFilter.svg";
+
+const InterviewerCard = ({
+  interviewer,
+  isSelected,
+  onSelect,
+  onViewDetails,
+  navigatedfrom,
+  candidateExperience,
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const firstName = interviewer?.contactDetails
+    ? interviewer?.contactDetails?.firstName
+    : interviewer?.contactId?.firstName;
+
+  const lastName = interviewer?.contactDetails
+    ? interviewer?.contactDetails?.lastName
+    : interviewer?.contactId?.lastName || "";
+
+  // Calculate available slots from contactDetails.availability
+  // Calculate available slots from contactDetails.availability
+  const getAvailableSlotsInfo = () => {
+    const availability =
+      interviewer?.contactId?.availability[0]?.availability ||
+      interviewer?.contactDetails?.availability[0]?.availability ||
+      [];
+
+    if (availability.length === 0) {
+      return {
+        text: "No available slots",
+        count: 0,
+        hasSlots: false,
+        days: [],
+        totalSlots: 0,
+      };
+    }
+
+    // Count total slots across all days
+    const totalSlots = availability.reduce((sum, dayAvail) => {
+      return sum + (dayAvail.timeSlots?.length || 0);
+    }, 0);
+
+    // Get day names that have slots
+    const daysWithSlots = availability
+      .filter((dayAvail) => dayAvail.timeSlots?.length > 0)
+      .map((dayAvail) => dayAvail.day);
+
+    return {
+      text:
+        totalSlots === 1 ? "1 slot available" : `${totalSlots} slots available`,
+      count: availability.length,
+      hasSlots: totalSlots > 0,
+      days: daysWithSlots,
+      totalSlots: totalSlots,
+    };
+  };
+
+  const slotsInfo = getAvailableSlotsInfo();
+
+  const fullName = `${firstName} ${lastName}`.trim() || "Unnamed";
+
+  const professionalTitle = interviewer?.contact?.professionalTitle;
+
+  const CurrentRole = interviewer?.contactDetails?.roleLabel;
+  // const company = interviewer?.contact?.industry || "Freelancer";
+
+  // const rating = interviewer?.contact?.rating || "4.6";
+  const introduction =
+    interviewer?.contactDetails?.bio || "No introduction provided.";
+  const skillsArray = interviewer?.contactDetails
+    ? interviewer?.contactDetails?.skills
+    : interviewer?.contactId?.skills || [];
+
+  console.log("interviewer in card", interviewer);
+
+  console.log("skillsArray in card", skillsArray);
+  // const avgResponseTime =
+  // interviewer?.contact?.avgResponseTime || "not provided";
+
+  return (
+    <div
+      className={`w-full  ${
+        isSelected
+          ? "border-orange-500 ring-2 ring-orange-200"
+          : "border-gray-200"
+      } `}
+    >
+      {/* <div className="w-full"> */}
+      <div className="flex items-center gap-3 w-full">
+        <div>
+          <InterviewerAvatar interviewer={interviewer} size="lg" />
+        </div>
+        <div className="flex sm:flex-col items-start sm:justify-start justify-between w-full">
+          <div className="sm:ml-0">
+            <h3 className="text-base font-medium truncate sm:max-w-[200px] md:max-w-[220px] lg:max-w-[280px] xl:max-w-[340px] 2xl:max-w-[360px] text-gray-900">
+              {capitalizeFirstLetter(fullName)}
+            </h3>
+            {CurrentRole && (
+              <p className="text-xs text-gray-500">
+                {capitalizeFirstLetter(CurrentRole)}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+      {/* </div> */}
+
+      <div className="mt-3">
+        {skillsArray.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {skillsArray.slice(0, 3).map((skill, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+              >
+                {typeof skill === "string" ? skill : skill?.skill || "Skill"}
+              </span>
+            ))}
+            {skillsArray.length > 3 && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                +{skillsArray.length - 3} more
+              </span>
+            )}
+          </div>
+        ) : (
+          <p className="text-xs  text-gray-500 italic">No skills listed.</p>
+        )}
+      </div>
+
+      {/* Premium Available Slots Display with Hover */}
+      <div className="mt-3 group relative">
+        {slotsInfo.hasSlots ? (
+          <>
+            <div className="rounded-lg bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 p-3 transition-all hover:shadow-md hover:border-green-300">
+              <div className="flex items-start gap-2.5">
+                <div className="mt-0.5 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 p-1.5 shadow-sm">
+                  <Clock size={14} className="text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-bold text-green-900">
+                      {slotsInfo.totalSlots}{" "}
+                      {slotsInfo.totalSlots === 1 ? "Slot" : "Slots"}
+                    </p>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500 text-white shadow-sm">
+                      ● READY
+                    </span>
+                  </div>
+                  <p className="text-xs text-green-700 mt-0.5 font-medium">
+                    Available on {slotsInfo.count}{" "}
+                    {slotsInfo.count === 1 ? "day" : "days"}
+                  </p>
+
+                  {/* Days Row */}
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {slotsInfo.days.map((day, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white text-green-700 border border-green-300 shadow-sm"
+                      >
+                        ✓ {day}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Hover Tooltip - Optional */}
+            <div className="absolute left-0 right-0 top-full mt-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+              <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg">
+                <p className="font-medium">Click to view full schedule</p>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="rounded-lg bg-gradient-to-br from-gray-50 to-slate-100 border-2 border-gray-200 p-3">
+            <div className="flex items-start gap-2.5">
+              <div className="mt-0.5 rounded-lg bg-gray-400 p-1.5">
+                <Clock size={14} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-700">
+                  No Availability Set
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Contact interviewer for scheduling
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const InternalInterviews = ({
   onClose,
@@ -49,7 +248,7 @@ const InternalInterviews = ({
   const { data: tagsData = [] } = useInterviewerTags({ active_only: true });
   const { data: teamsData = [] } = useTeamsQuery();
   const pageType = "adminPortal";
-  // const { skills, loadSkills, isSkillsFetching } = useMasterData({}, pageType);
+  const { skills, loadSkills, isSkillsFetching } = useMasterData({}, pageType);
 
   const [filterType, setFilterType] = useState("tags"); // default = tags
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -58,11 +257,13 @@ const InternalInterviews = ({
   const [activeTagIds, setActiveTagIds] = useState(propSelectedTagIds || []);
   const [activeTeamIds, setActiveTeamIds] = useState(propSelectedTeamIds || []);
   const [skillInput, setSkillInput] = useState("");
-
+  const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(true);
   const [selectedSkills, setSelectedSkills] = useState([]);
   const skillsPopupRef = useRef(null);
   const skillsInputRef = useRef(null);
   useScrollLock(true);
+
+  console.log("skills", skills);
 
   // const [viewType, setViewType] = useState(defaultViewType);
   // const [viewType, setViewType] = useState(defaultViewType);
@@ -162,13 +363,17 @@ const InternalInterviews = ({
     const propTeamSet = new Set(propSelectedTeamIds || []);
     const activeTagSet = new Set(activeTagIds || []);
     const activeTeamSet = new Set(activeTeamIds || []);
+    // const selectedSkillSet = new Set(
+    //   selectedSkills.map((s) => s.toLowerCase()),
+    // );
     const selectedSkillSet = new Set(
-      selectedSkills.map((s) => s.toLowerCase()),
+      selectedSkills.map((s) =>
+        typeof s === "string"
+          ? s.toLowerCase()
+          : (s.SkillName || s.skill || s).toString().toLowerCase(),
+      ),
     );
     const searchLower = searchQuery.toLowerCase().trim();
-
-    console.log("activeTagIds", activeTagIds);
-    console.log("activeTeamIds", activeTeamIds);
 
     const getPriority = (interviewer) => {
       let score = 0;
@@ -460,23 +665,6 @@ const InternalInterviews = ({
   //   onClose();
   // };
 
-  const handleAddSkill = () => {
-    const value = skillInput.trim();
-
-    if (!value) return;
-
-    setSelectedSkills((prev) => {
-      // prevent duplicates (case-insensitive)
-      if (prev.some((s) => s.toLowerCase() === value.toLowerCase())) {
-        return prev;
-      }
-
-      return [...prev, value];
-    });
-
-    setSkillInput("");
-  };
-
   const handleScheduleClick = () => {
     // if (viewType === "groups" && selectedInterviewers.length > 0) {
     //   // For groups, pass the group name AND group ID
@@ -536,100 +724,150 @@ const InternalInterviews = ({
     >
       <div className="flex flex-col h-full">
         {/* <------------------------------- v1.0.0  */}
-        {/* Header */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 mt-4">
-          {/* <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"> */}
-          {/* LEFT SECTION */}
-          {/* <div className="flex flex-wrap items-center gap-3"> */}
-          {/* Selected count */}
-          {/* <p className="text-sm text-gray-600 whitespace-nowrap">
-                <span className="font-medium text-gray-900">
-                  {selectedInterviewers?.length}
-                </span>{" "}
-                {viewType === "individuals" ? "Individual" : "Group"}
-                {selectedInterviewers?.length !== 1 ? "s" : ""} selected
-              </p> */}
 
-          {/* RIGHT SECTION — SEARCH */}
-          <div className="relative w-full sm:max-w-sm lg:max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search individuals..."
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-              className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Tags / Teams Dropdown */}
-          <div className="relative min-w-[120px]" ref={filterDropdownRef}>
-            <button
-              onClick={() => setShowFilterDropdown((prev) => !prev)}
-              className="flex w-full items-center justify-between gap-2 rounded-md border bg-white px-3 py-2 text-sm"
-            >
-              {filterType === "tags" ? "Tags" : "Teams"}
-              <ChevronDown className="h-4 w-4 shrink-0" />
-            </button>
-
-            {showFilterDropdown && (
-              <div className="absolute z-30 mt-1 w-full rounded-md border bg-white shadow">
-                {["tags", "teams"].map((type) => (
-                  <div
-                    key={type}
-                    onClick={() => {
-                      setFilterType(type);
-                      setShowFilterDropdown(false);
-                    }}
-                    className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${
-                      filterType === type ? "font-medium text-blue-600" : ""
-                    }`}
-                  >
-                    {capitalizeFirstLetter(type)}
-                  </div>
-                ))}
-              </div>
+        <div className="w-full flex justify-end  items-center mt-4">
+          <span className="cursor-pointer px-3 py-1 text-xl border rounded-md p-2">
+            {isFilterPopupOpen ? (
+              <LuFilterX
+                // className="cursor-pointer"
+                onClick={() => setIsFilterPopupOpen(false)}
+              />
+            ) : (
+              <LuFilter
+                // className="cursor-pointer"
+                onClick={() => setIsFilterPopupOpen(true)}
+              />
             )}
-          </div>
-
-          {/* Skills dropdown */}
-          <div className="min-w-[220px] max-w-xs w-full sm:w-auto">
-            <input
-              type="text"
-              value={skillInput}
-              placeholder="Type skill & press Enter"
-              onChange={(e) => setSkillInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddSkill();
-                }
-              }}
-              className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* </div> */}
-          {/* </div> */}
+          </span>
         </div>
 
-        {/* Fixed Dropdown and Search Section */}
+        {isFilterPopupOpen && (
+          <div className=" border p-3 rounded-lg shadow-sm bg-white gap-4 mt-4">
+            {/* Header */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 mt-4">
+              {/* RIGHT SECTION — SEARCH */}
+              <div className="relative w-full sm:max-w-sm lg:max-w-md">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search individuals..."
+                  value={searchQuery}
+                  onChange={handleSearchInputChange}
+                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
 
-        {/* Right: Filters */}
-        <div className="flex flex-col  gap-3 px-3 mt-3 ">
-          {filterType === "tags" && tagsData.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-gray-500 mr-1">Tags:</span>
+              {/* Tags / Teams Dropdown */}
+              <div className="relative min-w-[120px]" ref={filterDropdownRef}>
+                <button
+                  onClick={() => setShowFilterDropdown((prev) => !prev)}
+                  className="flex w-full items-center justify-between gap-2 rounded-md border bg-white px-3 py-2 text-sm"
+                >
+                  {filterType === "tags" ? "Tags" : "Teams"}
+                  <ChevronDown className="h-4 w-4 shrink-0" />
+                </button>
 
-              <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-                {tagsData.map((tag) => {
-                  const isSelected = activeTagIds.includes(tag._id);
-                  return (
-                    <button
-                      key={tag._id}
-                      type="button"
-                      onClick={() => toggleSelection(tag._id, setActiveTagIds)}
-                      className={`
+                {showFilterDropdown && (
+                  <div className="absolute z-30 mt-1 w-full rounded-md border bg-white shadow">
+                    {["tags", "teams"].map((type) => (
+                      <div
+                        key={type}
+                        onClick={() => {
+                          setFilterType(type);
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${
+                          filterType === type ? "font-medium text-blue-600" : ""
+                        }`}
+                      >
+                        {capitalizeFirstLetter(type)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Skills dropdown */}
+              <div className="min-w-[220px] max-w-xs w-full sm:w-auto">
+                {/* <input
+                  type="text"
+                  value={skillInput}
+                  placeholder="Type skill & press Enter"
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddSkill();
+                    }
+                  }}
+                  className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                /> */}
+                <DropdownWithSearchField
+                  ref={skillsInputRef}
+                  value={null}
+                  options={
+                    skills
+                      ?.filter(
+                        (skill) =>
+                          !selectedSkills.some(
+                            (s) => s.SkillName === skill.SkillName,
+                          ),
+                      )
+                      .map((skill) => ({
+                        value: skill.SkillName,
+                        label: skill.SkillName,
+                      })) || []
+                  }
+                  onChange={(option) => {
+                    if (!option) return;
+
+                    const value = option?.value || option?.target?.value;
+                    if (!value) return;
+                    setSelectedSkills((prev) => {
+                      // prevent duplicates
+                      if (
+                        prev.some(
+                          (s) =>
+                            (typeof s === "string"
+                              ? s
+                              : s.SkillName || s.skill || s) === value,
+                        )
+                      )
+                        return prev;
+                      return [...prev, value]; // Store as string, not object
+                    });
+                    // setSelectedSkills((prev) => {
+                    //   // prevent duplicates
+                    //   if (prev.some((s) => s.SkillName === value)) return prev;
+                    //   return [...prev, { SkillName: value }];
+                    // });
+                  }}
+                  onMenuOpen={loadSkills}
+                  loading={isSkillsFetching}
+                  placeholder="Add skill"
+                />
+              </div>
+            </div>
+
+            {/* Fixed Dropdown and Search Section */}
+
+            {/* Right: Filters */}
+            <div className="flex flex-col  gap-3 px-3 mt-3 ">
+              {filterType === "tags" && tagsData.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-gray-500 mr-1">Tags:</span>
+
+                  <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+                    {tagsData.map((tag) => {
+                      const isSelected = activeTagIds.includes(tag._id);
+                      return (
+                        <button
+                          key={tag._id}
+                          type="button"
+                          onClick={() =>
+                            toggleSelection(tag._id, setActiveTagIds)
+                          }
+                          className={`
             flex items-center gap-1.5 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
@@ -639,21 +877,21 @@ const InternalInterviews = ({
                 : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
             }
           `}
-                      style={{ "--tag-color": tag.color }}
-                    >
-                      <span
-                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                        style={{
-                          backgroundColor: tag.color,
-                        }}
-                      />
-                      <span className="text-black">{tag.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
+                          style={{ "--tag-color": tag.color }}
+                        >
+                          <span
+                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                            style={{
+                              backgroundColor: tag.color,
+                            }}
+                          />
+                          <span className="text-black">{tag.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
 
-              {/* {tagsData.map((tag) => (
+                  {/* {tagsData.map((tag) => (
                 <span
                   key={tag._id}
                   className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border"
@@ -670,24 +908,24 @@ const InternalInterviews = ({
                   {tag.name}
                 </span>
               ))} */}
-            </div>
-          )}
+                </div>
+              )}
 
-          {filterType === "teams" && teamsData.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-gray-500 mr-1">Teams:</span>
+              {filterType === "teams" && teamsData.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-gray-500 mr-1">Teams:</span>
 
-              <div className="flex flex-wrap gap-x-3 gap-y-3">
-                {teamsData.map((team) => {
-                  const isSelected = activeTeamIds.includes(team._id);
-                  return (
-                    <button
-                      key={team._id}
-                      type="button"
-                      onClick={() =>
-                        toggleSelection(team._id, setActiveTeamIds)
-                      }
-                      className={`
+                  <div className="flex flex-wrap gap-x-3 gap-y-3">
+                    {teamsData.map((team) => {
+                      const isSelected = activeTeamIds.includes(team._id);
+                      return (
+                        <button
+                          key={team._id}
+                          type="button"
+                          onClick={() =>
+                            toggleSelection(team._id, setActiveTeamIds)
+                          }
+                          className={`
             flex items-center gap-2 
             px-4 py-2 rounded-full text-sm font-medium
             border transition-all duration-150
@@ -697,15 +935,15 @@ const InternalInterviews = ({
                 : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
             }
           `}
-                    >
-                      <span className="text-base">👥</span>
-                      <span className="text-black">{team.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
+                        >
+                          <span className="text-base">👥</span>
+                          <span className="text-black">{team.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
 
-              {/* {teamsData.map((team) => (
+                  {/* {teamsData.map((team) => (
                 <span
                   key={team._id}
                   className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200"
@@ -714,36 +952,37 @@ const InternalInterviews = ({
                   {team.name}
                 </span>
               ))} */}
+                </div>
+              )}
+
+              {/* Selected Skills */}
+              {selectedSkills.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-gray-500 mr-1">Skills:</span>
+
+                  {selectedSkills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800"
+                    >
+                      {skill}
+                      <button
+                        onClick={() =>
+                          setSelectedSkills((prev) =>
+                            prev.filter((s) => s !== skill),
+                          )
+                        }
+                        className="ml-1 text-gray-500 hover:text-red-500"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-
-          {/* Selected Skills */}
-          {selectedSkills.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-gray-500 mr-1">Skills:</span>
-
-              {selectedSkills.map((skill) => (
-                <span
-                  key={skill}
-                  className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800"
-                >
-                  {skill}
-                  <button
-                    onClick={() =>
-                      setSelectedSkills((prev) =>
-                        prev.filter((s) => s !== skill),
-                      )
-                    }
-                    className="ml-1 text-gray-500 hover:text-red-500"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
+          </div>
+        )}
         {/* RIGHT SIDE — SEARCH */}
         {/* <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -758,43 +997,6 @@ const InternalInterviews = ({
 
         {/* Scrollable Data Section */}
         <div className="flex-1 sm:px-2 px-6 py-4">
-          <div className="bg-white">
-            {/* ------------------------------ v1.0.0 > */}
-            {/* <div className="flex gap-x-4 md:flex-row md:items-end md:space-x-4 md:space-y-0 justify-between my-5"> */}
-            {/* <div className="w-full grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-3 my-5"> */}
-            <div
-              className={`w-full grid gap-3 my-5 sm:grid-cols-1 md:grid-cols-1 
-              
-              
-              `}
-            >
-              {/* Right side (search) */}
-              {/* <div className="relative w-full max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search individuals..."
-                  value={searchQuery}
-                  onChange={handleSearchInputChange}
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
-                />
-              </div> */}
-              {/* Search Bar */}
-              {/* <div className="flex-1"> */}
-              {/* <div className=" w-full ">
-                <div className="relative w-[40%] flex items-end">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder={`Search individuals...`}
-                    value={searchQuery}
-                    onChange={handleSearchInputChange}
-                    className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div> */}
-            </div>
-          </div>
           {/* v1.0.2 <-------------------------------------------------------------------------- */}
 
           <div
