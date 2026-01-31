@@ -13,7 +13,8 @@ import "../styles/tabs.scss";
 import MockProfileDetails from "./MockProfileDetails";
 import { motion } from "framer-motion";
 import { Eye, MoreVertical, Pencil, Timer, XCircle } from "lucide-react";
-import CancelPopup from "./ScheduleCancelPopup.jsx";
+// import CancelPopup from "./ScheduleCancelPopup.jsx"; 
+import DateChangeConfirmationModal from "../Interview-New/components/DateChangeConfirmationModal.jsx";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import Header from "../../../../Components/Shared/Header/Header.jsx";
@@ -23,7 +24,7 @@ import TableView from "../../../../Components/Shared/Table/TableView.jsx";
 import MockInterviewKanban from "../../../../Components/Shared/KanbanCommon/KanbanCommon.jsx";
 import { ReactComponent as MdKeyboardArrowUp } from "../../../../icons/MdKeyboardArrowUp.svg";
 import { ReactComponent as MdKeyboardArrowDown } from "../../../../icons/MdKeyboardArrowDown.svg";
-import { useMockInterviews } from "../../../../apiHooks/useMockInterviews.js";
+import { useMockInterviews, useUpdateRoundStatus } from "../../../../apiHooks/useMockInterviews.js";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 // v1.0.1 <--------------------------------------------------------------------------
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
@@ -80,8 +81,8 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
             : action.key === "edit"
-            ? "text-green-600 hover:bg-green-600/10"
-            : "text-blue-600 bg-green-600/10";
+              ? "text-green-600 hover:bg-green-600/10"
+              : "text-blue-600 bg-green-600/10";
 
         return (
           <button
@@ -177,6 +178,7 @@ const MockInterview = () => {
   const [cancelSchedule, setCancelSchedule] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const filterIconRef = useRef(null);
+  const updateRoundStatus = useUpdateRoundStatus();
 
   const { mockinterviewData, loading, totalCount, totalPages } =
     useMockInterviews({
@@ -278,11 +280,11 @@ const MockInterview = () => {
     setSelectedFilters(filters);
     setIsFilterActive(
       filters.status.length > 0 ||
-        filters.technology.length > 0 ||
-        filters.duration.min !== "" ||
-        filters.duration.max !== "" ||
-        filters.createdDate !== "" ||
-        filters.interviewer.length > 0
+      filters.technology.length > 0 ||
+      filters.duration.min !== "" ||
+      filters.duration.max !== "" ||
+      filters.createdDate !== "" ||
+      filters.interviewer.length > 0
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -600,10 +602,10 @@ const MockInterview = () => {
           {row?.rounds?.[0]?.status === "RequestSent"
             ? "Request Sent"
             : (
-                <StatusBadge
-                  status={capitalizeFirstLetter(row?.rounds?.[0]?.status)}
-                />
-              ) || "N/A"}
+              <StatusBadge
+                status={capitalizeFirstLetter(row?.rounds?.[0]?.status)}
+              />
+            ) || "N/A"}
         </span>
       ),
     },
@@ -874,9 +876,8 @@ const MockInterview = () => {
                             const contact = interviewer?.contact;
                             return (
                               contact?.Name ||
-                              `${contact?.firstName || ""} ${
-                                contact?.lastName || ""
-                              }`.trim()
+                              `${contact?.firstName || ""} ${contact?.lastName || ""
+                                }`.trim()
                             );
                           });
                         })
@@ -1027,9 +1028,35 @@ const MockInterview = () => {
         />
       )}
       {cancelSchedule && (
-        <CancelPopup
-          row={selectedRow}
+        <DateChangeConfirmationModal
+          isOpen={cancelSchedule}
           onClose={() => setCancelSchedule(false)}
+          interview={selectedRow}
+          actionType="Cancel"
+          isMockInterview={true}
+          selectedInterviewType="External"
+          status={selectedRow?.rounds?.[0]?.status || "Scheduled"}
+          combinedDateTime={selectedRow?.rounds?.[0]?.dateTime}
+          onConfirm={async (payload) => {
+            try {
+              const apiPayload = {
+                action: "Cancelled",
+                reasonCode: payload.reason,
+                // if comment exists, maybe append or send separately? 
+                // backend expects 'reasonCode' often.
+                // The modal sends { reason, comment, roundOutcome }
+              };
+
+              await updateRoundStatus.mutateAsync({
+                mockInterviewId: selectedRow._id,
+                roundId: selectedRow.rounds?.[0]?._id,
+                payload: apiPayload
+              });
+              setCancelSchedule(false);
+            } catch (error) {
+              console.error("Failed to cancel mock interview", error);
+            }
+          }}
         />
       )}
       {/* {reschedule && (
