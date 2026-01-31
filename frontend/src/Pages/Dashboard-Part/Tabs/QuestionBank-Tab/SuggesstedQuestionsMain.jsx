@@ -128,11 +128,11 @@ function HeaderBar({
                   (size) => ({
                     value: size,
                     label: size,
-                  })
+                  }),
                 );
                 const selectedOption =
                   pageSizeOptions.find(
-                    (opt) => opt.value === questionsPerPage
+                    (opt) => opt.value === questionsPerPage,
                   ) || pageSizeOptions[0];
                 return (
                   <DropdownSelect
@@ -140,7 +140,7 @@ function HeaderBar({
                     value={selectedOption}
                     onChange={(opt) =>
                       onChangeQuestionsPerPage(
-                        opt?.value ? Number(opt.value) : 10
+                        opt?.value ? Number(opt.value) : 10,
                       )
                     }
                     options={pageSizeOptions}
@@ -232,7 +232,7 @@ const SuggestedQuestionsComponent = ({
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [dropdownValue, setDropdownValue] = useState(
-    type === "assessment" ? "Assessment Questions" : "Interview Questions"
+    type === "assessment" ? "Assessment Questions" : "Interview Questions",
   );
 
   // Map dropdown selection to backend-supported questionType filter
@@ -240,7 +240,7 @@ const SuggestedQuestionsComponent = ({
     () =>
       dropdownValue === "Interview Questions" ? "Interview" : "Assignment",
 
-    [dropdownValue]
+    [dropdownValue],
   );
 
   useEffect(() => {
@@ -254,7 +254,7 @@ const SuggestedQuestionsComponent = ({
 
   const [questionTypeFilterItems, setQuestionTypeFilterItems] = useState([]);
   const [difficultyLevelFilterItems, setDifficultyLevelFilterItems] = useState(
-    []
+    [],
   );
   const [categoryFilterItems, setCategoryFilterItems] = useState([]);
   const [technologyFilterItems, setTechnologyFilterItems] = useState([]);
@@ -267,7 +267,7 @@ const SuggestedQuestionsComponent = ({
     useState([]);
   const [tempCategoryFilterItems, setTempCategoryFilterItems] = useState([]);
   const [tempTechnologyFilterItems, setTempTechnologyFilterItems] = useState(
-    []
+    [],
   );
   const [tempSelectedSkills, setTempSelectedSkills] = useState([]);
   const [tempSkillInput, setTempSkillInput] = useState("");
@@ -306,7 +306,7 @@ const SuggestedQuestionsComponent = ({
       categoryFilterItems,
       technologyFilterItems,
       questionTypeFilterItems,
-    ]
+    ],
   );
 
   const {
@@ -321,7 +321,7 @@ const SuggestedQuestionsComponent = ({
     isLoading,
     pagination,
   } = useQuestions(
-    apiFilters
+    apiFilters,
     //   {
     //   questionType: selectedQuestionType,
 
@@ -378,10 +378,11 @@ const SuggestedQuestionsComponent = ({
         isOpen: false,
         options: [
           { type: "MCQ", isChecked: false },
-          { type: "Short", isChecked: false },
-          { type: "Long", isChecked: false },
-          { type: "Programming", isChecked: false },
-          { type: "Number", isChecked: false },
+          // Do not remove this commented code it needs to be used in the future.
+          // { type: "Short", isChecked: false },
+          // { type: "Long", isChecked: false },
+          // { type: "Programming", isChecked: false },
+          // { type: "Number", isChecked: false },
           { type: "Boolean", isChecked: false },
         ],
       });
@@ -419,10 +420,11 @@ const SuggestedQuestionsComponent = ({
       isOpen: false,
       options: [
         { type: "MCQ", isChecked: false },
-        { type: "Short", isChecked: false },
-        { type: "Long", isChecked: false },
-        { type: "Programming", isChecked: false },
-        { type: "Number", isChecked: false },
+        // Do not remove this commented code it needs to be used in the future.
+        // { type: "Short", isChecked: false },
+        // { type: "Long", isChecked: false },
+        // { type: "Programming", isChecked: false },
+        // { type: "Number", isChecked: false },
         { type: "Boolean", isChecked: false },
       ],
     },
@@ -439,7 +441,7 @@ const SuggestedQuestionsComponent = ({
   ]);
 
   const [tempFiltrationData, setTempFiltrationData] = useState(
-    JSON.parse(JSON.stringify(filtrationData))
+    JSON.parse(JSON.stringify(filtrationData)),
   );
 
   //<------v1.0.4--------
@@ -497,7 +499,7 @@ const SuggestedQuestionsComponent = ({
   // Determine locked items and prepare unlocked list for rendering
   const hasLockedOnPage = (paginatedData || []).some((q) => q?.isLocked);
   const unlockedPaginatedData = (paginatedData || []).filter(
-    (q) => !q?.isLocked
+    (q) => !q?.isLocked,
   );
   const lockedCount =
     typeof lockedQuestionsCount === "number"
@@ -517,16 +519,16 @@ const SuggestedQuestionsComponent = ({
     totalAvailable === 0
       ? "0/0"
       : beyondAccessible
-      ? `${planAccessibleTotal}/${totalAvailable} ${
-          totalAvailable > 1 ? "Questions" : "Question"
-        }`
-      : startIndex === endIndex
-      ? `${endIndex}/${totalAvailable} ${
-          totalAvailable > 1 ? "Questions" : "Question"
-        }`
-      : `${startIndex}-${endIndex}/${totalAvailable} ${
-          totalAvailable > 1 ? "Questions" : "Question"
-        }`;
+        ? `${planAccessibleTotal}/${totalAvailable} ${
+            totalAvailable > 1 ? "Questions" : "Question"
+          }`
+        : startIndex === endIndex
+          ? `${endIndex}/${totalAvailable} ${
+              totalAvailable > 1 ? "Questions" : "Question"
+            }`
+          : `${startIndex}-${endIndex}/${totalAvailable} ${
+              totalAvailable > 1 ? "Questions" : "Question"
+            }`;
 
   // Update mandatory status
   useEffect(() => {
@@ -536,7 +538,7 @@ const SuggestedQuestionsComponent = ({
         (question) => {
           updatedStatus[question.questionId || question.id] =
             question.snapshot?.mandatory === "true" || false;
-        }
+        },
       );
       return updatedStatus;
     });
@@ -547,7 +549,7 @@ const SuggestedQuestionsComponent = ({
     setMandatoryStatus((prev) => {
       const newStatus = !prev[questionId];
       notify.success(
-        `Question marked as ${newStatus ? "mandatory" : "optional"}`
+        `Question marked as ${newStatus ? "mandatory" : "optional"}`,
       );
       if (handleToggleMandatory) {
         handleToggleMandatory(questionId);
@@ -575,7 +577,7 @@ const SuggestedQuestionsComponent = ({
 
     if (type === "assessment") {
       const isDuplicate = addedSections.some((section) =>
-        section.Questions.some((q) => q.questionId === item._id)
+        section.Questions.some((q) => q.questionId === item._id),
       );
       if (isDuplicate) {
         toast.error("This question has already been added to the assessment");
@@ -583,7 +585,7 @@ const SuggestedQuestionsComponent = ({
       }
       if (checkedCount >= questionsLimit) {
         toast.error(
-          `You've reached the maximum limit of ${questionsLimit} questions`
+          `You've reached the maximum limit of ${questionsLimit} questions`,
         );
         return;
       }
@@ -695,11 +697,11 @@ const SuggestedQuestionsComponent = ({
                 options: category.options.map((opt) =>
                   opt.type.toLowerCase() === item
                     ? { ...opt, isChecked: false }
-                    : opt
+                    : opt,
                 ),
               }
-            : category
-        )
+            : category,
+        ),
       );
     } else if (difficultyLevelFilterItems.includes(item)) {
       setDifficultyLevelFilterItems((prev) => prev.filter((i) => i !== item));
@@ -711,11 +713,11 @@ const SuggestedQuestionsComponent = ({
                 options: category.options.map((opt) =>
                   opt.level.toLowerCase() === item
                     ? { ...opt, isChecked: false }
-                    : opt
+                    : opt,
                 ),
               }
-            : category
-        )
+            : category,
+        ),
       );
       //<------v1.0.4--------
     } else if (categoryFilterItems.includes(item)) {
@@ -728,11 +730,11 @@ const SuggestedQuestionsComponent = ({
                 options: category.options.map((opt) =>
                   String(opt.value).toLowerCase() === item
                     ? { ...opt, isChecked: false }
-                    : opt
+                    : opt,
                 ),
               }
-            : category
-        )
+            : category,
+        ),
       );
     } else if (technologyFilterItems.includes(item)) {
       setTechnologyFilterItems((prev) => prev.filter((i) => i !== item));
@@ -744,11 +746,11 @@ const SuggestedQuestionsComponent = ({
                 options: category.options.map((opt) =>
                   String(opt.value).toLowerCase() === item
                     ? { ...opt, isChecked: false }
-                    : opt
+                    : opt,
                 ),
               }
-            : category
-        )
+            : category,
+        ),
       );
       //------v1.0.4-------->
     }
@@ -1222,7 +1224,7 @@ const SuggestedQuestionsComponent = ({
                           >
                             <p
                               className={`w-16 text-center ${getDifficultyStyles(
-                                item.difficultyLevel
+                                item.difficultyLevel,
                               )} rounded-full py-1`}
                               title="Difficulty Level"
                             >
@@ -1236,7 +1238,7 @@ const SuggestedQuestionsComponent = ({
                                   onClick={() => {
                                     if (
                                       interviewQuestionsLists?.some(
-                                        (q) => q.questionId === item._id
+                                        (q) => q.questionId === item._id,
                                       )
                                     ) {
                                       handleToggle(item._id, item);
@@ -1283,7 +1285,7 @@ const SuggestedQuestionsComponent = ({
                                   </span>
                                 </button>
                               ) : interviewQuestionsLists?.some(
-                                  (q) => q.questionId === item._id
+                                  (q) => q.questionId === item._id,
                                 ) ? (
                                 <button
                                   type="button"
@@ -1327,8 +1329,8 @@ const SuggestedQuestionsComponent = ({
                             <div className="w-[8%] flex justify-center">
                               {addedSections.some((s) =>
                                 s.Questions.some(
-                                  (q) => q.questionId === item._id
-                                )
+                                  (q) => q.questionId === item._id,
+                                ),
                               ) ? (
                                 <button
                                   type="button"
@@ -1359,7 +1361,7 @@ const SuggestedQuestionsComponent = ({
                                   className={`text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${
                                     addedSections.reduce(
                                       (acc, s) => acc + s.Questions.length,
-                                      0
+                                      0,
                                     ) >= questionsLimit
                                       ? "opacity-50 cursor-not-allowed"
                                       : ""
@@ -1368,7 +1370,7 @@ const SuggestedQuestionsComponent = ({
                                   disabled={
                                     addedSections.reduce(
                                       (acc, s) => acc + s.Questions.length,
-                                      0
+                                      0,
                                     ) >= questionsLimit
                                   }
                                 >
@@ -1431,7 +1433,7 @@ const SuggestedQuestionsComponent = ({
                               <ul className="list-none">
                                 {(() => {
                                   const isAnyOptionLong = item.options.some(
-                                    (option) => option.length > 55
+                                    (option) => option.length > 55,
                                   );
                                   return item.options.map((option, idx) => (
                                     <li
@@ -1582,8 +1584,10 @@ const SuggestedQuestionsComponent = ({
                   onClick={() =>
                     setTempFiltrationData((prev) =>
                       prev.map((item) =>
-                        item.id === 1 ? { ...item, isOpen: !item.isOpen } : item
-                      )
+                        item.id === 1
+                          ? { ...item, isOpen: !item.isOpen }
+                          : item,
+                      ),
                     )
                   }
                 >
@@ -1599,7 +1603,7 @@ const SuggestedQuestionsComponent = ({
                         <input
                           type="checkbox"
                           checked={tempQuestionTypeFilterItems.includes(
-                            type.type.toLowerCase()
+                            type.type.toLowerCase(),
                           )}
                           className="w-4 cursor-pointer accent-custom-blue focus:ring-custom-blue"
                           value={type.type.toLowerCase()}
@@ -1612,7 +1616,7 @@ const SuggestedQuestionsComponent = ({
                                 ? prev.includes(value)
                                   ? prev
                                   : [...prev, value]
-                                : prev.filter((item) => item !== value)
+                                : prev.filter((item) => item !== value),
                             );
                           }}
                         />
@@ -1638,8 +1642,10 @@ const SuggestedQuestionsComponent = ({
                   onClick={() =>
                     setTempFiltrationData((prev) =>
                       prev.map((item) =>
-                        item.id === 2 ? { ...item, isOpen: !item.isOpen } : item
-                      )
+                        item.id === 2
+                          ? { ...item, isOpen: !item.isOpen }
+                          : item,
+                      ),
                     )
                   }
                 >
@@ -1655,7 +1661,7 @@ const SuggestedQuestionsComponent = ({
                         <input
                           type="checkbox"
                           checked={tempDifficultyLevelFilterItems.includes(
-                            type.level.toLowerCase()
+                            type.level.toLowerCase(),
                           )}
                           className="w-4 cursor-pointer accent-custom-blue focus:ring-custom-blue"
                           value={type.level.toLowerCase()}
@@ -1668,7 +1674,7 @@ const SuggestedQuestionsComponent = ({
                                 ? prev.includes(value)
                                   ? prev
                                   : [...prev, value]
-                                : prev.filter((item) => item !== value)
+                                : prev.filter((item) => item !== value),
                             );
                           }}
                         />
@@ -1695,8 +1701,10 @@ const SuggestedQuestionsComponent = ({
                   onClick={() =>
                     setTempFiltrationData((prev) =>
                       prev.map((item) =>
-                        item.id === 3 ? { ...item, isOpen: !item.isOpen } : item
-                      )
+                        item.id === 3
+                          ? { ...item, isOpen: !item.isOpen }
+                          : item,
+                      ),
                     )
                   }
                 >
@@ -1712,7 +1720,7 @@ const SuggestedQuestionsComponent = ({
                         <input
                           type="checkbox"
                           checked={tempCategoryFilterItems.includes(
-                            String(opt.value).toLowerCase()
+                            String(opt.value).toLowerCase(),
                           )}
                           className="w-4 cursor-pointer accent-custom-blue focus:ring-custom-blue"
                           value={String(opt.value).toLowerCase()}
@@ -1725,7 +1733,7 @@ const SuggestedQuestionsComponent = ({
                                 ? prev.includes(value)
                                   ? prev
                                   : [...prev, value]
-                                : prev.filter((item) => item !== value)
+                                : prev.filter((item) => item !== value),
                             );
                           }}
                         />
@@ -1752,8 +1760,10 @@ const SuggestedQuestionsComponent = ({
                   onClick={() =>
                     setTempFiltrationData((prev) =>
                       prev.map((item) =>
-                        item.id === 4 ? { ...item, isOpen: !item.isOpen } : item
-                      )
+                        item.id === 4
+                          ? { ...item, isOpen: !item.isOpen }
+                          : item,
+                      ),
                     )
                   }
                 >
@@ -1769,7 +1779,7 @@ const SuggestedQuestionsComponent = ({
                         <input
                           type="checkbox"
                           checked={tempTechnologyFilterItems.includes(
-                            String(opt.value).toLowerCase()
+                            String(opt.value).toLowerCase(),
                           )}
                           className="w-4 cursor-pointer accent-custom-blue focus:ring-custom-blue"
                           value={String(opt.value).toLowerCase()}
@@ -1782,7 +1792,7 @@ const SuggestedQuestionsComponent = ({
                                 ? prev.includes(value)
                                   ? prev
                                   : [...prev, value]
-                                : prev.filter((item) => item !== value)
+                                : prev.filter((item) => item !== value),
                             );
                           }}
                         />

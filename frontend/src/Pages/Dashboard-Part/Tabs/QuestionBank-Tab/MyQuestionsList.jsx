@@ -1332,7 +1332,7 @@ const MyQuestionsList = ({
                 <li key={index} className="flex gap-2 cursor-pointer">
                   <input
                     checked={option.isChecked}
-                    className="w-4 cursor-pointer"
+                    className="w-4 cursor-pointer accent-custom-blue"
                     value={String(
                       option.type || option.level || option.value || ""
                     ).toLowerCase()}
