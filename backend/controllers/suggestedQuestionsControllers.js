@@ -326,6 +326,7 @@ const getQuestions = async (req, res) => {
     const difficultyLevels = difficultyLevel ? difficultyLevel.split(",") : [];
     const categories = category ? category.split(",") : [];
     const technologies = technology ? technology.split(",") : [];
+
     const questionTypeFilters = questionTypes ? questionTypes.split(",") : [];
 
     const pageNum = parseInt(page);
@@ -408,22 +409,96 @@ const getQuestions = async (req, res) => {
         : null,
     });
 
+    // ------------------------------------ DO NOT Remove -------------------------------------------------
+    // Do not remove this commented code it needs be used in the future.
     // Build filter queries for both collections
+    // const buildFilterQuery = (collectionType) => {
+    //   const query = {};
+
+    //   // Question type filter
+    //   if (questionType === "Interview" && collectionType === "assessment") {
+    //     return null; // Skip wrong collection
+    //   }
+    //   if (
+    //     (questionType === "Assessment" || questionType === "Assignment") &&
+    //     collectionType === "interview"
+    //   ) {
+    //     return null; // Skip wrong collection
+    //   }
+
+    //   // Search filter (across multiple fields)
+    //   if (search) {
+    //     const searchRegex = new RegExp(search, "i");
+    //     query.$or = [
+    //       { questionText: searchRegex },
+    //       { tags: searchRegex },
+    //       { technology: searchRegex },
+    //       { topic: searchRegex },
+    //       { category: searchRegex },
+    //       { subTopic: searchRegex },
+    //       { area: searchRegex },
+    //     ];
+    //   }
+
+    //   // Difficulty level filter
+    //   if (difficultyLevels.length > 0) {
+    //     query.difficultyLevel = {
+    //       $in: difficultyLevels.map((d) => new RegExp(`^${d}$`, "i")),
+    //     };
+    //   }
+
+    //   // Category filter
+    //   if (categories.length > 0) {
+    //     query.category = { $in: categories.map((c) => new RegExp(c, "i")) };
+    //   }
+
+    //   // Technology filter
+    //   if (technologies.length > 0) {
+    //     query.technology = { $in: technologies.map((t) => new RegExp(t, "i")) };
+    //   }
+
+    //   // Question type filter (MCQ, Short, etc.)
+    //   if (questionTypeFilters.length > 0) {
+    //     query.questionType = {
+    //       $in: questionTypeFilters.map((t) => new RegExp(`^${t}$`, "i")),
+    //     };
+    //   }
+
+    //   const result = Object.keys(query).length > 0 ? query : {};
+    //   // console.log(`Filter Query for ${collectionType}:`, JSON.stringify(result, null, 2));
+    //   return result;
+    // };
+
     const buildFilterQuery = (collectionType) => {
       const query = {};
 
-      // Question type filter
-      if (questionType === "Interview" && collectionType === "assessment") {
-        return null; // Skip wrong collection
-      }
+      if (questionType === "Interview" && collectionType === "assessment")
+        return null;
       if (
         (questionType === "Assessment" || questionType === "Assignment") &&
         collectionType === "interview"
-      ) {
-        return null; // Skip wrong collection
+      )
+        return null;
+
+      let finalQuestionTypes = questionTypeFilters;
+      if (questionType === "Assignment" && collectionType === "assessment") {
+        const allowed = ["MCQ", "Boolean"];
+        finalQuestionTypes =
+          questionTypeFilters.length > 0
+            ? questionTypeFilters.filter((t) =>
+                allowed.some((a) => a.toLowerCase() === t.toLowerCase()),
+              )
+            : allowed;
+
+        if (finalQuestionTypes.length === 0) finalQuestionTypes = allowed;
       }
 
-      // Search filter (across multiple fields)
+      if (finalQuestionTypes.length > 0) {
+        query.questionType = {
+          $in: finalQuestionTypes.map((t) => new RegExp(`^${t}$`, "i")),
+        };
+      }
+
       if (search) {
         const searchRegex = new RegExp(search, "i");
         query.$or = [
@@ -454,17 +529,10 @@ const getQuestions = async (req, res) => {
         query.technology = { $in: technologies.map((t) => new RegExp(t, "i")) };
       }
 
-      // Question type filter (MCQ, Short, etc.)
-      if (questionTypeFilters.length > 0) {
-        query.questionType = {
-          $in: questionTypeFilters.map((t) => new RegExp(`^${t}$`, "i")),
-        };
-      }
-
       const result = Object.keys(query).length > 0 ? query : {};
-      // console.log(`Filter Query for ${collectionType}:`, JSON.stringify(result, null, 2));
       return result;
     };
+    // ------------------------------------ DO NOT Remove -------------------------------------------------
 
     // Fetch filtered data from both collections
     const [assessments, interviews, totalAssessments, totalInterviews] =
