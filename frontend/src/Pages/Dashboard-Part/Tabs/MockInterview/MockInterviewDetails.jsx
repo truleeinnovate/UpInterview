@@ -202,7 +202,7 @@ const MockInterviewDetails = () => {
   // };
 
   const handleAddRound = () => {
-    navigate(`/mock-interview/${id}/edit`, {
+    navigate(`/mock-interviews/${id}/edit`, {
       state: { from: "tableMode" },
     });
     // navigate(`/interviews/${id}/rounds/new`);
@@ -680,7 +680,7 @@ const MockInterviewDetails = () => {
         label: "Reschedule",
         icon: Calendar,
         onClick: () =>
-          navigate(`/mock-interview/${mockinterview?._id}/edit`, {
+          navigate(`/mock-interviews/${mockinterview?._id}/edit`, {
             state: { isReschedule: true },
           }),
         className:
@@ -734,7 +734,7 @@ const MockInterviewDetails = () => {
         label: "Edit Round",
         icon: Edit,
         onClick: () =>
-          navigate(`/mock-interview/${mockinterview?._id}/edit`, {
+          navigate(`/mock-interviews/${mockinterview?._id}/edit`, {
             state: { isEdit: true },
           }),
         className:
@@ -752,7 +752,7 @@ const MockInterviewDetails = () => {
         label: "Change Interviewers",
         icon: Edit,
         onClick: () =>
-          navigate(`/mock-interview/${mockinterview?._id}/edit`, {
+          navigate(`/mock-interviews/${mockinterview?._id}/edit`, {
             state: { isRequestSent: true },
           }),
         className:
@@ -819,7 +819,7 @@ const MockInterviewDetails = () => {
   const breadcrumbItems = [
     {
       label: "Mock Interview",
-      path: "/mock-interview",
+      path: "/mock-interviews",
     },
     {
       label: candidate?.candidateName || "Mock Interview",
@@ -869,7 +869,7 @@ const MockInterviewDetails = () => {
             <div className="mt-6 text-center py-12 bg-white rounded-lg shadow">
               <p className="text-gray-500">Interview not found.</p>
               <Link
-                to="/mock-interview"
+                to="/mock-interviews"
                 className="text-custom-blue hover:text-custom-blue/90 flex items-center mr-4"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
@@ -889,7 +889,7 @@ const MockInterviewDetails = () => {
           <div>
             <div className="flex items-center mb-4">
               <Link
-                to="/mock-interview"
+                to="/mock-interviews"
                 className="text-custom-blue hover:text-custom-blue/90 flex items-center mr-4"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />

@@ -339,7 +339,7 @@ const CombinedNavbar = React.memo(() => {
           permissionKey: "Interviewers.ViewTab",
         },
         {
-          path: "/mock-interview",
+          path: "/mock-interviews",
           label: "Mock Interviews",
           permissionKey: "MockInterviews.ViewTab",
         },
@@ -1251,7 +1251,7 @@ const CombinedNavbar = React.memo(() => {
                         <button
                           className={`flex items-center h-full relative px-1 ${
                             isActive("/interviews") ||
-                            isActive("/mock-interview") ||
+                            isActive("/mock-interviews") ||
                             isActive("/interviewers") ||
                             isActive("/interview-templates")
                               ? "text-custom-blue font-bold"
@@ -1266,7 +1266,7 @@ const CombinedNavbar = React.memo(() => {
                             <ChevronDown className="h-5 w-5" />
                           )}
                           {(isActive("/interviews") ||
-                            isActive("/mock-interview") ||
+                            isActive("/mock-interviews") ||
                             isActive("/interviewers") ||
                             isActive("/interview-templates")) && (
                             <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
@@ -1297,7 +1297,7 @@ const CombinedNavbar = React.memo(() => {
                                 ...(enhancedCheckPermission("MockInterviews")
                                   ? [
                                       {
-                                        to: "/mock-interview",
+                                        to: "/mock-interviews",
                                         label: "Mock Interviews",
                                       },
                                     ]
@@ -1825,7 +1825,7 @@ const CombinedNavbar = React.memo(() => {
                         <button
                           className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${
                             isActive("/interviews") ||
-                            isActive("/mock-interview") ||
+                            isActive("/mock-interviews") ||
                             isActive("/interview-templates")
                               ? "bg-gray-100 text-custom-blue font-bold"
                               : "text-gray-600 hover:bg-gray-100"
@@ -1861,7 +1861,7 @@ const CombinedNavbar = React.memo(() => {
                               ...(enhancedCheckPermission("MockInterviews")
                                 ? [
                                     {
-                                      to: "/mock-interview",
+                                      to: "/mock-interviews",
                                       label: "Mock Interviews",
                                     },
                                   ]

@@ -382,7 +382,7 @@ const MockInterview = () => {
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => navigate(`/mock-interview-details/${row._id}`)}
+          onClick={() => navigate(`/mock-interviews-details/${row._id}`)}
         >
           {row?.mockInterviewCode || "N/A"}
         </div>
@@ -394,7 +394,7 @@ const MockInterview = () => {
       render: (value, row) => (
         <div
           className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => navigate(`/mock-interview-details/${row._id}`)}
+          onClick={() => navigate(`/mock-interviews-details/${row._id}`)}
         >
           {row?.rounds?.[0]?.roundTitle || "Not Provided"}
         </div>
@@ -526,7 +526,7 @@ const MockInterview = () => {
       label: "View Details",
       icon: <Eye className="w-4 h-4 text-custom-blue" />,
       show: (row) => true, // always show
-      onClick: (row) => navigate(`/mock-interview-details/${row._id}`),
+      onClick: (row) => navigate(`/mock-interviews-details/${row._id}`),
     },
     {
       key: "edit",
@@ -534,7 +534,7 @@ const MockInterview = () => {
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       show: (row) => row?.rounds?.[0]?.status === "Draft",
       onClick: (row) =>
-        navigate(`/mock-interview/${row._id}/edit`, {
+        navigate(`/mock-interviews/${row._id}/edit`, {
           state: { from: "tableMode" },
         }),
     },
@@ -547,7 +547,7 @@ const MockInterview = () => {
           row?.rounds?.[0]?.status
         ),
       onClick: (row) =>
-        navigate(`/mock-interview/${row._id}/edit`, {
+        navigate(`/mock-interviews/${row._id}/edit`, {
           state: { from: location.pathname },
         }),
 
@@ -649,7 +649,7 @@ const MockInterview = () => {
       icon: <Eye className="w-4 h-4 text-custom-blue" />,
       show: (row) => true, // always show
       onClick: (row) =>
-        navigate(`/mock-interview-details/${row._id}`, {
+        navigate(`/mock-interviews-details/${row._id}`, {
           state: { from: location.pathname },
         }),
     },
@@ -659,7 +659,7 @@ const MockInterview = () => {
       icon: <Pencil className="w-4 h-4 text-green-600" />,
       show: (row) => row?.rounds?.[0]?.status === "Draft",
       onClick: (row) =>
-        navigate(`/mock-interview/${row._id}/edit`, {
+        navigate(`/mock-interviews/${row._id}/edit`, {
           state: { from: location.pathname },
         }),
     },
@@ -672,7 +672,7 @@ const MockInterview = () => {
           row?.rounds?.[0]?.status
         ),
       onClick: (row) =>
-        navigate(`/mock-interview/${row._id}/edit`, {
+        navigate(`/mock-interviews/${row._id}/edit`, {
           state: { from: location.pathname },
         }),
 
@@ -699,7 +699,7 @@ const MockInterview = () => {
           <div className="sm:px-0">
             <Header
               title="Mock Interviews"
-              onAddClick={() => navigate("/mock-interview-create")}
+              onAddClick={() => navigate("/mock-interviews-create")}
               addButtonText="Add Interview"
               canCreate={effectivePermissions.MockInterviews?.Create}
             />
@@ -737,7 +737,7 @@ const MockInterview = () => {
                   id: interview?._id,
                   title: interview?.mockInterviewCode,
                   subTitle: formatDateTime(interview.createdAt),
-                  navigateTo: `/mock-interview-details/${interview._id}`,
+                  navigateTo: `/mock-interviews-details/${interview._id}`,
                 }))}
                 columns={kanbanColumns}
                 renderActions={(item) => (

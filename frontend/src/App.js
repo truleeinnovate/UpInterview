@@ -783,7 +783,7 @@ const MainAppRoutes = ({
                 <Route path="/mock-interviews" element={<MockInterview />} />
                 {hasPermission("MockInterviews", "Create") && (
                   <Route
-                    path="/mock-interview-create"
+                    path="/mock-interviews-create"
                     element={<MockSchedulelater />}
                   />
                 )}
@@ -795,7 +795,7 @@ const MainAppRoutes = ({
                 )}
                 {hasPermission("MockInterviews", "View") && (
                   <Route
-                    path="/mock-interview-details/:id"
+                    path="/mock-interviews-details/:id"
                     element={<MockInterviewDetails />}
                   />
                 )}
