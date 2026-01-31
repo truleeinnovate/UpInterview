@@ -990,7 +990,7 @@ function RoundFormPosition() {
         throw new Error(response.message || "Failed to save round");
       }
 
-      navigate(`/position/view-details/${positionId}`);
+      navigate(`/positions/view-details/${positionId}`);
     } catch (err) {
       // Show error toast
       notify.error(
@@ -2224,7 +2224,7 @@ function RoundFormPosition() {
                     <button
                       type="button"
                       onClick={() =>
-                        navigate(`/position/view-details/${contextId}`)
+                        navigate(`/positions/view-details/${contextId}`)
                       }
                       className="mr-3 inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 "
                     >
