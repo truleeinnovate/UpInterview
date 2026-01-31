@@ -16,7 +16,7 @@ import {
   Info,
   Clock,
   Users,
-
+  CheckCircle, RotateCcw
   // Expand,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
@@ -122,11 +122,10 @@ const OutsourcedInterviewerCard = ({
 
   return (
     <div
-      className={`bg-white rounded-lg border  ${
-        isSelected
-          ? "border-orange-500 ring-2 ring-orange-200"
-          : "border-gray-200"
-      } p-4 shadow-sm hover:shadow-md transition-all`}
+      className={`bg-white rounded-lg border  ${isSelected
+        ? "border-orange-500 ring-2 ring-orange-200"
+        : "border-gray-200"
+        } p-4 shadow-sm hover:shadow-md transition-all`}
     >
       <div className="w-full">
         <div className="flex items-center gap-3 w-full">
@@ -171,9 +170,8 @@ const OutsourcedInterviewerCard = ({
           {capitalizeFirstLetter(company)}
         </p>
         <div
-          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${
-            isExpanded ? "line-clamp-none" : "line-clamp-4"
-          }`}
+          className={`text-sm text-gray-600 transition-all duration-300 overflow-hidden ${isExpanded ? "line-clamp-none" : "line-clamp-4"
+            }`}
         >
           {capitalizeFirstLetter(introduction)}
         </div>
@@ -222,7 +220,7 @@ const OutsourcedInterviewerCard = ({
         </div>
       </div>
 
-      <div className="flex w-full mt-4 justify-end ">
+      <div className="flex w-full mt-4 justify-end">
         <div className="flex w-full  justify-between items-center">
           <div>
             <span className="text-xs font-medium text-gray-700">
@@ -751,10 +749,9 @@ function OutsourcedInterviewerModal({
               (interviewer) => {
                 const interviewerSkills = interviewer.contact?.skills || [];
                 console.log(
-                  `👤 Checking interviewer: ${
-                    interviewer.contact?.firstName ||
-                    interviewer.contact?.UserName ||
-                    "Unknown"
+                  `👤 Checking interviewer: ${interviewer.contact?.firstName ||
+                  interviewer.contact?.UserName ||
+                  "Unknown"
                   }`,
                 );
                 console.log("📝 Interviewer's Skills:", interviewerSkills);
@@ -801,8 +798,7 @@ function OutsourcedInterviewerModal({
                 });
 
                 console.log(
-                  `🎯 ${
-                    interviewer.contact?.firstName || "Unknown"
+                  `🎯 ${interviewer.contact?.firstName || "Unknown"
                   } Skill Match Status: ${hasMatchingSkill}`,
                 );
                 return hasMatchingSkill;
@@ -1115,85 +1111,79 @@ function OutsourcedInterviewerModal({
 
   // Filter interviewers based on search term and applied rate range
   useEffect(() => {
+    // No early return — always run when dependencies change
+
     const getExperienceBasedRateValue = (contact, experience) => {
       const rates = contact?.rates;
       if (!rates) return 0;
-
       let selectedLevel = null;
-
       if (experience >= 1 && experience <= 3) selectedLevel = "junior";
       else if (experience > 3 && experience <= 6) selectedLevel = "mid";
       else if (experience > 6) selectedLevel = "senior";
-
       let rate = rates[selectedLevel]?.inr || 0;
-
       if (rate === 0) {
-        if (selectedLevel === "senior")
-          rate = rates.mid?.inr || rates.junior?.inr || 0;
-        else if (selectedLevel === "mid") rate = rates.junior?.inr || 0;
+        if (selectedLevel === "senior") rate = rates?.mid?.inr || rates?.junior?.inr || 0;
+        else if (selectedLevel === "mid") rate = rates?.junior?.inr || 0;
       }
-
       return rate;
     };
 
-    let filtered = baseInterviewers.filter((interviewer) => {
-      const firstName = interviewer?.contact?.firstName ?? "";
-      const lastName = interviewer?.contact?.lastName ?? "";
+    let filtered = [...baseInterviewers]; // always start fresh from base
 
-      const fullName = `${firstName} ${lastName}`.trim() || "Unnamed";
+    // 1. Role filter — live
+    if (selectedRole) {
+      filtered = filtered.filter((interviewer) => {
+        const role =
+          interviewer.contact?.roleLabel ||
+          interviewer.contact?.roleName ||
+          interviewer.roleLabel ||
+          interviewer.roleName ||
+          "";
+        return role.toLowerCase() === selectedRole.toLowerCase();
+      });
+    }
 
-      const professionalTitle =
-        interviewer?.contact?.professionalTitle ||
-        interviewer?.contact?.CurrentRole ||
-        "";
-      const company = interviewer?.contact?.industry || "";
-      const skills = interviewer?.contact?.skills || [];
-      const hourlyRate = getExperienceBasedRateValue(
-        interviewer.contact,
-        candidateExperience,
-      );
+    // 2. Skills filter — live
+    if (tempSelectedSkills.length > 0) {
+      const selectedSkillsLower = tempSelectedSkills
+        .map(s => (s?.SkillName || s?.skill || s || "").toLowerCase().trim())
+        .filter(Boolean);
 
-      // const searchMatch =
-      // searchTerm.trim() === "" ||
-      // fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      // professionalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      // company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      // skills.some((skill) =>
-      //   skill?.toLowerCase().includes(searchTerm.toLowerCase()),
-      // );
+      filtered = filtered
+        .map(interviewer => {
+          const interviewerSkills = (interviewer.contact?.skills || [])
+            .map(skill =>
+              typeof skill === "string"
+                ? skill.toLowerCase().trim()
+                : (skill?.skill || skill?.SkillName || "").toLowerCase().trim()
+            )
+            .filter(Boolean);
 
-      // Apply role filtering if role is selected - FIXED
+          const matchCount = interviewerSkills.filter(s => selectedSkillsLower.includes(s)).length;
+          return { ...interviewer, matchCount };
+        })
+        .sort((a, b) => b.matchCount - a.matchCount); // best matches first
+    }
 
-      // ✅ ROLE FILTER (OUTSIDE of filter callback)
-      if (selectedRole) {
-        // Changed from tempSelectedRole
-        filtered = filtered.filter((interviewer) => {
-          const interviewerRole =
-            interviewer.contact?.roleLabel ||
-            interviewer.contact?.roleName ||
-            interviewer.roleLabel ||
-            interviewer.roleName ||
-            "";
-
-          return interviewerRole.toLowerCase() === selectedRole.toLowerCase(); // Changed from tempSelectedRole
-        });
-      }
-
-      const rateMatch =
-        hourlyRate >= appliedRateRange[0] &&
-        (appliedRateRange[1] === Infinity || hourlyRate <= appliedRateRange[1]);
-      return rateMatch;
-      // return rateMatch;
-    });
+    // 3. Rate range — only when explicitly applied
+    if (isRateApplied) {
+      filtered = filtered.filter(interviewer => {
+        const hourlyRate = getExperienceBasedRateValue(interviewer.contact, candidateExperience);
+        return (
+          hourlyRate >= appliedRateRange[0] &&
+          (appliedRateRange[1] === Infinity || hourlyRate <= appliedRateRange[1])
+        );
+      });
+    }
 
     setFilteredInterviewers(filtered);
+
   }, [
-    // searchTerm,
-    selectedRole,
-    appliedRateRange,
-    navigatedfrom,
     baseInterviewers,
-    skills,
+    selectedRole,
+    tempSelectedSkills,
+    appliedRateRange,
+    isRateApplied,
     candidateExperience,
   ]);
 
@@ -1568,118 +1558,149 @@ function OutsourcedInterviewerModal({
           {/* Fixed Search and Info Section */}
           {/* <------------------------------- v1.0.0  */}
           <div className="sm:px-2 px-6 py-4 bg-white z-10">
-            {/* ------------------------------ v1.0.0 > */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div
-                className="flex items-start space-x-3 cursor-pointer"
-                onClick={() => setIsOpen(!isOpen)}
-              >
-                <Info className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-custom-blue">
-                      Interview Scheduling Policy
-                    </h3>
-                    {isOpen ? (
-                      <ChevronUp className="h-5 w-5 text-custom-blue" />
-                    ) : (
-                      <ChevronDown className="h-5 w-5 text-custom-blue" />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {isOpen && (
-                <div className="mt-3 ml-8 space-y-2">
-                  <div className="flex items-center text-sm text-custom-blue">
-                    <Clock className="h-4 w-4 mr-1" />
-                    <span>Response: 2-4 hours</span>
-                  </div>
-                  <div className="text-sm text-custom-blue space-y-1">
-                    <div className="flex items-center">
-                      <Users className="h-4 w-4 mr-2" />
-                      <span>
-                        Interviews are scheduled based on first acceptance
-                      </span>
+            {navigatedfrom !== "dashboard" && (
+              <>
+                {/* ------------------------------ v1.0.0 > */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div
+                    className="flex items-start space-x-3 cursor-pointer"
+                    onClick={() => setIsOpen(!isOpen)}
+                  >
+                    <Info className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-medium text-custom-blue">
+                          Interview Scheduling Policy
+                        </h3>
+                        {isOpen ? (
+                          <ChevronUp className="h-5 w-5 text-custom-blue" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-custom-blue" />
+                        )}
+                      </div>
                     </div>
-                    <ul className="list-disc list-inside pl-6 text-sm space-y-0.5">
-                      <li>
-                        Interview requests sent to all selected interviewers
-                      </li>
-                      <li>
-                        First interviewer to accept will conduct the interview
-                      </li>
-                      <li>
-                        Select multiple interviewers to increase availability
-                      </li>
-                    </ul>
                   </div>
+
+                  {isOpen && (
+                    <div className="mt-3 ml-8 space-y-2">
+                      <div className="flex items-center text-sm text-custom-blue">
+                        <Clock className="h-4 w-4 mr-1" />
+                        <span>Response: 2-4 hours</span>
+                      </div>
+                      <div className="text-sm text-custom-blue space-y-1">
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-2" />
+                          <span>
+                            Interviews are scheduled based on first acceptance
+                          </span>
+                        </div>
+                        <ul className="list-disc list-inside pl-6 text-sm space-y-0.5">
+                          <li>
+                            Interview requests sent to all selected interviewers
+                          </li>
+                          <li>
+                            First interviewer to accept will conduct the interview
+                          </li>
+                          <li>
+                            Select multiple interviewers to increase availability
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="w-full flex justify-end items-center mt-4">
-              <button
-                className="cursor-pointer px-3 py-2 text-xl border rounded-md relative flex items-center justify-center w-10 h-10"
-                onClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
-              >
-                {isFilterPopupOpen ? (
-                  <div className="relative">
-                    <LuFilterX className="cursor-pointer" />
-                    <ChevronUp className="absolute -bottom-8  -right-1 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50 " />
+                <div className="w-full flex justify-end items-center mt-4">
+
+                  <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-lg border border-gray-200 mr-6">
+                    <span className="text-sm font-medium text-gray-600">
+                      Available Balance:
+                    </span>
+                    <span
+                      className={`text-sm font-bold ${availableBalance >= maxHourlyRate
+                        ? "text-green-600"
+                        : "text-red-600"
+                        }`}
+                    >
+                      ₹{Number(availableBalance || 0).toFixed(2)}
+                    </span>
+                    <button
+                      onClick={() => setShowWalletModal(true)}
+                      className="ml-3 text-xs bg-custom-blue text-white px-2.5 py-1 rounded hover:bg-custom-blue/90 transition-colors font-medium"
+                    >
+                      Top Up
+                    </button>
                   </div>
-                ) : (
-                  <LuFilter className="cursor-pointer" />
-                )}
-              </button>
-            </div>
 
-            {isFilterPopupOpen && (
-              <div className="border mt-4 border-gray-200 rounded-sm p-3 bg-white shadow-sm">
-                <div className="grid   rounded-sm  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 mt-4">
-                  {/* Role Filter - Add this new field */}
-                  <div className="md:col-span-2 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Filter by Role
-                    </label>
-                    <DropdownWithSearchField
-                      value={
-                        selectedRole
-                          ? {
-                              value: selectedRole,
-                              label:
-                                currentRoles?.find(
-                                  (r) => r.roleName === selectedRole,
-                                )?.roleLabel || selectedRole,
+
+
+
+                  <button
+                    className="cursor-pointer px-3 py-2 text-xl border rounded-md relative flex items-center justify-center w-10 h-10"
+                    onClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
+                  >
+                    {isFilterPopupOpen ? (
+                      <div className="relative">
+                        <LuFilterX className="cursor-pointer" />
+                        <ChevronUp className="absolute -bottom-8  -right-1 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50 " />
+                      </div>
+                    ) : (
+                      <LuFilter className="cursor-pointer" />
+                    )}
+                  </button>
+                </div>
+
+
+                {isFilterPopupOpen && (
+                  <div className="border mt-4 border-gray-200 rounded-sm p-3 bg-white shadow-sm">
+                    <div className="grid   rounded-sm  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 mt-4">
+                      {/* Role Filter - Add this new field */}
+                      <div className="md:col-span-2 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Filter by Role
+                        </label>
+                        <DropdownWithSearchField
+                          value={selectedRole || null}          // ← changed: just the string or null
+                          options={
+                            currentRoles?.map((role) => ({
+                              value: role.roleName,
+                              label: role.roleLabel,
+                            })) || []
+                          }
+                          onChange={(selected) => {
+                            let newValue = "";
+
+                            if (selected === null || selected === undefined) {
+                              newValue = "";
                             }
-                          : null
-                      }
-                      options={
-                        currentRoles?.map((role) => ({
-                          value: role.roleName,
-                          label: role.roleLabel,
-                        })) || []
-                      }
-                      onChange={(option) => {
-                        if (!option) {
-                          setSelectedRole("");
-                          return;
-                        }
-                        setSelectedRole(option.value);
-                      }}
-                      onMenuOpen={loadCurrentRoles}
-                      loading={isCurrentRolesFetching}
-                      placeholder="Select role"
-                      isClearable={true}
-                    />
-                  </div>
+                            else if (selected?.target?.value !== undefined) {
+                              newValue = selected.target.value;
+                            }
+                            else if (typeof selected === "string") {
+                              newValue = selected;
+                            }
+                            else if (selected && "value" in selected) {
+                              newValue = selected.value;
+                            }
+                            else if (selected?.value) {
+                              newValue = selected.value;
+                            }
 
-                  {/* Skills Dropdown */}
-                  <div className="min-w-[120px] max-w-xs w-full sm:w-auto">
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Filter by Skills
-                    </label>
-                    {/* <input
+                            setSelectedRole(newValue);
+                          }}
+                          onMenuOpen={loadCurrentRoles}
+                          loading={isCurrentRolesFetching}
+                          placeholder="Select role"
+                          isClearable={true}
+                        />
+                      </div>
+
+                      {/* Skills Dropdown */}
+                      <div className="min-w-[120px] max-w-xs w-full sm:w-auto">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Filter by Skills
+                        </label>
+                        {/* <input
                       type="text"
                       value={skillInput}
                       placeholder="Type skill & press Enter"
@@ -1692,179 +1713,192 @@ function OutsourcedInterviewerModal({
                       }}
                       className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                     /> */}
-                    <DropdownWithSearchField
-                      ref={skillsInputRef}
-                      value={null}
-                      options={
-                        skillsData
-                          ?.filter(
-                            (skill) =>
-                              !tempSelectedSkills.some(
-                                (s) => s.SkillName === skill.SkillName,
-                              ),
-                          )
-                          .map((skill) => ({
-                            value: skill.SkillName,
-                            label: skill.SkillName,
-                          })) || []
-                      }
-                      onChange={(option) => {
-                        if (!option) return;
+                        <DropdownWithSearchField
+                          ref={skillsInputRef}
+                          value={null}
+                          options={
+                            skillsData
+                              ?.filter(
+                                (skill) =>
+                                  !tempSelectedSkills.some(
+                                    (s) => s.SkillName === skill.SkillName,
+                                  ),
+                              )
+                              .map((skill) => ({
+                                value: skill.SkillName,
+                                label: skill.SkillName,
+                              })) || []
+                          }
+                          onChange={(option) => {
+                            if (!option) return;
 
-                        const value = option?.value || option?.target?.value;
-                        if (!value) return;
+                            const value = option?.value || option?.target?.value;
+                            if (!value) return;
 
-                        setTempSelectedSkills((prev) => {
-                          // prevent duplicates
-                          if (prev.some((s) => s.SkillName === value))
-                            return prev;
-                          return [...prev, { SkillName: value }];
-                        });
-                      }}
-                      onMenuOpen={loadSkills}
-                      loading={isSkillsFetching}
-                      placeholder="Add skill"
-                    />
-                  </div>
+                            setTempSelectedSkills((prev) => {
+                              // prevent duplicates
+                              if (prev.some((s) => s.SkillName === value))
+                                return prev;
+                              return [...prev, { SkillName: value }];
+                            });
+                          }}
+                          onMenuOpen={loadSkills}
+                          loading={isSkillsFetching}
+                          placeholder="Add skill"
+                        />
+                      </div>
 
-                  {/* Hourly Rate Range */}
-                  <div className="md:col-span-1 lg:col-span-1">
-                    <div className="flex flex-col h-full">
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Hourly Rate Range ($)
-                      </label>
+                      {/* Hourly Rate Range */}
+                      <div className="md:col-span-1 lg:col-span-1">
+                        <div className="flex flex-col h-full">
+                          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                            Hourly Rate Range ($)
+                          </label>
 
-                      <div className="flex flex-col sm:flex-row items-stretch gap-3 flex-1">
-                        <div className="flex items-center gap-2 flex-1">
-                          {/* Min Input */}
-                          <div className="relative flex-1">
-                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                              $
-                            </span>
-                            <input
-                              type="number"
-                              value={tempRateRange[0]}
-                              onChange={(e) =>
-                                setTempRateRange([
-                                  e.target.value,
-                                  tempRateRange[1],
-                                ])
-                              }
-                              // value={rateRange[0]}
-                              // onChange={(e) =>
-                              //   setRateRange([e.target.value, rateRange[1]])
-                              // }
-                              className="w-full pl-8 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 hover:border-gray-400"
-                              placeholder="Min"
-                              min="0"
-                              step="1"
-                            />
+                          <div className="flex flex-col sm:flex-row items-stretch gap-3 flex-1">
+                            <div className="flex items-center gap-2 flex-1">
+                              {/* Min Input */}
+                              <div className="relative flex-1">
+                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                                  $
+                                </span>
+                                <input
+                                  type="number"
+                                  value={tempRateRange[0]}
+                                  onChange={(e) =>
+                                    setTempRateRange([
+                                      e.target.value,
+                                      tempRateRange[1],
+                                    ])
+                                  }
+                                  // value={rateRange[0]}
+                                  // onChange={(e) =>
+                                  //   setRateRange([e.target.value, rateRange[1]])
+                                  // }
+                                  className="w-full pl-8 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 hover:border-gray-400"
+                                  placeholder="Min"
+                                  min="0"
+                                  step="1"
+                                />
+                              </div>
+
+                              <span className="text-gray-400 font-medium shrink-0">
+                                —
+                              </span>
+
+                              {/* Max Input */}
+                              <div className="relative flex-1">
+                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                                  $
+                                </span>
+                                <input
+                                  type="number"
+                                  value={tempRateRange[1]}
+                                  onChange={(e) =>
+                                    setTempRateRange([
+                                      tempRateRange[0],
+                                      e.target.value,
+                                    ])
+                                  }
+                                  // value={rateRange[1]}
+                                  // onChange={(e) =>
+                                  //   setRateRange([rateRange[0], e.target.value])
+                                  // }
+                                  className="w-full pl-8 pr-3 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 hover:border-gray-400"
+                                  placeholder="Max"
+                                  min="0"
+                                  step="1"
+                                />
+                              </div>
+
+                              {/* Dynamic Button */}
+                              <div className="relative group inline-block">
+                                <button
+                                  className={`p-2 rounded-md transition-all duration-200
+      ${isFiltersApplied
+                                      ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
+                                      : "bg-custom-blue text-white hover:bg-custom-blue/90"
+                                    }`}
+                                  onClick={
+                                    isFiltersApplied
+                                      ? handleClearRateFilter
+                                      : handleApplyRateFilter
+                                  }
+                                >
+                                  {isFiltersApplied ? (
+                                    <RotateCcw  className="h-4 w-4" />
+                                  ) : (
+                                    <CheckCircle className="h-4 w-4" />
+                                  )}
+                                </button>
+
+                                {/* Tooltip */}
+                                <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                                  {isFiltersApplied ? "Clear Filter" : "Apply Filter"}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-
-                          <span className="text-gray-400 font-medium shrink-0">
-                            —
-                          </span>
-
-                          {/* Max Input */}
-                          <div className="relative flex-1">
-                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                              $
-                            </span>
-                            <input
-                              type="number"
-                              value={tempRateRange[1]}
-                              onChange={(e) =>
-                                setTempRateRange([
-                                  tempRateRange[0],
-                                  e.target.value,
-                                ])
-                              }
-                              // value={rateRange[1]}
-                              // onChange={(e) =>
-                              //   setRateRange([rateRange[0], e.target.value])
-                              // }
-                              className="w-full pl-8 pr-3 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 hover:border-gray-400"
-                              placeholder="Max"
-                              min="0"
-                              step="1"
-                            />
-                          </div>
-
-                          {/* Dynamic Button */}
-                          <button
-                            className={`px-3 py-2  rounded-md text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                              isFiltersApplied
-                                ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 hover:border-red-300"
-                                : "bg-custom-blue text-white  "
-                            }`}
-                            onClick={
-                              isFiltersApplied
-                                ? handleClearRateFilter
-                                : handleApplyRateFilter
-                            }
-                          >
-                            {isFiltersApplied ? "Clear Filter" : "Apply Filter"}
-                          </button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Selected Skills */}
-                {tempSelectedSkills.length > 0 && (
-                  <div className="flex mt-4 flex-wrap items-center gap-1.5">
-                    <span className="text-xs text-gray-500 mr-1">Skills:</span>
+                    {/* Selected Skills */}
+                    {tempSelectedSkills.length > 0 && (
+                      <div className="flex mt-4 flex-wrap items-center gap-1.5">
+                        <span className="text-xs text-gray-500 mr-1">Skills:</span>
 
-                    {tempSelectedSkills.map((skill) => {
-                      // Extract skill name from either object or string
-                      const skillName =
-                        skill?.SkillName || skill?.skill || skill;
+                        {tempSelectedSkills.map((skill) => {
+                          // Extract skill name from either object or string
+                          const skillName =
+                            skill?.SkillName || skill?.skill || skill;
 
-                      return (
-                        <span
-                          key={skillName}
-                          className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800"
-                        >
-                          {skillName}
+                          return (
+                            <span
+                              key={skillName}
+                              className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800"
+                            >
+                              {skillName}
+                              <button
+                                onClick={() =>
+                                  setTempSelectedSkills((prev) =>
+                                    prev.filter((s) => {
+                                      const sName = s?.SkillName || s?.skill || s;
+                                      return sName !== skillName;
+                                    }),
+                                  )
+                                }
+                                className="ml-1 text-gray-500 hover:text-red-500"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Show selected role */}
+                    {selectedRole && (
+                      <div className="flex mt-4 flex-wrap items-center gap-1.5">
+                        <span className="text-xs text-gray-500 mr-1">Role:</span>
+                        <span className="flex items-center gap-1 rounded-full bg-blue-100 border px-2.5 py-1 text-xs text-blue-800">
+                          {currentRoles?.find((r) => r.roleName === selectedRole)
+                            ?.roleLabel || selectedRole}
                           <button
-                            onClick={() =>
-                              setTempSelectedSkills((prev) =>
-                                prev.filter((s) => {
-                                  const sName = s?.SkillName || s?.skill || s;
-                                  return sName !== skillName;
-                                }),
-                              )
-                            }
-                            className="ml-1 text-gray-500 hover:text-red-500"
+                            onClick={() => {
+                              setSelectedRole("");
+                            }}
+                            className="ml-1 text-blue-500 hover:text-red-500"
                           >
                             <X className="h-3 w-3" />
                           </button>
                         </span>
-                      );
-                    })}
+                      </div>
+                    )}
                   </div>
                 )}
-
-                {/* Show selected role */}
-                {selectedRole && (
-                  <div className="flex mt-4 flex-wrap items-center gap-1.5">
-                    <span className="text-xs text-gray-500 mr-1">Role:</span>
-                    <span className="flex items-center gap-1 rounded-full bg-blue-100 border px-2.5 py-1 text-xs text-blue-800">
-                      {currentRoles?.find((r) => r.roleName === selectedRole)
-                        ?.roleLabel || selectedRole}
-                      <button
-                        onClick={() => {
-                          setSelectedRole("");
-                        }}
-                        className="ml-1 text-blue-500 hover:text-red-500"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  </div>
-                )}
-              </div>
+              </>
             )}
 
             {/* <div className="flex flex-row items-center  justify-between mt-4 gap-4">
@@ -1975,11 +2009,10 @@ function OutsourcedInterviewerModal({
           {/* v1.0.3 <--------------------------------------------------------------------- */}
           <div className="flex flex-col overflow-y-auto py-4 sm:px-2 px-6 min-h-full">
             <div
-              className={`grid gap-4 ${
-                isFullscreen
-                  ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-                  : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-              }`}
+              className={`grid gap-4 ${isFullscreen
+                ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+                : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+                }`}
             >
               {filteredInterviewers.map((interviewer) => (
                 // <OutsourcedInterviewerCard
