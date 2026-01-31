@@ -107,11 +107,10 @@ const InterviewerCard = ({
 
   return (
     <div
-      className={`w-full  ${
-        isSelected
+      className={`w-full  ${isSelected
           ? "border-orange-500 ring-2 ring-orange-200"
           : "border-gray-200"
-      } `}
+        } `}
     >
       {/* <div className="w-full"> */}
       <div className="flex items-center gap-3 w-full">
@@ -720,7 +719,7 @@ const InternalInterviews = ({
       onClose={onClose}
       // v1.0.2 <--------------------------------
       setIsFullscreen={setIsFullscreen}
-      // v1.0.2 -------------------------------->
+    // v1.0.2 -------------------------------->
     >
       <div className="flex flex-col h-full">
         {/* <------------------------------- v1.0.0  */}
@@ -741,6 +740,8 @@ const InternalInterviews = ({
           </span>
         </div> */}
         {/* Filter Toggle Button with Arrow */}
+         {navigatedfrom !== "dashboard" && (
+          <>
         <div className="w-full flex justify-end items-center mt-4">
           <button
             className="cursor-pointer px-3 py-2 text-xl border rounded-md relative flex items-center justify-center w-10 h-10"
@@ -792,9 +793,8 @@ const InternalInterviews = ({
                           setFilterType(type);
                           setShowFilterDropdown(false);
                         }}
-                        className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${
-                          filterType === type ? "font-medium text-blue-600" : ""
-                        }`}
+                        className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${filterType === type ? "font-medium text-blue-600" : ""
+                          }`}
                       >
                         {capitalizeFirstLetter(type)}
                       </div>
@@ -887,11 +887,10 @@ const InternalInterviews = ({
             flex items-center gap-1.5 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${
-              isSelected
-                ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
-                : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
-            }
+            ${isSelected
+                              ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
+                              : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
+                            }
           `}
                           style={{ "--tag-color": tag.color }}
                         >
@@ -945,11 +944,10 @@ const InternalInterviews = ({
             flex items-center gap-2 
             px-4 py-2 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${
-              isSelected
-                ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
-                : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
-            }
+            ${isSelected
+                              ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
+                              : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
+                            }
           `}
                         >
                           <span className="text-base">👥</span>
@@ -999,6 +997,8 @@ const InternalInterviews = ({
             </div>
           </div>
         )}
+            </>
+            )}
         {/* RIGHT SIDE — SEARCH */}
         {/* <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -1017,11 +1017,10 @@ const InternalInterviews = ({
 
           <div
             className={`grid gap-3 sm:grid-cols-1 md:grid-cols-1
-            ${
-              isFullscreen
+            ${isFullscreen
                 ? "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
                 : "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-            }
+              }
           `}
           >
             {/* v1.0.2 --------------------------------------------------------------------------> */}
@@ -1029,24 +1028,21 @@ const InternalInterviews = ({
               <div
                 key={item._id}
                 className={`relative z-0 flex items-center justify-between p-3 rounded-md transition-all duration-200
-                  ${
-                    navigatedfrom !== "dashboard"
-                      ? "cursor-pointer"
-                      : "cursor-default"
+                  ${navigatedfrom !== "dashboard"
+                    ? "cursor-pointer"
+                    : "cursor-default"
                   }
-                  ${
-                    navigatedfrom !== "dashboard" && isInterviewerSelected(item)
-                      ? "bg-custom-bg border border-custom-blue"
-                      : "hover:bg-gray-50 border border-gray-200"
+                  ${navigatedfrom !== "dashboard" && isInterviewerSelected(item)
+                    ? "bg-custom-bg border border-custom-blue"
+                    : "hover:bg-gray-50 border border-gray-200"
                   }`}
                 onClick={() =>
                   navigatedfrom !== "dashboard" && handleSelectClick(item)
                 }
               >
                 <div
-                  className={`flex items-center w-full ${
-                    isInterviewerSelected(item) ? "opacity-60" : "opacity-100"
-                  }`}
+                  className={`flex items-center w-full ${isInterviewerSelected(item) ? "opacity-60" : "opacity-100"
+                    }`}
                 >
                   {viewType === "individuals" ? (
                     <InterviewerCard
@@ -1077,7 +1073,7 @@ const InternalInterviews = ({
                         </p>
                         <p className="text-xs text-gray-500">
                           {Array.isArray(item.usersNames) &&
-                          item.usersNames.length > 0
+                            item.usersNames.length > 0
                             ? item.usersNames.join(", ")
                             : "No users available"}
                         </p>
