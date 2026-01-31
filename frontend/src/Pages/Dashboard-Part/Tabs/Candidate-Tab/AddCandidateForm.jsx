@@ -402,21 +402,35 @@ const AddCandidateForm = ({
         noticePeriod: selectedCandidate?.noticePeriod || "",
       });
 
-      if (selectedCandidate.ImageData?.filename) {
-        setImagePreview(selectedCandidate?.ImageData.path);
-        setSelectedImage(selectedCandidate?.ImageData);
+      //console.log("DEBUG: selectedCandidate", selectedCandidate);
+
+      if (selectedCandidate.activeResume?.ImageData?.filename) {
+        setImagePreview(selectedCandidate.activeResume.ImageData.path);
+        setSelectedImage(selectedCandidate.activeResume.ImageData);
+      } else if (selectedCandidate.ImageData?.filename) {
+        setImagePreview(selectedCandidate.ImageData.path);
+        setSelectedImage(selectedCandidate.ImageData);
       } else {
         setImagePreview(null);
         setSelectedImage(null);
       }
 
-      if (selectedCandidate.resume?.filename) {
+      if (selectedCandidate.activeResume?.resume?.filename) {
+        //console.log("DEBUG: Using activeResume resume", selectedCandidate.activeResume.resume);
         setSelectedResume({
-          path: selectedCandidate?.resume.path,
-          name: selectedCandidate?.resume.filename,
-          size: selectedCandidate?.resume.fileSize,
+          path: selectedCandidate.activeResume.resume.path,
+          name: selectedCandidate.activeResume.resume.filename,
+          size: selectedCandidate.activeResume.resume.fileSize,
+        });
+      } else if (selectedCandidate.resume?.filename) {
+        //console.log("DEBUG: Using candidate resume", selectedCandidate.resume);
+        setSelectedResume({
+          path: selectedCandidate.resume.path,
+          name: selectedCandidate.resume.filename,
+          size: selectedCandidate.resume.fileSize,
         });
       } else {
+        console.log("DEBUG: No resume found");
         setSelectedResume(null);
       }
 

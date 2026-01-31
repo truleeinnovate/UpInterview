@@ -73,36 +73,48 @@ export const useCandidates = (filters = {}) => {
         ? `${config.REACT_APP_API_URL}/candidate/${id}`
         : `${config.REACT_APP_API_URL}/candidate`;
 
-      const response = await axios[method](url, data);
-      // console.log("response", response);
-      // const candidateId = response.data.data._id;
-      const candidate = response.data?.data; // candidate may be undefined
-      // v1.0.1 <----------------------------------------------------------------------
-      const candidateId = candidate?.candidate?._id || id; // only defined if changes occurred
-      // v1.0.0 ---------------------------------------------------------------------->
-      // console.log("candidateId", candidateId);
-
-      if (candidateId) {
-        // uploading or updating files profilePic and resume
+      // If updating (PATCH), upload files FIRST
+      if (id) {
         // --- Profile Picture ---
-        // Delete profile picture if removed
         if (isProfilePicRemoved && !profilePicFile) {
-          await uploadFile(null, "image", "candidate", candidateId);
-        }
-        // Upload new profile picture
-        else if (profilePicFile instanceof File) {
-          await uploadFile(profilePicFile, "image", "candidate", candidateId);
+          await uploadFile(null, "image", "candidate", id);
+          data.ImageData = null;
+        } else if (profilePicFile instanceof File) {
+          const uploadedImageResponse = await uploadFile(profilePicFile, "image", "candidate", id);
+          // Upload returns { status: 'success', data: updatedInstance }
+          if (uploadedImageResponse?.data?.ImageData) {
+            data.ImageData = uploadedImageResponse.data.ImageData;
+          }
         }
 
         // --- Resume ---
-        // Delete resume if removed
         if (isResumeRemoved && !resumeFile) {
-          // await uploadFile(null, "resume", "candidate", candidateId);
-          await uploadFile(null, "resume", "resume", candidateId);
+          await uploadFile(null, "resume", "resume", id); // Note: entity 'resume' in original code, likely correct
+          data.resume = null;
+        } else if (resumeFile instanceof File) {
+          const uploadedResumeResponse = await uploadFile(resumeFile, "resume", "resume", id);
+          // Upload returns { status: 'success', data: updatedResumeInstance }
+          // Since entity is 'resume', the field is 'resume'
+          if (uploadedResumeResponse?.data?.resume) {
+            data.resume = uploadedResumeResponse.data.resume;
+          }
         }
-        // Upload new resume
-        else if (resumeFile instanceof File) {
-          // await uploadFile(resumeFile, "resume", "candidate", candidateId);
+      }
+
+      const response = await axios[method](url, data);
+
+      const candidate = response.data?.data;
+      const candidateId = candidate?.candidate?._id || id;
+
+      // If creating (POST), we get the ID *after* creation
+      // Keep POST logic as is: Create then Upload
+      if (!id && candidateId) {
+        if (profilePicFile instanceof File) {
+          await uploadFile(profilePicFile, "image", "candidate", candidateId);
+        }
+        if (resumeFile instanceof File) {
+          // Note: kept 'resume' entity as 'resume' to match original?
+          // Original line 106 was: await uploadFile(resumeFile, "resume", "resume", candidateId);
           await uploadFile(resumeFile, "resume", "resume", candidateId);
         }
       }
@@ -168,6 +180,7 @@ export const useCandidates = (filters = {}) => {
 
       // Invalidate to ensure consistency
       queryClient.invalidateQueries(["candidates"]);
+      queryClient.invalidateQueries(["candidate"]);
     },
     onError: (error) => {
       console.error("Error adding/updating candidate:", error);
