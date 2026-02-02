@@ -67,11 +67,7 @@ function SidebarPopup({
           isExpanded
             ? "w-full"
             : // : `${`w-full sm:w-full md:w-full `title === "out" ? : }`
-              "w-full sm:w-full md:w-full " +
-              (title === "Outsourced Interviewers" ||
-              title === "Internal Interviewers"
-                ? "lg:w-6/12 xl:w-6/12 2xl:w-6/12"
-                : "lg:w-1/2 xl:w-1/2 2xl:w-1/2")
+              "w-full sm:w-full md:w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2"
         }`}
       >
         {/* Header */}
@@ -84,7 +80,7 @@ function SidebarPopup({
                 </span>
               )}
               <div>
-                <h2 className="flex items-center sm:text-xl text-2xl font-semibold text-custom-blue">
+                <h2 className="flex items-center sm:items-start sm:flex-col sm:gap-3 sm:text-xl text-2xl font-semibold text-custom-blue">
                   {title}
                   {titleRight && <div className="ml-2">{titleRight}</div>}
                 </h2>
