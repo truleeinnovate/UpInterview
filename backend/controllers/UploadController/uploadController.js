@@ -100,6 +100,13 @@ const uploadHandler = async (req, res) => {
       if (existingFile?.publicId) {
         await deleteFromCloudinary(existingFile.publicId, resourceType);
         instance[field] = null;
+
+        // ----------------- Setting resume field source MANUAL --------------------
+        if (entity === "resume") {
+          instance.source = "MANUAL";
+        }
+        // -------------------------------------------------------------------------
+
         await instance.save();
 
         // Internal log: successful delete
@@ -158,6 +165,12 @@ const uploadHandler = async (req, res) => {
       fileSize: file.size,
       uploadDate: new Date(),
     };
+
+    // ------------ Handle Resume specific fields Setting source to "UPLOAD" as requested --------
+    if (entity === "resume") {
+      instance.source = "UPLOAD";
+    }
+    // -------------------------------------------------------------------------------------------
 
     await instance.save();
 

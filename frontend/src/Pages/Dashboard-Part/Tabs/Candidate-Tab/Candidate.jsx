@@ -989,37 +989,37 @@ function Candidate({
 
     ...(!isAssessmentView
       ? [
-        {
-          key: "360-view",
-          label: "360° View",
-          icon: <CircleUser className="w-4 h-4 text-purple-600" />,
-          onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
-        },
-        ...(effectivePermissions.Candidates?.Edit
-          ? [
-            {
-              key: "edit",
-              label: "Edit",
-              icon: <Pencil className="w-4 h-4 text-green-600" />,
-              onClick: (row) => navigate(`/candidates/edit/${row._id}`),
-            },
-          ]
-          : []),
-        ...(effectivePermissions.Candidates?.Delete
-          ? [
-            {
-              key: "delete",
-              label: "Delete",
-              icon: <Trash className="w-4 h-4 text-red-600" />,
-              // onClick: (row) => navigate(`delete/${row._id}`),
-              onClick: (row) => {
-                setShowDeleteConfirmModal(true);
-                setDeleteCandidate(row);
-              },
-            },
-          ]
-          : []),
-      ]
+          // {
+          //   key: "360-view",
+          //   label: "360° View",
+          //   icon: <CircleUser className="w-4 h-4 text-purple-600" />,
+          //   onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
+          // },
+          ...(effectivePermissions.Candidates?.Edit
+            ? [
+                {
+                  key: "edit",
+                  label: "Edit",
+                  icon: <Pencil className="w-4 h-4 text-green-600" />,
+                  onClick: (row) => navigate(`/candidates/edit/${row._id}`),
+                },
+              ]
+            : []),
+          ...(effectivePermissions.Candidates?.Delete
+            ? [
+                {
+                  key: "delete",
+                  label: "Delete",
+                  icon: <Trash className="w-4 h-4 text-red-600" />,
+                  // onClick: (row) => navigate(`delete/${row._id}`),
+                  onClick: (row) => {
+                    setShowDeleteConfirmModal(true);
+                    setDeleteCandidate(row);
+                  },
+                },
+              ]
+            : []),
+        ]
       : []),
 
     ...(isAssessmentView
@@ -1536,18 +1536,18 @@ function Candidate({
       : []),
 
     // 360° View (only if not assessment view)
-    ...(!isAssessmentView
-      ? [
-          {
-            key: "360view",
-            label: "360° View",
-            icon: <CircleUser className="w-4 h-4 text-purple-600" />,
-            onClick: (item, e) => {
-              item?._id && navigate(`/candidate/${item._id}`);
-            },
-          },
-        ]
-      : []),
+    // ...(!isAssessmentView
+    //   ? [
+    //       {
+    //         key: "360view",
+    //         label: "360° View",
+    //         icon: <CircleUser className="w-4 h-4 text-purple-600" />,
+    //         onClick: (item, e) => {
+    //           item?._id && navigate(`/candidate/${item._id}`);
+    //         },
+    //       },
+    //     ]
+    //   : []),
 
     // Edit (only if not assessment view)
     ...(!isAssessmentView && effectivePermissions.Candidates?.Edit
