@@ -40,11 +40,7 @@ function JoinMeeting() {
     [location.search],
   );
 
-  // console.log("JoinMeeting rendered", authType);
-
   const isMockInterview = urlData?.interviewType === "mockinterview";
-
-  console.log("location.search", urlData);
 
   useEffect(() => {
     setDecodedData(urlData);
@@ -127,19 +123,11 @@ function JoinMeeting() {
     enabled: !isMockInterview,
   });
 
-  // console.log("mockInterview", mockInterview);
-
   // const candidateData = data;
   // ✅ Select final data
   const candidateData = isMockInterview ? mockInterview : interviewData;
   const isLoading = isMockInterview ? isMockLoading : isInterviewLoading;
   const error = isMockInterview ? isMockError : interviewError;
-
-  // setAuthType(contactData.tenant?.type || "organization");
-
-  console.log("candidateData", candidateData);
-
-  console.log("candidateData11", candidateData?.tenant);
 
   // Feedback query (existing)
   const {
@@ -332,7 +320,7 @@ function JoinMeeting() {
       <RoleSelector
         onRoleSelect={setCurrentRole}
         roleInfo={urlRoleInfo}
-      // feedbackData={feedbackDatas}
+        // feedbackData={feedbackDatas}
       />
     );
   }

@@ -57,20 +57,20 @@ const SchedulerSectionComponent = ({
           return question.addedBy !== "interviewer";
         })
       : Array.isArray(allQuestions)
-      ? allQuestions.filter((question) => {
-          // Exclude questions added by interviewer
-          if (question.addedBy === "interviewer") {
-            return false;
-          }
+        ? allQuestions.filter((question) => {
+            // Exclude questions added by interviewer
+            if (question.addedBy === "interviewer") {
+              return false;
+            }
 
-          // Additional logic: Keep questions that have feedback even if they were added by interviewer
-          // (This is commented out as per your requirement to completely exclude interviewer questions)
-          // const hasFeedback = questionsfeedback.some(f => f.questionId === question.questionId);
-          // return question.addedBy !== "interviewer" || hasFeedback;
+            // Additional logic: Keep questions that have feedback even if they were added by interviewer
+            // (This is commented out as per your requirement to completely exclude interviewer questions)
+            // const hasFeedback = questionsfeedback.some(f => f.questionId === question.questionId);
+            // return question.addedBy !== "interviewer" || hasFeedback;
 
-          return true;
-        })
-      : [];
+            return true;
+          })
+        : [];
 
   const questionsfeedback =
     feedbackData.questionFeedback || interviewdata?.questionFeedback || [];
@@ -99,11 +99,11 @@ const SchedulerSectionComponent = ({
     return schedulerQuestions.map((q) => {
       // Find feedback for this question
       const feedback = questionsfeedback?.find(
-        (f) => f.questionId === q.questionId
+        (f) => f.questionId === q.questionId,
       );
       // Find preselected response for this question
       const preselectedResponse = preselectedQuestionsResponses?.find(
-        (r) => r.questionId === q.questionId
+        (r) => r.questionId === q.questionId,
       );
 
       if (feedback) {
@@ -162,8 +162,8 @@ const SchedulerSectionComponent = ({
   const onChangeRadioInput = (id, value) => {
     setSchedulerQuestionsData((prev) =>
       prev.map((question) =>
-        question._id === id ? { ...question, isAnswered: value } : question
-      )
+        question._id === id ? { ...question, isAnswered: value } : question,
+      ),
     );
 
     // Update preselected questions responses using the underlying bank questionId
@@ -187,7 +187,7 @@ const SchedulerSectionComponent = ({
           return { ...question, whyDislike: value, isLiked: "disliked" };
         }
         return question;
-      })
+      }),
     );
 
     // Update preselected questions responses
@@ -239,8 +239,8 @@ const SchedulerSectionComponent = ({
               // Clear dislike reason when toggling off dislike
               whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike,
             }
-          : q
-      )
+          : q,
+      ),
     );
 
     // Show/hide the "Tell us more" section
@@ -300,8 +300,8 @@ const SchedulerSectionComponent = ({
               // Clear dislike reason when liking
               whyDislike: q.isLiked === "liked" ? q.whyDislike : "",
             }
-          : q
-      )
+          : q,
+      ),
     );
 
     // Hide the "Tell us more" section when liking
@@ -330,7 +330,7 @@ const SchedulerSectionComponent = ({
   // Function to handle add note
   const onClickAddNote = (id) => {
     setSchedulerQuestionsData((prev) =>
-      prev.map((q) => (q._id === id ? { ...q, notesBool: !q.notesBool } : q))
+      prev.map((q) => (q._id === id ? { ...q, notesBool: !q.notesBool } : q)),
     );
 
     // Update preselected questions responses
@@ -365,7 +365,9 @@ const SchedulerSectionComponent = ({
   // Function to handle delete note
   const onClickDeleteNote = (id) => {
     setSchedulerQuestionsData((prev) =>
-      prev.map((q) => (q._id === id ? { ...q, notesBool: false, note: "" } : q))
+      prev.map((q) =>
+        q._id === id ? { ...q, notesBool: false, note: "" } : q,
+      ),
     );
 
     // Update preselected questions responses
@@ -377,14 +379,19 @@ const SchedulerSectionComponent = ({
         note: "",
       });
     }
+
+    // IMMEDIATE auto-save
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
+      triggerAutoSave();
+    }
   };
 
   // Function to handle interview question notes
   const onChangeInterviewQuestionNotes = (questionId, notes) => {
     setSchedulerQuestionsData((prev) =>
       prev.map((question) =>
-        question._id === questionId ? { ...question, note: notes } : question
-      )
+        question._id === questionId ? { ...question, note: notes } : question,
+      ),
     );
 
     // Update preselected questions responses
@@ -394,15 +401,19 @@ const SchedulerSectionComponent = ({
       handlePreselectedQuestionResponse(bankQuestionId, { note: notes });
     }
 
-    // Debounced auto-save for notes (wait for user to stop typing)
+    // IMMEDIATE auto-save
     if (triggerAutoSave && (isAddMode || isEditMode)) {
-      if (noteTimeoutRef.current) {
-        clearTimeout(noteTimeoutRef.current);
-      }
-      noteTimeoutRef.current = setTimeout(() => {
-        triggerAutoSave();
-      }, 2000); // Wait 2 seconds after last keystroke
+      triggerAutoSave();
     }
+    // Debounced auto-save for notes (wait for user to stop typing)
+    // if (triggerAutoSave && (isAddMode || isEditMode)) {
+    //   if (noteTimeoutRef.current) {
+    //     clearTimeout(noteTimeoutRef.current);
+    //   }
+    //   noteTimeoutRef.current = setTimeout(() => {
+    //     triggerAutoSave();
+    //   }, 2000); // Wait 2 seconds after last keystroke
+    // }
   };
 
   // Add cleanup for timeout:
@@ -520,7 +531,7 @@ const SchedulerSectionComponent = ({
                     {option}
                   </label>
                 </span>
-              )
+              ),
             )}
           </div>
         ) : (
@@ -639,7 +650,7 @@ const SchedulerSectionComponent = ({
                           onChange={(e) =>
                             onChangeInterviewQuestionNotes(
                               question._id,
-                              e.target.value.slice(0, 250)
+                              e.target.value.slice(0, 250),
                             )
                           }
                           placeholder="Add your note here"

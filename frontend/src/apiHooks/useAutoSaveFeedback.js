@@ -38,6 +38,10 @@ const useAutoSaveFeedback = ({
     if (ui === "Not Answered") return "incorrect";
     return "not answered";
   };
+  console.log(
+    "interviewerSectionData toBackendAnswerType",
+    interviewerSectionData,
+  );
 
   // Prepare feedback payload
   const prepareFeedbackPayload = useCallback(() => {
@@ -126,65 +130,101 @@ const useAutoSaveFeedback = ({
   }, [prepareFeedbackPayload]);
 
   // Auto-save function
-  const autoSave = useCallback(async () => {
-    if (!isAddMode || isSavingRef.current || !hasDataChanged()) {
+  // const autoSave = useCallback(async () => {
+  //   if (!isAddMode || isSavingRef.current || !hasDataChanged()) {
+  //     return;
+  //   }
+
+  //   try {
+  //     isSavingRef.current = true;
+  //     //   const authToken = Cookies.get("authToken");
+  //     const payload = prepareFeedbackPayload();
+
+  //     console.log("🔄 Auto-saving feedback...", feedbackId);
+  //     console.log("🔄 Auto-saving feedback...", payload);
+
+  //     let response;
+  //     if (feedbackId) {
+  //       // PATCH - Update existing feedback
+  //       response = await updateFeedback({ feedbackId, feedbackData: payload });
+  //       //  await axios.patch(
+  //       //   `${config.REACT_APP_API_URL}/feedback/${feedbackId}`,
+  //       //   payload,
+  //       //   {
+  //       //     headers: {
+  //       //       Authorization: `Bearer ${authToken}`,
+  //       //       "Content-Type": "application/json",
+  //       //     },
+  //       //   }
+  //       // );
+  //     } else {
+  //       // POST - Create new feedback
+
+  //       response = await createFeedback(payload);
+  //       // response = await axios.post(
+  //       //   `${config.REACT_APP_API_URL}/feedback`,
+  //       //   payload,
+  //       //   {
+  //       //     headers: {
+  //       //       Authorization: `Bearer ${authToken}`,
+  //       //       "Content-Type": "application/json",
+  //       //     },
+  //       //   }
+  //       // );
+  //     }
+
+  //     console.log("✅ Auto-save response:", response);
+
+  //     if (response.data.success) {
+  //       lastSavedDataRef.current = JSON.stringify(payload);
+  //       console.log("✅ Auto-save successful");
+  //       // Optional: Show subtle notification
+  //       // notify.success("Changes saved", { autoClose: 1000 });
+  //     }
+  //   } catch (error) {
+  //     console.error("❌ Auto-save failed:", error);
+  //     // Optional: Show error notification
+  //     // notify.error("Failed to auto-save changes");
+  //   } finally {
+  //     isSavingRef.current = false;
+  //   }
+  // }, [isAddMode, feedbackId, prepareFeedbackPayload, hasDataChanged]);
+
+  // useAutoSaveFeedback.js - Add this function
+  const triggerAutoSave = useCallback(async () => {
+    if (!isAddMode || isSavingRef.current) {
       return;
     }
 
     try {
       isSavingRef.current = true;
-      //   const authToken = Cookies.get("authToken");
       const payload = prepareFeedbackPayload();
 
-      console.log("🔄 Auto-saving feedback...", feedbackId);
-      console.log("🔄 Auto-saving feedback...", payload);
+      console.log("🔄 Triggering immediate auto-save...", feedbackId);
 
       let response;
       if (feedbackId) {
-        // PATCH - Update existing feedback
         response = await updateFeedback({ feedbackId, feedbackData: payload });
-        //  await axios.patch(
-        //   `${config.REACT_APP_API_URL}/feedback/${feedbackId}`,
-        //   payload,
-        //   {
-        //     headers: {
-        //       Authorization: `Bearer ${authToken}`,
-        //       "Content-Type": "application/json",
-        //     },
-        //   }
-        // );
       } else {
-        // POST - Create new feedback
-
         response = await createFeedback(payload);
-        // response = await axios.post(
-        //   `${config.REACT_APP_API_URL}/feedback`,
-        //   payload,
-        //   {
-        //     headers: {
-        //       Authorization: `Bearer ${authToken}`,
-        //       "Content-Type": "application/json",
-        //     },
-        //   }
-        // );
       }
-
-      console.log("✅ Auto-save response:", response);
 
       if (response.data.success) {
         lastSavedDataRef.current = JSON.stringify(payload);
-        console.log("✅ Auto-save successful");
-        // Optional: Show subtle notification
-        // notify.success("Changes saved", { autoClose: 1000 });
+        console.log("✅ Immediate auto-save successful");
       }
     } catch (error) {
-      console.error("❌ Auto-save failed:", error);
-      // Optional: Show error notification
-      // notify.error("Failed to auto-save changes");
+      console.error("❌ Immediate auto-save failed:", error);
     } finally {
       isSavingRef.current = false;
     }
-  }, [isAddMode, feedbackId, prepareFeedbackPayload, hasDataChanged]);
+  }, [
+    isAddMode,
+    feedbackId,
+    prepareFeedbackPayload,
+    updateFeedback,
+    createFeedback,
+  ]);
 
   // Debounced auto-save effect
   useEffect(() => {
@@ -197,7 +237,7 @@ const useAutoSaveFeedback = ({
 
     // Set new timeout for 30 seconds
     timeoutRef.current = setTimeout(() => {
-      autoSave();
+      triggerAutoSave();
     }, 30000); // 30 seconds
 
     // Cleanup
@@ -215,7 +255,7 @@ const useAutoSaveFeedback = ({
     communicationRating,
     recommendation,
     comments,
-    autoSave,
+    triggerAutoSave,
   ]);
 
   // Manual save function (can be called immediately)
@@ -223,10 +263,10 @@ const useAutoSaveFeedback = ({
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    await autoSave();
-  }, [autoSave]);
+    await triggerAutoSave();
+  }, [triggerAutoSave]);
 
-  return { saveNow, isSaving: isSavingRef.current };
+  return { saveNow, isSaving: isSavingRef.current, triggerAutoSave };
 };
 
 export default useAutoSaveFeedback;

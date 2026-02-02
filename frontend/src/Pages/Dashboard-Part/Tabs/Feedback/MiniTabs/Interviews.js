@@ -48,6 +48,7 @@ const InterviewsMiniTabComponent = ({
   handlePreselectedQuestionResponse,
   decodedData,
   autoSaveQuestions,
+  triggerAutoSave,
 }) => {
   useScrollLock(true);
   const [interviewMiniTab, setInterviewMiniTab] = useState(1);
@@ -75,7 +76,7 @@ const InterviewsMiniTabComponent = ({
             handlePreselectedQuestionResponse={
               handlePreselectedQuestionResponse
             }
-            triggerAutoSave={autoSaveQuestions}
+            triggerAutoSave={triggerAutoSave}
           />
         ); //<----v1.0.0---
       case 2:
@@ -90,7 +91,7 @@ const InterviewsMiniTabComponent = ({
             // Question Bank Props
             interviewerSectionData={interviewerSectionData || []}
             setInterviewerSectionData={setInterviewerSectionData}
-            preselectedQuestionsResponses={preselectedQuestionsResponses}
+            // preselectedQuestionsResponses={preselectedQuestionsResponses}
             // setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
             // handlePreselectedQuestionResponse={
             //   handlePreselectedQuestionResponse

@@ -181,6 +181,9 @@ const MockSchedulelater = () => {
   const userId = tokenPayload?.userId;
   const organizationId = tokenPayload?.tenantId;
 
+  // 1. Add state to track the created mock interview ID
+  const [createdMockInterviewId, setCreatedMockInterviewId] = useState(null);
+  const isExternalSelected = selectedInterviewType === "External";
   console.log("isReschedule:", isReschedule);
   console.log("isEdit:", isEdit);
   console.log("isRequestSent:", isRequestSent);
@@ -348,6 +351,11 @@ const MockSchedulelater = () => {
   // Populate formData for edit mode
   useEffect(() => {
     if (id && mockInterview) {
+      // If editing, clear any previously created ID
+      if (createdMockInterviewId && createdMockInterviewId !== id) {
+        setCreatedMockInterviewId(null);
+      }
+
       const data = mockInterview;
       console.log("Mock Edit Data:", data);
 
@@ -499,7 +507,7 @@ const MockSchedulelater = () => {
     } else if (!id) {
       updateTimes(formData.rounds.duration);
     }
-  }, [id, mockInterview, isMockLoading]);
+  }, [id, mockInterview, isMockLoading, createdMockInterviewId]);
 
   function formatStartTimeForZoom(combinedDateTime) {
     if (!combinedDateTime) return null;
@@ -621,10 +629,6 @@ const MockSchedulelater = () => {
       e.preventDefault();
     }
   };
-
-  // 1. Add state to track the created mock interview ID
-  const [createdMockInterviewId, setCreatedMockInterviewId] = useState(null);
-  const isExternalSelected = selectedInterviewType === "External";
 
   // 1. Fix handleNext function
   // const handleNext = async () => {
@@ -1094,9 +1098,14 @@ const MockSchedulelater = () => {
 
     if (!formIsValid) return;
 
+    // Prevent multiple clicks
+    if (isSubmitting) return;
     setIsSubmitting(true);
-    console.log("formData", formData);
+    // console.log("formData", formData);
     try {
+      // Always use the existing ID if available (from edit mode or previous creation)
+      const mockIdToUse = mockEdit ? id : createdMockInterviewId;
+
       const response = await saveMockInterview({
         formData: {
           skills: formData.skills,
@@ -1106,7 +1115,7 @@ const MockSchedulelater = () => {
           currentRole: formData.currentRole,
           jobDescription: formData.jobDescription,
         },
-        id: mockEdit ? id : null,
+        id: mockIdToUse,
         userId,
         organizationId,
         resume,
@@ -1125,12 +1134,25 @@ const MockSchedulelater = () => {
         throw new Error("Failed to get mock interview ID from response");
       }
 
-      if (!mockEdit) {
+      // if (!mockEdit) {
+      //   setCreatedMockInterviewId(savedMockId);
+      //   console.log("Created Mock ID saved:", savedMockId); // Debug log
+      // }
+      // Store the created ID if this is a NEW interview
+      if (!mockEdit && !createdMockInterviewId) {
         setCreatedMockInterviewId(savedMockId);
-        console.log("Created Mock ID saved:", savedMockId); // Debug log
+        console.log("Created new Mock ID:", savedMockId);
+      } else {
+        console.log("Updated existing Mock ID:", savedMockId);
       }
 
       setCurrentPage(2);
+      setIsSubmitting(false);
+
+      // Scroll to top when moving to page 2
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 100);
     } catch (error) {
       notify.error("Failed to save candidate details");
     } finally {

@@ -29,7 +29,7 @@ const InterviewerSectionComponent = ({
   isViewMode,
   // Question Bank Props from parent
   interviewerSectionData,
-  preselectedQuestionsResponses,
+  // preselectedQuestionsResponses,
   setInterviewerSectionData,
   removedQuestionIds,
   setRemovedQuestionIds,
@@ -53,12 +53,16 @@ const InterviewerSectionComponent = ({
     return rawFeedbackData || interviewData || {};
   }, [rawFeedbackData, interviewData]);
 
+  console.log("feedbackData", feedbackData);
+  console.log("interviewData", interviewData);
+  console.log("rawFeedbackData", rawFeedbackData);
+
   // Get interviewer-added questions from the new API structure
   const rawInterviewerAddedQuestionsFromAPI =
     interviewData?.interviewQuestions?.interviewerAddedQuestions;
   const interviewerAddedQuestionsFromAPI = React.useMemo(
     () => rawInterviewerAddedQuestionsFromAPI || [],
-    [rawInterviewerAddedQuestionsFromAPI]
+    [rawInterviewerAddedQuestionsFromAPI],
   );
   const rawInterviewQuestions =
     interviewData?.interviewQuestions || interviewerSectionData;
@@ -78,7 +82,7 @@ const InterviewerSectionComponent = ({
     }
     if (Array.isArray(allQuestions)) {
       return allQuestions.filter(
-        (question) => question.addedBy === "interviewer"
+        (question) => question.addedBy === "interviewer",
       );
     }
     return [];
@@ -99,7 +103,7 @@ const InterviewerSectionComponent = ({
         const isAddedByInterviewer =
           (newQ.addedBy || newQ.snapshot?.addedBy) === "interviewer";
         return isNotDuplicate && isAddedByInterviewer;
-      }
+      },
     );
 
     // Combine both arrays
@@ -194,7 +198,7 @@ const InterviewerSectionComponent = ({
 
   //<----v1.0.0---
   const [selectedQuestion, setSelectedQuestion] = useState(
-    interviewerSection.length > 0 ? interviewerSection[0].id : null
+    interviewerSection.length > 0 ? interviewerSection[0].id : null,
   );
 
   // REPLACE with this stable version:
@@ -269,7 +273,7 @@ const InterviewerSectionComponent = ({
   const onChangeInterviewQuestionNotes = (questionId, notes) => {
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some(
-        (q) => (q.questionId || q.id) === questionId
+        (q) => (q.questionId || q.id) === questionId,
       );
 
       if (questionExists) {
@@ -281,7 +285,7 @@ const InterviewerSectionComponent = ({
                 notesBool: true,
                 ...(isEditMode && { isEdited: true }),
               }
-            : q
+            : q,
         );
 
         // Debounced auto-save for notes
@@ -297,7 +301,7 @@ const InterviewerSectionComponent = ({
         return updated;
       } else {
         const originalQuestion = feedbackData?.questionFeedback?.find(
-          (f) => (f.questionId || f._id) === questionId
+          (f) => (f.questionId || f._id) === questionId,
         );
 
         if (originalQuestion) {
@@ -386,11 +390,11 @@ const InterviewerSectionComponent = ({
 
       if (questionExists) {
         return prev.map((q) =>
-          (q.questionId || q.id) === id ? { ...q, notesBool: !q.notesBool } : q
+          (q.questionId || q.id) === id ? { ...q, notesBool: !q.notesBool } : q,
         );
       } else {
         const originalQuestion = feedbackData?.questionFeedback?.find(
-          (f) => (f.questionId || f._id) === id
+          (f) => (f.questionId || f._id) === id,
         );
 
         if (originalQuestion) {
@@ -418,7 +422,7 @@ const InterviewerSectionComponent = ({
         return prev.map((q) =>
           (q.questionId || q.id) === id
             ? { ...q, notesBool: false, note: "" }
-            : q
+            : q,
         );
       }
       return prev;
@@ -451,7 +455,7 @@ const InterviewerSectionComponent = ({
         setIsQuestionBankOpen(false);
       }
     },
-    [isQuestionBankOpen]
+    [isQuestionBankOpen],
   );
 
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");
@@ -506,7 +510,7 @@ const InterviewerSectionComponent = ({
   const onChangeRadioInput = (questionId, value) => {
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some(
-        (q) => (q.questionId || q.id) === questionId
+        (q) => (q.questionId || q.id) === questionId,
       );
 
       if (questionExists) {
@@ -517,18 +521,22 @@ const InterviewerSectionComponent = ({
                 isAnswered: value,
                 ...(isEditMode && { isEdited: true }),
               }
-            : q
+            : q,
         );
 
         // Trigger auto-save after change
+        // if (triggerAutoSave && (isAddMode || isEditMode)) {
+        //   setTimeout(() => triggerAutoSave(), 500);
+        // }
+        // IMMEDIATE auto-save
         if (triggerAutoSave && (isAddMode || isEditMode)) {
-          setTimeout(() => triggerAutoSave(), 500);
+          triggerAutoSave();
         }
 
         return updated;
       } else {
         const originalQuestion = feedbackData?.questionFeedback?.find(
-          (f) => (f.questionId || f._id) === questionId
+          (f) => (f.questionId || f._id) === questionId,
         );
 
         if (originalQuestion) {
@@ -549,8 +557,12 @@ const InterviewerSectionComponent = ({
           ];
 
           // Trigger auto-save after change
+          // if (triggerAutoSave && (isAddMode || isEditMode)) {
+          //   setTimeout(() => triggerAutoSave(), 500);
+          // }
+          // IMMEDIATE auto-save
           if (triggerAutoSave && (isAddMode || isEditMode)) {
-            setTimeout(() => triggerAutoSave(), 500);
+            triggerAutoSave();
           }
 
           return newData;
@@ -601,25 +613,29 @@ const InterviewerSectionComponent = ({
   const onChangeDislikeRadioInput = (questionId, value) => {
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some(
-        (q) => (q.questionId || q.id) === questionId
+        (q) => (q.questionId || q.id) === questionId,
       );
 
       if (questionExists) {
         const updated = prev.map((q) =>
           (q.questionId || q.id) === questionId
             ? { ...q, whyDislike: value, isLiked: "disliked" }
-            : q
+            : q,
         );
 
         // Trigger auto-save after change
+        // if (triggerAutoSave && (isAddMode || isEditMode)) {
+        //   setTimeout(() => triggerAutoSave(), 500);
+        // }
+        // IMMEDIATE auto-save
         if (triggerAutoSave && (isAddMode || isEditMode)) {
-          setTimeout(() => triggerAutoSave(), 500);
+          triggerAutoSave();
         }
 
         return updated;
       } else {
         const originalQuestion = feedbackData?.questionFeedback?.find(
-          (f) => (f.questionId || f._id) === questionId
+          (f) => (f.questionId || f._id) === questionId,
         );
 
         if (originalQuestion) {
@@ -705,18 +721,22 @@ const InterviewerSectionComponent = ({
                 isLiked: q.isLiked === "liked" ? "" : "liked",
                 whyDislike: q.isLiked === "liked" ? "" : q.whyDislike,
               }
-            : q
+            : q,
         );
 
         // Trigger auto-save after change
+        // if (triggerAutoSave && (isAddMode || isEditMode)) {
+        //   setTimeout(() => triggerAutoSave(), 500);
+        // }
+        // IMMEDIATE auto-save
         if (triggerAutoSave && (isAddMode || isEditMode)) {
-          setTimeout(() => triggerAutoSave(), 500);
+          triggerAutoSave();
         }
 
         return updated;
       } else {
         const originalQuestion = feedbackData?.questionFeedback?.find(
-          (f) => (f.questionId || f._id) === id
+          (f) => (f.questionId || f._id) === id,
         );
 
         if (originalQuestion) {
@@ -733,8 +753,12 @@ const InterviewerSectionComponent = ({
           ];
 
           // Trigger auto-save after change
+          // if (triggerAutoSave && (isAddMode || isEditMode)) {
+          //   setTimeout(() => triggerAutoSave(), 500);
+          // }
+          // IMMEDIATE auto-save
           if (triggerAutoSave && (isAddMode || isEditMode)) {
-            setTimeout(() => triggerAutoSave(), 500);
+            triggerAutoSave();
           }
 
           return newData;
@@ -762,11 +786,11 @@ const InterviewerSectionComponent = ({
                 ...q,
                 isLiked: q.isLiked === "disliked" ? "" : "disliked",
               }
-            : q
+            : q,
         );
       } else {
         const originalQuestion = feedbackData?.questionFeedback?.find(
-          (f) => (f.questionId || f._id) === id
+          (f) => (f.questionId || f._id) === id,
         );
 
         if (originalQuestion) {
@@ -780,6 +804,11 @@ const InterviewerSectionComponent = ({
               notesBool: !!originalQuestion.interviewerFeedback?.note,
             },
           ];
+        }
+
+        // IMMEDIATE auto-save
+        if (triggerAutoSave && (isAddMode || isEditMode)) {
+          triggerAutoSave();
         }
 
         return prev;
@@ -815,7 +844,7 @@ const InterviewerSectionComponent = ({
                     onChange={(e) =>
                       onChangeDislikeRadioInput(
                         each.questionId || each.id,
-                        e.target.value
+                        e.target.value,
                       )
                     }
                   />
@@ -886,7 +915,7 @@ const InterviewerSectionComponent = ({
                   onChange={(e) =>
                     onChangeRadioInput(
                       each.questionId || each._id,
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   className="accent-custom-blue whitespace-nowrap text-sm"
@@ -899,7 +928,7 @@ const InterviewerSectionComponent = ({
                   {option}
                 </label>
               </span>
-            )
+            ),
           )}
         </div>
       </div>
@@ -910,7 +939,7 @@ const InterviewerSectionComponent = ({
     "interviewerSection",
     interviewerSectionData,
     "Or",
-    ...questionsWithFeedback
+    ...questionsWithFeedback,
   );
   return (
     // v1.0.5 <-----------------------------------------------------------------
@@ -1208,7 +1237,7 @@ const InterviewerSectionComponent = ({
                         className={`text-sm py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
                         onClick={() =>
                           onClickAddNote(
-                            question.questionId || question.id || question._id
+                            question.questionId || question.id || question._id,
                           )
                         }
                       >
@@ -1224,7 +1253,9 @@ const InterviewerSectionComponent = ({
                           }`}
                           onClick={() =>
                             handleLikeToggle(
-                              question.questionId || question._id || question.id
+                              question.questionId ||
+                                question._id ||
+                                question.id,
                             )
                           }
                         >
@@ -1239,7 +1270,9 @@ const InterviewerSectionComponent = ({
                           style={{ cursor: "pointer" }}
                           onClick={() =>
                             handleDislikeToggle(
-                              question.questionId || question._id || question.id
+                              question.questionId ||
+                                question._id ||
+                                question.id,
                             )
                           }
                         >
@@ -1277,7 +1310,7 @@ const InterviewerSectionComponent = ({
                                   question.questionId ||
                                     question._id ||
                                     question.id,
-                                  e.target.value.slice(0, 250)
+                                  e.target.value.slice(0, 250),
                                 )
                               }
                               placeholder="Add your note here"

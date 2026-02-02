@@ -76,6 +76,8 @@ const createFeedback = async (req, res) => {
       feedbackCode,
     } = req.body; //validatedData;
 
+    console.log("req.body qFeedback", req.body);
+
     // Process questions
     const processedQuestionFeedback = (questionFeedback || []).map(
       (qFeedback) => {
@@ -122,55 +124,83 @@ const createFeedback = async (req, res) => {
     }
 
     // Find existing feedback if draft
+    // let feedbackInstance;
+    // if (type === "draft") {
+    //   feedbackInstance = await FeedbackModel.findOne({
+    //     interviewRoundId,
+    //     candidateId,
+    //     interviewerId,
+    //   });
+
+    //   if (feedbackInstance) {
+    //     // Update draft
+    //     feedbackInstance.skills = skills || feedbackInstance.skills;
+    //     feedbackInstance.questionFeedback =
+    //       processedQuestionFeedback || feedbackInstance.questionFeedback;
+    //     feedbackInstance.generalComments =
+    //       generalComments || feedbackInstance.generalComments;
+    //     feedbackInstance.overallImpression =
+    //       overallImpression || feedbackInstance.overallImpression;
+    //     feedbackInstance.status = "draft";
+    //   }
+    // }
+
+    // // Generate feedbackCode (only for new feedback)
+    // let finalFeedbackCode = feedbackInstance?.feedbackCode;
+    // if (!finalFeedbackCode && interviewRoundId && feedbackCode) {
+    //   const existingCount = await FeedbackModel.countDocuments({
+    //     interviewRoundId,
+    //   });
+    //   finalFeedbackCode =
+    //     existingCount === 0
+    //       ? `${feedbackCode}`
+    //       : `${feedbackCode}-${existingCount + 1}`;
+    // }
+
+    // // Create new feedback (draft or submit)
+    // if (!feedbackInstance) {
+    //   feedbackInstance = new FeedbackModel({
+    //     tenantId,
+    //     ownerId,
+    //     interviewRoundId,
+    //     candidateId,
+    //     positionId,
+    //     interviewerId,
+    //     skills,
+    //     questionFeedback: processedQuestionFeedback,
+    //     generalComments: generalComments || "",
+    //     overallImpression: overallImpression || {},
+    //     status: type === "submit" ? "submitted" : "draft",
+    //     feedbackCode: finalFeedbackCode,
+    //   });
+    // }
+
     let feedbackInstance;
+
     if (type === "draft") {
-      feedbackInstance = await FeedbackModel.findOne({
-        interviewRoundId,
-        candidateId,
-        interviewerId,
-      });
-
-      if (feedbackInstance) {
-        // Update draft
-        feedbackInstance.skills = skills || feedbackInstance.skills;
-        feedbackInstance.questionFeedback =
-          processedQuestionFeedback || feedbackInstance.questionFeedback;
-        feedbackInstance.generalComments =
-          generalComments || feedbackInstance.generalComments;
-        feedbackInstance.overallImpression =
-          overallImpression || feedbackInstance.overallImpression;
-        feedbackInstance.status = "draft";
-      }
-    }
-
-    // Generate feedbackCode (only for new feedback)
-    let finalFeedbackCode = feedbackInstance?.feedbackCode;
-    if (!finalFeedbackCode && interviewRoundId && feedbackCode) {
-      const existingCount = await FeedbackModel.countDocuments({
-        interviewRoundId,
-      });
-      finalFeedbackCode =
-        existingCount === 0
-          ? `${feedbackCode}`
-          : `${feedbackCode}-${existingCount + 1}`;
-    }
-
-    // Create new feedback (draft or submit)
-    if (!feedbackInstance) {
-      feedbackInstance = new FeedbackModel({
-        tenantId,
-        ownerId,
-        interviewRoundId,
-        candidateId,
-        positionId,
-        interviewerId,
-        skills,
-        questionFeedback: processedQuestionFeedback,
-        generalComments: generalComments || "",
-        overallImpression: overallImpression || {},
-        status: type === "submit" ? "submitted" : "draft",
-        feedbackCode: finalFeedbackCode,
-      });
+      feedbackInstance = await FeedbackModel.findOneAndUpdate(
+        { interviewRoundId, candidateId, interviewerId },
+        {
+          $set: {
+            tenantId,
+            ownerId,
+            interviewRoundId,
+            candidateId,
+            positionId,
+            interviewerId,
+            skills,
+            questionFeedback: processedQuestionFeedback,
+            generalComments: generalComments || "",
+            overallImpression: overallImpression || {},
+            status: "draft",
+          },
+        },
+        {
+          new: true,
+          upsert: true,
+          runValidators: true,
+        },
+      );
     }
 
     await feedbackInstance.save();
@@ -251,9 +281,9 @@ const createFeedback = async (req, res) => {
           // Avoid duplicates in draft updates
           const exists = await InterviewQuestions.findOne({
             roundId: interviewRoundId,
-            ownerId: questionOwnerId,
+            // ownerId: questionOwnerId,
             questionId: normalizedQuestionId,
-            addedBy: "interviewer",
+            // addedBy: "interviewer",
           }).lean();
 
           if (!exists) {
@@ -381,8 +411,9 @@ const updateFeedback = async (req, res) => {
 
     // Normalize questionFeedback.questionId on updates (stringify IDs)
     if (
-      updateData.questionFeedback &&
-      Array.isArray(updateData.questionFeedback)
+      updateData.questionFeedback
+      //  &&
+      // Array.isArray(updateData.questionFeedback)
     ) {
       updateData.questionFeedback = updateData.questionFeedback.map(
         (feedback) => {
@@ -488,9 +519,9 @@ const updateFeedback = async (req, res) => {
 
             const exists = await InterviewQuestions.findOne({
               roundId: interviewRoundId,
-              ownerId: questionOwnerId,
+              // ownerId: questionOwnerId,
               questionId: normalizedQuestionId,
-              addedBy: "interviewer",
+              // addedBy: "interviewer",
             }).lean();
 
             if (!exists) {
@@ -1249,6 +1280,24 @@ const updateInterviewRoundFeedbackStatus = async (interviewRoundId) => {
   await InterviewRounds.findByIdAndUpdate(interviewRoundId, {
     status: newStatus,
   });
+};
+
+const normalizeQuestionId = (raw) => {
+  if (!raw) return null;
+
+  if (typeof raw === "string" && mongoose.Types.ObjectId.isValid(raw)) {
+    return raw;
+  }
+
+  if (typeof raw === "object") {
+    const id = raw.questionId || raw._id || raw.id || raw.snapshot?.questionId;
+
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      return id;
+    }
+  }
+
+  return null;
 };
 
 module.exports = {

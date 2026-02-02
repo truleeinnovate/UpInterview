@@ -69,10 +69,17 @@ const CandidateMiniTab = ({
         interviewData?.candidateId ||
         mockInterview
       : feedback.candidateId || {};
+
+  const safeSkills = candidateData?.skills ?? [];
+  const safeCertificates = candidateData?.certificates ?? [];
+  const safeProjects = candidateData?.projects ?? [];
+
   const positionData =
     propsSelecteData?.position || interviewData?.positionId
       ? propsSelecteData?.position || interviewData?.positionId
       : feedback.positionId || {};
+
+  console.log("candidateData candidateData CandidateMiniTab", candidateData);
 
   const [expandedSections, setExpandedSections] = useState({
     skills: true,
@@ -219,41 +226,45 @@ const CandidateMiniTab = ({
           )}
         </button>
 
-        {expandedSections.skills && (
-          <div className="mt-4 space-y-3">
-            {candidateData.skills.map((skill, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
-              >
-                <div>
-                  <p className="sm:text-sm font-medium text-gray-900">
-                    {skill.skill || skill}
-                  </p>
-                  {!isMockInterview && (
-                    <p className="text-sm text-gray-500">
-                      {skill.experience} experience
+        {safeSkills.length === 0 ? (
+          <p className="text-sm text-gray-500">No skills found.</p>
+        ) : (
+          expandedSections?.skills && (
+            <div className="mt-4 space-y-3">
+              {safeSkills?.map((skill, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                >
+                  <div>
+                    <p className="sm:text-sm font-medium text-gray-900">
+                      {skill.skill || skill}
                     </p>
+                    {!isMockInterview && (
+                      <p className="text-sm text-gray-500">
+                        {skill.experience} experience
+                      </p>
+                    )}
+                  </div>
+                  {!isMockInterview && (
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        skill.expertise === "Expert"
+                          ? "bg-green-100 text-green-800"
+                          : skill.expertise === "Advanced"
+                            ? "bg-blue-100 text-blue-800"
+                            : skill.expertise === "Basic"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {skill.expertise}
+                    </span>
                   )}
                 </div>
-                {!isMockInterview && (
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      skill.expertise === "Expert"
-                        ? "bg-green-100 text-green-800"
-                        : skill.expertise === "Advanced"
-                          ? "bg-blue-100 text-blue-800"
-                          : skill.expertise === "Basic"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {skill.expertise}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )
         )}
       </div>
       {/* v1.0.0 -----------------------------------------------------------------> */}
@@ -275,24 +286,28 @@ const CandidateMiniTab = ({
             </h3>
             {/* v1.0.0 -----------------------------------------------------------------> */}
           </div>
-          {expandedSections.certificates ? (
+          {expandedSections?.certificates ? (
             <ChevronUp className="h-5 w-5" />
           ) : (
             <ChevronDown className="h-5 w-5" />
           )}
         </button>
 
-        {expandedSections.certificates && (
-          <div className="mt-4 space-y-3">
-            {candidateData.certificates.map((cert, index) => (
-              <div key={index} className="p-3 bg-gray-50 rounded-md">
-                <p className="font-medium text-gray-900">{cert.name}</p>
-                <p className="text-sm text-gray-500">
-                  {cert.issuer} • {new Date(cert.date).getFullYear()}
-                </p>
-              </div>
-            ))}
-          </div>
+        {expandedSections?.certificates && safeCertificates?.length === 0 ? (
+          <p className="text-sm text-gray-500 mt-4">No certificates found.</p>
+        ) : (
+          expandedSections?.certificates && (
+            <div className="mt-4 space-y-3">
+              {safeCertificates?.map((cert, index) => (
+                <div key={index} className="p-3 bg-gray-50 rounded-md">
+                  <p className="font-medium text-gray-900">{cert?.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {cert?.issuer} • {new Date(cert?.date).getFullYear()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )
         )}
       </div>
 
@@ -313,36 +328,40 @@ const CandidateMiniTab = ({
             </h3>
             {/* v1.0.0 --------------------------------------------------------------------------------------------------------------> */}
           </div>
-          {expandedSections.projects ? (
+          {expandedSections?.projects ? (
             <ChevronUp className="h-5 w-5" />
           ) : (
             <ChevronDown className="h-5 w-5" />
           )}
         </button>
 
-        {expandedSections.projects && (
+        {expandedSections?.projects && (
           <div className="mt-4 space-y-4">
-            {candidateData?.projects.map((project, index) => (
-              <div key={index} className="p-4 bg-gray-50 rounded-md">
-                <h4 className="font-medium text-gray-900">{project.name}</h4>
-                <p className="text-sm text-gray-600 mt-1">
-                  {project.description}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {project.technologies.map((tech, techIndex) => (
-                    <span
-                      key={techIndex}
-                      className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
-                    >
-                      {tech}
-                    </span>
-                  ))}
+            {safeProjects && safeProjects.length === 0 ? (
+              <p className="text-sm text-gray-500">No projects found.</p>
+            ) : (
+              safeProjects?.map((project, index) => (
+                <div key={index} className="p-4 bg-gray-50 rounded-md">
+                  <h4 className="font-medium text-gray-900">{project?.name}</h4>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {project?.description}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {project?.technologies.map((tech, techIndex) => (
+                      <span
+                        key={techIndex}
+                        className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Duration: {project?.duration}
+                  </p>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Duration: {project.duration}
-                </p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         )}
       </div>
