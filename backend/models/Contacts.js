@@ -14,6 +14,7 @@ const ContactsSchema = new mongoose.Schema(
     portfolioUrl: String,
     currentRole: String,
     industry: { type: String },
+    company: String,
     gender: String,
     imageData: {
       filename: String,

@@ -30,9 +30,8 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
     // v1.0.1 <----------------------------------------------------------------------------------
     <div className="mx-2">
       <div
-        className={`flex items-center justify-end my-4 ${
-          mode !== "users" ? "py-2" : ""
-        }`}
+        className={`flex items-center justify-end my-4 ${mode !== "users" ? "py-2" : ""
+          }`}
       >
         {/* v1.0.1 <---------------------------------------------------------------------------- */}
         {/* <------------------------------- v1.0.0  */}
@@ -60,9 +59,8 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
       </div>
 
       <div
-        className={`bg-white rounded-lg space-y-4 ${
-          mode !== "users" ? "p-4" : ""
-        }`}
+        className={`bg-white rounded-lg space-y-4 ${mode !== "users" ? "p-4" : ""
+          }`}
       >
         {/* v1.0.1 <--------------------------------------------------------------------------------------------- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
@@ -72,58 +70,39 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
               {contactData?.currentRoleLabel || "Not Provided"}
             </p>
           </div>
-
           <div>
-            <p className="text-sm text-gray-500">Industry</p>
+            <p className="text-sm text-gray-500">Current Company</p>
             <p className="font-medium sm:text-sm">
-              {contactData?.industry || "Not Provided"}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-500">Years of Experience</p>
-            <p className="font-medium sm:text-sm">
-              {contactData.yearsOfExperience
-                ? `${contactData.yearsOfExperience} Years`
-                : "Not Provided"}
+              {contactData?.company || "Not Provided"}
             </p>
           </div>
 
-          <div>
-            <p className="text-sm text-gray-500">Location</p>
-            <p className="font-medium sm:text-sm">
-              {contactData.location || "Not Provided"}
-            </p>
+
+            <div>
+              <p className="text-sm text-gray-500">Years of Experience</p>
+              <p className="font-medium sm:text-sm">
+                {contactData.yearsOfExperience
+                  ? `${contactData.yearsOfExperience} Years`
+                  : "Not Provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Location</p>
+              <p className="font-medium sm:text-sm">
+                {contactData.location || "Not Provided"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">Industry</p>
+              <p className="font-medium sm:text-sm">
+                {contactData?.industry || "Not Provided"}
+              </p>
           </div>
         </div>
         {/* v1.0.1 <--------------------------------------------------------------------------------------------- */}
 
-        {/* <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
-
-          <div>
-            <p className="text-sm text-gray-500">Resume PDF </p>
-            <p className="font-medium">{contactData?.resume?.filename || 'No File'}</p>
-          </div>
-
-          <div>
-            <p className="text-sm text-gray-500">Cover Letter </p>
-            <p className="font-medium">{contactData?.coverLetter?.filename || 'No File'}</p>
-          </div>
-
-        </div> */}
-
-        {/* <div>
-                <p className="text-sm text-gray-500">Skills</p>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {contactData.skills.map((skill, index) => (
-                    <span key={index} className="px-3 py-1 bg-blue-100 text-custom-blue rounded-full text-sm">
-                      {skill || "N/A"}
-                    </span>
-                  ))}
-                </div>
-              </div> */}
       </div>
     </div>
   );

@@ -35,6 +35,9 @@ const additionalDetailsSchema = Joi.object({
   industry: Joi.string().required().messages({
     "string.empty": "Industry is required",
   }),
+  company: Joi.string().required().messages({
+    "string.empty": "Company Name is required",
+  }),
   yearsOfExperience: Joi.string().required().messages({
     "any.required": "Years of experience is required",
   }),
@@ -125,6 +128,7 @@ function validateIndividualSignup(step, data) {
     stepData = {
       currentRole: data.currentRole,
       industry: data.industry,
+      company:data.company,
       yearsOfExperience: data.yearsOfExperience,
       location: data.location,
       resume: data.resume?.filename,

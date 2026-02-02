@@ -1276,6 +1276,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
       currentRole: contact.currentRole || "",
       currentRoleLabel: role?.roleLabel || "",
       industry: contact.industry || "",
+      company: contact.company || "",
       experienceYears: contact.experienceYears || "",
       location: contact.location || "",
       resume: contact.resume || "",
