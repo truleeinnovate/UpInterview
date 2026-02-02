@@ -5,7 +5,7 @@
 // v1.0.4  -  Ashok   -  fixed alignment issues
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Search, X, ChevronDown, Clock, ChevronUp } from "lucide-react";
+import { Search, X, ChevronDown, Clock, ChevronUp, Users } from "lucide-react";
 // import useInterviewers from "../../../../../../hooks/useInterviewers";
 // v1.0.1 <------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
@@ -763,7 +763,18 @@ const InternalInterviews = ({
   return (
     // v1.0.3 <----------------------------------------------------------------------------------
     <SidebarPopup
-      title={`Internal Interviewers`}
+      // title={`Internal Interviewers`}
+      title={
+        <div>
+          <h4 className="flex items-center text-lg gap-2 font-semibold text-custom-blue">
+            <Users className="h-5 w-5" />
+            Select Internal Interviewer
+          </h4>
+          <p className="text-sm text-gray-500">
+            Select from internal interview experts
+          </p>
+        </div>
+      }
       //   ${
       //   viewType === "individuals" ? "Individuals" : "Groups"
       // }
@@ -772,7 +783,7 @@ const InternalInterviews = ({
       setIsFullscreen={setIsFullscreen}
       // v1.0.2 -------------------------------->
     >
-      <div className="flex flex-col h-full">
+      <div className="pb-10">
         {/* <------------------------------- v1.0.0  */}
 
         {/* <div className="w-full flex justify-end  items-center mt-4">
@@ -812,7 +823,7 @@ const InternalInterviews = ({
                 {isFilterPopupOpen ? (
                   <div className="relative">
                     <LuFilterX className="cursor-pointer" />
-                    <ChevronUp className="absolute -bottom-8  -right-1 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50 " />
+                    <ChevronUp className="absolute -bottom-8  right-0.5 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50 " />
                   </div>
                 ) : (
                   <LuFilter className="cursor-pointer" />
@@ -823,15 +834,15 @@ const InternalInterviews = ({
             {isFilterPopupOpen && (
               <div className="border mt-3 border-gray-200 rounded-sm p-3 bg-white shadow-sm">
                 {/* Header */}
-                <div className="grid items-center gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-12 xl:grid-cols-12 2xl:grid-cols-12">
+                <div className="grid items-center gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-12 xl:grid-cols-12 2xl:grid-cols-12">
                   {/* Tags / Teams Dropdown */}
                   <div
-                    className="md:col-span-5 lg:col-span-5 xl:col-span-5 2xl:col-span-5"
+                    className="md:col-span-4 lg:col-span-4 xl:col-span-5 2xl:col-span-5"
                     ref={filterDropdownRef}
                   >
                     <button
                       onClick={() => setShowFilterDropdown((prev) => !prev)}
-                      className="flex  w-full items-center justify-between gap-2 rounded-md border bg-white px-3 py-2 text-sm"
+                      className="flex w-full items-center justify-between gap-2 rounded-md border bg-white px-3 h-10 text-sm"
                     >
                       {filterType === "tags" ? "Tags" : "Teams"}
                       <ChevronDown className="h-4 w-4 shrink-0" />
@@ -850,7 +861,7 @@ const InternalInterviews = ({
                             }}
                             className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${
                               filterType === type
-                                ? "font-medium text-blue-600"
+                                ? "font-medium text-custom-blue"
                                 : ""
                             }`}
                           >
@@ -862,7 +873,7 @@ const InternalInterviews = ({
                   </div>
 
                   {/* Skills dropdown */}
-                  <div className="md:col-span-4 lg:col-span-4 xl:col-span-4 2xl:col-span-4">
+                  <div className="md:col-span-4 lg:col-span-4 xl:col-span-5 2xl:col-span-5">
                     {/* <input
                   type="text"
                   value={skillInput}
@@ -923,9 +934,9 @@ const InternalInterviews = ({
                   </div>
 
                   {/* Add this Apply/Clear Filter button */}
-                  <div className="md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3 flex items-end h-full">
+                  <div className="md:col-span-3 lg:col-span-3 xl:col-span-2 2xl:col-span-3 flex items-end h-full">
                     <button
-                      className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                      className={`w-full text-sm px-3 h-10 rounded-md font-medium transition-colors flex items-center justify-center whitespace-nowrap ${
                         isFiltersApplied
                           ? "bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
                           : "bg-custom-blue text-white hover:bg-custom-blue/90"
@@ -1103,14 +1114,23 @@ const InternalInterviews = ({
         {/* Scrollable Data Section */}
         <div className="flex flex-col overflow-y-auto py-4 sm:px-2 min-h-full">
           <div
+            // className={`
+            //     grid gap-4 sm:gap-5 px-1 sm:px-2
+            //     ${
+            //       isFullscreen
+            //         ? "grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-3"
+            //         : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
+            //     }
+            //   `}
+         
             className={`
-    grid gap-4 sm:gap-5 px-1 sm:px-2
-    ${
-      isFullscreen
-        ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
-        : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
-    }
-  `}
+              grid gap-4 sm:gap-5 px-1 sm:px-2
+              ${
+                isFullscreen
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" 
+                  : "grid-cols-1"
+              }
+            `}
           >
             {/* v1.0.2 --------------------------------------------------------------------------> */}
             {filteredAndPrioritizedInterviewers?.map((item) => (

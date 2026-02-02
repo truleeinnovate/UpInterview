@@ -15,6 +15,8 @@ import {
   Info,
   Clock,
   Users,
+  Wallet,
+  Plus,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
@@ -37,6 +39,7 @@ import DropdownWithSearchField from "../../../../../../Components/FormFields/Dro
 import { useMasterData } from "../../../../../../apiHooks/useMasterData.js";
 import { ReactComponent as LuFilterX } from "../../../../../../icons/LuFilterX.svg";
 import { ReactComponent as LuFilter } from "../../../../../../icons/LuFilter.svg";
+
 export const OutsourcedInterviewerCard = ({
   interviewer,
   isSelected,
@@ -46,6 +49,7 @@ export const OutsourcedInterviewerCard = ({
   candidateExperience,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
   // navigatedfrom="internal-interview"
 
   console.log("interviewer OutsourcedInterviewerCard", interviewer);
@@ -157,6 +161,58 @@ export const OutsourcedInterviewerCard = ({
 
   const slotsInfo = getAvailableSlotsInfo();
 
+  // ------------ Introduction text ---------------------------------
+  const textRef = useRef(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+
+  useEffect(() => {
+    const element = textRef.current;
+    if (element) {
+      setIsOverflowing(element.scrollHeight > element.clientHeight);
+    }
+  }, [introduction]);
+  // ------------ Introduction text ---------------------------------
+
+  // ------------------ Skills -----------------------------------------
+  const [visibleCount, setVisibleCount] = useState(skillsArray.length);
+  const skillsRef = useRef(null);
+
+  useEffect(() => {
+    const calculateVisible = () => {
+      const container = skillsRef.current;
+      if (!container || container.children.length === 0) return;
+
+      const children = Array.from(container.children);
+
+      const startTop = children[0].offsetTop;
+
+      const rowHeightThreshold = 35;
+
+      let count = 0;
+      for (let i = 0; i < children.length; i++) {
+        if (children[i].offsetTop - startTop > rowHeightThreshold) {
+          break;
+        }
+        count++;
+      }
+
+      if (count < skillsArray.length) {
+        setVisibleCount(count - 1);
+      } else {
+        setVisibleCount(skillsArray.length);
+      }
+    };
+
+    const timeoutId = setTimeout(calculateVisible, 150);
+    window.addEventListener("resize", calculateVisible);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("resize", calculateVisible);
+    };
+  }, [skillsArray.length]);
+  // ------------------ Skills -----------------------------------------
+
   return (
     <div
       className={`
@@ -178,7 +234,7 @@ export const OutsourcedInterviewerCard = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h3 className="text-base font-medium text-gray-900 truncate max-w-[220px] md:max-w-[280px] lg:max-w-[340px]">
+                <h3 className="text-lg font-medium text-gray-900 truncate max-w-[220px] md:max-w-[280px] lg:max-w-[340px]">
                   {capitalizeFirstLetter(fullName)}
                 </h3>
 
@@ -224,7 +280,7 @@ export const OutsourcedInterviewerCard = ({
         </div>
 
         {/* Introduction */}
-        {navigatedfrom === "internal-interview" ? null : (
+        {/* {navigatedfrom === "internal-interview" ? null : (
           <div className="mt-3 ml-14">
             <div
               className={`text-sm text-gray-600 leading-relaxed ${
@@ -247,10 +303,38 @@ export const OutsourcedInterviewerCard = ({
               </button>
             )}
           </div>
+        )} */}
+
+        {navigatedfrom === "internal-interview" ? null : (
+          <div className="mt-3 ml-14">
+            <div
+              ref={textRef}
+              className={`text-sm text-gray-600 leading-relaxed ${
+                isExpanded ? "" : "line-clamp-5"
+              }`}
+            >
+              {capitalizeFirstLetter(introduction)}
+            </div>
+
+            {/* Only show the button if the text is expanded OR if it was truncated/overflowing */}
+            {(isOverflowing || isExpanded) && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="mt-1 text-xs text-custom-blue hover:text-custom-blue/80 flex items-center gap-1"
+              >
+                {isExpanded ? "Show less" : "Show more"}
+                {isExpanded ? (
+                  <ChevronUp className="h-3 w-3" />
+                ) : (
+                  <ChevronDown className="h-3 w-3" />
+                )}
+              </button>
+            )}
+          </div>
         )}
 
         {/* Skills */}
-        <div className="mt-3 ml-14">
+        {/* <div className="mt-3 ml-14">
           {skillsArray.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {skillsArray.slice(0, 3).map((skill, i) => (
@@ -272,68 +356,99 @@ export const OutsourcedInterviewerCard = ({
           ) : (
             <p className="text-xs text-gray-500 italic">No skills listed.</p>
           )}
+        </div> */}
+        <div className="mt-3 ml-14">
+          {skillsArray.length > 0 ? (
+            <div
+              ref={skillsRef}
+              className="flex flex-wrap gap-1.5 max-h-[52px] overflow-hidden items-start"
+            >
+              {skillsArray.map((skill, i) => (
+                <span
+                  key={i}
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 h-[22px] ${
+                    i >= visibleCount ? "hidden" : ""
+                  }`}
+                >
+                  {typeof skill === "string"
+                    ? skill
+                    : skill?.skill || skill?.SkillName || "Skill"}
+                </span>
+              ))}
+
+              {visibleCount < skillsArray.length && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 h-[22px]">
+                  +{skillsArray.length - visibleCount} more
+                </span>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-500 italic">No skills listed.</p>
+          )}
         </div>
 
         {/* Availability Slots */}
-        {/* <div className="mt-4 ml-14 group relative">
-          {slotsInfo.hasSlots ? (
-            <div className="rounded-lg bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 p-3 hover:shadow-md hover:border-green-300 transition-all">
-              <div className="flex items-start gap-2.5">
-                <div className="mt-0.5 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 p-1.5 shadow-sm">
-                  <Clock size={14} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-bold text-green-900">
-                      {slotsInfo.totalSlots}{" "}
-                      {slotsInfo.totalSlots === 1 ? "Slot" : "Slots"}
-                    </p>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500 text-white shadow-sm">
-                      ● READY
-                    </span>
+        {navigatedfrom === "internal-interview" && (
+          <div className="mt-4 ml-14 group relative">
+            {slotsInfo.hasSlots ? (
+              <div className="rounded-lg bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 p-3 hover:shadow-md hover:border-green-300 transition-all">
+                <div className="flex items-start gap-2.5">
+                  <div className="mt-0.5 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 p-1.5 shadow-sm">
+                    <Clock size={14} className="text-white" />
                   </div>
-                  <p className="text-xs text-green-700 mt-0.5 font-medium">
-                    Available on {slotsInfo.count}{" "}
-                    {slotsInfo.count === 1 ? "day" : "days"}
-                  </p>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {slotsInfo.days.map((day, i) => (
-                      <span
-                        key={i}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white text-green-700 border border-green-300 shadow-sm"
-                      >
-                        ✓ {day}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-bold text-green-900">
+                        {slotsInfo.totalSlots}{" "}
+                        {slotsInfo.totalSlots === 1 ? "Slot" : "Slots"}
+                      </p>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500 text-white shadow-sm">
+                        ● READY
                       </span>
-                    ))}
+                    </div>
+                    <p className="text-xs text-green-700 mt-0.5 font-medium">
+                      Available on {slotsInfo.count}{" "}
+                      {slotsInfo.count === 1 ? "day" : "days"}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {slotsInfo.days.map((day, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white text-green-700 border border-green-300 shadow-sm"
+                        >
+                          ✓ {day}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="rounded-lg bg-gradient-to-br from-gray-50 to-slate-100 border-2 border-gray-200 p-3">
-              <div className="flex items-start gap-2.5">
-                <div className="mt-0.5 rounded-lg bg-gray-400 p-1.5">
-                  <Clock size={14} className="text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-700">
-                    No Availability Set
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Contact interviewer for scheduling
-                  </p>
+            ) : (
+              <div className="rounded-lg bg-gradient-to-br from-gray-50 to-slate-100 border-2 border-gray-200 p-3">
+                <div className="flex items-start gap-2.5">
+                  <div className="mt-0.5 rounded-lg bg-gray-400 p-1.5">
+                    <Clock size={14} className="text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-700">
+                      No Availability Set
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Contact interviewer for scheduling
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div> */}
+            )}
+          </div>
+        )}
       </div>
 
       {/* Buttons - no full gray bar, just border-t like simple separator */}
       {/* Buttons section - with side gaps like internal UI */}
       {navigatedfrom !== "dashboard" && (
-        <div className="border-t border-gray-100 mt-4">
-          <div className="px-4 py-3 flex justify-end items-center gap-2">
+        <div className="border-t border-gray-100 mt-4 mx-4">
+          <div className="py-3 flex justify-end items-center gap-2">
             {navigatedfrom === "internal-interview" ? null : (
               <Button
                 variant="outline"
@@ -1511,9 +1626,42 @@ function OutsourcedInterviewerModal({
       <Toaster />
       {/* v1.0.2 <-------------------------------------------------------------------------- */}
       <SidebarPopup
-        title="Outsourced Interviewers"
+        // title="Outsourced Interviewers"
+        title={
+          <div>
+            <h4 className="flex items-center sm:text-sm text-[18px] gap-2 font-semibold text-custom-blue">
+              <Users className="h-5 w-5" />
+              Select Outsourced Interviewer
+            </h4>
+            <p className="text-sm text-gray-500">
+              Select from external interview experts
+            </p>
+          </div>
+        }
         onClose={onClose}
         setIsFullscreen={setIsFullscreen}
+        titleRight={
+          <div className="flex items-center gap-3 bg-muted/50 rounded-lg px-2 py-1 sm:ml-0 ml-9">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-3 w-4 text-primary" />
+              <div>
+                <p className="text-xs text-muted-foreground">Wallet Balance</p>
+                <p className="text-sm font-bold text-custom-blue">
+                  ₹{Number(availableBalance || 0).toFixed(2)}
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() => setShowWalletModal(true)}
+              size="sm"
+              variant="outline"
+              className="gap-1 text-sm"
+            >
+              <Plus className="h-3 w-3" />
+              Top Up
+            </Button>
+          </div>
+        }
       >
         {/* v1.0.3 <------------------------- */}
         <div className="pb-10">
@@ -1575,38 +1723,40 @@ function OutsourcedInterviewerModal({
                   )}
                 </div>
 
-                <div className="w-full flex  justify-end items-center mt-4">
-                  <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-lg border border-gray-200 mr-6">
-                    <span className="text-sm font-medium text-gray-600">
-                      Available Balance:
-                    </span>
-                    <span
-                      className={`text-sm font-bold ${
-                        availableBalance >= maxHourlyRate
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      ₹{Number(availableBalance || 0).toFixed(2)}
-                    </span>
-                    <button
-                      onClick={() => setShowWalletModal(true)}
-                      className="ml-3 text-xs bg-custom-blue text-white px-2.5 py-1 rounded hover:bg-custom-blue/90 transition-colors font-medium"
-                    >
-                      Top Up
-                    </button>
-                  </div>
+                <div className="w-full flex  justify-between items-center mt-4">
+                  <div className="flex items-center gap-6 w-full">
+                    {/* <div className="flex w-full items-center gap-2 bg-gray-50 px-3 py-1 rounded-md border border-gray-200">
+                      <span className="text-sm font-medium text-gray-600">
+                        Available Balance:
+                      </span>
+                      <span
+                        className={`text-sm font-bold ${
+                          availableBalance >= maxHourlyRate
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        ₹{Number(availableBalance || 0).toFixed(2)}
+                      </span>
+                      <button
+                        onClick={() => setShowWalletModal(true)}
+                        className="text-xs bg-custom-blue text-white px-2.5 py-1 rounded hover:bg-custom-blue/90 transition-colors font-medium"
+                      >
+                        Top Up
+                      </button>
+                    </div> */}
 
-                  <div className="w-[30%] mr-2 ">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Search by name, role, company, or skills..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
+                    <div className="w-full mr-2">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search by name, role, company, or skills..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -1617,7 +1767,7 @@ function OutsourcedInterviewerModal({
                     {isFilterPopupOpen ? (
                       <div className="relative">
                         <LuFilterX className="cursor-pointer" />
-                        <ChevronUp className="absolute -bottom-8  -right-1 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50 " />
+                        <ChevronUp className="absolute -bottom-8  right-0.5 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50 " />
                       </div>
                     ) : (
                       <LuFilter className="cursor-pointer" />
@@ -1627,9 +1777,8 @@ function OutsourcedInterviewerModal({
 
                 {isFilterPopupOpen && (
                   <div className="border mt-3 border-gray-200 rounded-sm p-3 bg-white shadow-sm">
-                    <div className="grid items-center gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-12 xl:grid-cols-12 2xl:grid-cols-12">
-                      {" "}
-                      <div className="md:col-span-5 lg:col-span-5 xl:col-span-5 2xl:col-span-5">
+                    <div className="grid items-center gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-12 xl:grid-cols-12 2xl:grid-cols-12">
+                      <div className="md:col-span-4 lg:col-span-4 xl:col-span-5 2xl:col-span-5">
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
                           Filter by Role
                         </label>
@@ -1665,7 +1814,7 @@ function OutsourcedInterviewerModal({
                           isClearable={true}
                         />
                       </div>
-                      <div className="md:col-span-4 lg:col-span-4 xl:col-span-4 2xl:col-span-4">
+                      <div className="md:col-span-4 lg:col-span-4 xl:col-span-5 2xl:col-span-5">
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
                           Filter by Skills
                         </label>
@@ -1761,14 +1910,14 @@ function OutsourcedInterviewerModal({
                           placeholder="Add skill"
                         />
                       </div>
-                      <div className="md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3 flex items-end h-full">
+                      <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-3 flex items-end mt-6">
                         <button
-                          className={`w-full py-2 px-4 rounded-md  duration-200 flex items-center justify-center
-              ${
-                isFiltersApplied
-                  ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
-                  : "bg-custom-blue text-white hover:bg-custom-blue/90"
-              }`}
+                          className={`w-full h-10 px-4 text-sm rounded-md  duration-200 flex items-center justify-center whitespace-nowrap
+                            ${
+                              isFiltersApplied
+                                ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
+                                : "bg-custom-blue text-white hover:bg-custom-blue/90"
+                            }`}
                           onClick={
                             isFiltersApplied
                               ? handleClearRateFilter
@@ -2076,13 +2225,13 @@ function OutsourcedInterviewerModal({
           <div className="flex flex-col overflow-y-auto py-4 sm:px-2 min-h-full">
             <div
               className={`
-    grid gap-4 sm:gap-5 px-1 sm:px-2
-    ${
-      isFullscreen
-        ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
-        : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
-    }
-  `}
+                grid gap-4 sm:gap-5 px-1 sm:px-2
+                ${
+                  isFullscreen
+                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
+                    : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
+                }
+              `}
             >
               {filteredInterviewers.map((interviewer) => (
                 <OutsourcedInterviewerCard
