@@ -12,12 +12,9 @@ import {
   ChevronDown,
   ChevronUp,
   Search,
-  // Minimize,
   Info,
   Clock,
   Users,
-  CheckCircle, RotateCcw
-  // Expand,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
@@ -40,7 +37,7 @@ import DropdownWithSearchField from "../../../../../../Components/FormFields/Dro
 import { useMasterData } from "../../../../../../apiHooks/useMasterData.js";
 import { ReactComponent as LuFilterX } from "../../../../../../icons/LuFilterX.svg";
 import { ReactComponent as LuFilter } from "../../../../../../icons/LuFilter.svg";
-const OutsourcedInterviewerCard = ({
+export const OutsourcedInterviewerCard = ({
   interviewer,
   isSelected,
   onSelect,
@@ -49,16 +46,47 @@ const OutsourcedInterviewerCard = ({
   candidateExperience,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  // navigatedfrom="internal-interview"
 
-  const firstName = interviewer?.contact?.firstName ?? "";
-  const lastName = interviewer?.contact?.lastName ?? "";
+  console.log("interviewer OutsourcedInterviewerCard", interviewer);
+
+  const firstName =
+    navigatedfrom === "internal-interview"
+      ? interviewer?.contactDetails
+        ? interviewer?.contactDetails?.firstName
+        : interviewer?.contactId?.firstName
+      : (interviewer?.contact?.firstName ?? "");
+
+  const lastName =
+    navigatedfrom === "internal-interview"
+      ? interviewer?.contactDetails
+        ? interviewer?.contactDetails?.lastName
+        : interviewer?.contactId?.lastName || ""
+      : (interviewer?.contact?.lastName ?? "");
   const fullName = `${firstName} ${lastName}`.trim() || "Unnamed";
 
-  const currentRole = interviewer?.contact?.roleLabel || "Interviewer";
+  const interviewerEmail =
+    navigatedfrom === "internal-interview"
+      ? interviewer?.contactDetails
+        ? interviewer?.contactDetails?.email
+        : interviewer?.contactId?.email || "No email"
+      : interviewer?.contact?.email || "No email";
+
+  const currentRole =
+    navigatedfrom === "internal-interview"
+      ? interviewer?.contactDetails?.roleLabel ||
+        interviewer?.contactId?.roleLabel
+      : interviewer?.contact?.roleLabel || "Interviewer";
   const company = interviewer?.contact?.industry || "Freelancer";
   const rating = interviewer?.contact?.rating || "4.6";
   const introduction = interviewer?.contact?.bio || "No introduction provided.";
-  const skillsArray = interviewer?.contact?.skills ?? [];
+
+  const skillsArray =
+    navigatedfrom === "internal-interview"
+      ? interviewer?.contactDetails
+        ? interviewer?.contactDetails?.skills
+        : interviewer?.contactId?.skills || []
+      : (interviewer?.contact?.skills ?? []);
 
   // Your original rate logic
   const getExperienceBasedRate = () => {
@@ -66,13 +94,16 @@ const OutsourcedInterviewerCard = ({
     if (!rates) return interviewer?.contact?.hourlyRate || "Not provided";
 
     let selectedLevel = null;
-    if (candidateExperience >= 1 && candidateExperience <= 3) selectedLevel = "junior";
-    else if (candidateExperience > 3 && candidateExperience <= 6) selectedLevel = "mid";
+    if (candidateExperience >= 1 && candidateExperience <= 3)
+      selectedLevel = "junior";
+    else if (candidateExperience > 3 && candidateExperience <= 6)
+      selectedLevel = "mid";
     else if (candidateExperience > 6) selectedLevel = "senior";
 
-    let selectedRate = selectedLevel && rates[selectedLevel]?.inr > 0
-      ? rates[selectedLevel].inr
-      : null;
+    let selectedRate =
+      selectedLevel && rates[selectedLevel]?.inr > 0
+        ? rates[selectedLevel].inr
+        : null;
 
     if (!selectedRate) {
       if (selectedLevel === "senior") {
@@ -88,28 +119,39 @@ const OutsourcedInterviewerCard = ({
 
   const hourlyRate = getExperienceBasedRate();
 
-  // Availability slots (same as internal)
   const getAvailableSlotsInfo = () => {
     const availability =
-      interviewer?.contact?.availability?.[0]?.availability ||
-      interviewer?.contactId?.availability?.[0]?.availability ||
+      interviewer?.contactId?.availability[0]?.availability ||
+      interviewer?.contactDetails?.availability[0]?.availability ||
       [];
 
     if (availability.length === 0) {
-      return { text: "No available slots", count: 0, hasSlots: false, days: [], totalSlots: 0 };
+      return {
+        text: "No available slots",
+        count: 0,
+        hasSlots: false,
+        days: [],
+        totalSlots: 0,
+      };
     }
 
-    const totalSlots = availability.reduce((sum, day) => sum + (day.timeSlots?.length || 0), 0);
+    // Count total slots across all days
+    const totalSlots = availability.reduce((sum, dayAvail) => {
+      return sum + (dayAvail.timeSlots?.length || 0);
+    }, 0);
+
+    // Get day names that have slots
     const daysWithSlots = availability
-      .filter(day => day.timeSlots?.length > 0)
-      .map(day => day.day);
+      .filter((dayAvail) => dayAvail.timeSlots?.length > 0)
+      .map((dayAvail) => dayAvail.day);
 
     return {
-      text: totalSlots === 1 ? "1 slot available" : `${totalSlots} slots available`,
+      text:
+        totalSlots === 1 ? "1 slot available" : `${totalSlots} slots available`,
       count: availability.length,
       hasSlots: totalSlots > 0,
       days: daysWithSlots,
-      totalSlots,
+      totalSlots: totalSlots,
     };
   };
 
@@ -119,9 +161,10 @@ const OutsourcedInterviewerCard = ({
     <div
       className={`
         bg-white rounded-lg border shadow-sm transition-all duration-200
-        ${isSelected
-          ? "border-orange-500 ring-2 ring-orange-200"
-          : "border-gray-200 hover:shadow-md"
+        ${
+          isSelected
+            ? "border-orange-500 ring-2 ring-orange-200"
+            : "border-gray-200 hover:shadow-md"
         }
       `}
     >
@@ -138,52 +181,73 @@ const OutsourcedInterviewerCard = ({
                 <h3 className="text-base font-medium text-gray-900 truncate max-w-[220px] md:max-w-[280px] lg:max-w-[340px]">
                   {capitalizeFirstLetter(fullName)}
                 </h3>
+
                 {currentRole && (
-                  <p className="text-sm text-gray-500 mt-0.5">
-                    {capitalizeFirstLetter(currentRole)}
+                  <p className="text-sm text-gray-500 mt-0.2">
+                    {capitalizeFirstLetter(currentRole) || "Role not specified"}
                   </p>
                 )}
-                <p className="text-sm text-orange-600 mt-1">
-                  {capitalizeFirstLetter(company)}
-                </p>
+
+                {navigatedfrom !== "internal-interview" ? null : (
+                  <p className="text-xs text-gray-500 mt-0.1">
+                    {interviewerEmail}
+                  </p>
+                )}
+
+                {navigatedfrom === "internal-interview" ? null : (
+                  <p className="text-sm text-orange-600 mt-1">
+                    {capitalizeFirstLetter(company)}
+                  </p>
+                )}
               </div>
 
-              <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                {/* Rating */}
-                <div className="flex items-center gap-1 bg-yellow-100 p-1 rounded">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full">
-                    <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+              {navigatedfrom === "internal-interview" ? null : (
+                <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                  {/* Rating */}
+                  <div className="flex items-center gap-1 bg-yellow-100 p-1 rounded">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full">
+                      <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                    </span>
+                    <span className="text-xs font-medium text-gray-700">
+                      {rating}
+                    </span>
+                  </div>
+
+                  {/* Hourly Rate - right below rating */}
+                  <span className="text-sm font-medium text-custom-blue">
+                    {hourlyRate}
                   </span>
-                  <span className="text-xs font-medium text-gray-700">{rating}</span>
                 </div>
-
-                {/* Hourly Rate - right below rating */}
-                <span className="text-sm font-medium text-custom-blue">
-                  {hourlyRate}
-                </span>
-              </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Introduction */}
-        <div className="mt-3 ml-14">
-          <div
-            className={`text-sm text-gray-600 leading-relaxed ${isExpanded ? "" : "line-clamp-4"
+        {navigatedfrom === "internal-interview" ? null : (
+          <div className="mt-3 ml-14">
+            <div
+              className={`text-sm text-gray-600 leading-relaxed ${
+                isExpanded ? "" : "line-clamp-4"
               }`}
-          >
-            {capitalizeFirstLetter(introduction)}
-          </div>
-          {introduction.length > 140 && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="mt-1 text-xs text-custom-blue hover:text-custom-blue/80 flex items-center gap-1"
             >
-              {isExpanded ? "Show less" : "Show more"}
-              {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            </button>
-          )}
-        </div>
+              {capitalizeFirstLetter(introduction)}
+            </div>
+            {introduction.length > 140 && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="mt-1 text-xs text-custom-blue hover:text-custom-blue/80 flex items-center gap-1"
+              >
+                {isExpanded ? "Show less" : "Show more"}
+                {isExpanded ? (
+                  <ChevronUp className="h-3 w-3" />
+                ) : (
+                  <ChevronDown className="h-3 w-3" />
+                )}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Skills */}
         <div className="mt-3 ml-14">
@@ -194,7 +258,9 @@ const OutsourcedInterviewerCard = ({
                   key={i}
                   className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
                 >
-                  {typeof skill === "string" ? skill : skill?.skill || skill?.SkillName || "Skill"}
+                  {typeof skill === "string"
+                    ? skill
+                    : skill?.skill || skill?.SkillName || "Skill"}
                 </span>
               ))}
               {skillsArray.length > 3 && (
@@ -209,7 +275,7 @@ const OutsourcedInterviewerCard = ({
         </div>
 
         {/* Availability Slots */}
-        <div className="mt-4 ml-14 group relative">
+        {/* <div className="mt-4 ml-14 group relative">
           {slotsInfo.hasSlots ? (
             <div className="rounded-lg bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 p-3 hover:shadow-md hover:border-green-300 transition-all">
               <div className="flex items-start gap-2.5">
@@ -219,14 +285,16 @@ const OutsourcedInterviewerCard = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-bold text-green-900">
-                      {slotsInfo.totalSlots} {slotsInfo.totalSlots === 1 ? "Slot" : "Slots"}
+                      {slotsInfo.totalSlots}{" "}
+                      {slotsInfo.totalSlots === 1 ? "Slot" : "Slots"}
                     </p>
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500 text-white shadow-sm">
                       ● READY
                     </span>
                   </div>
                   <p className="text-xs text-green-700 mt-0.5 font-medium">
-                    Available on {slotsInfo.count} {slotsInfo.count === 1 ? "day" : "days"}
+                    Available on {slotsInfo.count}{" "}
+                    {slotsInfo.count === 1 ? "day" : "days"}
                   </p>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {slotsInfo.days.map((day, i) => (
@@ -248,13 +316,17 @@ const OutsourcedInterviewerCard = ({
                   <Clock size={14} className="text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-700">No Availability Set</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Contact interviewer for scheduling</p>
+                  <p className="text-sm font-semibold text-gray-700">
+                    No Availability Set
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Contact interviewer for scheduling
+                  </p>
                 </div>
               </div>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
 
       {/* Buttons - no full gray bar, just border-t like simple separator */}
@@ -262,14 +334,16 @@ const OutsourcedInterviewerCard = ({
       {navigatedfrom !== "dashboard" && (
         <div className="border-t border-gray-100 mt-4">
           <div className="px-4 py-3 flex justify-end items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onViewDetails}
-              className="text-custom-blue hover:text-custom-blue/80"
-            >
-              <ExternalLink className="h-3 w-3 mr-1" /> View Details
-            </Button>
+            {navigatedfrom === "internal-interview" ? null : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onViewDetails}
+                className="text-custom-blue hover:text-custom-blue/80"
+              >
+                <ExternalLink className="h-3 w-3 mr-1" /> View Details
+              </Button>
+            )}
 
             <Button
               variant={isSelected ? "destructive" : "customblue"}
@@ -294,6 +368,7 @@ function OutsourcedInterviewerModal({
   candidateExperience, //<-----v1.0.4-----Venkatesh---- Added to determine experience level for rate calculation
   navigatedfrom,
   previousSelectedInterviewers,
+
   // positionData,
   // candidateData,
 }) {
@@ -327,7 +402,7 @@ function OutsourcedInterviewerModal({
   const skillsPopupRef = useRef(null);
   const skillsInputRef = useRef(null);
 
-  // const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [rateRange, setRateRange] = useState(["", ""]);
   const [appliedRateRange, setAppliedRateRange] = useState([0, Infinity]);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -355,6 +430,11 @@ function OutsourcedInterviewerModal({
   // Add to existing state declarations
   // const [tempSelectedRole, setTempSelectedRole] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
+  const [tempSelectedRole, setTempSelectedRole] = useState("");
+
+  console.log("selectedRole", selectedRole);
+
+  console.log("tempSelectedSkills", tempSelectedSkills);
 
   // Fetch tenant tax configuration (GST, service charge, etc.)
   const { data: tenantTaxConfig } = useTenantTaxConfig();
@@ -383,11 +463,73 @@ function OutsourcedInterviewerModal({
   }, [contacts]);
   //----v1.0.1----->
   // REPLACE WITH:
+  // useEffect(() => {
+  //   setSelectedRole("");
+  //   setTempSelectedSkills([]);
+  //   setTempRateRange(["", ""]);
+  // }, []);
+
+  // Add refs to track if initialization has happened
+  const hasInitializedRole = useRef(false);
+  const hasInitializedSkills = useRef(false);
+
+  // Initialize with parent role - ONLY ONCE
+  // useEffect(() => {
+  //   if (currentRole && !hasInitializedRole.current) {
+  //     setSelectedRole(currentRole);
+  //     hasInitializedRole.current = true;
+  //   }
+  // }, [currentRole]);
+  // Replace the existing role initialization useEffect
   useEffect(() => {
-    setSelectedRole("");
-    setTempSelectedSkills([]);
-    setTempRateRange(["", ""]);
-  }, []);
+    if (currentRole && currentRole.trim() !== "") {
+      setSelectedRole(currentRole);
+    }
+  }, [currentRole]);
+
+  // Initialize with parent skills - ONLY ONCE
+
+  useEffect(() => {
+    if (skills && Array.isArray(skills) && skills.length > 0) {
+      const formattedSkills = skills.map((skill) => {
+        const skillName = skill?.skill || skill?.SkillName || skill;
+        return {
+          SkillName: skillName,
+          fromParent: true, // Mark as parent skill
+          id: `${skillName}_${Date.now()}_${Math.random()}`, // Unique ID for better tracking
+        };
+      });
+
+      // Only initialize if no skills exist yet or we need to preserve parent skills
+      if (tempSelectedSkills.length === 0) {
+        setTempSelectedSkills(formattedSkills);
+      } else {
+        // Merge parent skills with existing user-added skills
+        const existingUserSkills = tempSelectedSkills.filter(
+          (skill) => !skill.fromParent,
+        );
+        const mergedSkills = [...formattedSkills, ...existingUserSkills];
+
+        // Remove duplicates (case-insensitive)
+        const uniqueSkills = [];
+        const seen = new Set();
+
+        mergedSkills.forEach((skill) => {
+          const skillName = (
+            skill?.SkillName ||
+            skill?.skill ||
+            skill
+          ).toLowerCase();
+          if (!seen.has(skillName)) {
+            seen.add(skillName);
+            uniqueSkills.push(skill);
+          }
+        });
+
+        setTempSelectedSkills(uniqueSkills);
+      }
+    }
+  }, [skills]); // Only depend on parent skills
 
   // Fetch and filter interviewers based on skills and availability added by Ranjith
   useEffect(() => {
@@ -412,6 +554,8 @@ function OutsourcedInterviewerModal({
         // console.log("📥 Fetching interviewers from context...");
         const response = interviewers;
         // console.log("📊 Interviewers from context:", response);
+
+        // console.log("skills in fetchInterviewers", response);
 
         if (!response || !Array.isArray(response)) {
           // console.log("❌ No interviewers data found");
@@ -450,13 +594,14 @@ function OutsourcedInterviewerModal({
             skillFilteredInterviewers = filteredByOwnerId.filter(
               (interviewer) => {
                 const interviewerSkills = interviewer.contact?.skills || [];
-                console.log(
-                  `👤 Checking interviewer: ${interviewer.contact?.firstName ||
-                  interviewer.contact?.UserName ||
-                  "Unknown"
-                  }`,
-                );
-                console.log("📝 Interviewer's Skills:", interviewerSkills);
+                // console.log(
+                //   `👤 Checking interviewer: ${
+                //     interviewer.contact?.firstName ||
+                //     interviewer.contact?.UserName ||
+                //     "Unknown"
+                //   }`,
+                // );
+                // console.log("📝 Interviewer's Skills:", interviewerSkills);
 
                 if (interviewerSkills.length === 0) {
                   // console.log("❌ Interviewer has no skills, excluding");
@@ -472,10 +617,10 @@ function OutsourcedInterviewerModal({
                   )
                   .filter((skill) => skill); // Remove empty strings
 
-                console.log(
-                  "🔠 Interviewer's normalized skills:",
-                  interviewerSkillsLower,
-                );
+                // console.log(
+                //   "🔠 Interviewer's normalized skills:",
+                //   interviewerSkillsLower,
+                // );
 
                 // Check if any of the required skills match the interviewer's skills
                 const hasMatchingSkill = skills.some((requiredSkill) => {
@@ -500,7 +645,8 @@ function OutsourcedInterviewerModal({
                 });
 
                 console.log(
-                  `🎯 ${interviewer.contact?.firstName || "Unknown"
+                  `🎯 ${
+                    interviewer.contact?.firstName || "Unknown"
                   } Skill Match Status: ${hasMatchingSkill}`,
                 );
                 return hasMatchingSkill;
@@ -644,7 +790,6 @@ function OutsourcedInterviewerModal({
         // 🔍 Reusable function to calculate skill matches
         const calculateSkillMatches = (interviewersList, label) => {
           return interviewersList.map((interviewer, index) => {
-
             if (!skills || !Array.isArray(skills)) {
               // console.log(
               //   "⚠️ positionSkills is invalid or not an array:",
@@ -775,23 +920,27 @@ function OutsourcedInterviewerModal({
       else if (experience > 6) selectedLevel = "senior";
       let rate = rates[selectedLevel]?.inr || 0;
       if (rate === 0) {
-        if (selectedLevel === "senior") rate = rates?.mid?.inr || rates?.junior?.inr || 0;
+        if (selectedLevel === "senior")
+          rate = rates?.mid?.inr || rates?.junior?.inr || 0;
         else if (selectedLevel === "mid") rate = rates?.junior?.inr || 0;
       }
       return rate;
     };
 
     let filtered = [...baseInterviewers]; // always start fresh from base
-
+    console.log("Applying filters with selectedRole:", filtered);
     // 1. Role filter — live
     if (selectedRole) {
       filtered = filtered.filter((interviewer) => {
         const role =
+          interviewer.contact?.currentRole ||
           interviewer.contact?.roleLabel ||
           interviewer.contact?.roleName ||
           interviewer.roleLabel ||
           interviewer.roleName ||
           "";
+
+        console.log("selectedRole role", role);
         return role.toLowerCase() === selectedRole.toLowerCase();
       });
     }
@@ -799,20 +948,22 @@ function OutsourcedInterviewerModal({
     // 2. Skills filter — live
     if (tempSelectedSkills.length > 0) {
       const selectedSkillsLower = tempSelectedSkills
-        .map(s => (s?.SkillName || s?.skill || s || "").toLowerCase().trim())
+        .map((s) => (s?.SkillName || s?.skill || s || "").toLowerCase().trim())
         .filter(Boolean);
 
       filtered = filtered
-        .map(interviewer => {
+        .map((interviewer) => {
           const interviewerSkills = (interviewer.contact?.skills || [])
-            .map(skill =>
+            .map((skill) =>
               typeof skill === "string"
                 ? skill.toLowerCase().trim()
-                : (skill?.skill || skill?.SkillName || "").toLowerCase().trim()
+                : (skill?.skill || skill?.SkillName || "").toLowerCase().trim(),
             )
             .filter(Boolean);
 
-          const matchCount = interviewerSkills.filter(s => selectedSkillsLower.includes(s)).length;
+          const matchCount = interviewerSkills.filter((s) =>
+            selectedSkillsLower.includes(s),
+          ).length;
           return { ...interviewer, matchCount };
         })
         .sort((a, b) => b.matchCount - a.matchCount); // best matches first
@@ -820,17 +971,20 @@ function OutsourcedInterviewerModal({
 
     // 3. Rate range — only when explicitly applied
     if (isRateApplied) {
-      filtered = filtered.filter(interviewer => {
-        const hourlyRate = getExperienceBasedRateValue(interviewer.contact, candidateExperience);
+      filtered = filtered.filter((interviewer) => {
+        const hourlyRate = getExperienceBasedRateValue(
+          interviewer.contact,
+          candidateExperience,
+        );
         return (
           hourlyRate >= appliedRateRange[0] &&
-          (appliedRateRange[1] === Infinity || hourlyRate <= appliedRateRange[1])
+          (appliedRateRange[1] === Infinity ||
+            hourlyRate <= appliedRateRange[1])
         );
       });
     }
 
     setFilteredInterviewers(filtered);
-
   }, [
     baseInterviewers,
     selectedRole,
@@ -841,104 +995,280 @@ function OutsourcedInterviewerModal({
   ]);
 
   // Modify the existing useEffect to only run when filters are applied
+  // useEffect(() => {
+  //   // if (!isFiltersApplied) return;
+  //   // Don't filter on initial load - show all base interviewers
+  //   if (
+  //     !isFiltersApplied &&
+  //     !selectedRole &&
+  //     tempSelectedSkills.length === 0 &&
+  //     !isRateApplied
+  //   ) {
+  //     setFilteredInterviewers(baseInterviewers);
+  //     return;
+  //   }
+
+  //   const getExperienceBasedRateValue = (contact, experience) => {
+  //     const rates = contact?.rates;
+  //     if (!rates) return 0;
+  //     let selectedLevel = null;
+  //     if (experience >= 1 && experience <= 3) selectedLevel = "junior";
+  //     else if (experience > 3 && experience <= 6) selectedLevel = "mid";
+  //     else if (experience > 6) selectedLevel = "senior";
+  //     let rate = rates[selectedLevel]?.inr || 0;
+  //     if (rate === 0) {
+  //       if (selectedLevel === "senior")
+  //         rate = rates.mid?.inr || rates.junior?.inr || 0;
+  //       else if (selectedLevel === "mid") rate = rates.junior?.inr || 0;
+  //     }
+  //     return rate;
+  //   };
+
+  //   let filtered = baseInterviewers;
+
+  //   // ✅ ROLE FILTER (OUTSIDE of filter callback)
+  //   if (selectedRole) {
+  //     // Changed from tempSelectedRole
+  //     filtered = filtered.filter((interviewer) => {
+  //       const interviewerRole =
+  //         interviewer.contact?.roleLabel ||
+  //         interviewer.contact?.roleName ||
+  //         interviewer.roleLabel ||
+  //         interviewer.roleName ||
+  //         "";
+
+  //       return interviewerRole.toLowerCase() === selectedRole.toLowerCase(); // Changed from tempSelectedRole
+  //     });
+  //   }
+
+  //   // Apply skill filtering if skills are selected
+  //   if (tempSelectedSkills.length > 0) {
+  //     const selectedSkillsLower = tempSelectedSkills
+  //       .map((s) => {
+  //         const skillName = s?.SkillName || s?.skill || s;
+  //         return typeof skillName === "string"
+  //           ? skillName.toLowerCase().trim()
+  //           : "";
+  //       })
+  //       .filter(Boolean);
+
+  //     filtered = baseInterviewers
+  //       .map((interviewer) => {
+  //         const interviewerSkills = (interviewer.contact?.skills || [])
+  //           .map((skill) =>
+  //             typeof skill === "string"
+  //               ? skill
+  //               : skill?.skill || skill?.SkillName || "",
+  //           )
+  //           .map((s) => s.toLowerCase().trim());
+
+  //         const matchedCount = interviewerSkills.filter((skill) =>
+  //           selectedSkillsLower.includes(skill),
+  //         ).length;
+
+  //         return { ...interviewer, matchedSkillsCount: matchedCount };
+  //       })
+  //       .sort((a, b) => b.matchedSkillsCount - a.matchedSkillsCount);
+  //   }
+
+  //   // Apply search and rate filtering
+  //   filtered = filtered.filter((interviewer) => {
+  //     const firstName = interviewer?.contact?.firstName ?? "";
+  //     const lastName = interviewer?.contact?.lastName ?? "";
+  //     const fullName = `${firstName} ${lastName}`.trim() || "Unnamed";
+  //     const professionalTitle =
+  //       interviewer?.contact?.professionalTitle ||
+  //       interviewer?.contact?.CurrentRole ||
+  //       "";
+  //     const company = interviewer?.contact?.industry || "";
+  //     const skills = interviewer?.contact?.skills || [];
+  //     const hourlyRate = getExperienceBasedRateValue(
+  //       interviewer.contact,
+  //       candidateExperience,
+  //     );
+
+  //     const rateMatch =
+  //       hourlyRate >= appliedRateRange[0] &&
+  //       (appliedRateRange[1] === Infinity || hourlyRate <= appliedRateRange[1]);
+
+  //     return rateMatch;
+  //   });
+
+  //   setFilteredInterviewers(filtered);
+  // }, [
+  //   baseInterviewers,
+  //   selectedRole,
+  //   tempSelectedSkills,
+  //   appliedRateRange,
+  //   isRateApplied,
+  //   candidateExperience,
+  //   isFiltersApplied,
+  // ]);
   useEffect(() => {
-    if (!isFiltersApplied) return;
+    if (!baseInterviewers.length) return;
 
     const getExperienceBasedRateValue = (contact, experience) => {
       const rates = contact?.rates;
       if (!rates) return 0;
+
       let selectedLevel = null;
       if (experience >= 1 && experience <= 3) selectedLevel = "junior";
       else if (experience > 3 && experience <= 6) selectedLevel = "mid";
       else if (experience > 6) selectedLevel = "senior";
+
       let rate = rates[selectedLevel]?.inr || 0;
       if (rate === 0) {
-        if (selectedLevel === "senior")
-          rate = rates.mid?.inr || rates.junior?.inr || 0;
-        else if (selectedLevel === "mid") rate = rates.junior?.inr || 0;
+        if (selectedLevel === "senior") {
+          rate = rates?.mid?.inr || rates?.junior?.inr || 0;
+        } else if (selectedLevel === "mid") {
+          rate = rates?.junior?.inr || 0;
+        }
       }
       return rate;
     };
 
-    let filtered = baseInterviewers;
+    let filtered = [...baseInterviewers];
 
-    // ✅ ROLE FILTER (OUTSIDE of filter callback)
-    if (selectedRole) {
-      // Changed from tempSelectedRole
+    // 1. Apply search filter FIRST (this works independently)
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
       filtered = filtered.filter((interviewer) => {
-        const interviewerRole =
-          interviewer.contact?.roleLabel ||
-          interviewer.contact?.roleName ||
-          interviewer.roleLabel ||
-          interviewer.roleName ||
-          "";
+        const firstName = interviewer?.contact?.firstName || "";
+        const lastName = interviewer?.contact?.lastName || "";
+        const fullName = `${firstName} ${lastName}`.toLowerCase();
 
-        return interviewerRole.toLowerCase() === selectedRole.toLowerCase(); // Changed from tempSelectedRole
+        // Check name match
+        const nameMatch = fullName.includes(searchLower);
+        if (nameMatch) return true;
+
+        // Check role match
+        const role =
+          interviewer?.contact?.currentRole ||
+          interviewer?.contact?.roleLabel ||
+          interviewer?.contact?.roleName ||
+          "";
+        if (role.toLowerCase().includes(searchLower)) return true;
+
+        // Check company match
+        const company = interviewer?.contact?.industry || "";
+        if (company.toLowerCase().includes(searchLower)) return true;
+
+        // Check skills match
+        const skills = interviewer?.contact?.skills || [];
+        const hasSkillMatch = skills.some((skill) => {
+          const skillName =
+            typeof skill === "string"
+              ? skill.toLowerCase()
+              : (skill?.skill || skill?.SkillName || "").toLowerCase();
+          return skillName.includes(searchLower);
+        });
+
+        return hasSkillMatch;
       });
     }
 
-    // Apply skill filtering if skills are selected
-    if (tempSelectedSkills.length > 0) {
-      const selectedSkillsLower = tempSelectedSkills
-        .map((s) => {
-          const skillName = s?.SkillName || s?.skill || s;
-          return typeof skillName === "string"
-            ? skillName.toLowerCase().trim()
-            : "";
-        })
-        .filter(Boolean);
+    // 2. Apply rate filter (if rate filter is applied via Apply Filter button)
+    if (isRateApplied) {
+      filtered = filtered.filter((interviewer) => {
+        const hourlyRate = getExperienceBasedRateValue(
+          interviewer.contact,
+          candidateExperience,
+        );
 
-      filtered = baseInterviewers
-        .map((interviewer) => {
-          const interviewerSkills = (interviewer.contact?.skills || [])
-            .map((skill) =>
-              typeof skill === "string"
-                ? skill
-                : skill?.skill || skill?.SkillName || "",
-            )
-            .map((s) => s.toLowerCase().trim());
-
-          const matchedCount = interviewerSkills.filter((skill) =>
-            selectedSkillsLower.includes(skill),
-          ).length;
-
-          return { ...interviewer, matchedSkillsCount: matchedCount };
-        })
-        .sort((a, b) => b.matchedSkillsCount - a.matchedSkillsCount);
+        return (
+          hourlyRate >= appliedRateRange[0] &&
+          (appliedRateRange[1] === Infinity ||
+            hourlyRate <= appliedRateRange[1])
+        );
+      });
     }
 
-    // Apply search and rate filtering
-    filtered = filtered.filter((interviewer) => {
-      const firstName = interviewer?.contact?.firstName ?? "";
-      const lastName = interviewer?.contact?.lastName ?? "";
-      const fullName = `${firstName} ${lastName}`.trim() || "Unnamed";
-      const professionalTitle =
-        interviewer?.contact?.professionalTitle ||
-        interviewer?.contact?.CurrentRole ||
-        "";
-      const company = interviewer?.contact?.industry || "";
-      const skills = interviewer?.contact?.skills || [];
-      const hourlyRate = getExperienceBasedRateValue(
-        interviewer.contact,
-        candidateExperience,
-      );
+    // 3. Calculate match scores for sorting (role + skills)
+    const scoredInterviewers = filtered.map((interviewer) => {
+      let matchScore = 0;
+      let isRoleMatch = false;
+      let skillsMatchCount = 0;
 
-      const rateMatch =
-        hourlyRate >= appliedRateRange[0] &&
-        (appliedRateRange[1] === Infinity || hourlyRate <= appliedRateRange[1]);
+      // Check role match
+      if (selectedRole) {
+        const interviewerRole =
+          interviewer?.contact?.currentRole ||
+          interviewer?.contact?.roleLabel ||
+          interviewer?.contact?.roleName ||
+          "";
 
-      return rateMatch;
+        isRoleMatch =
+          interviewerRole.toLowerCase() === selectedRole.toLowerCase();
+        if (isRoleMatch) matchScore += 100; // Higher weight for role match
+      }
+
+      // Check skills match
+      if (tempSelectedSkills.length > 0) {
+        const selectedSkillsLower = tempSelectedSkills
+          .map((s) => {
+            const skillName = s?.SkillName || s?.skill || s;
+            return typeof skillName === "string"
+              ? skillName.toLowerCase().trim()
+              : "";
+          })
+          .filter(Boolean);
+
+        const interviewerSkills = (interviewer.contact?.skills || [])
+          .map((skill) => {
+            if (typeof skill === "string") return skill.toLowerCase().trim();
+            return (skill?.skill || skill?.SkillName || "")
+              .toLowerCase()
+              .trim();
+          })
+          .filter(Boolean);
+
+        skillsMatchCount = interviewerSkills.filter((skill) =>
+          selectedSkillsLower.includes(skill),
+        ).length;
+
+        matchScore += skillsMatchCount * 10; // Weight for skill matches
+      }
+
+      return {
+        ...interviewer,
+        matchScore,
+        isRoleMatch,
+        skillsMatchCount,
+        hasAnyFilterMatch:
+          (selectedRole && isRoleMatch) || skillsMatchCount > 0,
+      };
     });
 
-    setFilteredInterviewers(filtered);
+    // 4. Sort by: 1) Has any filter match, 2) Match score, 3) Original order
+    scoredInterviewers.sort((a, b) => {
+      // First, prioritize those that match ANY filter
+      if (a.hasAnyFilterMatch && !b.hasAnyFilterMatch) return -1;
+      if (!a.hasAnyFilterMatch && b.hasAnyFilterMatch) return 1;
+
+      // If both match or both don't match, sort by match score
+      if (a.matchScore !== b.matchScore) return b.matchScore - a.matchScore;
+
+      // If same score, maintain original order
+      return 0;
+    });
+
+    // 5. Only hide non-matching when filters are explicitly applied
+    if (isFiltersApplied && (selectedRole || tempSelectedSkills.length > 0)) {
+      // Show ALL but sorted (matched first, then others)
+      setFilteredInterviewers(scoredInterviewers);
+    } else {
+      // No filters applied, show all (still sorted by search if applicable)
+      setFilteredInterviewers(scoredInterviewers);
+    }
   }, [
-    // searchTerm,
-    selectedRole,
-    appliedRateRange,
-    tempSelectedSkills,
     baseInterviewers,
+    searchTerm,
+    selectedRole,
+    tempSelectedSkills,
+    appliedRateRange,
+    isRateApplied,
+    isFiltersApplied,
     candidateExperience,
-    isFiltersApplied, // Only run when filters are applied
   ]);
 
   const handleSelectClick = (interviewer) => {
@@ -980,7 +1310,7 @@ function OutsourcedInterviewerModal({
     }
   };
 
-  console.log("Selected Interviewers:", selectedInterviewersLocal);
+  // console.log("Selected Interviewers:", selectedInterviewersLocal);
 
   const handleProceed = () => {
     //<----v1.0.1-----
@@ -1085,10 +1415,23 @@ function OutsourcedInterviewerModal({
     // setSearchTerm(tempSearchTerm);
 
     // Apply role filter - store it in selectedRole for actual filtering
-    // setSelectedRole(selectedRole);
+    setSelectedRole(tempSelectedRole);
 
     // Apply skills
-    setTempSelectedSkills([...tempSelectedSkills]);
+    // setTempSelectedSkills([...tempSelectedSkills]);
+    // setSearchTerm("");
+
+    // Clear skills - reset to parent skills or empty
+    if (
+      (skills && Array.isArray(skills) && skills.length > 0) ||
+      (tempSelectedSkills &&
+        Array.isArray(tempSelectedSkills) &&
+        tempSelectedSkills.length > 0)
+    ) {
+      setTempSelectedSkills([...skills, ...tempSelectedSkills]);
+    } else {
+      setTempSelectedSkills([]);
+    }
 
     // Apply rate range
     const minVal = parseInt(tempRateRange[0]) || 0;
@@ -1107,12 +1450,20 @@ function OutsourcedInterviewerModal({
   // Function to clear all filters
   const handleClearRateFilter = () => {
     // Clear role
-    setSelectedRole("");
+    // setSelectedRole("");
+    // setSelectedRole("");
     // setSelectedRole("");
 
+    // Clear role (reset to parent if exists, otherwise empty)
+    // if (currentRole) {
+    //   setSelectedRole(currentRole);
+    // } else {
+    setSelectedRole("");
+    setTempSelectedRole("");
+    // }
     // Clear search
-    // setTempSearchTerm("");
-    // setSearchTerm("");
+    setTempSearchTerm("");
+    setSearchTerm("");
 
     // Clear skills
     setTempSelectedSkills([]);
@@ -1150,7 +1501,8 @@ function OutsourcedInterviewerModal({
 
   console.log("currentRoles===", currentRoles);
 
-  console.log("selectedRole...", selectedRole);
+  console.log("skills...", skills);
+  console.log("skillsData...", skillsData);
 
   console.log("filteredInterviewers", filteredInterviewers);
 
@@ -1210,10 +1562,12 @@ function OutsourcedInterviewerModal({
                             Interview requests sent to all selected interviewers
                           </li>
                           <li>
-                            First interviewer to accept will conduct the interview
+                            First interviewer to accept will conduct the
+                            interview
                           </li>
                           <li>
-                            Select multiple interviewers to increase availability
+                            Select multiple interviewers to increase
+                            availability
                           </li>
                         </ul>
                       </div>
@@ -1221,17 +1575,17 @@ function OutsourcedInterviewerModal({
                   )}
                 </div>
 
-                <div className="w-full flex justify-end items-center mt-4">
-
+                <div className="w-full flex  justify-end items-center mt-4">
                   <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-lg border border-gray-200 mr-6">
                     <span className="text-sm font-medium text-gray-600">
                       Available Balance:
                     </span>
                     <span
-                      className={`text-sm font-bold ${availableBalance >= maxHourlyRate
-                        ? "text-green-600"
-                        : "text-red-600"
-                        }`}
+                      className={`text-sm font-bold ${
+                        availableBalance >= maxHourlyRate
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
                     >
                       ₹{Number(availableBalance || 0).toFixed(2)}
                     </span>
@@ -1243,8 +1597,18 @@ function OutsourcedInterviewerModal({
                     </button>
                   </div>
 
-
-
+                  <div className="w-[30%] mr-2 ">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search by name, role, company, or skills..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
 
                   <button
                     className="cursor-pointer px-3 py-2 text-xl border rounded-md relative flex items-center justify-center w-10 h-10"
@@ -1261,17 +1625,16 @@ function OutsourcedInterviewerModal({
                   </button>
                 </div>
 
-
                 {isFilterPopupOpen && (
-                  <div className="border mt-4 border-gray-200 rounded-sm p-3 bg-white shadow-sm">
-                    <div className="grid   rounded-sm  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 mt-4">
-                      {/* Role Filter - Add this new field */}
-                      <div className="md:col-span-2 lg:col-span-1 xl:col-span-1 2xl:col-span-1">
+                  <div className="border mt-3 border-gray-200 rounded-sm p-3 bg-white shadow-sm">
+                    <div className="grid items-center gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-12 xl:grid-cols-12 2xl:grid-cols-12">
+                      {" "}
+                      <div className="md:col-span-5 lg:col-span-5 xl:col-span-5 2xl:col-span-5">
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
                           Filter by Role
                         </label>
                         <DropdownWithSearchField
-                          value={selectedRole || null}          // ← changed: just the string or null
+                          value={selectedRole || null} // ← changed: just the string or null
                           options={
                             currentRoles?.map((role) => ({
                               value: role.roleName,
@@ -1283,21 +1646,18 @@ function OutsourcedInterviewerModal({
 
                             if (selected === null || selected === undefined) {
                               newValue = "";
-                            }
-                            else if (selected?.target?.value !== undefined) {
+                            } else if (selected?.target?.value !== undefined) {
                               newValue = selected.target.value;
-                            }
-                            else if (typeof selected === "string") {
+                            } else if (typeof selected === "string") {
                               newValue = selected;
-                            }
-                            else if (selected && "value" in selected) {
+                            } else if (selected && "value" in selected) {
+                              newValue = selected.value;
+                            } else if (selected?.value) {
                               newValue = selected.value;
                             }
-                            else if (selected?.value) {
-                              newValue = selected.value;
-                            }
-
-                            setSelectedRole(newValue);
+                            console.log("selected in newValue===", newValue);
+                            setTempSelectedRole(newValue);
+                            // setSelectedRole(newValue);
                           }}
                           onMenuOpen={loadCurrentRoles}
                           loading={isCurrentRolesFetching}
@@ -1305,25 +1665,11 @@ function OutsourcedInterviewerModal({
                           isClearable={true}
                         />
                       </div>
-
-                      {/* Skills Dropdown */}
-                      <div className="min-w-[120px] max-w-xs w-full sm:w-auto">
+                      <div className="md:col-span-4 lg:col-span-4 xl:col-span-4 2xl:col-span-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
                           Filter by Skills
                         </label>
-                        {/* <input
-                      type="text"
-                      value={skillInput}
-                      placeholder="Type skill & press Enter"
-                      onChange={(e) => setSkillInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddSkill();
-                        }
-                      }}
-                      className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-                    /> */}
+
                         <DropdownWithSearchField
                           ref={skillsInputRef}
                           value={null}
@@ -1340,17 +1686,74 @@ function OutsourcedInterviewerModal({
                                 label: skill.SkillName,
                               })) || []
                           }
+                          // onChange={(option) => {
+                          //   if (!option) return;
+
+                          //   const value =
+                          //     option?.value || option?.target?.value;
+                          //   if (!value) return;
+
+                          //   setTempSelectedSkills((prev) => {
+                          //     // prevent duplicates
+                          //     if (prev.some((s) => s.SkillName === value))
+                          //       return prev;
+                          //     return [...prev, { SkillName: value }];
+                          //   });
+                          // }}
+                          // REPLACE the DropdownWithSearchField onChange for skills:
+                          // onChange={(option) => {
+                          //   if (!option) return;
+
+                          //   const value =
+                          //     option?.value || option?.target?.value;
+                          //   if (!value) return;
+
+                          //   setTempSelectedSkills((prev) => {
+                          //     // Prevent duplicates (case-insensitive)
+                          //     const existingSkill = prev.find((s) => {
+                          //       const sName = (
+                          //         s?.SkillName ||
+                          //         s?.skill ||
+                          //         s
+                          //       ).toLowerCase();
+                          //       return sName === value.toLowerCase();
+                          //     });
+
+                          //     if (existingSkill) return prev;
+
+                          //     // Add new user-selected skill (NOT from parent)
+                          //     return [
+                          //       ...prev,
+                          //       { SkillName: value, fromParent: false },
+                          //     ];
+                          //   });
+                          // }}
+
                           onChange={(option) => {
                             if (!option) return;
 
-                            const value = option?.value || option?.target?.value;
+                            const value =
+                              option?.value || option?.target?.value;
                             if (!value) return;
 
                             setTempSelectedSkills((prev) => {
-                              // prevent duplicates
-                              if (prev.some((s) => s.SkillName === value))
-                                return prev;
-                              return [...prev, { SkillName: value }];
+                              // Prevent duplicates (case-insensitive)
+                              const existingSkill = prev.find((s) => {
+                                const sName = (
+                                  s?.SkillName ||
+                                  s?.skill ||
+                                  s
+                                ).toLowerCase();
+                                return sName === value.toLowerCase();
+                              });
+
+                              if (existingSkill) return prev;
+
+                              // Add new user-selected skill
+                              return [
+                                ...prev,
+                                { SkillName: value, fromParent: false },
+                              ];
                             });
                           }}
                           onMenuOpen={loadSkills}
@@ -1358,41 +1761,29 @@ function OutsourcedInterviewerModal({
                           placeholder="Add skill"
                         />
                       </div>
-                      <div className="relative group inline-block">
+                      <div className="md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3 flex items-end h-full">
                         <button
-                          className={`p-2 rounded-md transition-all duration-200
-      ${isFiltersApplied
-                              ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
-                              : "bg-custom-blue text-white hover:bg-custom-blue/90"
-                            }`}
+                          className={`w-full py-2 px-4 rounded-md  duration-200 flex items-center justify-center
+              ${
+                isFiltersApplied
+                  ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
+                  : "bg-custom-blue text-white hover:bg-custom-blue/90"
+              }`}
                           onClick={
                             isFiltersApplied
                               ? handleClearRateFilter
                               : handleApplyRateFilter
                           }
                         >
-                          {isFiltersApplied ? (
-                            // <RotateCcw className="h-4 w-4" />
-                            <p>Apply Filter</p>
-                          ) : (
-                            // <CheckCircle className="h-4 w-4" />
-                            <p>Clear Filter</p>
-                          )}
+                          {isFiltersApplied ? "Clear Filter" : "Apply Filter"}
                         </button>
-
-                        {/* Tooltip */}
-                        {/* <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                                  {isFiltersApplied ? "Clear Filter" : "Apply Filter"}
-                                </span> */}
                       </div>
-
                       {/* Hourly Rate Range */}
                       {/* <div className="md:col-span-1 lg:col-span-1">
                         <div className="flex flex-col h-full"> */}
                       {/* <label className="block text-sm font-medium text-gray-700 mb-1.5">
                             Hourly Rate Range ($)
                           </label> */}
-
                       {/* <div className="flex flex-col sm:flex-row items-stretch gap-3 flex-1">
                             <div className="flex items-center gap-2 flex-1"> */}
                       {/* Min Input */}
@@ -1419,11 +1810,9 @@ function OutsourcedInterviewerModal({
                                   step="1"
                                 />
                               </div> */}
-
                       {/* <span className="text-gray-400 font-medium shrink-0">
                                 —
                               </span> */}
-
                       {/* Max Input */}
                       {/* <div className="relative flex-1">
                                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
@@ -1448,9 +1837,7 @@ function OutsourcedInterviewerModal({
                                   step="1"
                                 />
                               </div> */}
-
                       {/* Dynamic Button */}
-
                       {/* </div>
                           </div> */}
                       {/* </div>
@@ -1460,7 +1847,9 @@ function OutsourcedInterviewerModal({
                     {/* Selected Skills */}
                     {tempSelectedSkills.length > 0 && (
                       <div className="flex mt-4 flex-wrap items-center gap-1.5">
-                        <span className="text-xs text-gray-500 mr-1">Skills:</span>
+                        <span className="text-xs text-gray-500 mr-1">
+                          Skills:
+                        </span>
 
                         {tempSelectedSkills.map((skill) => {
                           // Extract skill name from either object or string
@@ -1473,11 +1862,51 @@ function OutsourcedInterviewerModal({
                               className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800"
                             >
                               {skillName}
+
                               <button
+                                onClick={() => {
+                                  // Remove this specific skill
+                                  setTempSelectedSkills((prev) =>
+                                    prev.filter((s) => {
+                                      const sName =
+                                        s?.SkillName || s?.skill || s;
+                                      const currentSkillName =
+                                        skill?.SkillName ||
+                                        skill?.skill ||
+                                        skill;
+                                      return sName !== currentSkillName;
+                                    }),
+                                  );
+                                }}
+                                className="ml-1 text-gray-500 hover:text-red-500"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                              {/* // REPLACE the skill removal button and logic: */}
+                              {/* <button
+                                onClick={() => {
+                                  const skillName =
+                                    skill?.SkillName || skill?.skill || skill;
+
+                                  // Allow removal of ANY skill (parent or user-added)
+                                  setTempSelectedSkills((prev) =>
+                                    prev.filter((s) => {
+                                      const sName =
+                                        s?.SkillName || s?.skill || s;
+                                      return sName !== skillName;
+                                    }),
+                                  );
+                                }}
+                                className="ml-1 text-gray-500 hover:text-red-500"
+                              >
+                                <X className="h-3 w-3" />
+                              </button> */}
+                              {/* <button
                                 onClick={() =>
                                   setTempSelectedSkills((prev) =>
                                     prev.filter((s) => {
-                                      const sName = s?.SkillName || s?.skill || s;
+                                      const sName =
+                                        s?.SkillName || s?.skill || s;
                                       return sName !== skillName;
                                     }),
                                   )
@@ -1485,7 +1914,7 @@ function OutsourcedInterviewerModal({
                                 className="ml-1 text-gray-500 hover:text-red-500"
                               >
                                 <X className="h-3 w-3" />
-                              </button>
+                              </button> */}
                             </span>
                           );
                         })}
@@ -1493,20 +1922,43 @@ function OutsourcedInterviewerModal({
                     )}
 
                     {/* Show selected role */}
-                    {selectedRole && (
+                    {tempSelectedRole && (
                       <div className="flex mt-4 flex-wrap items-center gap-1.5">
-                        <span className="text-xs text-gray-500 mr-1">Role:</span>
+                        <span className="text-xs text-gray-500 mr-1">
+                          Role:
+                        </span>
                         <span className="flex items-center gap-1 rounded-full bg-blue-100 border px-2.5 py-1 text-xs text-blue-800">
-                          {currentRoles?.find((r) => r.roleName === selectedRole)
-                            ?.roleLabel || selectedRole}
+                          {currentRoles?.find(
+                            (r) => r.roleName === tempSelectedRole,
+                          )?.roleLabel || tempSelectedRole}
                           <button
+                            onClick={() => {
+                              // Allow removal of ANY role (parent or user-selected)
+                              setSelectedRole("");
+                              setTempSelectedRole("");
+                            }}
+                            className="ml-1 text-blue-500 hover:text-red-500"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                          {/* // REPLACE the role removal button: */}
+                          {/* <button
+                            onClick={() => {
+                              // Allow removal of ANY role (parent or user-selected)
+                              setSelectedRole("");
+                            }}
+                            className="ml-1 text-blue-500 hover:text-red-500"
+                          >
+                            <X className="h-3 w-3" />
+                          </button> */}
+                          {/* <button
                             onClick={() => {
                               setSelectedRole("");
                             }}
                             className="ml-1 text-blue-500 hover:text-red-500"
                           >
                             <X className="h-3 w-3" />
-                          </button>
+                          </button> */}
                         </span>
                       </div>
                     )}
@@ -1625,10 +2077,11 @@ function OutsourcedInterviewerModal({
             <div
               className={`
     grid gap-4 sm:gap-5 px-1 sm:px-2
-    ${isFullscreen
-                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
-                  : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-2"
-                }
+    ${
+      isFullscreen
+        ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
+        : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
+    }
   `}
             >
               {filteredInterviewers.map((interviewer) => (

@@ -6,11 +6,11 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Search, X, ChevronDown, Clock, ChevronUp } from "lucide-react";
-import useInterviewers from "../../../../../../hooks/useInterviewers";
+// import useInterviewers from "../../../../../../hooks/useInterviewers";
 // v1.0.1 <------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 import {
-  useGroupsQuery,
+  // useGroupsQuery,
   useTeamsQuery,
 } from "../../../../../../apiHooks/useInterviewerGroups.js";
 // v1.0.1 ------------------------------------------------------------>
@@ -23,10 +23,11 @@ import {
 // import { InterviewerCard } from "../../../Interviewers/Interviewers.jsx";
 import { useMasterData } from "../../../../../../apiHooks/useMasterData.js";
 import DropdownWithSearchField from "../../../../../../Components/FormFields/DropdownWithSearchField.jsx";
-import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
+// import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
 import InterviewerAvatar from "../../../CommonCode-AllTabs/InterviewerAvatar.jsx";
 import { ReactComponent as LuFilterX } from "../../../../../../icons/LuFilterX.svg";
 import { ReactComponent as LuFilter } from "../../../../../../icons/LuFilter.svg";
+import { OutsourcedInterviewerCard } from "./OutsourceInterviewer.jsx";
 
 const InterviewerCard = ({
   interviewer,
@@ -36,7 +37,11 @@ const InterviewerCard = ({
   navigatedfrom,
   candidateExperience,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  // const [isExpanded, setIsExpanded] = useState(false);
+
+  // console.log("isSelected in card props", isSelected);
+
+  // console.log("interviewer available", interviewer);
   const firstName = interviewer?.contactDetails
     ? interviewer?.contactDetails?.firstName
     : interviewer?.contactId?.firstName;
@@ -89,7 +94,10 @@ const InterviewerCard = ({
 
   const professionalTitle = interviewer?.contact?.professionalTitle;
 
-  const CurrentRole = interviewer?.contactDetails?.roleLabel;
+  const CurrentRole =
+    interviewer?.contactDetails?.roleLabel ||
+    interviewer?.contactId?.roleLabel ||
+    professionalTitle;
   // const company = interviewer?.contact?.industry || "Freelancer";
 
   // const rating = interviewer?.contact?.rating || "4.6";
@@ -99,21 +107,32 @@ const InterviewerCard = ({
     ? interviewer?.contactDetails?.skills
     : interviewer?.contactId?.skills || [];
 
-  console.log("interviewer in card", interviewer);
+  // console.log("interviewer in card", interviewer);
 
-  console.log("skillsArray in card", skillsArray);
+  // console.log("skillsArray in card", skillsArray);
   // const avgResponseTime =
   // interviewer?.contact?.avgResponseTime || "not provided";
 
   return (
     <div
-      className={`w-full  ${isSelected
-          ? "border-orange-500 ring-2 ring-orange-200"
-          : "border-gray-200"
-        } `}
+      className={`relative
+        bg-white rounded-lg  border-gray-200 border border-md transition-all duration-200 p-4
+        ${
+          isSelected ? "opacity-60" : "opacity-100"
+          // isSelected
+          //   ? "border-orange-500 ring-2 ring-orange-200"
+          //   :
+          // " hover:shadow-md"
+        }
+      `}
+      // className={`w-full  ${
+      //   isSelected
+      //     ? "border-orange-500 ring-2 ring-orange-200"
+      //     : "border-gray-200"
+      // } `}
     >
       {/* <div className="w-full"> */}
-      <div className="flex items-center gap-3 w-full">
+      <div className="flex items-center gap-2">
         <div>
           <InterviewerAvatar interviewer={interviewer} size="lg" />
         </div>
@@ -218,6 +237,31 @@ const InterviewerCard = ({
           </div>
         )}
       </div>
+
+      {isSelected && (
+        <div
+          className="
+      absolute top-3 right-3
+      sm:top-4 sm:right-4
+      z-20
+      h-6 w-6
+      rounded-full
+      flex items-center justify-center
+      bg-custom-blue text-white
+      shadow-lg
+      ring-2 ring-custom-blue
+      transition-all duration-200
+    "
+        >
+          <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      )}
     </div>
   );
 };
@@ -249,15 +293,19 @@ const InternalInterviews = ({
   const pageType = "adminPortal";
   const { skills, loadSkills, isSkillsFetching } = useMasterData({}, pageType);
 
-  const [filterType, setFilterType] = useState("tags"); // default = tags
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const filterDropdownRef = useRef(null);
   // CHANGED: Use props as initial state
+  // Add this state with other state declarations
+  const [isFiltersApplied, setIsFiltersApplied] = useState(false);
+
   const [activeTagIds, setActiveTagIds] = useState(propSelectedTagIds || []);
   const [activeTeamIds, setActiveTeamIds] = useState(propSelectedTeamIds || []);
   const [skillInput, setSkillInput] = useState("");
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(true);
   const [selectedSkills, setSelectedSkills] = useState([]);
+  const [filterType, setFilterType] = useState("tags"); // default = tags
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const filterDropdownRef = useRef(null);
+
   const skillsPopupRef = useRef(null);
   const skillsInputRef = useRef(null);
   useScrollLock(true);
@@ -377,56 +425,58 @@ const InternalInterviews = ({
     const getPriority = (interviewer) => {
       let score = 0;
 
-      // ── 1. Parent (prop) match ─ highest priority ──
-      const teamId = interviewer.team_id?._id || interviewer.team_id;
-      if (teamId && propTeamSet.has(teamId)) {
-        score += 1000;
-      }
-
-      const tags = interviewer.tag_ids || interviewer.tags || [];
-      const hasPropTag = tags.some((t) => {
-        const tid = t?._id || t;
-        return tid && propTagSet.has(tid);
-      });
-      if (hasPropTag) {
-        score += 900;
-      }
-
-      // ── 2. Current UI filters match ──
-      let matchesCurrent = false;
-
-      // Teams
-      if (activeTeamIds.length > 0) {
-        if (teamId && activeTeamSet.has(teamId)) {
-          matchesCurrent = true;
+      if (isFiltersApplied) {
+        // ── 1. Parent (prop) match ─ highest priority ──
+        const teamId = interviewer.team_id?._id || interviewer.team_id;
+        if (teamId && propTeamSet.has(teamId)) {
+          score += 1000;
         }
-      } else {
-        matchesCurrent = true; // no team filter → neutral
-      }
 
-      // Tags (OR)
-      if (activeTagIds.length > 0) {
-        const hasActiveTag = tags.some((t) => {
+        const tags = interviewer.tag_ids || interviewer.tags || [];
+        const hasPropTag = tags.some((t) => {
           const tid = t?._id || t;
-          return tid && activeTagSet.has(tid);
+          return tid && propTagSet.has(tid);
         });
-        if (hasActiveTag) {
-          matchesCurrent = true;
-        } else if (activeTeamIds.length === 0) {
-          matchesCurrent = false; // only tags filter active → must match
+        if (hasPropTag) {
+          score += 900;
         }
-      }
 
-      if (matchesCurrent) {
-        score += 500;
-      }
+        // ── 2. Current UI filters match ──
+        let matchesCurrent = false;
 
-      // ── 3. Skills match ──
-      if (selectedSkills.length > 0) {
-        const hasSkill = (interviewer.contactId?.skills || []).some((s) =>
-          selectedSkillSet.has(s.toLowerCase()),
-        );
-        if (hasSkill) score += 200;
+        // Teams
+        if (activeTeamIds.length > 0) {
+          if (teamId && activeTeamSet.has(teamId)) {
+            matchesCurrent = true;
+          }
+        } else {
+          matchesCurrent = true; // no team filter → neutral
+        }
+
+        // Tags (OR)
+        if (activeTagIds.length > 0) {
+          const hasActiveTag = tags.some((t) => {
+            const tid = t?._id || t;
+            return tid && activeTagSet.has(tid);
+          });
+          if (hasActiveTag) {
+            matchesCurrent = true;
+          } else if (activeTeamIds.length === 0) {
+            matchesCurrent = false; // only tags filter active → must match
+          }
+        }
+
+        if (matchesCurrent) {
+          score += 500;
+        }
+
+        // ── 3. Skills match ──
+        if (selectedSkills.length > 0) {
+          const hasSkill = (interviewer.contactId?.skills || []).some((s) =>
+            selectedSkillSet.has(s.toLowerCase()),
+          );
+          if (hasSkill) score += 200;
+        }
       }
 
       // ── 4. Search match ──
@@ -470,6 +520,7 @@ const InternalInterviews = ({
     activeTeamIds,
     selectedSkills,
     searchQuery,
+    isFiltersApplied,
   ]);
 
   const [selectedInterviewers, setSelectedInterviewers] = useState(() => {
@@ -719,7 +770,7 @@ const InternalInterviews = ({
       onClose={onClose}
       // v1.0.2 <--------------------------------
       setIsFullscreen={setIsFullscreen}
-    // v1.0.2 -------------------------------->
+      // v1.0.2 -------------------------------->
     >
       <div className="flex flex-col h-full">
         {/* <------------------------------- v1.0.0  */}
@@ -740,30 +791,11 @@ const InternalInterviews = ({
           </span>
         </div> */}
         {/* Filter Toggle Button with Arrow */}
-         {navigatedfrom !== "dashboard" && (
+        {navigatedfrom !== "dashboard" && (
           <>
-        <div className="w-full flex justify-end items-center mt-4">
-          <button
-            className="cursor-pointer px-3 py-2 text-xl border rounded-md relative flex items-center justify-center w-10 h-10"
-            onClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
-          >
-            {isFilterPopupOpen ? (
-              <div className="relative">
-                <LuFilterX className="cursor-pointer" />
-                <ChevronUp className="absolute -bottom-8  -right-1 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50 " />
-              </div>
-            ) : (
-              <LuFilter className="cursor-pointer" />
-            )}
-          </button>
-        </div>
-
-        {isFilterPopupOpen && (
-          <div className=" border ring-opacity-5  ring-1 ring-black right-0 -mr-2 z-30 p-3 rounded-lg shadow-sm bg-white gap-4 mt-4">
-            {/* Header */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 mt-4">
+            <div className="w-full flex justify-end items-center gap-2 mt-4">
               {/* RIGHT SECTION — SEARCH */}
-              <div className="relative w-full sm:max-w-sm lg:max-w-md">
+              <div className="relative w-[60%] sm:max-w-sm lg:max-w-md">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
@@ -773,39 +805,65 @@ const InternalInterviews = ({
                   className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
-              {/* Tags / Teams Dropdown */}
-              <div className="relative min-w-[120px]" ref={filterDropdownRef}>
-                <button
-                  onClick={() => setShowFilterDropdown((prev) => !prev)}
-                  className="flex w-full items-center justify-between gap-2 rounded-md border bg-white px-3 py-2 text-sm"
-                >
-                  {filterType === "tags" ? "Tags" : "Teams"}
-                  <ChevronDown className="h-4 w-4 shrink-0" />
-                </button>
-
-                {showFilterDropdown && (
-                  <div className="absolute z-30 mt-1 w-full rounded-md border bg-white shadow">
-                    {["tags", "teams"].map((type) => (
-                      <div
-                        key={type}
-                        onClick={() => {
-                          setFilterType(type);
-                          setShowFilterDropdown(false);
-                        }}
-                        className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${filterType === type ? "font-medium text-blue-600" : ""
-                          }`}
-                      >
-                        {capitalizeFirstLetter(type)}
-                      </div>
-                    ))}
+              <button
+                className="cursor-pointer px-3 py-2 text-xl border rounded-md relative flex items-center justify-center w-10 h-10"
+                onClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
+              >
+                {isFilterPopupOpen ? (
+                  <div className="relative">
+                    <LuFilterX className="cursor-pointer" />
+                    <ChevronUp className="absolute -bottom-8  -right-1 w-4 h-4 text-white bg-white border-t border-l rotate-45 z-50 " />
                   </div>
+                ) : (
+                  <LuFilter className="cursor-pointer" />
                 )}
-              </div>
+              </button>
+            </div>
 
-              {/* Skills dropdown */}
-              <div className="min-w-[220px] max-w-xs w-full sm:w-auto">
-                {/* <input
+            {isFilterPopupOpen && (
+              <div className="border mt-3 border-gray-200 rounded-sm p-3 bg-white shadow-sm">
+                {/* Header */}
+                <div className="grid items-center gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-12 xl:grid-cols-12 2xl:grid-cols-12">
+                  {/* Tags / Teams Dropdown */}
+                  <div
+                    className="md:col-span-5 lg:col-span-5 xl:col-span-5 2xl:col-span-5"
+                    ref={filterDropdownRef}
+                  >
+                    <button
+                      onClick={() => setShowFilterDropdown((prev) => !prev)}
+                      className="flex  w-full items-center justify-between gap-2 rounded-md border bg-white px-3 py-2 text-sm"
+                    >
+                      {filterType === "tags" ? "Tags" : "Teams"}
+                      <ChevronDown className="h-4 w-4 shrink-0" />
+                    </button>
+
+                    {showFilterDropdown && (
+                      <div className="absolute  z-30 mt-1 w-[280px] rounded-md border bg-white shadow">
+                        {/* // <div className="absolute left-0 top-full z-30 mt-1 w-[120px] rounded-md border bg-white shadow"> */}
+
+                        {["tags", "teams"].map((type) => (
+                          <div
+                            key={type}
+                            onClick={() => {
+                              setFilterType(type);
+                              setShowFilterDropdown(false);
+                            }}
+                            className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${
+                              filterType === type
+                                ? "font-medium text-blue-600"
+                                : ""
+                            }`}
+                          >
+                            {capitalizeFirstLetter(type)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Skills dropdown */}
+                  <div className="md:col-span-4 lg:col-span-4 xl:col-span-4 2xl:col-span-4">
+                    {/* <input
                   type="text"
                   value={skillInput}
                   placeholder="Type skill & press Enter"
@@ -818,95 +876,123 @@ const InternalInterviews = ({
                   }}
                   className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                 /> */}
-                <DropdownWithSearchField
-                  ref={skillsInputRef}
-                  value={null}
-                  options={
-                    skills
-                      ?.filter(
-                        (skill) =>
-                          !selectedSkills.some(
-                            (s) => s.SkillName === skill.SkillName,
-                          ),
-                      )
-                      .map((skill) => ({
-                        value: skill.SkillName,
-                        label: skill.SkillName,
-                      })) || []
-                  }
-                  onChange={(option) => {
-                    if (!option) return;
+                    <DropdownWithSearchField
+                      ref={skillsInputRef}
+                      value={null}
+                      options={
+                        skills
+                          ?.filter(
+                            (skill) =>
+                              !selectedSkills.some(
+                                (s) => s.SkillName === skill.SkillName,
+                              ),
+                          )
+                          .map((skill) => ({
+                            value: skill.SkillName,
+                            label: skill.SkillName,
+                          })) || []
+                      }
+                      onChange={(option) => {
+                        if (!option) return;
 
-                    const value = option?.value || option?.target?.value;
-                    if (!value) return;
-                    setSelectedSkills((prev) => {
-                      // prevent duplicates
-                      if (
-                        prev.some(
-                          (s) =>
-                            (typeof s === "string"
-                              ? s
-                              : s.SkillName || s.skill || s) === value,
-                        )
-                      )
-                        return prev;
-                      return [...prev, value]; // Store as string, not object
-                    });
-                    // setSelectedSkills((prev) => {
-                    //   // prevent duplicates
-                    //   if (prev.some((s) => s.SkillName === value)) return prev;
-                    //   return [...prev, { SkillName: value }];
-                    // });
-                  }}
-                  onMenuOpen={loadSkills}
-                  loading={isSkillsFetching}
-                  placeholder="Add skill"
-                />
-              </div>
-            </div>
+                        const value = option?.value || option?.target?.value;
+                        if (!value) return;
+                        setSelectedSkills((prev) => {
+                          // prevent duplicates
+                          if (
+                            prev.some(
+                              (s) =>
+                                (typeof s === "string"
+                                  ? s
+                                  : s.SkillName || s.skill || s) === value,
+                            )
+                          )
+                            return prev;
+                          return [...prev, value]; // Store as string, not object
+                        });
+                        // setSelectedSkills((prev) => {
+                        //   // prevent duplicates
+                        //   if (prev.some((s) => s.SkillName === value)) return prev;
+                        //   return [...prev, { SkillName: value }];
+                        // });
+                      }}
+                      onMenuOpen={loadSkills}
+                      loading={isSkillsFetching}
+                      placeholder="Add skill"
+                    />
+                  </div>
 
-            {/* Fixed Dropdown and Search Section */}
+                  {/* Add this Apply/Clear Filter button */}
+                  <div className="md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3 flex items-end h-full">
+                    <button
+                      className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                        isFiltersApplied
+                          ? "bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
+                          : "bg-custom-blue text-white hover:bg-custom-blue/90"
+                      }`}
+                      onClick={() => {
+                        if (isFiltersApplied) {
+                          // Clear all filters
+                          setSearchQuery("");
+                          setActiveTagIds(propSelectedTagIds || []);
+                          setActiveTeamIds(propSelectedTeamIds || []);
+                          setSelectedSkills([]);
+                          setFilterType("tags");
+                          setIsFiltersApplied(false);
+                        } else {
+                          // Mark filters as applied (existing states will be used)
+                          setIsFiltersApplied(true);
+                        }
+                      }}
+                    >
+                      {isFiltersApplied ? "Clear Filter" : "Apply Filter"}
+                    </button>
+                  </div>
+                </div>
 
-            {/* Right: Filters */}
-            <div className="flex flex-col  gap-3 px-3 mt-3 ">
-              {filterType === "tags" && tagsData.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs text-gray-500 mr-1">Tags:</span>
+                {/* Fixed Dropdown and Search Section */}
 
-                  <div className="flex flex-wrap gap-x-2 gap-y-2.5">
-                    {tagsData.map((tag) => {
-                      const isSelected = activeTagIds.includes(tag._id);
-                      return (
-                        <button
-                          key={tag._id}
-                          type="button"
-                          onClick={() =>
-                            toggleSelection(tag._id, setActiveTagIds)
-                          }
-                          className={`
+                {/* Right: Filters */}
+                <div className="flex flex-col  gap-3 px-3 mt-3 ">
+                  {filterType === "tags" && tagsData.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-gray-500 mr-1">Tags:</span>
+
+                      <div className="flex flex-wrap gap-x-2 gap-y-2.5">
+                        {tagsData.map((tag) => {
+                          const isSelected = activeTagIds.includes(tag._id);
+                          return (
+                            <button
+                              key={tag._id}
+                              type="button"
+                              onClick={() =>
+                                toggleSelection(tag._id, setActiveTagIds)
+                              }
+                              className={`
             flex items-center gap-1.5 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${isSelected
-                              ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
-                              : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
-                            }
+            ${
+              isSelected
+                ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
+                : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
+            }
           `}
-                          style={{ "--tag-color": tag.color }}
-                        >
-                          <span
-                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                            style={{
-                              backgroundColor: tag.color,
-                            }}
-                          />
-                          <span className="text-black">{tag.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                              style={{ "--tag-color": tag.color }}
+                            >
+                              <span
+                                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                style={{
+                                  backgroundColor: tag.color,
+                                }}
+                              />
+                              <span className="text-black">{tag.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
 
-                  {/* {tagsData.map((tag) => (
+                      {/* {tagsData.map((tag) => (
                 <span
                   key={tag._id}
                   className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border"
@@ -923,41 +1009,42 @@ const InternalInterviews = ({
                   {tag.name}
                 </span>
               ))} */}
-                </div>
-              )}
+                    </div>
+                  )}
 
-              {filterType === "teams" && teamsData.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs text-gray-500 mr-1">Teams:</span>
+                  {filterType === "teams" && teamsData.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-gray-500 mr-1">Teams:</span>
 
-                  <div className="flex flex-wrap gap-x-3 gap-y-3">
-                    {teamsData.map((team) => {
-                      const isSelected = activeTeamIds.includes(team._id);
-                      return (
-                        <button
-                          key={team._id}
-                          type="button"
-                          onClick={() =>
-                            toggleSelection(team._id, setActiveTeamIds)
-                          }
-                          className={`
+                      <div className="flex flex-wrap gap-x-3 gap-y-3">
+                        {teamsData.map((team) => {
+                          const isSelected = activeTeamIds.includes(team._id);
+                          return (
+                            <button
+                              key={team._id}
+                              type="button"
+                              onClick={() =>
+                                toggleSelection(team._id, setActiveTeamIds)
+                              }
+                              className={`
             flex items-center gap-2 
             px-4 py-2 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${isSelected
-                              ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
-                              : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
-                            }
+            ${
+              isSelected
+                ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
+                : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
+            }
           `}
-                        >
-                          <span className="text-base">👥</span>
-                          <span className="text-black">{team.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                            >
+                              <span className="text-base">👥</span>
+                              <span className="text-black">{team.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
 
-                  {/* {teamsData.map((team) => (
+                      {/* {teamsData.map((team) => (
                 <span
                   key={team._id}
                   className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200"
@@ -966,39 +1053,41 @@ const InternalInterviews = ({
                   {team.name}
                 </span>
               ))} */}
-                </div>
-              )}
+                    </div>
+                  )}
 
-              {/* Selected Skills */}
-              {selectedSkills.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs text-gray-500 mr-1">Skills:</span>
+                  {/* Selected Skills */}
+                  {selectedSkills.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-gray-500 mr-1">
+                        Skills:
+                      </span>
 
-                  {selectedSkills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800"
-                    >
-                      {skill}
-                      <button
-                        onClick={() =>
-                          setSelectedSkills((prev) =>
-                            prev.filter((s) => s !== skill),
-                          )
-                        }
-                        className="ml-1 text-gray-500 hover:text-red-500"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
+                      {selectedSkills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800"
+                        >
+                          {skill}
+                          <button
+                            onClick={() =>
+                              setSelectedSkills((prev) =>
+                                prev.filter((s) => s !== skill),
+                              )
+                            }
+                            className="ml-1 text-gray-500 hover:text-red-500"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
-        )}
-            </>
+              </div>
             )}
+          </>
+        )}
         {/* RIGHT SIDE — SEARCH */}
         {/* <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -1012,43 +1101,47 @@ const InternalInterviews = ({
         </div> */}
 
         {/* Scrollable Data Section */}
-        <div className="flex-1 sm:px-2 px-6 py-4">
-          {/* v1.0.2 <-------------------------------------------------------------------------- */}
-
+        <div className="flex flex-col overflow-y-auto py-4 sm:px-2 min-h-full">
           <div
-            className={`grid gap-3 sm:grid-cols-1 md:grid-cols-1
-            ${isFullscreen
-                ? "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
-                : "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-              }
-          `}
+            className={`
+    grid gap-4 sm:gap-5 px-1 sm:px-2
+    ${
+      isFullscreen
+        ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
+        : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
+    }
+  `}
           >
             {/* v1.0.2 --------------------------------------------------------------------------> */}
             {filteredAndPrioritizedInterviewers?.map((item) => (
               <div
                 key={item._id}
-                className={`relative z-0 flex items-center justify-between p-3 rounded-md transition-all duration-200
-                  ${navigatedfrom !== "dashboard"
-                    ? "cursor-pointer"
-                    : "cursor-default"
+                className={`
+                  ${navigatedfrom === "dashboard" && "relative z-0 flex items-center justify-between p-3 rounded-md transition-all duration-200"}
+                  ${
+                    // navigatedfrom !== "dashboard"
+                    //   ? "cursor-pointer"
+                    //   :
+                    navigatedfrom === "dashboard" && "cursor-default"
                   }
-                  ${navigatedfrom !== "dashboard" && isInterviewerSelected(item)
-                    ? "bg-custom-bg border border-custom-blue"
-                    : "hover:bg-gray-50 border border-gray-200"
-                  }`}
+                
+                  `}
                 onClick={() =>
                   navigatedfrom !== "dashboard" && handleSelectClick(item)
                 }
               >
                 <div
-                  className={`flex items-center w-full ${isInterviewerSelected(item) ? "opacity-60" : "opacity-100"
-                    }`}
+                // transition-opacity
+                // className={`  ${
+                //   isInterviewerSelected(item) ? "opacity-60" : "opacity-100"
+                // }`}
                 >
                   {viewType === "individuals" ? (
-                    <InterviewerCard
+                    <OutsourcedInterviewerCard
                       key={item._id}
                       interviewer={item}
-                      from="outsource-interview"
+                      navigatedfrom="internal-interview"
+                      isSelected={isInterviewerSelected(item)}
                     />
                   ) : (
                     <>
@@ -1073,7 +1166,7 @@ const InternalInterviews = ({
                         </p>
                         <p className="text-xs text-gray-500">
                           {Array.isArray(item.usersNames) &&
-                            item.usersNames.length > 0
+                          item.usersNames.length > 0
                             ? item.usersNames.join(", ")
                             : "No users available"}
                         </p>
@@ -1081,27 +1174,6 @@ const InternalInterviews = ({
                     </>
                   )}
                 </div>
-
-                {isInterviewerSelected(item) && (
-                  <div
-                    className="absolute right-3 top-1/2 -translate-y-1/2 z-20
-                      h-6 w-6 rounded-full flex items-center justify-center 
-                      bg-custom-blue text-white shadow-lg ring-2 ring-custom-blue
-                      scale-90 transition-all duration-200"
-                  >
-                    <svg
-                      className="h-3 w-3"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                )}
               </div>
             ))}
           </div>
