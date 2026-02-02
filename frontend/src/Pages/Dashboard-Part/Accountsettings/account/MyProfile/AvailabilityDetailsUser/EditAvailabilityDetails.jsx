@@ -421,11 +421,10 @@ const EditAvailabilityDetails = ({
                 {["30", "45", "60", "90"].map((duration) => (
                   <li
                     key={duration}
-                    className={`option cursor-pointer inline-block py-2 px-3 rounded-lg border border-custom-blue ${
-                      formData.selectedOption === duration
+                    className={`option cursor-pointer inline-block py-2 px-3 rounded-lg border border-custom-blue ${formData.selectedOption === duration
                         ? "text-white bg-custom-blue"
                         : "bg-white"
-                    }`}
+                      }`}
                     onClick={() => handleOptionClick(duration)}
                   >
                     {duration} mins
@@ -447,7 +446,7 @@ const EditAvailabilityDetails = ({
         <div className="flex justify-end space-x-3 mt-10">
           <button
             onClick={handleCloseModal}
-            className="px-4 py-2 text-custom-blue border rounded-lg border-custom-blue"
+            className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>

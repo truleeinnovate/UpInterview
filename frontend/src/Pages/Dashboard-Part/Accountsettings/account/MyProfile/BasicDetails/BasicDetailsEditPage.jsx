@@ -911,8 +911,8 @@ const BasicDetailsEditPage = ({
                 label="LinkedIn"
                 name="linkedinUrl"
                 required
-                // disabled={true}
-                // className="bg-gray-100"
+              // disabled={true}
+              // className="bg-gray-100"
               />
             </div>
 
@@ -930,7 +930,7 @@ const BasicDetailsEditPage = ({
             <button
               type="button"
               onClick={handleCloseModal}
-              className="px-4 py-2 text-custom-blue border rounded-lg border-custom-blue"
+              className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>

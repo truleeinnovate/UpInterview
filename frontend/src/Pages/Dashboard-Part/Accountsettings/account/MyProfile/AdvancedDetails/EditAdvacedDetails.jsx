@@ -28,6 +28,7 @@ import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/Sideb
 import {
   DropdownWithSearchField,
   IncreaseAndDecreaseField,
+  InputField,
 } from "../../../../../../Components/FormFields";
 import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
@@ -101,6 +102,7 @@ const EditAdvacedDetails = ({
     industry: "",
     yearsOfExperience: "",
     location: "",
+    company: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -115,6 +117,7 @@ const EditAdvacedDetails = ({
         industry: profileData.industry || "",
         yearsOfExperience: profileData.yearsOfExperience || "",
         location: profileData.location || "",
+        company: profileData.company || "",
         id: profileData._id,
       });
       // setResumeName(profileData?.resume?.filename);
@@ -168,6 +171,7 @@ const EditAdvacedDetails = ({
         ? Number(formData.yearsOfExperience)
         : 0,
       location: formData.location?.trim() || "",
+      company: formData.company?.trim() || "",
       // skills: formData.skills
       id: formData.id,
     };
@@ -256,6 +260,7 @@ const EditAdvacedDetails = ({
     industry: useRef(null),
     yearsOfExperience: useRef(null),
     location: useRef(null),
+    company: useRef(null),
   };
 
   // Shared dropdown options
@@ -263,9 +268,9 @@ const EditAdvacedDetails = ({
     () =>
       Array.isArray(industries)
         ? industries.map((i) => ({
-            value: i.IndustryName,
-            label: i.IndustryName,
-          }))
+          value: i.IndustryName,
+          label: i.IndustryName,
+        }))
         : [],
     [industries]
   );
@@ -274,9 +279,9 @@ const EditAdvacedDetails = ({
     () =>
       Array.isArray(locations)
         ? locations.map((l) => ({
-            value: l.LocationName,
-            label: l.LocationName,
-          }))
+          value: l.LocationName,
+          label: l.LocationName,
+        }))
         : [],
     [locations]
   );
@@ -352,6 +357,17 @@ const EditAdvacedDetails = ({
             </div>
 
             <div className="flex flex-col">
+              <InputField
+                label="Current Company"
+                name="company"
+                value={formData.company}
+                onChange={handleInputChange}
+                error={errors.company}
+                placeholder="Enter Company Name"
+              />
+            </div>
+
+            <div className="flex flex-col">
               <DropdownWithSearchField
                 value={formData.industry}
                 options={industryOptionsWithCurrent}
@@ -401,7 +417,7 @@ const EditAdvacedDetails = ({
             <button
               type="button"
               onClick={handleCloseModal}
-              className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
+              className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
