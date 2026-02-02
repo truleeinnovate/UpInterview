@@ -79,9 +79,9 @@ export const OutsourcedInterviewerCard = ({
   const currentRole =
     navigatedfrom === "internal-interview"
       ? interviewer?.contactDetails?.roleLabel ||
-        interviewer?.contactId?.roleLabel
+      interviewer?.contactId?.roleLabel
       : interviewer?.contact?.roleLabel || "Interviewer";
-  const company = interviewer?.contact?.industry || "Freelancer";
+  const company = interviewer?.contact?.company || "N/A";
   const rating = interviewer?.contact?.rating || "4.6";
   const introduction = interviewer?.contact?.bio || "No introduction provided.";
 
@@ -217,10 +217,9 @@ export const OutsourcedInterviewerCard = ({
     <div
       className={`
         bg-white rounded-lg border shadow-sm transition-all duration-200
-        ${
-          isSelected
-            ? "border-orange-500 ring-2 ring-orange-200"
-            : "border-gray-200 hover:shadow-md"
+        ${isSelected
+          ? "border-orange-500 ring-2 ring-orange-200"
+          : "border-gray-200 hover:shadow-md"
         }
       `}
     >
@@ -245,16 +244,12 @@ export const OutsourcedInterviewerCard = ({
                 )}
 
                 {navigatedfrom !== "internal-interview" ? null : (
-                  <p className="text-xs text-gray-500 mt-0.1">
+                  <p className="text-sm text-gray-500 mt-0.1">
                     {interviewerEmail}
                   </p>
                 )}
 
-                {navigatedfrom === "internal-interview" ? null : (
-                  <p className="text-sm text-orange-600 mt-1">
-                    {capitalizeFirstLetter(company)}
-                  </p>
-                )}
+
               </div>
 
               {navigatedfrom === "internal-interview" ? null : (
@@ -306,12 +301,16 @@ export const OutsourcedInterviewerCard = ({
         )} */}
 
         {navigatedfrom === "internal-interview" ? null : (
-          <div className="mt-3 ml-14">
+          <div className="mt-3">
+            {navigatedfrom === "internal-interview" ? null : (
+              <p className="text-sm mt-1">
+                {capitalizeFirstLetter(company)}
+              </p>
+            )}
             <div
               ref={textRef}
-              className={`text-sm text-gray-600 leading-relaxed ${
-                isExpanded ? "" : "line-clamp-5"
-              }`}
+              className={`text-sm text-gray-600 leading-relaxed ${isExpanded ? "" : "line-clamp-5"
+                }`}
             >
               {capitalizeFirstLetter(introduction)}
             </div>
@@ -320,7 +319,7 @@ export const OutsourcedInterviewerCard = ({
             {(isOverflowing || isExpanded) && (
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="mt-1 text-xs text-custom-blue hover:text-custom-blue/80 flex items-center gap-1"
+                className="mt-1 text-sm text-custom-blue hover:text-custom-blue/80 flex items-center gap-1"
               >
                 {isExpanded ? "Show less" : "Show more"}
                 {isExpanded ? (
@@ -357,7 +356,7 @@ export const OutsourcedInterviewerCard = ({
             <p className="text-xs text-gray-500 italic">No skills listed.</p>
           )}
         </div> */}
-        <div className="mt-3 ml-14">
+        <div className="mt-3">
           {skillsArray.length > 0 ? (
             <div
               ref={skillsRef}
@@ -366,9 +365,8 @@ export const OutsourcedInterviewerCard = ({
               {skillsArray.map((skill, i) => (
                 <span
                   key={i}
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 h-[22px] ${
-                    i >= visibleCount ? "hidden" : ""
-                  }`}
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 h-[22px] ${i >= visibleCount ? "hidden" : ""
+                    }`}
                 >
                   {typeof skill === "string"
                     ? skill
@@ -389,7 +387,7 @@ export const OutsourcedInterviewerCard = ({
 
         {/* Availability Slots */}
         {navigatedfrom === "internal-interview" && (
-          <div className="mt-4 ml-14 group relative">
+          <div className="mt-4 group relative">
             {slotsInfo.hasSlots ? (
               <div className="rounded-lg bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 p-3 hover:shadow-md hover:border-green-300 transition-all">
                 <div className="flex items-start gap-2.5">
@@ -760,8 +758,7 @@ function OutsourcedInterviewerModal({
                 });
 
                 console.log(
-                  `🎯 ${
-                    interviewer.contact?.firstName || "Unknown"
+                  `🎯 ${interviewer.contact?.firstName || "Unknown"
                   } Skill Match Status: ${hasMatchingSkill}`,
                 );
                 return hasMatchingSkill;
@@ -1265,7 +1262,7 @@ function OutsourcedInterviewerModal({
         if (role.toLowerCase().includes(searchLower)) return true;
 
         // Check company match
-        const company = interviewer?.contact?.industry || "";
+        const company = interviewer?.contact?.company || "N/A";
         if (company.toLowerCase().includes(searchLower)) return true;
 
         // Check skills match
@@ -1629,9 +1626,9 @@ function OutsourcedInterviewerModal({
         // title="Outsourced Interviewers"
         title={
           <div>
-            <h4 className="flex items-center sm:text-sm text-[18px] gap-2 font-semibold text-custom-blue">
+            <h4 className="flex items-center sm:text-sm text-xl gap-2 font-semibold text-custom-blue">
               <Users className="h-5 w-5" />
-              Select Outsourced Interviewer
+              Outsourced Interviewer
             </h4>
             <p className="text-sm text-gray-500">
               Select from external interview experts
@@ -1751,7 +1748,7 @@ function OutsourcedInterviewerModal({
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <input
                           type="text"
-                          placeholder="Search by name, role, company, or skills..."
+                          placeholder="Search by name, company"
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                           className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1907,16 +1904,15 @@ function OutsourcedInterviewerModal({
                           }}
                           onMenuOpen={loadSkills}
                           loading={isSkillsFetching}
-                          placeholder="Add skill"
+                          placeholder="Filter by skills"
                         />
                       </div>
                       <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-3 flex items-end mt-6">
                         <button
                           className={`w-full h-10 px-4 text-sm rounded-md  duration-200 flex items-center justify-center whitespace-nowrap
-                            ${
-                              isFiltersApplied
-                                ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
-                                : "bg-custom-blue text-white hover:bg-custom-blue/90"
+                            ${isFiltersApplied
+                              ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
+                              : "bg-custom-blue text-white hover:bg-custom-blue/90"
                             }`}
                           onClick={
                             isFiltersApplied
@@ -2226,10 +2222,9 @@ function OutsourcedInterviewerModal({
             <div
               className={`
                 grid gap-4 sm:gap-5 px-1 sm:px-2
-                ${
-                  isFullscreen
-                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
-                    : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
+                ${isFullscreen
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
+                  : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
                 }
               `}
             >

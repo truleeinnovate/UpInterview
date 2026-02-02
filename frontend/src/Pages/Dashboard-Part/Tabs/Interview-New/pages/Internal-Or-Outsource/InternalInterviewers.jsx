@@ -117,19 +117,18 @@ const InterviewerCard = ({
     <div
       className={`relative
         bg-white rounded-lg  border-gray-200 border border-md transition-all duration-200 p-4
-        ${
-          isSelected ? "opacity-60" : "opacity-100"
-          // isSelected
-          //   ? "border-orange-500 ring-2 ring-orange-200"
-          //   :
-          // " hover:shadow-md"
+        ${isSelected ? "opacity-60" : "opacity-100"
+        // isSelected
+        //   ? "border-orange-500 ring-2 ring-orange-200"
+        //   :
+        // " hover:shadow-md"
         }
       `}
-      // className={`w-full  ${
-      //   isSelected
-      //     ? "border-orange-500 ring-2 ring-orange-200"
-      //     : "border-gray-200"
-      // } `}
+    // className={`w-full  ${
+    //   isSelected
+    //     ? "border-orange-500 ring-2 ring-orange-200"
+    //     : "border-gray-200"
+    // } `}
     >
       {/* <div className="w-full"> */}
       <div className="flex items-center gap-2">
@@ -766,9 +765,9 @@ const InternalInterviews = ({
       // title={`Internal Interviewers`}
       title={
         <div>
-          <h4 className="flex items-center text-lg gap-2 font-semibold text-custom-blue">
+          <h4 className="flex items-center text-xl gap-2 font-semibold text-custom-blue">
             <Users className="h-5 w-5" />
-            Select Internal Interviewer
+            Internal Interviewer
           </h4>
           <p className="text-sm text-gray-500">
             Select from internal interview experts
@@ -781,7 +780,7 @@ const InternalInterviews = ({
       onClose={onClose}
       // v1.0.2 <--------------------------------
       setIsFullscreen={setIsFullscreen}
-      // v1.0.2 -------------------------------->
+    // v1.0.2 -------------------------------->
     >
       <div className="pb-10">
         {/* <------------------------------- v1.0.0  */}
@@ -859,11 +858,10 @@ const InternalInterviews = ({
                               setFilterType(type);
                               setShowFilterDropdown(false);
                             }}
-                            className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${
-                              filterType === type
+                            className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${filterType === type
                                 ? "font-medium text-custom-blue"
                                 : ""
-                            }`}
+                              }`}
                           >
                             {capitalizeFirstLetter(type)}
                           </div>
@@ -929,18 +927,17 @@ const InternalInterviews = ({
                       }}
                       onMenuOpen={loadSkills}
                       loading={isSkillsFetching}
-                      placeholder="Add skill"
+                      placeholder="Filter by skills"
                     />
                   </div>
 
                   {/* Add this Apply/Clear Filter button */}
                   <div className="md:col-span-3 lg:col-span-3 xl:col-span-2 2xl:col-span-3 flex items-end h-full">
                     <button
-                      className={`w-full text-sm px-3 h-10 rounded-md font-medium transition-colors flex items-center justify-center whitespace-nowrap ${
-                        isFiltersApplied
+                      className={`w-full text-sm px-3 h-10 rounded-md font-medium transition-colors flex items-center justify-center whitespace-nowrap ${isFiltersApplied
                           ? "bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
                           : "bg-custom-blue text-white hover:bg-custom-blue/90"
-                      }`}
+                        }`}
                       onClick={() => {
                         if (isFiltersApplied) {
                           // Clear all filters
@@ -967,7 +964,7 @@ const InternalInterviews = ({
                 <div className="flex flex-col  gap-3 px-3 mt-3 ">
                   {filterType === "tags" && tagsData.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-xs text-gray-500 mr-1">Tags:</span>
+                      <span className="text-xs text-gray-500 mr-1"> Select Tags:</span>
 
                       <div className="flex flex-wrap gap-x-2 gap-y-2.5">
                         {tagsData.map((tag) => {
@@ -983,11 +980,10 @@ const InternalInterviews = ({
             flex items-center gap-1.5 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${
-              isSelected
-                ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
-                : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
-            }
+            ${isSelected
+                                  ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
+                                  : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
+                                }
           `}
                               style={{ "--tag-color": tag.color }}
                             >
@@ -1025,7 +1021,7 @@ const InternalInterviews = ({
 
                   {filterType === "teams" && teamsData.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-xs text-gray-500 mr-1">Teams:</span>
+                      <span className="text-xs text-gray-500 mr-1">Select Teams:</span>
 
                       <div className="flex flex-wrap gap-x-3 gap-y-3">
                         {teamsData.map((team) => {
@@ -1039,13 +1035,12 @@ const InternalInterviews = ({
                               }
                               className={`
             flex items-center gap-2 
-            px-4 py-2 rounded-full text-sm font-medium
+            px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${
-              isSelected
-                ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
-                : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
-            }
+            ${isSelected
+                                  ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
+                                  : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
+                                }
           `}
                             >
                               <span className="text-base">👥</span>
@@ -1122,13 +1117,12 @@ const InternalInterviews = ({
             //         : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
             //     }
             //   `}
-         
+
             className={`
               grid gap-4 sm:gap-5 px-1 sm:px-2
-              ${
-                isFullscreen
-                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" 
-                  : "grid-cols-1"
+              ${isFullscreen
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+                : "grid-cols-1"
               }
             `}
           >
@@ -1139,10 +1133,10 @@ const InternalInterviews = ({
                 className={`
                   ${navigatedfrom === "dashboard" && "relative z-0 flex items-center justify-between p-3 rounded-md transition-all duration-200"}
                   ${
-                    // navigatedfrom !== "dashboard"
-                    //   ? "cursor-pointer"
-                    //   :
-                    navigatedfrom === "dashboard" && "cursor-default"
+                  // navigatedfrom !== "dashboard"
+                  //   ? "cursor-pointer"
+                  //   :
+                  navigatedfrom === "dashboard" && "cursor-default"
                   }
                 
                   `}
@@ -1186,7 +1180,7 @@ const InternalInterviews = ({
                         </p>
                         <p className="text-xs text-gray-500">
                           {Array.isArray(item.usersNames) &&
-                          item.usersNames.length > 0
+                            item.usersNames.length > 0
                             ? item.usersNames.join(", ")
                             : "No users available"}
                         </p>
