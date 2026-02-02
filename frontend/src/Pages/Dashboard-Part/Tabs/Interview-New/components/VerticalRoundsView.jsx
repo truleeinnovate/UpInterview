@@ -205,7 +205,7 @@ const VerticalRoundsView = ({
                               }}
                               className="cursor-pointer text-custom-blue hover:underline font-medium"
                             >
-                              Join meeting
+                              Join Meeting
                             </span>
 
                           )}
