@@ -374,10 +374,10 @@ const EditInterviewDetails = ({
       bio: profileData?.bio || "",
       interviewFormatWeOffer: Array.isArray(
         profileData?.interviewFormatWeOffer ||
-          profileData?.InterviewFormatWeOffer,
+        profileData?.InterviewFormatWeOffer,
       )
         ? profileData.interviewFormatWeOffer ||
-          profileData?.InterviewFormatWeOffer
+        profileData?.InterviewFormatWeOffer
         : [],
       yearsOfExperience: profileData?.yearsOfExperience || 0,
       id: profileData?._id,
@@ -1688,9 +1688,8 @@ const EditInterviewDetails = ({
                                     Range: $
                                     {getRateRanges(level.rangeKey).usd.min}-$
                                     {getRateRanges(level.rangeKey).usd.max} (
-                                    {`₹${
-                                      getRateRanges(level.rangeKey).inr.min
-                                    }–${getRateRanges(level.rangeKey).inr.max}`}
+                                    {`₹${getRateRanges(level.rangeKey).inr.min
+                                      }–${getRateRanges(level.rangeKey).inr.max}`}
                                     )
                                   </span>
                                 )}
@@ -1908,9 +1907,9 @@ const EditInterviewDetails = ({
                             value={
                               formData.mock_interview_discount
                                 ? {
-                                    value: formData.mock_interview_discount,
-                                    label: `${formData.mock_interview_discount}% discount`,
-                                  }
+                                  value: formData.mock_interview_discount,
+                                  label: `${formData.mock_interview_discount}% discount`,
+                                }
                                 : null
                             }
                             onChange={(selected) => {
@@ -2025,12 +2024,11 @@ const EditInterviewDetails = ({
 
                   {formData.professionalTitle?.length > 0 && (
                     <p
-                      className={`text-xs ${
-                        formData.professionalTitle.length < 50 ||
-                        errors.professionalTitle
+                      className={`text-xs ${formData.professionalTitle.length < 50 ||
+                          errors.professionalTitle
                           ? "text-red-500"
                           : "text-gray-500"
-                      }`}
+                        }`}
                     >
                       {formData.professionalTitle.length}/100
                     </p>
@@ -2067,7 +2065,7 @@ const EditInterviewDetails = ({
           <button
             type="button"
             onClick={handleCloseModal}
-            className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg"
+            className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>
