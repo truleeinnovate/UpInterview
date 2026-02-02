@@ -1068,6 +1068,11 @@ const FeedbackForm = ({
     if (rating > 0) {
       clearError("overallRating");
     }
+
+    // IMMEDIATE auto-save
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
+      triggerAutoSave();
+    }
   };
 
   // Handle communication rating change
@@ -1075,6 +1080,11 @@ const FeedbackForm = ({
     setCommunicationRating(rating);
     if (rating > 0) {
       clearError("communicationRating");
+    }
+
+    // IMMEDIATE auto-save
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
+      triggerAutoSave();
     }
   };
 
@@ -1085,8 +1095,12 @@ const FeedbackForm = ({
       clearError("comments");
     }
 
+    // IMMEDIATE auto-save
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
+      triggerAutoSave();
+    }
     // to auto save comments change
-    triggerAutoSave();
+    // triggerAutoSave();
   };
 
   // Handle skill change with validation
@@ -1101,7 +1115,11 @@ const FeedbackForm = ({
     ) {
       clearError("skills");
     }
-    triggerAutoSave();
+    // IMMEDIATE auto-save
+    if (triggerAutoSave && (isAddMode || isEditMode)) {
+      triggerAutoSave();
+    }
+    // triggerAutoSave();
   };
 
   const submitFeedback = async () => {
@@ -2054,7 +2072,11 @@ const FeedbackForm = ({
                 onChange={(opt) => {
                   setRecommendation(opt?.value || "");
                   // to auto save comments change
-                  triggerAutoSave();
+                  // triggerAutoSave();
+                  // IMMEDIATE auto-save
+                  if (triggerAutoSave && (isAddMode || isEditMode)) {
+                    triggerAutoSave();
+                  }
                 }}
                 placeholder="Select Recommendation"
               />

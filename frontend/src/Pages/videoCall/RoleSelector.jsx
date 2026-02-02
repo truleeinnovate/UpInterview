@@ -143,8 +143,6 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
       // Wait for the API call to succeed
       let response = await updateInterviewStatus(role);
 
-      console.log("Status update response:", response);
-
       if (response?.success === true) {
         if (interviewRoundData?.meetPlatform === "platform") {
           const currentUrl = new URL(window.location.href);

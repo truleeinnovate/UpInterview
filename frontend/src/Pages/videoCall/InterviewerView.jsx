@@ -181,24 +181,27 @@ const InterviewerView = ({
 
   // Add the auto-save hook (around line 200, after state declarations):
 
-  const { saveNow: autoSaveQuestions, isSaving: isAutoSaving } =
-    useAutoSaveFeedback({
-      isAddMode: true,
-      interviewRoundId: decodedData?.interviewRoundId,
-      tenantId: currentTenantId,
-      interviewerId: decodedData?.interviewerId,
-      interviewerSectionData,
-      preselectedQuestionsResponses,
-      skillRatings: [], // Will be filled in feedback form
-      overallRating: 0,
-      communicationRating: 0,
-      recommendation: "Maybe",
-      comments: "",
-      candidateId: candidateData?._id,
-      positionId: selectedCandidate?.position?._id,
-      ownerId: currentOwnerId,
-      feedbackId: autoSaveFeedbackId,
-    });
+  const {
+    saveNow: autoSaveQuestions,
+    isSaving: isAutoSaving,
+    triggerAutoSave,
+  } = useAutoSaveFeedback({
+    isAddMode: true,
+    interviewRoundId: decodedData?.interviewRoundId,
+    tenantId: currentTenantId,
+    interviewerId: decodedData?.interviewerId,
+    interviewerSectionData,
+    preselectedQuestionsResponses,
+    skillRatings: [], // Will be filled in feedback form
+    overallRating: 0,
+    communicationRating: 0,
+    recommendation: "Maybe",
+    comments: "",
+    candidateId: candidateData?._id,
+    positionId: selectedCandidate?.position?._id,
+    ownerId: currentOwnerId,
+    feedbackId: autoSaveFeedbackId,
+  });
 
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
@@ -479,6 +482,7 @@ const InterviewerView = ({
                   }
                   decodedData={decodedData}
                   autoSaveQuestions={autoSaveQuestions}
+                  triggerAutoSave={triggerAutoSave}
                 />
               )}
               {activeTab === "interviewActions" && (
@@ -505,6 +509,7 @@ const InterviewerView = ({
                   isAddMode={true}
                   isScheduler={isScheduler}
                   schedulerFeedbackData={schedulerFeedbackData}
+                  triggerAutoSave={triggerAutoSave}
                 />
               )}
               {/* {activeTab === 'management' && <FeedbackManagement />} */}
