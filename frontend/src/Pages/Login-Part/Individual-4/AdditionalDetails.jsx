@@ -11,6 +11,7 @@ import { useMasterData } from "../../../apiHooks/useMasterData.js";
 import { validateFile } from "../../../utils/FileValidation/FileValidation.js";
 import DropdownWithSearchField from "../../../Components/FormFields/DropdownWithSearchField";
 import IncreaseAndDecreaseField from "../../../Components/FormFields/IncreaseAndDecreaseField";
+import InputField from "../../../Components/FormFields/InputField";
 
 const AdditionalDetails = ({
   errors,
@@ -253,20 +254,20 @@ const AdditionalDetails = ({
             options={[
               // Include the current value in options even if not in the database yet
               ...(additionalDetailsData.currentRole &&
-              !currentRoles?.some(
-                (role) => role.roleName === additionalDetailsData.currentRole
-              )
+                !currentRoles?.some(
+                  (role) => role.roleName === additionalDetailsData.currentRole
+                )
                 ? [
-                    {
-                      value: additionalDetailsData.currentRole,
-                      // Check if we can find a roleLabel for this roleName
-                      label:
-                        currentRoles?.find(
-                          (role) =>
-                            role.roleName === additionalDetailsData.currentRole
-                        )?.roleLabel || additionalDetailsData.currentRole,
-                    },
-                  ]
+                  {
+                    value: additionalDetailsData.currentRole,
+                    // Check if we can find a roleLabel for this roleName
+                    label:
+                      currentRoles?.find(
+                        (role) =>
+                          role.roleName === additionalDetailsData.currentRole
+                      )?.roleLabel || additionalDetailsData.currentRole,
+                  },
+                ]
                 : []),
               ...(currentRoles?.map((role) => ({
                 value: role.roleName,
@@ -283,41 +284,18 @@ const AdditionalDetails = ({
           />
         </div>
 
-        {/* Industry */}
+      
         <div className="sm:col-span-2 col-span-1">
-          <DropdownWithSearchField
-            value={additionalDetailsData.industry || ""}
-            options={[
-              // Include the current value in options even if not in the database yet
-              ...(additionalDetailsData.industry &&
-              !industries?.some(
-                (ind) => ind.IndustryName === additionalDetailsData.industry
-              )
-                ? [
-                    {
-                      value: additionalDetailsData.industry,
-                      label: additionalDetailsData.industry,
-                    },
-                  ]
-                : []),
-              ...(industries
-                ?.filter((industry) => industry.IndustryName)
-                .map((industry) => ({
-                  value: industry.IndustryName,
-                  label: industry.IndustryName,
-                })) || []),
-            ]}
-            name="industry"
+
+          <InputField
+            value={additionalDetailsData.company || ""}
             onChange={handleChange}
-            error={errors.industry}
-            label="Industry"
-            placeholder="Select Industry"
-            required={true}
-            onMenuOpen={loadIndustries}
-            loading={isIndustriesFetching}
+            label="Current Company"
+            name="company"
+            required
+            error={errors.company}
           />
         </div>
-
         {/* Experience */}
         <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
@@ -366,15 +344,15 @@ const AdditionalDetails = ({
             options={[
               // Include the current value in options even if not in the database yet
               ...(additionalDetailsData.location &&
-              !locations?.some(
-                (loc) => loc.LocationName === additionalDetailsData.location
-              )
+                !locations?.some(
+                  (loc) => loc.LocationName === additionalDetailsData.location
+                )
                 ? [
-                    {
-                      value: additionalDetailsData.location,
-                      label: additionalDetailsData.location,
-                    },
-                  ]
+                  {
+                    value: additionalDetailsData.location,
+                    label: additionalDetailsData.location,
+                  },
+                ]
                 : []),
               ...(locations
                 ?.filter((location) => location.LocationName)
@@ -391,6 +369,41 @@ const AdditionalDetails = ({
             required={true}
             onMenuOpen={loadLocations}
             loading={isLocationsFetching}
+          />
+        </div>
+
+          {/* Industry */}
+        <div className="sm:col-span-2 col-span-1">
+          <DropdownWithSearchField
+            value={additionalDetailsData.industry || ""}
+            options={[
+              // Include the current value in options even if not in the database yet
+              ...(additionalDetailsData.industry &&
+                !industries?.some(
+                  (ind) => ind.IndustryName === additionalDetailsData.industry
+                )
+                ? [
+                  {
+                    value: additionalDetailsData.industry,
+                    label: additionalDetailsData.industry,
+                  },
+                ]
+                : []),
+              ...(industries
+                ?.filter((industry) => industry.IndustryName)
+                .map((industry) => ({
+                  value: industry.IndustryName,
+                  label: industry.IndustryName,
+                })) || []),
+            ]}
+            name="industry"
+            onChange={handleChange}
+            error={errors.industry}
+            label="Industry"
+            placeholder="Select Industry"
+            required={true}
+            onMenuOpen={loadIndustries}
+            loading={isIndustriesFetching}
           />
         </div>
 

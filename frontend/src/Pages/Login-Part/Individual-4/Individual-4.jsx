@@ -135,6 +135,7 @@ const MultiStepForm = () => {
     industry: "",
     yearsOfExperience: "",
     location: "",
+    company: "",
     resumeFile: null,
     coverLetterFile: null,
     isResumeRemoved: false,
@@ -303,9 +304,11 @@ const MultiStepForm = () => {
     industry: "",
     yearsOfExperience: "",
     location: "",
+    company: "",
     resume: null,
     coverLetter: null,
   });
+  console.log("additionalDetailsData", additionalDetailsData);
   const [interviewDetailsData, setInterviewDetailsData] = useState({
     skills: [],
     currentRole: "",
@@ -348,6 +351,7 @@ const MultiStepForm = () => {
         industry: matchedContact.industry || "",
         yearsOfExperience: matchedContact.yearsOfExperience || "",
         location: matchedContact.location || "",
+        company: matchedContact.company || "",
         resume: matchedContact.resume || null,
         coverLetter: matchedContact.coverLetter || null,
       });
@@ -602,6 +606,8 @@ const MultiStepForm = () => {
           currentErrors.yearsOfExperience = "Years of experience is required";
         if (!additionalDetailsData.location)
           currentErrors.location = "Location is required";
+        if (!additionalDetailsData.company)
+          currentErrors.company = "Company name is required";
         // v1.0.0 <----------------------------------------------------------------------------------------------
         // v1.0.1 <----------------------------------------------------------------------------------------------
         // if (!additionalDetailsData.resume && !resumeFile) {
@@ -953,6 +959,7 @@ const MultiStepForm = () => {
           industry: additionalDetailsData.industry,
           yearsOfExperience: additionalDetailsData.yearsOfExperience,
           location: additionalDetailsData.location,
+          company: additionalDetailsData.company,
           resume: additionalDetailsData.resume,
           coverLetter: additionalDetailsData.coverLetter,
         }),
