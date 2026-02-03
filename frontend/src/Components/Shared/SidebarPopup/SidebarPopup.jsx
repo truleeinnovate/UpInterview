@@ -17,6 +17,7 @@ import { createPortal } from "react-dom";
 function SidebarPopup({
   title,
   titleRight = "", // custom element
+  titleRightEnd = "",
   subTitle = "",
   children,
   onClose,
@@ -91,6 +92,7 @@ function SidebarPopup({
             </div>
 
             <div className="flex items-center gap-2">
+              {titleRightEnd && <div className="ml-2">{titleRightEnd}</div>}
               {/* Custom header action */}
               {headerAction && <div className="mr-2">{headerAction}</div>}
 
