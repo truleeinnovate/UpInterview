@@ -164,9 +164,9 @@ const CandidateDetails = ({
                 <p className="text-sm font-medium text-gray-500">Company</p>
                 <p
                   className="text-sm text-gray-900 truncate max-w-[200px]"
-                  title={positionData?.companyname?.name}
+                  // title={positionData?.companyname?.name}
                 >
-                  {positionData?.companyname?.name}
+                  {positionData?.companyname?.name || positionData?.companyname}
                 </p>
               </div>
             </div>
@@ -198,7 +198,7 @@ const CandidateDetails = ({
 
         {expandedSections.skills && (
           <div className="mt-4 space-y-3">
-            {candidateDetails.skills.map((skill, index) => (
+            {candidateDetails?.skills.map((skill, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-md"

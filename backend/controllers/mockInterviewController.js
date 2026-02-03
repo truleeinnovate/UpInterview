@@ -1632,7 +1632,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     // Safety check
     if (!finalUpdate || (!finalUpdate.$set && !finalUpdate.$push)) {
       return res
-        .status(204)
+        .status(200)
         .json({ success: true, message: "Nothing to update" });
     }
 
@@ -1664,7 +1664,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => { } }), locals: {} },
+        { status: () => ({ json: () => {} }), locals: {} },
       );
     }
 

@@ -17,6 +17,7 @@ import {
   Users,
   Wallet,
   Plus,
+  Building,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
@@ -51,8 +52,7 @@ export const OutsourcedInterviewerCard = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-
-  console.log("interviewer OutsourcedInterviewerCard", interviewer);
+  console.log("interviewer dashboard", source, interviewer);
 
   const firstName =
     source === "internal-interview"
@@ -79,9 +79,16 @@ export const OutsourcedInterviewerCard = ({
   const currentRole =
     source === "internal-interview"
       ? interviewer?.contactDetails?.roleLabel ||
-        interviewer?.contactId?.roleLabel
+        interviewer?.contactId?.roleLabel ||
+        interviewer?.contactId?.currentRole
       : interviewer?.contact?.roleLabel || "Interviewer";
-  const company = interviewer?.contact?.company || "N/A";
+
+  const companyName =
+    source === "internal-interview"
+      ? interviewer?.contactDetails?.company ||
+        interviewer?.contactId?.company ||
+        interviewer?.contactId?.company
+      : interviewer?.contact?.company || "N/A";
   const rating = interviewer?.contact?.rating || "4.6";
   const introduction = interviewer?.contact?.bio || "No introduction provided.";
 
@@ -251,7 +258,7 @@ export const OutsourcedInterviewerCard = ({
                 )}
               </div>
 
-              {source === "internal-interview" || navigatedfrom === "dashboard" ? null : (
+              {source === "internal-interview" ? null : (
                 <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                   {/* Rating */}
                   <div className="flex items-center gap-1 bg-yellow-100 p-1 rounded">
@@ -299,36 +306,47 @@ export const OutsourcedInterviewerCard = ({
           </div>
         )} */}
 
-        {source === "internal-interview" ? null : (
-          <div className="mt-3">
-            {source === "internal-interview" ? null : (
-              <p className="text-sm mt-1">{capitalizeFirstLetter(company)}</p>
-            )}
-            <div
-              ref={textRef}
-              className={`text-sm text-gray-600 leading-relaxed ${
-                isExpanded ? "" : "line-clamp-5"
-              }`}
-            >
-              {capitalizeFirstLetter(introduction)}
-            </div>
-
-            {/* Only show the button if the text is expanded OR if it was truncated/overflowing */}
-            {(isOverflowing || isExpanded) && (
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="mt-1 text-sm text-custom-blue hover:text-custom-blue/80 flex items-center gap-1"
-              >
-                {isExpanded ? "Show less" : "Show more"}
-                {isExpanded ? (
-                  <ChevronUp className="h-3 w-3" />
-                ) : (
-                  <ChevronDown className="h-3 w-3" />
-                )}
-              </button>
-            )}
+        <div className="mt-3">
+          {/* {source === "internal-interview" ? null : ( */}
+          {/* <p className="text-sm mt-1">{capitalizeFirstLetter(companyName)}</p> */}
+          {/* )} */}
+          <div className="flex items-center space-x-[2px] text-xs text-gray-500">
+            <Building size={14} className="text-black" />
+            <span className="truncate">
+              {companyName
+                ? capitalizeFirstLetter(companyName)
+                : "Not specified"}
+            </span>
           </div>
-        )}
+
+          {source === "internal-interview" ? null : (
+            <>
+              <div
+                ref={textRef}
+                className={`text-sm text-gray-600 leading-relaxed ${
+                  isExpanded ? "" : "line-clamp-5"
+                }`}
+              >
+                {capitalizeFirstLetter(introduction)}
+              </div>
+
+              {/* Only show the button if the text is expanded OR if it was truncated/overflowing */}
+              {(isOverflowing || isExpanded) && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="mt-1 text-sm text-custom-blue hover:text-custom-blue/80 flex items-center gap-1"
+                >
+                  {isExpanded ? "Show less" : "Show more"}
+                  {isExpanded ? (
+                    <ChevronUp className="h-3 w-3" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3" />
+                  )}
+                </button>
+              )}
+            </>
+          )}
+        </div>
 
         {/* Skills */}
         {/* <div className="mt-3 ml-14">
@@ -1662,9 +1680,7 @@ function OutsourcedInterviewerModal({
                 Top Up
               </Button>
             </div>
-          ) : (
-            null
-          )
+          ) : null
         }
       >
         {/* v1.0.3 <------------------------- */}

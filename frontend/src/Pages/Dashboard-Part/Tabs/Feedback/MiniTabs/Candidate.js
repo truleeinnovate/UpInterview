@@ -74,13 +74,14 @@ const CandidateMiniTab = ({
   const safeCertificates = candidateData?.certificates ?? [];
   const safeProjects = candidateData?.projects ?? [];
 
-  const positionData =
-    propsSelecteData?.position || interviewData?.positionId
+  const positionData = !isMockInterview
+    ? propsSelecteData?.position || interviewData?.positionId
       ? propsSelecteData?.position || interviewData?.positionId
-      : feedback.positionId || {};
+      : feedback.positionId || {}
+    : null;
 
-  console.log("candidateData candidateData CandidateMiniTab", candidateData);
-
+  // console.log("candidateData candidateData CandidateMiniTab", candidateData);
+  // console.log("positionData in candidate details ", positionData);
   const [expandedSections, setExpandedSections] = useState({
     skills: true,
     certificates: false,
@@ -194,7 +195,7 @@ const CandidateMiniTab = ({
                   Company Name
                 </p>
                 <p className="text-gray-900">
-                  {positionData?.companyname || "Not Available"}
+                  {positionData?.companyname?.name || "Not Available"}
                 </p>
               </div>
             </>

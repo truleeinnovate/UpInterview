@@ -18,8 +18,6 @@ const VerticalRoundsView = ({
   onEditRound,
   onInitiateAction,
 }) => {
-
-
   // const { useScheduledAssessments } = useScheduleAssessments();
   // const { scheduleData } = useScheduleAssessments();
   // Sort rounds by sequence
@@ -87,7 +85,7 @@ const VerticalRoundsView = ({
   let { data: scheduledAssessments = [] } = useScheduleAssessments(
     sortedRounds.some((r) => r.roundTitle === "Assessment")
       ? sortedRounds.find((r) => r.roundTitle === "Assessment")?.assessmentId
-      : null
+      : null,
   );
 
   // 🔑 Whenever rounds/assessments change, extract candidate-specific data
@@ -99,11 +97,11 @@ const VerticalRoundsView = ({
         scheduledAssessments.length > 0
       ) {
         let filteredAssessment = scheduledAssessments?.find(
-          (assessment) => assessment._id === round.scheduleAssessmentId
+          (assessment) => assessment._id === round.scheduleAssessmentId,
         );
         let candidateData = filteredAssessment?.candidates?.find(
           (candidate) =>
-            candidate.candidateId?._id === interviewData?.candidateId?._id
+            candidate.candidateId?._id === interviewData?.candidateId?._id,
         );
 
         if (filteredAssessment) {
@@ -176,12 +174,15 @@ const VerticalRoundsView = ({
                     </h3>
                     <span
                       className={`mx-2 text-xs px-2 py-0.5 rounded-full ${getStatusBadgeColor(
-                        round?.status
+                        round?.status,
                       )}`}
                     >
                       {roundStatus === "RequestSent"
                         ? "Request Sent"
-                        : capitalizeFirstLetter(roundStatus)}
+                        : round?.status === "InProgress"
+                          ? "In Progress"
+                          : // : round?.status,
+                            capitalizeFirstLetter(roundStatus)}
                     </span>
                   </div>
                   <div className="flex items-center mt-1 text-sm text-gray-600">
@@ -192,25 +193,25 @@ const VerticalRoundsView = ({
                     <span className="mx-2">
                       {capitalizeFirstLetter(round?.interviewMode)}
                     </span>
-                    {round?.meetPlatform && round?.roundTitle !== "Assessment" && (
-                      <div className="flex items-center gap-2">
-                        <MeetPlatformBadge platform={round?.meetPlatform} />
-                        {(round?.status === "Scheduled" ||
-                          round?.status === "Rescheduled" ||
-                          round?.status === "InProgress") && (
+                    {round?.meetPlatform &&
+                      round?.roundTitle !== "Assessment" && (
+                        <div className="flex items-center gap-2">
+                          <MeetPlatformBadge platform={round?.meetPlatform} />
+                          {(round?.status === "Scheduled" ||
+                            round?.status === "Rescheduled" ||
+                            round?.status === "InProgress") && (
                             <span
                               onClick={(e) => {
-                                e.stopPropagation();      // ⛔ stop toggle
+                                e.stopPropagation(); // ⛔ stop toggle
                                 handleJoinMeeting(round); // ✅ join only
                               }}
                               className="cursor-pointer text-custom-blue hover:underline font-medium"
                             >
                               Join Meeting
                             </span>
-
                           )}
-                      </div>
-                    )}
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>

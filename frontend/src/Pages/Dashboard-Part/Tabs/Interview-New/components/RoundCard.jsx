@@ -1219,7 +1219,7 @@ const RoundCard = ({
   // };
 
   // 5. Cancel/NoShow reasons handled via shared modal
-  console.log("round", round);
+  // console.log("round", round);
 
   return (
     <>

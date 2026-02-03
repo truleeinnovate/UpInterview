@@ -217,7 +217,7 @@ const getAllInterviewersData = async (req, res) => {
       .populate({
         path: "contactId",
         select:
-          "firstName lastName email currentRole imageData rating skills availability",
+          "firstName lastName email location industry company currentRole imageData rating skills availability",
         populate: {
           path: "availability",
           model: "InterviewAvailability",
