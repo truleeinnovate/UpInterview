@@ -45,24 +45,24 @@ export const OutsourcedInterviewerCard = ({
   isSelected,
   onSelect,
   onViewDetails,
+  source,
   navigatedfrom,
   candidateExperience,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // navigatedfrom="internal-interview"
 
   console.log("interviewer OutsourcedInterviewerCard", interviewer);
 
   const firstName =
-    navigatedfrom === "internal-interview"
+    source === "internal-interview"
       ? interviewer?.contactDetails
         ? interviewer?.contactDetails?.firstName
         : interviewer?.contactId?.firstName
       : (interviewer?.contact?.firstName ?? "");
 
   const lastName =
-    navigatedfrom === "internal-interview"
+    source === "internal-interview"
       ? interviewer?.contactDetails
         ? interviewer?.contactDetails?.lastName
         : interviewer?.contactId?.lastName || ""
@@ -70,14 +70,14 @@ export const OutsourcedInterviewerCard = ({
   const fullName = `${firstName} ${lastName}`.trim() || "Unnamed";
 
   const interviewerEmail =
-    navigatedfrom === "internal-interview"
+    source === "internal-interview"
       ? interviewer?.contactDetails
         ? interviewer?.contactDetails?.email
         : interviewer?.contactId?.email || "No email"
       : interviewer?.contact?.email || "No email";
 
   const currentRole =
-    navigatedfrom === "internal-interview"
+    source === "internal-interview"
       ? interviewer?.contactDetails?.roleLabel ||
         interviewer?.contactId?.roleLabel
       : interviewer?.contact?.roleLabel || "Interviewer";
@@ -86,7 +86,7 @@ export const OutsourcedInterviewerCard = ({
   const introduction = interviewer?.contact?.bio || "No introduction provided.";
 
   const skillsArray =
-    navigatedfrom === "internal-interview"
+    source === "internal-interview"
       ? interviewer?.contactDetails
         ? interviewer?.contactDetails?.skills
         : interviewer?.contactId?.skills || []
@@ -244,14 +244,14 @@ export const OutsourcedInterviewerCard = ({
                   </p>
                 )}
 
-                {navigatedfrom !== "internal-interview" ? null : (
+                {source !== "internal-interview" ? null : (
                   <p className="text-sm text-gray-500 mt-0.1">
                     {interviewerEmail}
                   </p>
                 )}
               </div>
 
-              {navigatedfrom === "internal-interview" ? null : (
+              {source === "internal-interview" || navigatedfrom === "dashboard" ? null : (
                 <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                   {/* Rating */}
                   <div className="flex items-center gap-1 bg-yellow-100 p-1 rounded">
@@ -299,9 +299,9 @@ export const OutsourcedInterviewerCard = ({
           </div>
         )} */}
 
-        {navigatedfrom === "internal-interview" ? null : (
+        {source === "internal-interview" ? null : (
           <div className="mt-3">
-            {navigatedfrom === "internal-interview" ? null : (
+            {source === "internal-interview" ? null : (
               <p className="text-sm mt-1">{capitalizeFirstLetter(company)}</p>
             )}
             <div
@@ -385,7 +385,7 @@ export const OutsourcedInterviewerCard = ({
         </div>
 
         {/* Availability Slots */}
-        {navigatedfrom === "internal-interview" && (
+        {source === "internal-interview" && (
           <div className="mt-4 group relative">
             {slotsInfo.hasSlots ? (
               <div className="rounded-lg bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 p-3 hover:shadow-md hover:border-green-300 transition-all">
@@ -446,7 +446,7 @@ export const OutsourcedInterviewerCard = ({
       {navigatedfrom !== "dashboard" && (
         <div className="border-t border-gray-100 mt-4 mx-4">
           <div className="py-3 flex justify-end items-center gap-2">
-            {navigatedfrom === "internal-interview" ? null : (
+            {source === "internal-interview" ? null : (
               <Button
                 variant="outline"
                 size="sm"
@@ -478,6 +478,7 @@ function OutsourcedInterviewerModal({
   skills,
   currentRole,
   candidateExperience, //<-----v1.0.4-----Venkatesh---- Added to determine experience level for rate calculation
+  source,
   navigatedfrom,
   previousSelectedInterviewers,
 
