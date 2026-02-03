@@ -33,12 +33,13 @@ const InterviewerSchedule = () => {
     },
     1,
     10,
-    type
+    type,
   );
 
   console.log("interviewData InterviewerSchedule", responseDashBoard);
   // interviewData is get from useInterviews hook
   const interviewRounds = responseDashBoard?.upcomingRoundsData;
+
   // useMemo(() => {
   //   return interviewData.flatMap((interview) => {
   //     if (!Array.isArray(interview.rounds)) return [];
@@ -86,7 +87,7 @@ const InterviewerSchedule = () => {
       setCurrentIndex(0);
     }
   }, [interviewRounds]);
-
+  console.log("interviewRounds InterviewerSchedule", upcomingRounds);
   useEffect(() => {
     if (upcomingRounds.length > 1) {
       const interval = setInterval(() => {
@@ -213,8 +214,8 @@ const InterviewerSchedule = () => {
                     index === currentIndex
                       ? "opacity-100 translate-x-0"
                       : index < currentIndex
-                      ? "-translate-x-full opacity-0"
-                      : "translate-x-full opacity-0"
+                        ? "-translate-x-full opacity-0"
+                        : "translate-x-full opacity-0"
                   }`}
               >
                 <div className="space-y-4 w-full">
@@ -356,9 +357,11 @@ const InterviewerSchedule = () => {
                         <p className="text-sm font-medium text-gray-800">
                           {positionTitle}
                         </p>
-                        {companyName && (
-                          <p className="text-sm text-gray-600">{companyName}</p>
-                        )}
+                        {/* {companyName && ( */}
+                        <p className="text-sm text-gray-600">
+                          {companyName ? companyName : "Not Specified"}
+                        </p>
+                        {/* )} */}
                       </div>
                     </div>
                   </div>

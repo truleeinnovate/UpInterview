@@ -4,16 +4,18 @@ import React, { useState, useEffect } from "react";
 import {
   Star,
   ChevronRight,
-  Calendar,
   CheckCircle,
   Building,
   MapPin,
   Briefcase,
 } from "lucide-react";
 import useInterviewers from "../../../../hooks/useInterviewers";
+import { useAllInterviewers } from "../../../../apiHooks/useInterviewers";
 
 const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
-  const { interviewers, loading, error } = useInterviewers();
+  // const { interviewers, loading, error } = useInterviewers();
+  const { data: interviewers = [] } = useAllInterviewers({ active_only: true });
+  // console.log("Interviewers Data: DashboardInternalInterviewers", interviewers);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState("right");
 
@@ -24,9 +26,9 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
     if (!interviewers || !Array.isArray(interviewers)) return [];
 
     return interviewers
-      .filter((interviewer) => interviewer.type === "internal")
+      .filter((interviewer) => interviewer.interviewer_type === "internal")
       .map((interviewer) => {
-        const contact = interviewer.contact || {};
+        const contact = interviewer.contactId || {};
         const fullName = `${
           contact.firstName
             ? contact.firstName.charAt(0).toUpperCase() +
@@ -45,7 +47,7 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
           image: contact.ImageData?.path
             ? `${process.env.REACT_APP_API_URL}${contact.ImageData.path.replace(
                 /\\/g,
-                "/"
+                "/",
               )}`
             : null, // Changed to null to handle with nullish coalescing
           rating: 4.5, // Consider making this dynamic if available
@@ -64,6 +66,8 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
 
   // Get first 3 interviewers only
   const displayInterviewers = formattedInterviewers.slice(0, 3);
+
+  // console.log("Formatted Internal Interviewers:", displayInterviewers);
 
   // Auto-rotate slides
   useEffect(() => {
@@ -111,8 +115,8 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
                 index === currentIndex
                   ? "opacity-100 translate-x-0"
                   : index < currentIndex
-                  ? "-translate-x-full opacity-0"
-                  : "translate-x-full opacity-0"
+                    ? "-translate-x-full opacity-0"
+                    : "translate-x-full opacity-0"
               }`}
             >
               <div className="flex items-start gap-4">
@@ -145,7 +149,7 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
                         {interviewer.role}
                       </p>
                     </div>
-                    <div className="flex items-center space-x-1">
+                    {/* <div className="flex items-center space-x-1">
                       <Star
                         size={14}
                         className="text-yellow-400 fill-yellow-400"
@@ -153,14 +157,14 @@ const DashboardInternalInterviewers = ({ setInternalInterviews }) => {
                       <span className="text-sm text-gray-600">
                         {interviewer.rating}
                       </span>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="grid grid-cols-2 gap-y-2 gap-x-6 mb-3">
                     <div className="flex items-center space-x-[2px] text-xs text-gray-500">
                       <Building size={14} />
                       <span className="truncate">
-                        {interviewer.department || interviewer.company}
+                        {interviewer?.company || "Not specified"}
                       </span>
                     </div>
                     <div className="flex items-center space-x-[2px] text-xs text-gray-500 -ml-6">

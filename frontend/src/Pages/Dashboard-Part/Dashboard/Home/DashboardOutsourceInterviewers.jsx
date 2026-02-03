@@ -64,10 +64,10 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
     }
   }, [displayInterviewers.length]);
 
-  console.log(
-    "INTERVIEWS ==============================> ",
-    displayInterviewers
-  );
+  // console.log(
+  //   "INTERVIEWS ==============================> ",
+  //   displayInterviewers
+  // );
 
   return (
     <div className="bg-white/80 backdrop-blur-lg p-6 rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300">
@@ -106,8 +106,8 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                 index === currentIndex
                   ? "opacity-100 translate-x-0"
                   : index < currentIndex
-                  ? "-translate-x-full opacity-0"
-                  : "translate-x-full opacity-0"
+                    ? "-translate-x-full opacity-0"
+                    : "translate-x-full opacity-0"
               }`}
             >
               <div className="flex items-start gap-4">
