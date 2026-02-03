@@ -4370,7 +4370,7 @@ const RoundFormInterviews = () => {
           currentRole={candidate?.CurrentRole}
           onProceed={handleExternalInterviewerSelect}
           previousSelectedInterviewers={externalInterviewers}
-          navigatedfrom="interviewRound"
+          source="outsource-interview"
         />
       )}
 
@@ -4378,24 +4378,15 @@ const RoundFormInterviews = () => {
         <InternalInterviews
           key={`internal-modal-${internalInterviewers.length}`}
           isOpen={isInternalInterviews}
-          // onClose={() => setInternalInterviews(false)}
           onClose={() => {
             setInternalInterviews(false);
-            // If no interviewers were selected during this session, reset view type
-            // if (internalInterviewers.length === 0) {
-            //   setInterviewerViewType('individuals');
-            //   setInterviewerGroupName('');
-            // }
           }}
           onSelectCandidates={handleInternalInterviewerSelect}
           selectedInterviewers={internalInterviewers}
           selectedTeamIds={selectedTeamIds}
           selectedTagIds={selectedTagIds}
-          // defaultViewType={interviewerViewType}
-          // selectedGroupName={interviewerGroupName}
-          // selectedGroupId={interviewerGroupId}
-          // key={`${internalInterviewers.length}-${interviewerGroupId}`}
-          //  clearOnViewTypeChange={true}
+          source="internal-interview"
+         
         />
       )}
 

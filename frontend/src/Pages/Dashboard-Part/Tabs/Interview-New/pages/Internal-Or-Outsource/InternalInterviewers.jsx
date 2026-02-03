@@ -117,19 +117,18 @@ const InterviewerCard = ({
     <div
       className={`relative
         bg-white rounded-lg  border-gray-200 border border-md transition-all duration-200 p-4
-        ${
-          isSelected ? "opacity-60" : "opacity-100"
-          // isSelected
-          //   ? "border-orange-500 ring-2 ring-orange-200"
-          //   :
-          // " hover:shadow-md"
+        ${isSelected ? "opacity-60" : "opacity-100"
+        // isSelected
+        //   ? "border-orange-500 ring-2 ring-orange-200"
+        //   :
+        // " hover:shadow-md"
         }
       `}
-      // className={`w-full  ${
-      //   isSelected
-      //     ? "border-orange-500 ring-2 ring-orange-200"
-      //     : "border-gray-200"
-      // } `}
+    // className={`w-full  ${
+    //   isSelected
+    //     ? "border-orange-500 ring-2 ring-orange-200"
+    //     : "border-gray-200"
+    // } `}
     >
       {/* <div className="w-full"> */}
       <div className="flex items-center gap-2">
@@ -269,9 +268,9 @@ const InterviewerCard = ({
 const InternalInterviews = ({
   onClose,
   onSelectCandidates,
+  source,
   navigatedfrom,
   selectedInterviewers: selectedInterviewersProp = [],
-  defaultViewType = "individuals",
   // selectedGroupName = "",
   // selectedGroupId,
   // selectedTeamIds,
@@ -310,22 +309,6 @@ const InternalInterviews = ({
   const skillsInputRef = useRef(null);
   useScrollLock(true);
 
-  console.log("skills", skills);
-
-  // const [viewType, setViewType] = useState(defaultViewType);
-  // const [viewType, setViewType] = useState(defaultViewType);
-  // CHANGED: Auto-detect view type based on groupName or groupId
-  const [viewType, setViewType] = useState(() => {
-    // If groupName or groupId is provided, default to groups view
-    // if (selectedGroupName || selectedGroupId) {
-    //   return "groups";
-    // }
-    return defaultViewType;
-  });
-  // console.log("tagsData", tagsData);
-  // console.log("teamsData", teamsData);
-  // console.log("selectedInterviewersProp", selectedInterviewersProp);
-  // console.log("interviewers", interviewers);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -724,7 +707,7 @@ const InternalInterviews = ({
     //   onSelectCandidates(selectedInterviewers, viewType, groupName, groupId);
     // } else {
     // For individuals, just pass the selected interviewers and view type
-    onSelectCandidates(selectedInterviewers, viewType);
+    onSelectCandidates(selectedInterviewers);
     // }
     onClose();
   };
@@ -775,45 +758,26 @@ const InternalInterviews = ({
           </p>
         </div>
       }
-      //   ${
-      //   viewType === "individuals" ? "Individuals" : "Groups"
-      // }
       onClose={onClose}
       // v1.0.2 <--------------------------------
       setIsFullscreen={setIsFullscreen}
-      // v1.0.2 -------------------------------->
+    // v1.0.2 -------------------------------->
     >
       <div className="pb-10">
         {/* <------------------------------- v1.0.0  */}
-
-        {/* <div className="w-full flex justify-end  items-center mt-4">
-          <span className="cursor-pointer px-3 py-1 text-xl border rounded-md p-2">
-            {isFilterPopupOpen ? (
-              <LuFilterX
-                // className="cursor-pointer"
-                onClick={() => setIsFilterPopupOpen(false)}
-              />
-            ) : (
-              <LuFilter
-                // className="cursor-pointer"
-                onClick={() => setIsFilterPopupOpen(true)}
-              />
-            )}
-          </span>
-        </div> */}
         {/* Filter Toggle Button with Arrow */}
         {navigatedfrom !== "dashboard" && (
           <>
             <div className="w-full flex justify-end items-center gap-2 mt-4">
               {/* RIGHT SECTION — SEARCH */}
-              <div className="relative w-[60%] sm:max-w-sm lg:max-w-md">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search individuals..."
                   value={searchQuery}
                   onChange={handleSearchInputChange}
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <button
@@ -859,11 +823,10 @@ const InternalInterviews = ({
                               setFilterType(type);
                               setShowFilterDropdown(false);
                             }}
-                            className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${
-                              filterType === type
-                                ? "font-medium text-custom-blue"
-                                : ""
-                            }`}
+                            className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${filterType === type
+                              ? "font-medium text-custom-blue"
+                              : ""
+                              }`}
                           >
                             {capitalizeFirstLetter(type)}
                           </div>
@@ -936,11 +899,10 @@ const InternalInterviews = ({
                   {/* Add this Apply/Clear Filter button */}
                   <div className="md:col-span-3 lg:col-span-3 xl:col-span-2 2xl:col-span-3 flex items-end h-full">
                     <button
-                      className={`w-full text-sm px-3 h-10 rounded-md font-medium transition-colors flex items-center justify-center whitespace-nowrap ${
-                        isFiltersApplied
-                          ? "bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
-                          : "bg-custom-blue text-white hover:bg-custom-blue/90"
-                      }`}
+                      className={`w-full text-sm px-3 h-10 rounded-md font-medium transition-colors flex items-center justify-center whitespace-nowrap ${isFiltersApplied
+                        ? "bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
+                        : "bg-custom-blue text-white hover:bg-custom-blue/90"
+                        }`}
                       onClick={() => {
                         if (isFiltersApplied) {
                           // Clear all filters
@@ -986,11 +948,10 @@ const InternalInterviews = ({
             flex items-center gap-1.5 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${
-              isSelected
-                ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
-                : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
-            }
+            ${isSelected
+                                  ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
+                                  : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
+                                }
           `}
                               style={{ "--tag-color": tag.color }}
                             >
@@ -1046,11 +1007,10 @@ const InternalInterviews = ({
             flex items-center gap-2 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${
-              isSelected
-                ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
-                : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
-            }
+            ${isSelected
+                                  ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
+                                  : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
+                                }
           `}
                             >
                               <span className="text-base">👥</span>
@@ -1130,10 +1090,9 @@ const InternalInterviews = ({
 
             className={`
               grid gap-4 sm:gap-5 px-1 sm:px-2
-              ${
-                isFullscreen
-                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
-                  : "grid-cols-1"
+              ${isFullscreen
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+                : "grid-cols-1"
               }
             `}
           >
@@ -1144,10 +1103,10 @@ const InternalInterviews = ({
                 className={`
                   ${navigatedfrom === "dashboard" && "transition-all duration-200"}
                   ${
-                    // navigatedfrom !== "dashboard"
-                    //   ? "cursor-pointer"
-                    //   :
-                    navigatedfrom === "dashboard" && "cursor-default"
+                  // navigatedfrom !== "dashboard"
+                  //   ? "cursor-pointer"
+                  //   :
+                  navigatedfrom === "dashboard" && "cursor-default"
                   }
                 
                   `}
@@ -1155,47 +1114,13 @@ const InternalInterviews = ({
                   navigatedfrom !== "dashboard" && handleSelectClick(item)
                 }
               >
-                {viewType === "individuals" ? (
-                  <OutsourcedInterviewerCard
-                    key={item._id}
-                    interviewer={item}
-                    navigatedfrom={
-                      navigatedfrom === "dashboard"
-                        ? "dashboard"
-                        : "internal-interview"
-                    }
-                    isSelected={isInterviewerSelected(item)}
-                  />
-                ) : (
-                  <>
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <svg
-                        className="h-5 w-5 text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
-                        {item.name || "no name available"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {Array.isArray(item.usersNames) &&
-                        item.usersNames.length > 0
-                          ? item.usersNames.join(", ")
-                          : "No users available"}
-                      </p>
-                    </div>
-                  </>
-                )}
+                <OutsourcedInterviewerCard
+                  key={item._id}
+                  interviewer={item}
+                  source={source}
+                  navigatedfrom={navigatedfrom}
+                  isSelected={isInterviewerSelected(item)}
+                />
               </div>
             ))}
           </div>
@@ -1204,8 +1129,7 @@ const InternalInterviews = ({
           {filteredAndPrioritizedInterviewers?.length === 0 && (
             <div className="text-gray-500 flex items-center justify-center h-full mb-8">
               <p>
-                No {viewType === "individuals" ? "interviewers" : "groups"}{" "}
-                found for the selected criteria.
+                No interviewers found for the selected criteria.
               </p>
             </div>
           )}
