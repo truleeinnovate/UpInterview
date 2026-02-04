@@ -101,7 +101,7 @@ const SingleRoundView = ({
         {/* Header */}
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-custom-blue mr-2">
               <span className="text-sm font-medium">
                 {currentRound?.sequence}
               </span>
