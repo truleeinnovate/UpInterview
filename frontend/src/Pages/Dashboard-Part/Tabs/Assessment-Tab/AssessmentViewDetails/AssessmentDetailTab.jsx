@@ -25,7 +25,7 @@ function DetailsTab({ assessment, assessmentQuestions }) {
   const { positionData } = usePositions();
 
   const matchedPosition = positionData?.find(
-    (pos) => pos?._id === assessment?.Position?._id
+    (pos) => pos?._id === assessment?.Position?._id,
   );
 
   if (!assessment)
@@ -243,22 +243,19 @@ function DetailsTab({ assessment, assessmentQuestions }) {
     //   </div>
     //   {/* v1.0.1 -----------------------------------------------------------------------------> */}
     // </div>
-    <div className="overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-20">
+    // <div className="overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-20">
+    <div className="overflow-hidden h-full pb-20">
       <div className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
           {/* Basic Details Section */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <h3 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4 pb-2">
-              Basic Details
-            </h3>
-            <div className="grid sm:grid-cols-1 grid-cols-2 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-custom-bg rounded-lg">
-                  <BriefcaseIcon className="w-5 h-5 text-gray-500" />
-                </div>
+          <div className="bg-gray-50 rounded-lg p-5 border border-gray-100">
+            <h4 className="font-bold text-gray-800 mb-4">Basic Details</h4>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <BriefcaseIcon className="w-4 h-4 text-custom-blue mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Position</p>
-                  <p className="text-gray-700">
+                  <p className="text-xs text-gray-500">Position</p>
+                  <p className="font-medium text-sm text-gray-800">
                     {matchedPosition?.title
                       ? matchedPosition.title.charAt(0).toUpperCase() +
                         matchedPosition.title.slice(1)
@@ -267,33 +264,31 @@ function DetailsTab({ assessment, assessmentQuestions }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-custom-bg rounded-lg">
-                  <ClockIcon className="w-5 h-5 text-gray-500" />
-                </div>
+              <div className="flex items-start gap-3">
+                <ClockIcon className="w-4 h-4 text-custom-blue mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Duration</p>
-                  <p className="text-gray-700">{assessment.Duration}</p>
+                  <p className="text-xs text-gray-500">Duration</p>
+                  <p className="font-medium text-sm text-gray-800">
+                    {assessment.Duration}
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-custom-bg rounded-lg">
-                  <ChartBarIcon className="w-5 h-5 text-gray-500" />
-                </div>
+              <div className="flex items-start gap-3">
+                <ChartBarIcon className="w-4 h-4 text-custom-blue mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Difficulty Level</p>
-                  <p className="text-gray-700">{assessment.DifficultyLevel}</p>
+                  <p className="text-xs text-gray-500">Difficulty Level</p>
+                  <p className="font-medium text-sm text-gray-800">
+                    {assessment.DifficultyLevel}
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-custom-bg rounded-lg">
-                  <CalendarDaysIcon className="w-5 h-5 text-gray-500" />
-                </div>
+              <div className="flex items-start gap-3">
+                <CalendarDaysIcon className="w-4 h-4 text-custom-blue mt-1" />
                 <div>
-                  <p className="text-sm text-gray-500">Expiry Date</p>
-                  <p className="text-gray-700">
+                  <p className="text-xs text-gray-500">Expiry Date</p>
+                  <p className="font-medium text-sm text-gray-800">
                     {" "}
                     {assessment.ExpiryDate
                       ? format(new Date(assessment.ExpiryDate), "MMM dd, yyyy")
@@ -305,11 +300,9 @@ function DetailsTab({ assessment, assessmentQuestions }) {
           </div>
 
           {/* Scoring Section */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <h3 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4 pb-2">
-              Scoring
-            </h3>
-            <div className="space-y-6">
+          <div className="bg-gray-50 rounded-lg p-5 border border-gray-100">
+            <h4 className="font-bold text-gray-800 mb-4">Scoring</h4>
+            <div className="space-y-4">
               {scoringData.map((score, idx) => (
                 <div
                   key={idx}
@@ -319,38 +312,34 @@ function DetailsTab({ assessment, assessmentQuestions }) {
                       : ""
                   }`}
                 >
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <h4 className="text-xs font-semibold text-gray-800 mb-3 flex items-center gap-2">
                     {score.sectionName}
                   </h4>
-                  <div className="grid sm:grid-cols-1 grid-cols-2 items-center space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-custom-bg rounded-lg">
-                        <Trophy className="w-5 h-5 text-gray-500" />
-                      </div>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <Trophy className="w-4 h-4 text-custom-blue mt-1" />
+
                       <div>
-                        <p className="text-sm text-gray-500">Total Score</p>
-                        <p className="text-gray-700">{score.totalScore}</p>
+                        <p className="text-xs text-gray-500">Total Score</p>
+                        <p className="font-medium text-sm text-gray-800">{score.totalScore}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-custom-bg rounded-lg">
-                        <Star className="w-5 h-5 text-gray-500" />
-                      </div>
+                    <div className="flex items-start gap-3">
+                      <Star className="w-4 h-4 text-custom-blue mt-1" />
+
                       <div>
-                        <p className="text-sm text-gray-500">Pass Score</p>
-                        <p className="text-gray-700">{score.passScore}</p>
+                        <p className="text-xs text-gray-500">Pass Score</p>
+                        <p className="font-medium text-sm text-gray-800">{score.passScore}</p>
                       </div>
                     </div>
 
                     {!isEachSection && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-custom-bg rounded-lg">
-                          <MessageCircleQuestion className="w-5 h-5 text-gray-500" />
-                        </div>
+                      <div className="flex items-start gap-3">
+                        <MessageCircleQuestion className="w-4 h-4 text-custom-blue mt-1" />
                         <div>
-                          <p className="text-sm text-gray-500"> Questions</p>
-                          <p className="text-gray-700">
+                          <p className="text-xs text-gray-500"> Questions</p>
+                          <p className="font-medium text-sm text-gray-800">
                             {assessment.NumberOfQuestions || "-"}
                           </p>
                         </div>
@@ -365,7 +354,7 @@ function DetailsTab({ assessment, assessmentQuestions }) {
 
         {/* Additional Information Section */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4 pb-2 flex items-center gap-2">
+          <h3 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4 pb-2 flex items-start gap-2">
             <div className="p-2 bg-custom-bg rounded-lg">
               <MessageSquareText className="w-5 h-5 text-gray-500" />
             </div>
@@ -395,7 +384,7 @@ function DetailsTab({ assessment, assessmentQuestions }) {
                             <p className="break-words">{paragraph}</p>
                           )}
                         </div>
-                      )
+                      ),
                     )}
                   </div>
                 ) : (
