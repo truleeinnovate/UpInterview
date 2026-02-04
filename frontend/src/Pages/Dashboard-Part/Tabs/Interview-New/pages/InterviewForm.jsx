@@ -11,7 +11,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
-import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
+// import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
 import { useCandidates } from "../../../../../apiHooks/useCandidates";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import { useFilteredApplications } from "../../../../../apiHooks/useApplications.js";
@@ -27,9 +27,9 @@ import DropdownWithSearchField from "../../../../../Components/FormFields/Dropdo
 // v1.0.3 <-----------------------------------------------------------
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
 import { notify } from "../../../../../services/toastService.js";
-import { Info } from "lucide-react";
 import InfoGuide from "../../CommonCode-AllTabs/InfoCards.jsx";
 import { Button } from "../../../../../Components/Buttons/Button.jsx";
+import { ArrowLeft, Info, CheckCircle } from "lucide-react";
 
 // v1.0.3 ----------------------------------------------------------->
 
@@ -586,10 +586,10 @@ const InterviewForm = () => {
   // v1.0.6 <----------------------------------->
 
   return (
-    <div className="bg-gray-50">
-      <main className="mx-auto sm:px-4 lg:px-8 px-[6%] pt-6">
-        <div className="px-4 sm:px-0 min-h-screen overflow-y-auto">
-          <Breadcrumb
+    <div className="flex items-center  justify-center w-full">
+
+      <div className="bg-white w-full flex flex-col pb-20">
+        {/* <Breadcrumb
             items={[
               { label: "Interviews", path: "/interviews" },
               ...(isEditing && interview
@@ -603,9 +603,22 @@ const InterviewForm = () => {
                 ]
                 : [{ label: "New Interview", path: "" }]),
             ]}
-          />
+          /> */}
 
-          {/* Guidelines Component */}
+        <div className="px-[8%] sm:px-[5%] mt-4 mb-2 md:px-[5%]">
+          <button
+            onClick={() => {
+              navigate(-1);
+            }}
+            type="button"
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" /> Back to Interviews
+          </button>
+        </div>
+
+        {/* Guidelines Component */}
+        <div className="px-[8%] sm:px-[5%] md:px-[5%] mb-4">
           <InfoGuide
             className="mt-4"
             title="Interview Creation Guidelines"
@@ -661,24 +674,26 @@ const InterviewForm = () => {
               </>,
             ]}
           />
+        </div>
 
-          <div className="mt-4 bg-white shadow overflow sm:rounded-lg">
-            {/* v1.0.4 <----------------------------------- */}
-            <div className="px-6 py-5 sm:px-4">
-              {/* v1.0.4 -----------------------------------> */}
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                {isEditing ? "Edit Interview" : "Create New Interview"}
-              </h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                {isEditing
-                  ? "Update the interview details below"
-                  : "Fill in the details to create a new interview"}
-              </p>
-            </div>
-            {/* v1.0.4 <-------------------------------------------------------- */}
-            <div className="border-t border-gray-200 px-6 py-5 sm:px-4">
-              {/* v1.0.4 --------------------------------------------------------> */}
-              <form onSubmit={handleSubmit}>
+        <div className="px-[8%] sm:px-[5%] md:px-[5%]">
+          {/* v1.0.4 <----------------------------------- */}
+          {/* <div className="px-6 py-5 sm:px-4">
+
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              {isEditing ? "Edit Interview" : "Create New Interview"}
+            </h3>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+              {isEditing
+                ? "Update the interview details below"
+                : "Fill in the details to create a new interview"}
+            </p>
+          </div> */}
+          {/* v1.0.4 <-------------------------------------------------------- */}
+          <div className="bg-white rounded-lg shadow-md border">
+            {/* v1.0.4 --------------------------------------------------------> */}
+            <div className="px-6 pt-3">
+              <form className="space-y-5 mb-5" onSubmit={handleSubmit}>
                 {error && (
                   <div className="mb-4 p-4 bg-red-50 rounded-md">
                     <p className="text-sm text-red-700">{error}</p>
@@ -694,10 +709,14 @@ const InterviewForm = () => {
                         <DropdownWithSearchField
                           label="Application ID"
                           name="applicationId"
+                          placeholder="Select an application to auto-fill details..."
+                          isClearable={true}
+                          loading={applicationsLoading}
+                          value={applicationId || ""}
                           options={
                             filteredApplications?.map((app) => ({
                               value: app._id,
-                              label: app.applicationNumber, // Searchable text (clean)
+                              label: app.applicationNumber, // search key
                               application: app,
                             })) || []
                           }
@@ -705,12 +724,16 @@ const InterviewForm = () => {
                             const value = e?.target?.value || e?.value;
                             handleApplicationChange(value);
                           }}
-                          loading={applicationsLoading}
-                          placeholder="Select an application to auto-fill details..."
-                          isClearable={true}
                           formatOptionLabel={(option) => {
                             const app = option.application;
                             if (!app) return option.label;
+
+                            const candidateName = app?.candidateId
+                              ? `${app.candidateId.FirstName || ""} ${app.candidateId.LastName || ""}`
+                              : "Unknown Candidate";
+
+                            const positionTitle =
+                              app?.positionId?.title || "Unknown Position";
 
                             const statusColors = {
                               NEW: "bg-blue-100 text-blue-800",
@@ -725,29 +748,54 @@ const InterviewForm = () => {
                             };
 
                             const statusKey = app.status?.toUpperCase() || "NEW";
-                            const badgeClass = statusColors[statusKey] || "bg-gray-100 text-gray-800";
+                            const badgeClass =
+                              statusColors[statusKey] || "bg-gray-100 text-gray-800";
 
                             return (
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-gray-900">{app.applicationNumber}</span>
-                                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${badgeClass}`}>
-                                  {capitalizeFirstLetter(app.status?.toLowerCase() || "")}
-                                </span>
+                              <div className="flex items-center justify-between w-full gap-3">
+                                {/* LEFT TEXT — SINGLE LINE */}
+                                <div className="flex items-center gap-2 text-sm text-gray-800 truncate">
+                                  <span className="font-semibold text-gray-900 whitespace-nowrap">
+                                    {app.applicationNumber}
+                                  </span>
+
+                                  <span className="text-gray-400">•</span>
+
+                                  <span className="truncate whitespace-nowrap">
+                                    {candidateName}
+                                  </span>
+
+                                  <span className="text-gray-400">|</span>
+
+                                  <span className="truncate whitespace-nowrap">
+                                    {positionTitle}
+                                  </span>
+                                  {/* STATUS BADGE */}
+                                  <span
+                                    className={`px-2 py-0.5 text-xs font-semibold rounded-full whitespace-nowrap ${badgeClass}`}
+                                  >
+                                    {capitalizeFirstLetter(app.status?.toLowerCase() || "")}
+                                  </span>
+                                </div>
+
+
                               </div>
                             );
                           }}
                         />
+
                         {applicationId && (
-                          <p className="mt-1 text-xs">
-                            Candidate and Position fields are read-only, as they are derived from the selected Application.
-                          </p>
+                          <div className="mt-1 flex items-center gap-1.5 text-xs">
+                            <CheckCircle className="h-4 w-4 text-green-700" />
+                            Candidate and Position auto-populated from application.
+                          </div>
                         )}
                       </div>
 
                       {/* Divider */}
                       <div className="relative flex py-1 items-center">
                         <div className="flex-grow border-t border-gray-200"></div>
-                        <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase tracking-wider font-medium bg-white px-2">OR</span>
+                        <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase tracking-wider font-medium bg-white px-2">OR SELECT MANUALLY</span>
                         <div className="flex-grow border-t border-gray-200"></div>
                       </div>
                     </>
@@ -1051,7 +1099,7 @@ const InterviewForm = () => {
             </div>
           </div>
         </div>
-      </main>
+      </div>
 
       <ConfirmationModal
         isOpen={showModal}

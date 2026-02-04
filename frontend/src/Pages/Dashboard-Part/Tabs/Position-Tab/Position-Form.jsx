@@ -2111,41 +2111,6 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
           )}
         </div>
       </div>
-
-      {/* New Company Modal */}
-
-      {/* {isCompanyModalOpen && (
-        <CompanyForm
-          mode="Create"
-          onClose={() => setIsCompanyModalOpen(false)}
-          onSuccess={() => {
-            fetchCompaniesData();
-            setIsCompanyModalOpen(false);
-          }}
-        />
-      )} */}
-      {/* {isCompanyModalOpen && (
-        <CompanyForm
-          mode="Create"
-          onClose={() => setIsCompanyModalOpen(false)}
-          onSuccess={async () => {
-            const updatedList = await fetchCompaniesData();
-            if (updatedList && updatedList.length > 0) {
-              const newCompany = updatedList[0];
-
-              setFormData((prev) => ({
-                ...prev,
-                companyName: newCompany._id,
-              }));
-
-              if (errors.companyName) {
-                setErrors((prev) => ({ ...prev, companyName: "" }));
-              }
-            }
-            setIsCompanyModalOpen(false);
-          }}
-        />
-      )} */}
       {isCompanyModalOpen && (
         <CompanyForm
           mode="Create"
