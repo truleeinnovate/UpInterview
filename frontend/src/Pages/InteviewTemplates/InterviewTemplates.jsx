@@ -264,10 +264,11 @@ const InterviewTemplates = () => {
     setIsFilterActive(false);
     setFilterPopupOpen(false);
     setCurrentPage(0);
+    setFilterPopupOpen(false);
   };
 
   const handleFilterIconClick = () => {
-    if (normalizedTemplates.length !== 0) {
+    if (normalizedTemplates.length !== 0 || isFilterActive) {
       setFilterPopupOpen((prev) => !prev);
     }
   };
@@ -604,7 +605,7 @@ const InterviewTemplates = () => {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "interview templates" // Entity Name
+    "Interview Templates" // Entity Name
   );
   // ------------ Dynamic Empty State Messages using Utility (For Custom Tab) -----------------
 

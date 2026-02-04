@@ -371,7 +371,7 @@ const Interviewers = () => {
   const emptyStateMessage = getEmptyStateMessage(
     searchQuery,
     pagination.totalItems || 0,
-    "interviewers",
+    "Interviewers",
   );
 
   // Table columns

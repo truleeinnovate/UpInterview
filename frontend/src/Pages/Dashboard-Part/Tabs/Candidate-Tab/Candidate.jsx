@@ -524,7 +524,10 @@ function Candidate({
   };
 
   const handleFilterIconClick = () => {
-    if (dataToUse?.length !== 0) {
+    // if (dataToUse?.length !== 0) {
+    //   setFilterPopupOpen((prev) => !prev);
+    // }
+    if (dataToUse?.length !== 0 || isFilterActive) {
       setFilterPopupOpen((prev) => !prev);
     }
   };

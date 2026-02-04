@@ -147,7 +147,7 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
                     }))}
                     className="w-full px-2 py-2 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                     rows={3}
-                    placeholder="Enter domains (one per line)"
+                    placeholder="Enter domains (One Per Line)"
                   />
                 </div>
                 <div>
@@ -165,7 +165,7 @@ export function SharingSettingsPopup({ settings, onSave, onClose }) {
                     }))}
                     className="w-full px-2 py-2 rounded-md border border-gray-300 shadow-sm focus:border-custom-blue focus:ring-custom-blue"
                     rows={3}
-                    placeholder="Enter domains (one per line)"
+                    placeholder="Enter domains (One Per Line)"
                   />
                 </div>
               </div>

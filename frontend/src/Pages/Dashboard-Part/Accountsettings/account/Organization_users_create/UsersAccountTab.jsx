@@ -211,7 +211,7 @@ const UsersAccountTab = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (dataSource?.length !== 0) {
+    if (dataSource?.length !== 0 || isFilterActive) {
       setFilterPopupOpen((prev) => !prev);
     }
   };

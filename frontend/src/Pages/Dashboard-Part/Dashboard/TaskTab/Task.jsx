@@ -405,7 +405,7 @@ const Task = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (taskData?.length !== 0) {
+    if (taskData?.length !== 0 || isFilterActive) {
       setFilterPopupOpen((prev) => !prev);
     }
   };

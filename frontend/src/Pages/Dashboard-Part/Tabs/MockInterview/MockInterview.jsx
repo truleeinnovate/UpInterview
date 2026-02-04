@@ -375,7 +375,7 @@ const MockInterview = () => {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "mock interviews"
+    "Mock Interviews"
   ); // ------------------------- empty state message -------------------------------------
   const tableColumns = [
     {

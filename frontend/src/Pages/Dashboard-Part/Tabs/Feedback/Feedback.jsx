@@ -584,7 +584,7 @@ const Feedback = () => {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "feedback" // Entity Name
+    "Feedback" // Entity Name
   );
   // -------------------------- Dynamic Empty State Messages using Utility -------------------------
 
