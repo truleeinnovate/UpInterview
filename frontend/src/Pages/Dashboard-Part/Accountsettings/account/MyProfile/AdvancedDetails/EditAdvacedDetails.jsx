@@ -67,7 +67,7 @@ const EditAdvacedDetails = ({
     //  isError,
     //  error
   } = useUserProfile(
-    resolvedId
+    resolvedId,
     // from === "my-profile" ? resolvedId : null
   );
 
@@ -125,6 +125,8 @@ const EditAdvacedDetails = ({
       setErrors({});
     }
   }, [resolvedId, profileData]);
+
+  console.log("Profile Data in Edit Advanced Details:", profileData);
 
   // Handle input changes for text fields
   const handleInputChange = (e) => {
@@ -186,7 +188,7 @@ const EditAdvacedDetails = ({
         // For outsource interviewers, profileData is the Contact object
         if (!profileData || !profileData?.contactId) {
           notify.error(
-            "Profile data is not loaded. Please wait and try again."
+            "Profile data is not loaded. Please wait and try again.",
           );
           setLoading(false);
           return;
@@ -199,7 +201,7 @@ const EditAdvacedDetails = ({
             profileData,
           });
           notify.error(
-            "Profile data is not loaded. Please wait and try again."
+            "Profile data is not loaded. Please wait and try again.",
           );
           setLoading(false);
           return;
@@ -268,22 +270,22 @@ const EditAdvacedDetails = ({
     () =>
       Array.isArray(industries)
         ? industries.map((i) => ({
-          value: i.IndustryName,
-          label: i.IndustryName,
-        }))
+            value: i.IndustryName,
+            label: i.IndustryName,
+          }))
         : [],
-    [industries]
+    [industries],
   );
 
   const locationOptions = useMemo(
     () =>
       Array.isArray(locations)
         ? locations.map((l) => ({
-          value: l.LocationName,
-          label: l.LocationName,
-        }))
+            value: l.LocationName,
+            label: l.LocationName,
+          }))
         : [],
-    [locations]
+    [locations],
   );
 
   const currentRoleOptions = useMemo(
@@ -291,7 +293,7 @@ const EditAdvacedDetails = ({
       Array.isArray(currentRoles)
         ? currentRoles.map((r) => ({ value: r.roleName, label: r.roleLabel }))
         : [],
-    [currentRoles]
+    [currentRoles],
   );
 
   // Ensure current values are visible even if not in the fetched lists yet
@@ -326,6 +328,8 @@ const EditAdvacedDetails = ({
   //   // setErrors((prev) => ({ ...prev, [name]: '' }));
   // };
 
+  console.log("from", from);
+
   return (
     // v1.0.1 <----------------------------------------------------------------
     <SidebarPopup title="Edit Advanced Details" onClose={handleCloseModal}>
@@ -344,7 +348,14 @@ const EditAdvacedDetails = ({
               <DropdownWithSearchField
                 value={formData.currentRole}
                 options={currentRoleOptionsWithCurrent}
-                disabled={from !== "outsource-interviewer"}
+                // disabled={
+                //   from !== "outsource-interviewer" ||
+                //   profileData?.roleLabel !== "Admin"
+                // }
+                disabled={
+                  profileData?.roleLabel !== "Admin" &&
+                  from !== "outsource-interviewer"
+                }
                 name="currentRole"
                 onChange={handleInputChange}
                 error={errors.currentRole}

@@ -2584,13 +2584,20 @@ const validateRoundCreationBasedOnParallelScheduling = async (
           ![
             "Evaluated",
             "Skipped",
-            "Rescheduled",
-            "RequestSent",
-            "Scheduled",
+            // "Rescheduled",
+            // "RequestSent",
+            // "Scheduled",
           ].includes(r.status),
       );
+      // console.log("hasActiveRound", hasActiveRound);
+      const draftCount = rounds.filter((r) => r.status === "Draft").length;
+
+      // Parallel scheduling ON → no restriction
 
       if (hasActiveRound) {
+        if (draftCount === 0) {
+          return { isValid: true };
+        }
         return {
           isValid: false,
           message:

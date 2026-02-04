@@ -70,16 +70,16 @@ const VerticalRoundsView = ({
   };
   // v1.0.0 ---------------------------------------------------------->
   let [candidateAssessment, setCandidateAssessment] = useState(null);
-  let [currentScheduledAssessment, setCurrentScheduledAssessment] =
-    useState(null);
+  // let [currentScheduledAssessment, setCurrentScheduledAssessment] =
+  //   useState(null);
 
   // Assessment round status handling
-  let getAssessmentRoundStatus = (round) => {
-    if (round.roundTitle === "Assessment" && candidateAssessment) {
-      return candidateAssessment.status || "Pending";
-    }
-    return round?.status;
-  };
+  // let getAssessmentRoundStatus = (round) => {
+  //   if (round.roundTitle === "Assessment" && candidateAssessment) {
+  //     return candidateAssessment.status || "Pending";
+  //   }
+  //   return round?.status;
+  // };
 
   // 🔑 Hook to fetch scheduled assessments
   let { data: scheduledAssessments = [] } = useScheduleAssessments(
@@ -104,9 +104,9 @@ const VerticalRoundsView = ({
             candidate.candidateId?._id === interviewData?.candidateId?._id,
         );
 
-        if (filteredAssessment) {
-          setCurrentScheduledAssessment(filteredAssessment);
-        }
+        // if (filteredAssessment) {
+        //   setCurrentScheduledAssessment(filteredAssessment);
+        // }
         if (candidateData) {
           setCandidateAssessment(candidateData);
         }
@@ -148,10 +148,12 @@ const VerticalRoundsView = ({
   return (
     <div className="space-y-4">
       {sortedRounds.map((round, index) => {
-        let roundStatus =
-          round.roundTitle === "Assessment"
-            ? getAssessmentRoundStatus(round)
-            : round?.status;
+        // let roundStatus =
+        //   round.roundTitle === "Assessment"
+        //     ? getAssessmentRoundStatus(round)
+        //     : round?.status;
+
+        // console.log("round round", round);
         return (
           <div
             key={round._id || `${round.sequence}-${index}`}
@@ -177,12 +179,12 @@ const VerticalRoundsView = ({
                         round?.status,
                       )}`}
                     >
-                      {roundStatus === "RequestSent"
+                      {round?.status === "RequestSent"
                         ? "Request Sent"
                         : round?.status === "InProgress"
                           ? "In Progress"
                           : // : round?.status,
-                            capitalizeFirstLetter(roundStatus)}
+                            capitalizeFirstLetter(round?.status)}
                     </span>
                   </div>
                   <div className="flex items-center mt-1 text-sm text-gray-600">
