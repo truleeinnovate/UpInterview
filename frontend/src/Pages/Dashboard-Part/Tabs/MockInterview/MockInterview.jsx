@@ -464,7 +464,7 @@ const MockInterview = () => {
   //   },
   // ];
 
-  const tableColumns = getMockInterviewColumns(navigate);
+  // const tableColumns = getMockInterviewColumns(navigate);
 
   const tableActions = getMockInterviewActions(navigate, {
     permissions: effectivePermissions,
