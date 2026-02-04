@@ -175,7 +175,8 @@ const AddCandidateForm = ({
   // Initialize with 3 default empty skill rows
   const [entries, setEntries] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0); // For SkillsField
+  const [currentFormStep, setCurrentFormStep] = useState(1); // For the main form (1 or 2)
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSkill, setSelectedSkill] = useState("");
   const [allSelectedSkills, setAllSelectedSkills] = useState([]);
@@ -843,6 +844,94 @@ const AddCandidateForm = ({
 
       return newErrors;
     });
+  };
+
+  const handleNext = () => {
+    let nextErrors = {};
+    const step1Fields = [
+      "FirstName",
+      "LastName",
+      "Email",
+      "Phone",
+      "HigherQualification",
+      "CurrentExperience",
+      "RelevantExperience",
+      "CurrentRole",
+    ];
+
+    step1Fields.forEach((field) => {
+      // For UniversityCollege, we check either the dropdown or if it's custom
+      if (
+        field === "UniversityCollege" &&
+        !formData.UniversityCollege &&
+        !isCustomUniversity
+      ) {
+        // nextErrors.UniversityCollege = "University/College is required";
+      } else {
+        const error = getErrorMessage(field, formData[field], formData);
+        if (error) nextErrors[field] = error;
+      }
+    });
+
+    // Uniqueness checks (Email, Phone)
+    const uniquenessFields = ["Email", "Phone", "linkedInUrl"];
+    uniquenessFields.forEach((field) => {
+      if (
+        errors[field] &&
+        (errors[field].includes("exists") || errors[field].includes("in use"))
+      ) {
+        nextErrors[field] = errors[field];
+      }
+    });
+
+    const linkedInError = validateLinkedIn(formData.linkedInUrl);
+    if (linkedInError) {
+      nextErrors.linkedInUrl = linkedInError;
+    }
+
+    // Skills validation (First 3 rows required)
+    // Reuse specific skill validation logic from validateCandidateForm
+    const invalidRows = [];
+    const getMissingFields = (entry) => {
+      const missing = [];
+      if (!entry?.skill) missing.push("skill");
+      if (!entry?.experience) missing.push("experience");
+      if (!entry?.expertise) missing.push("expertise");
+      return missing;
+    };
+
+    // Validate first 3 rows (mandatory)
+    for (let i = 0; i < 3; i++) {
+      const entry = entries[i] || {};
+      const missingFields = getMissingFields(entry);
+      if (missingFields.length > 0) {
+        invalidRows.push({ index: i, missingFields });
+      }
+    }
+
+    if (invalidRows.length > 0) {
+      const messages = [
+        getErrorMessage("skills", 0, formData) || "First 3 rows are required",
+      ];
+      invalidRows.forEach(({ index, missingFields }) => {
+        messages.push(
+          `Row ${index + 1}: Please fill in ${missingFields.join(", ")}`,
+        );
+      });
+      nextErrors.skills = messages.join("; ");
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...nextErrors }));
+      setShowSkillValidation(true);
+      scrollToFirstError(nextErrors, fieldRefs);
+      return;
+    }
+
+    // Proceed to Step 2
+    setCurrentFormStep(2);
+    // Scroll to top
+    formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleDateChange = (date) => {
@@ -1639,232 +1728,240 @@ const AddCandidateForm = ({
   // The form content (this part is shared)
   const formContent = (
     <div className="sm:p-0 p-4 mb-10" ref={formRef}>
-      {/* v1.0.8 ----------------------------------------------> */}
-      {/* v1.0.7 ---------------------------------------------------------------------> */}
-      {/* v1.0.4 ----------------------------------------------------------------------------------> */}
-      {/* v1.0.2 ------------------------------------------------------------------> */}
-      {source !== "candidate-screening" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
-          {/* Profile Image Upload */}
-          <ProfilePhotoUpload
-            imageInputRef={imageInputRef}
-            imagePreview={imagePreview}
-            selectedImage={selectedImage}
-            fileError={fileError}
-            onImageChange={handleImageChange}
-            onRemoveImage={removeImage}
-            label="Profile Photo"
-          />
+      <div className="mb-6">
+        <h3 className="text-xl font-bold text-gray-900">
+          {id ? "Update Candidate" : "Add New Candidate"}
+        </h3>
+        <p className="text-sm text-gray-500 mt-1">
+          Step {currentFormStep} of 2 -{" "}
+          {currentFormStep === 1 ? "Basic Details" : "Additional Information"}
+        </p>
+      </div>
 
-          {/* Resume Upload */}
-          <ResumeUpload
-            resumeInputRef={resumeInputRef}
-            selectedResume={selectedResume}
-            resumeError={resumeError}
-            onResumeChange={handleResumeChange}
-            onRemoveResume={removeResume}
-            label="Resume"
-          />
-        </div>
-      )}
-      {/* </div> */}
-
-      <div className="space-y-2">
-        <div className="grid grid-cols-1 gap-6">
-          <div className="bg-white space-y-4">
-            {/* v1.0.7 <------------------------------------------------------ */}
-            {/* <h4 className="text-lg font-semibold text-gray-800"> */}
-            <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
-              {/* v1.0.7 ------------------------------------------------------> */}
-              Personal Details
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-              <InputField
-                value={formData.FirstName}
-                onChange={handleChange}
-                inputRef={fieldRefs.FirstName}
-                label="First Name"
-                name="FirstName"
-                required
-                error={errors.FirstName}
+      {currentFormStep === 1 && (
+        <>
+          {source !== "candidate-screening" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
+              {/* Profile Image Upload */}
+              <ProfilePhotoUpload
+                imageInputRef={imageInputRef}
+                imagePreview={imagePreview}
+                selectedImage={selectedImage}
+                fileError={fileError}
+                onImageChange={handleImageChange}
+                onRemoveImage={removeImage}
+                label="Profile Photo"
               />
-              <InputField
-                value={formData.LastName}
-                onChange={handleChange}
-                inputRef={fieldRefs.LastName}
-                error={errors.LastName}
-                label="Last Name"
-                name="LastName"
-                required
+
+              {/* Resume Upload */}
+              <ResumeUpload
+                resumeInputRef={resumeInputRef}
+                selectedResume={selectedResume}
+                resumeError={resumeError}
+                onResumeChange={handleResumeChange}
+                onRemoveResume={removeResume}
+                label="Resume"
               />
             </div>
+          )}
+          {/* </div> */}
 
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-              <DateOfBirthField
-                selectedDate={
-                  formData.Date_Of_Birth
-                    ? new Date(formData.Date_Of_Birth)
-                    : null
-                }
-                onChange={handleDateChange}
-                label="Date of Birth"
-                required={false}
-              />
-              <GenderDropdown
-                value={formData.Gender}
-                options={genderOptionsRS}
-                onChange={handleChange}
-                // error={errors.Gender}
-                containerRef={fieldRefs.Gender}
-                label="Gender"
-              // required
-              />
-            </div>
-            {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
-            {/* <p className="text-lg font-semibold col-span-2"> */}
-            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-              {/* v1.0.7 ----------------------------------------------------------------------------------------> */}
-              Contact Details
-            </p>
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-6">
+              <div className="bg-white space-y-4">
+                {/* v1.0.7 <------------------------------------------------------ */}
+                {/* <h4 className="text-lg font-semibold text-gray-800"> */}
+                <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
+                  {/* v1.0.7 ------------------------------------------------------> */}
+                  Personal Details
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                  <InputField
+                    value={formData.FirstName}
+                    onChange={handleChange}
+                    inputRef={fieldRefs.FirstName}
+                    label="First Name"
+                    name="FirstName"
+                    required
+                    error={errors.FirstName}
+                  />
+                  <InputField
+                    value={formData.LastName}
+                    onChange={handleChange}
+                    inputRef={fieldRefs.LastName}
+                    error={errors.LastName}
+                    label="Last Name"
+                    name="LastName"
+                    required
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-              <EmailField
-                value={formData.Email}
-                onChange={handleChange}
-                inputRef={fieldRefs.Email}
-                error={errors.Email}
-                label="Email"
-                required
-              />
-              <PhoneField
-                countryCodeValue={formData.CountryCode}
-                onCountryCodeChange={handleChange}
-                countryCodeError={errors.CountryCode}
-                countryCodeRef={fieldRefs.CountryCode}
-                phoneValue={formData.Phone}
-                onPhoneChange={handleChange}
-                phoneError={errors.Phone}
-                phoneRef={fieldRefs.Phone}
-                label="Phone"
-                required
-              />
-              <InputField
-                value={formData.linkedInUrl}
-                onChange={handleChange}
-                inputRef={fieldRefs.linkedInUrl}
-                label="LinkedIn URL"
-                name="linkedInUrl"
-                placeholder="https://linkedin.com/in/username"
-                error={errors.linkedInUrl}
-              />
-              <DropdownWithSearchField
-                label="Current Location"
-                name="location"
-                value={formData.location}
-                options={locationOptionsRS}
-                onChange={(e) => {
-                  const { value } = e.target;
-                  setFormData((prev) => ({ ...prev, location: value }));
-                  if (errors.location) {
-                    setErrors((prev) => ({ ...prev, location: "" }));
-                  }
-                }}
-                placeholder="Select Location"
-                isCustomName={isCustomLocation}
-                setIsCustomName={setIsCustomLocation}
-                onMenuOpen={loadLocations}
-                loading={isLocationsFetching}
-                containerRef={fieldRefs.location} // Ensure you add this ref to your fieldRefs object
-              />
-            </div>
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                  <DateOfBirthField
+                    selectedDate={
+                      formData.Date_Of_Birth
+                        ? new Date(formData.Date_Of_Birth)
+                        : null
+                    }
+                    onChange={handleDateChange}
+                    label="Date of Birth"
+                    required={false}
+                  />
+                  <GenderDropdown
+                    value={formData.Gender}
+                    options={genderOptionsRS}
+                    onChange={handleChange}
+                    // error={errors.Gender}
+                    containerRef={fieldRefs.Gender}
+                    label="Gender"
+                  // required
+                  />
+                </div>
+                {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
+                {/* <p className="text-lg font-semibold col-span-2"> */}
+                <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+                  {/* v1.0.7 ----------------------------------------------------------------------------------------> */}
+                  Contact Details
+                </p>
 
-            {/* v1.0.7 <-------------------------------------------------------------------------------------- */}
-            {/* <p className="text-lg font-semibold col-span-2"> */}
-            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-              {/* v1.0.7 --------------------------------------------------------------------------------------> */}
-              Education & Experience Details
-            </p>
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                  <EmailField
+                    value={formData.Email}
+                    onChange={handleChange}
+                    inputRef={fieldRefs.Email}
+                    error={errors.Email}
+                    label="Email"
+                    required
+                  />
+                  <PhoneField
+                    countryCodeValue={formData.CountryCode}
+                    onCountryCodeChange={handleChange}
+                    countryCodeError={errors.CountryCode}
+                    countryCodeRef={fieldRefs.CountryCode}
+                    phoneValue={formData.Phone}
+                    onPhoneChange={handleChange}
+                    phoneError={errors.Phone}
+                    phoneRef={fieldRefs.Phone}
+                    label="Phone"
+                    required
+                  />
+                  <InputField
+                    value={formData.linkedInUrl}
+                    onChange={handleChange}
+                    inputRef={fieldRefs.linkedInUrl}
+                    label="LinkedIn URL"
+                    name="linkedInUrl"
+                    placeholder="https://linkedin.com/in/username"
+                    error={errors.linkedInUrl}
+                  />
+                  <DropdownWithSearchField
+                    label="Current Location"
+                    name="location"
+                    value={formData.location}
+                    options={locationOptionsRS}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      setFormData((prev) => ({ ...prev, location: value }));
+                      if (errors.location) {
+                        setErrors((prev) => ({ ...prev, location: "" }));
+                      }
+                    }}
+                    placeholder="Select Location"
+                    isCustomName={isCustomLocation}
+                    setIsCustomName={setIsCustomLocation}
+                    onMenuOpen={loadLocations}
+                    loading={isLocationsFetching}
+                    containerRef={fieldRefs.location} // Ensure you add this ref to your fieldRefs object
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-              <DropdownWithSearchField
-                value={formData.HigherQualification}
-                options={qualificationOptionsRS}
-                onChange={handleChange}
-                error={errors.HigherQualification}
-                containerRef={fieldRefs.HigherQualification}
-                label="Higher Qualification"
-                name="HigherQualification"
-                required
-                onMenuOpen={loadQualifications}
-                loading={isQualificationsFetching}
-              />
-              <DropdownWithSearchField
-                value={formData.UniversityCollege}
-                options={collegeOptionsRS}
-                onChange={(e) => {
-                  const { value } = e.target;
-                  setFormData((prev) => ({
-                    ...prev,
-                    UniversityCollege: value,
-                  }));
-                  if (errors.UniversityCollege) {
-                    setErrors((prevErrors) => ({
-                      ...prevErrors,
-                      UniversityCollege: "",
-                    }));
-                  }
-                }}
-                // error={errors.UniversityCollege}
-                isCustomName={isCustomUniversity}
-                setIsCustomName={setIsCustomUniversity}
-                containerRef={fieldRefs.UniversityCollege}
-                label="University/College"
-                name="UniversityCollege"
-                // required
-                onMenuOpen={loadColleges}
-                loading={isCollegesFetching}
-              />
-            </div>
-            {/* --------v1.0.1----->*/}
-            {/* v1.0.7 <----------------------------------------------------------------------------------- */}
-            {/* <p className="text-lg font-semibold col-span-2"> */}
+                {/* v1.0.7 <-------------------------------------------------------------------------------------- */}
+                {/* <p className="text-lg font-semibold col-span-2"> */}
+                <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+                  {/* v1.0.7 --------------------------------------------------------------------------------------> */}
+                  Education & Experience Details
+                </p>
 
-            {/* Current Role */}
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-              <IncreaseAndDecreaseField
-                value={formData.CurrentExperience}
-                onChange={handleChange}
-                inputRef={fieldRefs.CurrentExperience}
-                error={errors.CurrentExperience}
-                label="Total Experience"
-                name="CurrentExperience"
-                required
-              />
-              <IncreaseAndDecreaseField
-                value={formData.RelevantExperience}
-                onChange={handleChange}
-                inputRef={fieldRefs.RelevantExperience}
-                error={errors.RelevantExperience}
-                label="Relevant Experience"
-                name="RelevantExperience"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-              <DropdownWithSearchField
-                value={formData.CurrentRole}
-                options={roleOptionsRS}
-                onChange={handleChange}
-                error={errors.CurrentRole}
-                containerRef={fieldRefs.CurrentRole}
-                label="Role / Technology"
-                name="CurrentRole"
-                required
-                onMenuOpen={loadCurrentRoles}
-                loading={isCurrentRolesFetching}
-              />
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                  <DropdownWithSearchField
+                    value={formData.HigherQualification}
+                    options={qualificationOptionsRS}
+                    onChange={handleChange}
+                    error={errors.HigherQualification}
+                    containerRef={fieldRefs.HigherQualification}
+                    label="Higher Qualification"
+                    name="HigherQualification"
+                    required
+                    onMenuOpen={loadQualifications}
+                    loading={isQualificationsFetching}
+                  />
+                  <DropdownWithSearchField
+                    value={formData.UniversityCollege}
+                    options={collegeOptionsRS}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      setFormData((prev) => ({
+                        ...prev,
+                        UniversityCollege: value,
+                      }));
+                      if (errors.UniversityCollege) {
+                        setErrors((prevErrors) => ({
+                          ...prevErrors,
+                          UniversityCollege: "",
+                        }));
+                      }
+                    }}
+                    // error={errors.UniversityCollege}
+                    isCustomName={isCustomUniversity}
+                    setIsCustomName={setIsCustomUniversity}
+                    containerRef={fieldRefs.UniversityCollege}
+                    label="University/College"
+                    name="UniversityCollege"
+                    // required
+                    onMenuOpen={loadColleges}
+                    loading={isCollegesFetching}
+                  />
+                </div>
+                {/* --------v1.0.1----->*/}
+                {/* v1.0.7 <----------------------------------------------------------------------------------- */}
+                {/* <p className="text-lg font-semibold col-span-2"> */}
 
-              {/* <DropdownWithSearchField
+                {/* Current Role */}
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                  <IncreaseAndDecreaseField
+                    value={formData.CurrentExperience}
+                    onChange={handleChange}
+                    inputRef={fieldRefs.CurrentExperience}
+                    error={errors.CurrentExperience}
+                    label="Total Experience"
+                    name="CurrentExperience"
+                    required
+                  />
+                  <IncreaseAndDecreaseField
+                    value={formData.RelevantExperience}
+                    onChange={handleChange}
+                    inputRef={fieldRefs.RelevantExperience}
+                    error={errors.RelevantExperience}
+                    label="Relevant Experience"
+                    name="RelevantExperience"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                  <DropdownWithSearchField
+                    value={formData.CurrentRole}
+                    options={roleOptionsRS}
+                    onChange={handleChange}
+                    error={errors.CurrentRole}
+                    containerRef={fieldRefs.CurrentRole}
+                    label="Role / Technology"
+                    name="CurrentRole"
+                    required
+                    onMenuOpen={loadCurrentRoles}
+                    loading={isCurrentRolesFetching}
+                  />
+
+                  {/* <DropdownWithSearchField
                     containerRef={fieldRefs.Technology}
                     label="Technology"
                     name="technology"
@@ -1889,15 +1986,212 @@ const AddCandidateForm = ({
                     onMenuOpen={loadCurrentRoles}
                     loading={isCurrentRolesFetching}
                   /> */}
+                </div>
+
+
+              </div>
+
+              <div>
+                <SkillsField
+                  ref={fieldRefs.skills}
+                  entries={entries}
+                  errors={errors}
+                  showValidation={showSkillValidation}
+                  onSkillsValidChange={(hasValidSkills) => {
+                    // Clear the skills error if at least one complete row exists
+                    if (hasValidSkills && errors.skills) {
+                      setErrors((prevErrors) => {
+                        const newErrors = { ...prevErrors };
+                        delete newErrors.skills;
+                        return newErrors;
+                      });
+                    }
+                  }}
+                  onAddSkill={(setEditingIndexCallback) => {
+                    setEntries((prevEntries) => {
+                      const newEntries = [
+                        ...prevEntries,
+                        { skill: "", experience: "", expertise: "" },
+                      ];
+                      // Only set editing index if callback is provided
+                      if (
+                        setEditingIndexCallback &&
+                        typeof setEditingIndexCallback === "function"
+                      ) {
+                        setEditingIndexCallback(newEntries.length - 1);
+                      }
+                      return newEntries;
+                    });
+                    setSelectedSkill("");
+                    setSelectedExp("");
+                    setSelectedLevel("");
+                  }}
+                  onAddMultipleSkills={(newSkillEntries, skillsToRemove = []) => {
+                    setEntries((prevEntries) => {
+                      let updatedEntries = [...prevEntries];
+
+                      // First, handle skill removals
+                      if (skillsToRemove.length > 0) {
+                        // Count current skills with data
+                        const currentFilledSkills = updatedEntries.filter(
+                          (e) => e.skill,
+                        ).length;
+                        const remainingSkillsAfterRemoval =
+                          currentFilledSkills - skillsToRemove.length;
+
+                        // If we still have 3+ skills after removal, remove rows entirely
+                        if (remainingSkillsAfterRemoval >= 3) {
+                          updatedEntries = updatedEntries.filter(
+                            (entry) => !skillsToRemove.includes(entry.skill),
+                          );
+                        } else {
+                          // If we'd have less than 3, just clear the skill but keep rows
+                          updatedEntries = updatedEntries.map((entry) => {
+                            if (skillsToRemove.includes(entry.skill)) {
+                              return {
+                                skill: "",
+                                experience: "",
+                                expertise: "",
+                              };
+                            }
+                            return entry;
+                          });
+                        }
+
+                        // Ensure we always have at least 3 rows
+                        while (updatedEntries.length < 3) {
+                          updatedEntries.push({
+                            skill: "",
+                            experience: "",
+                            expertise: "",
+                          });
+                        }
+                      }
+
+                      // Then, add new skills - fill empty rows first
+                      let skillIndex = 0;
+                      for (
+                        let i = 0;
+                        i < updatedEntries.length &&
+                        skillIndex < newSkillEntries.length;
+                        i++
+                      ) {
+                        if (!updatedEntries[i].skill) {
+                          updatedEntries[i] = {
+                            ...updatedEntries[i],
+                            skill: newSkillEntries[skillIndex].skill,
+                          };
+                          skillIndex++;
+                        }
+                      }
+
+                      // Add remaining skills as new rows
+                      while (
+                        skillIndex < newSkillEntries.length &&
+                        updatedEntries.length < 10
+                      ) {
+                        updatedEntries.push(newSkillEntries[skillIndex]);
+                        skillIndex++;
+                      }
+
+                      return updatedEntries;
+                    });
+                    // Update allSelectedSkills
+                    setAllSelectedSkills((prev) => {
+                      let updated = prev.filter((s) => !skillsToRemove.includes(s));
+                      return [...updated, ...newSkillEntries.map((e) => e.skill)];
+                    });
+                  }}
+                  onEditSkill={(index) => {
+                    const entry = entries[index];
+                    setSelectedSkill(entry.skill || "");
+                    setSelectedExp(entry.experience);
+                    setSelectedLevel(entry.expertise);
+                  }}
+                  onDeleteSkill={(index) => {
+                    const entry = entries[index];
+                    setAllSelectedSkills(
+                      allSelectedSkills.filter((skill) => skill !== entry.skill),
+                    );
+                    setEntries(entries.filter((_, i) => i !== index));
+                  }}
+                  onUpdateEntry={(index, updatedEntry) => {
+                    const newEntries = [...entries];
+                    const oldSkill = newEntries[index]?.skill;
+                    newEntries[index] = updatedEntry;
+                    setEntries(newEntries);
+
+                    // Update allSelectedSkills if skill changed
+                    if (oldSkill !== updatedEntry.skill) {
+                      const newSelectedSkills = newEntries
+                        .map((e) => e.skill)
+                        .filter(Boolean);
+                      setAllSelectedSkills(newSelectedSkills);
+                    }
+
+                    // Update formData
+                    setFormData((prev) => ({ ...prev, skills: newEntries }));
+                  }}
+                  setIsModalOpen={setIsModalOpen}
+                  setEditingIndex={setEditingIndex}
+                  isModalOpen={isModalOpen}
+                  currentStep={currentStep}
+                  setCurrentStep={setCurrentStep}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  selectedSkill={selectedSkill}
+                  setSelectedSkill={setSelectedSkill}
+                  allSelectedSkills={allSelectedSkills}
+                  selectedExp={selectedExp}
+                  setSelectedExp={setSelectedExp}
+                  selectedLevel={selectedLevel}
+                  setSelectedLevel={setSelectedLevel}
+                  skills={skills}
+                  isNextEnabled={isNextEnabled}
+                  handleAddEntry={handleAddEntry}
+                  skillpopupcancelbutton={skillpopupcancelbutton}
+                  editingIndex={editingIndex}
+                  onOpenSkills={loadSkills}
+                />
+              </div>
             </div>
+          </div>
 
-            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-              {/* v1.0.7 --------------------------------------------------------------------------------------> */}
-              Additional Details
-            </p>
+          <div className="flex justify-end gap-3 mt-2">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handleClose}
+              disabled={isMutationLoading}
+              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleNext}
+              className="flex items-center gap-2 bg-custom-blue text-white"
+            >
+              Next: Additional Details &gt;
+            </Button>
+          </div>
+        </>
+      )}
 
-            {/* New Fields: Location, Salary, Languages */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
+      {currentFormStep === 2 && (
+        <>
+          <div className="bg-custom-blue/10 text-custom-blue p-3 rounded-lg mb-6 text-sm border border-blue-100 flex items-center">
+            The following details are optional but help us understand the candidate better. You can skip and save or add them now.
+          </div>
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+                {/* v1.0.7 --------------------------------------------------------------------------------------> */}
+                Additional Details
+              </p>
+
+              {/* New Fields: Location, Salary, Languages */}
               <InputField
                 label="Languages (comma separated)"
                 name="languages"
@@ -1927,6 +2221,7 @@ const AddCandidateForm = ({
                 }}
                 placeholder="e.g. English, Telugu, Hindi"
               />
+
               <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
                 <IncreaseAndDecreaseField
                   value={formData.minSalary}
@@ -1951,8 +2246,7 @@ const AddCandidateForm = ({
                   placeholder="Max Salary (Annual)"
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-6">
+
               <DropdownWithSearchField
                 value={formData.noticePeriod}
                 options={noticePeriodOptions}
@@ -1994,338 +2288,176 @@ const AddCandidateForm = ({
                 />
               </div>
             </div>
-          </div>
+            {/* Certifications Tags */}
 
-          <div>
-            <SkillsField
-              ref={fieldRefs.skills}
-              entries={entries}
-              errors={errors}
-              showValidation={showSkillValidation}
-              onSkillsValidChange={(hasValidSkills) => {
-                // Clear the skills error if at least one complete row exists
-                if (hasValidSkills && errors.skills) {
-                  setErrors((prevErrors) => {
-                    const newErrors = { ...prevErrors };
-                    delete newErrors.skills;
-                    return newErrors;
-                  });
+            {/* Certifications Tags */}
+            <div className="mb-4 col-span-1">
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                Certifications ({formData?.certifications?.length}/10)
+              </label>
+
+              {/* The Input Field */}
+              <InputField
+                name="text"
+                value={certInput}
+                onChange={(e) => setCertInput(e.target.value)}
+                placeholder={
+                  formData?.certifications?.length >= 10
+                    ? "Limit reached"
+                    : "Type certification and press Enter"
                 }
-              }}
-              onAddSkill={(setEditingIndexCallback) => {
-                setEntries((prevEntries) => {
-                  const newEntries = [
-                    ...prevEntries,
-                    { skill: "", experience: "", expertise: "" },
-                  ];
-                  // Only set editing index if callback is provided
-                  if (
-                    setEditingIndexCallback &&
-                    typeof setEditingIndexCallback === "function"
-                  ) {
-                    setEditingIndexCallback(newEntries.length - 1);
-                  }
-                  return newEntries;
-                });
-                setSelectedSkill("");
-                setSelectedExp("");
-                setSelectedLevel("");
-              }}
-              onAddMultipleSkills={(newSkillEntries, skillsToRemove = []) => {
-                setEntries((prevEntries) => {
-                  let updatedEntries = [...prevEntries];
+                // IMPORTANT: Ensure your InputField component passes this to the internal <input>
+                onKeyDown={handleCertKeyDown}
+                disabled={formData?.certifications?.length >= 10}
+              />
 
-                  // First, handle skill removals
-                  if (skillsToRemove.length > 0) {
-                    // Count current skills with data
-                    const currentFilledSkills = updatedEntries.filter(
-                      (e) => e.skill,
-                    ).length;
-                    const remainingSkillsAfterRemoval =
-                      currentFilledSkills - skillsToRemove.length;
-
-                    // If we still have 3+ skills after removal, remove rows entirely
-                    if (remainingSkillsAfterRemoval >= 3) {
-                      updatedEntries = updatedEntries.filter(
-                        (entry) => !skillsToRemove.includes(entry.skill),
-                      );
-                    } else {
-                      // If we'd have less than 3, just clear the skill but keep rows
-                      updatedEntries = updatedEntries.map((entry) => {
-                        if (skillsToRemove.includes(entry.skill)) {
-                          return {
-                            skill: "",
-                            experience: "",
-                            expertise: "",
-                          };
-                        }
-                        return entry;
-                      });
-                    }
-
-                    // Ensure we always have at least 3 rows
-                    while (updatedEntries.length < 3) {
-                      updatedEntries.push({
-                        skill: "",
-                        experience: "",
-                        expertise: "",
-                      });
-                    }
-                  }
-
-                  // Then, add new skills - fill empty rows first
-                  let skillIndex = 0;
-                  for (
-                    let i = 0;
-                    i < updatedEntries.length &&
-                    skillIndex < newSkillEntries.length;
-                    i++
-                  ) {
-                    if (!updatedEntries[i].skill) {
-                      updatedEntries[i] = {
-                        ...updatedEntries[i],
-                        skill: newSkillEntries[skillIndex].skill,
-                      };
-                      skillIndex++;
-                    }
-                  }
-
-                  // Add remaining skills as new rows
-                  while (
-                    skillIndex < newSkillEntries.length &&
-                    updatedEntries.length < 10
-                  ) {
-                    updatedEntries.push(newSkillEntries[skillIndex]);
-                    skillIndex++;
-                  }
-
-                  return updatedEntries;
-                });
-                // Update allSelectedSkills
-                setAllSelectedSkills((prev) => {
-                  let updated = prev.filter((s) => !skillsToRemove.includes(s));
-                  return [...updated, ...newSkillEntries.map((e) => e.skill)];
-                });
-              }}
-              onEditSkill={(index) => {
-                const entry = entries[index];
-                setSelectedSkill(entry.skill || "");
-                setSelectedExp(entry.experience);
-                setSelectedLevel(entry.expertise);
-              }}
-              onDeleteSkill={(index) => {
-                const entry = entries[index];
-                setAllSelectedSkills(
-                  allSelectedSkills.filter((skill) => skill !== entry.skill),
-                );
-                setEntries(entries.filter((_, i) => i !== index));
-              }}
-              onUpdateEntry={(index, updatedEntry) => {
-                const newEntries = [...entries];
-                const oldSkill = newEntries[index]?.skill;
-                newEntries[index] = updatedEntry;
-                setEntries(newEntries);
-
-                // Update allSelectedSkills if skill changed
-                if (oldSkill !== updatedEntry.skill) {
-                  const newSelectedSkills = newEntries
-                    .map((e) => e.skill)
-                    .filter(Boolean);
-                  setAllSelectedSkills(newSelectedSkills);
-                }
-
-                // Update formData
-                setFormData((prev) => ({ ...prev, skills: newEntries }));
-              }}
-              setIsModalOpen={setIsModalOpen}
-              setEditingIndex={setEditingIndex}
-              isModalOpen={isModalOpen}
-              currentStep={currentStep}
-              setCurrentStep={setCurrentStep}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              selectedSkill={selectedSkill}
-              setSelectedSkill={setSelectedSkill}
-              allSelectedSkills={allSelectedSkills}
-              selectedExp={selectedExp}
-              setSelectedExp={setSelectedExp}
-              selectedLevel={selectedLevel}
-              setSelectedLevel={setSelectedLevel}
-              skills={skills}
-              isNextEnabled={isNextEnabled}
-              handleAddEntry={handleAddEntry}
-              skillpopupcancelbutton={skillpopupcancelbutton}
-              editingIndex={editingIndex}
-              onOpenSkills={loadSkills}
-            />
-          </div>
-
-          {/* Certifications Tags */}
-          <div className="mb-4">
-            <label className="text-sm font-medium text-gray-700 mb-1 block">
-              Certifications ({formData?.certifications?.length}/10)
-            </label>
-
-            {/* The Input Field */}
-            <InputField
-              name="text"
-              value={certInput}
-              onChange={(e) => setCertInput(e.target.value)}
-              placeholder={
-                formData?.certifications?.length >= 10
-                  ? "Limit reached"
-                  : "Type certification and press Enter"
-              }
-              // IMPORTANT: Ensure your InputField component passes this to the internal <input>
-              onKeyDown={handleCertKeyDown}
-              disabled={formData?.certifications?.length >= 10}
-            />
-
-            {/* Tag Display Area */}
-            <div className="flex flex-wrap gap-2 mb-2 mt-3">
-              {formData.certifications?.map((cert, index) => (
-                <div className="flex items-center justify-center gap-2 bg-custom-blue/10 text-custom-blue px-3 py-2 rounded-full border border-blue-200">
-                  <p key={index} className="text-sm font-medium leading-none">
-                    {cert}
-                  </p>
-                  <button
-                    type="button"
-                    className="flex items-center justify-center mt-[1px]"
-                    onClick={() => removeCert(cert)}
-                  >
-                    <X className="w-3 h-3 cursor-pointer text-red-500" />
-                  </button>
-                </div>
-              ))}
+              {/* Tag Display Area */}
+              <div className="flex flex-wrap gap-2 mb-2 mt-3">
+                {formData.certifications?.map((cert, index) => (
+                  <div className="flex items-center justify-center gap-2 bg-custom-blue/10 text-custom-blue px-3 py-2 rounded-full border border-blue-200">
+                    <p key={index} className="text-sm font-medium leading-none">
+                      {cert}
+                    </p>
+                    <button
+                      type="button"
+                      className="flex items-center justify-center mt-[1px]"
+                      onClick={() => removeCert(cert)}
+                    >
+                      <X className="w-3 h-3 cursor-pointer text-red-500" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Work Experience Heading */}
-          <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
-            Work Experience
-          </p>
+            {/* Work Experience Heading */}
+            {/* Work Experience Heading */}
+            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
+              Work Experience
+            </p>
 
-          <div>
-            {/* Professional Summary */}
-            <div className="col-span-2 mb-4">
-              <DescriptionField
-                label="Professional Summary (one per line)"
-                name="professionalSummary"
-                value={formData.professionalSummary}
-                onChange={handleChange}
-                inputRef={fieldRefs.professionalSummary}
-                error={errors.professionalSummary}
-                // placeholder="Briefly describe your professional background..."
-                placeholder="Experienced Full-Stack Developer with over 8 years of expertise in building scalable web applications.
+            <div className="col-span-1 md:col-span-2">
+              {/* Professional Summary */}
+              <div className="mb-4">
+                <DescriptionField
+                  label="Professional Summary (one per line)"
+                  name="professionalSummary"
+                  value={formData.professionalSummary}
+                  onChange={handleChange}
+                  inputRef={fieldRefs.professionalSummary}
+                  error={errors.professionalSummary}
+                  // placeholder="Briefly describe your professional background..."
+                  placeholder="Experienced Full-Stack Developer with over 8 years of expertise in building scalable web applications.
                 Proven track record of leading technical teams and delivering high-impact software solutions.
                 Specialized in React, Node.js, and Cloud Infrastructure with a focus on performance.
                 Committed to writing clean, maintainable code and implementing robust CI/CD pipelines.
                 Adept at collaborating with stakeholders to translate business needs into technical roadmaps.
                 Passionate about mentoring developers and staying at the forefront of emerging technologies."
-                rows={6}
-                minLength={200}
-                maxLength={1500}
-              />
-            </div>
-
-            {/* Work Experience Projects */}
-            <div className="col-span-2 mb-4">
-              <div className="flex justify-between items-center mb-4">
-                <label className="text-sm font-medium text-gray-700">
-                  Project Details
-                </label>
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setEditingProjectIndex(null);
-                    setIsProjectModalOpen(true);
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <FaPlus className="w-4 h-4 sm:hidden mr-1" /> Add Project
-                </Button>
+                  rows={6}
+                  minLength={200}
+                  maxLength={1500}
+                />
               </div>
 
-              {/* Project Cards Display */}
-              <div className="grid grid-cols-1 gap-4">
-                {formData?.workExperience &&
-                  formData.workExperience.length > 0 ? (
-                  formData.workExperience.map((project, index) => (
-                    <div
-                      key={index}
-                      className="border rounded-lg p-4 bg-gray-50 relative group"
-                    >
-                      <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Edit
-                          title="Edit Project"
-                          className="w-4 h-4 cursor-pointer text-custom-blue"
-                          onClick={() => handleEditProject(index)}
-                        />
-                        <X
-                          title="Delete Project"
-                          className="w-4 h-4 cursor-pointer text-red-600"
-                          onClick={() => handleDeleteProject(index)}
-                        />
-                      </div>
-                      <h5
-                        className="font-medium text-md text-gray-800 truncate max-w-[260px] mb-1"
-                        title={project?.projectName}
+              {/* Work Experience Projects */}
+              <div className="col-span-2 mb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <label className="text-sm font-medium text-gray-700">
+                    Project Details
+                  </label>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setEditingProjectIndex(null);
+                      setIsProjectModalOpen(true);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <FaPlus className="w-4 h-4 sm:hidden mr-1" /> Add Project
+                  </Button>
+                </div>
+
+                {/* Project Cards Display */}
+                <div className="grid grid-cols-1 gap-4">
+                  {formData?.workExperience &&
+                    formData.workExperience.length > 0 ? (
+                    formData.workExperience.map((project, index) => (
+                      <div
+                        key={index}
+                        className="border rounded-lg p-4 bg-gray-50 relative group"
                       >
-                        {project?.projectName}
-                      </h5>
-                      <div className="flex items-center gap-1 mb-1">
-                        <div className="flex items-center gap-2">
-                          <Briefcase className="text-gray-700 h-4 w-4" />
-                          <p className="text-xs text-gray-700 font-semibold truncate max-w-[260px]">
-                            {project?.role}
-                          </p>
+                        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Edit
+                            title="Edit Project"
+                            className="w-4 h-4 cursor-pointer text-custom-blue"
+                            onClick={() => handleEditProject(index)}
+                          />
+                          <X
+                            title="Delete Project"
+                            className="w-4 h-4 cursor-pointer text-red-600"
+                            onClick={() => handleDeleteProject(index)}
+                          />
                         </div>
-                        <Dot className="w-4 h-4 text-gray-700" />
-                        <div className="flex items-center gap-1">
-                          <p className="text-xs text-gray-700">
-                            {project?.fromDate?.split("-")[0]}
-                          </p>
-                          -
-                          <p className="text-xs text-gray-700">
-                            {project?.toDate
-                              ? project.toDate.split("-")[0]
-                              : "Present"}
-                          </p>
+                        <h5
+                          className="font-medium text-md text-gray-800 truncate max-w-[260px] mb-1"
+                          title={project?.projectName}
+                        >
+                          {project?.projectName}
+                        </h5>
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="flex items-center gap-2">
+                            <Briefcase className="text-gray-700 h-4 w-4" />
+                            <p className="text-xs text-gray-700 font-semibold truncate max-w-[260px]">
+                              {project?.role}
+                            </p>
+                          </div>
+                          <Dot className="w-4 h-4 text-gray-700" />
+                          <div className="flex items-center gap-1">
+                            <p className="text-xs text-gray-700">
+                              {project?.fromDate?.split("-")[0]}
+                            </p>
+                            -
+                            <p className="text-xs text-gray-700">
+                              {project?.toDate
+                                ? project.toDate.split("-")[0]
+                                : "Present"}
+                            </p>
+                          </div>
                         </div>
+                        <ul className="list-disc list-inside mt-2 space-y-1 p-4">
+                          {formatResponsibilitiesToList(
+                            project?.responsibilities,
+                          ).map((point, i) => (
+                            <li
+                              key={i}
+                              className="text-sm text-gray-600 break-words leading-relaxed"
+                            >
+                              {point.replace(/^[•\s*-]+/, "")}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                      <ul className="list-disc list-inside mt-2 space-y-1 p-4">
-                        {formatResponsibilitiesToList(
-                          project?.responsibilities,
-                        ).map((point, i) => (
-                          <li
-                            key={i}
-                            className="text-sm text-gray-600 break-words leading-relaxed"
-                          >
-                            {point.replace(/^[•\s*-]+/, "")}
-                          </li>
-                        ))}
-                      </ul>
+                    ))
+                  ) : (
+                    /* Empty State Card */
+                    <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg p-8 bg-gray-50/50">
+                      <span className="bg-white p-3 rounded-full shadow-sm mb-3">
+                        <FaPlus className="text-gray-400 w-5 h-5" />
+                      </span>
+                      <p className="text-sm font-medium text-gray-500">
+                        No projects added yet
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Click the "Add Project" to get started.
+                      </p>
                     </div>
-                  ))
-                ) : (
-                  /* Empty State Card */
-                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg p-8 bg-gray-50/50">
-                    <span className="bg-white p-3 rounded-full shadow-sm mb-3">
-                      <FaPlus className="text-gray-400 w-5 h-5" />
-                    </span>
-                    <p className="text-sm font-medium text-gray-500">
-                      No projects added yet
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Click the "Add Project" to get started.
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Key Achievements */}
-            <div className="col-span-2">
+            <div className="col-span-1 md:col-span-2">
               <DescriptionField
                 label="Key Achievements (one per line)"
                 name="keyAchievements"
@@ -2345,11 +2477,10 @@ const AddCandidateForm = ({
                 maxLength={1000}
               />
             </div>
+
           </div>
 
-          {/* v1.0.8 <----------------------------------- */}
-          <div className="flex justify-end gap-3">
-            {/* v1.0.8 <----------------------------------- */}
+          <div className="flex justify-end gap-3 mt-2">
             <Button
               variant="outline"
               type="button"
@@ -2361,31 +2492,35 @@ const AddCandidateForm = ({
               Cancel
             </Button>
 
+            {!id && (
+              <LoadingButton
+                variant="outline"
+                type="button"
+                onClick={(e) => {
+                  if (onSaveStart && isModal) onSaveStart();
+                  handleSubmit(e, false);
+                }}
+                className="text-gray-600 border border-gray-300 from-input"
+              >
+                Skip & Save
+              </LoadingButton>
+            )}
+
             <LoadingButton
               onClick={(e) => {
                 if (onSaveStart && isModal) onSaveStart();
-                handleSubmit(e);
+                handleSubmit(e, false);
               }}
-              isLoading={isMutationLoading && activeButton === "save"}
+              isLoading={isMutationLoading}
               loadingText={id ? "Updating..." : "Saving..."}
+              className="bg-custom-blue text-white"
             >
-              {id ? "Update" : "Save"}
+              {id ? "Update Candidate" : "Save Candidate"}
             </LoadingButton>
-
-            {!hideAddButton && !id && source !== "candidate-screening" && (
-              <LoadingButton
-                onClick={(e) => handleSubmit(e, true)}
-                isLoading={isMutationLoading && activeButton === "add"}
-                loadingText="Adding..."
-                className="flex items-center"
-              >
-                <FaPlus className="w-4 h-4 sm:hidden mr-1" /> Add Candidate
-              </LoadingButton>
-            )}
           </div>
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+    </div >
   );
   // ---------------------------------- Uniqueness checking ----------------------------------------
   return (

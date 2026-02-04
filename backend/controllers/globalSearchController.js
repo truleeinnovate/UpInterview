@@ -19,6 +19,7 @@ const InterviewerTag = require("../models/InterviewerTag.js");
 const Tenant = require("../models/Tenant.js");
 const { Contacts } = require("../models/Contacts.js");
 const { buildPermissionQuery } = require("../utils/buildPermissionQuery");
+const { Resume } = require("../models/Resume.js");
 
 /**
  * Build regex pattern based on search mode
@@ -37,16 +38,25 @@ const buildSearchRegex = (searchTerm, mode) => {
 /**
  * Search candidates
  */
-const searchCandidates = async (regex, tenantId, limit = 10) => {
+const searchCandidates = async (regex, limit = 10, permissionQuery = {}) => {
     try {
-        if (!tenantId) return [];
+        // Find matching resumes for CurrentRole
+        const matchingResumes = await Resume.find({
+            CurrentRole: regex,
+            isActive: true
+        }).select('candidateId').lean();
+
+        const resumeCandidateIds = matchingResumes.map(r => r.candidateId);
+
+        //if (!permissionQuery.tenantId && !permissionQuery.ownerId) return [];
         const query = {
-            tenantId: new mongoose.Types.ObjectId(tenantId),
+            ...permissionQuery,
             $or: [
                 { FirstName: regex },
                 { LastName: regex },
                 { Email: regex },
-                { Phone: regex }
+                { Phone: regex },
+                { _id: { $in: resumeCandidateIds } }
             ]
         };
 
@@ -86,8 +96,8 @@ const searchCandidates = async (regex, tenantId, limit = 10) => {
                     Phone: 1,
                     CountryCode: 1,
                     createdAt: 1,
-                    HigherQualification: { $ifNull: ["$activeResume.HigherQualification", null] },
                     CurrentExperience: { $ifNull: ["$activeResume.CurrentExperience", null] },
+                    CurrentRole: { $ifNull: ["$activeResume.CurrentRole", null] },
                     skills: { $ifNull: ["$activeResume.skills", []] },
                     ImageData: 1
                 }
@@ -111,22 +121,48 @@ const searchCandidates = async (regex, tenantId, limit = 10) => {
 /**
  * Search positions
  */
-const searchPositions = async (regex, tenantId, limit = 10) => {
+/**
+ * Search positions
+ */
+const searchPositions = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { title: regex },
                 { positionCode: regex },
                 { 'skills.skill': regex }
             ]
         };
-        const results = await Position.find(query).limit(limit).lean();
+        // Use lean() and NO populate first to avoid CastError on mixed data string/ObjectId
+        const results = await Position.find(query)
+            .limit(limit)
+            .lean();
+
+        // Manual population to handle "Adobe Inc." string vs ObjectId
+        const companyIds = results
+            .map(p => p.companyname)
+            .filter(id => id && mongoose.isValidObjectId(id));
+
+        let companyMap = {};
+        if (companyIds.length > 0) {
+            const companies = await TenantCompany.find({ _id: { $in: companyIds } })
+                .select('name')
+                .lean();
+            companies.forEach(c => {
+                companyMap[c._id.toString()] = c.name;
+            });
+        }
+
         return results.map(item => ({
             ...item,
             _entityType: 'positions',
             _displayName: item.title || item.positionCode || '',
-            _displaySubtitle: item.positionCode || ''
+            _displaySubtitle: item.positionCode || '',
+            // If it was an ID found in DB, use name. If it was a string (Adobe Inc.), use it directly.
+            companyname: companyMap[item.companyname?.toString()] || item.companyname || '-',
+            location: item.Location || item.location || '-',
+            skills: item.skills?.map(s => s.skill).join(', ') || '-'
         }));
     } catch (error) {
         console.error('Error searching positions:', error);
@@ -137,10 +173,10 @@ const searchPositions = async (regex, tenantId, limit = 10) => {
 /**
  * Search interview templates
  */
-const searchInterviewTemplates = async (regex, tenantId, limit = 10) => {
+const searchInterviewTemplates = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { title: regex },
                 { interviewTemplateCode: regex },
@@ -163,18 +199,18 @@ const searchInterviewTemplates = async (regex, tenantId, limit = 10) => {
 /**
  * Search interviews
  */
-const searchInterviews = async (regex, tenantId, limit = 10) => {
+const searchInterviews = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         // Find matching candidates first
         const candidates = await Candidate.find({
-            tenantId,
+            ...permissionQuery,
             $or: [{ FirstName: regex }, { LastName: regex }]
         }).select('_id').lean();
 
         const candidateIds = candidates.map(c => c._id);
 
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { interviewCode: regex },
                 { technology: regex },
@@ -209,11 +245,11 @@ const searchInterviews = async (regex, tenantId, limit = 10) => {
 /**
  * Search interviewers (via Contacts)
  */
-const searchInterviewers = async (regex, tenantId, limit = 10) => {
+const searchInterviewers = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         // First find matching contacts
         const contactQuery = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { firstName: regex },
                 { lastName: regex },
@@ -225,7 +261,7 @@ const searchInterviewers = async (regex, tenantId, limit = 10) => {
         // Get interviewers linked to these contacts
         const contactIds = contacts.map(c => c._id);
         const interviewers = await Interviewer.find({
-            tenantId,
+            ...permissionQuery,
             contactId: { $in: contactIds }
         }).populate('contactId', 'firstName lastName email').limit(limit).lean();
 
@@ -233,7 +269,8 @@ const searchInterviewers = async (regex, tenantId, limit = 10) => {
             ...item,
             _entityType: 'interviewers',
             _displayName: item.contactId ? `${item.contactId.firstName || ''} ${item.contactId.lastName || ''}`.trim() : '',
-            _displaySubtitle: item.contactId?.email || ''
+            _displaySubtitle: item.contactId?.email || '',
+            status: item.is_active ? 'Active' : 'Inactive'
         }));
     } catch (error) {
         console.error('Error searching interviewers:', error);
@@ -244,10 +281,10 @@ const searchInterviewers = async (regex, tenantId, limit = 10) => {
 /**
  * Search mock interviews
  */
-const searchMockInterviews = async (regex, tenantId, limit = 10) => {
+const searchMockInterviews = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { mockInterviewCode: regex },
                 { candidateName: regex },
@@ -270,10 +307,10 @@ const searchMockInterviews = async (regex, tenantId, limit = 10) => {
 /**
  * Search assessment templates
  */
-const searchAssessmentTemplates = async (regex, tenantId, limit = 10) => {
+const searchAssessmentTemplates = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { AssessmentTitle: regex },
                 { AssessmentCode: regex }
@@ -295,11 +332,11 @@ const searchAssessmentTemplates = async (regex, tenantId, limit = 10) => {
 /**
  * Search scheduled assessments
  */
-const searchScheduledAssessments = async (regex, tenantId, limit = 10) => {
+const searchScheduledAssessments = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         // 1. Find candidates matching the search term
         const candidates = await Candidate.find({
-            tenantId,
+            ...permissionQuery,
             $or: [{ FirstName: regex }, { LastName: regex }]
         }).select('_id').lean();
         const candidateIds = candidates.map(c => c._id);
@@ -314,14 +351,14 @@ const searchScheduledAssessments = async (regex, tenantId, limit = 10) => {
 
         // 3. Find Assessment Templates matching the search term
         const assessments = await Assessment.find({
-            tenantId,
+            ...permissionQuery,
             $or: [{ AssessmentTitle: regex }, { AssessmentCode: regex }]
         }).select('_id').lean();
         const assessmentIds = assessments.map(a => a._id);
 
         // 4. Find ScheduledAssessments matches
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { _id: { $in: scheduledIdsFromCandidates } },
                 { assessmentId: { $in: assessmentIds } },
@@ -334,8 +371,28 @@ const searchScheduledAssessments = async (regex, tenantId, limit = 10) => {
             .limit(limit)
             .lean();
 
+        const scheduledIds = results.map(r => r._id);
+
+        // Fetch candidates for these assessments
+        const candidatesMap = {};
+        if (scheduledIds.length > 0) {
+            const candidateAssessments = await CandidateAssessment.find({
+                scheduledAssessmentId: { $in: scheduledIds }
+            })
+                .populate('candidateId', 'FirstName LastName Email Phone CountryCode HigherQualification CurrentExperience skills')
+                .lean();
+
+            candidateAssessments.forEach(ca => {
+                if (!candidatesMap[ca.scheduledAssessmentId]) {
+                    candidatesMap[ca.scheduledAssessmentId] = [];
+                }
+                candidatesMap[ca.scheduledAssessmentId].push(ca);
+            });
+        }
+
         return results.map(item => ({
             ...item,
+            candidates: candidatesMap[item._id] || [],
             _entityType: 'assessments',
             _displayName: item.assessmentId?.AssessmentTitle || 'Assessment',
             _displaySubtitle: item.scheduledAssessmentCode || ''
@@ -349,10 +406,10 @@ const searchScheduledAssessments = async (regex, tenantId, limit = 10) => {
 /**
  * Search question bank
  */
-const searchQuestionBank = async (regex, tenantId, limit = 10) => {
+const searchQuestionBank = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { questionName: regex },
                 { questionText: regex }
@@ -374,18 +431,18 @@ const searchQuestionBank = async (regex, tenantId, limit = 10) => {
 /**
  * Search feedback
  */
-const searchFeedback = async (regex, tenantId, limit = 10) => {
+const searchFeedback = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         // Find matching candidates first
         const candidates = await Candidate.find({
-            tenantId,
+            ...permissionQuery,
             $or: [{ FirstName: regex }, { LastName: regex }]
         }).select('_id').lean();
 
         const candidateIds = candidates.map(c => c._id);
 
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { candidateId: { $in: candidateIds } },
                 // Note: Interviewer search would need similar lookup if needed
@@ -425,10 +482,10 @@ const searchFeedback = async (regex, tenantId, limit = 10) => {
 /**
  * Search support desk tickets
  */
-const searchSupportDesk = async (regex, tenantId, limit = 10) => {
+const searchSupportDesk = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { ticketCode: regex },
                 { subject: regex },
@@ -452,10 +509,10 @@ const searchSupportDesk = async (regex, tenantId, limit = 10) => {
 /**
  * Search companies
  */
-const searchCompanies = async (regex, tenantId, limit = 10) => {
+const searchCompanies = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { name: regex },
                 { industry: regex },
@@ -479,10 +536,10 @@ const searchCompanies = async (regex, tenantId, limit = 10) => {
 /**
  * Search my teams
  */
-const searchMyTeams = async (regex, tenantId, limit = 10) => {
+const searchMyTeams = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { name: regex },
                 { description: regex },
@@ -505,10 +562,10 @@ const searchMyTeams = async (regex, tenantId, limit = 10) => {
 /**
  * Search interviewer tags
  */
-const searchInterviewerTags = async (regex, tenantId, limit = 10) => {
+const searchInterviewerTags = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         const query = {
-            tenantId,
+            ...permissionQuery,
             $or: [
                 { name: regex },
                 { description: regex },
@@ -531,9 +588,10 @@ const searchInterviewerTags = async (regex, tenantId, limit = 10) => {
 /**
  * Search tenants (Super Admin only)
  */
-const searchTenants = async (regex, limit = 10) => {
+const searchTenants = async (regex, limit = 10, permissionQuery = {}) => {
     try {
         const query = {
+            ...permissionQuery,
             $or: [
                 { company: regex },
                 { email: regex },
@@ -574,31 +632,57 @@ const globalSearch = async (req, res) => {
         const searchLimit = Math.min(parseInt(limit) || 10, 50);
 
         // Get auth context from middleware
-        const { actingAsTenantId, isSuperAdminOnly } = res.locals.auth || {};
+        const { actingAsUserId, actingAsTenantId, isSuperAdminOnly } = res.locals.auth || {};
         const tenantId = actingAsTenantId;
 
-        // Define all entity search functions
+        // Get permission context from res.locals (set by authContextMiddleware)
+        const {
+            inheritedRoleIds = [],
+            effectivePermissions_RoleType,
+            effectivePermissions_RoleName,
+        } = res.locals;
+
+        // Build permission query dynamically based on user role
+        const permissionQuery = await buildPermissionQuery(
+            actingAsUserId,
+            actingAsTenantId,
+            inheritedRoleIds,
+            effectivePermissions_RoleType,
+            effectivePermissions_RoleName
+        );
+
+        console.log('[GlobalSearch] Permission context:', {
+            actingAsUserId,
+            actingAsTenantId,
+            inheritedRoleIds,
+            effectivePermissions_RoleType,
+            effectivePermissions_RoleName,
+            permissionQuery
+        });
+
+        // Define all entity search functions with permission query
         const entitySearchFunctions = {
-            candidates: () => searchCandidates(regex, tenantId, searchLimit),
-            positions: () => searchPositions(regex, tenantId, searchLimit),
-            interviewTemplates: () => searchInterviewTemplates(regex, tenantId, searchLimit),
-            interviews: () => searchInterviews(regex, tenantId, searchLimit),
-            interviewers: () => searchInterviewers(regex, tenantId, searchLimit),
-            mockInterviews: () => searchMockInterviews(regex, tenantId, searchLimit),
-            assessmentTemplates: () => searchAssessmentTemplates(regex, tenantId, searchLimit),
-            assessments: () => searchScheduledAssessments(regex, tenantId, searchLimit),
-            questionBank: () => searchQuestionBank(regex, tenantId, searchLimit),
-            feedback: () => searchFeedback(regex, tenantId, searchLimit),
-            supportDesk: () => searchSupportDesk(regex, tenantId, searchLimit),
-            companies: () => searchCompanies(regex, tenantId, searchLimit),
-            myTeams: () => searchMyTeams(regex, tenantId, searchLimit),
-            interviewerTags: () => searchInterviewerTags(regex, tenantId, searchLimit),
+            candidates: () => searchCandidates(regex, searchLimit, permissionQuery),
+            positions: () => searchPositions(regex, searchLimit, permissionQuery),
+            interviewTemplates: () => searchInterviewTemplates(regex, searchLimit, permissionQuery),
+            interviews: () => searchInterviews(regex, searchLimit, permissionQuery),
+            interviewers: () => searchInterviewers(regex, searchLimit, permissionQuery),
+            mockInterviews: () => searchMockInterviews(regex, searchLimit, permissionQuery),
+            assessmentTemplates: () => searchAssessmentTemplates(regex, searchLimit, permissionQuery),
+            assessments: () => searchScheduledAssessments(regex, searchLimit, permissionQuery),
+            questionBank: () => searchQuestionBank(regex, searchLimit, permissionQuery),
+            feedback: () => searchFeedback(regex, searchLimit, permissionQuery),
+            supportDesk: () => searchSupportDesk(regex, searchLimit, permissionQuery),
+            companies: () => searchCompanies(regex, searchLimit, permissionQuery),
+            myTeams: () => searchMyTeams(regex, searchLimit, permissionQuery),
+            interviewerTags: () => searchInterviewerTags(regex, searchLimit, permissionQuery),
         };
 
         // Add tenants search for super admin
         if (isSuperAdminOnly) {
-            entitySearchFunctions.tenants = () => searchTenants(regex, searchLimit);
+            entitySearchFunctions.tenants = () => searchTenants(regex, searchLimit, permissionQuery);
         }
+
 
         // If filter is specified, only search that entity
         if (filter && entitySearchFunctions[filter]) {

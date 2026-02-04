@@ -1,26 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import {
-    getCandidateColumns, getCandidateActions,
-    getPositionColumns, getPositionActions,
-    getInterviewColumns, getInterviewActions,
-    getInterviewerColumns, getInterviewerActions,
-    getInterviewTemplateColumns, getInterviewTemplateActions,
-    getMockInterviewColumns, getMockInterviewActions,
-    getAssessmentTemplateColumns, getAssessmentTemplateActions,
-    getScheduleAssessmentColumns, getScheduleAssessmentActions,
-    getQuestionColumns, getQuestionActions,
-    getFeedbackColumns, getFeedbackActions,
-    getSupportTicketColumns, getSupportTicketActions,
-    getCompanyColumns, getCompanyActions,
-    getTeamColumns, getTeamActions,
-    getTagColumns, getTagActions,
-    getTenantColumns, getTenantActions
-} from '../../utils/tableConfig.jsx';
-import { ArrowLeft, LayoutGrid, List, Search, Users, Briefcase, Calendar, Video, FileText, MessageSquare, Building2, UsersRound, Tag, Building, Eye, Filter } from 'lucide-react';
+import { ArrowLeft, LayoutGrid, List, Search, Users, Briefcase, Calendar, Video, FileText, MessageSquare, Building2, UsersRound, Tag, Building, Filter } from 'lucide-react';
 import { useGlobalSearch } from '../../hooks/useGlobalSearch';
 import '../../Components/Navbar/GlobalSearch/GlobalSearch.css';
-import CandidateKanban from '../Dashboard-Part/Tabs/Candidate-Tab/CandidateKanban';
 import TableView from '../../Components/Shared/Table/TableView';
 
 // Entity configuration for display
@@ -42,12 +24,352 @@ const ENTITY_CONFIG = {
     tenants: { label: 'Tenants', singular: 'Tenant', icon: Building, path: '/tenants' },
 };
 
+// Helper function to highlight matching text
+const highlightMatch = (text, query) => {
+    if (!query || !text) return text;
+    const textStr = String(text);
+    try {
+        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escapedQuery})`, 'gi');
+        const parts = textStr.split(regex);
+        return parts.map((part, i) =>
+            part.toLowerCase() === query.toLowerCase() ? (
+                <span key={i} className="bg-yellow-200 text-yellow-900 px-0.5 rounded">{part}</span>
+            ) : part
+        );
+    } catch (e) {
+        return text;
+    }
+};
+
+// Define columns for each entity type with clickable first column
+const getEntityColumns = (entityType, navigate, highlightText = '') => {
+    const config = ENTITY_CONFIG[entityType];
+    const handleNavigation = (item) => {
+        if (config?.path && item._id) {
+            if (entityType === 'assessments') {
+                navigate(`${config.path}/${item._id}`, { state: { schedule: item } });
+            } else {
+                navigate(`${config.path}/${item._id}`);
+            }
+        }
+    };
+
+    // Helper to highlight text in custom renders
+    const hl = (text) => highlightMatch(text, highlightText);
+
+    switch (entityType) {
+        case 'candidates':
+            return [
+                {
+                    header: 'Candidate Name',
+                    key: 'name',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(`${row.FirstName || ''} ${row.LastName || ''}`.trim() || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Email', key: 'Email', render: (val) => hl(val || '-') },
+                { header: 'Phone', key: 'Phone', render: (val) => hl(val || '-') },
+                { header: 'Current Role', key: 'CurrentRole', render: (val) => hl(val || '-') },
+                { header: 'Experience', key: 'CurrentExperience', render: (val) => val ? `${val} yrs` : '-' },
+            ];
+
+        case 'positions':
+            return [
+                {
+                    header: 'Position Title',
+                    key: 'title',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.title || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Code', key: 'positionCode', render: (val) => hl(val || '-') },
+                { header: 'Company', key: 'companyname', render: (val) => hl(val || '-') },
+                { header: 'Location', key: 'location', render: (val) => hl(val || '-') },
+                { header: 'Skills', key: 'skills', render: (val) => hl(val || '-') },
+                { header: 'Status', key: 'status', render: (val) => val || '-' },
+            ];
+
+        case 'interviewTemplates':
+            return [
+                {
+                    header: 'Template Title',
+                    key: 'title',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.title || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Code', key: 'interviewTemplateCode', render: (val) => hl(val || '-') },
+                { header: 'Description', key: 'description', render: (val) => val?.substring(0, 50) || '-' },
+            ];
+
+        case 'interviews':
+            return [
+                {
+                    header: 'Interview Code',
+                    key: 'interviewCode',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.interviewCode || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Candidate', key: 'candidateId', render: (val) => val?.FirstName ? hl(`${val.FirstName} ${val.LastName || ''}`) : '-' },
+                { header: 'Technology', key: 'technology', render: (val) => hl(val || '-') },
+                { header: 'Status', key: 'status', render: (val) => val || '-' },
+            ];
+
+        case 'interviewers':
+            return [
+                {
+                    header: 'Name',
+                    key: 'name',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.contactId ? `${row.contactId.firstName || ''} ${row.contactId.lastName || ''}`.trim() : 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Email', key: 'email', render: (_, row) => hl(row.contactId?.email || '-') },
+                { header: 'Status', key: 'status', render: (val) => val || '-' },
+            ];
+
+        case 'mockInterviews':
+            return [
+                {
+                    header: 'Code',
+                    key: 'mockInterviewCode',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.mockInterviewCode || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Candidate', key: 'candidateName', render: (val) => hl(val || '-') },
+                { header: 'Role', key: 'currentRole', render: (val) => hl(val || '-') },
+            ];
+
+        case 'assessmentTemplates':
+            return [
+                {
+                    header: 'Title',
+                    key: 'AssessmentTitle',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.AssessmentTitle || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Code', key: 'AssessmentCode', render: (val) => hl(val || '-') },
+                { header: 'Duration', key: 'Duration', render: (val) => val ? `${val} mins` : '-' },
+                { header: 'Status', key: 'status', render: (val) => val || '-' },
+            ];
+
+        case 'assessments':
+            return [
+                {
+                    header: 'Assessment',
+                    key: 'assessmentId',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.assessmentId?.AssessmentTitle || row.scheduledAssessmentCode || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Code', key: 'scheduledAssessmentCode', render: (val) => hl(val || '-') },
+                {
+                    header: 'Candidates',
+                    key: 'candidates',
+                    render: (_, row) => {
+                        const names = (row.candidates || [])
+                            .map(c => c.candidateId ? `${c.candidateId.FirstName} ${c.candidateId.LastName}` : '')
+                            .filter(Boolean)
+                            .join(', ');
+                        return hl(names || '-');
+                    }
+                },
+                { header: 'Status', key: 'status', render: (val) => val || '-' },
+            ];
+
+        case 'questionBank':
+            return [
+                {
+                    header: 'Question',
+                    key: 'questionName',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.questionName || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Text', key: 'questionText', render: (val) => hl(val?.substring(0, 50) || '-') },
+            ];
+
+        case 'feedback':
+            return [
+                {
+                    header: 'Candidate',
+                    key: 'candidateId',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.candidateId ? `${row.candidateId.FirstName || ''} ${row.candidateId.LastName || ''}`.trim() : 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Interviewer', key: 'interviewerId', render: (_, row) => row.interviewerId ? hl(`${row.interviewerId.firstName || ''} ${row.interviewerId.lastName || ''}`.trim()) : '-' },
+                { header: 'Rating', key: 'rating', render: (val) => val || '-' },
+            ];
+
+        case 'supportDesk':
+            return [
+                {
+                    header: 'Ticket Code',
+                    key: 'ticketCode',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.ticketCode || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Subject', key: 'subject', render: (val) => hl(val || '-') },
+                { header: 'Contact', key: 'contact', render: (val) => hl(val || '-') },
+                { header: 'Issue Type', key: 'issueType', render: (val) => hl(val || '-') },
+            ];
+
+        case 'companies':
+            return [
+                {
+                    header: 'Company Name',
+                    key: 'name',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.name || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Industry', key: 'industry', render: (val) => hl(val || '-') },
+                { header: 'Contact', key: 'primaryContactName', render: (val) => hl(val || '-') },
+            ];
+
+        case 'myTeams':
+            return [
+                {
+                    header: 'Team Name',
+                    key: 'name',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.name || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Department', key: 'department', render: (val) => hl(val || '-') },
+                { header: 'Description', key: 'description', render: (val) => hl(val?.substring(0, 50) || '-') },
+            ];
+
+        case 'interviewerTags':
+            return [
+                {
+                    header: 'Tag Name',
+                    key: 'name',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.name || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Category', key: 'category', render: (val) => hl(val || '-') },
+            ];
+
+        case 'tenants':
+            return [
+                {
+                    header: 'Company',
+                    key: 'company',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row.company || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Email', key: 'email', render: (val) => hl(val || '-') },
+                { header: 'Phone', key: 'phone', render: (val) => hl(val || '-') },
+            ];
+
+        default:
+            return [
+                {
+                    header: 'Name',
+                    key: '_displayName',
+                    render: (_, row) => (
+                        <div
+                            className="font-medium text-custom-blue cursor-pointer hover:underline"
+                            onClick={() => handleNavigation(row)}
+                        >
+                            {hl(row._displayName || 'N/A')}
+                        </div>
+                    )
+                },
+                { header: 'Details', key: '_displaySubtitle', render: (val) => hl(val || '-') },
+            ];
+    }
+};
+
 const GlobalSearchResults = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { globalSearch, loading, results, error } = useGlobalSearch();
 
-    const [viewMode, setViewMode] = useState('kanban');
     const [activeFilter, setActiveFilter] = useState('all');
 
     const query = searchParams.get('q') || '';
@@ -77,130 +399,14 @@ const GlobalSearchResults = () => {
         }));
     }, [results]);
 
-    // Transform data for common components
-    const transformData = (entityType, items) => {
-        const config = ENTITY_CONFIG[entityType];
-        return items.map(item => ({
-            ...item,
-            // Map to CandidateKanban expected fields
-            firstName: item._displayName || 'Unnamed',
-            currentRole: item._displaySubtitle || '',
-            title: item._displayName, // Fallback
-            // Add entity type for context
-            entityType,
-            entityLabel: config?.label || entityType
-        }));
-    };
-
-    // Render content based on view mode
+    // Render content - Table only
     const renderContent = () => {
         if (Object.keys(filteredResults).length === 0) return null;
 
         return Object.entries(filteredResults).map(([entityType, items]) => {
             const config = ENTITY_CONFIG[entityType];
             const IconComponent = config?.icon || Search;
-            const transformedItems = transformData(entityType, items);
-
-            // v2.0.0 Refactor to use shared table config
-            let tableColumns = [];
-            let tableActions = [];
-
-            if (entityType === 'candidates') {
-                tableColumns = getCandidateColumns(navigate, {});
-                tableActions = getCandidateActions(navigate, { permissions: { Candidates: { View: true, Edit: true } } });
-            } else if (entityType === 'positions') {
-                const allColumns = getPositionColumns(navigate);
-                // Reduce columns for Global Search view to prevent overflow
-                tableColumns = allColumns.filter(col =>
-                    !['jobDescription', 'createdAt', 'rounds', 'experience'].includes(col.key)
-                );
-                tableActions = getPositionActions(navigate, { View: true, Edit: true });
-            } else if (entityType === 'interviews') {
-                tableColumns = getInterviewColumns(navigate);
-                tableActions = getInterviewActions(navigate, { View: true, Edit: true });
-            } else if (entityType === 'interviewers') {
-                tableColumns = getInterviewerColumns(navigate, { permissions: { Interviewers: { View: true, Edit: true } } });
-                tableActions = getInterviewerActions(navigate, { permissions: { Interviewers: { View: true, Edit: true, Delete: true } } });
-            } else if (entityType === 'interviewTemplates') {
-                tableColumns = getInterviewTemplateColumns(navigate);
-                tableActions = getInterviewTemplateActions(navigate, { permissions: { InterviewTemplates: { View: true, Edit: true, Create: true, Delete: true } } });
-            } else if (entityType === 'mockInterviews') {
-                tableColumns = getMockInterviewColumns(navigate);
-                tableActions = getMockInterviewActions(navigate, { permissions: { MockInterviews: { View: true, Edit: true } } });
-            } else if (entityType === 'assessmentTemplates') {
-                tableColumns = getAssessmentTemplateColumns(navigate);
-                tableActions = getAssessmentTemplateActions(navigate, { permissions: { AssessmentTemplates: { View: true, Edit: true, Delete: true } } });
-            } else if (entityType === 'assessments') {
-                tableColumns = getScheduleAssessmentColumns(navigate);
-                tableActions = getScheduleAssessmentActions(navigate, { permissions: { View: true } });
-            } else if (entityType === 'questionBank') {
-                tableColumns = getQuestionColumns(navigate);
-                tableActions = getQuestionActions(navigate, { permissions: { QuestionBank: { View: true, Edit: true, Delete: true } } });
-            } else if (entityType === 'feedback') {
-                tableColumns = getFeedbackColumns(navigate);
-                tableActions = getFeedbackActions(navigate);
-            } else if (entityType === 'supportDesk') {
-                tableColumns = getSupportTicketColumns(navigate, { roleNames: { effectiveRole: 'Admin' } }); // Adjust role as needed
-                tableActions = getSupportTicketActions(navigate, { roleNames: { effectiveRole: 'Admin' } });
-            } else if (entityType === 'companies') {
-                tableColumns = getCompanyColumns(navigate);
-                tableActions = getCompanyActions(navigate, { permissions: { Companies: { View: true, Edit: true, Delete: true } } });
-            } else if (entityType === 'myTeams') {
-                tableColumns = getTeamColumns(navigate);
-                tableActions = getTeamActions(navigate, { permissions: { InterviewerTags: { View: true, Edit: true } } });
-            } else if (entityType === 'interviewerTags') {
-                tableColumns = getTagColumns(navigate);
-                tableActions = getTagActions(navigate, { permissions: { InterviewerTags: { View: true, Edit: true, Delete: true } } });
-            } else if (entityType === 'tenants') {
-                tableColumns = getTenantColumns(navigate, { superAdminPermissions: { Tenants: { View: true, Edit: true, Delete: true } } });
-                tableActions = getTenantActions(navigate, { superAdminPermissions: { Tenants: { View: true, Edit: true, Delete: true } } });
-            } else {
-                // Fallback / Generic Columns
-                tableColumns = [
-                    {
-                        header: 'Name',
-                        key: 'firstName',
-                        render: (_, row) => (
-                            <div className="font-medium text-gray-900 cursor-pointer" onClick={() => handleItemClick(row, entityType)}>
-                                {row.firstName}
-                            </div>
-                        )
-                    },
-                    {
-                        header: 'Details',
-                        key: 'currentRole',
-                        render: (_, row) => <span className="text-gray-500">{row.currentRole || '-'}</span>
-                    },
-                    {
-                        header: 'Type',
-                        key: 'entityLabel',
-                        render: (_, row) => (
-                            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium">
-                                {row.entityLabel}
-                            </span>
-                        )
-                    }
-                ];
-            }
-            // Define columns for CandidateKanban (body content)
-            const kanbanColumns = [
-                {
-                    key: 'entityLabel',
-                    header: 'Type',
-                    render: (value) => (
-                        <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-medium">
-                            {value}
-                        </span>
-                    )
-                }
-            ];
-
-            const handleItemClick = (item, type) => {
-                const path = ENTITY_CONFIG[type]?.path;
-                if (path) {
-                    navigate(`${path}/${item._id}`);
-                }
-            };
+            const tableColumns = getEntityColumns(entityType, navigate, query);
 
             return (
                 <div key={entityType} className="mb-8 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -212,37 +418,13 @@ const GlobalSearchResults = () => {
                         </span>
                     </div>
 
-                    {viewMode === 'kanban' ? (
-                        <CandidateKanban
-                            data={transformedItems}
-                            columns={kanbanColumns}
-                            KanbanTitle={config?.singular || config?.label}
-                            highlightText={query}
-                            renderActions={(item) => (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleItemClick(item, entityType);
-                                    }}
-                                    className="p-1 hover:bg-gray-100 rounded-full text-custom-blue"
-                                    title="View Details"
-                                >
-                                    <Eye size={16} />
-                                </button>
-                            )}
-                            autoHeight={true}
-                        />
-
-                    ) : (
-                        <TableView
-                            data={transformedItems}
-                            columns={tableColumns}
-                            actions={tableActions}
-                            autoHeight={true}
-                            highlightText={query}
-                        />
-
-                    )}
+                    <TableView
+                        data={items}
+                        columns={tableColumns}
+                        actions={[]} // No action buttons
+                        autoHeight={true}
+                        highlightText={query}
+                    />
                 </div>
             );
         });
@@ -321,17 +503,17 @@ const GlobalSearchResults = () => {
                         </p>
                     </div>
 
+                    {/* View toggle - Table only (Kanban disabled) */}
                     <div className="flex bg-white rounded-lg border border-gray-200 p-1 shadow-sm h-fit">
                         <button
-                            className={`p-2 rounded-md transition-all ${viewMode === 'kanban' ? 'bg-custom-blue text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                            onClick={() => setViewMode('kanban')}
-                            title="Kanban View"
+                            className="p-2 rounded-md text-gray-300 cursor-not-allowed"
+                            disabled
+                            title="Kanban View (Disabled)"
                         >
                             <LayoutGrid size={18} />
                         </button>
                         <button
-                            className={`p-2 rounded-md transition-all ${viewMode === 'table' ? 'bg-custom-blue text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                            onClick={() => setViewMode('table')}
+                            className="p-2 rounded-md bg-custom-blue text-white shadow-sm"
                             title="Table View"
                         >
                             <List size={18} />
@@ -386,3 +568,4 @@ const GlobalSearchResults = () => {
 };
 
 export default GlobalSearchResults;
+
