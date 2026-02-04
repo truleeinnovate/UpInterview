@@ -117,6 +117,7 @@ const interviewRoundSchema = new mongoose.Schema(
         "Completed",
         "InCompleted",
         "Rescheduled",
+        // "",
         // "Rejected",
         // "Selected",
         "Cancelled",

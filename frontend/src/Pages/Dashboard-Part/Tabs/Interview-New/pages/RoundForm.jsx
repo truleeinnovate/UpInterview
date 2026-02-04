@@ -1754,7 +1754,7 @@ const RoundFormInterviews = () => {
       ? internalInterviewers
       : externalInterviewers;
 
-  console.log("selectedInterviewers", selectedInterviewers);
+  // console.log("selectedInterviewers", selectedInterviewers);
 
   const isInternalSelected = selectedInterviewType === "Internal";
   const isExternalSelected = selectedInterviewType === "External";
@@ -4386,11 +4386,10 @@ const RoundFormInterviews = () => {
           selectedTeamIds={selectedTeamIds}
           selectedTagIds={selectedTagIds}
           source="internal-interview"
-         
         />
       )}
 
-      {showDateChangeConfirmation && (
+      {showDateChangeConfirmation && (isReschedule || isRequestSent) && (
         // shouldDisable("scheduledDate") &&
         <div className="fixed inset-0 z-[9999]">
           <DateChangeConfirmationModal
