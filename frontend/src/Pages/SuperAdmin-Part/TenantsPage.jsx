@@ -294,7 +294,7 @@ function TenantsPage() {
   }, [isTablet]);
 
   const handleFilterIconClick = () => {
-    if (pagination?.totalItems > 0 || tenants?.length > 0) {
+    if (pagination?.totalItems > 0 || tenants?.length > 0 || isFilterActive) {
       setFilterPopupOpen((prev) => !prev);
     }
   };

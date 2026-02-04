@@ -483,19 +483,19 @@ async function getMaxExistingNumber(
  */
 async function generateApplicationNumber(candidate, position, tenantId) {
   // Get first 4 chars of candidate name (First + Last), removing spaces
-  const fullName = (candidate?.FirstName || "") + (candidate?.LastName || "");
-  const candidateName = (fullName || "UNKN")
-    .replace(/[^a-zA-Z]/g, "") // Remove non-alphabetic characters
-    .substring(0, 4)
-    .toUpperCase()
-    .padEnd(4, "X"); // Pad with X if less than 4 chars
+  // const fullName = (candidate?.FirstName || "") + (candidate?.LastName || "");
+  // const candidateName = (fullName || "UNKN")
+  //   .replace(/[^a-zA-Z]/g, "") // Remove non-alphabetic characters
+  //   .substring(0, 4)
+  //   .toUpperCase()
+  //   .padEnd(4, "X"); // Pad with X if less than 4 chars
 
-  // Get first 3 chars of position title (uppercase)
-  const techCode = (position?.title || "POS")
-    .replace(/[^a-zA-Z]/g, "") // Remove non-alphabetic characters
-    .substring(0, 3)
-    .toUpperCase()
-    .padEnd(3, "X"); // Pad with X if less than 3 chars
+  // // Get first 3 chars of position title (uppercase)
+  // const techCode = (position?.title || "POS")
+  //   .replace(/[^a-zA-Z]/g, "") // Remove non-alphabetic characters
+  //   .substring(0, 3)
+  //   .toUpperCase()
+  //   .padEnd(3, "X"); // Pad with X if less than 3 chars
 
   // Get current year
   const currentYear = new Date().getFullYear();
@@ -505,7 +505,7 @@ async function generateApplicationNumber(candidate, position, tenantId) {
   const nextSeq = await getNextSequence("APPNUM", tenantId, 1, 4);
   const sequenceNumber = String(nextSeq).padStart(4, "0");
 
-  return `${candidateName}-${techCode}-${currentYear}-${sequenceNumber}`;
+  return `APP-${currentYear}-${sequenceNumber}`;
 }
 
 module.exports = {

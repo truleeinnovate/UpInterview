@@ -361,7 +361,10 @@ const AddCandidateForm = ({
   }, [locations, formData.location]);
   // --------------------------------------- new fields version 2 -----------------------
 
-  console.log("SELECTED CANDIDATE ==============================> ", selectedCandidate);
+  console.log(
+    "SELECTED CANDIDATE ==============================> ",
+    selectedCandidate,
+  );
 
   useEffect(() => {
     // IMPORTANT: Skip DB pre-fill when coming from screening — we want screening data instead
@@ -502,9 +505,9 @@ const AddCandidateForm = ({
       CountryCode: sd.candidate_country_code || "+91",
       Phone: sd.candidate_phone
         ? sd.candidate_phone
-          .replace(/^\+\d{1,3}/, "")
-          .replace(/^\d{1,3}/, "")
-          .trim()
+            .replace(/^\+\d{1,3}/, "")
+            .replace(/^\d{1,3}/, "")
+            .trim()
         : "",
 
       // ── Education ───────────────────────────────────
@@ -525,15 +528,15 @@ const AddCandidateForm = ({
       skills:
         parsedSkills.length > 0
           ? parsedSkills.map((name) => ({
-            skill: (name || "").trim(),
-            experience: "",
-            expertise: "Beginner",
-          }))
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "Beginner",
+            }))
           : (sd.screening_result?.extracted_skills || []).map((name) => ({
-            skill: (name || "").trim(),
-            experience: "",
-            expertise: "Beginner",
-          })),
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "Beginner",
+            })),
 
       // ── New Fields (Resume Analysis) ─────────────────
       professionalSummary:
@@ -609,10 +612,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry,
       );
       setEntries(updatedEntries);
@@ -1171,14 +1174,14 @@ const AddCandidateForm = ({
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" &&
         mode !== "Edit" && {
-        source: "UPLOAD",
-        // Pass full screeningData so backend can store it
-        screeningData: screeningData, // ← direct pass (full object)
-        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
-        parsedSkills: screeningData.parsed_skills || [],
-        parsedExperience: screeningData.parsed_experience || null,
-        parsedEducation: screeningData.parsed_education || null,
-      }),
+          source: "UPLOAD",
+          // Pass full screeningData so backend can store it
+          screeningData: screeningData, // ← direct pass (full object)
+          parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+          parsedSkills: screeningData.parsed_skills || [],
+          parsedExperience: screeningData.parsed_experience || null,
+          parsedEducation: screeningData.parsed_education || null,
+        }),
     };
 
     try {
@@ -1380,8 +1383,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save candidate",
+          error.message ||
+          "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1653,18 +1656,40 @@ const AddCandidateForm = ({
     //   }
     // }
 
+    // const today = new Date();
+    // const currentYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+
+    // if (currentProject.fromDate && currentProject.toDate) {
+    //   if (currentProject.toDate <= currentProject.fromDate) {
+    //     newProjectErrors.toDate = "End Date must be later than Start Date";
+    //   }
+
+    //   if (currentProject.toDate > currentYearMonth) {
+    //     newProjectErrors.toDate = "End date cannot be in the future.";
+    //   }
+    // }
+
+    // --- Date Logic Fix Start ---
     const today = new Date();
     const currentYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 
-    if (currentProject.fromDate && currentProject.toDate) {
-      if (currentProject.toDate <= currentProject.fromDate) {
-        newProjectErrors.toDate = "End Date must be later than Start Date";
-      }
+    let finalToDate = currentProject.toDate;
 
-      if (currentProject.toDate > currentYearMonth) {
+    if (currentProject.fromDate && currentProject.toDate) {
+      // 1. If user selects current month/year, treat it as "Present" (null/empty)
+      if (currentProject.toDate === currentYearMonth) {
+        finalToDate = "";
+      }
+      // 2. Prevent future dates
+      else if (currentProject.toDate > currentYearMonth) {
         newProjectErrors.toDate = "End date cannot be in the future.";
       }
+      // 3. Ensure End Date is after Start Date
+      else if (currentProject.toDate <= currentProject.fromDate) {
+        newProjectErrors.toDate = "End Date must be later than Start Date";
+      }
     }
+    // --- Date Logic Fix End ---
 
     if (currentProject.responsibilities.length < 150) {
       newProjectErrors.responsibilities =
@@ -1692,6 +1717,7 @@ const AddCandidateForm = ({
 
     const projectToSave = {
       ...currentProject,
+      toDate: finalToDate,
       responsibilities: cleanedResponsibilities,
     };
 
@@ -1752,6 +1778,22 @@ const AddCandidateForm = ({
                 onRemoveImage={removeImage}
                 label="Profile Photo"
               />
+              <GenderDropdown
+                value={formData.Gender}
+                options={genderOptionsRS}
+                onChange={handleChange}
+                // error={errors.Gender}
+                containerRef={fieldRefs.Gender}
+                label="Gender"
+                // required
+              />
+            </div>
+            {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
+            {/* <p className="text-lg font-semibold col-span-2"> */}
+            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+              {/* v1.0.7 ----------------------------------------------------------------------------------------> */}
+              Contact Details
+            </p>
 
               {/* Resume Upload */}
               <ResumeUpload
@@ -2284,7 +2326,7 @@ const AddCandidateForm = ({
                   inputRef={fieldRefs.externalId}
                   error={errors.externalId}
                   name="externalId"
-                  placeholder="External System Reference Id"
+                  placeholder="External System Reference ID"
                 />
               </div>
             </div>
@@ -2459,7 +2501,7 @@ const AddCandidateForm = ({
             {/* Key Achievements */}
             <div className="col-span-1 md:col-span-2">
               <DescriptionField
-                label="Key Achievements (one per line)"
+                label="Key Achievements (One Per Line)"
                 name="keyAchievements"
                 value={formData.keyAchievements}
                 onChange={handleChange}
@@ -2486,8 +2528,9 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${
+                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Cancel
             </Button>
@@ -2684,7 +2727,7 @@ const AddCandidateForm = ({
               </div>
               <div>
                 <DescriptionField
-                  label="Responsibilities (one per line)"
+                  label="Responsibilities (One Per Line)"
                   value={currentProject.responsibilities}
                   onChange={(e) => {
                     const { value } = e.target;

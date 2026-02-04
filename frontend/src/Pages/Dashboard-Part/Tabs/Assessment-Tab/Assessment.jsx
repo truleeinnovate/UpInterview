@@ -563,7 +563,7 @@ const Assessment = () => {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "assessment templates" // Entity Name
+    "Assessment Templates" // Entity Name
   );
   // --- Dynamic Empty State Messages using Utility ---
 

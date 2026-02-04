@@ -421,7 +421,7 @@ const SkillsField = forwardRef(
                 </div>
 
                 {/* Skills Grid */}
-                <div className="flex-1 overflow-y-auto px-6 py-4">
+                {/* <div className="flex-1 overflow-y-auto px-6 py-4">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {getFilteredSkillsForPopup().map((skillName) => {
                       const isSelected =
@@ -466,6 +466,65 @@ const SkillsField = forwardRef(
                           : "All available skills have been added"}
                       </div>
                     )}
+                  </div>
+                </div> */}
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {(() => {
+                      const filteredSkills = getFilteredSkillsForPopup();
+
+                      if (filteredSkills.length === 0) {
+                        return (
+                          <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-500">
+                            <p className="text-lg font-medium text-gray-600">
+                              No Skills Found
+                            </p>
+                            <p className="text-sm">
+                              {popupSearchTerm
+                                ? `We couldn't find any matches for "${popupSearchTerm}"`
+                                : "All available skills have been added."}
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return filteredSkills.map((skillName) => {
+                        const isSelected =
+                          popupSelectedSkills.includes(skillName);
+                        return (
+                          <button
+                            key={skillName}
+                            type="button"
+                            onClick={() => toggleSkillInPopup(skillName)}
+                            className={`
+                              px-4 py-3 rounded-lg border-2 text-left text-sm font-medium transition-all duration-150
+                              ${
+                                isSelected
+                                  ? "border-custom-blue bg-custom-blue/10 text-custom-blue ring-2 ring-custom-blue/20"
+                                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                              }
+                            `}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="truncate">{skillName}</span>
+                              {isSelected && (
+                                <svg
+                                  className="w-5 h-5 text-custom-blue flex-shrink-0 ml-2"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
 

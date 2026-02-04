@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - changed responsive break point
 // v1.0.1 - Ashok - added 320 as max width for small screens
 // v1.0.2 - Ashok - added showFilter prop some pages require it
+// v1.0.3 - Ashok - fixed issue where is no data it's not allowed to clear filters which is fixed
 
 import React from "react";
 import { motion } from "framer-motion";
@@ -159,7 +160,7 @@ import { useMediaQuery } from "react-responsive";
         </div>
 
         {/* Filter */}
-        {showFilter && (
+        {/* {showFilter && (
           <div className="flex items-center ml-2">
             <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
               <span
@@ -168,6 +169,24 @@ import { useMediaQuery } from "react-responsive";
                 style={{
                   opacity: dataLength === 0 ? 0.2 : 1,
                   pointerEvents: dataLength === 0 ? "none" : "auto",
+                }}
+                className="cursor-pointer text-xl border rounded-md p-2"
+              >
+                {isFilterPopupOpen ? <LuFilterX /> : <LuFilter />}
+              </span>
+            </Tooltip>
+          </div>
+        )} */}
+        {showFilter && (
+          <div className="flex items-center ml-2">
+            <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
+              <span
+                ref={filterIconRef}
+                onClick={onFilterClick}
+                style={{
+                  opacity: dataLength === 0 && !isFilterActive ? 0.2 : 1,
+                  pointerEvents:
+                    dataLength === 0 && !isFilterActive ? "none" : "auto",
                 }}
                 className="cursor-pointer text-xl border rounded-md p-2"
               >

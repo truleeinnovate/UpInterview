@@ -191,10 +191,11 @@ const InterviewTemplates = () => {
     setIsFilterActive(false);
     setFilterPopupOpen(false);
     setCurrentPage(0);
+    setFilterPopupOpen(false);
   };
 
   const handleFilterIconClick = () => {
-    if (normalizedTemplates?.length !== 0) {
+    if (normalizedTemplates.length !== 0 || isFilterActive) {
       setFilterPopupOpen((prev) => !prev);
     }
   };
@@ -288,7 +289,7 @@ const InterviewTemplates = () => {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "interview templates"
+    "Interview Templates" // Entity Name
   );
 
   const tableColumns = getInterviewTemplateColumns(navigate, {

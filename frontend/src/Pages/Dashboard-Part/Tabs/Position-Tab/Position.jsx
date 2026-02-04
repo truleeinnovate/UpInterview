@@ -449,7 +449,10 @@ const PositionTab = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (positionData?.length !== 0) {
+    // if (positionData?.length !== 0) {
+    //   setFilterPopupOpen((prev) => !prev);
+    // }
+    if (positionData?.length !== 0 || isFilterActive) {
       setFilterPopupOpen((prev) => !prev);
     }
   };

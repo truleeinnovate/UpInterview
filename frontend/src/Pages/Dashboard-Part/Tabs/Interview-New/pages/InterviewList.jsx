@@ -629,7 +629,7 @@ const InterviewList = ({ interviews, isPositionView }) => {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "interviews" // Entity Name
+    "Interviews" // Entity Name
   );
   // ------------------------ Dynamic Empty State Messages using Utility ----------------------
 

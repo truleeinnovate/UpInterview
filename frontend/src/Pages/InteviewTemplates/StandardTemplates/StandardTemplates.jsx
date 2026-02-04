@@ -225,6 +225,7 @@ const StandardTemplates = ({ handleClone }) => {
       createdDate: "",
     });
     setIsFilterActive(false);
+    setFilterPopupOpen(false);
   };
 
   // Filtered templates based on search & filters
@@ -301,7 +302,7 @@ const StandardTemplates = ({ handleClone }) => {
   };
 
   const handleFilterIconClick = () => {
-    if (normalizedTemplates.length !== 0) {
+    if (normalizedTemplates.length !== 0 || isFilterActive) {
       setFilterPopupOpen((prev) => !prev);
     }
   };
@@ -340,7 +341,7 @@ const StandardTemplates = ({ handleClone }) => {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "standard interview templates" // Entity Name
+    "Standard Interview Templates" // Entity Name
   ); // ------------ Dynamic Empty State Messages using Utility -----------------
   return (
     <>

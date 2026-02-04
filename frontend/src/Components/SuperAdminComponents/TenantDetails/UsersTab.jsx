@@ -104,7 +104,7 @@ function UsersTab({ users, viewMode }) {
   const dataToUse = users;
 
   const handleFilterIconClick = () => {
-    if (dataToUse?.length !== 0) {
+    if (dataToUse?.length !== 0 || isFilterActive) {
       setTempSelectedStatus([...selectedStatus]);
       setFilterPopupOpen((prev) => !prev);
     }

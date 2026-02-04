@@ -45,7 +45,6 @@ import {
 } from "../../../../../utils/roundHistoryOptions"; // Import options
 import SingleRoundView from "../components/SingleRoundView";
 import VerticalRoundsView from "../components/VerticalRoundsView";
-import PositionSlideDetails from "../../Position-Tab/PositionSlideDetails";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";
 import Loading from "../../../../../Components/Loading.js";
 import CandidateDetails from "../../Candidate-Tab/CandidateViewDetails/CandidateDetails.jsx";
@@ -905,9 +904,11 @@ const InterviewDetail = () => {
                         position.title.slice(1)
                         : "Unknown"}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {position?.companyname?.name || ""} • {position?.Location}
-                    </div>
+                    {position?.companyName?.name && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {position?.companyname?.name || ""} • {position?.Location}
+                      </div>
+                    )}
                   </dd>
                 </div>
 
@@ -1226,49 +1227,6 @@ const InterviewDetail = () => {
         />
       )}
 
-      {/* if (type === "template") {
-    if (viewType === "sidebar") {
-      setEntityDetailsSidebar({ entity, type });
-      setEntityDetailsModal(null);
-    } else {
-      setEntityDetailsModal({ entity, type });
-      setEntityDetailsSidebar(null);
-    }
-  } else {
-    if (viewType === "sidebar") {
-      setEntityDetailsSidebar({ entity, type });
-      setEntityDetailsModal(null);
-    } else {
-      setEntityDetailsModal({ entity, type });
-      setEntityDetailsSidebar(null);
-    }
-  } */}
-
-      {/* Entity Details Sidebar */}
-      {/* {entityDetailsSidebar && (
-          <EntityDetailsSidebar
-            onClose={() => setEntityDetailsSidebar(null)}
-            entity={entityDetailsSidebar.entity}
-            entityType={entityDetailsSidebar.type}
-            onOpenInNew={() => handleOpenEntityInNew(entityDetailsSidebar.entity, entityDetailsSidebar.type)}
-          />
-        )}
-
-        {entityDetailsModal && (
-          <EntityDetailsModal
-            onClose={() => setEntityDetailsModal(null)}
-            entity={entityDetailsModal.entity}
-            entityType={entityDetailsModal.type}
-          />
-        )} */}
-
-      {/* {selectCandidateView === true && (
-        <CandidateDetails
-          candidate={selectedCandidate}
-          onClose={() => setSelectCandidateView(null)}
-        />
-      )} */}
-
       {/* // <-------v1.0.0 - Ranjith  */}
       {selectCandidateView === true && (
         <CandidateDetails
@@ -1280,16 +1238,6 @@ const InterviewDetail = () => {
 
       {/*  ------------------------> */}
 
-      {/* {showFeeModal && (
-        <FeeConfirmationModal
-          onClose={() => setShowFeeModal(false)}
-          onConfirm={handleConfirmAction}
-          action={modalAction}
-          fees={calculatedFees}
-          round={selectedRound}
-        />
-      )} */}
-
       {/* Action Confirmation Modal */}
       <DateChangeConfirmationModal
         isOpen={actionModal.isOpen}
@@ -1300,13 +1248,6 @@ const InterviewDetail = () => {
         status={interview?.status} // Pass current status
       // Pass requiresReason implicitly via actionType logic in Modal, or explicitly if Modal supports it
       />
-
-      {/* {selectPositionView === true && (
-        <PositionSlideDetails
-          position={selectedPosition}
-          onClose={() => setSelectPositionView(null)}
-        />
-      )} */}
 
       {/* Status Modal for Round Validation */}
       {statusModal.isOpen && (

@@ -1448,7 +1448,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
               <div className="bg-white rounded-lg shadow-md border">
                 <div className="flex justify-between items-center px-5 pt-4">
                   <h2 className="text-lg font-semibold sm:text-md">
-                    Position Details:
+                    Position Details
                   </h2>
                 </div>
 
@@ -1818,7 +1818,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                       name="requirements"
                       inputRef={fieldRefs.requirements}
                       error={errors.requirements}
-                      label="Requirements (one per line)"
+                      label="Requirements (One Per Line)"
                       required
                       placeholder="5+ years of Salesforce development experience
 Expert knowledge of Apex, Lightning Web Components, and Visualforce
@@ -2111,41 +2111,6 @@ Experience with Salesforce integrations (REST/SOAP APIs)"
           )}
         </div>
       </div>
-
-      {/* New Company Modal */}
-
-      {/* {isCompanyModalOpen && (
-        <CompanyForm
-          mode="Create"
-          onClose={() => setIsCompanyModalOpen(false)}
-          onSuccess={() => {
-            fetchCompaniesData();
-            setIsCompanyModalOpen(false);
-          }}
-        />
-      )} */}
-      {/* {isCompanyModalOpen && (
-        <CompanyForm
-          mode="Create"
-          onClose={() => setIsCompanyModalOpen(false)}
-          onSuccess={async () => {
-            const updatedList = await fetchCompaniesData();
-            if (updatedList && updatedList.length > 0) {
-              const newCompany = updatedList[0];
-
-              setFormData((prev) => ({
-                ...prev,
-                companyName: newCompany._id,
-              }));
-
-              if (errors.companyName) {
-                setErrors((prev) => ({ ...prev, companyName: "" }));
-              }
-            }
-            setIsCompanyModalOpen(false);
-          }}
-        />
-      )} */}
       {isCompanyModalOpen && (
         <CompanyForm
           mode="Create"

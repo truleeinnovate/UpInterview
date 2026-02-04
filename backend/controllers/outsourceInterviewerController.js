@@ -3,6 +3,9 @@
 
 const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js");
 const { Contacts } = require("../models/Contacts.js");
+const {
+  sendOutsourceApprovalEmail,
+} = require("./EmailsController/signUpEmailController");
 
 exports.getAllInterviewers = async (req, res) => {
   try {
@@ -32,9 +35,9 @@ exports.getAllInterviewers = async (req, res) => {
 
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     const pipeline = [
@@ -208,15 +211,56 @@ exports.updateInterviewerFeedback = async (req, res) => {
     if (validatedRating !== null) {
       contactUpdateFields.rating = validatedRating;
     }
-
+    let updatedContact;
     // Update Contact only if there's something to update
     if (status || validatedRating !== null) {
-      const updatedContact = await Contacts.findByIdAndUpdate(
+      updatedContact = await Contacts.findByIdAndUpdate(
         contactId,
         { $set: contactUpdateFields },
         { new: true }
       );
     }
+
+
+    // ────────────────────────────────────────────────
+    // NEW: Send approval email when status becomes "approved"
+    if (status === "approved") {
+      console.log("Sending approval email...");
+      (async () => {
+        try {
+          const email = updatedContact?.email;
+          if (!email) {
+            console.warn(`No email found for contactId: ${contactId}`);
+            return;
+          }
+
+          const firstName = updatedContact?.firstName || "";
+          const lastName = updatedContact?.lastName || "";
+
+          const emailData = {
+            email,
+            tenantId: updatedContact?.tenantId || null,
+            firstName,
+            lastName,
+          };
+
+          // You can remove tenantId from sendOutsourceApprovalEmail parameters too
+          const emailResult = await sendOutsourceApprovalEmail({
+            to: email,
+            data: emailData
+          });
+
+          if (emailResult?.success) {
+            console.log(`Approval notification sent to ${email}`);
+          } else {
+            console.warn("Approval notification failed", emailResult);
+          }
+        } catch (emailErr) {
+          console.error("Failed to send approval notification:", emailErr);
+        }
+      })();
+    }
+    // ────────────────────────────────────────────────
 
     res.locals.logData = {
       tenantId: "",

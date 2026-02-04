@@ -17,6 +17,7 @@ import {
   Users,
   Wallet,
   Plus,
+  Building,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
@@ -45,24 +46,23 @@ export const OutsourcedInterviewerCard = ({
   isSelected,
   onSelect,
   onViewDetails,
+  source,
   navigatedfrom,
   candidateExperience,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // navigatedfrom="internal-interview"
-
-  console.log("interviewer OutsourcedInterviewerCard", interviewer);
+  console.log("interviewer dashboard", source, interviewer);
 
   const firstName =
-    navigatedfrom === "internal-interview"
+    source === "internal-interview"
       ? interviewer?.contactDetails
         ? interviewer?.contactDetails?.firstName
         : interviewer?.contactId?.firstName
       : (interviewer?.contact?.firstName ?? "");
 
   const lastName =
-    navigatedfrom === "internal-interview"
+    source === "internal-interview"
       ? interviewer?.contactDetails
         ? interviewer?.contactDetails?.lastName
         : interviewer?.contactId?.lastName || ""
@@ -70,23 +70,30 @@ export const OutsourcedInterviewerCard = ({
   const fullName = `${firstName} ${lastName}`.trim() || "Unnamed";
 
   const interviewerEmail =
-    navigatedfrom === "internal-interview"
+    source === "internal-interview"
       ? interviewer?.contactDetails
         ? interviewer?.contactDetails?.email
         : interviewer?.contactId?.email || "No email"
       : interviewer?.contact?.email || "No email";
 
   const currentRole =
-    navigatedfrom === "internal-interview"
+    source === "internal-interview"
       ? interviewer?.contactDetails?.roleLabel ||
-      interviewer?.contactId?.roleLabel
+        interviewer?.contactId?.roleLabel ||
+        interviewer?.contactId?.currentRole
       : interviewer?.contact?.roleLabel || "Interviewer";
-  const company = interviewer?.contact?.company || "N/A";
+
+  const companyName =
+    source === "internal-interview"
+      ? interviewer?.contactDetails?.company ||
+        interviewer?.contactId?.company ||
+        interviewer?.contactId?.company
+      : interviewer?.contact?.company || "N/A";
   const rating = interviewer?.contact?.rating || "4.6";
   const introduction = interviewer?.contact?.bio || "No introduction provided.";
 
   const skillsArray =
-    navigatedfrom === "internal-interview"
+    source === "internal-interview"
       ? interviewer?.contactDetails
         ? interviewer?.contactDetails?.skills
         : interviewer?.contactId?.skills || []
@@ -217,9 +224,10 @@ export const OutsourcedInterviewerCard = ({
     <div
       className={`
         bg-white rounded-lg border shadow-sm transition-all duration-200
-        ${isSelected
-          ? "border-orange-500 ring-2 ring-orange-200"
-          : "border-gray-200 hover:shadow-md"
+        ${
+          isSelected
+            ? "border-orange-500 ring-2 ring-orange-200"
+            : "border-gray-200 hover:shadow-md"
         }
       `}
     >
@@ -243,16 +251,14 @@ export const OutsourcedInterviewerCard = ({
                   </p>
                 )}
 
-                {navigatedfrom !== "internal-interview" ? null : (
+                {source !== "internal-interview" ? null : (
                   <p className="text-sm text-gray-500 mt-0.1">
                     {interviewerEmail}
                   </p>
                 )}
-
-
               </div>
 
-              {navigatedfrom === "internal-interview" ? null : (
+              {source === "internal-interview" ? null : (
                 <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                   {/* Rating */}
                   <div className="flex items-center gap-1 bg-yellow-100 p-1 rounded">
@@ -300,37 +306,47 @@ export const OutsourcedInterviewerCard = ({
           </div>
         )} */}
 
-        {navigatedfrom === "internal-interview" ? null : (
-          <div className="mt-3">
-            {navigatedfrom === "internal-interview" ? null : (
-              <p className="text-sm mt-1">
-                {capitalizeFirstLetter(company)}
-              </p>
-            )}
-            <div
-              ref={textRef}
-              className={`text-sm text-gray-600 leading-relaxed ${isExpanded ? "" : "line-clamp-5"
-                }`}
-            >
-              {capitalizeFirstLetter(introduction)}
-            </div>
-
-            {/* Only show the button if the text is expanded OR if it was truncated/overflowing */}
-            {(isOverflowing || isExpanded) && (
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="mt-1 text-sm text-custom-blue hover:text-custom-blue/80 flex items-center gap-1"
-              >
-                {isExpanded ? "Show less" : "Show more"}
-                {isExpanded ? (
-                  <ChevronUp className="h-3 w-3" />
-                ) : (
-                  <ChevronDown className="h-3 w-3" />
-                )}
-              </button>
-            )}
+        <div className="mt-3">
+          {/* {source === "internal-interview" ? null : ( */}
+          {/* <p className="text-sm mt-1">{capitalizeFirstLetter(companyName)}</p> */}
+          {/* )} */}
+          <div className="flex items-center space-x-[2px] text-xs text-gray-500">
+            <Building size={14} className="text-black" />
+            <span className="truncate">
+              {companyName
+                ? capitalizeFirstLetter(companyName)
+                : "Not specified"}
+            </span>
           </div>
-        )}
+
+          {source === "internal-interview" ? null : (
+            <>
+              <div
+                ref={textRef}
+                className={`text-sm text-gray-600 leading-relaxed ${
+                  isExpanded ? "" : "line-clamp-5"
+                }`}
+              >
+                {capitalizeFirstLetter(introduction)}
+              </div>
+
+              {/* Only show the button if the text is expanded OR if it was truncated/overflowing */}
+              {(isOverflowing || isExpanded) && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="mt-1 text-sm text-custom-blue hover:text-custom-blue/80 flex items-center gap-1"
+                >
+                  {isExpanded ? "Show less" : "Show more"}
+                  {isExpanded ? (
+                    <ChevronUp className="h-3 w-3" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3" />
+                  )}
+                </button>
+              )}
+            </>
+          )}
+        </div>
 
         {/* Skills */}
         {/* <div className="mt-3 ml-14">
@@ -365,8 +381,9 @@ export const OutsourcedInterviewerCard = ({
               {skillsArray.map((skill, i) => (
                 <span
                   key={i}
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 h-[22px] ${i >= visibleCount ? "hidden" : ""
-                    }`}
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 h-[22px] ${
+                    i >= visibleCount ? "hidden" : ""
+                  }`}
                 >
                   {typeof skill === "string"
                     ? skill
@@ -386,7 +403,7 @@ export const OutsourcedInterviewerCard = ({
         </div>
 
         {/* Availability Slots */}
-        {navigatedfrom === "internal-interview" && (
+        {source === "internal-interview" && (
           <div className="mt-4 group relative">
             {slotsInfo.hasSlots ? (
               <div className="rounded-lg bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 p-3 hover:shadow-md hover:border-green-300 transition-all">
@@ -447,7 +464,7 @@ export const OutsourcedInterviewerCard = ({
       {navigatedfrom !== "dashboard" && (
         <div className="border-t border-gray-100 mt-4 mx-4">
           <div className="py-3 flex justify-end items-center gap-2">
-            {navigatedfrom === "internal-interview" ? null : (
+            {source === "internal-interview" ? null : (
               <Button
                 variant="outline"
                 size="sm"
@@ -479,6 +496,7 @@ function OutsourcedInterviewerModal({
   skills,
   currentRole,
   candidateExperience, //<-----v1.0.4-----Venkatesh---- Added to determine experience level for rate calculation
+  source,
   navigatedfrom,
   previousSelectedInterviewers,
 
@@ -758,7 +776,8 @@ function OutsourcedInterviewerModal({
                 });
 
                 console.log(
-                  `🎯 ${interviewer.contact?.firstName || "Unknown"
+                  `🎯 ${
+                    interviewer.contact?.firstName || "Unknown"
                   } Skill Match Status: ${hasMatchingSkill}`,
                 );
                 return hasMatchingSkill;
@@ -1637,27 +1656,31 @@ function OutsourcedInterviewerModal({
         }
         onClose={onClose}
         setIsFullscreen={setIsFullscreen}
-        titleRight={
-          <div className="flex items-center gap-3 bg-muted/50 rounded-lg px-2 py-1 sm:ml-0 ml-9">
-            <div className="flex items-center gap-2">
-              <Wallet className="h-3 w-4 text-primary" />
-              <div>
-                <p className="text-xs text-muted-foreground">Wallet Balance</p>
-                <p className="text-sm font-bold text-custom-blue">
-                  ₹{Number(availableBalance || 0).toFixed(2)}
-                </p>
+        titleRightEnd={
+          navigatedfrom !== "dashboard" ? (
+            <div className="flex items-center gap-3 bg-muted/50 rounded-lg px-2 py-1 sm:ml-0 ml-9">
+              <div className="flex items-center gap-2">
+                <Wallet className="h-3 w-4 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Wallet Balance
+                  </p>
+                  <p className="text-sm font-bold text-custom-blue">
+                    ₹{Number(availableBalance || 0).toFixed(2)}
+                  </p>
+                </div>
               </div>
+              <Button
+                onClick={() => setShowWalletModal(true)}
+                size="sm"
+                variant="outline"
+                className="gap-1 text-sm"
+              >
+                <Plus className="h-3 w-3" />
+                Top Up
+              </Button>
             </div>
-            <Button
-              onClick={() => setShowWalletModal(true)}
-              size="sm"
-              variant="outline"
-              className="gap-1 text-sm"
-            >
-              <Plus className="h-3 w-3" />
-              Top Up
-            </Button>
-          </div>
+          ) : null
         }
       >
         {/* v1.0.3 <------------------------- */}
@@ -1910,9 +1933,10 @@ function OutsourcedInterviewerModal({
                       <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-3 flex items-end mt-6">
                         <button
                           className={`w-full h-10 px-4 text-sm rounded-md  duration-200 flex items-center justify-center whitespace-nowrap
-                            ${isFiltersApplied
-                              ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
-                              : "bg-custom-blue text-white hover:bg-custom-blue/90"
+                            ${
+                              isFiltersApplied
+                                ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
+                                : "bg-custom-blue text-white hover:bg-custom-blue/90"
                             }`}
                           onClick={
                             isFiltersApplied
@@ -2222,9 +2246,10 @@ function OutsourcedInterviewerModal({
             <div
               className={`
                 grid gap-4 sm:gap-5 px-1 sm:px-2
-                ${isFullscreen
-                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
-                  : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
+                ${
+                  isFullscreen
+                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
+                    : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
                 }
               `}
             >

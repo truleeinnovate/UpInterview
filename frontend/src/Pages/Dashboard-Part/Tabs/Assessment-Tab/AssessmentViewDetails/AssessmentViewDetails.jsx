@@ -17,6 +17,8 @@ import {
   FileQuestion,
   ClipboardCheck,
   AwardIcon,
+  ArrowLeft,
+  Edit,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 // <---------------------- v1.0.0
@@ -29,6 +31,8 @@ import Activity from "../../../Tabs/CommonCode-AllTabs/Activity.jsx";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import { Pencil } from "lucide-react";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
+import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
+import { Button } from "../../../../../Components/Buttons/Button.jsx";
 
 function AssessmentView() {
   const { useAssessmentById, fetchAssessmentQuestions } = useAssessments();
@@ -162,114 +166,99 @@ function AssessmentView() {
       </div>
     );
 
+  const breadcrumbItems = [
+    {
+      label: "Assessment Templates",
+      path: "/assessment-templates",
+    },
+    {
+      label: assessment?.title || "Assessment Template Details",
+      path: `/assessment-template-details/${assessment._id}`,
+      status: assessment?.status,
+    },
+  ];
+
   return (
     <>
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div
-            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-            onClick={handleCloseModal}
-          />
+        <div className="fixed top-[68px] left-0 right-0 bottom-0 z-40 bg-gray-50 flex flex-col overflow-hidden">
+          <div className="flex-1 w-full overflow-y-auto">
+            <div className="max-w-7xl mx-auto px-8 bg-white shadow-sm min-h-screen">
+              <div className="pt-4">
+                <button
+                  onClick={handleCloseModal}
+                  className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200 mb-6"
+                >
+                  <ArrowLeft className="h-5 w-5 mr-2" />
+                  <span className="sm:hidden inline text-sm sm:text-base font-medium">
+                    Back to Assessment Templates
+                  </span>
+                </button>
 
-          {/* v1.0.5 <------------------------------------------------------------ */}
-          <div
-            className={`fixed inset-y-0 right-0 flex max-w-full ${
-              isFullscreen ? "w-full" : "sm:w-full md:w-full lg:w-full w-1/2"
-            } transition-all duration-300`}
-          >
-            {/* v1.0.5 ------------------------------------------------------------> */}
-            <div className="w-full relative">
-              <div className="h-full bg-white shadow-xl flex flex-col">
-                {/* <------------------------------- v1.0.1  */}
-                {/* v1.0.5 <---------------------------------------------------------- */}
-                <div className="sm:px-4 px-6 py-2 flex items-center justify-between">
-                  {/* ------------------------------ v1.0.1 > */}
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Assessment Template Details
-                  </h3>
-                  <div className="flex items-center space-x-2">
-                    {/* <button
+                <div>
+                  {<Breadcrumb items={breadcrumbItems} />}
+                </div>
+              </div>
+              <div className="flex-1">
+                <Tab.Group
+                  selectedIndex={selectedTab}
+                  onChange={setSelectedTab}
+                >
+                  <Tab.List className="flex space-x-3 border-b border-gray-200 overflow-x-auto mt-2">
+                    {tabs.map((tab, idx) => {
+                      const Icon = tab.icon;
+                      return (
+                        <Tab
+                          key={idx}
+                          className={({ selected }) =>
+                            `whitespace-nowrap py-4 px-2 text-sm font-medium border-b-2 focus:outline-none flex items-center gap-2 ${
+                              selected
+                                ? "border-custom-blue text-custom-blue"
+                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`
+                          }
+                        >
+                          {/* <span className="mr-2">{tab.icon}</span> */}
+                          <Icon className="h-4 w-4" />
+                          {tab.name}
+                        </Tab>
+                      );
+                    })}
+                  </Tab.List>
+                  <div className="flex items-center justify-between w-full mt-4 mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Assessment Template Details
+                    </h3>
+                    <Button
+                      title="Edit Candidate"
                       onClick={() =>
                         navigate(`/assessment-templates/edit/${assessment._id}`)
                       }
-                      className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
+                      className="inline-flex items-center border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                     >
-                      <Pencil className="w-4 h-4" />
-                    </button> */}
-                    {assessment?.type !== "standard" && (
-                      <button
-                        onClick={() =>
-                          navigate(
-                            `/assessment-templates/edit/${assessment._id}`
-                          )
-                        }
-                        className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                    )}
-
-                    <button
-                      onClick={toggleFullscreen}
-                      className="sm:hidden md:hidden lg:hidden inline p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
-                    >
-                      {isFullscreen ? (
-                        <Minimize className="w-5 h-5 text-gray-500" />
-                      ) : (
-                        <Expand className="w-5 h-5 text-gray-500" />
-                      )}
-                    </button>
-                    <button
-                      onClick={handleCloseModal}
-                      className="p-2 text-gray-400 hover:text-gray-500 rounded-md hover:bg-gray-100"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                      <span className="sm:hidden inline ml-1">
+                        Assessment Template
+                      </span>
+                    </Button>
                   </div>
-                </div>
-                <div className="flex-1">
-                  <Tab.Group
-                    selectedIndex={selectedTab}
-                    onChange={setSelectedTab}
-                  >
-                    <Tab.List className="flex space-x-3 border-b border-gray-200 px-2 overflow-x-auto">
-                      {tabs.map((tab, idx) => {
-                        const Icon = tab.icon;
-                        return (
-                          <Tab
-                            key={idx}
-                            className={({ selected }) =>
-                              `py-2 px-4 text-sm font-medium border-b-2 focus:outline-none flex items-center gap-1 ${
-                                selected
-                                  ? "border-custom-blue text-custom-blue"
-                                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                              }`
-                            }
-                          >
-                            {/* <span className="mr-2">{tab.icon}</span> */}
-                            <Icon className="h-4 w-4" />
-                            {tab.name}
-                          </Tab>
-                        );
-                      })}
-                    </Tab.List>
-                    <Tab.Panels>
-                      {tabs.map((tab, idx) => (
-                        <Tab.Panel
-                          key={idx}
-                          className={`focus:outline-none ${
-                            selectedTab === 4
-                              ? "overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-20"
-                              : ""
-                          }`}
-                        >
-                          {tab.content}
-                        </Tab.Panel>
-                      ))}
-                    </Tab.Panels>
-                  </Tab.Group>
-                </div>
-                {/* v1.0.5 ----------------------------------------------------------> */}
+                  <Tab.Panels>
+                    {tabs.map((tab, idx) => (
+                      <Tab.Panel
+                        key={idx}
+                        className={`focus:outline-none ${
+                          selectedTab === 4
+                            // ? "overflow-y-auto max-h-[calc(100vh-88px)] pb-20"
+                            ? "pb-20"
+                            : ""
+                        }`}
+                      >
+                        {tab.content}
+                      </Tab.Panel>
+                    ))}
+                  </Tab.Panels>
+                </Tab.Group>
               </div>
             </div>
           </div>

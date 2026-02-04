@@ -60,7 +60,7 @@ const Home = () => {
     {
       limit: Infinity,
       type: "feedbackAnalytics",
-    }
+    },
   );
   const pendingDraftCount =
     feedbacksResponse?.feedbackTotalCount > 0
@@ -88,7 +88,7 @@ const Home = () => {
           `${config.REACT_APP_API_URL}/interview/dashboard-stats`,
           {
             params: { isOrganization, tenantId, ownerId, period },
-          }
+          },
         );
         setStats(response.data);
       } catch (error) {
@@ -231,6 +231,7 @@ const Home = () => {
         <InternalInterviews
           onClose={() => setInternalInterviews(false)}
           navigatedfrom="dashboard"
+          source="internal-interview"
         />
       )}
     </div>

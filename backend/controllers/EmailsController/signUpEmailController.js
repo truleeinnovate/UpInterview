@@ -93,7 +93,7 @@ exports.sendSignUpEmail = async (req, res) => {
     const notificationResponse = await notificationMiddleware(
       req,
       res,
-      () => {}
+      () => { }
     );
 
     return res.json({
@@ -134,9 +134,8 @@ exports.forgotPasswordSendEmail = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
-    const actionLink = `${
-      config.REACT_APP_API_URL_FRONTEND
-    }/resetPassword?token=${encodeURIComponent(resetToken)}&type=${type}`;
+    const actionLink = `${config.REACT_APP_API_URL_FRONTEND
+      }/resetPassword?token=${encodeURIComponent(resetToken)}&type=${type}`;
 
     // Get email template
     const emailTemplate = await emailTemplateModel.findOne({
@@ -677,6 +676,54 @@ exports.sendApprovalEmail = async ({ to, data }) => {
     return {
       success: false,
       message: "Failed to send approval email",
+      error: error.message,
+    };
+  }
+};
+
+// when outsource interviewer request is approved
+exports.sendOutsourceApprovalEmail = async ({ to, data }) => {
+  try {
+    const { email, tenantId, firstName, lastName } = data;
+
+    if (!email || typeof email !== "string") {
+      throw new Error("Invalid email address");
+    }
+
+    const tenant = await Tenant.findById(tenantId);
+    if (!tenant) {
+      throw new Error("Tenant not found");
+    }
+    const companyName = process.env.COMPANY_NAME || "UpInterview";
+
+    const emailTemplate = await emailTemplateModel.findOne({
+      category: "outsource_approval",
+      isActive: true,
+      isSystemTemplate: true,
+    });
+
+    if (!emailTemplate) {
+      throw new Error("Email template for outsource approval not found");
+    }
+
+    // Replace placeholders (no actionLink anymore)
+    const emailSubject = emailTemplate.subject
+      .replace(/{{companyName}}/g, companyName);
+
+    const emailBody = emailTemplate.body
+      .replace(/{{firstName}}/g, firstName || "")
+      .replace(/{{lastName}}/g, lastName || "")
+      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
+      .replace(/{{companyName}}/g, companyName);
+
+    const emailResult = await sendEmail(email, emailSubject, emailBody);
+
+    return emailResult;
+  } catch (error) {
+    console.error("Error sending outsource approval email:", error);
+    return {
+      success: false,
+      message: "Failed to send outsource approval email",
       error: error.message,
     };
   }

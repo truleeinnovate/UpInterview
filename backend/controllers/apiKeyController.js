@@ -17,7 +17,7 @@ exports.getApiKeys = asyncHandler(async (req, res) => {
       headers: req.headers
     });
 
-    const apiKeys = await ApiKey.find({}) // Remove createdBy filter - get all API keys
+    const apiKeys = await ApiKey.find({ tenantId: res.locals.auth?.actingAsTenantId }) // Remove createdBy filter - get all API keys
       .select("-__v");
 
     const duration = Date.now() - startTime;

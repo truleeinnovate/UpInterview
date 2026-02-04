@@ -319,8 +319,150 @@ const MockInterview = () => {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "mock interviews"
-  );
+    "Mock Interviews"
+  ); // ------------------------- empty state message -------------------------------------
+  const tableColumns = [
+    {
+      key: "mockInterviewCode",
+      header: "Interview ID",
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => navigate(`/mock-interviews-details/${row._id}`)}
+        >
+          {row?.mockInterviewCode || "N/A"}
+        </div>
+      ),
+    },
+    {
+      key: "title",
+      header: "Interview Title",
+      render: (value, row) => (
+        <div
+          className="text-sm font-medium text-custom-blue cursor-pointer"
+          onClick={() => navigate(`/mock-interviews-details/${row._id}`)}
+        >
+          {row?.rounds?.[0]?.roundTitle || "Not Provided"}
+        </div>
+      ),
+    },
+    {
+      key: "CurrentRole",
+      header: "Current Role",
+      render: (value, row) => row?.roleDetails?.roleLabel || "Not Provided",
+    },
+    {
+      key: "status",
+      // v1.0.0 <--------------------------------------------------------------------
+      header: "Status",
+
+      // render: (value, row) => row?.rounds?.[0]?.status || "Not Provided",
+      render: (value, row) => {
+        return row?.rounds?.[0]?.status ? (
+          <StatusBadge
+            status={
+              row.rounds[0].status === "RequestSent"
+                ? "Request Sent"
+                : row?.rounds[0]?.status
+            }
+          />
+        ) : (
+          <span className="text-gray-400 text-sm">Not Provided</span>
+        );
+      },
+      // v1.0.0 -------------------------------------------------------------------->
+    },
+    {
+      key: "duration",
+      header: "Duration",
+      render: (value, row) => row?.rounds?.[0]?.duration || "Not Provided",
+    },
+    {
+      key: "interviewer",
+      header: "Interviewer",
+      render: (value, row) => {
+        const interviewers = row?.rounds?.[0]?.interviewers || [];
+        if (interviewers.length === 0) return "Not Provided";
+
+        // Map interviewer names, accessing contact.Name or firstName/lastName
+        const names = interviewers
+          .map((interviewer) => {
+            const contact = interviewer?.contact;
+            return (
+              contact?.Name ||
+              `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim()
+            );
+          })
+          .filter(Boolean); // Remove empty strings
+
+        if (names.length === 0) return "Not Provided";
+
+        // Show first name and truncate with ... if more than one
+        const displayText = names.length > 1 ? `${names[0]}...` : names[0];
+        const additionalCount = names.length > 1 ? names.length - 1 : 0;
+
+        return (
+          <div className="w-48 truncate flex items-center space-x-1">
+            <span className="text-sm text-gray-900" title={names.join(", ")}>
+              {displayText}
+            </span>
+            {additionalCount > 0 && (
+              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-black bg-gray-200 rounded-full">
+                +{additionalCount}
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: "createdAt",
+      header: "Created On",
+      render: (value) => {
+        // if (!value) return "Not Provided";
+        // const date = new Date(value);
+        // return date.toLocaleString("en-GB", {
+        //   day: "2-digit",
+        //   month: "2-digit",
+        //   year: "numeric",
+        //   hour: "numeric",
+        //   minute: "2-digit",
+        //   hour12: true,
+        // });
+        return formatDateTime(value);
+      },
+    },
+  ];
+
+  // const tableActions = [
+  //   {
+  //     key: "view",
+  //     label: "View Details",
+  //     icon: <Eye className="w-4 h-4 text-custom-blue" />,
+  //     onClick: (row) => navigate(`/mock-interview-details/${row._id}`),
+  //   },
+  //   {
+  //     key: "edit",
+  //     label: "Edit",
+  //     icon: <Pencil className="w-4 h-4 text-green-600" />,
+  //     onClick: (row) =>
+  //       navigate(`/mock-interview/${row._id}/edit`, {
+  //         state: { from: "tableMode" },
+  //       }),
+  //   },
+  //   {
+  //     key: "reschedule",
+  //     label: "Reschedule",
+  //     icon: <Timer className="w-4 h-4 text-custom-blue" />,
+  //     onClick: (row) => onRescheduleClick(row),
+  //   },
+  //   {
+  //     key: "cancel",
+  //     label: "Cancel",
+  //     icon: <XCircle className="w-4 h-4 text-red-500" />,
+  //     onClick: (row) => onCancelClick(row),
+  //   },
+  // ];
 
   const tableColumns = getMockInterviewColumns(navigate);
 

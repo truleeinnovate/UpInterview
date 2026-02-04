@@ -142,6 +142,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     try {
       // Wait for the API call to succeed
       let response = await updateInterviewStatus(role);
+      console.log(
+        "API response from status update: handleRoleSelect",
+        response,
+      );
 
       if (response?.success === true) {
         if (interviewRoundData?.meetPlatform === "platform") {

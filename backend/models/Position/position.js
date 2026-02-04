@@ -76,7 +76,7 @@ const positionSchema = new mongoose.Schema(
     NoofPositions: Number,
     status: {
       type: String,
-      enum: ["draft", "opened", "closed", "hold"],
+      enum: ["draft", "opened", "closed", "hold","cancelled"],
       default: "draft",
     },
     employmentType: { type: String },
