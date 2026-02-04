@@ -1363,7 +1363,7 @@ const CombinedNavbar = React.memo(() => {
                         </div>
                       )}
 
-                    {enhancedCheckPermission("QuestionBank") && (
+                    {/* {enhancedCheckPermission("QuestionBank") && (
                       <NavLink
                         to="/question-bank"
                         className={`h-full flex items-center relative px-1 ${isActive("/question-bank")
@@ -1381,10 +1381,12 @@ const CombinedNavbar = React.memo(() => {
                           <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                         )}
                       </NavLink>
-                    )}
+                    )} */}
 
                     {(enhancedCheckPermission("Analytics") ||
                       enhancedCheckPermission("SupportDesk") ||
+                      enhancedCheckPermission("QuestionBank") ||
+
                       enhancedCheckPermission("Companies")) && (
                         <div
                           className="relative h-full flex items-center"
@@ -1406,6 +1408,7 @@ const CombinedNavbar = React.memo(() => {
                             )}
                             {(isActive("/analytics") ||
                               isActive("/support-desk") ||
+                              isActive("/question-bank") ||
                               isActive("/feedback") ||
                               isActive("/companies") ||
                               isActive("/my-teams") ||
@@ -1425,6 +1428,9 @@ const CombinedNavbar = React.memo(() => {
                                     : []),
                                   ...(enhancedCheckPermission("Companies")
                                     ? [{ to: "/companies", label: "Companies" }]
+                                    : []),
+                                  ...(enhancedCheckPermission("QuestionBank")
+                                    ? [{ to: "/question-bank", label: "QuestionBank" }]
                                     : []),
                                   ...(enhancedCheckPermission("Feedback")
                                     ? [{ to: "/feedback", label: "Feedback" }]
@@ -1899,7 +1905,7 @@ const CombinedNavbar = React.memo(() => {
                         </div>
                       )}
 
-                    {enhancedCheckPermission("QuestionBank") && (
+                    {/* {enhancedCheckPermission("QuestionBank") && (
                       <NavLink
                         to="/question-bank"
                         className={`block px-4 py-3 rounded-md ${isActive("/question-bank")
@@ -1915,7 +1921,7 @@ const CombinedNavbar = React.memo(() => {
                       >
                         Question Bank
                       </NavLink>
-                    )}
+                    )} */}
 
                     {(enhancedCheckPermission("Analytics") ||
                       enhancedCheckPermission("SupportDesk") ||
@@ -1925,6 +1931,7 @@ const CombinedNavbar = React.memo(() => {
                           <button
                             className={`w-full text-left px-4 py-3 rounded-md flex justify-between items-center ${isActive("/analytics") ||
                               isActive("/support-desk") ||
+                              isActive("/question-bank") ||
                               isActive("/feedback") ||
                               isActive("/companies") ||
                               isActive("/my-teams") ||
@@ -1953,6 +1960,9 @@ const CombinedNavbar = React.memo(() => {
                                   : []),
                                 ...(enhancedCheckPermission("Companies")
                                   ? [{ to: "/companies", label: "Companies" }]
+                                  : []),
+                                ...(enhancedCheckPermission("QuestionBank")
+                                  ? [{ to: "/question-bank", label: "QuestionBank" }]
                                   : []),
                                 ...(enhancedCheckPermission("Feedback")
                                   ? [{ to: "/feedback", label: "Feedback" }]
