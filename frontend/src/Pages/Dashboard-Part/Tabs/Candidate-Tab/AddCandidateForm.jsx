@@ -1567,18 +1567,40 @@ const AddCandidateForm = ({
     //   }
     // }
 
+    // const today = new Date();
+    // const currentYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+
+    // if (currentProject.fromDate && currentProject.toDate) {
+    //   if (currentProject.toDate <= currentProject.fromDate) {
+    //     newProjectErrors.toDate = "End Date must be later than Start Date";
+    //   }
+
+    //   if (currentProject.toDate > currentYearMonth) {
+    //     newProjectErrors.toDate = "End date cannot be in the future.";
+    //   }
+    // }
+
+    // --- Date Logic Fix Start ---
     const today = new Date();
     const currentYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 
-    if (currentProject.fromDate && currentProject.toDate) {
-      if (currentProject.toDate <= currentProject.fromDate) {
-        newProjectErrors.toDate = "End Date must be later than Start Date";
-      }
+    let finalToDate = currentProject.toDate;
 
-      if (currentProject.toDate > currentYearMonth) {
+    if (currentProject.fromDate && currentProject.toDate) {
+      // 1. If user selects current month/year, treat it as "Present" (null/empty)
+      if (currentProject.toDate === currentYearMonth) {
+        finalToDate = "";
+      }
+      // 2. Prevent future dates
+      else if (currentProject.toDate > currentYearMonth) {
         newProjectErrors.toDate = "End date cannot be in the future.";
       }
+      // 3. Ensure End Date is after Start Date
+      else if (currentProject.toDate <= currentProject.fromDate) {
+        newProjectErrors.toDate = "End Date must be later than Start Date";
+      }
     }
+    // --- Date Logic Fix End ---
 
     if (currentProject.responsibilities.length < 150) {
       newProjectErrors.responsibilities =
@@ -1606,6 +1628,7 @@ const AddCandidateForm = ({
 
     const projectToSave = {
       ...currentProject,
+      toDate: finalToDate,
       responsibilities: cleanedResponsibilities,
     };
 

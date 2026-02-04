@@ -3,6 +3,7 @@
 // v1.0.2  -  Ashraf  -  called sections function to load data fast
 // v1.0.3  -  Ashraf  -  added extend/cancel functionality for candidate assessments,assed cancel,extend popup
 // v1.0.4  -  Ashok   -  Improved responsiveness
+// v1.0.5  -  Ashok   -  Added create portal to fix z-index issue when share assessment popup opened
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
@@ -26,6 +27,7 @@ import { config } from "../../../../../config.js";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
 import { notify } from "../../../../../services/toastService.js";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
+import { createPortal } from "react-dom";
 
 function AssessmentsTab({ assessment }) {
   // <-------------------------------v1.0.3
@@ -352,14 +354,17 @@ function AssessmentsTab({ assessment }) {
           )}
         </div>
       </div>
-      {isShareOpen && (
-        <ShareAssessment
-          isOpen={isShareOpen}
-          onCloseshare={() => setIsShareOpen(false)}
-          assessment={assessment}
-        // AssessmentTitle={assessment?.AssessmentTitle}
-        // assessmentId={assessment._id}
-        />
+      {isShareOpen && createPortal(
+        <div>
+          <ShareAssessment
+            isOpen={isShareOpen}
+            onCloseshare={() => setIsShareOpen(false)}
+            assessment={assessment}
+          // AssessmentTitle={assessment?.AssessmentTitle}
+          // assessmentId={assessment._id}
+          />
+        </div>,
+        document.body
       )}
       {/* <---------------------- v1.0.3 */}
       {isActionPopupOpen && selectedSchedule && (
