@@ -126,6 +126,8 @@ const SubscriptionCardDetails = () => {
 
   const [processing, setProcessing] = useState(false);
   const [buttonLoading, setButtonLoading] = useState(false);
+  // Payment method state: "card", "upi", or "emandate" (Net Banking)
+  const [paymentMethod, setPaymentMethod] = useState("card");
 
   const navigate = useNavigate();
 
@@ -208,6 +210,51 @@ const SubscriptionCardDetails = () => {
     }
   }, [ownerId, planDetails, tenantId, userType]);
 
+  // Get available payment methods based on subscription amount
+  // UPI Autopay: max ₹5,000 (RBI limit)
+  // eMandate (Net Banking): up to ₹10 lakh, AFA required for > ₹15,000
+  // Card: No limit
+  const getAvailablePaymentMethods = () => {
+    const amount = parseFloat(totalPaid);
+    return [
+      {
+        id: "card",
+        name: "Credit/Debit Card",
+        available: true,
+        icon: (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+        ),
+        subtitle: "Visa, Mastercard, RuPay"
+      },
+      {
+        id: "upi",
+        name: "UPI Autopay",
+        available: amount <= 5000,
+        icon: (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        ),
+        subtitle: "GPay, PhonePe, Paytm",
+        limit: "Max ₹5,000"
+      },
+      {
+        id: "emandate",
+        name: "Net Banking",
+        available: true,
+        icon: (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        ),
+        subtitle: "eMandate via Bank",
+        note: amount > 15000 ? "OTP required" : null
+      },
+    ];
+  };
+
   // Validate details before submitting to payment processor
   const validateCardDetailsBeforeSubmit = () => {
     const errors = {};
@@ -273,10 +320,11 @@ const SubscriptionCardDetails = () => {
         planId: planDetails.planId || planDetails._id || "",
         membershipType: cardDetails.membershipType,
         userProfile,
-        // Send the amount in INR
         amount: amountToCharge,
         currency: "INR",
         autoRenew: true, // Always set to true since we're only using subscriptions
+        // Payment method selected by user: "card", "upi", or "emandate"
+        paymentMethod: paymentMethod,
         // Additional metadata for better tracking
         metadata: {
           billingCycle: cardDetails.membershipType,
@@ -343,9 +391,8 @@ const SubscriptionCardDetails = () => {
               // amount: orderResponse.data.amount,
               currency: "INR", //orderResponse.data.currency ||
               name: "UpInterview",
-              description: `${cardDetails.membershipType} Subscription for ${
-                planDetails.name
-              } - ₹${(orderResponse.amount / 100).toFixed(2)}`,
+              description: `${cardDetails.membershipType} Subscription for ${planDetails.name
+                } - ₹${(orderResponse.amount / 100).toFixed(2)}`,
               // v1.0.1 <----------------------------------------------------------------------------------------
               // image: logo,
               image:
@@ -360,10 +407,44 @@ const SubscriptionCardDetails = () => {
                 ownerId: ownerId,
                 planId: planDetails._id,
                 membershipType: cardDetails.membershipType,
+                paymentMethod: paymentMethod, // Track selected payment method
               },
               theme: {
                 color: "#3399cc",
               },
+              // Payment method configuration for subscriptions
+              // Note: Razorpay subscriptions only support Card and eMandate (Nach) for recurring payments
+              // UPI Autopay requires special enablement and works differently
+              method: paymentMethod === "card"
+                ? {
+                  card: true,
+                  upi: false,
+                  netbanking: false,
+                  emandate: false,
+                  wallet: false,
+                  emi: false,
+                  paylater: false,
+                }
+                : paymentMethod === "emandate"
+                  ? {
+                    card: false,
+                    upi: false,
+                    netbanking: true,
+                    emandate: true,
+                    wallet: false,
+                    emi: false,
+                    paylater: false,
+                  }
+                  : {
+                    // For UPI - enable both UPI and Card as fallback (UPI may not be available for subscriptions)
+                    card: true,
+                    upi: true,
+                    netbanking: false,
+                    emandate: false,
+                    wallet: false,
+                    emi: false,
+                    paylater: false,
+                  },
               handler: async function (response) {
                 try {
                   // Handle successful payment
@@ -425,32 +506,32 @@ const SubscriptionCardDetails = () => {
                       const start = Date.now();
                       let isReady = false;
                       let attempts = 0;
-                      
+
                       while (Date.now() - start < timeoutMs) {
                         attempts++;
                         // console.log(`Polling attempt ${attempts}...`);
-                        
+
                         // Force complete cache refresh each time
                         const result = await forceRefreshSubscription();
                         const fresh = result?.data || result;
-                        
+
                         // console.log('Subscription status:', fresh?.status);
                         // console.log('Has receipt/invoice:', !!(fresh?.receiptId || fresh?.invoiceId));
                         // console.log('Full subscription data:', fresh);
-                        
+
                         const isActive = (fresh?.status || '').toLowerCase() === 'active';
                         const hasDocs = !!(fresh?.receiptId || fresh?.invoiceId);
-                        
+
                         if (isActive && hasDocs) {
                           isReady = true;
                           // console.log('Subscription is ready with active status and documents!');
                           break;
                         }
-                        
+
                         // Wait before next poll
                         await new Promise(r => setTimeout(r, pollMs));
                       }
-                      
+
                       if (!isReady) {
                         const latestData = await forceRefreshSubscription();
                         console.warn('Webhook not confirmed within timeout. Current subscription data:', latestData);
@@ -458,7 +539,7 @@ const SubscriptionCardDetails = () => {
                     } catch (e) {
                       console.warn('Error while waiting for webhook completion:', e?.message);
                     }
-                    
+
                     // 4) Final force refresh before navigation to ensure latest data
                     try {
                       await forceRefreshSubscription();
@@ -466,7 +547,7 @@ const SubscriptionCardDetails = () => {
                     } catch (e) {
                       console.warn('Final force refresh failed:', e?.message);
                     }
-                    
+
                     // 3) Navigate to success page after webhook wait
                     navigate("/subscription-success", {
                       state: {
@@ -548,7 +629,7 @@ const SubscriptionCardDetails = () => {
       console.error("Error processing payment:", error);
       toast.error(
         "Error processing payment: " +
-          (error.response?.data?.message || error.message)
+        (error.response?.data?.message || error.message)
       );
       setButtonLoading(false);
     }
@@ -570,18 +651,17 @@ const SubscriptionCardDetails = () => {
       ) : (
         // v1.0.2 <---------------------------------------------------------------------------------------------------
         <form
-          className="relative w-[70%] sm:w-[90%] sm:h-[90%] md:h-[90%] md:w-[70%] flex flex-col mb-4 sm:justify-normal md:justify-normal lg:justify-normal justify-center h-[70%] p-5 bg-white border border-gray-300 rounded-md sm:overflow-y-auto md:overflow-y-auto"
+          className="relative w-[70%] sm:w-[90%] sm:h-[90%] md:h-[90%] md:w-[70%] flex flex-col mb-4 sm:justify-normal md:justify-normal lg:justify-normal justify-center h-[85%] max-h-[85vh] p-5 bg-white border border-gray-300 rounded-md overflow-y-auto"
           onSubmit={handleSubmit}
         >
           <div className="flex items-center justify-between">
             <h2 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl font-semibold mb-2">
-              {`Upgrade to a ${planDetails.name} ${
-                cardDetails.membershipType === "monthly" ? "Monthly" : "Annual"
-              } Membership`}
+              {`Upgrade to a ${planDetails.name} ${cardDetails.membershipType === "monthly" ? "Monthly" : "Annual"
+                } Membership`}
             </h2>
             <button
-            className="absolute sm:top-2 sm:right-2 top-4 right-6"
-            onClick={() => navigate("/account-settings/subscription")}>
+              className="absolute sm:top-2 sm:right-2 top-4 right-6"
+              onClick={() => navigate("/account-settings/subscription")}>
               <XCircle className="h-7 w-7" />
             </button>
           </div>
@@ -661,11 +741,10 @@ const SubscriptionCardDetails = () => {
               <div className="flex flex-col gap-4   mb-4">
                 <div
                   className={`border p-2 flex items-center gap-2 rounded-md bg-gray-50
-                                     ${
-                                       cardDetails.membershipType === "monthly"
-                                         ? "border-[#217989]"
-                                         : "border-gray-300"
-                                     }`}
+                                     ${cardDetails.membershipType === "monthly"
+                      ? "border-[#217989]"
+                      : "border-gray-300"
+                    }`}
                   onClick={() =>
                     handleMembershipChange(
                       "monthly",
@@ -701,11 +780,10 @@ const SubscriptionCardDetails = () => {
 
                 <div
                   className={`border p-2 flex justify-between items-center gap-4 rounded-md bg-gray-50 
-                ${
-                  cardDetails.membershipType === "annual"
-                    ? "border-[#217989]"
-                    : "border-gray-300"
-                }`}
+                ${cardDetails.membershipType === "annual"
+                      ? "border-[#217989]"
+                      : "border-gray-300"
+                    }`}
                   onClick={() =>
                     handleMembershipChange(
                       "annual",
@@ -745,6 +823,49 @@ const SubscriptionCardDetails = () => {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Payment Method Selection */}
+              <label className="block mb-2 text-lg font-medium text-gray-500">
+                Payment Method
+              </label>
+              <div className="flex flex-col gap-2 mb-4">
+                {getAvailablePaymentMethods().map((method) => (
+                  <div
+                    key={method.id}
+                    onClick={() => method.available && setPaymentMethod(method.id)}
+                    className={`border p-2 rounded-md cursor-pointer flex items-center justify-between transition-all ${paymentMethod === method.id
+                      ? "border-[#217989] bg-blue-50"
+                      : method.available
+                        ? "border-gray-300 hover:border-gray-400"
+                        : "border-gray-200 bg-gray-100 cursor-not-allowed opacity-50"
+                      }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={paymentMethod === method.id}
+                        disabled={!method.available}
+                        readOnly
+                        className="accent-custom-blue h-4 w-4"
+                      />
+                      <div className="flex-shrink-0">{method.icon}</div>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm">{method.name}</span>
+                        <span className="text-xs text-gray-500">{method.subtitle}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      {!method.available && method.limit && (
+                        <span className="text-xs text-red-500">{method.limit}</span>
+                      )}
+                      {method.available && method.note && (
+                        <span className="text-xs text-orange-500">{method.note}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* Add-on */}

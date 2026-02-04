@@ -475,6 +475,10 @@ app.use((req, res, next) => {
 
 // app.use("/api/agora", agoraRoomRoute);
 // ------------------------------v1.0.3 >
+// Global Search Routes - Must be before generic apiRoutes
+const globalSearchRoutes = require("./routes/globalSearchRoutes");
+app.use("/api/global-search", globalSearchRoutes);
+
 // Apply database connection middleware to all API routes except health check
 const apiRoutes = require("./routes/apiRoutes");
 app.use("/api", apiRoutes);
@@ -502,6 +506,8 @@ app.use("/api/resume-screening", resumeScreeningRoutes);
 // Application Routes
 const applicationRoutes = require("./routes/applicationRoutes");
 app.use("/application", applicationRoutes);
+
+
 
 
 const port = process.env.PORT || 5000;

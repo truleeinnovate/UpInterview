@@ -31,6 +31,10 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js"
 import { formatDateTime } from "../../../../utils/dateFormatter";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
+import {
+  getSupportTicketColumns,
+  getSupportTicketActions,
+} from "../../../../utils/tableConfig.jsx";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -76,8 +80,8 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
             : action.key === "edit"
-            ? "text-green-600 hover:bg-green-600/10"
-            : "text-blue-600 bg-green-600/10";
+              ? "text-green-600 hover:bg-green-600/10"
+              : "text-blue-600 bg-green-600/10";
 
         return (
           <button
@@ -354,141 +358,19 @@ function SupportDesk() {
   // ------------------- Dynamic Empty State Messages using Utility ---------------------
 
   //  table column
-  const tableColumns = [
-    {
-      key: "ticketCode",
-      header: "Ticket ID",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => {
-            const path =
-              effectivePermissions_RoleName === "Admin" ||
-              effectivePermissions_RoleName === "Individual_Freelancer" ||
-              effectivePermissions_RoleName === "Individual"
-                ? `/support-desk/${row?._id}`
-                : row.assignedToId ===
-                    impersonationPayload.impersonatedUserId &&
-                  impersonatedUser_roleName === "Support_Team"
-                ? `/support-desk/view/${row?._id}`
-                : impersonatedUser_roleName === "Super_Admin"
-                ? `/support-desk/view/${row?._id}`
-                : `/support-desk/${row?._id}`;
-            navigate(path, { state: { ticketData: row } });
-          }}
-        >
-          {capitalizeFirstLetter(value) || "N/A"}
-        </div>
-      ),
-    },
-    {
-      key: "contact",
-      header: "Contact",
-      render: (value) => capitalizeFirstLetter(value) || "N/A",
-    },
-    // v1.0.1 ---------------------------------------------------------------------------->
+  const roleNames = {
+    effectiveRole: effectivePermissions_RoleName,
+    impersonatedRole: impersonatedUser_roleName,
+    impersonatedUserId: impersonationPayload?.impersonatedUserId,
+  };
 
-    {
-      key: "subject",
-      header: "Subject",
-      render: (value) => (
-        <div
-          className="cursor-default truncate max-w-[220px]"
-          title={capitalizeFirstLetter(value)}
-        >
-          {capitalizeFirstLetter(value) || "N/A"}
-        </div>
-      ),
-    },
-    // v1.0.1 ---------------------------------------------------------------------------->
-    {
-      key: "issueType",
-      header: "Issue Type",
-      render: (value) => capitalizeFirstLetter(value) || "N/A",
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (value) => (
-        <StatusBadge
-          status={value}
-          text={value ? capitalizeFirstLetter(value) : "Not Provided"}
-        />
-      ),
-    },
-    ...(impersonatedUser_roleName === "Super_Admin" ||
-    impersonatedUser_roleName === "Support_Team"
-      ? [
-          {
-            key: "priority",
-            header: "Priority",
-            render: (value) => (
-              <span
-                className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
-                  value
-                )}`}
-              >
-                {<StatusBadge status={capitalizeFirstLetter(value)} /> || "N/A"}
-              </span>
-            ),
-          },
-        ]
-      : []),
-    {
-      key: "createdAt",
-      header: "Created At",
-      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
-    },
-    ...(impersonatedUser_roleName === "Super_Admin" ||
-    impersonatedUser_roleName === "Support_Team"
-      ? [
-          {
-            key: "assignedTo",
-            header: "Assigned To",
-            render: (value) => capitalizeFirstLetter(value) || "N/A",
-          },
-        ]
-      : []),
-  ];
-  //  table column actions
-  const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-custom-blue" />,
-      onClick: (row) => {
-        const path =
-          effectivePermissions_RoleName === "Admin" ||
-          effectivePermissions_RoleName === "Individual_Freelancer" ||
-          effectivePermissions_RoleName === "Individual"
-            ? `/support-desk/${row._id}`
-            : row.assignedToId === impersonationPayload.impersonatedUserId &&
-              impersonatedUser_roleName === "Support_Team"
-            ? `/support-desk/view/${row._id}`
-            : impersonatedUser_roleName === "Super_Admin"
-            ? `/support-desk/view/${row._id}`
-            : `/support-desk/${row._id}`;
-        navigate(path, { state: { ticketData: row } });
-      },
-      //disabled: (row) => !hasActionAccess(row),
-    },
-    ...(effectivePermissions_RoleName === "Admin" ||
-    effectivePermissions_RoleName === "Individual_Freelancer" ||
-    effectivePermissions_RoleName === "Individual"
-      ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) =>
-              navigate(`/support-desk/edit-ticket/${row._id}`, {
-                state: { ticketData: row },
-              }),
-            //disabled: (row) => !hasActionAccess(row),
-          },
-        ]
-      : []),
-  ];
+  const tableColumns = getSupportTicketColumns(navigate, {
+    roleNames,
+  });
+
+  const tableActions = getSupportTicketActions(navigate, {
+    roleNames,
+  });
 
   const kanbanColumns = [
     {
@@ -532,12 +414,12 @@ function SupportDesk() {
     },
     ...(impersonatedUser_roleName === "Super_Admin"
       ? [
-          {
-            key: "assignedTo",
-            header: "Assigned To",
-            render: (value) => value || "N/A",
-          },
-        ]
+        {
+          key: "assignedTo",
+          header: "Assigned To",
+          render: (value) => value || "N/A",
+        },
+      ]
       : []),
   ];
 
@@ -578,19 +460,19 @@ function SupportDesk() {
           ),
       },
       ...(effectivePermissions_RoleName === "Admin" ||
-      effectivePermissions_RoleName === "Individual_Freelancer" ||
-      effectivePermissions_RoleName === "Individual"
+        effectivePermissions_RoleName === "Individual_Freelancer" ||
+        effectivePermissions_RoleName === "Individual"
         ? [
-            {
-              key: "edit",
-              label: "Edit Ticket",
-              icon: <Pencil className="w-4 h-4 text-green-600" />,
-              onClick: () =>
-                navigate(`/support-desk/edit-ticket/${ticket._id}`, {
-                  state: { ticketData: ticket },
-                }),
-            },
-          ]
+          {
+            key: "edit",
+            label: "Edit Ticket",
+            icon: <Pencil className="w-4 h-4 text-green-600" />,
+            onClick: () =>
+              navigate(`/support-desk/edit-ticket/${ticket._id}`, {
+                state: { ticketData: ticket },
+              }),
+          },
+        ]
         : []),
     ];
   };
@@ -678,7 +560,7 @@ function SupportDesk() {
                   navigate(
                     effectivePermissions_RoleName === "Admin" ||
                       effectivePermissions_RoleName ===
-                        "Individual_Freelancer" ||
+                      "Individual_Freelancer" ||
                       effectivePermissions_RoleName === "Individual"
                       ? `/support-desk/${ticket._id}`
                       : `/support-desk/view/${ticket._id}`,
@@ -723,7 +605,7 @@ function SupportDesk() {
                             onChange={() => handleStatusToggle(option)}
                             // v1.0.2 <-------------------------------------------------------------
                             className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                            // v1.0.2 ------------------------------------------------------------->
+                          // v1.0.2 ------------------------------------------------------------->
                           />
                           <span className="text-sm">{option}</span>
                         </label>

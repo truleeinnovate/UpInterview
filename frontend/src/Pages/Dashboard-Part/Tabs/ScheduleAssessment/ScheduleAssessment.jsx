@@ -58,6 +58,10 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js"
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 // v1.0.8 <--------------------------------------------------------------------------
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
+import {
+  getScheduleAssessmentColumns,
+  getScheduleAssessmentActions,
+} from "../../../../utils/tableConfig.jsx";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -102,8 +106,8 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
             : action.key === "edit"
-            ? "text-green-600 hover:bg-green-600/10"
-            : "text-blue-600 bg-green-600/10";
+              ? "text-green-600 hover:bg-green-600/10"
+              : "text-blue-600 bg-green-600/10";
 
         return (
           <button
@@ -290,7 +294,7 @@ const ScheduleAssessment = () => {
       type: "scheduled",
     });
 
-    
+
 
   const navigate = useNavigate();
   // <---------------------- v1.0.1
@@ -299,7 +303,7 @@ const ScheduleAssessment = () => {
   // <---------------------- v1.0.3
   const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
-  
+
   const [selectedAction, setSelectedAction] = useState(""); // 'extend', 'cancel', or 'resend'
   // const [selectedAssessmentTemplateId, setSelectedAssessmentTemplateId] =
   //   useState(null);
@@ -388,11 +392,11 @@ const ScheduleAssessment = () => {
     setSelectedCreatedDate(tempCreatedDatePreset);
     setIsFilterActive(
       tempSelectedStatus.length > 0 ||
-        tempSelectedTemplates.length > 0 ||
-        tempOrderRange.min !== "" ||
-        tempOrderRange.max !== "" ||
-        tempExpiryDatePreset !== "" ||
-        tempCreatedDatePreset !== ""
+      tempSelectedTemplates.length > 0 ||
+      tempOrderRange.min !== "" ||
+      tempOrderRange.max !== "" ||
+      tempExpiryDatePreset !== "" ||
+      tempCreatedDatePreset !== ""
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -560,125 +564,18 @@ const ScheduleAssessment = () => {
   // ------------------------ empty state message -------------------------------
 
   // <-------------------------------v1.0.3
-  const tableColumns = [
-    // Assessment Template ID
-    //<---------v1.0.2-----
-    {
-      key: "scheduledAssessmentCode",
-      header: "Assessment ID",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => handleView(row)}
-        >
-          {value || "Not Provided"}
-        </div>
-      ),
-    },
-    //-------v1.0.2----->
-    {
-      key: "assessmentId",
-      header: "Assessment Template ID",
-      render: (value, row) => {
-        // Determine Assessment object (it may come populated or we find it in assessmentData)
-        let assessmentObj = null;
-        if (value) {
-          if (typeof value === "object") {
-            assessmentObj = value;
-          } else {
-            assessmentObj = (assessmentData || []).find((a) => a._id === value);
-          }
-        }
-        const code =
-          assessmentObj?.AssessmentCode || assessmentObj?._id || "Not Provided";
-        return (
-          <div
-            className="text-sm font-medium text-custom-blue cursor-pointer"
-            onClick={() => handleView(row)}
-          >
-            {code}
-          </div>
-        );
-      },
-    },
-    // Assessment Template Name
-    {
-      key: "assessmentTemplateName",
-      header: "Assessment Template Name",
-      render: (_, row) => {
-        const value = row.assessmentId;
-        let assessmentObj = null;
-        if (value) {
-          if (typeof value === "object") {
-            assessmentObj = value;
-          } else {
-            assessmentObj = (assessmentData || []).find((a) => a._id === value);
-          }
-        }
-        const title = assessmentObj?.AssessmentTitle || "Not Provided";
-        return (
-          <div
-            className="text-sm font-medium text-custom-blue cursor-pointer"
-            onClick={() => handleView(row)}
-          >
-            {title.charAt
-              ? title.charAt(0).toUpperCase() + title.slice(1)
-              : title}
-          </div>
-        );
-      },
-    },
-    {
-      key: "status",
-      header: "Status",
-      //<---------------------- v1.0.2--------
-      //<---------------------- v1.0.4
-      render: (v) => (
-        <StatusBadge
-          status={v}
-          text={v ? v.charAt(0).toUpperCase() + v.slice(1) : "Not Provided"}
-        />
-      ),
-    },
-    // ---------------------- v1.0.2-------->
-    // ------------------------------v1.0.4>
-  ];
+  const tableColumns = getScheduleAssessmentColumns(navigate, {
+    assessmentData,
+  });
 
-  const tableActions = [
-    ...(effectivePermissions.Assessments?.View
-      ? [
-          {
-            key: "view",
-            label: "View",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: handleView,
-          },
-        ]
-      : []),
-    // <-------------------------------v1.0.3
-    {
-      key: "extend",
-      label: "Extend",
-      icon: <Calendar className="w-4 h-4 text-custom-blue" />,
-      onClick: (schedule) => handleActionClick(schedule, "extend"),
-      show: shouldShowActionButtons,
+  const tableActions = getScheduleAssessmentActions(navigate, {
+    permissions: effectivePermissions.Assessments,
+    callbacks: {
+      onExtend: (row) => handleActionClick(row, "extend"),
+      onCancel: (row) => handleActionClick(row, "cancel"),
+      onResend: (row) => handleResendClick(row),
     },
-    {
-      key: "cancel",
-      label: "Cancel",
-      icon: <AlertTriangle className="w-4 h-4 text-red-600" />,
-      onClick: (schedule) => handleActionClick(schedule, "cancel"),
-      show: shouldShowActionButtons,
-    },
-    {
-      key: "resend",
-      label: "Resend Link",
-      icon: <Mail className="w-4 h-4 text-green-600" />,
-      onClick: (schedule) => handleResendClick(schedule),
-      show: shouldShowActionButtons,
-    },
-    // ------------------------------v1.0.3 >
-  ];
+  });
 
   // v1.0.5 <---------------------------------------------------------------------------------------
 
@@ -708,37 +605,7 @@ const ScheduleAssessment = () => {
   ];
 
   // Shared Actions Configuration for Kanban
-  const kanbanActions = () => [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-custom-blue" />,
-      onClick: (row) => {
-        handleView(row);
-      },
-    },
-    {
-      key: "extend",
-      label: "Extend",
-      icon: <Calendar className="w-4 h-4 text-custom-blue" />,
-      onClick: (schedule) => handleActionClick(schedule, "extend"),
-      show: shouldShowActionButtons,
-    },
-    {
-      key: "cancel",
-      label: "Cancel",
-      icon: <AlertTriangle className="w-4 h-4 text-red-600" />,
-      onClick: (schedule) => handleActionClick(schedule, "cancel"),
-      show: shouldShowActionButtons,
-    },
-    {
-      key: "resend",
-      label: "Resend Link",
-      icon: <Mail className="w-4 h-4 text-green-600" />,
-      onClick: (schedule) => handleResendClick(schedule),
-      show: shouldShowActionButtons,
-    },
-  ];
+  const kanbanActions = (row) => tableActions;
 
   // v1.0.8 --------------------------------------------------------------------------------------->
   // v1.0.5 --------------------------------------------------------------------------------------->

@@ -48,6 +48,7 @@ import { formatDateTime } from "../../../../utils/dateFormatter";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { getPositionColumns, getPositionActions } from "../../../../utils/tableConfig.jsx";
 
 // v1.0.8 <---------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -436,13 +437,13 @@ const PositionTab = () => {
     setCurrentPage(0);
     setIsFilterActive(
       filters.location.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.company.length > 0 ||
-        filters.experience.min > 0 ||
-        filters.experience.max < 15 ||
-        filters.salaryMin > 0 ||
-        filters.salaryMax > 0 ||
-        !!filters.createdDate,
+      filters.tech.length > 0 ||
+      filters.company.length > 0 ||
+      filters.experience.min > 0 ||
+      filters.experience.max < 15 ||
+      filters.salaryMin > 0 ||
+      filters.salaryMax > 0 ||
+      !!filters.createdDate,
     );
     setFilterPopupOpen(false);
   };
@@ -569,156 +570,15 @@ const PositionTab = () => {
   );
   // v2.0.1 ------------------------------------------------------------------------------->
 
-  const tableColumns = [
-    {
-      key: "positionCode",
-      header: "Position ID",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => handleView(row)}
-        >
-          {row?.positionCode || "N/A"}
-        </div>
-      ),
-    },
-    {
-      key: "title",
-      header: "Position Title",
-      render: (value, row) => (
-        <div className="flex items-center">
-          <div className="h-8 w-8 flex-shrink-0">
-            <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-              {row?.title ? row.title.charAt(0).toUpperCase() : "?"}
-            </div>
-          </div>
-          <div className="ml-3">
-            <div
-              className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
-              onClick={() => handleView(row)}
-              title={capitalizeFirstLetter(row?.title)}
-            >
-              {capitalizeFirstLetter(row?.title) || "N/A"}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "companyname",
-      header: "Company",
-      render: (value, row) => (
-        <span
-          className="block cursor-default truncate max-w-[140px]"
-          title={row?.companyname?.name}
-        >
-          {row?.companyname ? row?.companyname?.name : "Not Provided"}
-        </span>
-      ),
-    },
-    {
-      key: "Location",
-      header: "Location",
-      render: (value) => (
-        <span className="cursor-default" title={value}>
-          {value ? value : "Not Provided"}
-        </span>
-      ),
-    },
-    {
-      key: "experience",
-      header: "Experience",
-      render: (value, row) =>
-        `${row.minexperience || "N/A"} - ${row.maxexperience || "N/A"} Years`,
-    },
-    {
-      key: "rounds",
-      header: "Rounds",
-      render: (value, row) => row.rounds?.length || "N/A",
-    },
-    {
-      key: "skills",
-      header: "Skills",
-      render: (value) => (
-        // v1.0. <----------------------------------------------------------------------------
-        <div
-          className="flex gap-1 cursor-default"
-          title={value?.map((skill) => skill.skill)?.join(", ")}
-        >
-          {value.slice(0, 1).map((skill, idx) => (
-            <span
-              key={idx}
-              className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue rounded-full text-xs"
-            >
-              {skill.skill || "N/A"}
-            </span>
-          ))}
-          {value.length > 1 && (
-            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
-              +{value.length - 1}
-            </span>
-          )}
-        </div>
-        // v1.0. <----------------------------------------------------------------------------
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (value, row) => (
-        <StatusBadge status={capitalizeFirstLetter(value)} />
-      ),
-    },
-    {
-      key: "createdAt",
-      header: "Created At",
-      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
-    },
-  ];
+  const tableColumns = getPositionColumns(navigate);
 
-  const tableActions = [
-    ...(effectivePermissions.Positions?.View
-      ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => handleView(row),
-          },
-        ]
-      : []),
-    ...(effectivePermissions.Positions?.Edit
-      ? [
-          //<----v1.02-----
-          {
-            key: "change_status",
-            label: "Change Status",
-            icon: <Repeat className="w-4 h-4 text-green-600" />,
-            onClick: (row) => openStatusModal(row),
-          },
-          //----v1.02----->
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => handleEdit(row),
-          },
-        ]
-      : []),
-    ...(effectivePermissions.Positions?.Delete
-      ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (row) => {
-              setShowDeleteConfirmModal(true);
-              setDeletePosition(row);
-            },
-          },
-        ]
-      : []),
-  ];
+  const tableActions = getPositionActions(navigate, effectivePermissions, {
+    onStatusChange: openStatusModal,
+    onDelete: (row) => {
+      setShowDeleteConfirmModal(true);
+      setDeletePosition(row);
+    }
+  });
   // v1.0.5 <----------------------------------------------------------------------------------
   // v1.0.8 <----------------------------------------------------------------------------------
   const kanbanColumns = [
@@ -802,47 +662,47 @@ const PositionTab = () => {
   const kanbanActions = [
     ...(effectivePermissions.Positions?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => handleView(row),
-          },
-        ]
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (row) => handleView(row),
+        },
+      ]
       : []),
 
     ...(effectivePermissions.Positions?.Edit
       ? [
-          {
-            key: "change_status",
-            label: "Change Status",
-            icon: <Repeat className="w-4 h-4 text-green-600" />,
-            onClick: (row) => openStatusModal(row),
-          },
-        ]
+        {
+          key: "change_status",
+          label: "Change Status",
+          icon: <Repeat className="w-4 h-4 text-green-600" />,
+          onClick: (row) => openStatusModal(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Edit
       ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (row) => handleEdit(row),
-          },
-        ]
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <Pencil className="w-4 h-4 text-green-600" />,
+          onClick: (row) => handleEdit(row),
+        },
+      ]
       : []),
     ...(effectivePermissions.Positions?.Delete
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (row) => {
-              setShowDeleteConfirmModal(true);
-              setDeletePosition(row);
-            },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: (row) => {
+            setShowDeleteConfirmModal(true);
+            setDeletePosition(row);
           },
-        ]
+        },
+      ]
       : []),
   ];
   // v1.0.8 ---------------------------------------------------------------------------------->
@@ -1013,7 +873,7 @@ const PositionTab = () => {
                                 onChange={() => handleLocationToggle(location)}
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                // v1.0.1 --------------------------------------------------------------->
+                              // v1.0.1 --------------------------------------------------------------->
                               />
                               <span className="text-sm">{location}</span>
                             </label>
@@ -1054,7 +914,7 @@ const PositionTab = () => {
                                 }
                                 // v1.0.1 <---------------------------------------------------------------
                                 className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                // v1.0.1 <---------------------------------------------------------------
+                              // v1.0.1 <---------------------------------------------------------------
                               />
                               <span className="text-sm">{skill.SkillName}</span>
                             </label>

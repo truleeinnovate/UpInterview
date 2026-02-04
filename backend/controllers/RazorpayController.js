@@ -3376,6 +3376,9 @@ const createRecurringSubscription = async (req, res) => {
     }
 
     // 4. Create subscription - handle errors gracefully
+    // Extract payment method from request (card, upi, or emandate)
+    const paymentMethod = req.body.paymentMethod || "card";
+
     let subscription;
     try {
       // console.log('Creating subscription with plan_id:', razorpayPlanId, 'customer_id:', customerId);
@@ -3389,6 +3392,7 @@ const createRecurringSubscription = async (req, res) => {
           tenantId: tenantId || "",
           planId: planId || "",
           membershipType,
+          paymentMethod, // Track the selected payment method
         },
       });
       //  console.log('Subscription created successfully:', subscription.id);

@@ -59,6 +59,7 @@ import { formatDateTime } from "../../../../utils/dateFormatter.js";
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import CandidateBulkUpload from "./CandidateBulkUpload.jsx";
+import { getCandidateColumns, getCandidateActions } from "../../../../utils/tableConfig.jsx";
 
 // v2.0.1 <-----------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -509,15 +510,15 @@ function Candidate({
     setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 ||
-        filters.tech.length > 0 ||
-        filters.experience.min ||
-        //<-----v1.0.4--------
-        filters.experience.max ||
-        filters.roles.length > 0 ||
-        filters.universities.length > 0 ||
-        filters.relevantExperience.min ||
-        filters.relevantExperience.max ||
-        !!filters.createdDate,
+      filters.tech.length > 0 ||
+      filters.experience.min ||
+      //<-----v1.0.4--------
+      filters.experience.max ||
+      filters.roles.length > 0 ||
+      filters.universities.length > 0 ||
+      filters.relevantExperience.min ||
+      filters.relevantExperience.max ||
+      !!filters.createdDate,
       //-----v1.0.4-------->
     );
     setFilterPopupOpen(false);
@@ -683,396 +684,28 @@ function Candidate({
   // v2.0.2 ----------------------------------------------------------------------------->
 
   // Table Columns Configuration
-  const tableColumns = [
-    {
-      key: "name",
-      header: "Candidate Name",
-      render: (value, row) => (
-        <div
-          className="flex items-center"
-          title={`${row?.FirstName} ${row?.LastName}`}
-        >
-          <div className="h-8 w-8 flex-shrink-0">
-            {row?.ImageData ? (
-              <img
-                className="h-8 w-8 rounded-full object-cover"
-                src={row?.ImageData?.path || null}
-                alt={row?.FirstName || "Candidate"}
-                onError={(e) => {
-                  e.target.src = "/default-profile.png";
-                }}
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                {row.FirstName ? row.FirstName.charAt(0).toUpperCase() : "?"}
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col ml-3">
-            <div title={`${row?.FirstName} ${row?.LastName}`}>
-              <div
-                // v1.0.9 <------------------------------------------------------------------------------
-                className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
-                // v1.0.9 ------------------------------------------------------------------------------>
-                onClick={
-                  () => {
-                    if (onCandidateClick) {
-                      onCandidateClick(row);
-                      return;
-                    }
-                    navigate(
-                      isAssessmentView
-                        ? `/assessment/${row?.assessmentId}/view-details/${row?._id}`
-                        : // `/assessments/candidate-details/${row._id}`
-                          effectivePermissions.Candidates?.View &&
-                            `view-details/${row._id}`,
-                      {
-                        state: isAssessmentView
-                          ? {
-                              from: `/assessment-details/${row?.assessmentId}`,
-                              assessmentId: row?.assessmentId,
-                            }
-                          : { from: "/candidates" },
-                      },
-                    );
-                  }
-                  //  effectivePermissions.Candidates?.View && navigate(`view-details/${row._id}`)
-                }
-              >
-                {capitalizeFirstLetter(row?.FirstName) +
-                  " " +
-                  capitalizeFirstLetter(row.LastName)}
-              </div>
-            </div>
-            <div
-              title={capitalizeFirstLetter(row?.currentRoleLabel)}
-              className="text-xs cursor-default truncate max-w-[140px]"
-            >
-              {capitalizeFirstLetter(row?.currentRoleLabel)}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "Email",
-      header: "Email",
-      render: (value) => (
-        <div className="flex items-center gap-2" title={value}>
-          <Mail className="w-4 h-4 text-gray-500" />
-          <span className="truncate max-w-[140px] cursor-default" title={value}>
-            {value || "Not Provided"}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "Phone",
-      header: "Contact",
-      render: (value, row) => row?.CountryCode + " " + value || "Not Provided",
-    },
-    {
-      key: "HigherQualification",
-      header: "Higher Qualification",
-      render: (value) => (
-        // v1.0.9 <----------------------------------------------
-        <span
-          className="block truncate max-w-[140px] cursor-default"
-          title={value}
-        >
-          {value || "Not Provided"}
-        </span>
-        // v1.0.9 ---------------------------------------------->
-      ),
-    },
-    {
-      key: "CurrentExperience",
-      header: "Total Experience",
-      render: (value) => (
-        <span className="pl-12">{value || "Not Provided"}</span>
-      ),
-    },
-    {
-      key: "skills",
-      header: "Skills",
-      render: (value) => (
-        // v1.0.9 <-----------------------------------------------------------------------------
-        <div
-          className="flex flex-wrap gap-1 cursor-default"
-          title={value?.map((skill) => skill.skill)?.join(", ")}
-        >
-          {value && value.length > 0 ? (
-            <>
-              {value.slice(0, 1).map((skill, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue rounded-full text-xs"
-                >
-                  {skill.skill || "Not Provided"}
-                </span>
-              ))}
-              {value.length > 1 && (
-                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
-                  +{value.length - 1}
-                </span>
-              )}
-            </>
-          ) : (
-            <span className="text-gray-400 text-xs">No Skills</span>
-          )}
-        </div>
-        // v1.0.9 ----------------------------------------------------------------------------->
-      ),
-    },
-    //<-----v1.0.4--------
-    {
-      key: "createdAt",
-      header: "Created At",
-      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
-    },
-    //-----v1.0.4-------->
-    // <---------------------- v1.0.2
-    // Add status column only for assessment view
-    ...(isAssessmentView
-      ? [
-          {
-            key: "status",
-            header: "Status",
-            render: (value, row) => {
-              const status = row.status || "pending";
-              return (
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                    status,
-                  )}`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </span>
-              );
-            },
-          },
-          {
-            key: "expiryAt",
-            header: "Expiry Date",
-            render: (value, row) => {
-              const status = (row.status || "pending").toLowerCase();
-
-              // ── Special cases ────────────────────────────────────────
-
-              if (status === "expired") {
-                return (
-                  <div className="text-sm">
-                    <div className="font-medium text-red-700">Expired</div>
-                    {row.expiryAt && (
-                      <div className="text-xs text-red-600/70">
-                        {new Date(row.expiryAt).toLocaleDateString()}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              if (["completed", "pass", "fail"].includes(status)) {
-                if (row.endedAt) {
-                  return (
-                    <div className="text-sm">
-                      <div className="font-medium text-gray-900">
-                        {new Date(row.endedAt).toLocaleDateString()}
-                      </div>
-                      <div className="text-xs text-gray-500">Completed</div>
-                    </div>
-                  );
-                }
-                return <span className="text-gray-600 text-sm">Completed</span>;
-              }
-
-              if (status === "cancelled") {
-                return (
-                  <span className="text-gray-500 text-sm font-medium">
-                    Cancelled
-                  </span>
-                );
-              }
-
-              // ── All other statuses (pending, in_progress, extended...) ──
-              // Just show the expiry date — NO remaining time
-
-              if (!row.expiryAt) {
-                return <span className="text-gray-400 text-sm">N/A</span>;
-              }
-
-              return (
-                <div className="text-sm font-medium text-gray-900">
-                  {new Date(row.expiryAt).toLocaleDateString()}
-                </div>
-              );
-            },
-          },
-        ]
-      : []),
-    // ------------------------------ v1.0.2 >
-  ];
+  const tableColumns = getCandidateColumns(navigate, {
+    isAssessmentView,
+    isPositionView,
+    onCandidateClick,
+    permissions: effectivePermissions
+  });
 
   // Table Actions Configuration
-  const tableActions = [
-    ...(effectivePermissions.Candidates?.View
-      ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => {
-              if (isPositionView) {
-                navigate(`/candidate/view-details/${row._id}`, {
-                  state: { from: "position" },
-                });
-                return;
-              }
-              navigate(
-                isAssessmentView
-                  ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
-                  : // `/assessments/candidate-details/${row._id}`
-                    `view-details/${row._id}`,
-                {
-                  state: isAssessmentView
-                    ? {
-                        from: `/assessment-details/${row?.assessmentId}`,
-                        assessmentId: row?.assessmentId,
-                      }
-                    : { from: "/candidate" },
-                },
-              );
-            },
-            // navigate(
-            //   isAssessmentView
-            //     ? `candidate-details/${row._id}`
-            //     : `view-details/${row._id}`,
-            //   {
-            //     state: isAssessmentView
-            //       ? {
-            //           from: `/assessment-details/${row?.assessmentId}`,
-            //           assessmentId: row?.assessmentId,
-            //         }
-            //       : { from: "/candidate" },
-            //   }
-            // ),
-          },
-        ]
-      : []),
-
-    // <---------------------- New actions for Position View in Table
-    ...(isPositionView
-      ? [
-          {
-            key: "screening",
-            label: "Screening View",
-            icon: <Eye className="w-4 h-4 text-indigo-600" />,
-            onClick: (item) => {
-              if (extraActions?.onScreeningView) {
-                extraActions.onScreeningView(item);
-              }
-            },
-          },
-          {
-            key: "profile",
-            label: "Profile View",
-            icon: <CircleUser className="w-4 h-4 text-custom-blue" />,
-            onClick: (item) => {
-              if (extraActions?.onProfileView) {
-                extraActions.onProfileView(item);
-              }
-            },
-          },
-        ]
-      : []),
-    // ---------------------->
-
-    ...(!isAssessmentView
-      ? [
-          // {
-          //   key: "360-view",
-          //   label: "360° View",
-          //   icon: <CircleUser className="w-4 h-4 text-purple-600" />,
-          //   onClick: (row) => row?._id && navigate(`/candidate/${row._id}`),
-          // },
-          ...(effectivePermissions.Candidates?.Edit
-            ? [
-                {
-                  key: "edit",
-                  label: "Edit",
-                  icon: <Pencil className="w-4 h-4 text-green-600" />,
-                  onClick: (row) => navigate(`/candidates/edit/${row._id}`),
-                },
-              ]
-            : []),
-          ...(effectivePermissions.Candidates?.Delete
-            ? [
-                {
-                  key: "delete",
-                  label: "Delete",
-                  icon: <Trash className="w-4 h-4 text-red-600" />,
-                  // onClick: (row) => navigate(`delete/${row._id}`),
-                  onClick: (row) => {
-                    setShowDeleteConfirmModal(true);
-                    setDeleteCandidate(row);
-                  },
-                },
-              ]
-            : []),
-        ]
-      : []),
-
-    ...(isAssessmentView
-      ? [
-          // <-------------------------------v1.0.1
-          // Only show resend link for candidates that can be resent
-          {
-            key: "resend-link",
-            label: "Resend Link",
-            icon: (row) => {
-              const isLoading = resendLoading[row.id];
-              return isLoading ? (
-                <div className="w-4 h-4 flex items-center justify-center">
-                  <svg
-                    className="animate-spin h-4 w-4 text-custom-blue"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                </div>
-              ) : (
-                <Mail className="w-4 h-4 text-custom-blue" />
-              );
-            },
-            onClick: (row) => {
-              if (!resendLoading[row.id]) {
-                onResendLink(row.id);
-              }
-            },
-            show: (row) => {
-              const result = shouldShowButton(row, "resend");
-              return result;
-            },
-            disabled: (row) => resendLoading[row.id],
-          },
-        ]
-      : []),
-    // ------------------------------v1.0.1 >
-  ];
+  const tableActions = getCandidateActions(navigate, {
+    permissions: effectivePermissions,
+    isAssessmentView,
+    isPositionView,
+    extraActions,
+    callbacks: {
+      onDelete: (row) => {
+        setShowDeleteConfirmModal(true);
+        setDeleteCandidate(row);
+      },
+      onResendLink: onResendLink,
+      resendLoading: resendLoading
+    }
+  });
 
   // v1.0.8 <------------------------------------------------------------------------------
   // Render Actions for Kanban
@@ -1501,130 +1134,21 @@ function Candidate({
     },
   ];
 
-  const kanbanActions = [
-    // View Details
-    ...(effectivePermissions.Candidates?.View
-      ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => {
-              if (isPositionView) {
-                navigate(`/candidates/view-details/${row._id}`, {
-                  state: { from: "position" },
-                });
-                return;
-              }
-              navigate(
-                isAssessmentView
-                  ? `/assessment/${row?.assessmentId}/view-details/${row._id}`
-                  : // `/assessments/candidate-details/${row._id}`
-                    `view-details/${row._id}`,
-                {
-                  state: isAssessmentView
-                    ? {
-                        from: `/assessment-details/${row?.assessmentId}`,
-                        assessmentId: row?.assessmentId,
-                      }
-                    : { from: "/candidates" },
-                },
-              );
-            },
-          },
-        ]
-      : []),
+  const kanbanActions = getCandidateActions(navigate, {
+    permissions: effectivePermissions,
+    isAssessmentView,
+    isPositionView,
+    extraActions,
+    callbacks: {
+      onDelete: (row) => {
+        setShowDeleteConfirmModal(true);
+        setDeleteCandidate(row);
+      },
+      onResendLink: onResendLink,
+      resendLoading: resendLoading
+    }
+  });
 
-    // 360° View (only if not assessment view)
-    // ...(!isAssessmentView
-    //   ? [
-    //       {
-    //         key: "360view",
-    //         label: "360° View",
-    //         icon: <CircleUser className="w-4 h-4 text-purple-600" />,
-    //         onClick: (item, e) => {
-    //           item?._id && navigate(`/candidate/${item._id}`);
-    //         },
-    //       },
-    //     ]
-    //   : []),
-
-    // Edit (only if not assessment view)
-    ...(!isAssessmentView && effectivePermissions.Candidates?.Edit
-      ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: (item, e) => {
-              navigate(`/candidates/edit/${item._id}`);
-            },
-          },
-        ]
-      : []),
-
-    // Resend Link (only if in assessment view)
-    ...(isAssessmentView
-      ? [
-          {
-            key: "resend",
-            label: "Resend Link",
-            icon: <Mail className="w-4 h-4 text-custom-blue" />,
-            isVisible: (item) => shouldShowButton(item, "resend"),
-            onClick: (item, e) => {
-              if (!resendLoading[item.id]) {
-                onResendLink(item.id);
-              }
-            },
-            loading: (item) => resendLoading[item.id],
-            disabled: (item) => resendLoading[item.id],
-          },
-        ]
-      : []),
-
-    // <---------------------- New actions for Position View
-    ...(isPositionView
-      ? [
-          {
-            key: "screening",
-            label: "Screening View",
-            icon: <Eye className="w-4 h-4 text-indigo-600" />,
-            onClick: (item) => {
-              if (extraActions?.onScreeningView) {
-                extraActions.onScreeningView(item);
-              }
-            },
-          },
-          {
-            key: "profile",
-            label: "Profile View",
-            icon: <CircleUser className="w-4 h-4 text-custom-blue" />,
-            onClick: (item) => {
-              if (extraActions?.onProfileView) {
-                extraActions.onProfileView(item);
-              }
-            },
-          },
-        ]
-      : []),
-    // ---------------------->
-
-    // Delete
-    ...(effectivePermissions.Candidates?.Delete
-      ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (item) => {
-              setShowDeleteConfirmModal(true);
-              setDeleteCandidate(item);
-            },
-          },
-        ]
-      : []),
-  ];
-  // v1.0.8 ------------------------------------------------------------------------------>
 
   return (
     <div className={isEmbedded ? "" : "bg-background min-h-screen"}>
@@ -1674,7 +1198,7 @@ function Candidate({
               ? ""
               : "fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background"
           }
-          // v1.0.7 ---------------------------------------------------------->
+        // v1.0.7 ---------------------------------------------------------->
         >
           <div className="sm:px-0">
             <motion.div className="bg-white">
@@ -1703,21 +1227,18 @@ function Candidate({
                       data={currentFilteredRows.map((candidate) => ({
                         ...candidate,
                         id: candidate._id,
-                        title: `${candidate?.FirstName || ""} ${
-                          candidate?.LastName || ""
-                        }`.trim(),
-                        firstName: `${
-                          (candidate?.FirstName || "").charAt(0).toUpperCase() +
+                        title: `${candidate?.FirstName || ""} ${candidate?.LastName || ""
+                          }`.trim(),
+                        firstName: `${(candidate?.FirstName || "").charAt(0).toUpperCase() +
                           (candidate?.FirstName || "").slice(1)
-                        } ${
-                          (candidate?.LastName || "").charAt(0).toUpperCase() +
+                          } ${(candidate?.LastName || "").charAt(0).toUpperCase() +
                           (candidate?.LastName || "").slice(1)
-                        }`.trim(),
+                          }`.trim(),
                         subTitle: candidate?.currentRoleLabel || "N/A",
                         avatar: candidate?.ImageData?.path || null,
                         navigateTo: isAssessmentView
-                          ? `/${candidate?.assessmentId}/view-details/${candidate._id}`
-                          : `view-details/${candidate._id}`,
+                          ? `/assessment/${candidate?.assessmentId}/view-details/${candidate._id}`
+                          : `/candidates/view-details/${candidate._id}`,
                       }))}
                       columns={kanbanColumns}
                       // v2.0.1 <-------------------------------------------------
@@ -1764,11 +1285,10 @@ function Candidate({
                           {qualifications?.length > 0 ? (
                             qualifications.map((q, index) => (
                               <label
-                                key={`${
-                                  q._id ||
+                                key={`${q._id ||
                                   q.QualificationName ||
                                   "qualification"
-                                }-${index}`}
+                                  }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -1781,7 +1301,7 @@ function Candidate({
                                   }
                                   // v1.0.3 <--------------------------------------------------------------
                                   className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                  // v1.0.3 -------------------------------------------------------------->
+                                // v1.0.3 -------------------------------------------------------------->
                                 />
                                 <span className="text-sm">
                                   {q.QualificationName}
@@ -1815,9 +1335,8 @@ function Candidate({
                           {skills?.length > 0 ? (
                             skills.map((skill, index) => (
                               <label
-                                key={`${
-                                  skill._id || skill.SkillName || "skill"
-                                }-${index}`}
+                                key={`${skill._id || skill.SkillName || "skill"
+                                  }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -1830,7 +1349,7 @@ function Candidate({
                                   }
                                   // v1.0.3 <--------------------------------------------------------------
                                   className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                                  // v1.0.3 -------------------------------------------------------------->
+                                // v1.0.3 -------------------------------------------------------------->
                                 />
                                 <span className="text-sm">
                                   {skill.SkillName}
@@ -1973,9 +1492,8 @@ function Candidate({
                           {currentRoles?.length > 0 ? (
                             currentRoles.map((role, index) => (
                               <label
-                                key={`${
-                                  role._id || role.roleName || "role"
-                                }-${index}`}
+                                key={`${role._id || role.roleName || "role"
+                                  }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -2020,11 +1538,10 @@ function Candidate({
                           {colleges?.length > 0 ? (
                             colleges.map((college, index) => (
                               <label
-                                key={`${
-                                  college._id ||
+                                key={`${college._id ||
                                   college.University_CollegeName ||
                                   "college"
-                                }-${index}`}
+                                  }-${index}`}
                                 className="flex items-center space-x-2"
                               >
                                 <input
@@ -2112,24 +1629,28 @@ function Candidate({
           </div>
         </main>
       </main>
-      {selectCandidateView && (
-        <CandidateDetails
-          candidate={selectedCandidate}
-          onClose={() => setSelectCandidateView(false)}
-        />
-      )}
-      {!isAssessmentView && showAddForm && (
-        <AddCandidateForm
-          isOpen={showAddForm}
-          onClose={() => {
-            setShowAddForm(false);
-            setSelectedCandidate(null);
-            setEditModeOn(false);
-          }}
-          selectedCandidate={selectedCandidate}
-          isEdit={editModeOn}
-        />
-      )}
+      {
+        selectCandidateView && (
+          <CandidateDetails
+            candidate={selectedCandidate}
+            onClose={() => setSelectCandidateView(false)}
+          />
+        )
+      }
+      {
+        !isAssessmentView && showAddForm && (
+          <AddCandidateForm
+            isOpen={showAddForm}
+            onClose={() => {
+              setShowAddForm(false);
+              setSelectedCandidate(null);
+              setEditModeOn(false);
+            }}
+            selectedCandidate={selectedCandidate}
+            isEdit={editModeOn}
+          />
+        )
+      }
 
       {/* Ranjith added deleted functionality  */}
       <DeleteConfirmModal
@@ -2142,12 +1663,14 @@ function Candidate({
         }
       />
 
-      {showBulkUpload && (
-        <CandidateBulkUpload onClose={() => setShowBulkUpload(false)} />
-      )}
+      {
+        showBulkUpload && (
+          <CandidateBulkUpload onClose={() => setShowBulkUpload(false)} />
+        )
+      }
 
       <Outlet />
-    </div>
+    </div >
   );
 }
 

@@ -43,6 +43,10 @@ import DeleteConfirmModal from "../CommonCode-AllTabs/DeleteConfirmModal.jsx";
 import { notify } from "../../../../services/toastService.js";
 import Toolbar from "./AssessmentToolbar.jsx";
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
+import {
+  getAssessmentTemplateColumns,
+  getAssessmentTemplateActions,
+} from "../../../../utils/tableConfig.jsx";
 
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => (
   <Dialog
@@ -313,15 +317,15 @@ const Assessment = () => {
     setSelectedFilters(filters);
     setIsFilterActive(
       filters.difficultyLevel.length > 0 ||
-        filters.duration.length > 0 ||
-        filters.position.length > 0 ||
-        // filters.sections.min !== "" ||
-        // filters.sections.max !== "" ||
-        // filters.questions.min !== "" ||
-        // filters.questions.max !== "" ||
-        filters.totalScore.min !== "" ||
-        filters.totalScore.max !== "" ||
-        filters.createdDate !== ""
+      filters.duration.length > 0 ||
+      filters.position.length > 0 ||
+      // filters.sections.min !== "" ||
+      // filters.sections.max !== "" ||
+      // filters.questions.min !== "" ||
+      // filters.questions.max !== "" ||
+      filters.totalScore.min !== "" ||
+      filters.totalScore.max !== "" ||
+      filters.createdDate !== ""
     );
     setCurrentPage(0);
     setFilterPopupOpen(false);
@@ -367,7 +371,7 @@ const Assessment = () => {
 
   const handleFilterIconClick = () => {
     // if (assessmentData?.length !== 0) {
-      setFilterPopupOpen((prev) => !prev);
+    setFilterPopupOpen((prev) => !prev);
     // }
   };
 
@@ -563,120 +567,19 @@ const Assessment = () => {
   );
   // --- Dynamic Empty State Messages using Utility ---
 
-  const tableColumns = [
-    ...(activeTab === "custom"
-      ? [
-          {
-            key: "AssessmentCode",
-            header: "Template ID",
-            render: (value, row) => (
-              <div
-                className="text-sm font-medium text-custom-blue cursor-pointer"
-                onClick={() => handleView(row)}
-              >
-                {value || "Not Provided"}
-              </div>
-            ),
-          },
-        ]
-      : []),
-    {
-      key: "AssessmentTitle",
-      header: "Template Name",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[160px]"
-          onClick={() => handleView(row)}
-        >
-          {value.charAt(0).toUpperCase() + value.slice(1) || "Not Provided"}
-        </div>
-      ),
-    },
-    {
-      key: "sections",
-      header: "No. of Sections",
-      render: (value, row) => assessmentSections[row._id] ?? 0,
-    },
-    {
-      key: "NumberOfQuestions",
-      header: "No. of Questions",
-      render: (value) => value || "Not Provided",
-    },
-    {
-      key: "DifficultyLevel",
-      header: "Difficulty Level",
-      render: (value) => value || "Not Provided",
-    },
-    {
-      key: "totalScore",
-      header: "Total Score",
-      render: (value) => value || "Not Provided",
-    },
-    {
-      key: "passScore",
-      header: "Pass Criteria",
-      render: (value, row) =>
-        row.passScore
-          ? row.passScoreType === "Percentage"
-            ? `${row.passScore}%`
-            : `${row.passScore} Marks` // or "pts"
-          : "Not Provided",
-    },
-    {
-      key: "Duration",
-      header: "Duration",
-      render: (value) => value || "Not Provided",
-    },
-    {
-      key: "createdAt",
-      header: "Created At",
-      render: (value, row) => formatDateTime(row.createdAt) || "N/A",
-    },
-  ];
+  const tableColumns = getAssessmentTemplateColumns(navigate, {
+    assessmentSections,
+    activeTab,
+  });
 
-  const tableActions = [
-    ...(effectivePermissions.AssessmentTemplates?.View
-      ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: handleView,
-          },
-        ]
-      : []),
-    ...(effectivePermissions.AssessmentTemplates?.Edit
-      ? // <---------------------- v1.0.0
-        // <---------------------- v1.0.1
-        [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-500" />,
-            onClick: handleEdit,
-            show: (row) => row.type !== "standard",
-          },
-        ]
-      : []),
-    ...(effectivePermissions.AssessmentTemplates?.Delete
-      ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: handleDelete,
-            show: (row) => row.type !== "standard",
-          },
-        ]
-      : []),
-    {
-      key: "share",
-      label: "Create Assessment",
-      icon: <Plus className="w-4 h-4 text-custom-blue" />,
-      onClick: handleShareClick,
-      disabled: (row) => (assessmentSections[row._id] ?? 0) === 0,
+  const tableActions = getAssessmentTemplateActions(navigate, {
+    permissions: effectivePermissions.AssessmentTemplates,
+    assessmentSections,
+    callbacks: {
+      onDelete: handleDelete,
+      onShare: handleShareClick,
     },
-  ];
+  });
   // <---------------------- v1.0.0
   // <---------------------- v1.0.1
 
@@ -699,7 +602,7 @@ const Assessment = () => {
               addButtonText="New Template"
               // <---------------------- v1.0.1
               canCreate={effectivePermissions.AssessmentTemplates?.Create}
-              // <---------------------- v1.0.1 >
+            // <---------------------- v1.0.1 >
             />
             <Toolbar
               view={viewMode}
@@ -794,7 +697,7 @@ const Assessment = () => {
                             onChange={() => handleDifficultyToggle(option)}
                             // v1.0.6 <------------------------------------------------------------
                             className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                            // v1.0.6 ------------------------------------------------------------>
+                          // v1.0.6 ------------------------------------------------------------>
                           />
                           <span className="text-sm">{option}</span>
                         </label>
@@ -827,7 +730,7 @@ const Assessment = () => {
                             onChange={() => handleDurationToggle(option)}
                             // v1.0.6 <------------------------------------------------------------
                             className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                            // v1.0.6 ------------------------------------------------------------>
+                          // v1.0.6 ------------------------------------------------------------>
                           />
                           <span className="text-sm">{option}</span>
                         </label>
@@ -974,7 +877,7 @@ const Assessment = () => {
                   const uniquePositionIds = [
                     ...new Set(
                       assessmentData?.map((a) => a.Position).filter(Boolean) ||
-                        []
+                      []
                     ),
                   ];
 

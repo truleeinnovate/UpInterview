@@ -552,6 +552,11 @@ const RegionalTaxDetails = lazy(
 // v1.0.8 ------------------------------------------------------------------------------->
 // v1.0.9 ------------------------------------------------------------------------------->
 
+// Global Search
+const GlobalSearchResults = lazy(
+  () => import("./Pages/GlobalSearch/GlobalSearchResults.jsx"),
+);
+
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
   <Suspense fallback={<Loading />}>{children}</Suspense>
@@ -695,6 +700,9 @@ const MainAppRoutes = ({
             }
           >
             <Route path="/home" element={<Home />} />
+
+            {/* Global Search Results */}
+            <Route path="/search" element={<GlobalSearchResults />} />
 
             {/* Candidate Routes */}
             {hasPermission("Candidates") && (

@@ -35,13 +35,16 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js"
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import { formatDateTime } from "../../../../utils/dateFormatter.js";
+import {
+  getMockInterviewColumns,
+  getMockInterviewActions,
+} from "../../../../utils/tableConfig.jsx";
 
 // v1.0.5 <----------------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Call the function to get actions array for this item
   const actions = kanbanActions(item);
   const mainActions = actions.filter((a) => ["view", "edit"].includes(a.key));
   const overflowActions = actions.filter(
@@ -60,20 +63,6 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
 
   return (
     <div ref={menuRef} className="flex items-center gap-2 relative">
-      {/* {mainActions.map((action) => (
-        <button
-          key={action.key}
-          onClick={(e) => {
-            e.stopPropagation();
-            action.onClick(item, e);
-          }}
-          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title={action.label}
-        >
-          {action.icon}
-        </button>
-      ))} */}
-
       {mainActions.map((action) => {
         const baseClasses =
           "p-1.5 rounded-lg transition-colors hover:bg-opacity-20";
@@ -143,7 +132,6 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
     </div>
   );
 };
-// v1.0.5 ---------------------------------------------------------------------------->
 
 const MockInterview = () => {
   const { effectivePermissions, isInitialized } = usePermissions();
@@ -160,7 +148,7 @@ const MockInterview = () => {
     status: [],
     technology: [],
     duration: { min: "", max: "" },
-    createdDate: "", // '', 'last7', 'last30', 'last90'
+    createdDate: "",
     interviewer: [],
   });
   const [selectedStatus, setSelectedStatus] = useState([]);
@@ -183,16 +171,12 @@ const MockInterview = () => {
   const { mockinterviewData, loading, totalCount, totalPages } =
     useMockInterviews({
       search: searchQuery,
-      page: currentPage + 1, // This is 0-based, will be converted to 1-based in hook
+      page: currentPage + 1,
       limit: rowsPerPage,
       filters: selectedFilters,
     });
 
-  // v1.0.2 <--------------------------------------------
-  // v1.0.5 <---------------------------------------------------------------
   useScrollLock(reschedule || cancelSchedule || viewMode === "kanban");
-  // v1.0.5 --------------------------------------------------------------->
-  // v1.0.2 -------------------------------------------->
 
   useEffect(() => {
     document.title = "Mockinterview Tab";
@@ -204,7 +188,6 @@ const MockInterview = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Sync filter states when popup opens
   useEffect(() => {
     if (isFilterPopupOpen) {
       setSelectedStatus(selectedFilters.status);
@@ -212,7 +195,6 @@ const MockInterview = () => {
       setDurationRange(selectedFilters.duration);
       setCreatedDatePreset(selectedFilters.createdDate);
       setSelectedInterviewers(selectedFilters.interviewer);
-      // Reset all open states
       setIsStatusOpen(false);
       setIsTechnologyOpen(false);
       setIsDurationOpen(false);
@@ -221,16 +203,14 @@ const MockInterview = () => {
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
-  // Don't render until permissions are initialized
   if (!isInitialized) {
     return null;
   }
 
-  // Check if user has access to MockInterviews
   if (!effectivePermissions.MockInterviews?.ViewTab) {
     return null;
   }
-  // <---------------------- v1.0.0
+
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(0);
@@ -310,17 +290,9 @@ const MockInterview = () => {
   };
 
   const handleFilterIconClick = () => {
-    // if (mockinterviewData?.length !== 0) {
     setFilterPopupOpen((prev) => !prev);
-    // }
   };
 
-  // Helper function to normalize spaces for better search
-  // const normalizeSpaces = (str) =>
-  //   str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
-
-  // const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
-  // const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
   const currentFilteredRows = mockinterviewData || [];
 
   const nextPage = () => {
@@ -335,39 +307,11 @@ const MockInterview = () => {
     }
   };
 
-  // const onRescheduleClick = (mockinterview) => {
-  //   setReschedule(mockinterview);
-  // };
-
   const onCancelClick = (row) => {
     setSelectedRow(row);
     setCancelSchedule(true);
   };
 
-  // const closeschedulepopup = () => {
-  //   setReschedule(false);
-  // };
-
-  // const closepopup = () => {
-  //   setCancelSchedule(false);
-  // };
-
-  // v1.0.5 <-------------------------------------------------------------
-  // const formatDate = (isoString) => {
-  //   if (!isoString) return "";
-  //   const date = new Date(isoString);
-  //   return date.toLocaleString("en-GB", {
-  //     day: "2-digit",
-  //     month: "short",
-  //     year: "numeric",
-  //     hour: "2-digit",
-  //     minute: "2-digit",
-  //     hour12: true,
-  //   });
-  // };
-  // v1.0.5 ------------------------------------------------------------->
-
-  // ------------------------- empty state message -------------------------------------
   const isSearchActive = searchQuery.length > 0 || isFilterActive;
   const initialDataCount = mockinterviewData?.length || 0;
   const currentFilteredCount = currentFilteredRows?.length || 0;
@@ -376,196 +320,17 @@ const MockInterview = () => {
     currentFilteredCount,
     initialDataCount,
     "mock interviews"
-  ); // ------------------------- empty state message -------------------------------------
-  const tableColumns = [
-    {
-      key: "mockInterviewCode",
-      header: "Interview ID",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => navigate(`/mock-interviews-details/${row._id}`)}
-        >
-          {row?.mockInterviewCode || "N/A"}
-        </div>
-      ),
-    },
-    {
-      key: "title",
-      header: "Interview Title",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => navigate(`/mock-interviews-details/${row._id}`)}
-        >
-          {row?.rounds?.[0]?.roundTitle || "Not Provided"}
-        </div>
-      ),
-    },
-    {
-      key: "CurrentRole",
-      header: "Current Role",
-      render: (value, row) => row?.roleDetails?.roleLabel || "Not Provided",
-    },
-    {
-      key: "status",
-      // v1.0.0 <--------------------------------------------------------------------
-      header: "Status",
+  );
 
-      // render: (value, row) => row?.rounds?.[0]?.status || "Not Provided",
-      render: (value, row) => {
-        return row?.rounds?.[0]?.status ? (
-          <StatusBadge
-            status={
-              row.rounds[0].status === "RequestSent"
-                ? "Request Sent"
-                : row?.rounds[0]?.status
-            }
-          />
-        ) : (
-          <span className="text-gray-400 text-sm">Not Provided</span>
-        );
-      },
-      // v1.0.0 -------------------------------------------------------------------->
-    },
-    {
-      key: "duration",
-      header: "Duration",
-      render: (value, row) => row?.rounds?.[0]?.duration || "Not Provided",
-    },
-    {
-      key: "interviewer",
-      header: "Interviewer",
-      render: (value, row) => {
-        const interviewers = row?.rounds?.[0]?.interviewers || [];
-        if (interviewers.length === 0) return "Not Provided";
+  const tableColumns = getMockInterviewColumns(navigate);
 
-        // Map interviewer names, accessing contact.Name or firstName/lastName
-        const names = interviewers
-          .map((interviewer) => {
-            const contact = interviewer?.contact;
-            return (
-              contact?.Name ||
-              `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim()
-            );
-          })
-          .filter(Boolean); // Remove empty strings
-
-        if (names.length === 0) return "Not Provided";
-
-        // Show first name and truncate with ... if more than one
-        const displayText = names.length > 1 ? `${names[0]}...` : names[0];
-        const additionalCount = names.length > 1 ? names.length - 1 : 0;
-
-        return (
-          <div className="w-48 truncate flex items-center space-x-1">
-            <span className="text-sm text-gray-900" title={names.join(", ")}>
-              {displayText}
-            </span>
-            {additionalCount > 0 && (
-              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-black bg-gray-200 rounded-full">
-                +{additionalCount}
-              </span>
-            )}
-          </div>
-        );
-      },
+  const tableActions = getMockInterviewActions(navigate, {
+    permissions: effectivePermissions,
+    locationState: location,
+    callbacks: {
+      onCancel: onCancelClick,
     },
-    {
-      key: "createdAt",
-      header: "Created On",
-      render: (value) => {
-        // if (!value) return "Not Provided";
-        // const date = new Date(value);
-        // return date.toLocaleString("en-GB", {
-        //   day: "2-digit",
-        //   month: "2-digit",
-        //   year: "numeric",
-        //   hour: "numeric",
-        //   minute: "2-digit",
-        //   hour12: true,
-        // });
-        return formatDateTime(value);
-      },
-    },
-  ];
-
-  // const tableActions = [
-  //   {
-  //     key: "view",
-  //     label: "View Details",
-  //     icon: <Eye className="w-4 h-4 text-custom-blue" />,
-  //     onClick: (row) => navigate(`/mock-interview-details/${row._id}`),
-  //   },
-  //   {
-  //     key: "edit",
-  //     label: "Edit",
-  //     icon: <Pencil className="w-4 h-4 text-green-600" />,
-  //     onClick: (row) =>
-  //       navigate(`/mock-interview/${row._id}/edit`, {
-  //         state: { from: "tableMode" },
-  //       }),
-  //   },
-  //   {
-  //     key: "reschedule",
-  //     label: "Reschedule",
-  //     icon: <Timer className="w-4 h-4 text-custom-blue" />,
-  //     onClick: (row) => onRescheduleClick(row),
-  //   },
-  //   {
-  //     key: "cancel",
-  //     label: "Cancel",
-  //     icon: <XCircle className="w-4 h-4 text-red-500" />,
-  //     onClick: (row) => onCancelClick(row),
-  //   },
-  // ];
-
-  // v1.0.5 <----------------------------------------------------------------------------------
-
-  const tableActions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-custom-blue" />,
-      show: (row) => true, // always show
-      onClick: (row) => navigate(`/mock-interviews-details/${row._id}`),
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-600" />,
-      show: (row) => row?.rounds?.[0]?.status === "Draft",
-      onClick: (row) =>
-        navigate(`/mock-interviews/${row._id}/edit`, {
-          state: { from: "tableMode" },
-        }),
-    },
-    {
-      key: "reschedule",
-      label: "Reschedule",
-      icon: <Timer className="w-4 h-4 text-custom-blue" />,
-      show: (row) =>
-        !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(
-          row?.rounds?.[0]?.status
-        ),
-      onClick: (row) =>
-        navigate(`/mock-interviews/${row._id}/edit`, {
-          state: { from: location.pathname },
-        }),
-
-      // onClick: (row) => onRescheduleClick(row),
-    },
-    {
-      key: "cancel",
-      label: "Cancel",
-      icon: <XCircle className="w-4 h-4 text-red-500" />,
-      show: (row) =>
-        !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(
-          row?.rounds?.[0]?.status
-        ),
-      onClick: (row) => onCancelClick(row),
-    },
-  ];
+  });
 
   const kanbanColumns = [
     {

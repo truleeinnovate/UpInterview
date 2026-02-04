@@ -60,6 +60,8 @@ const CardDetails = () => {
 
     const [processing, setProcessing] = useState(false);
     const [buttonLoading, setButtonLoading] = useState(false);
+    // Payment method state: "card", "upi", or "emandate" (Net Banking)
+    const [paymentMethod, setPaymentMethod] = useState("card");
 
 
     const navigate = useNavigate();
@@ -75,7 +77,7 @@ const CardDetails = () => {
     });
 
 
-    const { userProfile} = useUserProfile(ownerId)
+    const { userProfile } = useUserProfile(ownerId)
     const [userProfileData, setUserProfile] = useState([])
 
     // Fetch user profile data from contacts API
@@ -140,6 +142,51 @@ const CardDetails = () => {
         }
     }, [ownerId, planDetails, tenantId]);
 
+    // Get available payment methods based on subscription amount
+    // UPI Autopay: max ₹5,000 (RBI limit)
+    // eMandate (Net Banking): up to ₹10 lakh, AFA required for > ₹15,000
+    // Card: No limit
+    const getAvailablePaymentMethods = () => {
+        const amount = parseFloat(totalPaid);
+        return [
+            {
+                id: "card",
+                name: "Credit/Debit Card",
+                available: true,
+                icon: (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                ),
+                subtitle: "Visa, Mastercard, RuPay"
+            },
+            {
+                id: "upi",
+                name: "UPI Autopay",
+                available: amount <= 5000,
+                icon: (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                ),
+                subtitle: "GPay, PhonePe, Paytm",
+                limit: "Max ₹5,000"
+            },
+            {
+                id: "emandate",
+                name: "Net Banking",
+                available: true,
+                icon: (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                ),
+                subtitle: "eMandate via Bank",
+                note: amount > 15000 ? "OTP required" : null
+            },
+        ];
+    };
+
     // Validate details before submitting to payment processor
     const validateCardDetailsBeforeSubmit = () => {
         const errors = {};
@@ -192,10 +239,10 @@ const CardDetails = () => {
             // Create order data object
             // console.log('DEBUG - Original planDetails:', planDetails);
             // console.log('DEBUG - planDetails.annualDiscount:', planDetails.annualDiscount);
-            
+
             // Create a clean planDetails object without any discount fields
             const { monthDiscount, annualDiscount, monthlyBadge, annualBadge, ...cleanPlanDetails } = planDetails;
-            
+
             const orderData = {
                 planDetails: {
                     ...cleanPlanDetails,
@@ -211,10 +258,11 @@ const CardDetails = () => {
                 planId: planDetails.planId || planDetails._id || '',
                 membershipType: cardDetails.membershipType,
                 userProfile,
-                // Send the amount in INR
                 amount: amountToCharge,
                 currency: 'INR',
                 autoRenew: true, // Always set to true since we're only using subscriptions
+                // Payment method selected by user: "card", "upi", or "emandate"
+                paymentMethod: paymentMethod,
                 // Additional metadata for better tracking
                 metadata: {
                     billingCycle: cardDetails.membershipType,
@@ -244,7 +292,7 @@ const CardDetails = () => {
 
             // console.log('BACKEND - Order response received:', orderResponse);
             // console.log('BACKEND - Amount in response:', orderResponse.amount, 'paise =', orderResponse.amount / 100, 'rupees');
-            
+
             // VALIDATION: Check if backend returned different amount than sent
             //const expectedAmountInPaise = amountToCharge * 100;
             // if (orderResponse.amount !== expectedAmountInPaise) {
@@ -252,7 +300,7 @@ const CardDetails = () => {
             //     console.error('Sent to backend:', amountToCharge, 'rupees =', expectedAmountInPaise, 'paise');
             //     console.error('Received from backend:', orderResponse.amount / 100, 'rupees =', orderResponse.amount, 'paise');
             //     console.error('Difference:', (expectedAmountInPaise - orderResponse.amount) / 100, 'rupees');
-                
+
             //     // Alert the user about the discrepancy
             //     toast.warning(`Note: Payment amount adjusted by backend to ₹${orderResponse.amount / 100}`);
             // }
@@ -308,10 +356,44 @@ const CardDetails = () => {
                                 ownerId: ownerId,
                                 planId: planDetails._id,
                                 membershipType: cardDetails.membershipType,
+                                paymentMethod: paymentMethod, // Track selected payment method
                             },
                             theme: {
                                 color: "#3399cc",
                             },
+                            // Payment method configuration for subscriptions
+                            // Note: Razorpay subscriptions only support Card and eMandate (Nach) for recurring payments
+                            // UPI Autopay requires special enablement and works differently
+                            method: paymentMethod === "card"
+                                ? {
+                                    card: true,
+                                    upi: false,
+                                    netbanking: false,
+                                    emandate: false,
+                                    wallet: false,
+                                    emi: false,
+                                    paylater: false,
+                                }
+                                : paymentMethod === "emandate"
+                                    ? {
+                                        card: false,
+                                        upi: false,
+                                        netbanking: true,
+                                        emandate: true,
+                                        wallet: false,
+                                        emi: false,
+                                        paylater: false,
+                                    }
+                                    : {
+                                        // For UPI - enable both UPI and Card as fallback (UPI may not be available for subscriptions)
+                                        card: true,
+                                        upi: true,
+                                        netbanking: false,
+                                        emandate: false,
+                                        wallet: false,
+                                        emi: false,
+                                        paylater: false,
+                                    },
                             handler: async function (response) {
                                 try {
                                     // Handle successful payment
@@ -377,7 +459,7 @@ const CardDetails = () => {
                                             console.warn('Error while waiting for webhook completion (non-blocking):', e?.message);
                                         }
 
-                                        
+
                                         // 3) Navigate to success page only after webhook wait
                                         navigate('/subscription-success', {
                                             state: {
@@ -395,13 +477,13 @@ const CardDetails = () => {
                                         setProcessing(false);
 
                                         axios.post(`${config.REACT_APP_API_URL}/emails/send-signup-email`, {
-                                                    tenantId: tenantId,
-                                                    ownerId: ownerId,
+                                            tenantId: tenantId,
+                                            ownerId: ownerId,
                                         }).catch((err) => console.error('Email error:', err));
                                         await axios.post(`${process.env.REACT_APP_API_URL}/emails/subscription/paid`, {
-                                                ownerId,
-                                                tenantId,
-                                                // ccEmail: "shaikmansoor1200@gmail.com",
+                                            ownerId,
+                                            tenantId,
+                                            // ccEmail: "shaikmansoor1200@gmail.com",
                                         });
 
                                     } else {
@@ -518,7 +600,7 @@ const CardDetails = () => {
 
     return (
         <>
-            
+
 
             <div
                 className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 pt-4"
@@ -630,6 +712,49 @@ const CardDetails = () => {
                                             <span className="text-sm font-semibold">{planDetails.annualDiscount}%</span>
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* Payment Method Selection */}
+                                <label className="block mb-2 text-lg font-medium text-gray-500 sm:text-base">
+                                    Payment Method
+                                </label>
+                                <div className="flex flex-col gap-2 mb-4">
+                                    {getAvailablePaymentMethods().map((method) => (
+                                        <div
+                                            key={method.id}
+                                            onClick={() => method.available && setPaymentMethod(method.id)}
+                                            className={`border p-2 rounded-md cursor-pointer flex items-center justify-between transition-all ${paymentMethod === method.id
+                                                ? "border-[#217989] bg-blue-50"
+                                                : method.available
+                                                    ? "border-gray-300 hover:border-gray-400"
+                                                    : "border-gray-200 bg-gray-100 cursor-not-allowed opacity-50"
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="radio"
+                                                    name="paymentMethod"
+                                                    checked={paymentMethod === method.id}
+                                                    disabled={!method.available}
+                                                    readOnly
+                                                    className="accent-custom-blue h-4 w-4 sm:h-3 sm:w-3"
+                                                />
+                                                <div className="flex-shrink-0">{method.icon}</div>
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium text-sm">{method.name}</span>
+                                                    <span className="text-xs text-gray-500">{method.subtitle}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-end">
+                                                {!method.available && method.limit && (
+                                                    <span className="text-xs text-red-500">{method.limit}</span>
+                                                )}
+                                                {method.available && method.note && (
+                                                    <span className="text-xs text-orange-500">{method.note}</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
 
                                 {errors.membershipType && (

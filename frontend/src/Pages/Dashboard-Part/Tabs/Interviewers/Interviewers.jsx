@@ -25,6 +25,10 @@ import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyS
 import Header from "../../../../Components/Shared/Header/Header";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
+import {
+  getInterviewerColumns,
+  getInterviewerActions,
+} from "../../../../utils/tableConfig";
 
 // Card Component for Kanban View
 export const InterviewerCard = ({
@@ -192,15 +196,15 @@ export const InterviewerCard = ({
 
           {(interviewer?.interviwer?.department ||
             interviewer?.interviwer?.external_company) && (
-            <div className="flex items-center text-sm text-gray-500 gap-2">
-              <Building size={14} className="text-gray-400" />
-              <span className="truncate">
-                {interviewer?.interviwer?.interviewer_type === "internal"
-                  ? interviewer?.interviwer?.department
-                  : interviewer?.interviwer?.external_company}
-              </span>
-            </div>
-          )}
+              <div className="flex items-center text-sm text-gray-500 gap-2">
+                <Building size={14} className="text-gray-400" />
+                <span className="truncate">
+                  {interviewer?.interviwer?.interviewer_type === "internal"
+                    ? interviewer?.interviwer?.department
+                    : interviewer?.interviwer?.external_company}
+                </span>
+              </div>
+            )}
 
           <div className="flex items-center gap-1 mt-1">
             <Star size={14} className="text-yellow-400 fill-current" />
@@ -325,21 +329,24 @@ const Interviewers = () => {
     setCurrentPage(0);
   };
 
-  const handleEdit = (id) => {
-    navigate(`/interviewers/${id}/edit`);
+  const handleEdit = (row) => {
+    navigate(`/interviewers/${row?.interviwer?._id}/edit`);
   };
 
-  const handleView = (id) => {
-    navigate(`/interviewers/${id}`);
+  const handleView = (row) => {
+    navigate(`/interviewers/${row?.interviwer?._id}`);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (row) => {
+    const id = row?.interviwer?._id;
     if (window.confirm("Are you sure you want to delete this interviewer?")) {
       await deleteMutation.mutateAsync(id);
     }
   };
 
-  const handleToggleActive = async (id, isActive) => {
+  const handleToggleActive = async (row) => {
+    const id = row?.interviwer?._id;
+    const isActive = !row?.interviwer?.is_active;
     await toggleActiveMutation.mutateAsync({ id, is_active: isActive });
   };
 
@@ -374,149 +381,20 @@ const Interviewers = () => {
     "interviewers",
   );
 
-  // Table columns
-  const columns = [
-    {
-      key: "full_name",
-      header: "Name",
-      render: (value, row) => {
-        let displayName = "";
-        let displayAvatar = "";
+  // Use shared configurations
+  const columns = getInterviewerColumns(navigate, {
+    onInterviewerClick: handleView,
+    permissions: effectivePermissions,
+  });
 
-        // Access name from contactDetails
-        if (row.contactDetails) {
-          displayName =
-            `${row.contactDetails.firstName || ""} ${row.contactDetails.lastName || ""}`.trim();
-        }
-
-        // For internal interviewers, you might also have user data
-        if (row.user && !displayName) {
-          displayName = row.user.name || "";
-        }
-
-        return (
-          <div className="flex items-center gap-3">
-            {displayAvatar ? (
-              <img
-                src={displayAvatar}
-                alt={displayName}
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
-                {(displayName || "?").charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div className="flex flex-col">
-              <span
-                className="font-medium text-gray-900 cursor-pointer hover:text-blue-600"
-                onClick={() => handleView(row.interviwer?._id)}
-              >
-                {displayName || "Unknown"}
-              </span>
-            </div>
-          </div>
-        );
-      },
+  const actions = getInterviewerActions(navigate, {
+    permissions: effectivePermissions,
+    callbacks: {
+      onEdit: handleEdit,
+      onDelete: handleDelete,
+      onToggleStatus: handleToggleActive,
     },
-    {
-      key: "email",
-      header: "Email",
-      render: (value, row) => {
-        // Access email from contactDetails
-        return (
-          <span className="text-gray-600">
-            {row.contactDetails?.email || "-"}
-          </span>
-        );
-      },
-    },
-    {
-      key: "interviewer_type",
-      header: "Type",
-      render: (value, row) => {
-        // Access interviewer_type from interviwer object
-        const type = row.interviwer?.interviewer_type;
-        return (
-          <span
-            className={`px-2 py-0.5 rounded-full text-xs font-medium ${type === "internal" ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"}`}
-          >
-            {capitalizeFirstLetter(type || "")}
-          </span>
-        );
-      },
-      // render: (value) => (
-      //   console.log("value interviewer_type", value),
-      //   (
-      //     <span
-      //       className={`px-2 py-0.5 rounded-full text-xs font-medium ${value === "internal" ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"}`}
-      //     >
-      //       {capitalizeFirstLetter(value)}
-      //     </span>
-      //   )
-      // ),
-    },
-    // { key: 'title', header: 'Title', render: (value) => value || '-' },
-    {
-      key: "team_id",
-      header: "Team",
-      render: (value, row) => {
-        // Access team from interviwer object
-        return row.interviwer?.team?.name || "-";
-      },
-      //  render: (value) => value?.name || "-"
-    },
-    {
-      key: "is_active",
-      header: "Status",
-      render: (value, row) => {
-        // Access is_active from interviwer object
-        return (
-          <StatusBadge
-            status={row.interviwer?.is_active ? "Active" : "Inactive"}
-          />
-        );
-      },
-      // render: (value) => <StatusBadge status={value ? "Active" : "Inactive"} />,
-    },
-  ];
-
-  // Table actions
-  const actions = [
-    {
-      key: "view",
-      label: "View",
-      icon: <Eye size={16} className="text-gray-500" />,
-      onClick: (row) => handleView(row?.interviwer?._id),
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil size={16} className="text-gray-500" />,
-      onClick: (row) => handleEdit(row?.interviwer?._id),
-      show: () => effectivePermissions?.Interviewers?.Edit,
-    },
-    {
-      key: "toggle",
-      label: (row) => (row?.interviwer?.is_active ? "Deactivate" : "Activate"),
-      icon: (row) =>
-        row.is_active ? (
-          <ToggleLeft size={16} className="text-red-500" />
-        ) : (
-          <ToggleRight size={16} className="text-green-500" />
-        ),
-      onClick: (row) =>
-        handleToggleActive(row?.interviwer?._id, !row?.interviwer?.is_active),
-      show: () => effectivePermissions?.Interviewers?.Edit,
-    },
-    {
-      key: "delete",
-      label: "Delete",
-      icon: <Trash2 size={16} className="text-red-500" />,
-      onClick: (row) => handleDelete(row?.interviwer?._id),
-      show: () => effectivePermissions?.Interviewers?.Delete,
-    },
-  ];
+  });
 
   return (
     <div className="mt-6">
