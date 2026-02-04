@@ -43,7 +43,7 @@ import {
 } from "../../../../../apiHooks/usePositions";
 import LoadingButton from "../../../../../Components/LoadingButton";
 import { Button } from "@mui/material";
-import { Trash2, X } from "lucide-react";
+import { ArrowLeft, Trash2, X } from "lucide-react";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import AssessmentListModal from "../AssessmentListModal/AssessmentListModal.jsx";
 
@@ -180,7 +180,7 @@ const NewAssessment = () => {
   const assessment = isEditing
     ? assessmentById
     : // assessmentData.find((assessment) => assessment._id === id)
-    null;
+      null;
 
   const selectedPositionId =
     (formData.Position && formData.Position) ||
@@ -188,7 +188,7 @@ const NewAssessment = () => {
     "";
 
   const { position: positionById } = usePositionById(
-    selectedPositionId || null
+    selectedPositionId || null,
   );
 
   useEffect(() => {
@@ -204,8 +204,8 @@ const NewAssessment = () => {
 
   const positionsForDropdown =
     selectedPosition &&
-      selectedPosition._id &&
-      !filteredPositionData.some((p) => p._id === selectedPosition._id)
+    selectedPosition._id &&
+    !filteredPositionData.some((p) => p._id === selectedPosition._id)
       ? [selectedPosition, ...filteredPositionData]
       : filteredPositionData;
 
@@ -279,7 +279,7 @@ const NewAssessment = () => {
     if (isEditing && assessment) {
       // Find category object using assessmentTemplateList ID
       const matchedCategory = assessmentListData.find(
-        (item) => item._id === assessment?.assessmentTemplateList?._id
+        (item) => item._id === assessment?.assessmentTemplateList?._id,
       );
 
       setFormData({
@@ -318,7 +318,7 @@ const NewAssessment = () => {
       if (assessment.CandidateDetails) {
         setIncludePhone(assessment.CandidateDetails.includePhone || false);
         setIncludePosition(
-          assessment.CandidateDetails.includePosition || false
+          assessment.CandidateDetails.includePosition || false,
         );
       } else {
         setIncludePhone(false);
@@ -379,14 +379,14 @@ const NewAssessment = () => {
                   ...acc,
                   [section.SectionName]: section.totalScore || "",
                 }),
-                {}
+                {},
               );
               const sectionPassScores = formattedSections.reduce(
                 (acc, section) => ({
                   ...acc,
                   [section.SectionName]: section.passScore || "",
                 }),
-                {}
+                {},
               );
 
               setTotalScores(sectionTotalScores);
@@ -400,7 +400,7 @@ const NewAssessment = () => {
           console.error("Error fetching assessment questions:", error);
           console.error(
             "Error details:",
-            error.response?.data || error.message
+            error.response?.data || error.message,
           );
         }
       };
@@ -515,14 +515,14 @@ const NewAssessment = () => {
       case "Questions":
         const totalQuestions = addedSections.reduce(
           (acc, eachSection) => acc + eachSection.Questions.length,
-          0
+          0,
         );
         if (totalQuestions !== questionsLimit) {
           newErrors.questions = `Please add exactly ${questionsLimit} questions.`;
           setIsQuestionLimitErrorPopupOpen(true);
         } else {
           const isAnySectionPassScoreSet = Object.values(passScores).some(
-            (score) => score > 0
+            (score) => score > 0,
           );
           if (!(overallPassScore > 0 || isAnySectionPassScoreSet)) {
             setSidebarOpen(true);
@@ -556,7 +556,7 @@ const NewAssessment = () => {
     try {
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/assessments/validate/${currentTab}`,
-        assessmentData
+        assessmentData,
       );
 
       if (!response.data.success) {
@@ -569,7 +569,7 @@ const NewAssessment = () => {
       }
       // Fallback to frontend validation errors
       console.warn(
-        "Backend validation unavailable, using frontend validation only"
+        "Backend validation unavailable, using frontend validation only",
       );
     }
 
@@ -772,7 +772,7 @@ const NewAssessment = () => {
 
         const assessmentQuestionsData = prepareAssessmentQuestionsData(
           addedSections,
-          questionsAssessmentId
+          questionsAssessmentId,
         );
 
         if (!assessmentQuestionsData.sections?.length) {
@@ -781,7 +781,7 @@ const NewAssessment = () => {
         }
 
         const questionsResponse = await upsertAssessmentQuestions(
-          assessmentQuestionsData
+          assessmentQuestionsData,
         );
       }
 
@@ -851,12 +851,12 @@ const NewAssessment = () => {
         // Only include passScoreType and passScoreBy if they have values
         ...(formData.passScoreType &&
           formData.passScoreType.trim() !== "" && {
-          passScoreType: formData.passScoreType,
-        }),
+            passScoreType: formData.passScoreType,
+          }),
         ...(formData.passScoreBy &&
           formData.passScoreBy.trim() !== "" && {
-          passScoreBy: formData.passScoreBy,
-        }),
+            passScoreBy: formData.passScoreBy,
+          }),
         ...(formData.passScoreBy === "Overall" && { totalScore: totalScore }),
         ...(formData.passScoreBy === "Overall" &&
           formData.passScore && { passScore: formData.passScore }),
@@ -878,11 +878,11 @@ const NewAssessment = () => {
         ...assessmentData,
         ...(includePosition || includePhone
           ? {
-            CandidateDetails: {
-              ...(includePosition ? { includePosition } : {}),
-              ...(includePhone ? { includePhone } : {}),
-            },
-          }
+              CandidateDetails: {
+                ...(includePosition ? { includePosition } : {}),
+                ...(includePhone ? { includePhone } : {}),
+              },
+            }
           : {}),
         ...(instructions ? { Instructions: instructions } : {}),
         ...(additionalNotes ? { AdditionalNotes: additionalNotes } : {}),
@@ -971,7 +971,7 @@ const NewAssessment = () => {
             };
           }
           return section;
-        })
+        }),
       );
     } else if (type === "bulk") {
       // Bulk delete selected questions
@@ -981,12 +981,12 @@ const NewAssessment = () => {
             return {
               ...section,
               Questions: section.Questions.filter(
-                (_, idx) => !checkedState[section.SectionName][idx]
+                (_, idx) => !checkedState[section.SectionName][idx],
               ),
             };
           }
           return section;
-        })
+        }),
       );
       setCheckedState({}); // Reset checked state
     }
@@ -1024,8 +1024,8 @@ const NewAssessment = () => {
     if (index !== null && name.trim()) {
       setAddedSections((prev) =>
         prev.map((section, idx) =>
-          idx === index ? { ...section, SectionName: name.trim() } : section
-        )
+          idx === index ? { ...section, SectionName: name.trim() } : section,
+        ),
       );
       setEditSectionData({ isOpen: false, index: null, name: "" });
     }
@@ -1114,7 +1114,7 @@ const NewAssessment = () => {
         closeSidebarForSection();
       }
     },
-    [closeSidebarForSection]
+    [closeSidebarForSection],
   );
 
   useEffect(() => {
@@ -1142,7 +1142,7 @@ const NewAssessment = () => {
         closeSidebarAddQuestion();
       }
     },
-    [closeSidebarAddQuestion]
+    [closeSidebarAddQuestion],
   );
 
   useEffect(() => {
@@ -1305,7 +1305,7 @@ const NewAssessment = () => {
           ...section,
           passScore: scores.sectionPassScores[section.SectionName] || 0,
           totalScore: scores.sectionTotalScores[section.SectionName] || 0,
-        }))
+        })),
       );
     }
     setIsPassScoreSubmitted(true);
@@ -1379,10 +1379,10 @@ const NewAssessment = () => {
   const toggleAction = (sectionName, questionIndex) => {
     setActionViewMore((prev) =>
       prev &&
-        prev.sectionName === sectionName &&
-        prev.questionIndex === questionIndex
+      prev.sectionName === sectionName &&
+      prev.questionIndex === questionIndex
         ? null
-        : { sectionName, questionIndex }
+        : { sectionName, questionIndex },
     );
   };
 
@@ -1390,7 +1390,7 @@ const NewAssessment = () => {
 
   const toggleActionSection = (sectionIndex) => {
     setActionViewMoreSection((prev) =>
-      prev && prev.sectionIndex === sectionIndex ? null : { sectionIndex }
+      prev && prev.sectionIndex === sectionIndex ? null : { sectionIndex },
     );
   };
 
@@ -1524,7 +1524,7 @@ const NewAssessment = () => {
   const updateQuestionsInAddedSectionFromQuestionBank = (
     sectionName,
     question,
-    questionIdToRemove = null
+    questionIdToRemove = null,
   ) => {
     setAddedSections((prevSections) => {
       const updatedSections = prevSections.map((section) => {
@@ -1559,7 +1559,7 @@ const NewAssessment = () => {
               updatedQuestions.push(question);
             } else {
               console.warn(
-                `⚠️ Duplicate question ${existingQuestionId} not added`
+                `⚠️ Duplicate question ${existingQuestionId} not added`,
               );
             }
           }
@@ -1674,7 +1674,7 @@ const NewAssessment = () => {
                   onClick={() => {
                     const totalQuestions = addedSections.reduce(
                       (acc, eachSection) => acc + eachSection.Questions.length,
-                      0
+                      0,
                     );
                     if (totalQuestions !== questionsLimit) {
                       setIsQuestionLimitErrorPopupOpen(true);
@@ -1727,9 +1727,21 @@ const NewAssessment = () => {
 
   return (
     <div ref={formRef}>
-      <div className="bg-gray-50">
+      <div className="bg-gray-50 pt-4">
         {/* v1.0.4 <------------------------------------------------------------------ */}
-        <main className="mx-auto py-4 sm:px-3 lg:px-8 md:px-8 xl:px-8 2xl:px-8 mr-14 ml-14 pb-20">
+        {/* Header/Back Navigation Section */}
+        <div className="flex flex-row items-center justify-between gap-4 mx-auto sm:px-3 px-8 mr-14 ml-14 mt-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex text-base items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            <span className="sm:hidden inline">
+              Back to Assessment Templates
+            </span>
+          </button>
+        </div>
+        <main className="mx-auto sm:px-3 px-8 mr-14 ml-14 pb-20">
           <div className="sm:px-0">
             <div className="mt-4 bg-white shadow overflow-hidden rounded-lg pb-16">
               <div className="flex justify-between px-12 py-6 sm:px-4">
@@ -1744,14 +1756,6 @@ const NewAssessment = () => {
                       ? "Update the Assessment Template details"
                       : "Fill in the details to add a new assessment template"}
                   </p>
-                </div>
-                <div>
-                  <button
-                    onClick={() => navigate(-1)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <X />
-                  </button>
                 </div>
               </div>
 

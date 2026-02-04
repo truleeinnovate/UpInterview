@@ -18,10 +18,14 @@ import {
   Trophy,
   Star,
   IdCard,
+  Edit,
 } from "lucide-react";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import { Button } from "../../../../../Components/Buttons/Button";
+import { useNavigate } from "react-router-dom";
 
 function DetailsTab({ assessment, assessmentQuestions }) {
+    const navigate = useNavigate();
   const { positionData } = usePositions();
 
   const matchedPosition = positionData?.find(
@@ -245,6 +249,22 @@ function DetailsTab({ assessment, assessmentQuestions }) {
     // </div>
     // <div className="overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-20">
     <div className="overflow-hidden h-full pb-20">
+      <div className="flex items-center justify-between w-full mt-4 mb-4">
+        <h3 className="text-lg font-medium text-gray-900">
+          Assessment Template Details
+        </h3>
+        <Button
+          title="Edit Candidate"
+          onClick={() =>
+            navigate(`/assessment-templates/edit/${assessment._id}`)
+          }
+          className="inline-flex items-center border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+        >
+          <Edit className="h-4 w-4 mr-1" />
+          Edit
+          <span className="sm:hidden inline ml-1">Assessment Template</span>
+        </Button>
+      </div>
       <div className="space-y-8">
         <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
           {/* Basic Details Section */}
@@ -321,7 +341,9 @@ function DetailsTab({ assessment, assessmentQuestions }) {
 
                       <div>
                         <p className="text-xs text-gray-500">Total Score</p>
-                        <p className="font-medium text-sm text-gray-800">{score.totalScore}</p>
+                        <p className="font-medium text-sm text-gray-800">
+                          {score.totalScore}
+                        </p>
                       </div>
                     </div>
 
@@ -330,7 +352,9 @@ function DetailsTab({ assessment, assessmentQuestions }) {
 
                       <div>
                         <p className="text-xs text-gray-500">Pass Score</p>
-                        <p className="font-medium text-sm text-gray-800">{score.passScore}</p>
+                        <p className="font-medium text-sm text-gray-800">
+                          {score.passScore}
+                        </p>
                       </div>
                     </div>
 

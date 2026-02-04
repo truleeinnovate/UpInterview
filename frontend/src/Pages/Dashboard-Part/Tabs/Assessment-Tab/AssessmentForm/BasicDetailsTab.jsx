@@ -177,7 +177,7 @@ const BasicDetailsTab = ({
 
         <div className="space-y-6 sm:px-0 px-12">
           <div className="font-semibold sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg mb-5">
-            Assessment Template Details:
+            Assessment Template Details
           </div>
           {/* // <---------------------- v1.0.0 */}
 
@@ -323,7 +323,7 @@ const BasicDetailsTab = ({
             </div>
           </div>
 
-          <div className="font-semibold text-xl mb-5">Additional Details:</div>
+          <div className="font-semibold text-xl mb-5">Additional Details</div>
 
           {/* Position and Difficulty Level */}
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-1">

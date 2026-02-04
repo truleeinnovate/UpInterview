@@ -24,7 +24,7 @@ const AssessmentTestDetailsTab = ({
     // v1.0.0 <-------------------------------------------------------------------------
     <div className="sm:px-2 px-12">
       <h2 className="font-semibold sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg mb-2">
-        Assessment Test Page Details:
+        Assessment Test Page Details
       </h2>
       <p className="mb-4 sm:text-sm">
         The selected candidate's details will be shown on the assessment test
@@ -35,7 +35,7 @@ const AssessmentTestDetailsTab = ({
         <div className="mb-4">
           <div className="flex sm:flex-col md:flex-col items-start">
             <label className="font-medium mb-2 w-36">
-              Candidate Details: <span className="text-red-500">*</span>
+              Candidate Details <span className="text-red-500">*</span>
             </label>
             <div className="flex flex-wrap gap-4 mt-1 sm:ml-0 md:ml-0 ml-8">
               <p className="flex items-center">

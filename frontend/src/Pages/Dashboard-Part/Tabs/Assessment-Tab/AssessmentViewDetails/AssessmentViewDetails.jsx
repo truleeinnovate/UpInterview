@@ -9,16 +9,12 @@
 import { useState, useEffect } from "react";
 import { Tab } from "@headlessui/react";
 import {
-  Minimize,
-  Expand,
-  X,
   BarChart3,
   FileText,
   FileQuestion,
   ClipboardCheck,
   AwardIcon,
   ArrowLeft,
-  Edit,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 // <---------------------- v1.0.0
@@ -29,10 +25,8 @@ import DetailsTab from "./AssessmentDetailTab.jsx";
 import QuestionsTab from "./AsseessmentQuestionsTab.jsx";
 import Activity from "../../../Tabs/CommonCode-AllTabs/Activity.jsx";
 import { useAssessments } from "../../../../../apiHooks/useAssessments.js";
-import { Pencil } from "lucide-react";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
-import { Button } from "../../../../../Components/Buttons/Button.jsx";
 
 function AssessmentView() {
   const { useAssessmentById, fetchAssessmentQuestions } = useAssessments();
@@ -225,24 +219,6 @@ function AssessmentView() {
                       );
                     })}
                   </Tab.List>
-                  <div className="flex items-center justify-between w-full mt-4 mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Assessment Template Details
-                    </h3>
-                    <Button
-                      title="Edit Candidate"
-                      onClick={() =>
-                        navigate(`/assessment-templates/edit/${assessment._id}`)
-                      }
-                      className="inline-flex items-center border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                      <span className="sm:hidden inline ml-1">
-                        Assessment Template
-                      </span>
-                    </Button>
-                  </div>
                   <Tab.Panels>
                     {tabs.map((tab, idx) => (
                       <Tab.Panel
