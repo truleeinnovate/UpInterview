@@ -828,7 +828,7 @@ const PositionSlideDetails = () => {
                           <div className="flex items-start gap-3">
                             <IndianRupee className="w-4 h-4 text-custom-blue mt-1" />
                             <div>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-sm text-gray-500">
                                 Salary Expectation (Annual)
                               </p>
 

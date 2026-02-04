@@ -1767,7 +1767,6 @@ const AddCandidateForm = ({
       {currentFormStep === 1 && (
         <>
           {source !== "candidate-screening" && (
-          <div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
               {/* Profile Image Upload */}
               <ProfilePhotoUpload
@@ -1779,23 +1778,6 @@ const AddCandidateForm = ({
                 onRemoveImage={removeImage}
                 label="Profile Photo"
               />
-              <GenderDropdown
-                value={formData.Gender}
-                options={genderOptionsRS}
-                onChange={handleChange}
-                // error={errors.Gender}
-                containerRef={fieldRefs.Gender}
-                label="Gender"
-                // required
-              />
-            </div>
-            {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
-            {/* <p className="text-lg font-semibold col-span-2"> */}
-            <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
-              {/* v1.0.7 ----------------------------------------------------------------------------------------> */}
-              Contact Details
-            </p>
-
               {/* Resume Upload */}
               <ResumeUpload
                 resumeInputRef={resumeInputRef}
