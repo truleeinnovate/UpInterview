@@ -210,7 +210,7 @@ const StandardTemplatesToolbar = ({
         </div>
 
         {/* Filter */}
-        <div className="flex items-center ml-2">
+        {/* <div className="flex items-center ml-2">
           <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
             <span
               ref={filterIconRef} // Attach ref to filter icon
@@ -218,6 +218,22 @@ const StandardTemplatesToolbar = ({
               style={{
                 opacity: dataLength === 0 ? 0.2 : 1,
                 pointerEvents: dataLength === 0 ? "none" : "auto",
+              }}
+              className="cursor-pointer text-xl border rounded-md p-2"
+            >
+              {isFilterPopupOpen ? <LuFilterX /> : <LuFilter />}
+            </span>
+          </Tooltip>
+        </div> */}
+        <div className="flex items-center ml-2">
+          <Tooltip title="Filter" enterDelay={300} leaveDelay={100} arrow>
+            <span
+              ref={filterIconRef}
+              onClick={onFilterClick}
+              style={{
+                opacity: dataLength === 0 && !isFilterActive ? 0.2 : 1,
+                pointerEvents:
+                  dataLength === 0 && !isFilterActive ? "none" : "auto",
               }}
               className="cursor-pointer text-xl border rounded-md p-2"
             >

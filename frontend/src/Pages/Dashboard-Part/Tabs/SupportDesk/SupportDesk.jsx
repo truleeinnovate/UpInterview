@@ -243,7 +243,7 @@ function SupportDesk() {
 
   //  handling filter pop up  showing
   const handleFilterIconClick = () => {
-    if (tickets?.tickets?.length !== 0) {
+    if (tickets?.tickets?.length !== 0 || isFilterActive) {
       setIsFilterPopupOpen((prev) => !prev);
     }
   };
@@ -349,7 +349,7 @@ function SupportDesk() {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "tickets" // Entity Name
+    "Tickets" // Entity Name
   );
   // ------------------- Dynamic Empty State Messages using Utility ---------------------
 

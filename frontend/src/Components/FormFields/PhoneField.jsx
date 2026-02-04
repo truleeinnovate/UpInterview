@@ -208,7 +208,7 @@ const PhoneField = ({
                             }
                             focus:outline-gray-300
                         `}
-                        placeholder={`Enter phone number`} // 👈 Dynamic placeholder
+                        placeholder={`Enter Phone Number`} // 👈 Dynamic placeholder
                     />
                 </div>
             </div>

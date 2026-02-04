@@ -99,9 +99,33 @@ const IncreaseAndDecreaseField = ({
   max = 15,
   disabled = false,
 }) => {
+  // const handleInputChange = (e) => {
+  //   const inputValue = e.target.value;
+
+  //   if (inputValue === "") {
+  //     onChange(e);
+  //     return;
+  //   }
+
+  //   const numValue = parseInt(inputValue);
+
+  //   if (!isNaN(numValue)) {
+  //     if (numValue > max) {
+  //       onChange({ target: { name, value: max.toString() } });
+  //       return;
+  //     }
+
+  //     const minString = min.toString();
+  //     if (inputValue.length >= minString.length && numValue < min) {
+  //       onChange({ target: { name, value: minString } });
+  //     } else {
+  //       onChange(e);
+  //     }
+  //   }
+  // };
+
   const handleInputChange = (e) => {
     const inputValue = e.target.value;
-
     if (inputValue === "") {
       onChange(e);
       return;
@@ -114,13 +138,7 @@ const IncreaseAndDecreaseField = ({
         onChange({ target: { name, value: max.toString() } });
         return;
       }
-
-      const minString = min.toString();
-      if (inputValue.length >= minString.length && numValue < min) {
-        onChange({ target: { name, value: minString } });
-      } else {
-        onChange(e);
-      }
+      onChange(e);
     }
   };
 

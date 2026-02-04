@@ -360,7 +360,10 @@ const AddCandidateForm = ({
   }, [locations, formData.location]);
   // --------------------------------------- new fields version 2 -----------------------
 
-  console.log("SELECTED CANDIDATE ==============================> ", selectedCandidate);
+  console.log(
+    "SELECTED CANDIDATE ==============================> ",
+    selectedCandidate,
+  );
 
   useEffect(() => {
     // IMPORTANT: Skip DB pre-fill when coming from screening — we want screening data instead
@@ -501,9 +504,9 @@ const AddCandidateForm = ({
       CountryCode: sd.candidate_country_code || "+91",
       Phone: sd.candidate_phone
         ? sd.candidate_phone
-          .replace(/^\+\d{1,3}/, "")
-          .replace(/^\d{1,3}/, "")
-          .trim()
+            .replace(/^\+\d{1,3}/, "")
+            .replace(/^\d{1,3}/, "")
+            .trim()
         : "",
 
       // ── Education ───────────────────────────────────
@@ -524,15 +527,15 @@ const AddCandidateForm = ({
       skills:
         parsedSkills.length > 0
           ? parsedSkills.map((name) => ({
-            skill: (name || "").trim(),
-            experience: "",
-            expertise: "Beginner",
-          }))
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "Beginner",
+            }))
           : (sd.screening_result?.extracted_skills || []).map((name) => ({
-            skill: (name || "").trim(),
-            experience: "",
-            expertise: "Beginner",
-          })),
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "Beginner",
+            })),
 
       // ── New Fields (Resume Analysis) ─────────────────
       professionalSummary:
@@ -608,10 +611,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry,
       );
       setEntries(updatedEntries);
@@ -1082,14 +1085,14 @@ const AddCandidateForm = ({
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" &&
         mode !== "Edit" && {
-        source: "UPLOAD",
-        // Pass full screeningData so backend can store it
-        screeningData: screeningData, // ← direct pass (full object)
-        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
-        parsedSkills: screeningData.parsed_skills || [],
-        parsedExperience: screeningData.parsed_experience || null,
-        parsedEducation: screeningData.parsed_education || null,
-      }),
+          source: "UPLOAD",
+          // Pass full screeningData so backend can store it
+          screeningData: screeningData, // ← direct pass (full object)
+          parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+          parsedSkills: screeningData.parsed_skills || [],
+          parsedExperience: screeningData.parsed_experience || null,
+          parsedEducation: screeningData.parsed_education || null,
+        }),
     };
 
     try {
@@ -1291,8 +1294,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save candidate",
+          error.message ||
+          "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1717,7 +1720,7 @@ const AddCandidateForm = ({
                 // error={errors.Gender}
                 containerRef={fieldRefs.Gender}
                 label="Gender"
-              // required
+                // required
               />
             </div>
             {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -1818,7 +1821,7 @@ const AddCandidateForm = ({
                 isCustomName={isCustomUniversity}
                 setIsCustomName={setIsCustomUniversity}
                 containerRef={fieldRefs.UniversityCollege}
-                label="University/College"
+                label="University / College"
                 name="UniversityCollege"
                 // required
                 onMenuOpen={loadColleges}
@@ -1990,7 +1993,7 @@ const AddCandidateForm = ({
                   inputRef={fieldRefs.externalId}
                   error={errors.externalId}
                   name="externalId"
-                  placeholder="External System Reference Id"
+                  placeholder="External System Reference ID"
                 />
               </div>
             </div>
@@ -2167,7 +2170,7 @@ const AddCandidateForm = ({
             </label>
 
             {/* The Input Field */}
-            <InputField
+            {/* <InputField
               name="text"
               value={certInput}
               onChange={(e) => setCertInput(e.target.value)}
@@ -2179,7 +2182,43 @@ const AddCandidateForm = ({
               // IMPORTANT: Ensure your InputField component passes this to the internal <input>
               onKeyDown={handleCertKeyDown}
               disabled={formData?.certifications?.length >= 10}
-            />
+            /> */}
+
+            <div className="flex items-center gap-2">
+              <div className="flex-grow">
+                <InputField
+                  name="text"
+                  value={certInput}
+                  onChange={(e) => setCertInput(e.target.value)}
+                  placeholder={
+                    formData?.certifications?.length >= 10
+                      ? "Limit reached"
+                      : "Type Certification and Press Enter"
+                  }
+                  onKeyDown={handleCertKeyDown}
+                  disabled={formData?.certifications?.length >= 10}
+                />
+              </div>
+
+              <button
+                type="button"
+                title="Add Certificate"
+                onClick={(e) => {
+                  const event = {
+                    key: "Enter",
+                    preventDefault: () => {},
+                    stopPropagation: () => {},
+                  };
+                  handleCertKeyDown(event);
+                }}
+                disabled={
+                  formData?.certifications?.length >= 10 || !certInput.trim()
+                }
+                className="hidden sm:flex md:flex lg:flex items-center mt-1 h-10 justify-center bg-custom-blue text-white px-4 rounded-md disabled:bg-gray-300 transition-colors"
+              >
+                <FaPlus className="w-4 h-4" />
+              </button>
+            </div>
 
             {/* Tag Display Area */}
             <div className="flex flex-wrap gap-2 mb-2 mt-3">
@@ -2209,7 +2248,7 @@ const AddCandidateForm = ({
             {/* Professional Summary */}
             <div className="col-span-2 mb-4">
               <DescriptionField
-                label="Professional Summary (one per line)"
+                label="Professional Summary (One Per Line)"
                 name="professionalSummary"
                 value={formData.professionalSummary}
                 onChange={handleChange}
@@ -2249,7 +2288,7 @@ const AddCandidateForm = ({
               {/* Project Cards Display */}
               <div className="grid grid-cols-1 gap-4">
                 {formData?.workExperience &&
-                  formData.workExperience.length > 0 ? (
+                formData.workExperience.length > 0 ? (
                   formData.workExperience.map((project, index) => (
                     <div
                       key={index}
@@ -2327,7 +2366,7 @@ const AddCandidateForm = ({
             {/* Key Achievements */}
             <div className="col-span-2">
               <DescriptionField
-                label="Key Achievements (one per line)"
+                label="Key Achievements (One Per Line)"
                 name="keyAchievements"
                 value={formData.keyAchievements}
                 onChange={handleChange}
@@ -2355,8 +2394,9 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${
+                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Cancel
             </Button>
@@ -2549,7 +2589,7 @@ const AddCandidateForm = ({
               </div>
               <div>
                 <DescriptionField
-                  label="Responsibilities (one per line)"
+                  label="Responsibilities (One Per Line)"
                   value={currentProject.responsibilities}
                   onChange={(e) => {
                     const { value } = e.target;

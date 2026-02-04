@@ -426,7 +426,7 @@ function InterviewerRequestsPage() {
   const dataToUse = requests;
 
   const handleFilterIconClick = () => {
-    if (dataToUse?.length !== 0) {
+    if (dataToUse?.length !== 0 || isFilterActive) {
       setFilterPopupOpen((prev) => !prev);
     }
   };

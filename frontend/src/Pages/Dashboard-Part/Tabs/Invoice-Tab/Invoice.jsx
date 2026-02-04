@@ -426,7 +426,7 @@ const InvoiceTab = () => {
   };
 
   const handleFilterIconClick = () => {
-    if (billingData.length !== 0) {
+    if (billingData.length !== 0 || isFilterActive) {
       setFilterPopupOpen((prev) => !prev);
     }
   };
@@ -556,7 +556,7 @@ const InvoiceTab = () => {
     isSearchActive,
     currentFilteredCount,
     initialDataCount,
-    "invoices" // Entity Name
+    "Invoices" // Entity Name
   );
   // ------------------------- Dynamic Empty State Messages using Utility -----------------------
 
