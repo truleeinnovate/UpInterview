@@ -649,6 +649,10 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import InfoGuide from "../CommonCode-AllTabs/InfoCards";
 import { usePermissions } from "../../../../Context/PermissionsContext";
+import {
+  getTeamColumns,
+  getTeamActions,
+} from "../../../../utils/tableConfig.jsx";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -679,11 +683,10 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
             e.stopPropagation();
             action.onClick(item);
           }}
-          className={`p-1.5 rounded-lg transition-colors ${
-            action.key === "view"
+          className={`p-1.5 rounded-lg transition-colors ${action.key === "view"
               ? "text-custom-blue hover:bg-custom-blue/10"
               : "text-green-600 hover:bg-green-600/10"
-          }`}
+            }`}
           title={action.label}
         >
           {action.icon}
@@ -749,71 +752,14 @@ const MyTeams = () => {
   const totalPages = pagination?.totalPages || 0;
   const totalItems = pagination?.totalItems || 0;
 
-  const columns = [
-    {
-      key: "name",
-      header: "Team Name",
-      render: (val, row) => (
-        <div
-          className="flex items-center gap-2 cursor-pointer"
-          onClick={() => navigate(`team-details/${row._id}`)}
-        >
-          <span className="text-custom-blue font-medium truncate max-w-[200px]">
-            {capitalizeFirstLetter(val)}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "department",
-      header: "Department",
-      render: (val) => (
-        <span className="truncate max-w-[200px]">
-          {capitalizeFirstLetter(val) || "—"}
-        </span>
-      ),
-    },
-    {
-      key: "leadName",
-      header: "Team Lead",
-      render: (val) => (
-        <span className="truncate max-w-[200px]">{val || "—"}</span>
-      ),
-    },
-    {
-      key: "numberOfUsers",
-      header: "Members",
-      render: (val) => (
-        <div className="flex items-center gap-2">
-          <Users className="w-4 h-4 text-gray-400" />
-          <span>{val ?? 0}</span>
-        </div>
-      ),
-    },
-    {
-      key: "is_active",
-      header: "Status",
-      render: (val, row) => {
-        const isActive = val !== undefined ? val : row.status === "active";
-        return <StatusBadge status={isActive ? "Active" : "Inactive"} />;
-      },
-    },
-  ];
+  const columns = getTeamColumns(navigate);
 
-  const actions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-custom-blue" />,
-      onClick: (row) => navigate(`team-details/${row._id}`),
+  const actions = getTeamActions(navigate, {
+    permissions: effectivePermissions,
+    callbacks: {
+      onEdit: (row) => navigate(`team-edit/${row._id}`),
     },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-500" />,
-      onClick: (row) => navigate(`team-edit/${row._id}`),
-    },
-  ];
+  });
 
   return (
     <div className="w-full">

@@ -370,6 +370,10 @@ import {
 import { notify } from "../../../../services/toastService";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
+import {
+  getTagColumns,
+  getTagActions,
+} from "../../../../utils/tableConfig.jsx";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -400,11 +404,10 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
             e.stopPropagation();
             action.onClick(item);
           }}
-          className={`p-1.5 rounded-lg transition-colors ${
-            action.key === "view"
+          className={`p-1.5 rounded-lg transition-colors ${action.key === "view"
               ? "text-custom-blue hover:bg-custom-blue/10"
               : "text-green-600 hover:bg-green-600/10"
-          }`}
+            }`}
           title={action.label}
         >
           {action.icon}
@@ -522,82 +525,19 @@ const InterviewerTags = () => {
     }
   };
 
-  const columns = [
-    {
-      key: "name",
-      header: "Tag Name",
-      render: (val, row) => (
-        <div
-          className="flex items-center gap-2 cursor-pointer"
-          onClick={() => navigate(`tag-details/${row._id}`)}
-        >
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: row.color || "#94a3b8" }}
-          />
-          <span className="text-custom-blue font-medium">
-            {capitalizeFirstLetter(val)}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "category",
-      header: "Category",
-      render: (val) =>
-        capitalizeFirstLetter(categoryLabels[val]) ||
-        capitalizeFirstLetter(val),
-    },
-    {
-      key: "description",
-      header: "Description",
-      render: (val) => (
-        <div
-          className="max-w-xs truncate cursor-default"
-          title={capitalizeFirstLetter(val)}
-        >
-          {capitalizeFirstLetter(val) || "No description"}
-        </div>
-      ),
-    },
-    {
-      key: "is_active",
-      header: "Status",
-      render: (val) => (
-        <span>
-          {val !== false ? (
-            <StatusBadge status="Active" />
-          ) : (
-            <StatusBadge status="Inactive" />
-          )}
-        </span>
-      ),
-    },
-  ];
+  const columns = getTagColumns(navigate, {
+    categoryLabels,
+  });
 
-  const actions = [
-    {
-      key: "view",
-      label: "View",
-      icon: <Eye className="w-4 h-4 text-custom-blue" />,
-      onClick: (row) => navigate(`tag-details/${row._id}`),
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-500" />,
-      onClick: (row) => navigate(`tag-edit/${row._id}`),
-    },
-    {
-      key: "delete",
-      label: "Delete",
-      icon: <Trash className="w-4 h-4 text-red-500" />,
-      onClick: (row) => {
+  const actions = getTagActions(navigate, {
+    permissions: effectivePermissions,
+    callbacks: {
+      onDelete: (row) => {
         setTagToDelete(row);
         setShowDeleteModal(true);
       },
     },
-  ];
+  });
 
   return (
     <div className="flex flex-col w-full min-h-screen overflow-hidden">

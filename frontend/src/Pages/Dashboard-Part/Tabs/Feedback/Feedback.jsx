@@ -40,6 +40,10 @@ import { useInterviews } from "../../../../apiHooks/useInterviews.js";
 // <------------------------v1.0.3
 import { useFeedbacks } from "../../../../apiHooks/useFeedbacks.js";
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
+import {
+  getFeedbackColumns,
+  getFeedbackActions,
+} from "../../../../utils/tableConfig.jsx";
 
 const Feedback = () => {
   const navigate = useNavigate();
@@ -289,13 +293,13 @@ const Feedback = () => {
 
     setIsFilterActive(
       tempSelectedStatus.length > 0 ||
-        tempSelectedPositions.length > 0 ||
-        tempSelectedModes.length > 0 ||
-        tempSelectedInterviewers.length > 0 ||
-        tempSelectedRecommendations.length > 0 ||
-        tempRatingRange.min !== "" ||
-        tempRatingRange.max !== "" ||
-        tempInterviewDatePreset !== ""
+      tempSelectedPositions.length > 0 ||
+      tempSelectedModes.length > 0 ||
+      tempSelectedInterviewers.length > 0 ||
+      tempSelectedRecommendations.length > 0 ||
+      tempRatingRange.min !== "" ||
+      tempRatingRange.max !== "" ||
+      tempInterviewDatePreset !== ""
     );
     setFilterPopupOpen(false);
     setFilteredFeedbacks(feedbacks);
@@ -518,9 +522,8 @@ const Feedback = () => {
   const handleSummarize = (feedback) => {
     setSummaryData({
       candidate_name: feedback.candidateId
-        ? `${feedback.candidateId.FirstName || ""} ${
-            feedback.candidateId.LastName || ""
-          }`
+        ? `${feedback.candidateId.FirstName || ""} ${feedback.candidateId.LastName || ""
+        }`
         : "Unknown",
       candidate_job_title: feedback.positionId?.title || "Unknown Position",
       overall_impression:
@@ -534,9 +537,8 @@ const Feedback = () => {
       scheduled_datetime:
         feedback.interviewRoundId?.dateTime || "Not specified",
       interviewer: feedback.interviewerId
-        ? `${feedback.interviewerId.firstName || ""} ${
-            feedback.interviewerId.lastName || ""
-          }`
+        ? `${feedback.interviewerId.firstName || ""} ${feedback.interviewerId.lastName || ""
+        }`
         : "Not specified",
     });
     setShowSummaryModal(true);
@@ -565,9 +567,8 @@ const Feedback = () => {
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`w-4 h-4 ${
-              star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
-            }`}
+            className={`w-4 h-4 ${star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
+              }`}
           />
         ))}
       </div>
@@ -588,200 +589,13 @@ const Feedback = () => {
   );
   // -------------------------- Dynamic Empty State Messages using Utility -------------------------
 
-  const tableColumns = [
-    {
-      key: "_id",
-      header: "ID",
-      render: (value, row) => (
-        <div
-          className="text-sm font-medium text-custom-blue cursor-pointer"
-          onClick={() => handleView(row)}
-        >
-          {row.feedbackCode || "Not Provided"}
-        </div>
-      ),
-    },
-    {
-      key: "interviewRoundId.interviewMode",
-      header: "Mode",
-      render: (value, row) => (
-        <div className="text-sm">
-          {row.interviewRoundId?.interviewMode || "Not Provided"}
-        </div>
-      ),
-    },
-    {
-      key: "candidateName",
-      header: "Candidate Name",
-      render: (value, row) => {
-        const candidate = row.candidateId;
-        return (
-          <Tooltip
-            label={`${candidate?.FirstName || ""} ${candidate?.LastName || ""}`}
-          >
-            <div className="flex items-center">
-              <div className="flex-shrink-0 h-8 w-8">
-                {candidate?.imageUrl ? (
-                  <img
-                    src={candidate.imageUrl}
-                    alt={candidate.LastName}
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                    {candidate?.LastName
-                      ? candidate?.LastName?.charAt(0).toUpperCase()
-                      : "?"}
-                  </div>
-                )}
-              </div>
-              <div className="ml-3 truncate max-w-[120px]">
-                <div
-                  className="text-sm font-medium text-custom-blue cursor-pointer truncate"
-                  onClick={() => handleView(candidate)}
-                >
-                  {(candidate?.FirstName
-                    ? candidate.FirstName.charAt(0).toUpperCase() +
-                      candidate.FirstName.slice(1)
-                    : "") +
-                    " " +
-                    (candidate?.LastName
-                      ? candidate.LastName.charAt(0).toUpperCase() +
-                        candidate.LastName.slice(1)
-                      : "")}
-                </div>
-                <div className="text-sm text-gray-500 truncate">
-                  {candidate?.Email || "No Email"}
-                </div>
-              </div>
-            </div>
-          </Tooltip>
-        );
-      },
-    },
-    {
-      key: "position",
-      header: "Position",
-      render: (value, row) => {
-        const position = row.positionId;
-        return (
-          <Tooltip
-            label={`${position?.title || "Unknown"} • ${
-              position?.companyname || "No Company"
-            } • ${position?.Location || "No location"}`}
-          >
-            <div className="truncate max-w-[120px]">
-              <div
-                className="text-sm font-medium text-custom-blue cursor-pointer truncate"
-                //onClick={() => handleViewPosition(position)}
-              >
-                {position?.title
-                  ? position.title.charAt(0).toUpperCase() +
-                    position.title.slice(1)
-                  : "Unknown"}
-              </div>
-              <div className="text-sm text-gray-500 truncate">
-                {position?.companyname || "No Company"} •{" "}
-                {position?.Location || "No location"}
-              </div>
-            </div>
-          </Tooltip>
-        );
-      },
-    },
-    {
-      key: "interviewerId.firstName",
-      header: "Interviewer",
-      render: (value, row) => (
-        <div className="text-sm">
-          {row.interviewRoundId?.interviewerType === "Internal"
-            ? row.interviewerId?.firstName +
-                " " +
-                row.interviewerId?.lastName || "Not Provided"
-            : "External"}
-        </div>
-      ),
-    },
+  const tableColumns = getFeedbackColumns(navigate);
 
-    // {
-    //   key: 'interviewType',
-    //   header: 'Interview Type',
-    //   render: (value) => (
-    //     <div className="text-sm">{value || "Not Provided"}</div>
-    //   ),
-    // },
-    {
-      key: "interviewRoundId.dateTime",
-      header: "Date",
-      render: (value, row) => (
-        <div className="text-sm">
-          {row.interviewRoundId?.dateTime?.split(" ")[0] || "N/A"}
-        </div>
-      ),
+  const tableActions = getFeedbackActions(navigate, {
+    callbacks: {
+      onSummarize: handleSummarize,
     },
-    {
-      key: "overallImpression.overallRating",
-      header: "Rating",
-      render: (value, row) => (
-        <div className="text-sm">
-          {row.overallImpression?.overallRating ? (
-            renderStars(row.overallImpression?.overallRating)
-          ) : (
-            <span className="text-gray-400">Pending</span>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (value, row) => (
-        <div className="flex items-center">
-          {getStatusIcon(row.status === "submitted" ? "completed" : row.status)}
-          <span className="ml-2 text-sm capitalize">
-            {row.status === "submitted" ? "completed" : row.status}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "overallImpression.recommendation",
-      header: "Recommendation",
-      render: (value, row) => (
-        <StatusBadge
-          status={row.overallImpression?.recommendation}
-          text={
-            row.overallImpression?.recommendation
-              ? row.overallImpression?.recommendation.charAt(0).toUpperCase() +
-                row.overallImpression?.recommendation.slice(1)
-              : "Not Provided"
-          }
-        />
-      ),
-    },
-  ];
-
-  const tableActions = [
-    {
-      key: "view",
-      label: "View",
-      icon: <Eye className="w-4 h-4 text-custom-blue" />,
-      onClick: handleView,
-    },
-    {
-      key: "summarize",
-      label: "Summarize",
-      icon: <FileTextIcon className="w-4 h-4 text-custom-blue" />,
-      onClick: handleSummarize,
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-500" />,
-      onClick: handleEdit,
-      show: (row) => row.status === "draft", // Only show edit button for draft status
-    },
-  ];
+  });
 
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
@@ -880,7 +694,7 @@ const Feedback = () => {
                               onChange={() => handleStatusToggle(option)}
                               // v1.0.4 <-------------------------------------------------------------
                               className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                              // v1.0.4 ------------------------------------------------------------->
+                            // v1.0.4 ------------------------------------------------------------->
                             />
                             <span className="text-sm">{option}</span>
                           </label>
@@ -1151,16 +965,15 @@ const Feedback = () => {
                     feedbacks?.forEach((feedback) => {
                       if (
                         feedback.interviewRoundId?.interviewerType ===
-                          "Internal" &&
+                        "Internal" &&
                         feedback.interviewerId &&
                         !interviewerMap.has(feedback.interviewerId._id)
                       ) {
                         interviewerMap.set(feedback.interviewerId._id, {
                           id: feedback.interviewerId._id,
                           name:
-                            `${feedback.interviewerId.firstName || ""} ${
-                              feedback.interviewerId.lastName || ""
-                            }`.trim() || "Unknown",
+                            `${feedback.interviewerId.firstName || ""} ${feedback.interviewerId.lastName || ""
+                              }`.trim() || "Unknown",
                         });
                       }
                     });

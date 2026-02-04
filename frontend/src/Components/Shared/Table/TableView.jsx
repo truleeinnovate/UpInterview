@@ -21,7 +21,27 @@ const TableView = ({
   autoHeight = false,
   // ------------------------------v1.0.0 >
   customHeight = "",
+  highlightText = "", // Search query to highlight
 }) => {
+  // Helper function to highlight matching text
+  const highlightMatch = (text, query) => {
+    if (!query || !text) return text;
+    const textStr = String(text);
+    try {
+      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escapedQuery})`, 'gi');
+      const parts = textStr.split(regex);
+      return parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase() ? (
+          <span key={i} className="bg-yellow-200 text-yellow-900 px-0.5 rounded">{part}</span>
+        ) : part
+      );
+    } catch (e) {
+      return text;
+    }
+  };
+
+
   const menuRefs = useRef({});
   const menuButtonRefs = useRef({});
   const scrollContainerRef = useRef(null);
@@ -153,13 +173,12 @@ const TableView = ({
           // className={`${
           //   autoHeight ? "h-auto" : "h-[calc(100vh-12rem)]"
           // } overflow-y-auto pb-6 scrollbar-thin`}
-          className={`${
-            autoHeight
-              ? "h-auto"
-              : customHeight
+          className={`${autoHeight
+            ? "h-auto"
+            : customHeight
               ? customHeight
               : "h-[calc(100vh-12rem)]"
-          } overflow-y-auto pb-6 scrollbar-thin`}
+            } overflow-y-auto pb-6 scrollbar-thin`}
           style={{ scrollbarWidth: "thin" }}
           ref={scrollContainerRef}
         >
@@ -221,13 +240,21 @@ const TableView = ({
                       {columns.map((column) => (
                         <td
                           key={`${rowKey}-${column.key}`}
-                          className={`px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis ${
-                            column.cellClassName || ""
-                          }`}
+                          className={`px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis ${column.cellClassName || ""
+                            }`}
                         >
-                          {column.render
-                            ? column.render(row[column.key], row)
-                            : row[column.key] || ""}
+                          {(() => {
+                            const cellValue = column.render
+                              ? column.render(row[column.key], row)
+                              : row[column.key] || "";
+
+                            // Apply highlighting to plain string values
+                            if (highlightText && typeof cellValue === 'string') {
+                              return highlightMatch(cellValue, highlightText);
+                            }
+                            return cellValue;
+                          })()}
+
                         </td>
                       ))}
                       {actions.length > 0 && (
@@ -319,9 +346,8 @@ const TableView = ({
                                               action.onClick(row);
                                               setOpenMenuIndex(null);
                                             }}
-                                            className={`${
-                                              active ? "bg-gray-50" : ""
-                                            } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
+                                            className={`${active ? "bg-gray-50" : ""
+                                              } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
                                           >
                                             {typeof action.icon === "function"
                                               ? action.icon(row)

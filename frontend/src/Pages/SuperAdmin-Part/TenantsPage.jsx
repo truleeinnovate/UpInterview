@@ -36,6 +36,10 @@ import { notify } from "../../services/toastService.js";
 import { useMasterData } from "../../apiHooks/useMasterData.js";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import { formatDateTime } from "../../utils/dateFormatter.js";
+import {
+  getTenantColumns,
+  getTenantActions,
+} from "../../utils/tableConfig.jsx";
 
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -46,7 +50,7 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const mainActions = kanbanActions.filter((a) =>
     ["view", "delete"].includes(a.key)
   );
-  
+
   // 2. UPDATED FILTER: Overflow actions are everything else
   const overflowActions = kanbanActions.filter(
     (a) => !["view", "delete"].includes(a.key)
@@ -67,14 +71,14 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
       {/* Always visible actions: View and Delete */}
       {mainActions.map((action) => {
         const baseClasses = "p-1.5 rounded-lg transition-colors";
-        
+
         // 3. STYLING: Logic for Blue (View) and Red (Delete)
         const bgClass =
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
             : action.key === "delete"
-            ? "text-red-600 hover:bg-red-50" // Red for delete
-            : "text-gray-600 hover:bg-gray-100";
+              ? "text-red-600 hover:bg-red-50" // Red for delete
+              : "text-gray-600 hover:bg-gray-100";
 
         return (
           <button
@@ -271,8 +275,8 @@ function TenantsPage() {
     setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 ||
-        filters.subscriptionStatus.length > 0 ||
-        filters.plan.length > 0
+      filters.subscriptionStatus.length > 0 ||
+      filters.plan.length > 0
     );
     setFilterPopupOpen(false);
   };
@@ -325,27 +329,27 @@ function TenantsPage() {
   ];
   const filteredRows = selectedValueFilter
     ? (() => {
-        const [prefix, ...rest] = selectedValueFilter.split(":");
-        const val = rest.join(":");
-        const target = normalize(val);
-        if (prefix === "role") {
-          return currentFilteredRows.filter(
-            (row) =>
-              row?.type !== "organization" &&
-              normalize(row?.contact?.currentRole) === target
-          );
-        }
-        if (prefix === "tech") {
-          return currentFilteredRows.filter((row) => {
-            const techs = row?.contact?.currentRole || "";
-            // Array.isArray(row?.contact?.technologies)
-            //   ? row.contact.technologies
-            //   : [];
-            return techs.some((t) => normalize(t) === target);
-          });
-        }
-        return currentFilteredRows;
-      })()
+      const [prefix, ...rest] = selectedValueFilter.split(":");
+      const val = rest.join(":");
+      const target = normalize(val);
+      if (prefix === "role") {
+        return currentFilteredRows.filter(
+          (row) =>
+            row?.type !== "organization" &&
+            normalize(row?.contact?.currentRole) === target
+        );
+      }
+      if (prefix === "tech") {
+        return currentFilteredRows.filter((row) => {
+          const techs = row?.contact?.currentRole || "";
+          // Array.isArray(row?.contact?.technologies)
+          //   ? row.contact.technologies
+          //   : [];
+          return techs.some((t) => normalize(t) === target);
+        });
+      }
+      return currentFilteredRows;
+    })()
     : currentFilteredRows;
   const totalPages = pagination?.totalPages || 0;
 
@@ -429,302 +433,23 @@ function TenantsPage() {
     return fullName || "Unknown Tenant";
   };
 
-  // Table Columns
-  const tableColumns = [
-    {
-      key: "name",
-      header: "Tenant Name",
-      render: (value, row) => (
-        <div className="flex items-center">
-          <div className="h-10 w-10 flex-shrink-0 rounded-full bg-custom-blue flex items-center justify-center text-white font-semibold overflow-hidden">
-            {row?.contact?.imageData ? (
-              <img
-                src={row?.contact?.imageData?.path}
-                alt="branding"
-                className="object-cover w-full h-full rounded-full"
-              />
-            ) : (
-              row?.firstName?.charAt(0).toUpperCase() || "?"
-            )}
-          </div>
-          <div className="ml-4">
-            <div
-              className={`font-medium truncate max-w-[140px] cursor-default ${
-                superAdminPermissions?.Tenants?.View
-                  ? "text-custom-blue cursor-pointer"
-                  : "text-gray-900"
-              }`}
-              onClick={(e) => {
-                e.stopPropagation(); // Prevents row-level handlers (if any)
-                if (superAdminPermissions?.Tenants?.View && row?._id) {
-                  navigate(`/tenants/${row._id}`);
-                }
-              }}
-              title={`${capitalizeFirstLetter(row?.firstName) || "N/A"} ${
-                capitalizeFirstLetter(row?.lastName) || "N/A"
-              }`}
-            >
-              {capitalizeFirstLetter(row.firstName) || "N/A"}{" "}
-              {capitalizeFirstLetter(row.lastName) || "N/A"}
-              {/* capitalizeFirstLetter(row.lastName) */}
-              <div
-                className="text-xs text-gray-500 truncate max-w-[140px]"
-                title={capitalizeFirstLetter(
-                  currentRoles.find(
-                    (role) => role.roleName === row?.contact?.currentRole
-                  )?.roleLabel || "N/A"
-                )}
-              >
-                {/* {currentRoles.find(
-                  (role) => role.roleName === row?.contact?.currentRole
-                )?.roleLabel || "N/A"} */}
-                {capitalizeFirstLetter(
-                  currentRoles.find(
-                    (role) => role.roleName === row?.contact?.currentRole
-                  )?.roleLabel || "N/A"
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      ),
-    },
+  const tableColumns = getTenantColumns(navigate, {
+    superAdminPermissions,
+    currentRoles,
+    selectedType,
+  });
 
-    {
-      key: "type",
-      header: "Type",
-      render: (value, row) => (
-        <span>{capitalizeFirstLetter(row?.type) || "N/A"}</span>
-      ),
-    },
-    selectedType === "organization"
-      ? ""
-      : {
-          key: "isFreelancer",
-          header: "Freelancer",
-          render: (value, row) => (
-            <span>
-              {row?.type === "organization"
-                ? "-"
-                : row?.isFreelancer
-                ? "Yes"
-                : "No"}
-            </span>
-            // <span>{row?.type === "organization" row?.isFreelancer ? "Yes" : "No" || "-"}</span>
-          ),
-        },
-
-    // {
-    //   key: "currentRole",
-    //   header: "Current Role",
-    //   render: (value, row) => <span>{row?.contact?.currentRole || "N/A"}</span>,
-    // },
-
-    {
-      key: "yearsOfExperience",
-      header: "Experience",
-      render: (value, row) => (
-        <span>
-          {row?.contact?.yearsOfExperience
-            ? row?.contact?.yearsOfExperience + " Years"
-            : "N/A"}
-        </span>
-      ),
-    },
-
-    {
-      key: "plan",
-      header: "Plan",
-      render: (value, row) => (
-        <span>{row?.planName ? row?.planName : "N/A"}</span>
-      ),
-    },
-
-    {
-      key: "organizations",
-      header: "Users",
-      render: (value, row) => (
-        <div className="flex items-center gap-2">
-          <span>{row.usersCount || 0}</span>
-        </div>
-      ),
-    },
-    // {
-    //   key: "activeJobs",
-    //   header: "Active Jobs",
-    //   render: (value) => value || "0",
-    // },
-    {
-      key: "activeUsersCount",
-      header: "Active Candidates",
-      render: (value, row) =>
-        row?.activeUsersCount ? row.activeUsersCount : "0",
-    },
-    {
-      key: "lastActivity",
-      header: "Last Activity",
-      render: (value, row) => (
-        <span>{row ? formatDateTime(row?.updatedAt) : "N/A"}</span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (value, row) => <StatusBadge status={formatStatus(row.status)} />,
-    },
-  ];
-
-  // Table Actions Configuration
-  const tableActions = [
-    ...(superAdminPermissions?.Tenants?.View
-      ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => row?._id && navigate(`/tenants/${row._id}`),
-          },
-        ]
-      : []),
-    // ...(superAdminPermissions?.Tenants?.Edit
-    //   ? [
-    //       {
-    //         key: "edit",
-    //         label: "Edit",
-    //         icon: <Pencil className="w-4 h-4 text-green-600" />,
-    //         onClick: (row) => navigate(`edit/${row._id}`),
-    //       },
-    //     ]
-    //   : []),
-    ...(superAdminPermissions?.Tenants?.Delete
-      ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            // onClick: (row) => navigate(`delete/${row._id}`),
-            onClick: (row) => {
-              setDeleteTenant(row);
-              setShowDeleteConfirmModal(true);
-            },
-          },
-        ]
-      : []),
-    // {
-    //   key: "resend-link",
-    //   label: "Resend Link",
-    //   icon: <Mail className="w-4 h-4 text-blue-600" />,
-    //   disabled: (row) => row.status === "completed",
-    // },
-  ];
-
-  // Kanban Columns Configuration
-  const kanbanColumns = [
-    // {
-    //   key: "email",
-    //   header: "Email",
-    // },
-    {
-      key: "type",
-      header: "Type",
-      render: (value, row) => {
-        return <span>{capitalizeFirstLetter(row?.type)}</span>;
+  const tableActions = getTenantActions(navigate, {
+    superAdminPermissions,
+    callbacks: {
+      onDelete: (row) => {
+        setDeleteTenant(row);
+        setShowDeleteConfirmModal(true);
       },
     },
-    selectedType === "organization"
-      ? ""
-      : {
-          key: "isFreelancer",
-          header: "Freelancer",
-          render: (value, row) => {
-            return <span>{row?.isFreelancer ? "Yes" : "No" || "-"}</span>;
-          },
-        },
-    {
-      key: "currentRole",
-      header: "Current Role",
-      render: (value, row) => {
-        return (
-          currentRoles.find(
-            (role) => role.roleName === row?.contact?.currentRole
-          )?.roleLabel || "N/A"
-        );
-      },
-      // render: (value, row) => {
-      //   const tenantRole = row?.contact?.currentRole || "N/A";
-      //   return tenantRole;
+  });
 
-      //   // {row?.type === "organization"
-      //   //   ? "N/A"
-      //   //   : row?.contact?.currentRole || "N/A"}
-      // },
-    },
-
-    {
-      key: "yearsOfExperience",
-      header: "Experience",
-      render: (value, row) => {
-        return row?.contact?.yearsOfExperience
-          ? row?.contact?.yearsOfExperience + " Years"
-          : "N/A";
-      },
-    },
-
-    {
-      key: "plan",
-      header: "Plan",
-      render: (value, row) => (
-        <span>{row?.planName ? row?.planName : "N/A"}</span>
-      ),
-    },
-
-    // {
-    //   key: "organizations",
-    //   header: "Users",
-    //   render: (value, row) => {
-    //     return row.usersCount || 0;
-    //   },
-    // },
-    // {
-    //   key: "activeJobs",
-    //   header: "Active Jobs",
-    //   render: (value) => value || "0",
-    // },
-    // {
-    //   key: "activeUsersCount",
-    //   header: "Active Candidates",
-    //   render: (value, row) => {
-    //     return row?.activeUsersCount ? row.activeUsersCount : "0";
-    //   },
-    // },
-    {
-      key: "lastActivity",
-      header: "Last Activity",
-      render: (value, row) => {
-        return row ? formatDateTime(row?.updatedAt) : "N/A";
-      },
-    },
-
-    // {
-    //   key: "phone",
-    //   header: "Phone",
-    //   render: (value, row) => {
-    //     const tenantPhone = row?.phone;
-    //     const contactPhone = row?.contact?.phone;
-    //     const countryCode = row?.contact?.countryCode;
-
-    //     const finalPhone = tenantPhone || contactPhone;
-    //     if (!finalPhone) return "N/A";
-
-    //     return countryCode ? `${countryCode} ${finalPhone}` : finalPhone;
-    //   },
-    // },
-    {
-      key: "status",
-      header: "Status",
-      render: (value) => <StatusBadge status={formatStatus(value)} />,
-    },
-  ];
+  const kanbanColumns = tableColumns;
 
   // Render Actions for Kanban
   const renderKanbanActions = (item, { onView, onEdit, onResendLink } = {}) => (
@@ -798,32 +523,32 @@ function TenantsPage() {
     // View Details
     ...(superAdminPermissions?.Tenants?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (item, e) => {
-              e.stopPropagation();
-              navigate(`/tenants/${item._id}`);
-            },
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (item, e) => {
+            e.stopPropagation();
+            navigate(`/tenants/${item._id}`);
           },
-        ]
+        },
+      ]
       : []),
 
     // Delete (shown only if NOT loading and has View permission)
     ...(!isLoading && superAdminPermissions?.Tenants?.View
       ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: (item, e) => {
-              e.stopPropagation();
-              setShowDeleteConfirmModal(true);
-              setDeleteTenant(item);
-            },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <Trash className="w-4 h-4 text-red-600" />,
+          onClick: (item, e) => {
+            e.stopPropagation();
+            setShowDeleteConfirmModal(true);
+            setDeleteTenant(item);
           },
-        ]
+        },
+      ]
       : []),
   ];
 
@@ -1007,11 +732,10 @@ function TenantsPage() {
           <div className="flex flex-col items-center space-x-2 w-full">
             <div className="flex self-end rounded-lg border border-gray-300 p-1 mb-4">
               <button
-                className={`px-4 py-1 rounded-md text-sm ${
-                  selectedType === "all"
+                className={`px-4 py-1 rounded-md text-sm ${selectedType === "all"
                     ? "bg-gray-100 text-gray-900"
                     : "text-gray-600 hover:text-gray-900"
-                }`}
+                  }`}
                 onClick={() => {
                   setSelectedType("all");
                   setCurrentPage(0);
@@ -1020,11 +744,10 @@ function TenantsPage() {
                 All
               </button>
               <button
-                className={`px-4 py-1 rounded-md text-sm ${
-                  selectedType === "organization"
+                className={`px-4 py-1 rounded-md text-sm ${selectedType === "organization"
                     ? "bg-gray-100 text-gray-900"
                     : "text-gray-600 hover:text-gray-900"
-                }`}
+                  }`}
                 onClick={() => {
                   setSelectedType("organization");
                   setCurrentPage(0);
@@ -1033,11 +756,10 @@ function TenantsPage() {
                 Organizations
               </button>
               <button
-                className={`px-4 py-1 rounded-md text-sm ${
-                  selectedType === "individual"
+                className={`px-4 py-1 rounded-md text-sm ${selectedType === "individual"
                     ? "bg-gray-100 text-gray-900"
                     : "text-gray-600 hover:text-gray-900"
-                }`}
+                  }`}
                 onClick={() => {
                   setSelectedType("individual");
                   setCurrentPage(0);

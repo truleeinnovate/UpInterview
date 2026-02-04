@@ -18,36 +18,43 @@ const buildPermissionQuery = async (userId, tenantId,
 
     let query = {};
 
+    // Convert to ObjectId if they are strings
+    const toObjectId = (id) => {
+        if (!id) return null;
+        return typeof id === 'string' ? new mongoose.Types.ObjectId(id) : id;
+    };
+
     if (roleType === "individual") {
         // Only own records
-        query.ownerId = userId;
+        query.ownerId = toObjectId(userId);
     }
     else if (roleType === "organization") {
         if (roleName === "Admin") {
             // Admin sees everything in tenant
-            query.tenantId = tenantId;
+            query.tenantId = toObjectId(tenantId);
         } else {
             // Non-admin org user → sees own + inherited roles' users' records
             if (inheritedRoleIds.length > 0) {
                 const accessibleUsers = await Users.find({
-                    tenantId,
+                    tenantId: toObjectId(tenantId),
                     roleId: { $in: inheritedRoleIds },
                 }).select("_id").lean();
 
                 const accessibleUserIds = accessibleUsers.map(u => u._id);
-                accessibleUserIds.push(userId); // include self
+                accessibleUserIds.push(toObjectId(userId)); // include self
 
                 // Dedupe
                 const uniqueIds = [...new Set(accessibleUserIds.map(id => id.toString()))]
-                    .map(id => mongoose.Types.ObjectId(id));
+                    .map(id => new mongoose.Types.ObjectId(id));
 
                 query.ownerId = { $in: uniqueIds };
             } else {
                 // No inherited roles → only own
-                query.ownerId = userId;
+                query.ownerId = toObjectId(userId);
             }
         }
     }
+
 
     // Always restrict to tenant (safety net)
     // if (tenantId && roleType !== "individual") {

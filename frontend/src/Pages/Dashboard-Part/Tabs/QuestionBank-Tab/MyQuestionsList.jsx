@@ -47,6 +47,10 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 
+import {
+  getQuestionColumns,
+  getQuestionActions,
+} from "../../../../utils/tableConfig.jsx";
 import { notify } from "../../../../services/toastService.js";
 
 // v1.0.6 <-------------------------------------------------------------
@@ -78,13 +82,12 @@ function QuestionHeaderBar({
 }) {
   return (
     <div
-      className={`flex items-center sm:justify-start justify-between overflow-x-auto ${
-        type === "interviewerSection" ||
-        type === "feedback" ||
-        type === "assessment"
+      className={`flex items-center sm:justify-start justify-between overflow-x-auto ${type === "interviewerSection" ||
+          type === "feedback" ||
+          type === "assessment"
           ? ""
           : ""
-      }`}
+        }`}
     >
       <div className="flex items-center gap-2">
         {/* Interview Type Dropdown (using DropdownSelect) */}
@@ -119,11 +122,11 @@ function QuestionHeaderBar({
             value={
               selectedLabel
                 ? {
-                    value: selectedLabel,
-                    label:
-                      selectedLabel.charAt(0).toUpperCase() +
-                      selectedLabel.slice(1),
-                  }
+                  value: selectedLabel,
+                  label:
+                    selectedLabel.charAt(0).toUpperCase() +
+                    selectedLabel.slice(1),
+                }
                 : null
             }
             onChange={(opt) => handleLabelChange(opt?.value || "")}
@@ -165,8 +168,8 @@ function QuestionHeaderBar({
           onClick={() => {
             const meta = Array.isArray(createdLists)
               ? createdLists.find(
-                  (l) => l?.label === selectedLabel || l?.name === selectedLabel
-                )
+                (l) => l?.label === selectedLabel || l?.name === selectedLabel
+              )
               : null;
             const listId = meta?._id || selectedLabelId;
             if (listId && selectedLabel) {
@@ -234,11 +237,10 @@ function QuestionHeaderBar({
               title="Previous"
               onClick={onClickLeftPaginationIcon}
               disabled={currentPage === 1}
-              className={`border p-2 mr-2 text-xl rounded-md ${
-                currentPage === 1
+              className={`border p-2 mr-2 text-xl rounded-md ${currentPage === 1
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-gray-100"
-              }`}
+                }`}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -249,11 +251,10 @@ function QuestionHeaderBar({
               disabled={
                 currentPage * itemsPerPage >= totalItems || totalItems === 0
               }
-              className={`border p-2 text-xl rounded-md ${
-                currentPage * itemsPerPage >= totalItems || totalItems === 0
+              className={`border p-2 text-xl rounded-md ${currentPage * itemsPerPage >= totalItems || totalItems === 0
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-gray-100"
-              }`}
+                }`}
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -490,13 +491,13 @@ const MyQuestionsList = ({
   };
 
   const handleDeleteQuestions = async (deleteLabel = false) => {
- 
+
     const allQuestions = Object.values(myQuestionsList || {}).flat();
     const matchingQuestion = allQuestions.find(
       (q) => q.label === selectedLabel
     );
     const labelId = matchingQuestion.listId;
-  
+
 
     try {
       let payload;
@@ -528,13 +529,13 @@ const MyQuestionsList = ({
           label: labelId,
         };
       }
-     
+
       payload.ownerId = ownerId;
       payload.tenantId = tenantId;
 
       // Call the delete API
       const response = await deleteQuestions(payload);
-     
+
       if (response.success) {
         // Show success message
         notify.success(
@@ -734,8 +735,8 @@ const MyQuestionsList = ({
             Array.isArray(q?.technology)
               ? q.technology
               : typeof q?.technology === "string"
-              ? [q.technology]
-              : []
+                ? [q.technology]
+                : []
           )
           .filter(Boolean)
           .map((t) => String(t).trim())
@@ -860,8 +861,8 @@ const MyQuestionsList = ({
         const techs = Array.isArray(question?.technology)
           ? question.technology
           : typeof question?.technology === "string"
-          ? [question.technology]
-          : [];
+            ? [question.technology]
+            : [];
         const techsLower = techs.map((t) => String(t || "").toLowerCase());
         const matchesTechnology =
           !selectedTechnologyFilterItems.length ||
@@ -1030,8 +1031,8 @@ const MyQuestionsList = ({
     if (!selectedLabel) return;
     const meta = Array.isArray(createdLists)
       ? createdLists.find(
-          (l) => l?.label === selectedLabel || l?.name === selectedLabel
-        )
+        (l) => l?.label === selectedLabel || l?.name === selectedLabel
+      )
       : null;
     // if (meta && typeof meta.type !== 'undefined') {
     //   const display = mapListTypeToDisplay(meta.type);
@@ -1181,7 +1182,7 @@ const MyQuestionsList = ({
       }
     } else {
       try {
-       
+
         const questionToAdd = {
           questionId: question._id,
           source: "system",
@@ -1191,7 +1192,7 @@ const MyQuestionsList = ({
           // mandatory: mandatoryStatus[item._id] ? "true" : "false",
         };
 
-       
+
 
         if (onAddQuestion) {
           onAddQuestion(questionToAdd); // Pass the question and index to the parent
@@ -1336,17 +1337,15 @@ const MyQuestionsList = ({
                     value={String(
                       option.type || option.level || option.value || ""
                     ).toLowerCase()}
-                    id={`${filter.filterType}-${
-                      option.type || option.level || option.value
-                    }`}
+                    id={`${filter.filterType}-${option.type || option.level || option.value
+                      }`}
                     type="checkbox"
                     onChange={() => onChangeCheckbox(filter.id, index)}
                   />
 
                   <label
-                    htmlFor={`${filter.filterType}-${
-                      option.type || option.level || option.value
-                    }`}
+                    htmlFor={`${filter.filterType}-${option.type || option.level || option.value
+                      }`}
                   >
                     {option.type || option.level || option.value}
                   </label>
@@ -1493,13 +1492,13 @@ const MyQuestionsList = ({
         );
       const inSkill = Array.isArray(q?.skill)
         ? q.skill.some((sk) =>
-            String(sk || "")
-              .toLowerCase()
-              .includes(s)
-          )
+          String(sk || "")
+            .toLowerCase()
+            .includes(s)
+        )
         : typeof q?.skill === "string"
-        ? q.skill.toLowerCase().includes(s)
-        : false;
+          ? q.skill.toLowerCase().includes(s)
+          : false;
       return inText || inTags || inSkill;
     });
   }, [selectedLabelItems, searchInput]);
@@ -1522,9 +1521,8 @@ const MyQuestionsList = ({
     totalItems === 0
       ? "0/0 Questions"
       : startIndex === endIndex
-      ? `${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`
-      : `${startIndex}-${endIndex}/${totalItems} ${
-          totalItems > 1 ? "Questions" : "Question"
+        ? `${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`
+        : `${startIndex}-${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"
         }`;
   // v2.0.1 -------------------------------------------------------------------->
 
@@ -1618,13 +1616,12 @@ const MyQuestionsList = ({
 
         {/* v1.0.8 <-------------------------------------------------------------------------- */}
         <div
-          className={`${
-            type === "interviewerSection" ||
-            type === "assessment" ||
-            activeTab === "MyQuestionsList"
+          className={`${type === "interviewerSection" ||
+              type === "assessment" ||
+              activeTab === "MyQuestionsList"
               ? ""
               : ""
-          }`}
+            }`}
         >
           {isLoading ? (
             <>
@@ -1633,7 +1630,7 @@ const MyQuestionsList = ({
           ) : (
             <>
               {selectedLabel &&
-              groupedQuestions[selectedLabel]?.length === 0 ? (
+                groupedQuestions[selectedLabel]?.length === 0 ? (
                 <div className="flex flex-col items-center justify-center min-h-[400px]">
                   <div className="text-center max-w-md">
                     <svg
@@ -1693,11 +1690,10 @@ const MyQuestionsList = ({
                         <div key={listName} className="mt-4">
                           {isOpen[listName] && items.length > 0 && (
                             <div
-                              className={`px-2 ${
-                                type === "interviewerSection"
+                              className={`px-2 ${type === "interviewerSection"
                                   ? "h-[62vh]"
                                   : "h-[calc(100vh-200px)]"
-                              } overflow-y-auto`}
+                                } overflow-y-auto`}
                             >
                               {paginatedItems.map((question, index) => (
                                 <div className="flex w-full items-center">
@@ -1717,29 +1713,28 @@ const MyQuestionsList = ({
                                           className="sr-only accent-custom-blue" // Hide the default checkbox
                                         />
                                         <div
-                                          className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                                            selectedQuestions.includes(
-                                              question._id
-                                            )
+                                          className={`w-4 h-4 rounded border-2 flex items-center justify-center ${selectedQuestions.includes(
+                                            question._id
+                                          )
                                               ? "bg-custom-blue border-custom-blue"
                                               : "bg-white border-gray-300"
-                                          }`}
+                                            }`}
                                         >
                                           {selectedQuestions.includes(
                                             question._id
                                           ) && (
-                                            <svg
-                                              className="w-3 h-3 text-white"
-                                              viewBox="0 0 20 20"
-                                              fill="currentColor"
-                                            >
-                                              <path
-                                                fillRule="evenodd"
-                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                clipRule="evenodd"
-                                              />
-                                            </svg>
-                                          )}
+                                              <svg
+                                                className="w-3 h-3 text-white"
+                                                viewBox="0 0 20 20"
+                                                fill="currentColor"
+                                              >
+                                                <path
+                                                  fillRule="evenodd"
+                                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                  clipRule="evenodd"
+                                                />
+                                              </svg>
+                                            )}
                                         </div>
                                       </label>
                                     </div>
@@ -1769,11 +1764,10 @@ const MyQuestionsList = ({
                                         </div>
                                         <div className="flex items-center gap-2">
                                           <span
-                                            className={`text-xs px-2 py-1 rounded-md ${
-                                              question.isCustom
+                                            className={`text-xs px-2 py-1 rounded-md ${question.isCustom
                                                 ? "bg-[#BBDEFB] text-blue-800"
                                                 : "bg-[#D1C4E9] text-blue-800"
-                                            }`}
+                                              }`}
                                             title="Question Type"
                                           >
                                             {question.isCustom
@@ -1788,49 +1782,45 @@ const MyQuestionsList = ({
                                           >
                                             {question.difficultyLevel}
                                           </span>
-                                          {(type === "interviewerSection" ||
-                                            type === "feedback") && (
-                                            <div>
-                                              {interviewQuestionsLists?.some(
-                                                (q) =>
-                                                  q.questionId === question._id
-                                              ) ? (
+                                          {(() => {
+                                            const actions = getQuestionActions({
+                                              callbacks: {
+                                                onEdit: (row) => handleEdit(row._id, row.questionText),
+                                                onDelete: (row) => {
+                                                  setSelectedQuestions([row._id]);
+                                                  setDeleteConfirmOpen(true);
+                                                }
+                                              }
+                                            });
+                                            const addAction = (type === "interviewerSection" || type === "feedback") && !interviewQuestionsLists?.some(q => q.questionId === question._id);
+                                            const removeAction = (type === "interviewerSection" || type === "feedback") && interviewQuestionsLists?.some(q => q.questionId === question._id);
+
+                                            if (removeAction) {
+                                              return (
                                                 <button
                                                   type="button"
-                                                  onClick={() =>
-                                                    onClickRemoveQuestion(
-                                                      question,
-                                                      listName,
-                                                      index
-                                                    )
-                                                  }
+                                                  onClick={() => onClickRemoveQuestion(question, listName, index)}
                                                   className="sm:flex sm:items-center sm:justify-center rounded-md bg-gray-500 px-3 py-1 text-white text-sm hover:bg-gray-600 transition-colors"
                                                 >
-                                                  <span className="sm:hidden inline">
-                                                    Remove
-                                                  </span>
+                                                  <span className="sm:hidden inline">Remove</span>
                                                   <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                                                 </button>
-                                              ) : (
+                                              );
+                                            }
+                                            if (addAction) {
+                                              return (
                                                 <button
                                                   type="button"
                                                   className="sm:flex sm:items-center sm:justify-center bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors"
-                                                  onClick={() =>
-                                                    onClickAddButton(
-                                                      question,
-                                                      listName,
-                                                      index
-                                                    )
-                                                  }
+                                                  onClick={() => onClickAddButton(question, listName, index)}
                                                 >
-                                                  <span className="sm:hidden inline">
-                                                    Add
-                                                  </span>
+                                                  <span className="sm:hidden inline">Add</span>
                                                   <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                                                 </button>
-                                              )}
-                                            </div>
-                                          )}
+                                              );
+                                            }
+                                            return null;
+                                          })()}
                                           {type === "assessment" && (
                                             <div>
                                               {addedSections.some((s) =>
@@ -1848,16 +1838,15 @@ const MyQuestionsList = ({
                                                 </span>
                                               ) : (
                                                 <button
-                                                  className={`sm:flex sm:items-center sm:justify-center bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors ${
-                                                    addedSections.reduce(
-                                                      (acc, s) =>
-                                                        acc +
-                                                        s.Questions.length,
-                                                      0
-                                                    ) >= questionsLimit
+                                                  className={`sm:flex sm:items-center sm:justify-center bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors ${addedSections.reduce(
+                                                    (acc, s) =>
+                                                      acc +
+                                                      s.Questions.length,
+                                                    0
+                                                  ) >= questionsLimit
                                                       ? "opacity-50 cursor-not-allowed"
                                                       : ""
-                                                  }`}
+                                                    }`}
                                                   onClick={() =>
                                                     onClickAddButton(
                                                       question,
@@ -1894,18 +1883,18 @@ const MyQuestionsList = ({
                                               </button>
                                               {dropdownOpen ===
                                                 question._id && (
-                                                <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                                                  <p
-                                                    className="px-3 flex items-center gap-2 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
-                                                    onClick={() =>
-                                                      handleEditClick(question)
-                                                    }
-                                                  >
-                                                    <Pencil className="w-4 h-4 text-blue-600" />{" "}
-                                                    Edit
-                                                  </p>
-                                                </div>
-                                              )}
+                                                  <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                                                    <p
+                                                      className="px-3 flex items-center gap-2 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
+                                                      onClick={() =>
+                                                        handleEditClick(question)
+                                                      }
+                                                    >
+                                                      <Pencil className="w-4 h-4 text-blue-600" />{" "}
+                                                      Edit
+                                                    </p>
+                                                  </div>
+                                                )}
                                             </div>
                                           )}
                                         </div>
@@ -1935,11 +1924,10 @@ const MyQuestionsList = ({
                                                   (option, idx) => (
                                                     <li
                                                       key={idx}
-                                                      className={`${
-                                                        isAnyOptionLong
+                                                      className={`${isAnyOptionLong
                                                           ? "block w-full"
                                                           : "inline-block w-1/2"
-                                                      } mb-2`}
+                                                        } mb-2`}
                                                     >
                                                       {question.isCustom && (
                                                         <span className="mr-2 text-gray-500">
@@ -1970,10 +1958,10 @@ const MyQuestionsList = ({
                                             ? `${String.fromCharCode(97 + question.options.indexOf(question.correctAnswer)) + ") "}`
                                             : ""} */}
                                           {question.questionType ===
-                                          "Programming"
+                                            "Programming"
                                             ? renderSolutions(
-                                                question.solutions
-                                              )
+                                              question.solutions
+                                            )
                                             : question.correctAnswer}
                                         </span>
                                       </p>

@@ -14,6 +14,10 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 import { useCompanies } from "../../../../apiHooks/TenantCompany/useTenantCompanies.js";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
 import CompanyForm from "./CompanyForm.jsx";
+import {
+  getCompanyColumns,
+  getCompanyActions,
+} from "../../../../utils/tableConfig.jsx";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -44,11 +48,10 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
             e.stopPropagation();
             action.onClick(item);
           }}
-          className={`p-1.5 rounded-lg transition-colors ${
-            action.key === "view"
+          className={`p-1.5 rounded-lg transition-colors ${action.key === "view"
               ? "text-custom-blue hover:bg-custom-blue/10"
               : "text-green-600 hover:bg-green-600/10"
-          }`}
+            }`}
           title={action.label}
         >
           {action.icon}
@@ -169,105 +172,21 @@ const Companies = () => {
     (currentPage + 1) * ITEMS_PER_PAGE,
   );
 
-  const columns = [
-    {
-      key: "name",
-      header: "Company Name",
-      render: (val, row) => (
-        <div
-          className="flex items-center gap-2 cursor-pointer"
-          onClick={() => navigate(`view/${row._id}`)}
-        >
-          <span className="text-custom-blue font-medium truncate max-w-[200px]">
-            {capitalizeFirstLetter(val)}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "industry",
-      header: "Industry",
-      render: (val, row) => (
-        <div className="flex items-center gap-2 cursor-pointer">
-          <span className="truncate max-w-[200px]">
-            {capitalizeFirstLetter(val)}
-          </span>
-        </div>
-      ),
-    },
+  const columns = getCompanyColumns(navigate);
 
-    {
-      key: "primaryContactName",
-      header: "Primary Contact",
-      render: (val) => (
-        <span className="truncate max-w-[200px]">
-          {capitalizeFirstLetter(val) || "-"}
-        </span>
-      ),
-    },
-    {
-      key: "primaryContactEmail",
-      header: "Contact Email",
-      render: (val) => (
-        <span className="truncate max-w-[240px]">{val || "-"}</span>
-      ),
-    },
-    {
-      key: "website",
-      header: "Website",
-      render: (val) => (
-        <span className="truncate max-w-[200px]">{val || "-"}</span>
-      ),
-    },
-    {
-      key: "description",
-      header: "Description",
-      render: (val) => (
-        <span className="block truncate max-w-[240px]">{val || "-"}</span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (val) => (
-        <span>{<StatusBadge status={capitalizeFirstLetter(val)} />}</span>
-      ),
-    },
-    {
-      key: "createdAt",
-      header: "Created At",
-      render: (value) => formatDateTime(value),
-    },
-  ];
-
-  const actions = [
-    {
-      key: "view",
-      label: "View Details",
-      icon: <Eye className="w-4 h-4 text-custom-blue" />,
-      onClick: (row) => navigate(`view/${row._id}`),
-    },
-    {
-      key: "edit",
-      label: "Edit",
-      icon: <Pencil className="w-4 h-4 text-green-500" />,
-      // onClick: (row) => navigate(`edit/${row._id}`),
-      onClick: (row) => {
+  const actions = getCompanyActions(navigate, {
+    callbacks: {
+      onEdit: (row) => {
         setFormMode("Edit");
         setSelectedCompanyId(row._id);
         setIsFormOpen(true);
       },
-    },
-    {
-      key: "delete",
-      label: "Delete",
-      icon: <Trash2 className="w-4 h-4 text-red-500" />,
-      onClick: (row) => {
+      onDelete: (row) => {
         setCompanyToDelete(row);
         setShowDeleteConfirmModal(true);
       },
     },
-  ];
+  });
 
   const handleDeleteConfirm = async () => {
     try {

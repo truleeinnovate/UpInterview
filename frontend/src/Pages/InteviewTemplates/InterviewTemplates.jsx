@@ -25,6 +25,10 @@ import { notify } from "../../services/toastService.js";
 import StandardTemplatesToolbar from "./StandardTemplates/StandardTemplatesHeader.jsx";
 import DeleteConfirmModal from "../Dashboard-Part/Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
 import { getEmptyStateMessage } from "../../utils/EmptyStateMessage/emptyStateMessage.js";
+import {
+  getInterviewTemplateColumns,
+  getInterviewTemplateActions,
+} from "../../utils/tableConfig.jsx";
 
 const InterviewTemplates = () => {
   const navigate = useNavigate();
@@ -55,37 +59,6 @@ const InterviewTemplates = () => {
   const [deleteInterviewTemplates, setDeleteInterviewTemplates] =
     useState(null);
 
-  // Handle tab change from URL (e.g., browser back/forward)
-  // useEffect(() => {
-  //   const handlePopState = () => {
-  //     const params = new URLSearchParams(window.location.search);
-  //     const tabFromUrl = params.get("tab");
-
-  //     if (
-  //       tabFromUrl &&
-  //       (tabFromUrl === "standard" || tabFromUrl === "custom")
-  //     ) {
-  //       setActiveTab(tabFromUrl);
-  //     } else if (!tabFromUrl) {
-  //       // If no tab in URL, set default and update URL
-
-  //       setActiveTab("standard");
-  //       params.set("tab", "standard");
-  //       navigate({ search: params.toString() }, { replace: true });
-  //     }
-  //   };
-
-  //   // Listen for URL changes
-  //   window.addEventListener("popstate", handlePopState);
-
-  //   // Initial check
-  //   handlePopState();
-
-  //   return () => {
-  //     window.removeEventListener("popstate", handlePopState);
-  //   };
-  // }, [navigate]);
-
   // Filter states
   const [selectedStatus, setSelectedStatus] = useState([]);
   const [selectedFormats, setSelectedFormats] = useState([]);
@@ -99,22 +72,6 @@ const InterviewTemplates = () => {
     modifiedDate: "",
     createdDate: "",
   });
-
-  // Filter states - move these to URL params or state
-  // const [filters, setFilters] = useState({
-  //   search: searchParams.get('search') || '',
-  //   status: searchParams.get('status') ? searchParams.get('status').split(',') : [],
-  //   formats: searchParams.get('formats') ? searchParams.get('formats').split(',') : [],
-  //   roundsMin: searchParams.get('roundsMin') || '',
-  //   roundsMax: searchParams.get('roundsMax') || '',
-  //   createdDate: searchParams.get('createdDate') || '',
-  //   modifiedDate: searchParams.get('modifiedDate') || '',
-  //   page: parseInt(searchParams.get('page')) || 1,
-  //   limit: parseInt(searchParams.get('limit')) || 10,
-  //   type: searchParams.get('type') || 'custom',
-  //   sortBy: searchParams.get('sortBy') || 'createdAt',
-  //   sortOrder: searchParams.get('sortOrder') || 'desc',
-  // });
 
   // Refs
   const filterIconRef = useRef(null);
@@ -135,15 +92,10 @@ const InterviewTemplates = () => {
     totalCount,
     customCount,
     standardCount,
-    // currentPage,
-    // itemsPerPage,
     isLoading,
-    // saveTemplate,
     deleteInterviewTemplate,
   } = useInterviewTemplates({
     search: searchQuery,
-    // IMPORTANT: use applied filters (selectedFilters) so changes in the
-    // popup only take effect when the user clicks Apply.
     status: selectedFilters.status,
     formats: selectedFilters.formats,
     rounds: selectedFilters.rounds,
@@ -151,13 +103,10 @@ const InterviewTemplates = () => {
     page: currentPage,
     limit: itemsPerPage,
     type: activeTab,
-    //  === 'standard' ? 'standard' : 'custom'
   });
-  // Add proper loading state handling
 
   const totalPages = Math.ceil(totalCount / 10);
 
-  // Add this useEffect (only once)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
@@ -167,38 +116,16 @@ const InterviewTemplates = () => {
     }
   }, []);
 
-  // Template cloning states
-  // const [templateToClone, setTemplateToClone] = useState(null);
-  // const [isCloneConfirmOpen, setCloneConfirmOpen] = useState(false);
-  // Keep URL in sync with tab state
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-
-    // Only update URL if it doesn't match the current tab
     if (params.get("tab") !== activeTab) {
       params.set("tab", activeTab);
       navigate({ search: params.toString() }, { replace: true });
     }
-  }, [activeTab, navigate, templatesData]);
+  }, [activeTab, navigate]);
 
-  // Derived state
   const normalizedTemplates = templatesData;
-  // useMemo(() => {
-  //   if (!templatesData || !Array.isArray(templatesData)) return [];
-  //   return templatesData;
-  //   // .filter((template) => template.type === "custom");
-  // }, [templatesData]);
 
-  // const standardCount = templatesData?.filter(t => t.type === 'standard').length || 0;
-  // const customCount = templatesData?.filter(t => t.type === 'custom').length || 0;
-  // const totalCount = templatesData?.length || 0;
-
-  // Handler for view toggle
-  // const toggleView = () => {
-  //     setView(prev => prev === 'table' ? 'kanban' : 'table');
-  // };
-
-  // Status toggle handler
   const handleStatusToggle = (status) => {
     setSelectedStatus((prev) =>
       prev.includes(status)
@@ -237,11 +164,11 @@ const InterviewTemplates = () => {
     setSelectedFilters(filters);
     setIsFilterActive(
       filters.status.length > 0 ||
-        filters.rounds.min !== "" ||
-        filters.rounds.max !== "" ||
-        filters.modifiedDate !== "" ||
-        filters.createdDate !== "" ||
-        filters.formats.length > 0
+      filters.rounds.min !== "" ||
+      filters.rounds.max !== "" ||
+      filters.modifiedDate !== "" ||
+      filters.createdDate !== "" ||
+      filters.formats.length > 0
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -273,10 +200,6 @@ const InterviewTemplates = () => {
     }
   };
 
-  // When opening the filter popup, reset the draft filter state
-  // from the currently applied filters so that checkboxes/radios
-  // reflect what is actually applied. Changes inside the popup
-  // do NOT affect the API until Apply is clicked.
   useEffect(() => {
     if (isFilterPopupOpen) {
       setSelectedStatus(selectedFilters.status || []);
@@ -291,102 +214,6 @@ const InterviewTemplates = () => {
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
-  // Helper function to normalize spaces for better search
-  // const normalizeSpaces = (str) =>
-  //   str?.toString().replace(/\s+/g, " ").trim().toLowerCase() || "";
-
-  // const filteredTemplates = useMemo(() => {
-  //   return normalizedTemplates.filter((template) => {
-  //     const normalizedQuery = normalizeSpaces(searchQuery);
-  //     const fieldsToSearch = [
-  //       template.title,
-  //       template.interviewTemplateCode,
-  //       template.status,
-  //       template.rounds?.length?.toString(),
-  //     ].filter(Boolean);
-
-  //     const matchesSearchQuery =
-  //       searchQuery === "" ||
-  //       fieldsToSearch.some((field) =>
-  //         normalizeSpaces(field).includes(normalizedQuery)
-  //       );
-
-  //     const matchesStatus =
-  //       selectedFilters.status.length === 0 ||
-  //       selectedFilters.status.includes(
-  //         template.status
-  //           ? template.status.charAt(0).toUpperCase() + template.status.slice(1)
-  //           : "Active"
-  //       );
-
-  //     const roundsCount = template.rounds?.length || 0;
-  //     const matchesRounds =
-  //       (selectedFilters.rounds.min === "" ||
-  //         roundsCount >= Number(selectedFilters.rounds.min)) &&
-  //       (selectedFilters.rounds.max === "" ||
-  //         roundsCount <= Number(selectedFilters.rounds.max));
-
-  //     const matchesModifiedDate = () => {
-  //       if (!selectedFilters.modifiedDate) return true;
-  //       if (!template.updatedAt) return false;
-  //       const modifiedAt = new Date(template.updatedAt);
-  //       const now = new Date();
-  //       const daysDiff = Math.floor((now - modifiedAt) / (1000 * 60 * 60 * 24));
-  //       switch (selectedFilters.modifiedDate) {
-  //         case "last7":
-  //           return daysDiff <= 7;
-  //         case "last30":
-  //           return daysDiff <= 30;
-  //         case "last90":
-  //           return daysDiff <= 90;
-  //         default:
-  //           return true;
-  //       }
-  //     };
-
-  //     const matchesCreatedDate = () => {
-  //       if (!selectedFilters.createdDate) return true;
-  //       if (!template.createdAt) return false;
-  //       const createdAt = new Date(template.createdAt);
-  //       const now = new Date();
-  //       const daysDiff = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-  //       switch (selectedFilters.createdDate) {
-  //         case "last7":
-  //           return daysDiff <= 7;
-  //         case "last30":
-  //           return daysDiff <= 30;
-  //         case "last90":
-  //           return daysDiff <= 90;
-  //         default:
-  //           return true;
-  //       }
-  //     };
-
-  //     const matchesFormat =
-  //       selectedFilters.formats.length === 0 ||
-  //       (template.format && selectedFilters.formats.includes(template.format));
-
-  //     return (
-  //       matchesSearchQuery &&
-  //       matchesStatus &&
-  //       matchesRounds &&
-  //       matchesFormat &&
-  //       matchesModifiedDate() &&
-  //       matchesCreatedDate()
-  //     );
-  //   });
-  // }, [normalizedTemplates, searchQuery, selectedFilters]);
-
-  // const totalPages = Math.ceil(normalizedTemplates.length / itemsPerPage);
-
-  // const startIndex = currentPage * itemsPerPage;
-  // const endIndex = Math.min(
-  //   startIndex + itemsPerPage,
-  //   normalizedTemplates.length
-  // );
-  // const paginatedTemplates = normalizedTemplates;
-  // .slice(startIndex, endIndex)
-
   const handlePreviousPage = () => {
     if (currentPage > 0) {
       setCurrentPage((prev) => prev - 1);
@@ -399,24 +226,23 @@ const InterviewTemplates = () => {
     }
   };
 
-  const handleView = (template) => {
+  const handleView = (row) => {
     if (effectivePermissions.InterviewTemplates?.View) {
-      // Preserve the current tab in the URL when navigating to view
       const params = new URLSearchParams();
       params.set("tab", activeTab);
       navigate({
-        pathname: `/interview-templates/${template._id}`,
+        pathname: `/interview-templates/${row._id}`,
         search: params.toString(),
       });
     }
   };
 
-  const handleEdit = (template) => {
+  const handleEdit = (row) => {
     if (effectivePermissions.InterviewTemplates?.Edit) {
       const params = new URLSearchParams();
       params.set("tab", activeTab);
       navigate(
-        `/interview-templates/${template._id}/edit?${params.toString()}`
+        `/interview-templates/${row._id}/edit?${params.toString()}`
       );
     }
   };
@@ -426,26 +252,21 @@ const InterviewTemplates = () => {
     return str.charAt(0).toUpperCase() + str.slice(1);
   };
 
-  const handleDelete = async (template) => {
+  const handleDelete = async (row) => {
     if (!effectivePermissions.InterviewTemplates?.Delete) {
       return;
     }
-
-    setDeleteInterviewTemplates(template);
+    setDeleteInterviewTemplates(row);
     setShowDeleteConfirmModal(true);
   };
 
-  // Your existing handleConfirmDelete function
   const handleConfirmDelete = async () => {
     if (deleteInterviewTemplates?._id) {
       try {
-        let res = await deleteInterviewTemplate(deleteInterviewTemplates?._id);
-
-        // notify.success("Interview template deleted successfully");
+        await deleteInterviewTemplate(deleteInterviewTemplates?._id);
         setShowDeleteConfirmModal(false);
         setDeleteInterviewTemplates(null);
       } catch (error) {
-        // Error is already handled in the mutation
         console.error("Failed to delete interview:", error);
         setShowDeleteConfirmModal(false);
         setDeleteInterviewTemplates(null);
@@ -456,148 +277,11 @@ const InterviewTemplates = () => {
     }
   };
 
-  const formatOptionsfortable = [
-    { label: "Online / Virtual", value: "online" },
-    { label: "Face to Face / Onsite", value: "offline" },
-    { label: "Hybrid (Online + Onsite)", value: "hybrid" },
-  ];
-
-  const getFormatLabelfortable = (formatValue) => {
-    const option = formatOptionsfortable.find(
-      (opt) => opt.value === formatValue
-    );
-    return option ? option.label : formatValue || "Uncategorized";
+  const handleCloneClick = (row) => {
+    navigate(`/interview-templates/${row._id}/clone`);
   };
 
-  // const handleClone = async (template) => {
-  //     // v1.0.5 <--------------------------------------------------------------
-  //     // setTemplateToClone(template);
-  //     // setCloneConfirmOpen(true);
-  //     if (!template) {
-  //         console.error("Invalid template: template is undefined or null");
-  //         alert("Cannot clone: Invalid template data.");
-  //         return;
-  //     }
-  //     // v1.0.5 -------------------------------------------------------------->
-
-  //     try {
-  //         // Get all existing template names for uniqueness check
-  //         const existingNames = templatesData.map(t => t.name);
-
-  //         // Generate a unique name
-  //         const generateUniqueName = (baseName) => {
-  //             let newName = baseName;
-  //             let counter = 1;
-
-  //             // Check if the name already exists
-  //             while (existingNames.includes(newName)) {
-  //                 // If we've tried 99 times, append a timestamp instead
-  //                 if (counter > 99) {
-  //                     return `${baseName}_${Date.now().toString().slice(-4)}`;
-  //                 }
-  //                 // Append a random 2-digit number (01-99)
-  //                 const randomNum = Math.floor(Math.random() * 99) + 1;
-  //                 newName = `${baseName}_${randomNum.toString().padStart(2, '0')}`;
-  //                 counter++;
-  //             }
-  //             return newName;
-  //         };
-
-  //         // Safely extract and default fields
-  //         const baseName = typeof template.name === "string"
-  //             ? template.name.replace(/_std$/, "")
-  //             : "cloned_template";
-
-  //         // Generate a unique name
-  //         const safeName = generateUniqueName(baseName);
-
-  //         // Define the fields to pass based on the schema, with safe defaults
-  //         const clonedTemplateData = {
-  //             title: template.title || "Untitled Template",
-  //             name: safeName,
-  //             description: template.description || "",
-  //             bestFor: template.bestFor || "General use",
-  //             format: template.format || "online",
-  //             status: template.status || "inactive",
-  //             type: "custom", // Set to custom for cloned template
-  //             rounds: Array.isArray(template.rounds)
-  //                 ? template.rounds.map((round, index) => ({
-  //                     roundTitle: round.roundTitle || `Round ${index + 1}`,
-  //                     assessmentId: round.assessmentId || null,
-  //                     interviewerViewType: round.interviewerViewType || null,
-  //                     duration: round.duration || null,
-  //                     instructions: round.instructions || null,
-  //                     interviewMode: round.interviewMode || null,
-  //                     minimumInterviewers: round.minimumInterviewers || null,
-  //                     selectedInterviewers: Array.isArray(round.selectedInterviewers)
-  //                         ? round.selectedInterviewers
-  //                         : [],
-  //                     interviewerType: round.interviewerType || null,
-  //                     selectedInterviewersType: round.selectedInterviewersType || null,
-  //                     interviewerGroupName: round.interviewerGroupName || null,
-  //                     interviewers: Array.isArray(round.interviewers)
-  //                         ? round.interviewers
-  //                         : [],
-  //                     questions: Array.isArray(round.questions)
-  //                         ? round.questions.map((question) => ({
-  //                             questionId: question.questionId || null,
-  //                             snapshot: question.snapshot || {},
-  //                         }))
-  //                         : [],
-  //                     sequence: round.sequence || index + 1,
-  //                 }))
-  //                 : [],
-  //             isSaved: false, // Set to false for new template
-  //         };
-
-  //         // Optionally include interviewTemplateCode if needed (e.g., generate if backend requires uniqueness)
-  //         // if (template.interviewTemplateCode) {
-  //         //   clonedTemplateData.interviewTemplateCode = `${clonedTemplateData.name}-clone-${Date.now()}`;
-  //         // }
-
-  //         // Save the cloned template
-  //         const savedTemplate = await saveTemplate({
-  //             templateData: clonedTemplateData,
-  //         });
-
-  //         // v1.0.5 <------------------------------------------------------------
-  //         console.log("Cloned template saved:", savedTemplate);
-  //         // Provide feedback to the user (e.g., via toast in production)
-  //         notify.success("Template cloned successfully!");
-  //         return savedTemplate;
-  //     } catch (error) {
-  //         console.error("Error cloning template:", error);
-  //         // alert("Failed to clone template. Please try again.");
-  //         notify.error("Failed to clone template. Please try again.");
-  //         // v1.0.5 ------------------------------------------------------------>
-  //         throw error;
-  //     }
-  // };
-
-  // v1.0.5 <------------------------------------------------------------------------
-  const handleCloneClick = (template) => {
-    navigate(`/interview-templates/${template._id}/clone`);
-  };
-
-  // const confirmClone = async () => {
-  //     if (!templateToClone) return;
-  //     try {
-  //         await handleClone(templateToClone); // call your existing clone logic
-  //     } finally {
-  //         // setCloneConfirmOpen(false);
-  //         setTemplateToClone(null);
-  //     }
-  // };
-
-  // const cancelClone = () => {
-  //     // setCloneConfirmOpen(false);
-  //     setTemplateToClone(null);
-  // };
-  // v1.0.5 ------------------------------------------------------------------------>
-
-  // ------------ Dynamic Empty State Messages using Utility (For Custom Tab) -----------------
   const isSearchActive = searchQuery.length > 0 || isFilterActive;
-  // Use the totalCount from the API hook
   const initialDataCount = totalCount || 0;
   const currentFilteredCount = normalizedTemplates?.length || 0;
 
@@ -607,134 +291,20 @@ const InterviewTemplates = () => {
     initialDataCount,
     "Interview Templates" // Entity Name
   );
-  // ------------ Dynamic Empty State Messages using Utility (For Custom Tab) -----------------
 
-  const tableColumns = [
-    {
-      key: "title",
-      header: "Template",
-      render: (value, row) => {
-        const formattedValue = value
-          ? value.charAt(0).toUpperCase() + value.slice(1)
-          : "N/A";
+  const tableColumns = getInterviewTemplateColumns(navigate, {
+    onTemplateClick: handleView,
+    permissions: effectivePermissions,
+  });
 
-        return (
-          <div
-            className="text-sm font-medium text-custom-blue cursor-pointer"
-            onClick={() => handleView(row)}
-          >
-            {formattedValue}
-          </div>
-        );
-      },
+  const tableActions = getInterviewTemplateActions(navigate, {
+    permissions: effectivePermissions,
+    callbacks: {
+      onEdit: handleEdit,
+      onDelete: handleDelete,
+      onClone: handleCloneClick,
     },
-    {
-      key: "description",
-      header: "Description",
-      render: (value) => {
-        const displayValue = value || "N/A";
-        return (
-          <span className="truncate max-w-[160px] block" title={displayValue}>
-            {displayValue}
-          </span>
-        );
-      },
-    },
-    {
-      key: "rounds",
-      header: "Rounds",
-      render: (value) => {
-        if (!Array.isArray(value) || value.length === 0) {
-          const noRounds = "No rounds";
-          return (
-            <span className="truncate max-w-[160px] block" title={noRounds}>
-              {noRounds}
-            </span>
-          );
-        }
-        const fullRounds = value.map((item, index) => (
-          <span key={index}>
-            {item.roundTitle}
-            {index !== value.length - 1 && " → "}
-          </span>
-        ));
-        const fullText = value.map((item) => item.roundTitle).join(" → ");
-        return (
-          <span className="truncate max-w-[160px] block" title={fullText}>
-            {fullRounds}
-          </span>
-        );
-      },
-    },
-    {
-      key: "bestFor",
-      header: "Best For",
-      render: (value) => value || "N/A",
-    },
-    {
-      key: "format",
-      header: "Format",
-      render: (value) => {
-        const formatLabel = getFormatLabelfortable(value);
-        return <span className="whitespace-nowrap">{formatLabel}</span>;
-      },
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (value) => {
-        return value ? (
-          <StatusBadge status={capitalizeFirstLetter(value)} />
-        ) : (
-          <span className="text-gray-400 text-sm">N/A</span>
-        );
-      },
-    },
-  ];
-
-  const tableActions = [
-    ...(effectivePermissions.InterviewTemplates?.View
-      ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: handleView,
-          },
-        ]
-      : []),
-    ...(effectivePermissions.InterviewTemplates?.Edit
-      ? [
-          {
-            key: "edit",
-            label: "Edit",
-            icon: <Pencil className="w-4 h-4 text-green-600" />,
-            onClick: handleEdit,
-          },
-        ]
-      : []),
-    ...(effectivePermissions.InterviewTemplates?.Delete
-      ? [
-          {
-            key: "delete",
-            label: "Delete",
-            icon: <Trash className="w-4 h-4 text-red-600" />,
-            onClick: handleDelete,
-          },
-        ]
-      : []),
-    ...(effectivePermissions.InterviewTemplates?.Clone
-      ? [
-          {
-            key: "clone",
-            label: "Clone",
-            icon: <Files className="w-4 h-4 text-custom-blue" />,
-            // onClick: handleClone,
-            onClick: handleCloneClick,
-          },
-        ]
-      : []),
-  ];
+  });
 
   return (
     <div className="bg-background min-h-screen">
@@ -789,7 +359,7 @@ const InterviewTemplates = () => {
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 setCurrentPage={setCurrentPage}
-                // v1.0.6 ---------------------------------------->
+              // v1.0.6 ---------------------------------------->
               />
             </div>
             <div className="sm:px-0">
