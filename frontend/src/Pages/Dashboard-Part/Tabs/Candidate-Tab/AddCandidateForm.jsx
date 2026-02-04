@@ -2612,7 +2612,7 @@ const AddCandidateForm = ({
 
       {isModal ? (
         // When opened as modal/popup (from screening) → NO sidebar, just content
-        <div className="h-full overflow-y-auto bg-white">{formContent}</div>
+        <div className="h-full overflow-y-auto bg-white rounded-lg p-4">{formContent}</div>
       ) : (
         // Normal page mode → show SidebarPopup
         // <SidebarPopup
