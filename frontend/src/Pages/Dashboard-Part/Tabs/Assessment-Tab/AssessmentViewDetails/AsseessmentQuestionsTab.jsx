@@ -7,7 +7,7 @@ import QuestionCard from "./QuestionCard/QuestionCard";
 function QuestionsTab({ sections, toggleStates, toggleArrow1 }) {
   return (
     // <div className="overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-18">
-    <div className="overflow-hidden h-full pb-16">
+    <div className="overflow-hidden h-full pb-16 mt-4">
       <div className="space-y-5">
         {sections?.length > 0 ? (
           sections.map((section, index) => (

@@ -50,7 +50,7 @@ const AssessmentTest = () => {
       const loadAssessmentQuestions = async () => {
         try {
           const { data, error } = await fetchAssessmentQuestions(
-            assessment.assessmentId._id
+            assessment.assessmentId._id,
           );
 
           if (error) {
@@ -80,7 +80,7 @@ const AssessmentTest = () => {
   const getCandidateAssessmentDetails = async (candidateAssessmentId) => {
     try {
       const response = await axios.get(
-        `${config.REACT_APP_API_URL}/candidate-assessment/details/${candidateAssessmentId}`
+        `${config.REACT_APP_API_URL}/candidate-assessment/details/${candidateAssessmentId}`,
       );
       if (response.data.success) {
         const document = response.data.candidateAssessment;
@@ -138,11 +138,11 @@ const AssessmentTest = () => {
       // console.log('Calculating scores for Each Section');
       const totalPassScore = assessmentQuestions.sections.reduce(
         (sum, section) => sum + (section?.passScore || 0),
-        0
+        0,
       );
       const totalScore = assessmentQuestions.sections.reduce(
         (sum, section) => sum + (section?.totalScore || 0),
-        0
+        0,
       );
       // console.log('Calculated scores:', { totalPassScore, totalScore });
       return {
@@ -206,7 +206,7 @@ const AssessmentTest = () => {
 
         // Fetch assessment details
         const assessmentResponse = await axios.get(
-          `${config.REACT_APP_API_URL}/schedule-assessment/list/${scheduledAssessmentId}`
+          `${config.REACT_APP_API_URL}/schedule-assessment/list/${scheduledAssessmentId}`,
         );
         if (assessmentResponse.data.scheduledAssessment) {
           setAssessment(assessmentResponse.data.scheduledAssessment);
@@ -217,7 +217,7 @@ const AssessmentTest = () => {
 
         // Fetch candidate details via public assessment endpoint (no auth required)
         const candidateResponse = await axios.get(
-          `${config.REACT_APP_API_URL}/candidate-assessment/public-candidate/${decryptedId}`
+          `${config.REACT_APP_API_URL}/candidate-assessment/public-candidate/${decryptedId}`,
         );
         const candidateData = candidateResponse?.data || null;
         console.log("Candidate Data:", candidateData);
@@ -263,11 +263,7 @@ const AssessmentTest = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-400 font-semibold">
-                {tenant?.tenant
-                  ? [tenant.tenant.firstName, tenant.tenant.lastName]
-                      .filter(Boolean)
-                      .join(" ") || "Unknown User"
-                  : "Loading"}
+                {tenant ? tenant?.tenant?.company : "Loading"}
               </span>
 
               {/* {organizationLogo && (
