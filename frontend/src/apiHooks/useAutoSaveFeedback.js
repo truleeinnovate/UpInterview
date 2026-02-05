@@ -38,10 +38,24 @@ const useAutoSaveFeedback = ({
     if (ui === "Not Answered") return "incorrect";
     return "not answered";
   };
-  console.log(
-    "interviewerSectionData toBackendAnswerType",
+
+  console.log("useAutoSaveFeedback called with feedbackId:", {
+    isAddMode,
+    interviewRoundId,
+    tenantId,
+    interviewerId,
     interviewerSectionData,
-  );
+    preselectedQuestionsResponses,
+    skillRatings,
+    overallRating,
+    communicationRating,
+    recommendation,
+    comments,
+    candidateId,
+    positionId,
+    ownerId,
+    feedbackId, // For PATCH operations if feedback already exists
+  });
 
   // Prepare feedback payload
   const prepareFeedbackPayload = useCallback(() => {
@@ -195,7 +209,11 @@ const useAutoSaveFeedback = ({
     if (!isAddMode || isSavingRef.current) {
       return;
     }
-
+    console.log("🔄 Triggering immediate auto-save...", feedbackId);
+    // console.log(
+    //   "🔄 Triggering payload auto-save with data:",
+    //   prepareFeedbackPayload(),
+    // );
     try {
       isSavingRef.current = true;
       const payload = prepareFeedbackPayload();
@@ -208,6 +226,7 @@ const useAutoSaveFeedback = ({
       } else {
         response = await createFeedback(payload);
       }
+      // console.log("✅ Immediate auto-save response:", response);
 
       if (response.data.success) {
         lastSavedDataRef.current = JSON.stringify(payload);

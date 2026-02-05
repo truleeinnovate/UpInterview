@@ -64,6 +64,12 @@ const InterviewerSectionComponent = ({
     () => rawInterviewerAddedQuestionsFromAPI || [],
     [rawInterviewerAddedQuestionsFromAPI],
   );
+
+  console.log(
+    "interviewerAddedQuestionsFromAPI",
+    interviewerAddedQuestionsFromAPI,
+  );
+
   const rawInterviewQuestions =
     interviewData?.interviewQuestions || interviewerSectionData;
   const allQuestions = React.useMemo(() => {

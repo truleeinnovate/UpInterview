@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { openPanelInNewTab } from "../utils/openInNewTab";
 import QuestionBank from "../../Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank";
+import InterviewsMiniTabComponent from "../../Pages/Dashboard-Part/Tabs/Feedback/MiniTabs/Interviews";
 
 export function MeetingContainer({
   onMeetingLeave,
@@ -321,8 +322,8 @@ export function MeetingContainer({
       },
       {
         id: "questionbank",
-        label: "Question Bank",
-        tooltip: "Question Bank",
+        label: "Interview Questions",
+        tooltip: "Interview Questions",
         icon: <BookOpen className="w-4 h-4" />,
         show: isInterviewer || isSchedule,
         // show: isCandidate || isInterviewer || isSchedule,
@@ -536,7 +537,8 @@ export function MeetingContainer({
                         {sideBarMode === "FEEDBACK" && "Interview Feedback"}
                         {sideBarMode === "INTERVIEWACTIONS" &&
                           "Interview Actions"}
-                        {sideBarMode === "QUESTIONBANK" && "Question Bank"}
+                        {sideBarMode === "QUESTIONBANK" &&
+                          "Interview Questions"}
                       </h3>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -600,9 +602,12 @@ export function MeetingContainer({
                       </div>
                     ) : sideBarMode === "QUESTIONBANK" ? (
                       <div className="">
-                        <QuestionBank
+                        <InterviewsMiniTabComponent
                           isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
                         />
+                        {/* <QuestionBank
+                          isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
+                        /> */}
                       </div>
                     ) : null}
                   </div>

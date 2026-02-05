@@ -14,7 +14,7 @@ export function getEmptyStateMessage(
     return `No ${normalizedEntityName} match your current search or filter criteria.`;
   } else if (initialDataCount === 0) {
     // Case 2: No data in database
-    return `No ${normalizedEntityName} Found.`;
+    return `No ${normalizedEntityName} found.`;
   }
 
   // Fallback (e.g., if logic is somehow missed, though unlikely)
