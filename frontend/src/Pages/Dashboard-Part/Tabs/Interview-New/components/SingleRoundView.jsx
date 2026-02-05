@@ -54,9 +54,12 @@ const SingleRoundView = ({
     return <div className="text-center py-8">No round selected</div>;
   }
   const handleJoinMeeting = (round) => {
-    const joinUrl = createJoinMeetingUrl(round, interviewData);
-    if (!joinUrl) return;
-    window.open(joinUrl, "_blank");
+    // in your button click handler
+    const url = createJoinMeetingUrl(round, interviewData);
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      // or just: window.open(url, '_blank');
+    }
   };
 
   return (
@@ -66,11 +69,10 @@ const SingleRoundView = ({
         <button
           onClick={goToPrevious}
           disabled={!hasPrevious}
-          className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md ${
-            hasPrevious
+          className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md ${hasPrevious
               ? "text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               : "text-gray-400 bg-gray-100 cursor-not-allowed"
-          }`}
+            }`}
         >
           <ArrowLeft className="h-4 w-4 sm:mr-0 mr-1" />
           <span className="sm:hidden inline">Previous Round</span>
@@ -84,11 +86,10 @@ const SingleRoundView = ({
         <button
           onClick={goToNext}
           disabled={!hasNext}
-          className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md ${
-            hasNext
+          className={`inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md ${hasNext
               ? "text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               : "text-gray-400 bg-gray-100 cursor-not-allowed"
-          }`}
+            }`}
         >
           <span className="sm:hidden inline">Next Round</span>
           <ArrowRight className="h-4 w-4 sm:ml-0 ml-1" />
@@ -112,22 +113,21 @@ const SingleRoundView = ({
                   {currentRound?.roundTitle}
                 </h3>
                 <span
-                  className={`mx-2 text-xs px-2 py-0.5 rounded-full ${
-                    currentRound?.status === "Scheduled"
+                  className={`mx-2 text-xs px-2 py-0.5 rounded-full ${currentRound?.status === "Scheduled"
                       ? "bg-blue-50 text-blue-800 border border-blue-200"
                       : currentRound?.status === "Completed"
                         ? "bg-green-50 text-green-800 border border-green-200"
                         : currentRound?.status === "Draft"
                           ? "bg-gray-100 text-gray-800 border border-gray-400"
                           : "bg-gray-50 text-gray-800 border border-gray-200"
-                  }`}
+                    }`}
                 >
                   {currentRound?.status === "RequestSent"
                     ? "Request Sent"
                     : currentRound?.status === "InProgress"
                       ? "In Progress"
                       : // : round?.status,
-                        capitalizeFirstLetter(currentRound?.status)}
+                      capitalizeFirstLetter(currentRound?.status)}
                   {/* {currentRound?.status === "RequestSent" ? "Request Sent" : currentRound?.status} */}
                 </span>
               </div>
@@ -148,16 +148,16 @@ const SingleRoundView = ({
                 {(currentRound?.status === "Scheduled" ||
                   currentRound?.status === "Rescheduled" ||
                   currentRound?.status === "InProgress") && (
-                  <span
-                    onClick={(e) => {
-                      e.stopPropagation(); // ⛔ stop toggle
-                      handleJoinMeeting(currentRound); // ✅ join only
-                    }}
-                    className="cursor-pointer text-custom-blue hover:underline font-medium"
-                  >
-                    Join Meeting
-                  </span>
-                )}
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation(); // ⛔ stop toggle
+                        handleJoinMeeting(currentRound); // ✅ join only
+                      }}
+                      className="cursor-pointer text-custom-blue hover:underline font-medium"
+                    >
+                      Join Meeting
+                    </span>
+                  )}
               </div>
             </div>
           </div>
