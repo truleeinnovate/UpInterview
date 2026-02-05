@@ -19,11 +19,7 @@ import {
   Calendar,
   ChevronUp,
   MapPin,
-  Building2,
   Phone,
-  CheckCircle2,
-  Loader2,
-  //   Info,
 } from "lucide-react";
 import classNames from "classnames";
 import { Button } from "../../CommonCode-AllTabs/ui/button.jsx";
@@ -57,13 +53,13 @@ import { notify } from "../../../../../services/toastService.js";
 import { ROUND_TITLES } from "../../CommonCode-AllTabs/roundTitlesConfig.js";
 // import InternalInterviewUsageDisplay from "../../../../../Components/InternalInterviewUsageDisplay.jsx";
 import { useVideoSettingsQuery } from "../../../../../apiHooks/VideoDetail.js";
-import {
-  useGroupsQuery,
-  useTeamsQuery,
-} from "../../../../../apiHooks/useInterviewerGroups.js";
+// import {
+//   useGroupsQuery,
+//   useTeamsQuery,
+// } from "../../../../../apiHooks/useInterviewerGroups.js";
 import DateChangeConfirmationModal from "../components/DateChangeConfirmationModal.jsx";
 import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
-import { useInterviewerTags } from "../../../../../apiHooks/useInterviewers.js";
+// import { useInterviewerTags } from "../../../../../apiHooks/useInterviewers.js";
 import AddressesPopup from "../../../../../Components/Shared/AddressPopup/AddressPopup.jsx";
 import { useOrganizationDetails } from "../../../../../apiHooks/useOrganization.js";
 const {
@@ -329,7 +325,7 @@ const RoundFormInterviews = () => {
     isError,
     error,
   } = useOrganizationDetails(orgId);
-
+  console.log("interviewQuestionsList response:", interviewQuestionsList);
   // const offices = response?.offices || [];
 
   // Add this useEffect to handle address when switching to Face to Face mode
@@ -664,6 +660,8 @@ const RoundFormInterviews = () => {
     setRemovedQuestionIds((prev) => [...prev, questionId]);
   };
 
+  console.log("originalQuestions List:", originalQuestions);
+
   // const handleSuggestedTabClick = (questionType) => {
   //   setActiveTab("SuggesstedQuestions");
   // };
@@ -711,112 +709,6 @@ const RoundFormInterviews = () => {
     };
   }, [roundId]);
 
-  // console.log("roundEditData roundEditData", roundEditData);
-
-  const editingAssessmentId =
-    isEditing && roundEditData && roundEditData.assessmentId
-      ? roundEditData.assessmentId
-      : null;
-
-  const { assessmentById: editingAssessment } = useAssessmentById(
-    editingAssessmentId,
-    {},
-  );
-
-  const assessmentOptions = React.useMemo(() => {
-    const baseOptions = Array.isArray(assessmentData)
-      ? assessmentData.map((a) => {
-          const titleLabel = a.AssessmentTitle || "Untitled Assessment";
-          const typeLabel = a.type
-            ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
-            : "";
-
-          return {
-            value: a._id,
-            label: (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  width: "98%",
-                }}
-              >
-                <span>{titleLabel}</span>
-                {typeLabel && (
-                  <span
-                    className={
-                      "text-md " +
-                      (a.type === "custom"
-                        ? "text-custom-blue"
-                        : "text-green-600")
-                    }
-                  >
-                    {typeLabel}
-                  </span>
-                )}
-              </div>
-            ),
-            searchLabel: titleLabel,
-          };
-        })
-      : [];
-
-    if (editingAssessmentId && editingAssessment) {
-      const exists = baseOptions.some(
-        (opt) => opt.value === editingAssessmentId,
-      );
-
-      if (!exists) {
-        const editingTitleLabel =
-          editingAssessment.AssessmentTitle ||
-          assessmentTemplate?.assessmentName ||
-          "Untitled Assessment";
-
-        const editingTypeLabel = editingAssessment.type
-          ? editingAssessment.type.charAt(0).toUpperCase() +
-            editingAssessment.type.slice(1)
-          : "";
-
-        baseOptions.push({
-          value: editingAssessmentId,
-          label: (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                width: "98%",
-              }}
-            >
-              <span>{editingTitleLabel}</span>
-              {editingTypeLabel && (
-                <span
-                  className={
-                    "text-md " +
-                    (editingAssessment.type === "custom"
-                      ? "text-custom-blue"
-                      : "text-green-600")
-                  }
-                >
-                  {editingTypeLabel}
-                </span>
-              )}
-            </div>
-          ),
-          searchLabel: editingTitleLabel,
-        });
-      }
-    }
-
-    return baseOptions;
-  }, [
-    assessmentData,
-    editingAssessmentId,
-    editingAssessment,
-    assessmentTemplate?.assessmentName,
-  ]);
-
   // Add this reset effect near other useEffects
   useEffect(() => {
     setHasManuallyClearedInterviewers(false);
@@ -830,6 +722,18 @@ const RoundFormInterviews = () => {
       setInternalInterviews(false);
     };
   }, [roundId]);
+
+  // console.log("roundEditData roundEditData", roundEditData);
+
+  const editingAssessmentId =
+    isEditing && roundEditData && roundEditData.assessmentId
+      ? roundEditData.assessmentId
+      : null;
+
+  const { assessmentById: editingAssessment } = useAssessmentById(
+    editingAssessmentId,
+    {},
+  );
 
   useEffect(() => {
     if (!isEditing) {
@@ -886,7 +790,10 @@ const RoundFormInterviews = () => {
 
     setInterviewMode(normalizedMode);
     setSelectedInterviewType(roundEditData.interviewerType || null);
-    setInterviewQuestionsList(roundEditData.questions || []);
+    if (roundEditData.questions) {
+      setInterviewQuestionsList(roundEditData.questions || []);
+      // setInterviewQuestionsList(roundEditData.questions || []);
+    }
     if (status !== roundEditData.status) setStatus(roundEditData.status);
     setInstructions(roundEditData.instructions || "");
     setSequence(roundEditData.sequence || 1);
@@ -1065,6 +972,113 @@ const RoundFormInterviews = () => {
     assessmentData,
   ]);
 
+  useEffect(() => {
+    const date = new Date();
+    date.setMinutes(date.getMinutes() + 15);
+    const newScheduledDate = date.toISOString().slice(0, 16);
+
+    if (scheduledDate !== newScheduledDate) {
+      setScheduledDate(newScheduledDate);
+    }
+    if (duration !== 60) {
+      setDuration(60);
+    }
+  }, []);
+
+  const assessmentOptions = React.useMemo(() => {
+    const baseOptions = Array.isArray(assessmentData)
+      ? assessmentData.map((a) => {
+          const titleLabel = a.AssessmentTitle || "Untitled Assessment";
+          const typeLabel = a.type
+            ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
+            : "";
+
+          return {
+            value: a._id,
+            label: (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "98%",
+                }}
+              >
+                <span>{titleLabel}</span>
+                {typeLabel && (
+                  <span
+                    className={
+                      "text-md " +
+                      (a.type === "custom"
+                        ? "text-custom-blue"
+                        : "text-green-600")
+                    }
+                  >
+                    {typeLabel}
+                  </span>
+                )}
+              </div>
+            ),
+            searchLabel: titleLabel,
+          };
+        })
+      : [];
+
+    if (editingAssessmentId && editingAssessment) {
+      const exists = baseOptions.some(
+        (opt) => opt.value === editingAssessmentId,
+      );
+
+      if (!exists) {
+        const editingTitleLabel =
+          editingAssessment.AssessmentTitle ||
+          assessmentTemplate?.assessmentName ||
+          "Untitled Assessment";
+
+        const editingTypeLabel = editingAssessment.type
+          ? editingAssessment.type.charAt(0).toUpperCase() +
+            editingAssessment.type.slice(1)
+          : "";
+
+        baseOptions.push({
+          value: editingAssessmentId,
+          label: (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "98%",
+              }}
+            >
+              <span>{editingTitleLabel}</span>
+              {editingTypeLabel && (
+                <span
+                  className={
+                    "text-md " +
+                    (editingAssessment.type === "custom"
+                      ? "text-custom-blue"
+                      : "text-green-600")
+                  }
+                >
+                  {editingTypeLabel}
+                </span>
+              )}
+            </div>
+          ),
+          searchLabel: editingTitleLabel,
+        });
+      }
+    }
+
+    return baseOptions;
+  }, [
+    assessmentData,
+    editingAssessmentId,
+    editingAssessment,
+    assessmentTemplate?.assessmentName,
+  ]);
+
   // Simplified shouldDisable function with all conditions
   const shouldDisable = (fieldName) => {
     // CASE 1: Draft status and no schedule/reschedule in history → ALL editable
@@ -1163,11 +1177,11 @@ const RoundFormInterviews = () => {
     return statusList.includes(status);
   };
 
-  const toggleSelection = (id, setFn) => {
-    setFn((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    );
-  };
+  // const toggleSelection = (id, setFn) => {
+  //   setFn((prev) =>
+  //     prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+  //   );
+  // };
 
   // console.log("ExternalInterviewers", externalInterviewers, status);
 
@@ -1607,18 +1621,10 @@ const RoundFormInterviews = () => {
   };
 
   const handleExternalInterviewerSelect = (interviewers, maxHourlyRate) => {
-    // if (selectedInterviewType === "Internal") {
-    //   alert(
-    //     "You need to clear Internal interviewers before selecting outsourced interviewers."
-    //   );
-    //   return;
-    // }
-
     // Clear internal interviewers when selecting external
     if (internalInterviewers.length > 0) {
       setInternalInterviewers([]);
-      // setInterviewerGroupName("");
-      // setInterviewerGroupId("");
+
       setInterviewerViewType("individuals");
     }
 
@@ -1714,14 +1720,6 @@ const RoundFormInterviews = () => {
   // };
 
   const handleClearAllInterviewers = () => {
-    // console.log("Clearing all interviewers...");
-    // console.log(
-    //   "Before clear - internal:",
-    //   internalInterviewers.length,
-    //   "external:",
-    //   externalInterviewers.length,
-    // );
-
     setInternalInterviewers([]);
     setExternalInterviewers([]);
     setExternalMaxHourlyRate(0);
@@ -2331,19 +2329,6 @@ const RoundFormInterviews = () => {
   //   }
   //   setDuration(30);
   // }, []); // Empty dependency array to run only once
-
-  useEffect(() => {
-    const date = new Date();
-    date.setMinutes(date.getMinutes() + 15);
-    const newScheduledDate = date.toISOString().slice(0, 16);
-
-    if (scheduledDate !== newScheduledDate) {
-      setScheduledDate(newScheduledDate);
-    }
-    if (duration !== 60) {
-      setDuration(60);
-    }
-  }, []);
 
   const breadcrumbItems = [
     {

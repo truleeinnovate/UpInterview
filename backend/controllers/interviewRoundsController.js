@@ -1318,6 +1318,24 @@ const updateInterviewRoundStatus = async (req, res) => {
         .json({ success: false, message: "Round not found" });
     }
 
+    // ────────────────────────────────────────────────
+    // validation when existing status is FeedbackPending and action is Evaluated stop when external
+    // ────────────────────────────────────────────────
+    if (action === "Evaluated") {
+      if (
+        existingRound.interviewerType === "External" &&
+        existingRound.status === "FeedbackPending"
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please submit feedback before marking this round as Evaluated",
+          // Optional: you can send more context if frontend needs it
+          // code: "FEEDBACK_REQUIRED_FOR_EXTERNAL"
+        });
+      }
+    }
+
     let newStatus = null;
     if (!isParticipantUpdate) {
       // Map frontend "action" to actual status
@@ -1341,6 +1359,9 @@ const updateInterviewRoundStatus = async (req, res) => {
         NoShow: "NoShow",
         Evaluated: "Evaluated",
         Skipped: "Skipped",
+        FeedbackPending: "FeedbackPending",
+        FeedbackSubmitted: "FeedbackSubmitted",
+        // FeedbackPending: "FeedbackPending", // Override status to FeedbackPending if feedback is still in draft
       };
 
       newStatus = actionToStatusMap[action];
@@ -1401,6 +1422,46 @@ const updateInterviewRoundStatus = async (req, res) => {
         });
       }
     }
+
+    // Check for submitted feedback
+    const feedback = await FeedbackModel.findOne({
+      interviewRoundId: existingRound._id,
+    });
+
+    // ===== STRICT CHECK: ALL INTERVIEWERS FEEDBACK STATUS = DRAFT =====
+
+    // Interviewer IDs from round
+    const interviewerIds = (existingRound.interviewers || []).map((id) =>
+      id.toString(),
+    );
+
+    // Fetch feedbacks only for these interviewers
+    const feedbacks = await FeedbackModel.find({
+      interviewRoundId: existingRound._id,
+      interviewerId: { $in: interviewerIds },
+    });
+
+    // Build a map: interviewerId -> status
+    const feedbackStatusMap = new Map(
+      feedbacks.map((fb) => [fb.interviewerId.toString(), fb.status]),
+    );
+
+    // Check:
+    // 1. Every interviewer has a feedback entry
+    // 2. Every feedback status is "draft"
+    const allInterviewersDraft =
+      interviewerIds.length > 0 &&
+      interviewerIds.every(
+        (interviewerId) =>
+          feedbackStatusMap.has(interviewerId) &&
+          feedbackStatusMap.get(interviewerId) === "draft",
+      );
+
+    // const feedbackDraft = Array.isArray(feedback)
+    //   ? feedback.some((fb) => fb.status === "Draft")
+    //   : feedback?.status === "Draft";
+
+    // const feedbackDraft = feedback?.some((fb) => fb.status === "Draft");
 
     // if (req.body?.role) {
     //   const { role, userId, joined } = req.body;
@@ -1530,17 +1591,45 @@ const updateInterviewRoundStatus = async (req, res) => {
         status: newStatus,
         interviewerType: existingRound.interviewerType,
         selectedInterviewers: existingRound.interviewers,
-        currentActionReason: reasonCode || null,
+        currentActionReason: reasonCode || cancellationReason || null,
         comments: comment || null,
         rescheduleReason: reasonCode || null,
       };
 
-      smartUpdate = await buildSmartRoundUpdate({
-        existingRound,
-        body: smartBody,
-        actingAsUserId,
-        statusChanged: true,
-      });
+      if (
+        action === "Completed" &&
+        allInterviewersDraft &&
+        existingRound.interviewMode === "Virtual"
+      ) {
+        smartUpdate = await buildSmartRoundUpdate({
+          existingRound,
+          body: {
+            ...smartBody,
+            status: "FeedbackPending", // Override status to FeedbackPending if feedback is still in draft
+          },
+          actingAsUserId,
+          statusChanged: true,
+        });
+      } else if (!feedbackDraft) {
+        smartUpdate = await buildSmartRoundUpdate({
+          existingRound,
+          body: {
+            ...smartBody,
+            status: "FeedbackSubmitted", // Override status to FeedbackPending if feedback is still in draft
+          },
+          actingAsUserId,
+          statusChanged: true,
+        });
+      }
+      // else if (existingRound?.)
+      else {
+        smartUpdate = await buildSmartRoundUpdate({
+          existingRound,
+          body: smartBody,
+          actingAsUserId,
+          statusChanged: true,
+        });
+      }
     }
     // Build body for buildSmartRoundUpdate — this is key!
     // const smartBody = {
@@ -1571,17 +1660,9 @@ const updateInterviewRoundStatus = async (req, res) => {
     let extraUpdate = { $set: {} };
     let shouldSendCancellationEmail = false;
 
-    if (
-      action === "Completed" &&
-      existingRound.interviewerType === "External"
-    ) {
-      // Check for submitted feedback
-      const feedback = await FeedbackModel.findOne({
-        interviewRoundId: existingRound._id,
-      });
-
+    if (action === "Completed") {
       // Auto-settlement for completed interviews ONLY if feedback is submitted
-      if (feedback && feedback.status === "submitted") {
+      if (existingRound.interviewerType === "External") {
         try {
           await processAutoSettlement({
             roundId: existingRound._id.toString(),
@@ -1599,12 +1680,13 @@ const updateInterviewRoundStatus = async (req, res) => {
           );
           // Continue with status update even if settlement fails
         }
-      } else {
-        console.log(
-          "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
-          existingRound._id,
-        );
       }
+      // //  else {
+      // //   console.log(
+      // //     "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
+      // //     existingRound._id,
+      // //   );
+      // }
     }
 
     if (action === "Cancelled") {
@@ -1614,7 +1696,7 @@ const updateInterviewRoundStatus = async (req, res) => {
           await processAutoSettlement({
             roundId: existingRound._id.toString(),
             action: "Cancelled",
-            reasonCode: cancellationReason || reasonCode || null,
+            reasonCode: cancellationReason || reasonCode || comment || null,
           });
 
           console.log(
@@ -1791,15 +1873,12 @@ async function buildSmartRoundUpdate({
   changes,
   isCreate = false,
   statusChanged = false,
+  OutsourceAccepted = false,
 }) {
   const update = { $set: {}, $push: { history: [] } };
 
   const isInternal = body.interviewerType === "Internal";
   const isExternal = !isInternal;
-
-  console.log("body", body);
-  console.log("changes", changes);
-  console.log("isExternal", isExternal);
 
   const now = new Date();
 
@@ -1810,6 +1889,7 @@ async function buildSmartRoundUpdate({
     changes,
     isCreate,
     statusChanged,
+    OutsourceAccepted,
   });
 
   /* ---------------- Helpers ---------------- */
@@ -1839,6 +1919,25 @@ async function buildSmartRoundUpdate({
       createdAt: now,
     });
   };
+
+  if (OutsourceAccepted) {
+    update.$set.previousAction = existingRound.currentAction || null;
+    update.$set.currentAction = body.status;
+    update.$set.status = body.status;
+    update.$set.currentActionReason = "accepted_by_outsource" || null;
+    // body.currentActionReason ||
+    // body.rescheduleReason ||
+    // body.cancellationReason ||
+    // null;
+    addHistory({
+      action: body.status, //existingRound.status,
+      scheduledAt: existingRound.dateTime,
+      reasonCode: "accepted_by_outsource",
+      comment: null,
+    });
+
+    return update;
+  }
 
   /* ================= CREATE ================= */
 
@@ -1984,8 +2083,6 @@ async function buildSmartRoundUpdate({
       comment: body.comments,
     });
   }
-
-  console.log("update update update", update);
 
   /* ============= CLEANUP ============= */
 

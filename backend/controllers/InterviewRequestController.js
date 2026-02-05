@@ -671,14 +671,19 @@ exports.acceptInterviewRequest = async (req, res) => {
         dateTimeChanged: false,
       };
 
+      console.log("changes buildSmartRoundUpdate", changes);
+
       // 🔧 CHANGED: correct helper usage
-      const updatePayload = buildSmartRoundUpdate({
+      const updatePayload = await buildSmartRoundUpdate({
         existingRound: round,
         body: updatedBody,
         actingAsUserId: req.user?._id || null,
         changes,
+        OutsourceAccepted: true,
       });
       await scheduleOrRescheduleNoShow(round); //calling agenda to trigger round
+
+      console.log("updatePayload updatePayload", updatePayload);
 
       // ✅ IMPORTANT: atomic update (NO manual history push)
       if (updatePayload) {

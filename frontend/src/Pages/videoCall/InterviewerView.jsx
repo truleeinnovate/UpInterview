@@ -90,273 +90,113 @@ const InterviewerView = ({
   //   Array.isArray(initialQuestions) ? [...initialQuestions] : []
   // );
 
-  const [interviewerSectionData, setInterviewerSectionData] = useState(() => {
-    if (!feedbackData?.questionFeedback) return [];
-
-    return feedbackData.questionFeedback.map((q) => {
-      // Map backend answer types to UI values
-      const mapAnswerType = (type) => {
-        if (type === "correct") return "Fully Answered";
-        if (type === "partial") return "Partially Answered";
-        if (type === "incorrect" || type === "not answered")
-          return "Not Answered";
-        return "Not Answered";
-      };
-
-      return {
-        ...q,
-        questionId: q.questionId || q._id,
-        isAnswered: mapAnswerType(q.candidateAnswer?.answerType),
-        isLiked: q.interviewerFeedback?.liked || "",
-        whyDislike: q.interviewerFeedback?.dislikeReason || "",
-        note: q.interviewerFeedback?.note || "",
-        notesBool: !!q.interviewerFeedback?.note,
-        // Preserve original data for reference
-        originalData: q,
-      };
-    });
-  });
-
-  // const [interviewerSectionData, setInterviewerSectionData] = useState( [...selectedCandidate.interviewData?.questionFeedback]);
-  const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
-  const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
-
   // Merge answered and newly added
-  const mergedQuestions = useMemo(() => {
-    // Get existing interviewer questions from API
-    const existingInterviewerQuestions =
-      selectedCandidate?.interviewData?.questionFeedback || [];
+  // const mergedQuestions = useMemo(() => {
+  //   // Get existing interviewer questions from API
+  //   const existingInterviewerQuestions =
+  //     selectedCandidate?.interviewData?.questionFeedback || [];
 
-    // Get newly added questions from interviewerSectionData
-    const newlyAddedQuestions = (interviewerSectionData || []).filter(
-      (newQ) => {
-        const newId = newQ.questionId || newQ._id || newQ.id;
-        return !existingInterviewerQuestions.some((existingQ) => {
-          const existingId =
-            existingQ.questionId || existingQ._id || existingQ.id;
-          return existingId === newId;
-        });
-      },
-    );
+  //   // Get newly added questions from interviewerSectionData
+  //   const newlyAddedQuestions = (interviewerSectionData || []).filter(
+  //     (newQ) => {
+  //       const newId = newQ.questionId || newQ._id || newQ.id;
+  //       return !existingInterviewerQuestions.some((existingQ) => {
+  //         const existingId =
+  //           existingQ.questionId || existingQ._id || existingQ.id;
+  //         return existingId === newId;
+  //       });
+  //     },
+  //   );
 
-    // Combine both for submission purposes
-    return [...existingInterviewerQuestions, ...newlyAddedQuestions];
-  }, [selectedCandidate, interviewerSectionData]);
+  //   // Combine both for submission purposes
+  //   return [...existingInterviewerQuestions, ...newlyAddedQuestions];
+  // }, [selectedCandidate, interviewerSectionData]);
 
   // // Preselected Questions Responses State Management
   // const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] = useState([]);
 
-  // Properly initialize preselected questions with full question data and responses
-  const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] =
-    useState(() => {
-      const preselectedQuestions =
-        feedbackData?.interviewQuestions?.preselectedQuestions || [];
-
-      return preselectedQuestions.map((question) => {
-        // Find existing feedback for this question
-        const existingFeedback = feedbackData?.questionFeedback?.find(
-          (f) => f.questionId === (question.questionId || question._id),
-        );
-
-        return {
-          // Include the full question data
-          ...question,
-          // Response data with proper defaults
-          isAnswered: existingFeedback?.candidateAnswer?.answerType
-            ? existingFeedback.candidateAnswer.answerType === "correct"
-              ? "Fully Answered"
-              : existingFeedback.candidateAnswer.answerType === "partial"
-                ? "Partially Answered"
-                : "Not Answered"
-            : "Not Answered",
-          isLiked: existingFeedback?.interviewerFeedback?.liked || "",
-          whyDislike:
-            existingFeedback?.interviewerFeedback?.dislikeReason || "",
-          note: existingFeedback?.interviewerFeedback?.note || "",
-          notesBool: !!existingFeedback?.interviewerFeedback?.note,
-          answer: existingFeedback?.candidateAnswer?.submittedAnswer || "",
-        };
-      });
-    });
-
   // Add the auto-save hook (around line 200, after state declarations):
 
-  const {
-    saveNow: autoSaveQuestions,
-    isSaving: isAutoSaving,
-    triggerAutoSave,
-  } = useAutoSaveFeedback({
-    isAddMode: true,
-    interviewRoundId: decodedData?.interviewRoundId,
-    tenantId: currentTenantId,
-    interviewerId: decodedData?.interviewerId,
-    interviewerSectionData,
-    preselectedQuestionsResponses,
-    skillRatings: [], // Will be filled in feedback form
-    overallRating: 0,
-    communicationRating: 0,
-    recommendation: "Maybe",
-    comments: "",
-    candidateId: candidateData?._id,
-    positionId: selectedCandidate?.position?._id,
-    ownerId: currentOwnerId,
-    feedbackId: autoSaveFeedbackId,
-  });
-
-  // Question Bank Handler Functions
-  const handleAddQuestionToRound = (question) => {
-    if (question && question.questionId && question.snapshot) {
-      if (typeof setInterviewerSectionData === "function") {
-        setInterviewerSectionData((prevList) => {
-          if (prevList.some((q) => q.questionId === question.questionId)) {
-            return prevList;
-          }
-          const newList = [
-            ...prevList,
-            {
-              ...question,
-              addedBy: "interviewer",
-              mandatory: "false", // Default to false when adding a new question
-              snapshot: {
-                ...question.snapshot,
-                addedBy: "interviewer",
-                mandatory: "false",
-              },
-            },
-          ];
-
-          // Clear questions error if questions are added
-          // if (newList.length > 0) {
-          //   clearError('questions');
-          // }
-
-          // Trigger auto-save after adding question
-          setTimeout(() => autoSaveQuestions(), 500);
-
-          return newList;
-        });
-      } else {
-        console.warn(
-          "setInterviewerSectionData is not a function, cannot add question to round",
-        );
-      }
-    }
-  };
-
-  const handleRemoveQuestion = (questionId) => {
-    // Remove question from interviewer section data
-    setInterviewerSectionData((prev) =>
-      prev.filter((q) => (q.questionId || q.id) !== questionId),
-    );
-
-    // Add to removed question IDs
-    setRemovedQuestionIds((prev) => [...prev, questionId]);
-
-    // Trigger auto-save after removing question
-    setTimeout(() => autoSaveQuestions(), 500);
-  };
-
-  const handleToggleMandatory = (questionId) => {
-    // Toggle mandatory status for the question
-    setInterviewerSectionData((prev) => {
-      const updated = prev.map((q) => {
-        if ((q.questionId || q.id) === questionId) {
-          const newMandatory = q.mandatory === "true" ? "false" : "true";
-
-          return {
-            ...q,
-            mandatory: newMandatory,
-            snapshot: q.snapshot
-              ? {
-                  ...q.snapshot,
-                  mandatory: newMandatory,
-                }
-              : undefined,
-          };
-        }
-        return q;
-      });
-
-      // Trigger auto-save after toggling mandatory
-      setTimeout(() => autoSaveQuestions(), 500);
-      return updated;
-    });
-  };
-
-  // Preselected Questions Responses Handler Functions
-  const handlePreselectedQuestionResponse = (questionId, responseData) => {
-    setPreselectedQuestionsResponses((prev) => {
-      const existingIndex = prev.findIndex((q) => q.questionId === questionId);
-      if (existingIndex !== -1) {
-        // Update existing response
-        const updated = [...prev];
-        updated[existingIndex] = { ...updated[existingIndex], ...responseData };
-        return updated;
-      } else {
-        // Add new response
-        return [...prev, { questionId, ...responseData }];
-      }
-    });
-  };
+  // const {
+  //   saveNow: autoSaveQuestions,
+  //   isSaving: isAutoSaving,
+  //   triggerAutoSave,
+  // } = useAutoSaveFeedback({
+  //   isAddMode: true,
+  //   interviewRoundId: decodedData?.interviewRoundId,
+  //   tenantId: currentTenantId,
+  //   interviewerId: decodedData?.interviewerId,
+  //   interviewerSectionData,
+  //   preselectedQuestionsResponses,
+  //   skillRatings: [], // Will be filled in feedback form
+  //   overallRating: 0,
+  //   communicationRating: 0,
+  //   recommendation: "Maybe",
+  //   comments: "",
+  //   candidateId: candidateData?._id,
+  //   positionId: selectedCandidate?.position?._id,
+  //   ownerId: currentOwnerId,
+  //   feedbackId: autoSaveFeedbackId,
+  // });
 
   // Enhanced handler to update both response data and question data
-  const enhancedHandlePreselectedQuestionResponse = useCallback(
-    (questionId, updates) => {
-      setPreselectedQuestionsResponses((prev) => {
-        const existingIndex = prev.findIndex(
-          (response) =>
-            response.questionId === questionId ||
-            response.id === questionId ||
-            response._id === questionId,
-        );
+  // const enhancedHandlePreselectedQuestionResponse = useCallback(
+  //   (questionId, updates) => {
+  //     setPreselectedQuestionsResponses((prev) => {
+  //       const existingIndex = prev.findIndex(
+  //         (response) =>
+  //           response.questionId === questionId ||
+  //           response.id === questionId ||
+  //           response._id === questionId,
+  //       );
 
-        let newResponses;
-        if (existingIndex >= 0) {
-          // Update existing response while preserving question data
-          newResponses = prev.map((response, index) =>
-            index === existingIndex
-              ? {
-                  ...response, // Preserve existing question data
-                  ...updates, // Update response fields
-                }
-              : response,
-          );
-        } else {
-          // This shouldn't happen often, but handle it by finding the question data
-          const preselectedQuestions =
-            feedbackData?.interviewQuestions?.preselectedQuestions || [];
-          const questionData = preselectedQuestions.find(
-            (q) => q.questionId === questionId || q._id === questionId,
-          );
+  //       let newResponses;
+  //       if (existingIndex >= 0) {
+  //         // Update existing response while preserving question data
+  //         newResponses = prev.map((response, index) =>
+  //           index === existingIndex
+  //             ? {
+  //                 ...response, // Preserve existing question data
+  //                 ...updates, // Update response fields
+  //               }
+  //             : response,
+  //         );
+  //       } else {
+  //         // This shouldn't happen often, but handle it by finding the question data
+  //         const preselectedQuestions =
+  //           feedbackData?.interviewQuestions?.preselectedQuestions || [];
+  //         const questionData = preselectedQuestions.find(
+  //           (q) => q.questionId === questionId || q._id === questionId,
+  //         );
 
-          newResponses = [
-            ...prev,
-            {
-              ...questionData, // Include full question data
-              questionId: questionId,
-              ...updates,
-            },
-          ];
-        }
+  //         newResponses = [
+  //           ...prev,
+  //           {
+  //             ...questionData, // Include full question data
+  //             questionId: questionId,
+  //             ...updates,
+  //           },
+  //         ];
+  //       }
 
-        // Trigger auto-save after updating response
-        setTimeout(() => autoSaveQuestions(), 500);
+  //       // Trigger auto-save after updating response
+  //       setTimeout(() => autoSaveQuestions(), 500);
 
-        return newResponses;
-      });
+  //       return newResponses;
+  //     });
 
-      // Also call the original handler if it exists
-      if (handlePreselectedQuestionResponse) {
-        handlePreselectedQuestionResponse(questionId, updates);
-      }
-    },
-    [
-      setPreselectedQuestionsResponses,
-      handlePreselectedQuestionResponse,
-      feedbackData,
-      autoSaveQuestions,
-    ],
-  );
+  //     // Also call the original handler if it exists
+  //     if (handlePreselectedQuestionResponse) {
+  //       handlePreselectedQuestionResponse(questionId, updates);
+  //     }
+  //   },
+  //   [
+  //     setPreselectedQuestionsResponses,
+  //     handlePreselectedQuestionResponse,
+  //     feedbackData,
+  //     autoSaveQuestions,
+  //   ],
+  // );
 
   const tabs = [
     { id: "candidate", label: "Candidate Details", icon: User },
@@ -407,7 +247,7 @@ const InterviewerView = ({
                       onClick={() => setActiveTab(tab.id)}
                       className={`outline-none w-[230px] flex items-center px-6 py-3 text-sm font-medium transition-colors
                       ${
-                        decodedData?.schedule && tab.id === "questions"
+                        urlData?.schedule && tab.id === "questions"
                           ? "hidden"
                           : ""
                       }
@@ -464,25 +304,26 @@ const InterviewerView = ({
                 <InterviewsMiniTabComponent
                   interviewData={selectedCandidate}
                   isAddMode={true}
-                  interviewerSectionData={interviewerSectionData}
-                  setInterviewerSectionData={setInterviewerSectionData}
-                  removedQuestionIds={removedQuestionIds}
-                  setRemovedQuestionIds={setRemovedQuestionIds}
-                  isQuestionBankOpen={isQuestionBankOpen}
-                  setIsQuestionBankOpen={setIsQuestionBankOpen}
-                  handleAddQuestionToRound={handleAddQuestionToRound}
-                  handleRemoveQuestion={handleRemoveQuestion}
-                  handleToggleMandatory={handleToggleMandatory}
-                  preselectedQuestionsResponses={preselectedQuestionsResponses}
-                  setPreselectedQuestionsResponses={
-                    setPreselectedQuestionsResponses
-                  }
-                  handlePreselectedQuestionResponse={
-                    handlePreselectedQuestionResponse
-                  }
+                  interviewRoundId={decodedData?.interviewRoundId}
+                  // interviewerSectionData={interviewerSectionData}
+                  // setInterviewerSectionData={setInterviewerSectionData}
+                  // removedQuestionIds={removedQuestionIds}
+                  // setRemovedQuestionIds={setRemovedQuestionIds}
+                  // isQuestionBankOpen={isQuestionBankOpen}
+                  // setIsQuestionBankOpen={setIsQuestionBankOpen}
+                  // handleAddQuestionToRound={handleAddQuestionToRound}
+                  // handleRemoveQuestion={handleRemoveQuestion}
+                  // handleToggleMandatory={handleToggleMandatory}
+                  // preselectedQuestionsResponses={preselectedQuestionsResponses}
+                  // setPreselectedQuestionsResponses={
+                  //   setPreselectedQuestionsResponses
+                  // }
+                  // handlePreselectedQuestionResponse={
+                  //   handlePreselectedQuestionResponse
+                  // }
                   decodedData={decodedData}
-                  autoSaveQuestions={autoSaveQuestions}
-                  triggerAutoSave={triggerAutoSave}
+                  // autoSaveQuestions={autoSaveQuestions}
+                  // triggerAutoSave={triggerAutoSave}
                 />
               )}
               {activeTab === "interviewActions" && (
@@ -494,22 +335,22 @@ const InterviewerView = ({
               )}
               {activeTab === "feedback" && (
                 <FeedbackForm
-                  interviewerSectionData={interviewerSectionData}
-                  setInterviewerSectionData={setInterviewerSectionData}
+                  // interviewerSectionData={interviewerSectionData}
+                  // setInterviewerSectionData={setInterviewerSectionData}
                   interviewRoundId={decodedData?.interviewRoundId}
-                  candidateId={selectedCandidate?.candidate?._id}
-                  positionId={selectedCandidate?.position?._id}
-                  interviewerId={decodedData?.interviewerId}
+                  // candidateId={selectedCandidate?.candidate?._id}
+                  // positionId={selectedCandidate?.position?._id}
+                  // interviewerId={decodedData?.interviewerId}
                   // feedbackCandidate={selectedCandidate}
                   // tenantId={decodedData?.tenantId}
                   // isEditMode={false}
                   // feedbackId={null}
-                  preselectedQuestionsResponses={preselectedQuestionsResponses}
+                  // preselectedQuestionsResponses={preselectedQuestionsResponses}
                   decodedData={decodedData}
                   isAddMode={true}
-                  isScheduler={isScheduler}
+                  // isScheduler={isScheduler}
                   schedulerFeedbackData={schedulerFeedbackData}
-                  triggerAutoSave={triggerAutoSave}
+                  // triggerAutoSave={triggerAutoSave}
                 />
               )}
               {/* {activeTab === 'management' && <FeedbackManagement />} */}
@@ -518,14 +359,14 @@ const InterviewerView = ({
         </div>
       </div>
 
-      {isAutoSaving && (
+      {/* {isAutoSaving && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
           <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             <span className="text-sm">Auto-saving changes...</span>
           </div>
         </div>
-      )}
+      )} */}
     </div>
     // v1.0.0 ------------------------------------------------------------------------------>
   );

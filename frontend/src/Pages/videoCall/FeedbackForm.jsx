@@ -72,8 +72,8 @@ const fromBackendAnswerType = (backend) => {
 //---v1.0.0----->
 
 const FeedbackForm = ({
-  interviewerSectionData = [],
-  setInterviewerSectionData,
+  // interviewerSectionData = [],
+  // setInterviewerSectionData,
   interviewRoundId,
   candidateId,
   positionId,
@@ -82,11 +82,11 @@ const FeedbackForm = ({
   // tenantId,
   isEditMode,
   isViewMode,
-  preselectedQuestionsResponses = [],
+  // preselectedQuestionsResponses = [],
 
   decodedData,
   isAddMode,
-  isScheduler,
+  // isScheduler,
   schedulerFeedbackData,
 }) => {
   // console.log("feedbackCandidate", isEditMode, isViewMode, isAddMode);
@@ -113,7 +113,7 @@ const FeedbackForm = ({
   });
 
   const isMockInterview = urlData?.interviewType === "mockinterview";
-  console.log("isMockInterview", isMockInterview);
+  // console.log("isMockInterview", isMockInterview);
   // const { data, isLoading } = useInterviewDetails({
   //   roundId: urlData.interviewRoundId,
   // });
@@ -142,11 +142,171 @@ const FeedbackForm = ({
     ? mockinterview
     : interviewData?.candidateId || {};
 
+  const positionData = isMockInterview ? {} : interviewData?.positionId || {};
+
   const feedbackData = useMemo(() => {
     return locationFeedback || feedbackDatas || {};
   }, [locationFeedback, feedbackDatas]);
 
-  // console.log("feedbackData", feedbackDatas);
+  const [interviewerSectionData, setInterviewerSectionData] = useState(() => {
+    if (!feedbackData?.questionFeedback) return [];
+
+    return feedbackData.questionFeedback.map((q) => {
+      // Map backend answer types to UI values
+      const mapAnswerType = (type) => {
+        if (type === "correct") return "Fully Answered";
+        if (type === "partial") return "Partially Answered";
+        if (type === "incorrect" || type === "not answered")
+          return "Not Answered";
+        return "Not Answered";
+      };
+
+      return {
+        ...q,
+        questionId: q.questionId || q._id,
+        isAnswered: mapAnswerType(q.candidateAnswer?.answerType),
+        isLiked: q.interviewerFeedback?.liked || "",
+        whyDislike: q.interviewerFeedback?.dislikeReason || "",
+        note: q.interviewerFeedback?.note || "",
+        notesBool: !!q.interviewerFeedback?.note,
+        // Preserve original data for reference
+        originalData: q,
+      };
+    });
+  });
+
+  // const [interviewerSectionData, setInterviewerSectionData] = useState( [...selectedCandidate.interviewData?.questionFeedback]);
+  // const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
+  // const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
+
+  // Question Bank Handler Functions
+  // const handleAddQuestionToRound = (question) => {
+  //   if (question && question.questionId && question.snapshot) {
+  //     if (typeof setInterviewerSectionData === "function") {
+  //       setInterviewerSectionData((prevList) => {
+  //         if (prevList.some((q) => q.questionId === question.questionId)) {
+  //           return prevList;
+  //         }
+  //         const newList = [
+  //           ...prevList,
+  //           {
+  //             ...question,
+  //             addedBy: "interviewer",
+  //             mandatory: "false", // Default to false when adding a new question
+  //             snapshot: {
+  //               ...question.snapshot,
+  //               addedBy: "interviewer",
+  //               mandatory: "false",
+  //             },
+  //           },
+  //         ];
+
+  //         // Clear questions error if questions are added
+  //         // if (newList.length > 0) {
+  //         //   clearError('questions');
+  //         // }
+
+  //         // Trigger auto-save after adding question
+  //         setTimeout(() => autoSaveQuestions(), 500);
+
+  //         return newList;
+  //       });
+  //     } else {
+  //       console.warn(
+  //         "setInterviewerSectionData is not a function, cannot add question to round",
+  //       );
+  //     }
+  //   }
+  // };
+
+  // const handleRemoveQuestion = (questionId) => {
+  //   // Remove question from interviewer section data
+  //   setInterviewerSectionData((prev) =>
+  //     prev.filter((q) => (q.questionId || q.id) !== questionId),
+  //   );
+
+  //   // Add to removed question IDs
+  //   setRemovedQuestionIds((prev) => [...prev, questionId]);
+
+  //   // Trigger auto-save after removing question
+  //   setTimeout(() => autoSaveQuestions(), 500);
+  // };
+
+  // const handleToggleMandatory = (questionId) => {
+  //   // Toggle mandatory status for the question
+  //   setInterviewerSectionData((prev) => {
+  //     const updated = prev.map((q) => {
+  //       if ((q.questionId || q.id) === questionId) {
+  //         const newMandatory = q.mandatory === "true" ? "false" : "true";
+
+  //         return {
+  //           ...q,
+  //           mandatory: newMandatory,
+  //           snapshot: q.snapshot
+  //             ? {
+  //                 ...q.snapshot,
+  //                 mandatory: newMandatory,
+  //               }
+  //             : undefined,
+  //         };
+  //       }
+  //       return q;
+  //     });
+
+  //     // Trigger auto-save after toggling mandatory
+  //     setTimeout(() => autoSaveQuestions(), 500);
+  //     return updated;
+  //   });
+  // };
+
+  // Preselected Questions Responses Handler Functions
+  const handlePreselectedQuestionResponse = (questionId, responseData) => {
+    setPreselectedQuestionsResponses((prev) => {
+      const existingIndex = prev.findIndex((q) => q.questionId === questionId);
+      if (existingIndex !== -1) {
+        // Update existing response
+        const updated = [...prev];
+        updated[existingIndex] = { ...updated[existingIndex], ...responseData };
+        return updated;
+      } else {
+        // Add new response
+        return [...prev, { questionId, ...responseData }];
+      }
+    });
+  };
+
+  // Properly initialize preselected questions with full question data and responses
+  const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] =
+    useState(() => {
+      const preselectedQuestions =
+        feedbackData?.interviewQuestions?.preselectedQuestions || [];
+
+      return preselectedQuestions.map((question) => {
+        // Find existing feedback for this question
+        const existingFeedback = feedbackData?.questionFeedback?.find(
+          (f) => f.questionId === (question.questionId || question._id),
+        );
+
+        return {
+          // Include the full question data
+          ...question,
+          // Response data with proper defaults
+          isAnswered: existingFeedback?.candidateAnswer?.answerType
+            ? existingFeedback.candidateAnswer.answerType === "correct"
+              ? "Fully Answered"
+              : existingFeedback.candidateAnswer.answerType === "partial"
+                ? "Partially Answered"
+                : "Not Answered"
+            : "Not Answered",
+          isLiked: existingFeedback?.interviewerFeedback?.liked || "",
+          whyDislike:
+            existingFeedback?.interviewerFeedback?.dislikeReason || "",
+          note: existingFeedback?.interviewerFeedback?.note || "",
+          notesBool: !!existingFeedback?.interviewerFeedback?.note,
+          answer: existingFeedback?.candidateAnswer?.submittedAnswer || "",
+        };
+      });
+    });
 
   // const feedbackData = React.useMemo(() => locationFeedback || {}, [locationFeedback]);
   const feedbackId =
@@ -158,7 +318,7 @@ const FeedbackForm = ({
   const skillsData = feedbackData.skills || [];
 
   // console.log("feedbackId", feedbackId);
-
+  // console.log("feedbackData", feedbackData);
   // Fixed: Properly initialize overall impression data with fallback
   const overallImpressionTabData = feedbackData?.overallImpression || {};
 
@@ -561,12 +721,22 @@ const FeedbackForm = ({
 
   // Add the auto-save hook after all your useState declarations (around line 350):
 
-  const { saveNow, isSaving } = useAutoSaveFeedback({
+  const {
+    saveNow: autoSaveQuestions,
+    // saveNow,
+    // : autoSaveQuestions,
+    // isSaving: autoSaveQuestions,
+    // triggerAutoSave,
+  } = useAutoSaveFeedback({
     isAddMode,
     isEditMode,
-    interviewRoundId: interviewRoundId || decodedData?.interviewRoundId,
+    interviewRoundId:
+      interviewRoundId ||
+      urlData?.interviewRoundId ||
+      decodedData?.interviewRoundId,
     tenantId: currentTenantId,
-    interviewerId: interviewerId || decodedData?.interviewerId,
+    interviewerId:
+      interviewerId || decodedData?.interviewerId || urlData?.interviewerId,
     interviewerSectionData,
     preselectedQuestionsResponses,
     skillRatings,
@@ -575,7 +745,12 @@ const FeedbackForm = ({
     recommendation,
     comments,
     candidateId: candidateData?._id || undefined,
-    positionId: positionId || decodedData?.positionId || undefined,
+    positionId:
+      positionId ||
+      positionData?._id ||
+      decodedData?.positionId ||
+      urlData?.positionId ||
+      undefined,
     ownerId: currentOwnerId,
     feedbackId: autoSaveFeedbackId,
   });
@@ -584,8 +759,9 @@ const FeedbackForm = ({
   const triggerAutoSave = () => {
     if (isAddMode || isEditMode) {
       setAutoSaveFeedbackId((prev) => prev); // Trigger useEffect in the hook
-      // setTimeout(() => saveNow(), 500);
-      saveNow();
+      setTimeout(() => autoSaveQuestions(), 500);
+      // saveNow()
+      // autoSaveQuestions();
     }
   };
 
@@ -1141,14 +1317,27 @@ const FeedbackForm = ({
         type: "submit",
         tenantId: currentTenantId || "",
         ownerId: currentOwnerId || "",
-        interviewRoundId: interviewRoundId || "",
+        interviewRoundId:
+          interviewRoundId ||
+          urlData?.interviewRoundId ||
+          decodedData?.interviewRoundId ||
+          "",
         candidateId: candidateData?._id || "",
         feedbackCode:
           feedbackDatas?.interviewRound?.interviewCode ||
           "" + "-" + feedbackDatas?.interviewRound?.sequence ||
           "",
-        positionId: positionId || "",
-        interviewerId: interviewerId || "",
+        positionId:
+          positionId ||
+          positionData?._id ||
+          decodedData?.positionId ||
+          urlData?.positionId ||
+          "",
+        interviewerId:
+          interviewerId ||
+          decodedData?.interviewerId ||
+          urlData?.interviewerId ||
+          "",
         skills: skillRatings.map((skill) => ({
           skillName: skill.skill,
           rating: skill.rating,
@@ -1320,10 +1509,24 @@ const FeedbackForm = ({
         type: "draft",
         tenantId: currentTenantId || "",
         ownerId: currentOwnerId || "",
-        interviewRoundId: interviewRoundId || "",
+        interviewRoundId:
+          interviewRoundId ||
+          urlData?.interviewRoundId ||
+          decodedData?.interviewRoundId ||
+          "",
         candidateId: candidateData?._id || "",
-        positionId: positionId || "",
-        interviewerId: interviewerId || "",
+        positionId:
+          positionId ||
+          positionData?._id ||
+          decodedData?.positionId ||
+          urlData?.positionId ||
+          "",
+        interviewerId:
+          interviewerId ||
+          decodedData?.interviewerId ||
+          "" ||
+          urlData?.interviewerId ||
+          "",
         skills: skillRatings.map((skill) => ({
           skillName: skill.skill,
           rating: skill.rating,
@@ -1616,9 +1819,8 @@ const FeedbackForm = ({
               </label>
               {isViewMode ? (
                 <div></div>
-              ) : (
-                // {!isViewMode &&
-
+              ) : // {!isViewMode &&
+              urlData?.isSchedule ? null : (
                 <Button
                   type="button"
                   onClick={handleAddSkill}
@@ -2069,6 +2271,7 @@ const FeedbackForm = ({
                     { value: "No", label: "No" },
                   ].find((opt) => opt.value === recommendation) || null
                 }
+                disabled={isViewMode || urlData?.isSchedule}
                 onChange={(opt) => {
                   setRecommendation(opt?.value || "");
                   // to auto save comments change
@@ -2123,17 +2326,19 @@ const FeedbackForm = ({
               className="bg-white rounded-md w-[96%] max-h-[90vh] overflow-y-auto sm:px-2  px-4 py-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="py-3 px-4 flex items-center justify-between">
-                <h2 className="text-xl text-custom-blue font-semibold">
-                  Add Interview Question
-                </h2>
-                <button>
-                  <X
-                    className="text-2xl text-red-500"
-                    onClick={() => setIsQuestionBankOpen(false)}
-                  />
-                </button>
-              </div>
+              {urlData?.isSchedule ? null : (
+                <div className="py-3 px-4 flex items-center justify-between">
+                  <h2 className="text-xl text-custom-blue font-semibold">
+                    Add Interview Question
+                  </h2>
+                  <button>
+                    <X
+                      className="text-2xl text-red-500"
+                      onClick={() => setIsQuestionBankOpen(false)}
+                    />
+                  </button>
+                </div>
+              )}
               {/* QuestionBank Content */}
               <div className="flex-1 overflow-hidden">
                 <QuestionBank
@@ -2152,7 +2357,7 @@ const FeedbackForm = ({
         )}
       </div>
 
-      {isAddMode && isSaving && (
+      {isAddMode && autoSaveQuestions && (
         <div className="fixed bottom-4 right-4 z-50">
           <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

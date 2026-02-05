@@ -404,18 +404,85 @@ const updateFeedback = async (req, res) => {
 
     console.log("Update Data Received:", updateData);
 
+    // CHANGE 1: Get existing feedback first for comparison
+    const existingFeedback = await FeedbackModel.findById(id);
+    if (!existingFeedback) {
+      return res.status(404).json({
+        success: false,
+        message: "Feedback not found",
+      });
+    }
+
+    // CHANGE 2: Check if already submitted (can't edit)
+    if (existingFeedback.status === "submitted") {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot update submitted feedback",
+      });
+    }
+
     // Preserve original questionFeedback from request for interviewer question processing
     const originalQuestionFeedback = Array.isArray(req.body?.questionFeedback)
       ? req.body.questionFeedback
       : [];
 
-    // Normalize questionFeedback.questionId on updates (stringify IDs)
+    // Preserve original questionFeedback from request for interviewer question processing
+    // const originalQuestionFeedback = Array.isArray(req.body?.questionFeedback)
+    //   ? req.body.questionFeedback
+    //   : [];
+
+    // // Normalize questionFeedback.questionId on updates (stringify IDs)
+    // if (
+    //   updateData.questionFeedback
+    //   //  &&
+    //   // Array.isArray(updateData.questionFeedback)
+    // ) {
+    //   updateData.questionFeedback = updateData.questionFeedback.map(
+    //     (feedback) => {
+    //       const raw = feedback?.questionId;
+    //       let normalizedId = "";
+    //       if (typeof raw === "string") normalizedId = raw;
+    //       else if (raw && typeof raw === "object")
+    //         normalizedId = raw.questionId || raw._id || raw.id || "";
+    //       return {
+    //         ...feedback,
+    //         questionId: normalizedId,
+    //       };
+    //     },
+    //   );
+    // }
+
+    // Find and update the feedback
+    // let updatedFeedback = await FeedbackModel.findByIdAndUpdate(
+    //   id,
+    //   updateData,
+    //   {
+    //     new: true, // Return the updated document
+    //     runValidators: true, // Run schema validators
+    //   },
+    // )
+    //   .populate("candidateId", "FirstName LastName Email Phone")
+    //   .populate("interviewerId", "FirstName LastName Email Phone")
+    //   .populate("positionId", "title companyname")
+    //   .lean();
+
+    // CHANGE 3: Normalize AND check for changes
+    let normalizedQuestionFeedback = null;
+    let hasChanges = false;
+    const updateObject = {};
+
+    // Helper for deep comparison
+    const isDeepEqual = (obj1, obj2) => {
+      if (obj1 === obj2) return true;
+      if (obj1 == null || obj2 == null) return false;
+      return JSON.stringify(obj1) === JSON.stringify(obj2);
+    };
+
     if (
-      updateData.questionFeedback
-      //  &&
-      // Array.isArray(updateData.questionFeedback)
+      updateData.questionFeedback &&
+      Array.isArray(updateData.questionFeedback)
     ) {
-      updateData.questionFeedback = updateData.questionFeedback.map(
+      normalizedQuestionFeedback = updateData.questionFeedback.map(
         (feedback) => {
           const raw = feedback?.questionId;
           let normalizedId = "";
@@ -428,12 +495,86 @@ const updateFeedback = async (req, res) => {
           };
         },
       );
+
+      // CHANGE 4: Check if questionFeedback actually changed
+      if (
+        !isDeepEqual(
+          existingFeedback.questionFeedback,
+          normalizedQuestionFeedback,
+        )
+      ) {
+        updateObject.questionFeedback = normalizedQuestionFeedback;
+        hasChanges = true;
+        console.log("Question feedback changed");
+      }
     }
 
-    // Find and update the feedback
+    // CHANGE 5: Check other fields for changes
+    if (
+      updateData.skills &&
+      !isDeepEqual(existingFeedback.skills, updateData.skills)
+    ) {
+      updateObject.skills = updateData.skills;
+      hasChanges = true;
+    }
+
+    if (
+      updateData.generalComments !== undefined &&
+      updateData.generalComments !== existingFeedback.generalComments
+    ) {
+      updateObject.generalComments = updateData.generalComments;
+      hasChanges = true;
+    }
+
+    if (
+      updateData.overallImpression &&
+      !isDeepEqual(
+        existingFeedback.overallImpression,
+        updateData.overallImpression,
+      )
+    ) {
+      updateObject.overallImpression = updateData.overallImpression;
+      hasChanges = true;
+    }
+
+    if (updateData.status && updateData.status !== existingFeedback.status) {
+      updateObject.status = updateData.status;
+      hasChanges = true;
+    }
+
+    // CHANGE 6: Handle type field (for draft/submit)
+    if (
+      updateData.type === "submit" &&
+      existingFeedback.status !== "submitted"
+    ) {
+      updateObject.status = "submitted";
+      hasChanges = true;
+    } else if (updateData.type === "draft") {
+      updateObject.status = "draft";
+      hasChanges = true;
+    }
+
+    // CHANGE 7: If no changes, return early
+    if (!hasChanges) {
+      return res.status(200).json({
+        success: true,
+        message: "No changes detected - feedback already up to date",
+        data: existingFeedback,
+      });
+    }
+
+    // CHANGE 8: Add updated timestamp
+    updateObject.updatedAt = Date.now();
+
+    // CHANGE 9: Update normalized data for rest of function
+    if (normalizedQuestionFeedback) {
+      updateData.questionFeedback = normalizedQuestionFeedback;
+    }
+
+    // CHANGE 10: Update ONLY changed fields
     let updatedFeedback = await FeedbackModel.findByIdAndUpdate(
       id,
-      updateData,
+      { $set: updateObject }, // Only update changed fields
       {
         new: true, // Return the updated document
         runValidators: true, // Run schema validators
@@ -444,12 +585,12 @@ const updateFeedback = async (req, res) => {
       .populate("positionId", "title companyname")
       .lean();
 
-    if (!updatedFeedback) {
-      return res.status(404).json({
-        success: false,
-        message: "Feedback not found",
-      });
-    }
+    // if (!updatedFeedback) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "Feedback not found",
+    //   });
+    // }
 
     // Fetch Resume data for candidate (skills, experience, etc. moved from Candidate)
     if (updatedFeedback.candidateId?._id) {
@@ -882,6 +1023,8 @@ const getFeedbackByRoundId = async (req, res) => {
     let preselectedQuestions = interviewQuestionsList
       .filter((q) => q.addedBy !== "interviewer" || !q.addedBy)
       .map((q) => q.toObject());
+
+    // console.log("preselectedQuestions", preselectedQuestions);
 
     let interviewerAddedQuestions = interviewQuestionsList
       .filter((q) => q.addedBy === "interviewer")

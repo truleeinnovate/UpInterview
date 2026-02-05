@@ -33,6 +33,8 @@ const SchedulerSectionComponent = ({
   const location = useLocation();
   const feedbackData = location.state?.feedback || {};
 
+  // console.log("SchedulerSectionComponent interviewdata", interviewdata);
+
   // Get preselected questions from the new API structure
   const preselectedQuestionsFromAPI =
     interviewdata?.interviewQuestions?.preselectedQuestions ||
@@ -53,6 +55,12 @@ const SchedulerSectionComponent = ({
   const schedulerQuestions =
     preselectedQuestionsFromAPI.length > 0
       ? preselectedQuestionsFromAPI.filter((question) => {
+          // console.log(
+          //   "Filtering question",
+          //   question.questionId,
+          //   "addedBy:",
+          //   question.addedBy,
+          // );
           // Exclude questions added by interviewer
           return question.addedBy !== "interviewer";
         })
@@ -71,6 +79,8 @@ const SchedulerSectionComponent = ({
             return true;
           })
         : [];
+
+  console.log("schedulerQuestions after filtering:", schedulerQuestions);
 
   const questionsfeedback =
     feedbackData.questionFeedback || interviewdata?.questionFeedback || [];
@@ -95,6 +105,7 @@ const SchedulerSectionComponent = ({
       return "Not Answered";
     return "Not Answered";
   };
+
   const [schedulerQuestionsData, setSchedulerQuestionsData] = useState(() => {
     return schedulerQuestions.map((q) => {
       // Find feedback for this question
@@ -105,6 +116,14 @@ const SchedulerSectionComponent = ({
       const preselectedResponse = preselectedQuestionsResponses?.find(
         (r) => r.questionId === q.questionId,
       );
+
+      // Find preselected response for this question
+      // const preselectedResponse = preselectedQuestionsResponses;
+      // ?.find(
+      //   (r) => r.questionId === (q.questionId || q._id),
+      // );
+
+      console.log("preselectedResponse question", preselectedResponse);
 
       if (feedback) {
         const backendAnswerType =
