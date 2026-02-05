@@ -513,7 +513,7 @@ function OutsourcedInterviewerModal({
   //   console.log("contacts===", contacts);
   const contacts = matchedContact;
   //<----v1.0.1-----
-  // console.log("walletBalance===", walletBalance);
+  // console.log("interviewers===", interviewers);
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
