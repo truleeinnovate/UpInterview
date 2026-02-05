@@ -36,6 +36,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
             capitalizeFirstLetter(contact?.lastName)
           : "Unknown",
         role: contact?.currentRole || "N/A",
+        roleLabel: contact?.roleLabel || "N/A",
         image: contact?.imageData?.path || "N/A",
         department: contact?.industry || "N/A",
         company: contact?.industry || "N/A",
@@ -52,6 +53,8 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
 
   // Get first 3 interviewers only
   const displayInterviewers = formattedInterviewers?.slice(0, 3);
+
+  console.log("Formatted Interviewers: ", formattedInterviewers);
 
   // Auto-rotate slides
   useEffect(() => {
@@ -143,7 +146,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
                         {interviewer?.name}
                       </h3>
                       <p className="text-xs text-gray-600">
-                        {interviewer?.role}
+                        {interviewer?.roleLabel}
                       </p>
                     </div>
                     <div className="flex items-center space-x-1">
