@@ -140,9 +140,12 @@ const VerticalRoundsView = ({
   }
 
   const handleJoinMeeting = (round) => {
-    const joinUrl = createJoinMeetingUrl(round, interviewData);
-    if (!joinUrl) return;
-    window.open(joinUrl, "_blank");
+    // in your button click handler
+    const url = createJoinMeetingUrl(round, interviewData);
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      // or just: window.open(url, '_blank');
+    }
   };
 
   return (
@@ -184,7 +187,7 @@ const VerticalRoundsView = ({
                         : round?.status === "InProgress"
                           ? "In Progress"
                           : // : round?.status,
-                            capitalizeFirstLetter(round?.status)}
+                          capitalizeFirstLetter(round?.status)}
                     </span>
                   </div>
                   <div className="flex items-center mt-1 text-sm text-gray-600">
@@ -202,16 +205,16 @@ const VerticalRoundsView = ({
                           {(round?.status === "Scheduled" ||
                             round?.status === "Rescheduled" ||
                             round?.status === "InProgress") && (
-                            <span
-                              onClick={(e) => {
-                                e.stopPropagation(); // ⛔ stop toggle
-                                handleJoinMeeting(round); // ✅ join only
-                              }}
-                              className="cursor-pointer text-custom-blue hover:underline font-medium"
-                            >
-                              Join Meeting
-                            </span>
-                          )}
+                              <span
+                                onClick={(e) => {
+                                  e.stopPropagation(); // ⛔ stop toggle
+                                  handleJoinMeeting(round); // ✅ join only
+                                }}
+                                className="cursor-pointer text-custom-blue hover:underline font-medium"
+                              >
+                                Join Meeting
+                              </span>
+                            )}
                         </div>
                       )}
                   </div>
