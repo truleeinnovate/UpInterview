@@ -66,6 +66,60 @@ const combineQueries = (permissionQuery, searchConditions) => {
 };
 
 /**
+ * Helper function that applies fallback intersection strategy for CosmosDB compatibility
+ * If the combined query returns 0 results, falls back to:
+ * 1. Search by text conditions only (ignoring permissions)
+ * 2. Filter those results by permission query using _id
+ * @param {Mongoose.Model} Model - The Mongoose model to search
+ * @param {Object} permissionQuery - Permission-based query conditions
+ * @param {Array} searchConditions - Array of search conditions for $or
+ * @param {number} limit - Maximum results to return
+ * @param {Object} options - Optional: select, populate fields
+ * @returns {Array} Search results
+ */
+const searchWithFallback = async (Model, permissionQuery, searchConditions, limit = 10, options = {}) => {
+    const { select = '', populate = null } = options;
+
+    const query = combineQueries(permissionQuery, searchConditions);
+
+    let queryBuilder = Model.find(query).limit(limit);
+    if (select) queryBuilder = queryBuilder.select(select);
+    if (populate) queryBuilder = queryBuilder.populate(populate);
+
+    let results = await queryBuilder.lean().exec();
+
+    // Fallback strategy for CosmosDB compatibility
+    if (results.length === 0 && searchConditions && searchConditions.length > 0) {
+        // 1. Find candidates matching search conditions only (ignoring permissions)
+        const searchOnlyQuery = { $or: searchConditions };
+        const candidateDocs = await Model.find(searchOnlyQuery)
+            .select('_id')
+            .limit(limit * 5)
+            .lean().exec();
+
+        if (candidateDocs.length > 0) {
+            const candidateIds = candidateDocs.map(d => d._id);
+
+            // 2. Filter these candidates using the permission query
+            const fallbackQuery = {
+                $and: [
+                    permissionQuery,
+                    { _id: { $in: candidateIds } }
+                ]
+            };
+
+            let fallbackQueryBuilder = Model.find(fallbackQuery).limit(limit);
+            if (select) fallbackQueryBuilder = fallbackQueryBuilder.select(select);
+            if (populate) fallbackQueryBuilder = fallbackQueryBuilder.populate(populate);
+
+            results = await fallbackQueryBuilder.lean().exec();
+        }
+    }
+
+    return results;
+};
+
+/**
  * Search candidates
  */
 const searchCandidates = async (regex, limit = 10, permissionQuery = {}) => {
@@ -74,7 +128,7 @@ const searchCandidates = async (regex, limit = 10, permissionQuery = {}) => {
         const matchingResumes = await Resume.find({
             CurrentRole: regex,
             isActive: true
-        }).select('candidateId').lean();
+        }).select('candidateId').lean().exec();
 
         const resumeCandidateIds = matchingResumes.map(r => r.candidateId);
 
@@ -87,58 +141,38 @@ const searchCandidates = async (regex, limit = 10, permissionQuery = {}) => {
             { _id: { $in: resumeCandidateIds } }
         ]);
 
-        const pipeline = [
-            { $match: query },
-            { $limit: limit },
-            {
-                $lookup: {
-                    from: "resume",
-                    let: { candidateId: "$_id" },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ["$candidateId", "$$candidateId"] },
-                                        { $eq: ["$isActive", true] }
-                                    ]
-                                }
-                            }
-                        }
-                    ],
-                    as: "activeResume"
-                }
-            },
-            {
-                $unwind: {
-                    path: "$activeResume",
-                    preserveNullAndEmptyArrays: true
-                }
-            },
-            {
-                $project: {
-                    FirstName: 1,
-                    LastName: 1,
-                    Email: 1,
-                    Phone: 1,
-                    CountryCode: 1,
-                    createdAt: 1,
-                    CurrentExperience: { $ifNull: ["$activeResume.CurrentExperience", null] },
-                    CurrentRole: { $ifNull: ["$activeResume.CurrentRole", null] },
-                    skills: { $ifNull: ["$activeResume.skills", []] },
-                    ImageData: 1
-                }
-            }
-        ];
+        // Use simple find instead of aggregation with $lookup (CosmosDB compatible)
+        const candidates = await Candidate.find(query)
+            .select('FirstName LastName Email Phone CountryCode createdAt ImageData')
+            .limit(limit)
+            .lean().exec();
 
-        const results = await Candidate.aggregate(pipeline);
+        // Fetch active resumes for these candidates in a separate query
+        const candidateIds = candidates.map(c => c._id);
+        const activeResumes = await Resume.find({
+            candidateId: { $in: candidateIds },
+            isActive: true
+        }).select('candidateId CurrentExperience CurrentRole skills').lean().exec();
 
-        return results.map(item => ({
-            ...item,
-            _entityType: 'candidates',
-            _displayName: `${item.FirstName || ''} ${item.LastName || ''}`.trim(),
-            _displaySubtitle: item.Email || ''
-        }));
+        // Create a map of candidateId -> resume
+        const resumeMap = {};
+        activeResumes.forEach(resume => {
+            resumeMap[resume.candidateId?.toString()] = resume;
+        });
+
+        // Merge resume data with candidates
+        return candidates.map(item => {
+            const resume = resumeMap[item._id?.toString()] || {};
+            return {
+                ...item,
+                CurrentExperience: resume.CurrentExperience || null,
+                CurrentRole: resume.CurrentRole || null,
+                skills: resume.skills || [],
+                _entityType: 'candidates',
+                _displayName: `${item.FirstName || ''} ${item.LastName || ''}`.trim(),
+                _displaySubtitle: item.Email || ''
+            };
+        });
     } catch (error) {
         console.error('Error searching candidates:', error);
         return [];
@@ -161,7 +195,7 @@ const searchPositions = async (regex, limit = 10, permissionQuery = {}) => {
         // Use lean() and NO populate first to avoid CastError on mixed data string/ObjectId
         const results = await Position.find(query)
             .limit(limit)
-            .lean();
+            .lean().exec();
 
         // Manual population to handle "Adobe Inc." string vs ObjectId
         const companyIds = results
@@ -172,7 +206,7 @@ const searchPositions = async (regex, limit = 10, permissionQuery = {}) => {
         if (companyIds.length > 0) {
             const companies = await TenantCompany.find({ _id: { $in: companyIds } })
                 .select('name')
-                .lean();
+                .lean().exec();
             companies.forEach(c => {
                 companyMap[c._id.toString()] = c.name;
             });
@@ -199,12 +233,12 @@ const searchPositions = async (regex, limit = 10, permissionQuery = {}) => {
  */
 const searchInterviewTemplates = async (regex, limit = 10, permissionQuery = {}) => {
     try {
-        const query = combineQueries(permissionQuery, [
+        const searchConditions = [
             { title: regex },
             { interviewTemplateCode: regex },
             { description: regex }
-        ]);
-        const results = await InterviewTemplate.find(query).limit(limit).lean();
+        ];
+        const results = await searchWithFallback(InterviewTemplate, permissionQuery, searchConditions, limit);
         return results.map(item => ({
             ...item,
             _entityType: 'interviewTemplates',
@@ -226,7 +260,7 @@ const searchInterviews = async (regex, limit = 10, permissionQuery = {}) => {
         const candidates = await Candidate.find({
             ...permissionQuery,
             $or: [{ FirstName: regex }, { LastName: regex }]
-        }).select('_id').lean();
+        }).select('_id').lean().exec();
 
         const candidateIds = candidates.map(c => c._id);
 
@@ -240,7 +274,7 @@ const searchInterviews = async (regex, limit = 10, permissionQuery = {}) => {
         const results = await Interview.find(query)
             .populate('candidateId', 'FirstName LastName Email')
             .limit(limit)
-            .lean();
+            .lean().exec();
 
         return results.map(item => {
             const candidateName = item.candidateId
@@ -271,14 +305,14 @@ const searchInterviewers = async (regex, limit = 10, permissionQuery = {}) => {
             { lastName: regex },
             { email: regex }
         ]);
-        const contacts = await Contacts.find(contactQuery).limit(limit).lean();
+        const contacts = await Contacts.find(contactQuery).limit(limit).lean().exec();
 
         // Get interviewers linked to these contacts
         const contactIds = contacts.map(c => c._id);
         const interviewers = await Interviewer.find({
             ...permissionQuery,
             contactId: { $in: contactIds }
-        }).populate('contactId', 'firstName lastName email').limit(limit).lean();
+        }).populate('contactId', 'firstName lastName email').limit(limit).lean().exec();
 
         return interviewers.map(item => ({
             ...item,
@@ -303,7 +337,7 @@ const searchMockInterviews = async (regex, limit = 10, permissionQuery = {}) => 
             { candidateName: regex },
             { currentRole: regex }
         ]);
-        const results = await MockInterview.find(query).limit(limit).lean();
+        const results = await MockInterview.find(query).limit(limit).lean().exec();
 
         if (results.length === 0) {
             // Fallback Intersection Strategy:
@@ -318,7 +352,7 @@ const searchMockInterviews = async (regex, limit = 10, permissionQuery = {}) => 
             const candidateDocs = await MockInterview.find(searchPartQuery)
                 .select('_id')
                 .limit(limit * 5)
-                .lean();
+                .lean().exec();
 
             if (candidateDocs.length > 0) {
                 const candidateIds = candidateDocs.map(d => d._id);
@@ -333,7 +367,7 @@ const searchMockInterviews = async (regex, limit = 10, permissionQuery = {}) => 
 
                 const fallbackResults = await MockInterview.find(fallbackQuery)
                     .limit(limit)
-                    .lean();
+                    .lean().exec();
 
                 if (fallbackResults.length > 0) {
                     return fallbackResults.map(item => ({
@@ -362,11 +396,11 @@ const searchMockInterviews = async (regex, limit = 10, permissionQuery = {}) => 
  */
 const searchAssessmentTemplates = async (regex, limit = 10, permissionQuery = {}) => {
     try {
-        const query = combineQueries(permissionQuery, [
+        const searchConditions = [
             { AssessmentTitle: regex },
             { AssessmentCode: regex }
-        ]);
-        const results = await Assessment.find(query).limit(limit).lean();
+        ];
+        const results = await searchWithFallback(Assessment, permissionQuery, searchConditions, limit);
         return results.map(item => ({
             ...item,
             _entityType: 'assessmentTemplates',
@@ -388,14 +422,14 @@ const searchScheduledAssessments = async (regex, limit = 10, permissionQuery = {
         const candidates = await Candidate.find({
             ...permissionQuery,
             $or: [{ FirstName: regex }, { LastName: regex }]
-        }).select('_id').lean();
+        }).select('_id').lean().exec();
         const candidateIds = candidates.map(c => c._id);
 
         // 2. Find CandidateAssessments for these candidates
         // We get the scheduledAssessmentId from here
         const candidateAssessments = await CandidateAssessment.find({
             candidateId: { $in: candidateIds }
-        }).select('scheduledAssessmentId candidateId').lean();
+        }).select('scheduledAssessmentId candidateId').lean().exec();
 
         const scheduledIdsFromCandidates = candidateAssessments.map(ca => ca.scheduledAssessmentId);
 
@@ -403,7 +437,7 @@ const searchScheduledAssessments = async (regex, limit = 10, permissionQuery = {
         const assessments = await Assessment.find({
             ...permissionQuery,
             $or: [{ AssessmentTitle: regex }, { AssessmentCode: regex }]
-        }).select('_id').lean();
+        }).select('_id').lean().exec();
         const assessmentIds = assessments.map(a => a._id);
 
         // 4. Find ScheduledAssessments matches
@@ -416,7 +450,7 @@ const searchScheduledAssessments = async (regex, limit = 10, permissionQuery = {
         const results = await ScheduledAssessmentSchema.find(query)
             .populate('assessmentId', 'AssessmentTitle AssessmentCode')
             .limit(limit)
-            .lean();
+            .lean().exec();
 
         const scheduledIds = results.map(r => r._id);
 
@@ -427,7 +461,7 @@ const searchScheduledAssessments = async (regex, limit = 10, permissionQuery = {
                 scheduledAssessmentId: { $in: scheduledIds }
             })
                 .populate('candidateId', 'FirstName LastName Email Phone CountryCode HigherQualification CurrentExperience skills')
-                .lean();
+                .lean().exec();
 
             candidateAssessments.forEach(ca => {
                 if (!candidatesMap[ca.scheduledAssessmentId]) {
@@ -455,11 +489,11 @@ const searchScheduledAssessments = async (regex, limit = 10, permissionQuery = {
  */
 const searchQuestionBank = async (regex, limit = 10, permissionQuery = {}) => {
     try {
-        const query = combineQueries(permissionQuery, [
+        const searchConditions = [
             { questionName: regex },
             { questionText: regex }
-        ]);
-        const results = await TenantQuestions.find(query).limit(limit).lean();
+        ];
+        const results = await searchWithFallback(TenantQuestions, permissionQuery, searchConditions, limit);
         return results.map(item => ({
             ...item,
             _entityType: 'questionBank',
@@ -481,7 +515,7 @@ const searchFeedback = async (regex, limit = 10, permissionQuery = {}) => {
         const candidates = await Candidate.find({
             ...permissionQuery,
             $or: [{ FirstName: regex }, { LastName: regex }]
-        }).select('_id').lean();
+        }).select('_id').lean().exec();
 
         const candidateIds = candidates.map(c => c._id);
 
@@ -494,7 +528,7 @@ const searchFeedback = async (regex, limit = 10, permissionQuery = {}) => {
             .populate('candidateId', 'FirstName LastName')
             .populate('interviewerId', 'firstName lastName email')
             .limit(limit)
-            .lean();
+            .lean().exec();
 
         return results.map(item => {
             const candidateName = item.candidateId
@@ -534,7 +568,7 @@ const searchSupportDesk = async (regex, limit = 10, permissionQuery = {}) => {
             { status: regex }
         ]);
         console.log("Support Desk Search Query:", JSON.stringify(query, null, 2));
-        const results = await SupportUser.find(query).limit(limit).lean();
+        const results = await SupportUser.find(query).limit(limit).lean().exec();
         console.log("Support Desk Search Results Count:", results.length);
 
         if (results.length === 0) {
@@ -551,7 +585,7 @@ const searchSupportDesk = async (regex, limit = 10, permissionQuery = {}) => {
             const candidateDocs = await SupportUser.find(searchPartQuery)
                 .select('_id')
                 .limit(limit * 5) // Fetch more candidates to filter down
-                .lean();
+                .lean().exec();
 
             if (candidateDocs.length > 0) {
                 const candidateIds = candidateDocs.map(d => d._id);
@@ -567,7 +601,7 @@ const searchSupportDesk = async (regex, limit = 10, permissionQuery = {}) => {
 
                 const fallbackResults = await SupportUser.find(fallbackQuery)
                     .limit(limit)
-                    .lean();
+                    .lean().exec();
 
                 console.log("Fallback Strategy Results Count:", fallbackResults.length);
 
@@ -598,13 +632,13 @@ const searchSupportDesk = async (regex, limit = 10, permissionQuery = {}) => {
  */
 const searchCompanies = async (regex, limit = 10, permissionQuery = {}) => {
     try {
-        const query = combineQueries(permissionQuery, [
+        const searchConditions = [
             { name: regex },
             { industry: regex },
             { primaryContactName: regex },
             { primaryContactEmail: regex }
-        ]);
-        const results = await TenantCompany.find(query).limit(limit).lean();
+        ];
+        const results = await searchWithFallback(TenantCompany, permissionQuery, searchConditions, limit);
         return results.map(item => ({
             ...item,
             _entityType: 'companies',
@@ -622,12 +656,12 @@ const searchCompanies = async (regex, limit = 10, permissionQuery = {}) => {
  */
 const searchMyTeams = async (regex, limit = 10, permissionQuery = {}) => {
     try {
-        const query = combineQueries(permissionQuery, [
+        const searchConditions = [
             { name: regex },
             { description: regex },
             { department: regex }
-        ]);
-        const results = await MyTeams.find(query).limit(limit).lean();
+        ];
+        const results = await searchWithFallback(MyTeams, permissionQuery, searchConditions, limit);
         return results.map(item => ({
             ...item,
             _entityType: 'myTeams',
@@ -645,12 +679,12 @@ const searchMyTeams = async (regex, limit = 10, permissionQuery = {}) => {
  */
 const searchInterviewerTags = async (regex, limit = 10, permissionQuery = {}) => {
     try {
-        const query = combineQueries(permissionQuery, [
+        const searchConditions = [
             { name: regex },
             { description: regex },
             { category: regex }
-        ]);
-        const results = await InterviewerTag.find(query).limit(limit).lean();
+        ];
+        const results = await searchWithFallback(InterviewerTag, permissionQuery, searchConditions, limit);
         return results.map(item => ({
             ...item,
             _entityType: 'interviewerTags',
@@ -668,13 +702,13 @@ const searchInterviewerTags = async (regex, limit = 10, permissionQuery = {}) =>
  */
 const searchTenants = async (regex, limit = 10, permissionQuery = {}) => {
     try {
-        const query = combineQueries(permissionQuery, [
+        const searchConditions = [
             { company: regex },
             { email: regex },
             { firstName: regex },
             { lastName: regex }
-        ]);
-        const results = await Tenant.find(query).limit(limit).lean();
+        ];
+        const results = await searchWithFallback(Tenant, permissionQuery, searchConditions, limit);
         return results.map(item => ({
             ...item,
             _entityType: 'tenants',
@@ -734,6 +768,14 @@ const globalSearch = async (req, res) => {
             effectivePermissions_RoleName,
             permissionQuery
         });
+
+        // SAFETY: Warn if permission context is incomplete (helps debug Azure issues)
+        if (!effectivePermissions_RoleType) {
+            console.warn('[GlobalSearch] WARNING: effectivePermissions_RoleType is undefined. Permission filtering may be restricted.');
+        }
+        if (!actingAsUserId || !actingAsTenantId) {
+            console.warn('[GlobalSearch] WARNING: Missing actingAsUserId or actingAsTenantId. Auth context may have failed.');
+        }
 
         // Define all entity search functions with permission query
         const entitySearchFunctions = {
