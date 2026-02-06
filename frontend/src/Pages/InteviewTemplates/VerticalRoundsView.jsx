@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import RoundCard from "./RoundCard";
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const VerticalRoundsView = ({ rounds, onEditRound, template }) => {
   // Sort rounds by sequence
@@ -16,7 +17,7 @@ const VerticalRoundsView = ({ rounds, onEditRound, template }) => {
   //   }
   // }, [rounds]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (sortedRounds.length > 0) {
       const firstRoundId = sortedRounds[0]._id;
 
@@ -55,23 +56,32 @@ const VerticalRoundsView = ({ rounds, onEditRound, template }) => {
           key={round._id || `${round.sequence}-${index}`}
           className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden"
         >
-          <div className="flex justify-between items-center p-4 hover:bg-gray-50">
+          <div
+            onClick={() => toggleRound(round?._id)}
+            // className="flex justify-between items-center p-4 hover:bg-gray-50"
+            className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50"
+          >
             <div
-              className="flex items-center flex-1"
-              onClick={() => toggleRound(round._id)}
-              style={{ cursor: "pointer" }}
+              className="flex items-center "
+            // onClick={() => toggleRound(round?._id)}
+            // style={{ cursor: "pointer" }}
             >
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
-                <span className="text-sm font-medium">{round.sequence}</span>
+              <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-custom-blue mr-2">
+                <span className="text-sm font-medium">{round?.sequence}</span>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3
+                  className="sm:text-sm md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900"
+                //  className="text-lg font-semibold text-gray-900"
+                >
                   {round.roundTitle}
                 </h3>
                 <div className="flex items-center mt-1 text-sm text-gray-600">
-                  {/* <span className="mr-2">{round.interviewType}</span> */}
+                  {/* <span className="mr-2">{round?.interviewType}</span> */}
                   <span>•</span>
-                  <span className="mx-2">{round.interviewMode}</span>
+                  <span className="mx-2">
+                    {capitalizeFirstLetter(round?.interviewMode)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -97,7 +107,7 @@ const VerticalRoundsView = ({ rounds, onEditRound, template }) => {
           </div>
 
           {isExpanded(round._id) && (
-            <div className="px-4 pb-4">
+            <div className="sm:px-0 px-4 pb-4">
               <RoundCard
                 round={round}
                 onEdit={() => onEditRound(round)}

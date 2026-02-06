@@ -1424,24 +1424,30 @@ const updateInterviewRoundStatus = async (req, res) => {
     }
 
     // Check for submitted feedback
-    const feedback = await FeedbackModel.findOne({
-      interviewRoundId: existingRound._id,
-    });
+    // const feedback = await FeedbackModel.findOne({
+    //   interviewRoundId: existingRound._id,
+    // });
 
     // ===== STRICT CHECK: ALL INTERVIEWERS FEEDBACK STATUS = DRAFT =====
 
     // Interviewer IDs from round
-    const interviewerIds = (existingRound.interviewers || []).map((id) =>
-      id.toString(),
-    );
+    const interviewerIds = (existingRound.interviewers || []).map((id) => id);
 
     // Fetch feedbacks only for these interviewers
+    // const feedbacks = await FeedbackModel.find({
+    //   interviewRoundId: existingRound._id,
+    //   interviewerId: { $in: interviewerIds },
+    // });
     const feedbacks = await FeedbackModel.find({
       interviewRoundId: existingRound._id,
       interviewerId: { $in: interviewerIds },
-    });
+    }).select("interviewerId status");
 
     // Build a map: interviewerId -> status
+    // const feedbackStatusMap = new Map(
+    //   feedbacks.map((fb) => [fb.interviewerId.toString(), fb.status]),
+    // );
+
     const feedbackStatusMap = new Map(
       feedbacks.map((fb) => [fb.interviewerId.toString(), fb.status]),
     );
@@ -1449,13 +1455,22 @@ const updateInterviewRoundStatus = async (req, res) => {
     // Check:
     // 1. Every interviewer has a feedback entry
     // 2. Every feedback status is "draft"
-    const allInterviewersDraft =
-      interviewerIds.length > 0 &&
-      interviewerIds.every(
-        (interviewerId) =>
-          feedbackStatusMap.has(interviewerId) &&
-          feedbackStatusMap.get(interviewerId) === "draft",
-      );
+    // const allInterviewersDraft =
+    //   interviewerIds.length > 0 &&
+    //   interviewerIds.every(
+    //     (interviewerId) =>
+    //       feedbackStatusMap.has(interviewerId) &&
+    //       feedbackStatusMap.get(interviewerId) === "draft",
+    //   );
+    const draftCount = await FeedbackModel.countDocuments({
+      interviewRoundId: existingRound._id,
+      interviewerId: { $in: interviewerIds },
+      status: "draft",
+    });
+
+    const allInterviewersDraft = draftCount === interviewerIds.length;
+
+    console.log("interviewerIds", allInterviewersDraft);
 
     // const feedbackDraft = Array.isArray(feedback)
     //   ? feedback.some((fb) => fb.status === "Draft")
@@ -1610,7 +1625,7 @@ const updateInterviewRoundStatus = async (req, res) => {
           actingAsUserId,
           statusChanged: true,
         });
-      } else if (!feedbackDraft) {
+      } else if (!allInterviewersDraft) {
         smartUpdate = await buildSmartRoundUpdate({
           existingRound,
           body: {

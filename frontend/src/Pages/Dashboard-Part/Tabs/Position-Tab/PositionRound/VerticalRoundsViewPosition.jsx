@@ -42,8 +42,8 @@ const VerticalRoundsViewPosition = ({
 
   // Always expand the first round whenever the sorted list changes
   useEffect(() => {
-  if (sortedRounds.length > 0) {
-    const firstRoundId = sortedRounds[0]._id;
+    if (sortedRounds.length > 0) {
+      const firstRoundId = sortedRounds[0]._id;
 
       setExpandedRounds((prev) => {
         const alreadyExpanded = Object.values(prev).some((v) => v);
@@ -82,20 +82,26 @@ const VerticalRoundsViewPosition = ({
         <div
           // v1.0.1 <--------------------------------------------
           // key={round._id}
-           key={`${round._id}-${round.sequence}`} // Fix applied here
+          key={`${round._id}-${round.sequence}`} // Fix applied here
           //  v1.0.1 ------------------------------------------->
-          className="bg-white rounded-lg  border border-gray-200 shadow-md overflow-hidden"
+          className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden"
         >
           <button
             onClick={() => toggleRound(round._id)}
+            // className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50"
             className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50"
+
           >
             <div className="flex items-center">
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 border border-gray-300 mr-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-custom-blue mr-2">
                 <span className="text-sm font-medium">{round.sequence}</span>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3
+                  className="sm:text-sm md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900"
+                // className="text-lg font-semibold text-gray-900"
+                >
+
                   {round.roundTitle}
                 </h3>
                 <div className="flex items-center mt-1 text-sm text-gray-600">
