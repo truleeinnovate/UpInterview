@@ -62,10 +62,13 @@ import { useMasterData } from "../../../../apiHooks/useMasterData.js";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import InputField from "../../../../Components/FormFields/InputField";
 import DescriptionField from "../../../../Components/FormFields/DescriptionField";
-import DropdownSelect, { StickyFooterMenuList, preserveStickyOptionFilter } from "../../../../Components/Dropdowns/DropdownSelect.jsx";
+import DropdownSelect, {
+  StickyFooterMenuList,
+  preserveStickyOptionFilter,
+} from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 
 const optionLabels = Array.from({ length: 26 }, (_, i) =>
-  String.fromCharCode(65 + i)
+  String.fromCharCode(65 + i),
 );
 
 const QuestionBankForm = ({
@@ -116,8 +119,8 @@ const QuestionBankForm = ({
   // console.log('selected---541651',selectedLabels)
   // Master data (categories) for common dropdowns
   const pageType = "adminPortal";
-  const { skills,loadSkills,category, loadCategory, isCategoryFetching } = useMasterData({}, pageType);
-
+  const { skills, loadSkills, category, loadCategory, isCategoryFetching } =
+    useMasterData({}, pageType);
 
   const [selectedListId, setSelectedListId] = useState([]);
   // console.log("selectedLabelId =================+", [
@@ -126,7 +129,7 @@ const QuestionBankForm = ({
   // ]);
 
   const [dropdownValue, setDropdownValue] = useState(
-    isInterviewType ? "Interview Questions" : "Assessment Questions"
+    isInterviewType ? "Interview Questions" : "Assessment Questions",
   );
   const autoSelectInitializedRef = useRef(false);
 
@@ -141,7 +144,7 @@ const QuestionBankForm = ({
       //<--v1.0.8-----
       // Find the matching label in createdLists
       const matchedLabel = createdLists.find(
-        (list) => list._id === selectedLabelId
+        (list) => list._id === selectedLabelId,
       );
       // console.log("matchedLabel", matchedLabel);
       // Only auto-apply the selection if it matches the current Ass/Int type
@@ -181,9 +184,16 @@ const QuestionBankForm = ({
   ];
 
   // Common select options for shared fields
-  const questionTypeOptionsRS = questionTypeOptions.map((qt) => ({ value: qt, label: qt }));
+  const questionTypeOptionsRS = questionTypeOptions.map((qt) => ({
+    value: qt,
+    label: qt,
+  }));
+
   const difficultyLevels = ["Easy", "Medium", "Hard"];
-  const difficultyOptionsRS = difficultyLevels.map((d) => ({ value: d, label: d }));
+  const difficultyOptionsRS = difficultyLevels.map((d) => ({
+    value: d,
+    label: d,
+  }));
   const assIntOptionsRS = [
     { value: "Interview Questions", label: "Interview Questions" },
     { value: "Assessment Questions", label: "Assessment Questions" },
@@ -227,24 +237,55 @@ const QuestionBankForm = ({
     (isInterviewType && dropdownValue !== "Assessment Questions") ||
       type === "Feedback"
       ? "Interview Questions"
-      : "" //<----v1.0.7------
+      : "", //<----v1.0.7------
   );
   const [selectedCategory, setSelectedCategory] = useState([]);
   const [showDropdownQuestionType, setShowDropdownQuestionType] =
     useState(false);
   const [showMcqFields, setShowMcqFields] = useState(false);
+  // const [mcqOptions, setMcqOptions] = useState([
+  //   { option: "", isSaved: false, isEditing: false },
+  //   { option: "", isSaved: false, isEditing: false },
+  //   { option: "", isSaved: false, isEditing: false },
+  //   { option: "", isSaved: false, isEditing: false },
+  // ]);
   const [mcqOptions, setMcqOptions] = useState([
-    { option: "", isSaved: false, isEditing: false },
-    { option: "", isSaved: false, isEditing: false },
-    { option: "", isSaved: false, isEditing: false },
-    { option: "", isSaved: false, isEditing: false },
+    { option: "", isSaved: false, isEditing: false, isCorrect: false },
+    { option: "", isSaved: false, isEditing: false, isCorrect: false },
+    { option: "", isSaved: false, isEditing: false, isCorrect: false },
+    { option: "", isSaved: false, isEditing: false, isCorrect: false },
   ]);
   const [selectedBooleanAnswer, setSelectedBooleanAnswer] = useState("");
   const [showDropdownBooleanAnswer, setShowDropdownBooleanAnswer] =
     useState(false);
-  const [showDropdownAssInt, setShowDropdownAssInt] = useState(false);//<---v1.0.9-----
+  const [showDropdownAssInt, setShowDropdownAssInt] = useState(false); //<---v1.0.9-----
   const [showDropdownCategory, setShowDropdownCategory] = useState(false);
-  const [ignoreDefaultSelectedLabel, setIgnoreDefaultSelectedLabel] = useState(false);
+  const [ignoreDefaultSelectedLabel, setIgnoreDefaultSelectedLabel] =
+    useState(false);
+
+  // ---------------------------- NEW MCQ IMPLEMENTATION ---------------------------------
+  const handleCorrectAnswerChange = (index) => {
+    const newOptions = [...mcqOptions];
+    // Toggle the isCorrect boolean for the clicked option
+    newOptions[index].isCorrect = !newOptions[index].isCorrect;
+    setMcqOptions(newOptions);
+
+    // Sync with formData: Filter all options marked as correct and get their text
+    const correctValues = newOptions
+      .filter((opt) => opt.isCorrect && opt.option.trim() !== "")
+      .map((opt) => opt.option.trim());
+
+    setFormData((prev) => ({
+      ...prev,
+      // Store as array for Multi-select, or join with a delimiter if your backend requires a string
+      correctAnswer: correctValues,
+    }));
+
+    if (errors.correctAnswer) {
+      setErrors((prev) => ({ ...prev, correctAnswer: "" }));
+    }
+  };
+  // ---------------------------- NEW MCQ IMPLEMENTATION ---------------------------------
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -306,6 +347,10 @@ const QuestionBankForm = ({
 
   useEffect(() => {
     if (isEdit && Object.keys(question).length > 0) {
+      const currentType = question.questionType || "";
+      const isMCQType =
+        currentType === "MCQ_SINGLE" || currentType === "MCQ_MULTI";
+
       setFormData({
         questionText: question.questionText || "",
         questionType: question.questionType || "",
@@ -330,20 +375,60 @@ const QuestionBankForm = ({
       setDropdownValue(
         question.isInterviewQuestionType
           ? "Interview Questions"
-          : "Assessment Questions"
+          : "Assessment Questions",
       );
+      // ------------------------ NEW MCQ CHANGE -----------------------------------------
+      if (question.questionType === "MCQ") {
+        const storedAnswers = Array.isArray(question.correctAnswer)
+          ? question.correctAnswer
+          : [];
+
+        const initializedOptions = (question.options || []).map((optText) => ({
+          option: optText,
+          isSaved: true,
+          isEditing: false,
+          isCorrect: storedAnswers.some(
+            (ans) => String(ans).trim() === String(optText).trim(),
+          ),
+        }));
+
+        setMcqOptions(initializedOptions);
+        setShowMcqFields(true);
+      } else {
+        setShowMcqFields(false);
+      }
+
+      if (question.questionType === "Boolean") {
+        const rawValue = Array.isArray(question.correctAnswer)
+          ? question.correctAnswer[0]
+          : question.correctAnswer;
+
+        const normalizedValue =
+          rawValue === true || String(rawValue).toLowerCase() === "true"
+            ? "True"
+            : rawValue === false || String(rawValue).toLowerCase() === "false"
+              ? "False"
+              : "";
+
+        setSelectedBooleanAnswer(normalizedValue);
+        setFormData((prev) => ({
+          ...prev,
+          correctAnswer: normalizedValue,
+        }));
+      }
+      // ------------------------ NEW MCQ CHANGE -----------------------------------------
       setHintContent(question.hints || "");
       setSelectedSkill(question.skill || "");
       setSelectedCategory(question.category || "");
       setSelectedQuestionType(question.questionType || "");
       setSelectedDifficultyLevel(question.difficultyLevel || "");
-      setMcqOptions(
-        question.options.map((option) => ({
-          option,
-          isSaved: true,
-          isEditing: false,
-        }))
-      );
+      // setMcqOptions(
+      //   question.options.map((option) => ({
+      //     option,
+      //     isSaved: true,
+      //     isEditing: false,
+      //   })),
+      // );
       setShowMcqFields(question.questionType === "MCQ");
 
       // Add any additional fields if required (e.g., autoAssessment)
@@ -370,8 +455,8 @@ const QuestionBankForm = ({
       }
     }
   }, [isEdit, question]);
-
   // Auto-update character limits when question type changes
+
   useEffect(() => {
     if (selectedQuestionType === "Short") {
       setCharLimits({ min: 1, max: 500 });
@@ -391,7 +476,7 @@ const QuestionBankForm = ({
       setSelectedQuestionType(
         isInterviewType && dropdownValue !== "Assessment Questions"
           ? "Interview Questions"
-          : ""
+          : "",
       );
       setFormData((prev) => ({
         ...prev,
@@ -431,7 +516,11 @@ const QuestionBankForm = ({
 
     setSelectedSkill("");
     setSelectedCategory("");
-    setSelectedQuestionType((isInterviewType && dropdownValue !== "Assessment Questions") ? "Interview Questions" : "");//<----v1.0.7------
+    setSelectedQuestionType(
+      isInterviewType && dropdownValue !== "Assessment Questions"
+        ? "Interview Questions"
+        : "",
+    ); //<----v1.0.7------
     setSelectedDifficultyLevel("");
     setAutoAssessment("");
     setHintContent("");
@@ -440,10 +529,10 @@ const QuestionBankForm = ({
     // setSelectedMinExperience("");
     // setSelectedMaxExperience("");
     setMcqOptions([
-      { option: "", isSaved: false, isEditing: false },
-      { option: "", isSaved: false, isEditing: false },
-      { option: "", isSaved: false, isEditing: false },
-      { option: "", isSaved: false, isEditing: false },
+      { option: "", isSaved: false, isEditing: false, isCorrect: false },
+      { option: "", isSaved: false, isEditing: false, isCorrect: false },
+      { option: "", isSaved: false, isEditing: false, isCorrect: false },
+      { option: "", isSaved: false, isEditing: false, isCorrect: false },
     ]);
 
     setShowMcqFields(false);
@@ -452,10 +541,10 @@ const QuestionBankForm = ({
     setEntries([]);
     setSelectedBooleanAnswer("");
     setShowDropdownBooleanAnswer(false);
-};
+  };
 
-// Extract and normalize backend validation errors for display and field mapping
-const extractValidationErrors = (axiosError) => {
+  // Extract and normalize backend validation errors for display and field mapping
+  const extractValidationErrors = (axiosError) => {
     const data = axiosError?.response?.data || {};
     const rootMessage =
       data?.message || axiosError?.message || "Request failed";
@@ -473,11 +562,11 @@ const extractValidationErrors = (axiosError) => {
         acc[field] = msg;
         return acc;
       },
-      {}
+      {},
     );
 
     const detailedMessages = Object.entries(fieldErrors).map(
-      ([k, v]) => `${k}: ${v}`
+      ([k, v]) => `${k}: ${v}`,
     );
     return { message: rootMessage, fieldErrors, detailedMessages };
   };
@@ -496,7 +585,7 @@ const extractValidationErrors = (axiosError) => {
     let effectiveListIds = selectedListId;
     if (shouldConsiderDefault) {
       const matchedLabel = (createdLists || []).find(
-        (l) => l._id === selectedLabelId
+        (l) => l._id === selectedLabelId,
       );
       const typeVal = matchedLabel?.type;
       const isInterviewList =
@@ -523,7 +612,7 @@ const extractValidationErrors = (axiosError) => {
       {
         skipQuestionType:
           isInterviewType && dropdownValue !== "Assessment Questions",
-      } //<----v1.0.7------
+      }, //<----v1.0.7------
     );
     // console.log("newErrors", newErrors);
     if (Object.keys(newErrors).length > 0) {
@@ -599,9 +688,9 @@ const extractValidationErrors = (axiosError) => {
       tenantListId: Array.from(
         new Set(
           (effectiveListIds || []).filter(
-            (id) => typeof id === "string" && id.trim().length > 0
-          )
-        )
+            (id) => typeof id === "string" && id.trim().length > 0,
+          ),
+        ),
       ),
       //---v1.0.8----->
       difficultyLevel: selectedDifficultyLevel,
@@ -617,6 +706,28 @@ const extractValidationErrors = (axiosError) => {
       isInterviewType: Boolean(dropdownValue === "Interview Questions"), //<---v1.0.9-----
     };
 
+    // ----------------------- NEW MCQ IMPLEMENTATION -----------------------------
+    // if (selectedQuestionType === "MCQ") {
+    //   const hasCorrectAnswer = mcqOptions.some((opt) => opt.isCorrect);
+    //   if (!hasCorrectAnswer) {
+    //     newErrors.correctAnswer =
+    //       "Please select the correct option using the checkbox.";
+    //   }
+    // }
+
+    if (selectedQuestionType === "MCQ") {
+      questionData.correctAnswer = mcqOptions
+        .filter((opt) => opt.isCorrect)
+        .map((opt) => opt.option.trim());
+    } else if (selectedQuestionType === "Boolean") {
+      questionData.correctAnswer = [selectedBooleanAnswer];
+    } else {
+      // For Short, Long, Number types
+      questionData.correctAnswer = [String(formData.correctAnswer).trim()];
+    }
+
+    // ----------------------- NEW MCQ IMPLEMENTATION -----------------------------
+
     // Ensure we don't carry over an empty options array from formData by default
     // Options should only be attached when MCQ has at least one non-empty option
     if (Object.prototype.hasOwnProperty.call(questionData, "options")) {
@@ -624,11 +735,7 @@ const extractValidationErrors = (axiosError) => {
     }
 
     // Add conditional data based on question type
-    if (
-      ["Short", "Long"].includes(
-        selectedQuestionType
-      )
-    ) {
+    if (["Short", "Long"].includes(selectedQuestionType)) {
       questionData.charLimits = charLimits;
       if (autoAssessment) {
         questionData.isAutoAssessment = true;
@@ -698,19 +805,19 @@ const extractValidationErrors = (axiosError) => {
         updateQuestionsInAddedSectionFromQuestionBank(
           sectionName,
           reqBody,
-          "addquestion"
+          "addquestion",
         );
         //<---------v1.0.1----------
       } else if (type === "assessment") {
         console.warn(
-          "updateQuestionsInAddedSectionFromQuestionBank callback not provided"
+          "updateQuestionsInAddedSectionFromQuestionBank callback not provided",
         );
         // ---------v1.0.1---------->
       }
 
       console.log(
         isEdit ? "Question updated:" : "Question created:",
-        questionResponse
+        questionResponse,
       );
 
       // Clear form fields
@@ -765,7 +872,9 @@ const extractValidationErrors = (axiosError) => {
         onClose();
       }
       notify.success(
-        isEdit ? "Question updated successfully" : "Question saved successfully"
+        isEdit
+          ? "Question updated successfully"
+          : "Question saved successfully",
       );
     } catch (error) {
       console.error("Error creating/updating question:", error);
@@ -774,8 +883,7 @@ const extractValidationErrors = (axiosError) => {
       const { message, fieldErrors, detailedMessages } =
         extractValidationErrors(error);
 
-        console.log("fieldErrors", message, fieldErrors, detailedMessages);
-        
+      console.log("fieldErrors", message, fieldErrors, detailedMessages);
 
       // Merge server-side field errors into local error state for inline display
       if (fieldErrors && Object.keys(fieldErrors).length > 0) {
@@ -847,19 +955,15 @@ const extractValidationErrors = (axiosError) => {
     setShowSkillsPopup(false);
   };
 
-
-
   const handleRemoveSkill = (index) => {
     const updatedSkills = [...selectedSkill];
     updatedSkills.splice(index, 1);
     setSelectedSkill(updatedSkills);
   };
 
-
   const clearSkills = () => {
     setSelectedSkill([]);
   };
-
 
   // Close popup on outside click
   useEffect(() => {
@@ -876,7 +980,6 @@ const extractValidationErrors = (axiosError) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
 
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -908,8 +1011,9 @@ const extractValidationErrors = (axiosError) => {
     //   setShowDropdownMaxExperience(false);
     if (currentDropdown !== "showDropdownBooleanAnswer")
       setShowDropdownBooleanAnswer(false);
-    if (currentDropdown !== "showDropdownAssInt") setShowDropdownAssInt(false);//<---v1.0.9-----
-    if (currentDropdown !== "showDropdownCategory") setShowDropdownCategory(false);
+    if (currentDropdown !== "showDropdownAssInt") setShowDropdownAssInt(false); //<---v1.0.9-----
+    if (currentDropdown !== "showDropdownCategory")
+      setShowDropdownCategory(false);
   };
   //---------v1.0.3--------->
 
@@ -994,11 +1098,14 @@ const extractValidationErrors = (axiosError) => {
       ...prevErrors,
       questionType: "",
     }));
+    // ----------------------- NEW MCQ --------------------------------------
     if (questionType === "MCQ") {
       setShowMcqFields(true);
     } else {
       setShowMcqFields(false);
     }
+
+    // ----------------------- NEW MCQ --------------------------------------
   };
 
   const handleOptionChange = (index, e) => {
@@ -1008,7 +1115,7 @@ const extractValidationErrors = (axiosError) => {
 
     // Check if all options are filled
     const allOptionsFilled = newOptions.every(
-      (option) => option.option.trim() !== ""
+      (option) => option.option.trim() !== "",
     );
     if (allOptionsFilled) {
       setErrors((prevErrors) => {
@@ -1017,6 +1124,33 @@ const extractValidationErrors = (axiosError) => {
       });
     }
   };
+
+  // const handleOptionChange = (index, e) => {
+  //   const newOptions = [...mcqOptions];
+  //   newOptions[index].option = e.target.value;
+  //   setMcqOptions(newOptions);
+
+  //   // Sync with formData: Update the text values in the correctAnswer array
+  //   const correctValues = newOptions
+  //     .filter((opt) => opt.isCorrect && opt.option.trim() !== "")
+  //     .map((opt) => opt.option.trim());
+
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     correctAnswer: correctValues,
+  //   }));
+
+  //   const allOptionsFilled = newOptions.every(
+  //     (opt) => opt.option.trim() !== "",
+  //   );
+
+  //   if (allOptionsFilled) {
+  //     setErrors((prevErrors) => {
+  //       const { Options, ...rest } = prevErrors;
+  //       return rest;
+  //     });
+  //   }
+  // };
 
   const handleSaveOption = (index) => {
     const newOptions = [...mcqOptions];
@@ -1031,14 +1165,42 @@ const extractValidationErrors = (axiosError) => {
     setMcqOptions(newOptions);
   };
 
+  // const handleCancelOption = (index) => {
+  //   const newOptions = mcqOptions.filter((_, i) => i !== index);
+  //   setMcqOptions(newOptions);
+  // };
+
   const handleCancelOption = (index) => {
     const newOptions = mcqOptions.filter((_, i) => i !== index);
     setMcqOptions(newOptions);
+
+    // Sync Answer: Remove the value from correctAnswer if the cancelled option was correct
+    syncCorrectAnswersAfterDelete(newOptions);
   };
+
+  // const handleDeleteOption = (index) => {
+  //   const newOptions = mcqOptions.filter((_, i) => i !== index);
+  //   setMcqOptions(newOptions);
+  // };
 
   const handleDeleteOption = (index) => {
     const newOptions = mcqOptions.filter((_, i) => i !== index);
     setMcqOptions(newOptions);
+
+    // Sync Answer: Remove the value from correctAnswer if the deleted option was correct
+    syncCorrectAnswersAfterDelete(newOptions);
+  };
+
+  // Helper function to keep formData in sync after deleting rows
+  const syncCorrectAnswersAfterDelete = (updatedOptions) => {
+    const correctValues = updatedOptions
+      .filter((opt) => opt.isCorrect && opt.option.trim() !== "")
+      .map((opt) => opt.option.trim());
+
+    setFormData((prev) => ({
+      ...prev,
+      correctAnswer: correctValues,
+    }));
   };
 
   const addOption = () => {
@@ -1128,7 +1290,7 @@ const extractValidationErrors = (axiosError) => {
     setFormData((prev) => ({ ...prev, correctAnswer: value }));
     setErrors((prevErrors) => ({ ...prevErrors, correctAnswer: "" }));
   };
-// v2.0.0 <-----------------------------------------------------------------------------------------
+  // v2.0.0 <-----------------------------------------------------------------------------------------
   // const modalClass = classNames(
   //   // v1.0.6 <----------------------------------------------------------
   //   // "fixed bg-white shadow-2xl border-l border-gray-200",
@@ -1142,9 +1304,9 @@ const extractValidationErrors = (axiosError) => {
   //       !isFullScreen,
   //   }
   // );
-// v2.0.0 <----------------------------------------------------------------------------------------->
+  // v2.0.0 <----------------------------------------------------------------------------------------->
 
-// v2.0.0 <-----------------------------------------------------------------------------------------
+  // v2.0.0 <-----------------------------------------------------------------------------------------
   return (
     <>
       <SidebarPopup title="Add Question" onClose={onClose}>
@@ -1304,37 +1466,37 @@ const extractValidationErrors = (axiosError) => {
                   />
                 </div>
 
-                  {/* Category */}
+                {/* Category */}
+                <div className="flex flex-col gap-1 mb-4">
+                  <DropdownWithSearchField
+                    value={formData.category}
+                    options={categoryOptionsRS}
+                    onChange={(e) => handleCategorySelect(e.target.value)}
+                    error={errors.category}
+                    containerRef={fieldRefs.category}
+                    label="Category"
+                    name="category"
+                    required
+                    onMenuOpen={loadCategory}
+                    loading={isCategoryFetching}
+                  />
+                </div>
+
+                {/* Question Type Selection */}
+                {dropdownValue === "Assessment Questions" && (
                   <div className="flex flex-col gap-1 mb-4">
                     <DropdownWithSearchField
-                      value={formData.category}
-                      options={categoryOptionsRS}
-                      onChange={(e) => handleCategorySelect(e.target.value)}
-                      error={errors.category}
-                      containerRef={fieldRefs.category}
-                      label="Category"
-                      name="category"
+                      value={selectedQuestionType}
+                      options={questionTypeOptionsRS}
+                      onChange={(e) => handleQuestionTypeSelect(e.target.value)}
+                      error={errors.questionType}
+                      containerRef={fieldRefs.questionType}
+                      label="Question Type"
+                      name="questionType"
                       required
-                      onMenuOpen={loadCategory}
-                      loading={isCategoryFetching}
                     />
                   </div>
-
-                  {/* Question Type Selection */}
-                  {dropdownValue === "Assessment Questions" && (
-                    <div className="flex flex-col gap-1 mb-4">
-                      <DropdownWithSearchField
-                        value={selectedQuestionType}
-                        options={questionTypeOptionsRS}
-                        onChange={(e) => handleQuestionTypeSelect(e.target.value)}
-                        error={errors.questionType}
-                        containerRef={fieldRefs.questionType}
-                        label="Question Type"
-                        name="questionType"
-                        required
-                      />
-                    </div>
-                  )}
+                )}
 
                 {/* Question List */}
                 {type === "feedback" ? null : (
@@ -1357,26 +1519,52 @@ const extractValidationErrors = (axiosError) => {
                               .filter((l) => {
                                 if (!l || typeof l !== "object") return false;
                                 const t = l.type;
-                                const normalized = typeof t === "boolean" ? t : (String(t).toLowerCase() === "true" || String(t).toLowerCase().includes("interview"));
-                                const wantInterview = dropdownValue === "Interview Questions";
+                                const normalized =
+                                  typeof t === "boolean"
+                                    ? t
+                                    : String(t).toLowerCase() === "true" ||
+                                      String(t)
+                                        .toLowerCase()
+                                        .includes("interview");
+                                const wantInterview =
+                                  dropdownValue === "Interview Questions";
                                 return normalized === wantInterview;
                               })
-                              .map((l) => ({ value: l._id, label: l.label ?? "" }))
+                              .map((l) => ({
+                                value: l._id,
+                                label: l.label ?? "",
+                              }))
                           : []),
                         { value: "__other__", label: "Create New List" },
                       ]}
-                      value={(Array.isArray(selectedListId) ? selectedListId : [])
+                      value={(Array.isArray(selectedListId)
+                        ? selectedListId
+                        : []
+                      )
                         .map((id) => {
-                          const m = (createdLists || []).find((l) => l._id === id);
-                          return m ? { value: m._id, label: m.label ?? "" } : null;
+                          const m = (createdLists || []).find(
+                            (l) => l._id === id,
+                          );
+                          return m
+                            ? { value: m._id, label: m.label ?? "" }
+                            : null;
                         })
                         .filter(Boolean)}
                       onChange={(opts, actionMeta) => {
                         let arr = Array.isArray(opts) ? opts : [];
-                        const hasCreate = arr.some((o) => o?.value === "__other__") || actionMeta?.option?.value === "__other__";
+                        const hasCreate =
+                          arr.some((o) => o?.value === "__other__") ||
+                          actionMeta?.option?.value === "__other__";
                         if (hasCreate) {
-                          if (listRef.current && typeof listRef.current.openPopup === "function") {
-                            listRef.current.openPopup({ isEditingMode: false, defaultType: dropdownValue === "Interview Questions" });
+                          if (
+                            listRef.current &&
+                            typeof listRef.current.openPopup === "function"
+                          ) {
+                            listRef.current.openPopup({
+                              isEditingMode: false,
+                              defaultType:
+                                dropdownValue === "Interview Questions",
+                            });
                           }
                           arr = arr.filter((o) => o.value !== "__other__");
                         }
@@ -1392,7 +1580,9 @@ const extractValidationErrors = (axiosError) => {
                       }}
                     />
                     {errors?.tenantListId && (
-                      <p className="text-red-500 text-sm mt-1">{errors.tenantListId}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.tenantListId}
+                      </p>
                     )}
                     {/* Keep the popup component mounted for Create New List */}
                     <MyQuestionList
@@ -1431,17 +1621,28 @@ const extractValidationErrors = (axiosError) => {
                       hasError={!!errors?.skill}
                       placeholder="Select Skills"
                       onMenuOpen={loadSkills}
-                      options={(skills || []).map((s) => ({ value: s.SkillName, label: s.SkillName }))}
-                      value={(Array.isArray(selectedSkill) ? selectedSkill : []).map((name) => ({ value: name, label: name }))}
+                      options={(skills || []).map((s) => ({
+                        value: s.SkillName,
+                        label: s.SkillName,
+                      }))}
+                      value={(Array.isArray(selectedSkill)
+                        ? selectedSkill
+                        : []
+                      ).map((name) => ({ value: name, label: name }))}
                       onChange={(opts) => {
-                        const values = Array.isArray(opts) ? opts.map((o) => o.value) : [];
+                        const values = Array.isArray(opts)
+                          ? opts.map((o) => o.value)
+                          : [];
                         setSelectedSkill(values);
                         setFormData((prev) => ({ ...prev, skill: values }));
-                        if (errors?.skill) setErrors((prev) => ({ ...(prev || {}), skill: "" }));
+                        if (errors?.skill)
+                          setErrors((prev) => ({ ...(prev || {}), skill: "" }));
                       }}
                     />
                     {errors?.skill && (
-                      <p className="text-red-500 text-sm mt-1">{errors.skill}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.skill}
+                      </p>
                     )}
                   </div>
                   {/* <div className="col-span-2 sm:col-span-6 px-4 py-3 rounded-md border border-gray-200 mt-1">
@@ -1497,7 +1698,11 @@ const extractValidationErrors = (axiosError) => {
                 <div className="flex flex-col gap-1 mb-4 mt-4">
                   <DescriptionField
                     value={formData.questionText}
-                    onChange={(e) => handleChange({ target: { name: "questionText", value: e.target.value } })}
+                    onChange={(e) =>
+                      handleChange({
+                        target: { name: "questionText", value: e.target.value },
+                      })
+                    }
                     name="questionText"
                     inputRef={fieldRefs.questionText}
                     error={errors.questionText}
@@ -1508,20 +1713,22 @@ const extractValidationErrors = (axiosError) => {
                     maxLength={1000}
                   />
                 </div>
-                    {/* Difficulty Level */}
-              <div className="flex flex-col gap-5 mb-3">
-                <DropdownWithSearchField
-                  value={selectedDifficultyLevel}
-                  options={difficultyOptionsRS}
-                  isSearchable={false}
-                  onChange={(e) => handleDifficultyLevelSelect(e.target.value)}
-                  error={errors.difficultyLevel}
-                  containerRef={fieldRefs.difficultyLevel}
-                  label="Difficulty Level"
-                  name="difficultyLevel"
-                  required
-                />
-              </div>
+                {/* Difficulty Level */}
+                <div className="flex flex-col gap-5 mb-3">
+                  <DropdownWithSearchField
+                    value={selectedDifficultyLevel}
+                    options={difficultyOptionsRS}
+                    isSearchable={false}
+                    onChange={(e) =>
+                      handleDifficultyLevelSelect(e.target.value)
+                    }
+                    error={errors.difficultyLevel}
+                    containerRef={fieldRefs.difficultyLevel}
+                    label="Difficulty Level"
+                    name="difficultyLevel"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="">
@@ -1530,7 +1737,7 @@ const extractValidationErrors = (axiosError) => {
                 </div>
                 {/* MCQ Options */}
                 {showMcqFields && (
-                  <div>
+                  <div className="mb-2">
                     <div className="flex justify-between items-center gap-2 w-full mb-5">
                       <label className="block mb-2 text-sm mt-1 font-medium text-gray-900 ">
                         Options <span className="text-red-500">*</span>
@@ -1548,93 +1755,198 @@ const extractValidationErrors = (axiosError) => {
                     </div>
                     <form onSubmit={handleSubmit}>
                       {mcqOptions.map((option, index) => (
+                        // <div
+                        //   key={index}
+                        //   className="flex items-center gap-4 relative"
+                        // >
+                        //   {/* <div>
+                        //     <label
+                        //       htmlFor={`option${index}`}
+                        //       className="block text-sm font-medium leading-6 text-gray-500"
+                        //     ></label>
+                        //   </div> */}
+                        //   {/* v1.0.5 <--------------------------------------------------------- */}
+                        //   <div className="flex-grow flex justify-center relative">
+                        //     {/* <span className="absolute left-0 pl-1 pt-2 text-gray-500"> */}
+                        //     <span className="absolute left-0 pl-2 pt-3 text-gray-500">
+                        //       {optionLabels[index]}.
+                        //     </span>
+                        //     <div className="flex flex-col w-full">
+                        //       {/* v1.0.4 <-------------------------------------------------------------- */}
+                        //       <input
+                        //         ref={fieldRefs.options}
+                        //         id={`option${index}`}
+                        //         name={`option${index}`}
+                        //         autoComplete="off"
+                        //         maxLength={250}
+                        //         // className={`border  px-3 py-2  sm:text-sm rounded-md border-gray-300   text-gray-500 focus:border-black focus:outline-none w-full pl-8`}
+                        //         className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 pl-7 sm:text-sm
+                        //             border ${
+                        //               errors.options
+                        //                 ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                        //                 : "border-gray-300 focus:ring-red-300"
+                        //             }
+                        //             focus:outline-gray-300
+                        //           `}
+                        //         // v1.0.4 ------------------------------------------------------------->
+                        //         onChange={(e) => handleOptionChange(index, e)}
+                        //         value={option.option}
+                        //         readOnly={option.isSaved && !option.isEditing}
+                        //         placeholder={`Please add option`}
+                        //       />
+                        //       {/* v1.0.5 <--------------------------------------------------------- */}
+                        //       {/* MCQ Option Character Counter */}
+                        //       <div className="text-right text-xs text-gray-400 mt-1">
+                        //         {option.option.length}/250 characters
+                        //       </div>
+                        //     </div>
+                        //     {!option.isSaved || option.isEditing ? (
+                        //       <div className="flex gap-2 ml-2">
+                        //         <button
+                        //           type="button"
+                        //           className="  p-1  bg-white"
+                        //           onClick={() => handleSaveOption(index)}
+                        //         >
+                        //           <VscSave className="fill-custom-blue" />
+                        //         </button>
+                        //         <button
+                        //           type="button"
+                        //           className={`p-1  bg-white ${
+                        //             mcqOptions.length <= 2
+                        //               ? "cursor-not-allowed opacity-50"
+                        //               : ""
+                        //           }`}
+                        //           disabled={mcqOptions.length <= 2}
+                        //           onClick={() => handleCancelOption(index)}
+                        //         >
+                        //           <MdOutlineCancel className="fill-red-400" />
+                        //         </button>
+                        //       </div>
+                        //     ) : (
+                        //       <div className="flex gap-2 ml-2">
+                        //         <button
+                        //           type="button"
+                        //           className=" mt-2  p-1 bg-white"
+                        //           onClick={() => handleEditOption(index)}
+                        //         >
+                        //           <FaRegEdit />
+                        //         </button>
+                        //         <button
+                        //           type="button"
+                        //           className={` mt-2 p-1 bg-white ${
+                        //             mcqOptions.length <= 2
+                        //               ? "cursor-not-allowed opacity-50"
+                        //               : ""
+                        //           }`}
+                        //           onClick={() => handleDeleteOption(index)}
+                        //           disabled={mcqOptions.length <= 2}
+                        //         >
+                        //           <FaTrash />
+                        //         </button>
+                        //       </div>
+                        //     )}
+                        //   </div>
+                        // </div>
                         <div
                           key={index}
-                          className="flex gap-5 items-center relative mb-4"
+                          className="flex items-start gap-4 relative" // Changed items-center to items-start
                         >
-                          <div>
-                            <label
-                              htmlFor={`option${index}`}
-                              className="block text-sm font-medium leading-6 text-gray-500"
-                            ></label>
+                          {/* Checkbox Container */}
+                          <div className="flex items-center pt-4">
+                            <input
+                              type="checkbox"
+                              checked={!!option.isCorrect}
+                              onChange={() => handleCorrectAnswerChange(index)}
+                              className="w-4 h-4 accent-custom-blue cursor-pointer rounded border-gray-300"
+                              title="Mark as a correct answer"
+                            />
                           </div>
-                          {/* v1.0.5 <--------------------------------------------------------- */}
-                          <div className="flex-grow flex justify-center relative mb-5">
-                            {/* <span className="absolute left-0 pl-1 pt-2 text-gray-500"> */}
+
+                          <div className="flex-grow flex item justify-center relative">
                             <span className="absolute left-0 pl-2 pt-3 text-gray-500">
                               {optionLabels[index]}.
                             </span>
-                            <div className="flex flex-col w-full">
-                              {/* v1.0.4 <-------------------------------------------------------------- */}
+
+                            <div className="flex flex-col w-full mb-5">
                               <input
                                 ref={fieldRefs.options}
                                 id={`option${index}`}
                                 name={`option${index}`}
                                 autoComplete="off"
                                 maxLength={250}
-                                // className={`border  px-3 py-2  sm:text-sm rounded-md border-gray-300   text-gray-500 focus:border-black focus:outline-none w-full pl-8`}
                                 className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 pl-7 sm:text-sm
-                                    border ${
-                                      errors.options
-                                        ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                        : "border-gray-300 focus:ring-red-300"
-                                    }
-                                    focus:outline-gray-300
-                                  `}
-                                // v1.0.4 ------------------------------------------------------------->
+                                  border ${
+                                    errors.options
+                                      ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                      : "border-gray-300 focus:ring-red-300"
+                                  }
+                                  focus:outline-gray-300
+                                `}
                                 onChange={(e) => handleOptionChange(index, e)}
                                 value={option.option}
-                                readOnly={option.isSaved && !option.isEditing}
+                                // readOnly={option.isSaved && !option.isEditing}
                                 placeholder={`Please add option`}
                               />
-                              {/* v1.0.5 <--------------------------------------------------------- */}
-                              {/* MCQ Option Character Counter */}
+                              {/* Character Counter */}
                               <div className="text-right text-xs text-gray-400 mt-1">
                                 {option.option.length}/250 characters
                               </div>
                             </div>
+
+                            {/* Action Buttons */}
                             {!option.isSaved || option.isEditing ? (
-                              <div className="flex gap-2 ml-2">
-                                <button
+                              <div className="flex gap-2 ml-2 pb-9">
+                                {/* <button
                                   type="button"
-                                  className="  p-1  bg-white"
+                                  className="p-1 bg-white"
                                   onClick={() => handleSaveOption(index)}
                                 >
                                   <VscSave className="fill-custom-blue" />
-                                </button>
+                                </button> */}
                                 <button
                                   type="button"
-                                  className={`p-1  bg-white ${
+                                  className={`p-1 bg-white ${
                                     mcqOptions.length <= 2
                                       ? "cursor-not-allowed opacity-50"
                                       : ""
                                   }`}
                                   disabled={mcqOptions.length <= 2}
                                   onClick={() => handleCancelOption(index)}
+                                  title={
+                                    mcqOptions.length > 2
+                                      ? "Remove Option"
+                                      : undefined
+                                  }
                                 >
-                                  <MdOutlineCancel className="fill-red-400" />
+                                  {/* <MdOutlineCancel className="fill-red-400" /> */}
+                                  <FaTrash className="fill-red-400" />
                                 </button>
                               </div>
                             ) : (
-                              <div className="flex gap-2 ml-2">
-                                <button
+                              <div className="flex gap-2 ml-2 pb-9">
+                                {/* <button
                                   type="button"
-                                  className=" mt-2  p-1 bg-white"
+                                  className="p-1 bg-white"
                                   onClick={() => handleEditOption(index)}
                                 >
                                   <FaRegEdit />
-                                </button>
+                                </button> */}
                                 <button
                                   type="button"
-                                  className={` mt-2 p-1 bg-white ${
+                                  className={`p-1 bg-white ${
                                     mcqOptions.length <= 2
                                       ? "cursor-not-allowed opacity-50"
                                       : ""
                                   }`}
                                   onClick={() => handleDeleteOption(index)}
                                   disabled={mcqOptions.length <= 2}
+                                  title={
+                                    mcqOptions.length > 2
+                                      ? "Remove Option"
+                                      : undefined
+                                  }
                                 >
-                                  <FaTrash />
+                                  <FaTrash className="fill-red-400" />
                                 </button>
                               </div>
                             )}
@@ -1642,22 +1954,27 @@ const extractValidationErrors = (axiosError) => {
                         </div>
                       ))}
                       {errors.options && (
-                        <p className="text-red-500 text-sm mt-1 ml-[164px]">
-                          {errors.options}
-                        </p>
+                        <p className="text-red-500 text-sm">{errors.options}</p>
                       )}
                     </form>
                   </div>
                 )}
                 {/* Answer */}
-                <div className="flex flex-col gap-2 mb-2 mt-2">
-
+                <div className="flex flex-col gap-2 mb-2">
                   <div className="flex-grow">
                     {selectedQuestionType === "Boolean" ? (
                       <DropdownWithSearchField
-                        value={selectedBooleanAnswer || formData.correctAnswer}
-                        options={[{ value: "True", label: "True" }, { value: "False", label: "False" }]}
-                        onChange={(e) => handleBooleanAnswerSelect(e.target.value)}
+                        // value={selectedBooleanAnswer || formData.correctAnswer}
+                        value={
+                          formData.correctAnswer || selectedBooleanAnswer || ""
+                        }
+                        options={[
+                          { value: "True", label: "True" },
+                          { value: "False", label: "False" },
+                        ]}
+                        onChange={(e) =>
+                          handleBooleanAnswerSelect(e.target.value)
+                        }
                         error={errors.correctAnswer}
                         containerRef={fieldRefs.correctAnswer}
                         label="Answer"
@@ -1676,6 +1993,42 @@ const extractValidationErrors = (axiosError) => {
                         placeholder="Enter Number"
                         required
                       />
+                    ) : selectedQuestionType === "MCQ" ? (
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Selected Correct Answer(s):
+                        </label>
+                        <div className="p-3 bg-gray-50 rounded-md border border-gray-200 min-h-[40px]">
+                          {mcqOptions.some(
+                            (opt) => opt.isCorrect && opt.option.trim() !== "",
+                          ) ? (
+                            <div className="flex flex-wrap gap-2">
+                              {mcqOptions.map((opt, idx) => {
+                                if (opt.isCorrect && opt.option.trim() !== "") {
+                                  return (
+                                    <span
+                                      key={idx}
+                                      className="bg-custom-blue/20 text-custom-blue px-2 py-1 rounded-full text-sm font-semibold"
+                                    >
+                                      {optionLabels[idx]}) {opt.option.trim()}
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-sm italic">
+                              Please check the correct options above
+                            </span>
+                          )}
+                        </div>
+                        {errors.correctAnswer && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.correctAnswer}
+                          </p>
+                        )}
+                      </div>
                     ) : (
                       <DescriptionField
                         value={formData.correctAnswer}
@@ -1684,8 +2037,18 @@ const extractValidationErrors = (axiosError) => {
                         required
                         inputRef={fieldRefs.correctAnswer}
                         error={errors.correctAnswer}
-                        label={selectedQuestionType === "MCQ" ? "Correct Answer" : "Answer"}
-                        placeholder={selectedQuestionType === "MCQ" ? "Enter Correct Answer like this A) Answer" : "Enter Answer"}
+                        // label={
+                        //   selectedQuestionType === "MCQ"
+                        //     ? "Correct Answer"
+                        //     : "Answer"
+                        // }
+                        label="Answer"
+                        // placeholder={
+                        //   selectedQuestionType === "MCQ"
+                        //     ? "Enter Correct Answer like this A) Answer"
+                        //     : "Enter Answer"
+                        // }
+                        placeholder="Enter Answer"
                         rows={5}
                         maxLength={
                           selectedQuestionType === "Short" ||
@@ -1746,23 +2109,17 @@ const extractValidationErrors = (axiosError) => {
                         type="number"
                         min="1"
                         placeholder="Max"
-                        max={
-                          selectedQuestionType === "Short"
-                            ? "500"
-                            : "2000"
-                        }
+                        max={selectedQuestionType === "Short" ? "500" : "2000"}
                         step="1"
                         value={charLimits.max}
                         onChange={(e) => {
                           const maxLimit =
-                            selectedQuestionType === "Short"
-                              ? 500
-                              : 2000;
+                            selectedQuestionType === "Short" ? 500 : 2000;
                           setCharLimits((prev) => ({
                             ...prev,
                             max: Math.min(
                               maxLimit,
-                              Math.max(1, e.target.value)
+                              Math.max(1, e.target.value),
                             ),
                           }));
                         }}
@@ -1824,7 +2181,7 @@ const extractValidationErrors = (axiosError) => {
 
                   <div className="grid w-full mt-4 grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
                     {/* <div className="flex items-center justify-center w-full gap-5"> */}
-                    {/* Min Experience *
+              {/* Min Experience *
                     <div className="w-full">
                       <DropdownWithSearchField
                         value={formData.minexperience}
@@ -1855,7 +2212,6 @@ const extractValidationErrors = (axiosError) => {
                   {/* </div> *
               </div>
               </div> */}
-          
 
               {/* Score */}
               {/* //shashank - [13/01/2025] */}
@@ -2006,7 +2362,7 @@ const extractValidationErrors = (axiosError) => {
       </SidebarPopup>
     </>
   );
-// v2.0.0 ----------------------------------------------------------------------------------------->
+  // v2.0.0 ----------------------------------------------------------------------------------------->
 };
 
 export default QuestionBankForm;
