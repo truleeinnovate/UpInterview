@@ -530,12 +530,12 @@ const AddCandidateForm = ({
           ? parsedSkills.map((name) => ({
             skill: (name || "").trim(),
             experience: "",
-            expertise: "Beginner",
+            expertise: "",
           }))
           : (sd.screening_result?.extracted_skills || []).map((name) => ({
             skill: (name || "").trim(),
             experience: "",
-            expertise: "Beginner",
+            expertise: "",
           })),
 
       // ── New Fields (Resume Analysis) ─────────────────
@@ -543,9 +543,10 @@ const AddCandidateForm = ({
         sd.screening_result?.summary ||
         sd.screening_result?.professionalSummary ||
         "",
-      keyAchievements: sd.screening_result?.strengths?.join("\n• ")
-        ? "• " + sd.screening_result.strengths.join("\n• ")
-        : "",
+      keyAchievements: "",
+      // sd.screening_result?.strengths?.join("\n• ")
+      //   ? "• " + sd.screening_result.strengths.join("\n• ")
+      //   : "",
       workExperience:
         sd.screening_result?.workHistory?.map((job) => ({
           projectName: job.company || "",
