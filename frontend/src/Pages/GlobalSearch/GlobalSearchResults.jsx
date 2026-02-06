@@ -96,7 +96,15 @@ const getEntityColumns = (entityType, navigate, highlightText = '') => {
                 { header: 'Code', key: 'positionCode', render: (val) => hl(val || '-') },
                 { header: 'Company', key: 'companyname', render: (val) => hl(val || '-') },
                 { header: 'Location', key: 'location', render: (val) => hl(val || '-') },
-                { header: 'Skills', key: 'skills', render: (val) => hl(val || '-') },
+                {
+                    header: 'Skills',
+                    key: 'skills',
+                    render: (val) => (
+                        <div className="max-w-[300px] truncate" title={val || '-'}>
+                            {hl(val || '-')}
+                        </div>
+                    )
+                },
                 { header: 'Status', key: 'status', render: (val) => val || '-' },
             ];
 
@@ -418,13 +426,15 @@ const GlobalSearchResults = () => {
                         </span>
                     </div>
 
-                    <TableView
-                        data={items}
-                        columns={tableColumns}
-                        actions={[]} // No action buttons
-                        autoHeight={true}
-                        highlightText={query}
-                    />
+                    <div className="overflow-x-auto">
+                        <TableView
+                            data={items}
+                            columns={tableColumns}
+                            actions={[]} // No action buttons
+                            autoHeight={true}
+                            highlightText={query}
+                        />
+                    </div>
                 </div>
             );
         });
@@ -504,7 +514,7 @@ const GlobalSearchResults = () => {
                     </div>
 
                     {/* View toggle - Table only (Kanban disabled) */}
-                    <div className="flex bg-white rounded-lg border border-gray-200 p-1 shadow-sm h-fit">
+                    {/* <div className="flex bg-white rounded-lg border border-gray-200 p-1 shadow-sm h-fit">
                         <button
                             className="p-2 rounded-md text-gray-300 cursor-not-allowed"
                             disabled
@@ -518,7 +528,7 @@ const GlobalSearchResults = () => {
                         >
                             <List size={18} />
                         </button>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Loading State */}

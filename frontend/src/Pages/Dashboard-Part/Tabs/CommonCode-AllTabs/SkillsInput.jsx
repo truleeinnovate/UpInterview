@@ -200,7 +200,7 @@ const SkillsField = forwardRef(
       if (onSkillsValidChange) {
         onSkillsValidChange(firstThreeRowsComplete);
       }
-    }, [entries, onSkillsValidChange, showValidation]);
+    }, [entries, onSkillsValidChange, showValidation, showRequirementLevel]);
 
     // Auto-add three empty rows on first mount (no click needed)
     useEffect(() => {
@@ -498,10 +498,9 @@ const SkillsField = forwardRef(
                             onClick={() => toggleSkillInPopup(skillName)}
                             className={`
                               px-4 py-3 rounded-lg border-2 text-left text-sm font-medium transition-all duration-150
-                              ${
-                                isSelected
-                                  ? "border-custom-blue bg-custom-blue/10 text-custom-blue ring-2 ring-custom-blue/20"
-                                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                              ${isSelected
+                                ? "border-custom-blue bg-custom-blue/10 text-custom-blue ring-2 ring-custom-blue/20"
+                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
                               }
                             `}
                           >
@@ -606,11 +605,11 @@ const SkillsField = forwardRef(
                         value={
                           showRequirementLevel
                             ? positionExperienceOptions.find(
-                                (o) => o.value === entry.experience,
-                              ) || null
+                              (o) => o.value === entry.experience,
+                            ) || null
                             : experienceOptionsRS.find(
-                                (o) => o.value === entry.experience,
-                              ) || null
+                              (o) => o.value === entry.experience,
+                            ) || null
                         }
                         onChange={(opt) => {
                           if (onUpdateEntry) {
