@@ -33,7 +33,7 @@ const TaskProfileDetails = ({ task, taskId, onClosetask }) => {
     if (typeof onClosetask === "function") {
       onClosetask();
     } else {
-      navigate("/task");
+      navigate("/tasks");
     }
   };
 
