@@ -382,8 +382,8 @@ exports.createMockInterview = async (req, res) => {
 
     const {
       skills,
-      ownerId,
-      tenantId,
+      ownerId: bodyOwnerId,
+      tenantId: bodyTenantId,
       candidateName,
       higherQualification,
       currentExperience,
@@ -392,6 +392,12 @@ exports.createMockInterview = async (req, res) => {
       createdById,
       lastModifiedById,
     } = req.body;
+
+    // Extract tenantId and ownerId from auth context (priority) or body
+    const authContext = res.locals.auth || {};
+    const tenantId = authContext.actingAsTenantId || bodyTenantId;
+    const ownerId = authContext.actingAsUserId || bodyOwnerId;
+
 
     // Generate unique mockInterviewCode
     const mockInterviewCode = await generateUniqueId(
@@ -514,6 +520,14 @@ exports.updateMockInterview = async (req, res) => {
     }
 
     console.log("existingMockInterview", existingMockInterview);
+
+    // LAZY FIX: If tenantId is missing on the record, set it from auth context
+    const authContext = res.locals.auth || {};
+    if (!existingMockInterview.tenantId && authContext.actingAsTenantId) {
+      existingMockInterview.tenantId = authContext.actingAsTenantId;
+      existingMockInterview.markModified("tenantId");
+      console.log("Lazy-fixed missing tenantId for mock interview:", mockId);
+    }
 
     // let changes = [];
 
@@ -1664,7 +1678,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => {} }), locals: {} },
+        { status: () => ({ json: () => { } }), locals: {} },
       );
     }
 

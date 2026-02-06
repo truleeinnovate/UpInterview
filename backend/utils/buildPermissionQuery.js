@@ -24,42 +24,54 @@ const buildPermissionQuery = async (userId, tenantId,
         return typeof id === 'string' ? new mongoose.Types.ObjectId(id) : id;
     };
 
+    // Get both ObjectId and String versions for compatibility with different schemas
+    const userIdObj = toObjectId(userId);
+    const userIdStr = userId?.toString();
+    const tenantIdObj = toObjectId(tenantId);
+    const tenantIdStr = tenantId?.toString();
+
     if (roleType === "individual") {
-        // Only own records
-        query.ownerId = toObjectId(userId);
+        // Only own records - match both ObjectId and String types
+        query.$or = [
+            { ownerId: userIdObj },
+            { ownerId: userIdStr }
+        ];
     }
     else if (roleType === "organization") {
         if (roleName === "Admin") {
-            // Admin sees everything in tenant
-            query.tenantId = toObjectId(tenantId);
+            // Admin sees everything in tenant - match both ObjectId and String types
+            query.$or = [
+                { tenantId: tenantIdObj },
+                { tenantId: tenantIdStr },
+                { ownerId: userIdObj }, // Allow admin to see own records even if tenantId missing
+                { ownerId: userIdStr }
+            ];
         } else {
             // Non-admin org user → sees own + inherited roles' users' records
             if (inheritedRoleIds.length > 0) {
                 const accessibleUsers = await Users.find({
-                    tenantId: toObjectId(tenantId),
+                    tenantId: { $in: [tenantIdObj, tenantIdStr] },
                     roleId: { $in: inheritedRoleIds },
                 }).select("_id").lean();
 
                 const accessibleUserIds = accessibleUsers.map(u => u._id);
-                accessibleUserIds.push(toObjectId(userId)); // include self
+                accessibleUserIds.push(userIdObj); // include self
 
-                // Dedupe
-                const uniqueIds = [...new Set(accessibleUserIds.map(id => id.toString()))]
-                    .map(id => new mongoose.Types.ObjectId(id));
+                // Dedupe and create both ObjectId and String versions
+                const uniqueIds = [...new Set(accessibleUserIds.map(id => id.toString()))];
+                const objectIdVersions = uniqueIds.map(id => new mongoose.Types.ObjectId(id));
+                const stringVersions = uniqueIds;
 
-                query.ownerId = { $in: uniqueIds };
+                query.ownerId = { $in: [...objectIdVersions, ...stringVersions] };
             } else {
-                // No inherited roles → only own
-                query.ownerId = toObjectId(userId);
+                // No inherited roles → only own - match both ObjectId and String types
+                query.$or = [
+                    { ownerId: userIdObj },
+                    { ownerId: userIdStr }
+                ];
             }
         }
     }
-
-
-    // Always restrict to tenant (safety net)
-    // if (tenantId && roleType !== "individual") {
-    //     query.tenantId = tenantId;
-    // }
 
     return query;
 };
