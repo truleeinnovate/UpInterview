@@ -549,20 +549,20 @@ export const getInterviewColumns = (navigate, permissions = {}, callbacks = {}) 
 ];
 
 export const getInterviewActions = (navigate, permissions = {}, callbacks = {}) => [
-    ...(permissions?.View ? [{
+    ...(permissions?.Interviews?.View ? [{
         key: "view",
         label: "View Details",
         icon: <Eye className="w-4 h-4 text-custom-blue" />,
         onClick: (row) => navigate(`/interviews/${row._id}`)
     }] : []),
-    ...(permissions?.Edit ? [{
+    ...(permissions?.Interviews?.Edit ? [{
         key: "edit",
         label: "Edit",
         icon: <Pencil className="w-4 h-4 text-green-600" />,
         onClick: (row) => navigate(`/interviews/${row._id}/edit`),
         show: (row) => row.status === "Draft"
     }] : []),
-    ...(permissions?.Delete && callbacks.onDelete ? [{
+    ...(permissions?.Interviews?.Delete && callbacks.onDelete ? [{
         key: "delete",
         label: "Delete",
         icon: <Trash className="w-4 h-4 text-red-600" />,
