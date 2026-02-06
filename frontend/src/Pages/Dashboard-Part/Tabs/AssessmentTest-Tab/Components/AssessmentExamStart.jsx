@@ -18,6 +18,7 @@ function AssessmentTest({
   duration,
   candidateAssessmentId,
 }) {
+  console.log("QUESTIONS ===========================> ", questions);
   const [currentSection, setCurrentSection] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -275,6 +276,16 @@ function AssessmentTest({
   // };
 
   const verifyAnswer = (question, selectedAnswer) => {
+    console.log("QUESTION =======================> ", question);
+    console.log("SELECTED ANSWER =======================> ", selectedAnswer);
+    // const questionType =
+    //   question.snapshot?.questionType || question.questionType;
+    // const options = question.snapshot?.options || question.options || [];
+
+    // const clean = (val) =>
+    //   String(val || "")
+    //     .trim()
+    //     .toLowerCase();
     const questionType =
       question.snapshot?.questionType || question.questionType;
     const options = question.snapshot?.options || question.options || [];
@@ -285,26 +296,68 @@ function AssessmentTest({
         .toLowerCase();
 
     switch (questionType) {
+      // case "MCQ":
+      // case "Multiple Choice": {
+      //   // 1. Get correct answers from the options array objects
+      //   const correctOptions = options
+      //     .filter((opt) => typeof opt === "object" && opt.isCorrect === true)
+      //     .map((opt) => clean(opt.optionText));
+
+      //   // 2. Normalize selected answers to an array
+      //   const selectedArray = Array.isArray(selectedAnswer)
+      //     ? selectedAnswer.map((s) => clean(s))
+      //     : selectedAnswer
+      //       ? [clean(selectedAnswer)]
+      //       : [];
+
+      //   // 3. Comparison
+      //   if (correctOptions.length === 0) return false;
+      //   if (correctOptions.length !== selectedArray.length) return false;
+
+      //   // Ensure every correct option is present in the selection
+      //   return correctOptions.every((c) => selectedArray.includes(c));
+      // }
+
+      // case "MCQ":
+      // case "Multiple Choice": {
+      //   // 1. Extract all correct options based on the isCorrect flag
+      //   const correctOptionTexts = options
+      //     .filter((opt) => opt && opt.isCorrect === true)
+      //     .map((opt) => clean(opt.optionText));
+
+      //   // 2. Normalize selectedAnswer (handle both single string or array of strings)
+      //   const selectedArray = Array.isArray(selectedAnswer)
+      //     ? selectedAnswer.map((s) => clean(s))
+      //     : selectedAnswer
+      //       ? [clean(selectedAnswer)]
+      //       : [];
+
+      //   // 3. Logic check:
+      //   if (correctOptionTexts.length === 0) return false;
+
+      //   // Check if lengths match and every correct option is selected
+      //   if (correctOptionTexts.length !== selectedArray.length) return false;
+      //   return correctOptionTexts.every((c) => selectedArray.includes(c));
+      // }
+
       case "MCQ":
       case "Multiple Choice": {
-        // 1. Get correct answers from the options array objects
-        const correctOptions = options
-          .filter((opt) => typeof opt === "object" && opt.isCorrect === true)
+        const correctOptionTexts = options
+          .filter((opt) => opt && opt.isCorrect === true)
           .map((opt) => clean(opt.optionText));
 
-        // 2. Normalize selected answers to an array
+        // Use Set to ensure unique selections if the UI allows multiple clicks
         const selectedArray = Array.isArray(selectedAnswer)
-          ? selectedAnswer.map((s) => clean(s))
-          : selectedAnswer
-            ? [clean(selectedAnswer)]
-            : [];
+          ? [...new Set(selectedAnswer.map((s) => clean(s)))]
+          : selectedAnswer ? [clean(selectedAnswer)] : [];
 
-        // 3. Comparison
-        if (correctOptions.length === 0) return false;
-        if (correctOptions.length !== selectedArray.length) return false;
+        if (correctOptionTexts.length === 0) return false;
 
-        // Ensure every correct option is present in the selection
-        return correctOptions.every((c) => selectedArray.includes(c));
+        // Length must match unique selections
+        if (correctOptionTexts.length !== selectedArray.length) return false;
+        
+        // Every correct answer must be found in the user's selection
+        return correctOptionTexts.every((c) => selectedArray.includes(c));
       }
 
       case "Boolean": {
@@ -456,23 +509,19 @@ function AssessmentTest({
         remainingTime: timeLeft,
         sections: questions.sections.map((section) => {
           const sectionQuestions = section.questions.map((question) => {
-            // Get raw answer from state
             const rawAnswer = answers[question._id];
 
-            // Fix: Explicitly check for null/undefined to allow boolean 'false' or number 0
             const userAnswer =
               rawAnswer !== undefined && rawAnswer !== null ? rawAnswer : "";
 
             const isCorrect = verifyAnswer(question, userAnswer);
 
-            // --- START FIX FOR MCQ & BOOLEAN CORRECT ANSWER DISPLAY ---
             let displayCorrectAnswer =
               question.snapshot?.correctAnswer || question.correctAnswer;
             const qType =
               question.snapshot?.questionType || question.questionType;
 
             if (qType === "MCQ") {
-              // Extract correct answers from the options objects
               const correctOpts = (
                 question.snapshot?.options ||
                 question.options ||
@@ -486,12 +535,10 @@ function AssessmentTest({
               displayCorrectAnswer =
                 correctOpts.length > 0 ? correctOpts.join(", ") : "";
             } else if (qType === "Boolean") {
-              // Ensure we send a string even if legacy data was an array
               displayCorrectAnswer = Array.isArray(displayCorrectAnswer)
                 ? displayCorrectAnswer[0]
                 : displayCorrectAnswer;
             }
-            // --- END FIX ---
 
             // Get weighted points from snapshot or root
             const questionWeight = Number(
