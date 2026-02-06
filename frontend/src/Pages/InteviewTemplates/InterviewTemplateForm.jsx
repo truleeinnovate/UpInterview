@@ -510,6 +510,8 @@ const InterviewSlideover = ({ mode }) => {
                                 required
                             />
 
+
+<div>
                             <InputField
                                 label="Best For"
                                 inputRef={fieldRefs.bestFor}
@@ -530,9 +532,9 @@ const InterviewSlideover = ({ mode }) => {
                                 maxLength={50}
                             />
                             <p className="flex justify-end text-xs text-gray-500 mt-1">
-                                {newTemplate.bestFor.length}/50 characters
+                                {newTemplate.bestFor.length}/50 
                             </p>
-
+</div>
                             <DropdownWithSearchField
                                 label="Format"
                                 name="format"

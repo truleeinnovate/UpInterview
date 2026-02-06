@@ -1012,10 +1012,24 @@ const RoundCard = ({
       canEvaluated: true,
     },
     //  added by ranjith new status validation
+    // InProgress: {
+    //   canEdit: false,
+    //   canDelete: false,
+    //   canNoShow: true,
+    // },
     InProgress: {
       canEdit: false,
       canDelete: false,
       canNoShow: true,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: true,
+      canComplete: true,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canSkipped: false,
+      canEvaluated: true,
     },
     Cancelled: {
       canEdit: false,
