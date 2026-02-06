@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
 import { config } from '../config';
+import Cookies from 'js-cookie';
 
-const API_BASE_URL = config.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = config.REACT_APP_API_URL;
 
 /**
  * Hook for global search functionality
@@ -32,9 +33,18 @@ export const useGlobalSearch = () => {
                 params.append('filter', filter);
             }
 
+            const authToken = Cookies.get("authToken") ?? "";
             const response = await axios.get(
                 `${API_BASE_URL}/api/global-search?${params.toString()}`,
-                { withCredentials: true }
+                {
+                    headers: authToken
+                        ? {
+                            Authorization: `Bearer ${authToken}`,
+                        }
+                        : undefined,
+                    withCredentials: true,
+                }
+
             );
 
             if (response.data.success) {
