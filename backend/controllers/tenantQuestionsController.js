@@ -100,15 +100,13 @@ exports.newQuestion = async (req, res) => {
     //----v1.0.1---->
 
     if (!tenantId && !ownerId) {
-      return res
-        .status(400)
-        .json({
-          message: "Validation failed",
-          errors: {
-            tenantId: "Either tenantId or ownerId is required",
-            ownerId: "Either ownerId or tenantId is required",
-          },
-        });
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: {
+          tenantId: "Either tenantId or ownerId is required",
+          ownerId: "Either ownerId or tenantId is required",
+        },
+      });
     }
 
     res.locals.loggedByController = true;
@@ -135,7 +133,7 @@ exports.newQuestion = async (req, res) => {
         isInterviewQuestionType: isInterviewType,
         ...(tenantListId && {
           tenantListId: tenantListId.map(
-            (id) => new mongoose.Types.ObjectId(id)
+            (id) => new mongoose.Types.ObjectId(id),
           ),
         }),
         ...(ownerId && { ownerId }),
@@ -150,7 +148,7 @@ exports.newQuestion = async (req, res) => {
         isInterviewQuestionType: isInterviewType,
         ...(tenantListId && {
           tenantListId: tenantListId.map(
-            (id) => new mongoose.Types.ObjectId(id)
+            (id) => new mongoose.Types.ObjectId(id),
           ),
         }),
         ...(ownerId && { ownerId }),
@@ -359,6 +357,10 @@ exports.updateQuestion = async (req, res) => {
       isEdit,
       ...updateFields
     } = req.body;
+    console.log(
+      "UPDATED FIELDS ==================================> ",
+      updateFields,
+    );
 
     // Map UI field -> DB field
     if (typeof isInterviewType !== "undefined") {
@@ -408,7 +410,7 @@ exports.updateQuestion = async (req, res) => {
     // Handle tenantListId
     if (Array.isArray(tenantListId)) {
       const uniqueListIds = [...new Set(tenantListId)].map(
-        (id) => new mongoose.Types.ObjectId(id)
+        (id) => new mongoose.Types.ObjectId(id),
       );
       const oldIds = (original.tenantListId || []).map(String);
       const newIds = uniqueListIds.map(String);
@@ -423,17 +425,39 @@ exports.updateQuestion = async (req, res) => {
       }
     }
 
+    // -------------------- NEW FOR MCQ OPTIONS ----------------------------------------
+    // Check each update field
+    // for (const key of Object.keys(updateFields)) {
+    //   if (String(original[key] ?? "") !== String(updateFields[key] ?? "")) {
+    //     changes.push({
+    //       fieldName: key,
+    //       oldValue: original[key],
+    //       newValue: updateFields[key],
+    //     });
+    //     question[key] = updateFields[key];
+    //   }
+    // }
+
     // Check each update field
     for (const key of Object.keys(updateFields)) {
-      if (String(original[key] ?? "") !== String(updateFields[key] ?? "")) {
+      const oldValue = original[key];
+      const newValue = updateFields[key];
+
+      const isDifferent =
+        JSON.stringify(oldValue ?? "") !== JSON.stringify(newValue ?? "");
+
+      if (isDifferent) {
         changes.push({
           fieldName: key,
-          oldValue: original[key],
-          newValue: updateFields[key],
+          oldValue: oldValue,
+          newValue: newValue,
         });
-        question[key] = updateFields[key];
+
+        // Use .set() or direct assignment to ensure Mongoose tracks the change
+        question.set(key, newValue);
       }
     }
+    // -------------------- NEW FOR MCQ OPTIONS  ----------------------------------------
 
     // Explicit tenantId/ownerId
     if (tenantId && String(original.tenantId ?? "") !== String(tenantId)) {
@@ -530,12 +554,10 @@ exports.getQuestionBySuggestedId = async (req, res) => {
   }
 
   if (!isValidObjectId(suggestedQuestionId)) {
-    return res
-      .status(400)
-      .json({
-        message: "Validation failed",
-        errors: { suggestedQuestionId: "Invalid suggestedQuestionId" },
-      });
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: { suggestedQuestionId: "Invalid suggestedQuestionId" },
+    });
   }
   //----v1.0.1---->
 
@@ -566,13 +588,11 @@ exports.getQuestionBySuggestedId = async (req, res) => {
     };
 
     // Try across models in order: assessment, interview, legacy
-    question = await TenantAssessmentQuestions.findOne(query).populate(
-      "tenantListId"
-    );
+    question =
+      await TenantAssessmentQuestions.findOne(query).populate("tenantListId");
     if (!question) {
-      question = await TenantInterviewQuestions.findOne(query).populate(
-        "tenantListId"
-      );
+      question =
+        await TenantInterviewQuestions.findOne(query).populate("tenantListId");
     }
     // if (!question) {
     //   question = await TenantQuestions.findOne(query).populate('tenantListId');
@@ -586,7 +606,7 @@ exports.getQuestionBySuggestedId = async (req, res) => {
     const responseData = {
       ...question.toObject(),
       tenantListId: (question.tenantListId || []).map(
-        (id) => id._id?.toString() || id.toString()
+        (id) => id._id?.toString() || id.toString(),
       ), //---v1.0.0--->
     };
 
@@ -671,7 +691,7 @@ exports.deleteQuestionsById = async (req, res) => {
       });
     } else if (deleteType === "selected") {
       const validQuestionIds = questionIds.filter((id) =>
-        mongoose.Types.ObjectId.isValid(id)
+        mongoose.Types.ObjectId.isValid(id),
       );
 
       if (validQuestionIds.length === 0) {
@@ -716,7 +736,7 @@ exports.deleteQuestionsById = async (req, res) => {
           // 🚨 Case 2: Multiple labels → just remove this label from array
           await QuestionModel.updateOne(
             { _id: q._id },
-            { $pull: { tenantListId: list._id } }
+            { $pull: { tenantListId: list._id } },
           );
           updatedCount++;
         }

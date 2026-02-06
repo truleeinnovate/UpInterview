@@ -19,7 +19,10 @@ export const validateQuestionBankData = (
     // maxexperience: "Max Experience is required",
     // score: "Score is required",
     ...(section === "assessment" && { score: "Score is required" }),
-    correctAnswer: "Answer is required",
+    // correctAnswer: "Answer is required",
+    ...(formData.questionType !== "MCQ" && {
+      correctAnswer: "Answer is required",
+    }),
   };
 
   // Check if required fields are empty
@@ -38,20 +41,32 @@ export const validateQuestionBankData = (
   // }
 
   // Inside your validation utility function
-  if (formData.questionType === "MCQ") {
-    // Check if mcqOptions array has any item where isCorrect is true
-    const selectedCount = mcqOptions.filter((opt) => opt.isCorrect).length;
+  // if (formData.questionType === "MCQ") {
+  //   // Check if mcqOptions array has any item where isCorrect is true
+  //   const selectedCount = mcqOptions.filter((opt) => opt.isCorrect).length;
 
-    if (selectedCount === 0) {
-      errors.correctAnswer = "Please select at least one correct answer.";
+  //   if (selectedCount === 0) {
+  //     errors.correctAnswer = "Please select at least one correct answer.";
+  //   }
+
+  //   // Optional: Check if the text of correct options isn't empty
+  //   const hasEmptyCorrect = mcqOptions.some(
+  //     (opt) => opt.isCorrect && !opt.option.trim(),
+  //   );
+  //   if (hasEmptyCorrect) {
+  //     errors.options = "A correct answer option cannot be empty.";
+  //   }
+  // }
+  if (formData.questionType === "MCQ") {
+    // Check if there are actual options text entered
+    const hasOptions = mcqOptions.some((opt) => opt.option.trim() !== "");
+    if (!hasOptions) {
+      errors.options = "At least one option is required";
     }
 
-    // Optional: Check if the text of correct options isn't empty
-    const hasEmptyCorrect = mcqOptions.some(
-      (opt) => opt.isCorrect && !opt.option.trim(),
-    );
-    if (hasEmptyCorrect) {
-      errors.options = "A correct answer option cannot be empty.";
+    const selectedCount = mcqOptions.filter((opt) => opt.isCorrect).length;
+    if (selectedCount === 0) {
+      errors.correctAnswer = "Please select at least one correct answer.";
     }
   }
 

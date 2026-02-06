@@ -602,6 +602,11 @@ const SuggestedQuestionsComponent = ({
           isAutoAssessment: item.isAutoAssessment,
           isInterviewQuestionOnly: item.isInterviewQuestionOnly,
           options: item.options,
+          // do not remove this line used in future
+          // options: item.options.map(opt => ({
+          //   optionText: opt.optionText || opt,
+          //   isCorrect: opt.isCorrect || false
+          // })),
           programming: item.programming,
           questionNo: item.questionNo,
           questionText: item.questionText,
@@ -1453,6 +1458,31 @@ const SuggestedQuestionsComponent = ({
                               </ul>
                             </div>
                           )}
+                          {/* do not remove this commented code used in future */}
+                        {/* {item.questionType === "MCQ" && item.options && (
+                          <div className="mb-2 ml-12 mt-2">
+                            <ul className="list-none">
+                              {(() => {
+                                const isAnyOptionLong = item.options.some(
+                                  (option) => (option?.optionText || option).length > 55
+                                );
+
+                                return item.options.map((option, idx) => (
+                                  <li
+                                    key={idx}
+                                    className={`${
+                                      isAnyOptionLong ? "block w-full" : "inline-block w-1/2"
+                                    } mb-2`}
+                                  >
+                                    <span className="text-gray-700">
+                                      {typeof option === 'object' ? option.optionText : option}
+                                    </span>
+                                  </li>
+                                ));
+                              })()}
+                            </ul>
+                          </div>
+                        )} */}
                         </div>
                         <div className="p-4">
                           <p className="text-sm break-words whitespace-pre-wrap">
@@ -1464,6 +1494,21 @@ const SuggestedQuestionsComponent = ({
                                 ? renderSolutions(item.solutions)
                                 : item.correctAnswer}
                             </span>
+                            {/* do not remove this line used in future */}
+                            {/* <span className="sm:text-sm text-gray-600">
+                              {(() => {
+                                if (item.questionType === "Programming") {
+                                  return renderSolutions(item.solutions);
+                                }
+
+                                if (item.questionType === "MCQ" && Array.isArray(item.options)) {
+                                  const correctOption = item.options.find(opt => opt.isCorrect === true);
+                                  return correctOption ? correctOption.optionText : "No correct answer specified";
+                                }
+
+                                return item.correctAnswer;
+                              })()}
+                            </span> */}
                           </p>
                           <p className="sm:text-sm font-medium pt-2">
                             Tags:{" "}

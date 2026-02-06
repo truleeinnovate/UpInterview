@@ -19,29 +19,82 @@ const QuestionCard = ({ question }) => {
 
   const renderByType = () => {
     switch (questionType) {
+      // case "MCQ":
+      //   // Extract the actual answer text from "C) number"
+
+      //   return (
+      //     <div>
+      //       {/* Options grid */}
+      //       <div className="grid grid-cols-2">
+      //         {options.map((option, index) => {
+      //           return (
+      //             <div
+      //               key={index}
+      //               className="flex items-center p-3 rounded-lg transition-colors"
+      //             >
+      //               <span>{option}</span>
+      //             </div>
+      //           );
+      //         })}
+      //       </div>
+
+      //       {/* Correct answer below */}
+      //       <div className="flex items-center gap-2 p-3">
+      //         <span className="text-gray-600">Answer:</span>
+      //         <span className="text-gray-900 font-medium">{correctAnswer}</span>
+      //       </div>
+      //     </div>
+      //   );
+
       case "MCQ":
-        // Extract the actual answer text from "C) number"
+        // 1. Get formatted correct answers from options array
+        const correctAnswersFormatted = options
+          ?.map((opt, idx) => {
+            const isObject = typeof opt === "object";
+            const isCorrect = isObject ? opt.isCorrect === true : false;
+            const text = isObject ? opt.optionText : opt;
+
+            if (isCorrect) {
+              const letter = String.fromCharCode(97 + idx); // small 'a', 'b', 'c'
+              return `${letter}) ${text}`;
+            }
+            return null;
+          })
+          .filter(Boolean);
+
+        const displayAnswer =
+          correctAnswersFormatted?.length > 0
+            ? correctAnswersFormatted.join(", ")
+            : "No correct answer specified";
 
         return (
           <div>
             {/* Options grid */}
-            <div className="grid grid-cols-2">
+            <div className="grid grid-cols-2 gap-2 mb-3">
               {options.map((option, index) => {
+                const text =
+                  typeof option === "object" ? option.optionText : option;
+                const letter = String.fromCharCode(97 + index);
                 return (
                   <div
                     key={index}
-                    className="flex items-center p-3 rounded-lg transition-colors"
+                    className="flex items-center p-2 rounded-lg"
                   >
-                    <span>{option}</span>
+                    <span className="text-gray-500 font-medium mr-2">
+                      {letter})
+                    </span>
+                    <span className="text-gray-700">{text}</span>
                   </div>
                 );
               })}
             </div>
 
             {/* Correct answer below */}
-            <div className="flex items-center gap-2 p-3">
-              <span className="text-gray-600">Answer:</span>
-              <span className="text-gray-900 font-medium">{correctAnswer}</span>
+            <div className="flex items-center gap-2 p-1">
+              <span className="text-gray-600 font-medium">Answer:</span>
+              <span className="text-gray-800 font-semibold">
+                {displayAnswer}
+              </span>
             </div>
           </div>
         );
@@ -88,7 +141,7 @@ const QuestionCard = ({ question }) => {
         {/* Difficulty Badge */}
         <span
           className={`text-sm w-16 text-center ${getDifficultyStyles(
-            question?.snapshot?.difficultyLevel
+            question?.snapshot?.difficultyLevel,
           )} rounded-md py-0.5`}
         >
           {question?.snapshot?.difficultyLevel}

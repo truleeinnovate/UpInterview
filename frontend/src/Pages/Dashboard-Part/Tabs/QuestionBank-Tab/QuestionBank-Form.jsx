@@ -264,27 +264,52 @@ const QuestionBankForm = ({
     useState(false);
 
   // ---------------------------- NEW MCQ IMPLEMENTATION ---------------------------------
-  const handleCorrectAnswerChange = (index) => {
-    const newOptions = [...mcqOptions];
-    // Toggle the isCorrect boolean for the clicked option
-    newOptions[index].isCorrect = !newOptions[index].isCorrect;
-    setMcqOptions(newOptions);
+  // const handleCorrectAnswerChange = (index) => {
+  //   const newOptions = [...mcqOptions];
+  //   // Toggle the isCorrect boolean for the clicked option
+  //   newOptions[index].isCorrect = !newOptions[index].isCorrect;
+  //   setMcqOptions(newOptions);
 
-    // Sync with formData: Filter all options marked as correct and get their text
-    const correctValues = newOptions
+  //   // Sync with formData: Filter all options marked as correct and get their text
+  //   const correctValues = newOptions
+  //     .filter((opt) => opt.isCorrect && opt.option.trim() !== "")
+  //     .map((opt) => opt.option.trim());
+
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     // Store as array for Multi-select, or join with a delimiter if your backend requires a string
+  //     correctAnswer: correctValues,
+  //   }));
+
+  //   if (errors.correctAnswer) {
+  //     setErrors((prev) => ({ ...prev, correctAnswer: "" }));
+  //   }
+  // };
+const handleCorrectAnswerChange = (index) => {
+  setMcqOptions((prevOptions) => {
+    const newOptions = [...prevOptions];
+    newOptions[index] = { 
+      ...newOptions[index], 
+      isCorrect: !newOptions[index].isCorrect 
+    };
+
+    // Update the string version in formData for the validator
+    const selectedTexts = newOptions
       .filter((opt) => opt.isCorrect && opt.option.trim() !== "")
       .map((opt) => opt.option.trim());
 
     setFormData((prev) => ({
       ...prev,
-      // Store as array for Multi-select, or join with a delimiter if your backend requires a string
-      correctAnswer: correctValues,
+      correctAnswer: selectedTexts.join(", "),
     }));
 
-    if (errors.correctAnswer) {
-      setErrors((prev) => ({ ...prev, correctAnswer: "" }));
-    }
-  };
+    return newOptions;
+  });
+
+  if (errors.correctAnswer) {
+    setErrors((prev) => ({ ...prev, correctAnswer: "" }));
+  }
+};
   // ---------------------------- NEW MCQ IMPLEMENTATION ---------------------------------
 
   const handleChange = (e) => {
@@ -347,9 +372,7 @@ const QuestionBankForm = ({
 
   useEffect(() => {
     if (isEdit && Object.keys(question).length > 0) {
-      const currentType = question.questionType || "";
-      const isMCQType =
-        currentType === "MCQ_SINGLE" || currentType === "MCQ_MULTI";
+      console.log("1. DEBUG: Initialized MCQ State =========================>:", question);
 
       setFormData({
         questionText: question.questionText || "",
@@ -378,23 +401,47 @@ const QuestionBankForm = ({
           : "Assessment Questions",
       );
       // ------------------------ NEW MCQ CHANGE -----------------------------------------
-      if (question.questionType === "MCQ") {
-        const storedAnswers = Array.isArray(question.correctAnswer)
-          ? question.correctAnswer
-          : [];
+      // if (question.questionType === "MCQ") {
+      //   const storedAnswers = Array.isArray(question.correctAnswer)
+      //     ? question.correctAnswer
+      //     : [];
 
-        const initializedOptions = (question.options || []).map((optText) => ({
-          option: optText,
+      //   const initializedOptions = (question.options || []).map((optText) => ({
+      //     option: optText,
+      //     isSaved: true,
+      //     isEditing: false,
+      //     isCorrect: storedAnswers.some(
+      //       (ans) => String(ans).trim() === String(optText).trim(),
+      //     ),
+      //   }));
+
+      //   setMcqOptions(initializedOptions);
+      //   setShowMcqFields(true);
+      // } 
+      // if (question.questionType === "MCQ") {
+      //   const initializedOptions = (question.options || []).map((opt) => ({
+      //     option: typeof opt === 'object' ? opt.optionText : opt, 
+      //     isSaved: true,
+      //     isEditing: false,
+      //     isCorrect: typeof opt === 'object' ? !!opt.isCorrect : false,
+      //   }));
+
+      //   setMcqOptions(initializedOptions);
+      //   setShowMcqFields(true);
+      // }
+      if (question.questionType === "MCQ") {
+        const initializedOptions = (question.options || []).map((opt) => ({
+          // Map 'optionText' from DB back to 'option' for component state
+          option: typeof opt === 'object' ? opt.optionText : opt, 
           isSaved: true,
           isEditing: false,
-          isCorrect: storedAnswers.some(
-            (ans) => String(ans).trim() === String(optText).trim(),
-          ),
+          isCorrect: typeof opt === 'object' ? !!opt.isCorrect : false,
         }));
+        console.log("2. DEBUG: Initialized MCQ State: ======================>", initializedOptions);
 
         setMcqOptions(initializedOptions);
         setShowMcqFields(true);
-      } else {
+    } else {
         setShowMcqFields(false);
       }
 
@@ -715,24 +762,85 @@ const QuestionBankForm = ({
     //   }
     // }
 
+    // if (selectedQuestionType === "MCQ") {
+    //   const filteredOptions = mcqOptions
+    //     .map((o) => ({
+    //       optionText: o.option.trim(),
+    //       isCorrect: o.isCorrect
+    //     }))
+    //     .filter((o) => o.optionText.length > 0);
+
+    //   questionData.options = filteredOptions;
+    //   const correctOnes = filteredOptions
+    //     .filter(o => o.isCorrect)
+    //     .map(o => o.optionText);
+
+    //   questionData.correctAnswer = correctOnes.join(", "); 
+    // }
+    // if (selectedQuestionType === "MCQ") {
+    //   const filteredOptions = mcqOptions
+    //     .map((o) => ({
+    //       optionText: o.option.trim(),
+    //       isCorrect: !!o.isCorrect
+    //     }))
+    //     .filter((o) => o.optionText.length > 0);
+
+    //   questionData.options = filteredOptions;
+
+    //   const correctOnes = filteredOptions
+    //     .filter(o => o.isCorrect)
+    //     .map(o => o.optionText);
+
+    //   questionData.correctAnswer = correctOnes.join(", "); 
+    // }
+    // if (selectedQuestionType === "MCQ") {
+    //   const filteredOptions = mcqOptions
+    //     .map((o) => ({
+    //       optionText: o.option.trim(),
+    //       isCorrect: !!o.isCorrect
+    //     }))
+    //     .filter((o) => o.optionText.length > 0);
+
+    //   questionData.options = filteredOptions;
+
+    //   const correctOnes = filteredOptions
+    //     .filter(o => o.isCorrect)
+    //     .map(o => o.optionText);
+
+    //   questionData.correctAnswer = correctOnes.join(", "); 
+    // }
     if (selectedQuestionType === "MCQ") {
-      questionData.correctAnswer = mcqOptions
-        .filter((opt) => opt.isCorrect)
-        .map((opt) => opt.option.trim());
-    } else if (selectedQuestionType === "Boolean") {
-      questionData.correctAnswer = [selectedBooleanAnswer];
-    } else {
-      // For Short, Long, Number types
-      questionData.correctAnswer = [String(formData.correctAnswer).trim()];
+      const filteredOptions = mcqOptions
+        .filter((o) => o.option && o.option.trim() !== "") // Don't save empty options
+        .map((o) => ({
+          optionText: o.option.trim(),
+          isCorrect: Boolean(o.isCorrect), // Force cast to boolean
+        }));
+
+      questionData.options = filteredOptions;
+
+      // Sync the correctAnswer string field for the backend
+      const correctOnes = filteredOptions
+        .filter(o => o.isCorrect === true)
+        .map(o => o.optionText);
+
+      questionData.correctAnswer = correctOnes.join(", "); 
+    }
+    else if (selectedQuestionType === "Boolean") {
+      questionData.correctAnswer = selectedBooleanAnswer; 
+      questionData.options = []; 
+    } 
+    else {
+      questionData.correctAnswer = String(formData.correctAnswer).trim();
     }
 
     // ----------------------- NEW MCQ IMPLEMENTATION -----------------------------
 
     // Ensure we don't carry over an empty options array from formData by default
     // Options should only be attached when MCQ has at least one non-empty option
-    if (Object.prototype.hasOwnProperty.call(questionData, "options")) {
-      delete questionData.options;
-    }
+    // if (Object.prototype.hasOwnProperty.call(questionData, "options")) {
+    //   delete questionData.options;
+    // }
 
     // Add conditional data based on question type
     if (["Short", "Long"].includes(selectedQuestionType)) {
@@ -747,16 +855,16 @@ const QuestionBankForm = ({
       }
     }
 
-    if (selectedQuestionType === "MCQ") {
-      const filteredOptions = (mcqOptions || [])
-        .map((o) => (o?.option ?? "").trim())
-        .filter((o) => o.length > 0);
+    // if (selectedQuestionType === "MCQ") {
+    //   const filteredOptions = (mcqOptions || [])
+    //     .map((o) => (o?.option ?? "").trim())
+    //     .filter((o) => o.length > 0);
 
-      if (filteredOptions.length > 0) {
-        questionData.options = filteredOptions;
-      }
-      // If no non-empty options, omit the field; frontend validation already blocks submission
-    }
+    //   if (filteredOptions.length > 0) {
+    //     questionData.options = filteredOptions;
+    //   }
+    //   // If no non-empty options, omit the field; frontend validation already blocks submission
+    // }
 
     if (
       selectedQuestionType === "Programming Questions" &&
@@ -770,6 +878,7 @@ const QuestionBankForm = ({
     }
 
     console.log("questionData", questionData);
+    console.log("4. DEBUG: Full Submission Object ==========================> :", questionData);
 
     try {
       // Use saveOrUpdateQuestion mutation instead of direct axios call
@@ -794,7 +903,8 @@ const QuestionBankForm = ({
           source: "custom",
           snapshot: {
             questionText: formData.questionText,
-            options: formData.options,
+            // options: formData.options,
+            options: selectedQuestionType === "MCQ" ? questionData.options : formData.options,
             correctAnswer: formData.correctAnswer,
             questionType: formData.questionType,
             category: formData.category,
@@ -1108,18 +1218,47 @@ const QuestionBankForm = ({
     // ----------------------- NEW MCQ --------------------------------------
   };
 
-  const handleOptionChange = (index, e) => {
-    const newOptions = [...mcqOptions];
-    newOptions[index].option = e.target.value;
-    setMcqOptions(newOptions);
+  // const handleOptionChange = (index, e) => {
+  //   const newOptions = [...mcqOptions];
+  //   newOptions[index].option = e.target.value;
+  //   setMcqOptions(newOptions);
 
-    // Check if all options are filled
-    const allOptionsFilled = newOptions.every(
-      (option) => option.option.trim() !== "",
-    );
-    if (allOptionsFilled) {
-      setErrors((prevErrors) => {
-        const { Options, ...rest } = prevErrors;
+  //   // Check if all options are filled
+  //   const allOptionsFilled = newOptions.every(
+  //     (option) => option.option.trim() !== "",
+  //   );
+  //   if (allOptionsFilled) {
+  //     setErrors((prevErrors) => {
+  //       const { Options, ...rest } = prevErrors;
+  //       return rest;
+  //     });
+  //   }
+  // };
+  const handleOptionChange = (index, e) => {
+  const newValue = e.target.value;
+  console.log(`3. DEBUG: Option Index ${index} changing to : ===================>`, newValue);
+  
+    setMcqOptions((prevOptions) => {
+      const newOptions = [...prevOptions];
+      newOptions[index] = { ...newOptions[index], option: newValue };
+
+      // Sync the comma-separated correctAnswer string for the backend
+      const correctValues = newOptions
+        .filter((opt) => opt.isCorrect && opt.option.trim() !== "")
+        .map((opt) => opt.option.trim());
+
+      setFormData((prev) => ({
+        ...prev,
+        correctAnswer: correctValues.join(", "),
+      }));
+
+      return newOptions;
+    });
+
+    // Clear errors if all options are filled
+    if (errors.options) {
+      setErrors((prev) => {
+        const { options, ...rest } = prev;
         return rest;
       });
     }
@@ -1998,7 +2137,7 @@ const QuestionBankForm = ({
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Selected Correct Answer(s):
                         </label>
-                        <div className="p-3 bg-gray-50 rounded-md border border-gray-200 min-h-[40px]">
+                        {/* <div className="p-3 bg-gray-50 rounded-md border border-gray-200 min-h-[40px]">
                           {mcqOptions.some(
                             (opt) => opt.isCorrect && opt.option.trim() !== "",
                           ) ? (
@@ -2022,6 +2161,34 @@ const QuestionBankForm = ({
                               Please check the correct options above
                             </span>
                           )}
+                        </div> */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Correct Answer (Set via checkboxes above)
+                          </label>
+                          <div className="p-3 bg-blue-50 rounded-md border border-blue-100 min-h-[40px]">
+                            {mcqOptions.filter(opt => opt.isCorrect && opt.option.trim() !== "").length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {/* {mcqOptions.map((opt, idx) => (
+                                  opt.isCorrect && opt.option.trim() !== "" && (
+                                    <span key={idx} className="bg-custom-blue text-white px-3 py-1 rounded-full text-xs font-bold">
+                                      {optionLabels[idx]}) {opt.option}
+                                    </span>
+                                  )
+                                ))} */}
+                                {mcqOptions.map((opt, idx) => (
+                                  opt.isCorrect && opt.option.trim() !== "" && (
+                                    <span key={idx} className="bg-custom-blue text-white px-3 py-1 rounded-full text-xs font-bold">
+                                      {/* FIX: Access the string property '.option' (or .optionText depending on your state) */}
+                                      {optionLabels[idx]}) {opt.option} 
+                                    </span>
+                                  )
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-red-400 text-sm italic">No option marked as correct yet.</span>
+                            )}
+                          </div>
                         </div>
                         {errors.correctAnswer && (
                           <p className="text-red-500 text-sm mt-1">
