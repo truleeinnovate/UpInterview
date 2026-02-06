@@ -17,7 +17,7 @@ const ResumeUpload = ({
         onClick={() => resumeInputRef.current?.click()}
         className="relative group cursor-pointer w-full max-w-sm"
       >
-        <div className="h-32 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-custom-blue/30 flex flex-col items-center justify-center transition-all duration-200 hover:border-custom-blue/60 hover:shadow-lg px-4 text-center">
+        <div className="h-28 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-custom-blue/30 flex flex-col items-center justify-center transition-all duration-200 hover:border-custom-blue/60 hover:shadow-lg px-4 text-center">
           {selectedResume ? (
             <div className="text-center">
               <p className="text-sm text-gray-700 font-medium truncate max-w-[180px]">

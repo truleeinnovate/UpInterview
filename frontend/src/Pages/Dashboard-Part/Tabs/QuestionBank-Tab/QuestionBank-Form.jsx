@@ -1474,7 +1474,7 @@ const handleCorrectAnswerChange = (index) => {
             `}
             > */}
         <div ref={formRef} className="sm:pb-20 pb-12">
-          <div className="sm:p-0 p-6 flex-1">
+          <div className="sm:p-0 p-4 flex-1">
             {/* Header */}
             {/* <div className="flex justify-between items-center mb-6">
                 <div className="flex  justify-between sm:justify-start items-center text-custom-blue p-4  w-full  ">

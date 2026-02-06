@@ -37,7 +37,7 @@ const ProfilePhotoUpload = ({
         onClick={() => imageInputRef.current?.click()}
         className="relative group cursor-pointer"
       >
-        <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-custom-blue/30 flex flex-col items-center justify-center overflow-hidden transition-all duration-200 hover:border-custom-blue/60 hover:shadow-lg">
+        <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-custom-blue/30 flex flex-col items-center justify-center overflow-hidden transition-all duration-200 hover:border-custom-blue/60 hover:shadow-lg">
           {imagePreview ? (
             <img
               src={imagePreview}

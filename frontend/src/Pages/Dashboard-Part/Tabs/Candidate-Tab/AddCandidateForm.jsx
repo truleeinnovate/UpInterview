@@ -2694,7 +2694,7 @@ const AddCandidateForm = ({
               </div>
               <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
                 <InputField
-                  label="Duration From"
+                  label="From"
                   type="month"
                   value={currentProject.fromDate}
                   onChange={(e) =>
@@ -2706,7 +2706,7 @@ const AddCandidateForm = ({
                   error={projectErrors.fromDate}
                 />
                 <InputField
-                  label="Duration To"
+                  label="To"
                   type="month"
                   value={currentProject.toDate}
                   onChange={(e) => {

@@ -14,7 +14,11 @@ const candidateSchema = new mongoose.Schema(
     maxSalary: Number,
     minSalary: Number,
     languages: [String],
-    certifications: [String],
+    certifications: [{
+      name: String,
+      issuingFrom: String, 
+      issuingYear: Number, //max 4
+    }],
     noticePeriod: String,
     ImageData: {
       filename: String,
