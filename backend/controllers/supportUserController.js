@@ -30,12 +30,18 @@ exports.createTicket = async (req, res) => {
 
       status,
       contact,
+
       priority,
-      ownerId,
-      tenantId,
       organization,
       createdByUserId,
     } = req.body;
+
+    // Use auth context source of truth
+    const authContext = res.locals.auth || {};
+    const tenantId = authContext.actingAsTenantId || req.body.tenantId;
+    const ownerId = authContext.actingAsUserId || req.body.ownerId;
+
+
     //<----v1.0.1----
     // Joi validation (mirrors frontend rules)
     const { errors, isValid } = validateCreateSupportTicket(req.body);
@@ -641,14 +647,17 @@ exports.updateTicketById = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      ownerId,
-      tenantId,
       issueType,
       description,
       subject,
       assignedTo,
       assignedToId,
     } = req.body;
+
+    // Use auth context source of truth
+    const authContext = res.locals.auth || {};
+    const tenantId = authContext.actingAsTenantId || req.body.tenantId;
+    const ownerId = authContext.actingAsUserId || req.body.ownerId;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
