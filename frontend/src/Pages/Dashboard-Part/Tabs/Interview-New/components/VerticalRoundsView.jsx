@@ -186,8 +186,13 @@ const VerticalRoundsView = ({
                         ? "Request Sent"
                         : round?.status === "InProgress"
                           ? "In Progress"
-                          : // : round?.status,
-                          capitalizeFirstLetter(round?.status)}
+                          : round?.status === "feedbackPending"
+                            ? "Feedback Pending"
+                            : round?.status === "feedbackCompleted"
+                              ? "Feedback Completed"
+                              :
+                              // : round?.status,
+                              capitalizeFirstLetter(round?.status)}
                     </span>
                   </div>
                   <div className="flex items-center mt-1 text-sm text-gray-600">

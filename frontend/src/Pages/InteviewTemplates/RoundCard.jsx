@@ -49,12 +49,14 @@ const RoundCard = ({
 }) => {
   //console.log("rounds---",round.interviewers)
 
-  const { deleteRoundMutation } = useInterviewTemplates();
+  // const { deleteRoundMutation } = useInterviewTemplates();
+  const { deleteRound } = useInterviewTemplates();
   const { fetchAssessmentQuestions } = useAssessments();
 
   const handleDeleteRound = async () => {
+    console.log("round", round);
     try {
-      await deleteRoundMutation(round._id);
+      await deleteRound(round?._id);
       // v1.0.1 <----------------------------------------------------------------------
       setShowDeleteConfirmModal(false); // close the modal here
       // v1.0.1 ---------------------------------------------------------------------->

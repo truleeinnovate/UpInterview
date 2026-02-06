@@ -335,9 +335,8 @@ const MockSchedulelater = () => {
       const contact = singleContact;
       setFormData((prev) => ({
         ...prev,
-        candidateName: `${contact.firstName || ""} ${
-          contact.lastName || ""
-        }`.trim(),
+        candidateName: `${contact.firstName || ""} ${contact.lastName || ""
+          }`.trim(),
         higherQualification: contact.HigherQualification || "",
         currentExperience: contact.yearsOfExperience || "",
         // technology: contact.technologies?.[0] || "",
@@ -359,9 +358,30 @@ const MockSchedulelater = () => {
       const data = mockInterview;
       console.log("Mock Edit Data:", data);
 
-      if (data?.rounds?.[0]) {
-        setMockEdit(true);
+      // Always set mockEdit to true when editing an existing mock interview
+      setMockEdit(true);
 
+      // ========== POPULATE CANDIDATE FIELDS (always, regardless of rounds) ==========
+      const skillStrings =
+        data.skills?.map((s) =>
+          typeof s === "object" ? s.skill || s.SkillName || s : s,
+        ) || [];
+
+      const skillObjects =
+        data.skills?.map((s) => ({
+          _id:
+            typeof s === "object"
+              ? s._id
+              : Math.random().toString(36).slice(2),
+          SkillName: typeof s === "object" ? s.skill || s.SkillName || s : s,
+        })) || [];
+
+      setEntries(skillStrings);
+      setAllSelectedSkills(skillObjects);
+      setFileName(data?.resume?.filename || "");
+
+      // ========== POPULATE ROUND FIELDS (only if rounds exist) ==========
+      if (data?.rounds?.[0]) {
         const round = data.rounds[0]; // ← always take first (and only) round
 
         let source = [];
@@ -410,12 +430,11 @@ const MockSchedulelater = () => {
 
         // Rest of your form population...
         setSelectedMeetingPlatform(round.meetPlatform || "Google Meet");
-
         setStatus(round.status);
 
+        // Set formData with both candidate AND round fields
         setFormData({
-          ...formData, // preserve other fields if needed
-          skills: data.skills || [],
+          skills: skillStrings,
           candidateName: data.candidateName || "",
           higherQualification: data.higherQualification || "",
           currentExperience: data.currentExperience || "",
@@ -482,27 +501,26 @@ const MockSchedulelater = () => {
           }
         }
         setInterviewType(round.interviewType || "scheduled");
-
-        // Skills handling...
-        const skillStrings =
-          data.skills?.map((s) =>
-            typeof s === "object" ? s.skill || s.SkillName || s : s,
-          ) || [];
-
-        const skillObjects =
-          data.skills?.map((s) => ({
-            _id:
-              typeof s === "object"
-                ? s._id
-                : Math.random().toString(36).slice(2),
-            SkillName: typeof s === "object" ? s.skill || s.SkillName || s : s,
-          })) || [];
-
-        setEntries(skillStrings);
-        setAllSelectedSkills(skillObjects);
-        setFormData((prev) => ({ ...prev, skills: skillStrings }));
-
-        setFileName(data?.resume?.filename || "");
+      } else {
+        // No rounds exist - only populate candidate fields with default round values
+        setFormData({
+          skills: skillStrings,
+          candidateName: data.candidateName || "",
+          higherQualification: data.higherQualification || "",
+          currentExperience: data.currentExperience || "",
+          jobDescription: data.jobDescription || "",
+          currentRole: data.currentRole || "",
+          rounds: {
+            roundTitle: "Technical Round",
+            interviewMode: "Virtual",
+            duration: "60",
+            instructions: "",
+            interviewType: "",
+            interviewers: [],
+            status: "",
+            dateTime: "",
+          },
+        });
       }
     } else if (!id) {
       updateTimes(formData.rounds.duration);
@@ -2100,9 +2118,8 @@ const MockSchedulelater = () => {
     const end = new Date(start.getTime() + Number(durationMinutes) * 60 * 1000);
 
     return {
-      display: `${formatToCustomDateTime(start)} - ${
-        formatToCustomDateTime(end).split(" ")[1] || "??:??"
-      }`,
+      display: `${formatToCustomDateTime(start)} - ${formatToCustomDateTime(end).split(" ")[1] || "??:??"
+        }`,
       startISO: start.toISOString(),
     };
   }, []);
@@ -3225,25 +3242,22 @@ const MockSchedulelater = () => {
                             // }}
 
                             onClick={() => handleInterviewTypeChange("instant")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
-                              interviewType === "instant"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${
-                                interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-6 w-6 ${interviewType === "instant"
+                                ? "text-custom-blue"
+                                : "text-gray-400"
+                                }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${
-                                interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
-                              }`}
+                              className={`mt-2 font-medium ${interviewType === "instant"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                                }`}
                             >
                               Instant Interview
                             </span>
@@ -3286,25 +3300,22 @@ const MockSchedulelater = () => {
                             // Interview Type buttons - disabled in CASE 2, enabled in CASE 3
                             disabled={shouldDisable("interviewType")}
                             key="scheduled-btn"
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
-                              interviewType === "scheduled"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${
-                                interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-6 w-6 ${interviewType === "scheduled"
+                                ? "text-custom-blue"
+                                : "text-gray-400"
+                                }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${
-                                interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
-                              }`}
+                              className={`mt-2 font-medium ${interviewType === "scheduled"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                                }`}
                             >
                               Schedule for Later
                             </span>
@@ -3698,7 +3709,7 @@ const MockSchedulelater = () => {
           candidateExperience={formData?.currentExperience}
           previousSelectedInterviewers={externalInterviewers}
 
-          // isMockInterview={true} // Correctly passes true for mock interviews
+        // isMockInterview={true} // Correctly passes true for mock interviews
         />
       )}
 

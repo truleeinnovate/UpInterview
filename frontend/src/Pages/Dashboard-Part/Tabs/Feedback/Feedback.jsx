@@ -45,6 +45,7 @@ import {
   getFeedbackActions,
 } from "../../../../utils/tableConfig.jsx";
 
+
 const Feedback = () => {
   const navigate = useNavigate();
   useScrollLock(true);
@@ -97,6 +98,8 @@ const Feedback = () => {
   const [isRatingOpen, setIsRatingOpen] = useState(false);
   const [isInterviewDateOpen, setIsInterviewDateOpen] = useState(false);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
+
+
   // ------------------------------v1.0.3 >
   // State for filters and pagination
   const [filters, setFilters] = useState({
@@ -118,6 +121,9 @@ const Feedback = () => {
     isLoading: feedbacksLoading,
     error: feedbacksError,
   } = useFeedbacks(filters);
+
+  console.log("feedbacksResponse", feedbacksResponse);
+  console.log("tokenPayload", tokenPayload);
 
   // Use data from the hook
   // const feedbacks = feedbacksData || [];

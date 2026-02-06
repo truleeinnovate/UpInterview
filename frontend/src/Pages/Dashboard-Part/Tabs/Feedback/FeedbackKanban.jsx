@@ -16,9 +16,17 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Star } from "lucide-react";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+
 
 const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
   const [filteredData, setFilteredData] = useState([]);
+
+
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  // console.log("tokenPayload", tokenPayload);
   useEffect(() => {
     if (feedbacks) {
       setFilteredData(feedbacks);
@@ -78,9 +86,8 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
       stars.push(
         <Star
           key={i}
-          className={`w-3 h-3 ${
-            i <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
-          }`}
+          className={`w-3 h-3 ${i <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
+            }`}
         />
       );
     }
@@ -252,13 +259,17 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
                               <Eye className="w-3 h-3 inline mr-1" />
                               View
                             </button>
-                            <button
-                              className="text-green-500 hover:text-gray-600 text-xs"
-                              onClick={() => onEdit(item)}
-                            >
-                              <Edit className="w-3 h-3 inline mr-1" />
-                              Edit
-                            </button>
+                            {item.status === "draft" && item?.ownerId?._id === tokenPayload.userId &&
+                              <>
+                                < button
+                                  className="text-green-500 hover:text-gray-600 text-xs"
+                                  onClick={() => onEdit(item)}
+                                >
+                                  <Edit className="w-3 h-3 inline mr-1" />
+                                  Edit
+                                </button>
+                              </>
+                            }
                           </div>
                         </div>
                       ))}
@@ -270,7 +281,7 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
           </div>
         </div>
       </div>
-    </motion.div>
+    </motion.div >
   );
 };
 

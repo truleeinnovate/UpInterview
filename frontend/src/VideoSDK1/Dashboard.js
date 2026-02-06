@@ -85,14 +85,28 @@ const Dashboard = () => {
     ? mockinterview
     : interviewData?.candidateId || {};
 
+
+  const interviewerDetails = isMockInterview
+    ? mockinterview
+    : interviewData?.candidateId || {};
+
   const positionData = isMockInterview ? {} : interviewData?.positionId;
 
-  const interviewRoundData = interviewData?.rounds[0] || {};
+  const interviewRoundData =
+    interviewData?.rounds[0] || mockinterview?.rounds[0] || {};
+
+  const FinalName = urlData?.isCandidate ? candidateData?.FirstName + " " + candidateData?.LastName :
+    // isMockInterview ?
+    interviewerDetails?.interviewers[0]?.FirstName + " " + interviewerDetails?.interviewerId[0]?.LastName
+  // : interviewerDetails?.interviewers[0]?.FirstName + " " + interviewerDetails?.interviewerId?.LastName
+
+
+  // const interviewRoundData = interviewData?.rounds[0] || {};
 
   // console.log("data", interviewData);
-  // console.log("candidateData1", candidateData);
+  console.log("candidateData1", candidateData);
   // console.log("positionData1", positionData);
-  // console.log("interviewRoundData1", interviewRoundData);
+  console.log("interviewRoundData1", interviewRoundData);
 
   const navigate = useNavigate();
   const [isAuthChecking, setIsAuthChecking] = useState(true);
@@ -588,7 +602,8 @@ const Dashboard = () => {
                   micEnabled: false, // Start with mic off
                   webcamEnabled: false, // Start with webcam off
                   // name: candidateData?.LastName || contactData?.name,
-                  name: candidateData?.LastName,
+                  // name: candidateData?.LastName,
+                  name: FinalName,
                   multiStream: true,
                   defaultAudioDevice: {
                     deviceId: "default",

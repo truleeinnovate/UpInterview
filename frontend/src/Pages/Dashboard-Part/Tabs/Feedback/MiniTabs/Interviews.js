@@ -209,6 +209,8 @@ const InterviewsMiniTabComponent = ({
     }));
   };
 
+  console.log("feedbackData autoSaveQuestions", feedbackData);
+
   const {
     saveNow: autoSaveQuestions,
     // saveNow,
@@ -239,6 +241,13 @@ const InterviewsMiniTabComponent = ({
       undefined,
     ownerId: currentOwnerId,
     feedbackId: autoSaveFeedbackId,
+    feedbackCode:
+      feedbackData?.rounds?.[0]?.interviewCode ||
+      "" + "-" + (feedbackData?.rounds?.[0]?.sequence || ""),
+    // feedbackCode:
+    //   feedbackData?.rounds[0]?.interviewCode ||
+    //   "" + "-" + feedbackData?.rounds[0]?.sequence ||
+    //   "",
   });
 
   // Question Bank Handler Functions
@@ -314,9 +323,9 @@ const InterviewsMiniTabComponent = ({
             mandatory: newMandatory,
             snapshot: q.snapshot
               ? {
-                  ...q.snapshot,
-                  mandatory: newMandatory,
-                }
+                ...q.snapshot,
+                mandatory: newMandatory,
+              }
               : undefined,
           };
         }
@@ -537,11 +546,10 @@ const InterviewsMiniTabComponent = ({
         {interviewMiniTabsList.map((each) => (
           <li
             key={each.id}
-            className={`px-4 py-2 rounded-t-md text-sm font-medium transition-colors flex-shrink-0 ${
-              interviewMiniTab === each.id
-                ? "bg-[#227a8a] text-white"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`px-4 py-2 rounded-t-md text-sm font-medium transition-colors flex-shrink-0 ${interviewMiniTab === each.id
+              ? "bg-[#227a8a] text-white"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
             onClick={() => handleTabChange(each.id)}
           >
             {each.name}
