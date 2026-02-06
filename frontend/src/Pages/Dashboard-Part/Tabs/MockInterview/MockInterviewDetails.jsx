@@ -481,8 +481,6 @@ const MockInterviewDetails = () => {
       canCancel: false,
       canComplete: false,
       canFeedback: false,
-      canResendLink: false,
-      canShareLink: true,
       canNoShow: false,
       canSkipped: true,
     },
@@ -494,8 +492,6 @@ const MockInterviewDetails = () => {
       canCancel: false,
       canComplete: false,
       canFeedback: false,
-      canResendLink: false,
-      canShareLink: false,
       canNoShow: false,
     },
     Scheduled: {
@@ -506,14 +502,7 @@ const MockInterviewDetails = () => {
       canCancel: true,
       canComplete: true,
       canFeedback: false,
-      canShareLink: false,
-      canResendLink: true,
-      //only for if round title assessment
-      canExtendAssessment: true,
-      canCancelAssessment: true,
       canNoShow: true,
-      canSkipped: false,
-      canEvaluated: true,
       canFeedbackPending: false,
     },
     Rescheduled: {
@@ -524,11 +513,7 @@ const MockInterviewDetails = () => {
       canCancel: true,
       canComplete: true,
       canFeedback: false,
-      canResendLink: false,
-      canShareLink: false,
       canNoShow: true,
-      canSkipped: false,
-      canEvaluated: false,
       canFeedbackPending: false,
     },
     Completed: {
@@ -539,15 +524,17 @@ const MockInterviewDetails = () => {
       canCancel: false,
       canComplete: false,
       canFeedback: true,
-      canResendLink: false,
-      canShareLink: false,
       canNoShow: false,
-      canEvaluated: true,
     },
     //  added by ranjith new status validation
     InProgress: {
       canEdit: false,
       canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: false,
+      canCancel: false,
+      canComplete: true,
+      canFeedback: false,
       canNoShow: true,
     },
     Cancelled: {
@@ -558,37 +545,8 @@ const MockInterviewDetails = () => {
       canCancel: false,
       canComplete: false,
       canFeedback: false,
-      canResendLink: false,
-      canShareLink: false,
       canNoShow: false,
     },
-    // Rejected: {
-    //   canEdit: false,
-    //   canDelete: false,
-    //   canMarkScheduled: false,
-    //   canReschedule: false,
-    //   canCancel: false,
-    //   canComplete: false,
-    //   canReject: false,
-    //   canSelect: false,
-    //   canFeedback: true,
-    //   canResendLink: false,
-    //   canShareLink: false,
-    // },
-    // Selected: {
-    //   canEdit: false,
-    //   canDelete: false,
-    //   canMarkScheduled: false,
-    //   canReschedule: false,
-    //   canCancel: false,
-    //   canComplete: false,
-    //   canReject: false,
-    //   canSelect: false,
-    //   canFeedback: true,
-    //   canResendLink: false,
-    //   canShareLink: false,
-    //   canNoShow: false,
-    // },
     InComplete: {
       canEdit: false,
       canDelete: false,
@@ -597,8 +555,6 @@ const MockInterviewDetails = () => {
       canCancel: false,
       canComplete: false,
       canFeedback: false,
-      canResendLink: false,
-      canShareLink: false,
       canNoShow: false,
     },
     NoShow: {
@@ -609,39 +565,7 @@ const MockInterviewDetails = () => {
       canCancel: false,
       canComplete: false,
       canFeedback: false,
-      canResendLink: false,
-      canShareLink: false,
       canNoShow: false,
-    },
-    Skipped: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
-      canReschedule: false,
-      canCancel: false,
-      canComplete: false,
-      canFeedback: false,
-      canResendLink: false,
-      canShareLink: false,
-      canNoShow: false,
-      canSkipped: false,
-      canEvaluated: false,
-      canFeedbackPending: false,
-    },
-    Evaluated: {
-      canEdit: false,
-      canDelete: false,
-      canMarkScheduled: false,
-      canReschedule: false,
-      canCancel: false,
-      canComplete: false,
-      canFeedback: true,
-      canResendLink: false,
-      canShareLink: false,
-      canNoShow: false,
-      canSkipped: false,
-      canEvaluated: false,
-      canFeedbackPending: false,
     },
     FeedbackPending: {
       canEdit: false,
@@ -651,10 +575,7 @@ const MockInterviewDetails = () => {
       canCancel: false,
       canComplete: false,
       canFeedback: false,
-      canResendLink: false,
-      canShareLink: false,
       canNoShow: false,
-      canSkipped: false,
       canEvaluated: false,
       canFeedbackPending: false,
     },
@@ -701,17 +622,17 @@ const MockInterviewDetails = () => {
       });
     }
 
-    // Evaluated
-    if (permissions.canEvaluated) {
-      actions.push({
-        label: "Evaluated",
-        icon: ClipboardList,
-        onClick: () => handleActionClick("Evaluated"),
-        className:
-          "inline-flex items-center  text-sm text-teal-700 bg-teal-50 hover:bg-teal-100",
-        showInMore: true,
-      });
-    }
+    // // Evaluated
+    // if (permissions.canEvaluated) {
+    //   actions.push({
+    //     label: "Evaluated",
+    //     icon: ClipboardList,
+    //     onClick: () => handleActionClick("Evaluated"),
+    //     className:
+    //       "inline-flex items-center  text-sm text-teal-700 bg-teal-50 hover:bg-teal-100",
+    //     showInMore: true,
+    //   });
+    // }
 
     // Cancel
     if (

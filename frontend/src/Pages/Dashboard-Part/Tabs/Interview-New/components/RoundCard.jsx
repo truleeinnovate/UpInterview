@@ -1029,7 +1029,7 @@ const RoundCard = ({
       canResendLink: false,
       canShareLink: false,
       canSkipped: false,
-      canEvaluated: true,
+      canEvaluated: false,
     },
     Cancelled: {
       canEdit: false,
@@ -1135,7 +1135,7 @@ const RoundCard = ({
       canShareLink: false,
       canNoShow: false,
       canSkipped: false,
-      canEvaluated: false,
+      canEvaluated: true,
     },
     FeedbackSubmitted: {
       canEdit: false,
