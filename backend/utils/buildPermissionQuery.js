@@ -18,6 +18,14 @@ const buildPermissionQuery = async (userId, tenantId,
 
     let query = {};
 
+    // SAFETY GUARD: If roleType is not recognized, return a query that matches nothing
+    // to prevent accidental data exposure (fail-safe, not fail-open)
+    if (!roleType || !['individual', 'organization'].includes(roleType)) {
+        console.warn('[buildPermissionQuery] Invalid or missing roleType:', roleType, '- returning restrictive query');
+        // Return a query that matches nothing
+        return { _id: { $in: [] } };
+    }
+
     // Convert to ObjectId if they are strings
     const toObjectId = (id) => {
         if (!id) return null;

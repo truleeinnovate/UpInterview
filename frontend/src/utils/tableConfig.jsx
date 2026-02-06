@@ -371,13 +371,13 @@ export const getPositionColumns = (navigate) => [
 ];
 
 export const getPositionActions = (navigate, permissions = {}, callbacks = {}) => [
-    ...(permissions?.View ? [{
+    ...(permissions.Positions?.View ? [{
         key: "view",
         label: "View Details",
         icon: <Eye className="w-4 h-4 text-custom-blue" />,
         onClick: (row) => navigate(`/positions/view-details/${row._id}`)
     }] : []),
-    ...(permissions?.Edit ? [
+    ...(permissions.Positions?.Edit ? [
         {
             key: "change_status",
             label: "Change Status",
@@ -391,7 +391,7 @@ export const getPositionActions = (navigate, permissions = {}, callbacks = {}) =
             onClick: (row) => navigate(`/positions/edit-position/${row._id}`)
         }
     ] : []),
-    ...(permissions?.Delete && callbacks.onDelete ? [{
+    ...(permissions.Positions?.Delete && callbacks.onDelete ? [{
         key: "delete",
         label: "Delete",
         icon: <Trash className="w-4 h-4 text-red-600" />,
