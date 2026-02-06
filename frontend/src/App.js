@@ -1349,7 +1349,7 @@ const MainAppRoutes = ({
             {/* v1.0.6 <--------------------------------------------------------------------------- */}
             {/* Task */}
             {hasPermission("Tasks") && (
-              <Route path="/task" element={<Task />} />
+              <Route path="/tasks" element={<Task />} />
             )}
 
             {/* Outsource Interviewer Request */}

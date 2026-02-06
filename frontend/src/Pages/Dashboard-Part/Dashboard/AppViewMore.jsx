@@ -34,7 +34,7 @@ const AppViewMore = ({ isModalOpen, closeModal }) => {
         { to: "/profilefromapps", icon: <ImProfile className="text-4xl" />, title: "Profile", description: "Manage profile easily with our profile app and add new profile easily" },
         { to: "/roles", icon: <ImProfile className="text-4xl" />, title: "Roles", description: "Manage profile easily with our profile app and add new profile easily" },
         { to: "/all_sharing_settings", icon: <ImProfile className="text-4xl" />, title: "All Sharing Settings", description: "Manage profile easily with our profile app and add new profile easily" },
-        { to: "/task", icon: <MdOutlineTask className="text-4xl" />, title: "Task", description: "Manage profile easily with our profile app and add new profile easily" },
+        { to: "/tasks", icon: <MdOutlineTask className="text-4xl" />, title: "Task", description: "Manage profile easily with our profile app and add new profile easily" },
         { to: "/subscription-details", icon: <MdOutlineTask className="text-4xl" />, title: "Subscription", description: "Manage profile easily with our profile app and add new profile easily" },
     ];
 
