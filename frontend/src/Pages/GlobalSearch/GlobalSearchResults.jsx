@@ -4,6 +4,7 @@ import { ArrowLeft, LayoutGrid, List, Search, Users, Briefcase, Calendar, Video,
 import { useGlobalSearch } from '../../hooks/useGlobalSearch';
 import '../../Components/Navbar/GlobalSearch/GlobalSearch.css';
 import TableView from '../../Components/Shared/Table/TableView';
+import { capitalizeFirstLetter } from '../../utils/CapitalizeFirstLetter/capitalizeFirstLetter';
 
 // Entity configuration for display
 const ENTITY_CONFIG = {
@@ -29,7 +30,7 @@ const highlightMatch = (text, query) => {
     if (!query || !text) return text;
     const textStr = String(text);
     try {
-        const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedQuery = query.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
         const regex = new RegExp(`(${escapedQuery})`, 'gi');
         const parts = textStr.split(regex);
         return parts.map((part, i) =>
@@ -40,6 +41,16 @@ const highlightMatch = (text, query) => {
     } catch (e) {
         return text;
     }
+};
+
+// Helper function to add spaces before capital letters (e.g., "AIPromptEngineer" -> "AI Prompt Engineer")
+const addSpacesToCamelCase = (str) => {
+    if (!str || typeof str !== 'string') return str;
+    // Add space before uppercase that follows lowercase, and before the last capital in a sequence followed by lowercase
+    return str
+        .replace(/([a-z])([A-Z])/g, '$1 $2')  // "promptEngineer" -> "prompt Engineer"
+        .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')  // "AIEngineer" -> "AI Engineer"
+        .trim();
 };
 
 // Define columns for each entity type with clickable first column
@@ -55,8 +66,13 @@ const getEntityColumns = (entityType, navigate, highlightText = '') => {
         }
     };
 
-    // Helper to highlight text in custom renders
-    const hl = (text) => highlightMatch(text, highlightText);
+    // Helper to capitalize and highlight text in custom renders
+    const hl = (text) => {
+        if (!text || text === '-' || text === 'N/A') return text;
+        // Capitalize each word
+        const capitalized = String(text).split(' ').map(word => capitalizeFirstLetter(word)).join(' ');
+        return highlightMatch(capitalized, highlightText);
+    };
 
     switch (entityType) {
         case 'candidates':
@@ -75,7 +91,7 @@ const getEntityColumns = (entityType, navigate, highlightText = '') => {
                 },
                 { header: 'Email', key: 'Email', render: (val) => hl(val || '-') },
                 { header: 'Phone', key: 'Phone', render: (val) => hl(val || '-') },
-                { header: 'Current Role', key: 'CurrentRole', render: (val) => hl(val || '-') },
+                { header: 'Current Role', key: 'CurrentRole', render: (val) => hl(addSpacesToCamelCase(val) || '-') },
                 { header: 'Experience', key: 'CurrentExperience', render: (val) => val ? `${val} yrs` : '-' },
             ];
 
@@ -105,7 +121,7 @@ const getEntityColumns = (entityType, navigate, highlightText = '') => {
                         </div>
                     )
                 },
-                { header: 'Status', key: 'status', render: (val) => val || '-' },
+                { header: 'Status', key: 'status', render: (val) => capitalizeFirstLetter(val) || '-' },
             ];
 
         case 'interviewTemplates':
@@ -142,7 +158,7 @@ const getEntityColumns = (entityType, navigate, highlightText = '') => {
                 },
                 { header: 'Candidate', key: 'candidateId', render: (val) => val?.FirstName ? hl(`${val.FirstName} ${val.LastName || ''}`) : '-' },
                 { header: 'Technology', key: 'technology', render: (val) => hl(val || '-') },
-                { header: 'Status', key: 'status', render: (val) => val || '-' },
+                { header: 'Status', key: 'status', render: (val) => capitalizeFirstLetter(val) || '-' },
             ];
 
         case 'interviewers':
@@ -160,7 +176,7 @@ const getEntityColumns = (entityType, navigate, highlightText = '') => {
                     )
                 },
                 { header: 'Email', key: 'email', render: (_, row) => hl(row.contactId?.email || '-') },
-                { header: 'Status', key: 'status', render: (val) => val || '-' },
+                { header: 'Status', key: 'status', render: (val) => capitalizeFirstLetter(val) || '-' },
             ];
 
         case 'mockInterviews':
@@ -197,7 +213,7 @@ const getEntityColumns = (entityType, navigate, highlightText = '') => {
                 },
                 { header: 'Code', key: 'AssessmentCode', render: (val) => hl(val || '-') },
                 { header: 'Duration', key: 'Duration', render: (val) => val ? `${val} mins` : '-' },
-                { header: 'Status', key: 'status', render: (val) => val || '-' },
+                { header: 'Status', key: 'status', render: (val) => capitalizeFirstLetter(val) || '-' },
             ];
 
         case 'assessments':
@@ -226,7 +242,7 @@ const getEntityColumns = (entityType, navigate, highlightText = '') => {
                         return hl(names || '-');
                     }
                 },
-                { header: 'Status', key: 'status', render: (val) => val || '-' },
+                { header: 'Status', key: 'status', render: (val) => capitalizeFirstLetter(val) || '-' },
             ];
 
         case 'questionBank':
@@ -418,7 +434,7 @@ const GlobalSearchResults = () => {
 
             return (
                 <div key={entityType} className="mb-8 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-                    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
+                    <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
                         <IconComponent size={20} className="text-custom-blue" />
                         <span className="text-lg font-semibold text-gray-800">{config?.label || entityType}</span>
                         <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-medium">
@@ -445,7 +461,7 @@ const GlobalSearchResults = () => {
             {/* Sidebar */}
             <aside className="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-[calc(100vh-64px)] overflow-y-auto sticky top-16">
                 <div className="p-4 border-b border-gray-200 font-semibold text-gray-700 text-sm uppercase tracking-wider">
-                    Filter Results
+                    Search Results
                 </div>
 
                 <div className="py-2">
