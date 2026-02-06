@@ -142,11 +142,15 @@ const FeedbackForm = ({
     ? mockinterview
     : interviewData?.candidateId || {};
 
+
+
   const positionData = isMockInterview ? {} : interviewData?.positionId || {};
 
   const feedbackData = useMemo(() => {
     return locationFeedback || feedbackDatas || {};
   }, [locationFeedback, feedbackDatas]);
+
+  console.log("feedbackData", feedbackData);
 
   const [interviewerSectionData, setInterviewerSectionData] = useState(() => {
     if (!feedbackData?.questionFeedback) return [];
@@ -349,10 +353,10 @@ const FeedbackForm = ({
   const initialSkillRatings =
     (isEditMode || isViewMode || isAddMode) && skillsData.length > 0
       ? skillsData.map((skill) => ({
-          skill: skill.skillName,
-          rating: skill.rating,
-          comments: skill.note,
-        }))
+        skill: skill.skillName,
+        rating: skill.rating,
+        comments: skill.note,
+      }))
       : [{ skill: "", rating: 0, comments: "" }];
 
   const [skillRatings, setSkillRatings] = useState(initialSkillRatings);
@@ -753,6 +757,9 @@ const FeedbackForm = ({
       undefined,
     ownerId: currentOwnerId,
     feedbackId: autoSaveFeedbackId,
+    feedbackCode:
+      feedbackData?.rounds?.[0]?.interviewCode ||
+      "" + "-" + (feedbackData?.rounds?.[0]?.sequence || ""),
   });
 
   // Helper Function (Outside the component or inside FeedbackForm)
@@ -836,9 +843,9 @@ const FeedbackForm = ({
             mandatory: newMandatory,
             snapshot: q.snapshot
               ? {
-                  ...q.snapshot,
-                  mandatory: newMandatory,
-                }
+                ...q.snapshot,
+                mandatory: newMandatory,
+              }
               : undefined,
           };
         }
@@ -913,11 +920,11 @@ const FeedbackForm = ({
         return prev.map((q) =>
           (q.questionId || q.id) === id
             ? {
-                ...q,
-                notesBool: !q.notesBool,
-                // Clear note when toggling off
-                note: !q.notesBool ? q.note : "",
-              }
+              ...q,
+              notesBool: !q.notesBool,
+              // Clear note when toggling off
+              note: !q.notesBool ? q.note : "",
+            }
             : q,
         );
       }
@@ -1019,10 +1026,10 @@ const FeedbackForm = ({
         return prev.map((q) =>
           (q.questionId || q.id) === id
             ? {
-                ...q,
-                isLiked: q.isLiked === "liked" ? "" : "liked",
-                whyDislike: "", // Clear dislike reason when liking
-              }
+              ...q,
+              isLiked: q.isLiked === "liked" ? "" : "liked",
+              whyDislike: "", // Clear dislike reason when liking
+            }
             : q,
         );
       }
@@ -1070,9 +1077,8 @@ const FeedbackForm = ({
                     }}
                   />
                   <label
-                    htmlFor={`dislike-${each.questionId || each.id}-${
-                      option.value
-                    }`}
+                    htmlFor={`dislike-${each.questionId || each.id}-${option.value
+                      }`}
                     className="cursor-pointer"
                   >
                     {option.label}
@@ -1116,8 +1122,8 @@ const FeedbackForm = ({
           Response Type{" "}
           {(each.mandatory === "true" ||
             each.snapshot?.mandatory === "true") && (
-            <span className="text-[red]">*</span>
-          )}
+              <span className="text-[red]">*</span>
+            )}
         </p>
         <div className={`w-full flex gap-x-8 gap-y-2 `}>
           {["Not Answered", "Partially Answered", "Fully Answered"].map(
@@ -1163,9 +1169,8 @@ const FeedbackForm = ({
               triggerAutoSave();
             }}
             disabled={isViewMode}
-            className={`w-6 h-6 ${
-              star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
-            } hover:text-yellow-400 transition-colors`}
+            className={`w-6 h-6 ${star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
+              } hover:text-yellow-400 transition-colors`}
           >
             ★
           </button>
@@ -1324,8 +1329,8 @@ const FeedbackForm = ({
           "",
         candidateId: candidateData?._id || "",
         feedbackCode:
-          feedbackDatas?.interviewRound?.interviewCode ||
-          "" + "-" + feedbackDatas?.interviewRound?.sequence ||
+          feedbackData?.rounds[0]?.interviewCode ||
+          "" + "-" + feedbackData?.rounds[0]?.sequence ||
           "",
         positionId:
           positionId ||
@@ -1685,7 +1690,7 @@ const FeedbackForm = ({
 
   //<---v1.0.2-----Ranjith----solved feedback issues
 
-  if (decodedData?.schedule) {
+  if (urlData?.isSchedule) {
     return <SchedulerViewMode feedbackData={schedulerFeedbackData} />;
   }
 
@@ -1723,9 +1728,8 @@ const FeedbackForm = ({
         type={type}
         onClick={onClick}
         disabled={disabled}
-        className={`${baseClasses} ${variants[variant]} ${
-          sizes[size]
-        } ${className} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`${baseClasses} ${variants[variant]} ${sizes[size]
+          } ${className} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
         style={style}
       >
         {children}
@@ -1820,22 +1824,22 @@ const FeedbackForm = ({
               {isViewMode ? (
                 <div></div>
               ) : // {!isViewMode &&
-              urlData?.isSchedule ? null : (
-                <Button
-                  type="button"
-                  onClick={handleAddSkill}
-                  variant="outline"
-                  size="sm"
-                  style={{
-                    borderColor: "rgb(33, 121, 137)",
-                    color: "rgb(33, 121, 137)",
-                  }}
-                  className="bg-custom-blue text-sm border-custom-blue"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Add Skill
-                </Button>
-              )}
+                urlData?.isSchedule ? null : (
+                  <Button
+                    type="button"
+                    onClick={handleAddSkill}
+                    variant="outline"
+                    size="sm"
+                    style={{
+                      borderColor: "rgb(33, 121, 137)",
+                      color: "rgb(33, 121, 137)",
+                    }}
+                    className="bg-custom-blue text-sm border-custom-blue"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add Skill
+                  </Button>
+                )}
             </div>
             {isViewMode ? (
               <div className="space-y-3">
@@ -1928,7 +1932,7 @@ const FeedbackForm = ({
                   className="text-sm flex items-center gap-2 sm:px-3 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 font-medium"
                   onClick={openQuestionBank}
                   title="Add Question from Question Bank"
-                  // disabled={decodedData?.schedule}
+                // disabled={decodedData?.schedule}
                 >
                   <Plus className="text-sm" />
                   <span>Add</span>
@@ -1942,121 +1946,119 @@ const FeedbackForm = ({
             <>
               {questionsWithFeedback?.length > 0
                 ? questionsWithFeedback.map((question) => (
-                    <div
-                      key={question.questionId || question.id}
-                      className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-2"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                          {question.snapshot?.technology[0] ||
-                            question.snapshot?.category[0] ||
-                            "N/A"}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {question.snapshot?.difficultyLevel ||
-                            question.difficulty ||
-                            "N/A"}
-                        </span>
-                      </div>
-
-                      <h3 className="font-semibold text-gray-800 mb-2">
-                        {question.snapshot?.questionText ||
-                          question.question ||
+                  <div
+                    key={question.questionId || question.id}
+                    className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-2"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
+                        {question.snapshot?.technology[0] ||
+                          question.snapshot?.category[0] ||
                           "N/A"}
-                      </h3>
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {question.snapshot?.difficultyLevel ||
+                          question.difficulty ||
+                          "N/A"}
+                      </span>
+                    </div>
 
-                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                        <p className="text-sm font-medium text-gray-600 mb-2">
-                          Expected Answer:
-                        </p>
-                        <p className="text-sm text-gray-700">
-                          {question.snapshot?.correctAnswer ||
-                            question.expectedAnswer ||
-                            "N/A"}
-                        </p>
-                      </div>
+                    <h3 className="font-semibold text-gray-800 mb-2">
+                      {question.snapshot?.questionText ||
+                        question.question ||
+                        "N/A"}
+                    </h3>
 
-                      <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
-                        <span>
-                          Mandatory:{" "}
-                          {question.mandatory === "true" ||
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <p className="text-sm font-medium text-gray-600 mb-2">
+                        Expected Answer:
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        {question.snapshot?.correctAnswer ||
+                          question.expectedAnswer ||
+                          "N/A"}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
+                      <span>
+                        Mandatory:{" "}
+                        {question.mandatory === "true" ||
                           question.snapshot?.mandatory === "true"
-                            ? "Yes"
-                            : "No"}
-                        </span>
-                      </div>
+                          ? "Yes"
+                          : "No"}
+                      </span>
+                    </div>
 
-                      <div className="flex items-center gap-2 mt-2">
-                        <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                            question.isLiked === "liked" ? "text-green-700" : ""
+                    <div className="flex items-center gap-2 mt-2">
+                      <span
+                        className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
                           }`}
-                          onClick={() =>
-                            handleLikeToggle(
-                              question.questionId ||
-                                question.id ||
-                                question._id,
-                            )
-                          }
-                          disabled={!isViewMode}
-                        >
-                          <ThumbsUp className="h-4 w-4" />
-                        </span>
-                        <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                            question.isLiked === "disliked"
-                              ? "text-red-500"
-                              : ""
+                        onClick={() =>
+                          handleLikeToggle(
+                            question.questionId ||
+                            question.id ||
+                            question._id,
+                          )
+                        }
+                        disabled={!isViewMode}
+                      >
+                        <ThumbsUp className="h-4 w-4" />
+                      </span>
+                      <span
+                        className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked"
+                          ? "text-red-500"
+                          : ""
                           }`}
-                          style={{ cursor: "pointer" }}
-                          onClick={() =>
-                            handleDislikeToggle(
-                              question.questionId ||
-                                question.id ||
-                                question._id,
-                            )
-                          }
-                          disabled={!isViewMode}
-                        >
-                          <ThumbsDown className="h-4 w-4" />
-                        </span>
-                      </div>
-                      <div>
-                        {/* {(dislikeQuestionId ===
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                          handleDislikeToggle(
+                            question.questionId ||
+                            question.id ||
+                            question._id,
+                          )
+                        }
+                        disabled={!isViewMode}
+                      >
+                        <ThumbsDown className="h-4 w-4" />
+                      </span>
+                    </div>
+                    <div>
+                      {/* {(dislikeQuestionId ===
                           (question.questionId ||
                             question.id ||
                             question._id) ||
                           !!question.whyDislike) && (
                           <DisLikeSection each={question} />
                         )} */}
-                        {(dislikeQuestionId ===
-                          (question.questionId ||
-                            question.id ||
-                            question._id) ||
-                          (!!question.whyDislike &&
-                            question.isLiked === "disliked")) && (
+                      {(dislikeQuestionId ===
+                        (question.questionId ||
+                          question.id ||
+                          question._id) ||
+                        (!!question.whyDislike &&
+                          question.isLiked === "disliked")) && (
                           <DisLikeSection each={question} />
                         )}
-                      </div>
-
-                      {/* Note display if available */}
-                      {question.notesBool && question.note && (
-                        <div className="mt-4">
-                          <p className="text-sm font-medium text-gray-600 mb-1">
-                            Note:
-                          </p>
-                          <p className="text-sm text-gray-800">
-                            {question.note}
-                          </p>
-                          {!isViewMode && (
-                            <p className="text-xs text-gray-400 mt-1">
-                              {question.note.length}/250
-                            </p>
-                          )}
-                        </div>
-                      )}
                     </div>
-                  ))
+
+                    {/* Note display if available */}
+                    {question.notesBool && question.note && (
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-gray-600 mb-1">
+                          Note:
+                        </p>
+                        <p className="text-sm text-gray-800">
+                          {question.note}
+                        </p>
+                        {!isViewMode && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            {question.note.length}/250
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))
                 : null}
             </>
           ) : (
@@ -2072,8 +2074,8 @@ const FeedbackForm = ({
                         {
                           // question.snapshot?.skill ||
                           question?.snapshot?.technology[0] ||
-                            question?.snapshot?.category[0] ||
-                            "N/A"
+                          question?.snapshot?.category[0] ||
+                          "N/A"
                         }
                       </span>
                       <span className="text-sm text-gray-500">
@@ -2103,7 +2105,7 @@ const FeedbackForm = ({
                       <span>
                         Mandatory:{" "}
                         {question.mandatory === "true" ||
-                        question.snapshot?.mandatory === "true"
+                          question.snapshot?.mandatory === "true"
                           ? "Yes"
                           : "No"}
                       </span>
@@ -2118,8 +2120,8 @@ const FeedbackForm = ({
                           onClick={() =>
                             onClickAddNote(
                               question.questionId ||
-                                question.id ||
-                                question._id,
+                              question.id ||
+                              question._id,
                             )
                           }
                         >
@@ -2128,9 +2130,8 @@ const FeedbackForm = ({
                         </button>
                         <SharePopupSection />
                         <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                            question.isLiked === "liked" ? "text-green-700" : ""
-                          }`}
+                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
+                            }`}
                           onClick={() =>
                             handleLikeToggle(
                               question.questionId || question._id,
@@ -2140,11 +2141,10 @@ const FeedbackForm = ({
                           <ThumbsUp className="h-4 w-4" />
                         </span>
                         <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                            question.isLiked === "disliked"
-                              ? "text-red-500"
-                              : ""
-                          }`}
+                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked"
+                            ? "text-red-500"
+                            : ""
+                            }`}
                           style={{ cursor: "pointer" }}
                           onClick={() =>
                             handleDislikeToggle(
@@ -2161,9 +2161,8 @@ const FeedbackForm = ({
                       <div>
                         <div className="flex justify-start mt-4">
                           <label
-                            htmlFor={`note-input-${
-                              question.questionId || question.id
-                            }`}
+                            htmlFor={`note-input-${question.questionId || question.id
+                              }`}
                             className="w-[180px] font-bold text-gray-700"
                           >
                             Note
@@ -2172,9 +2171,8 @@ const FeedbackForm = ({
                             <div className="w-full relative  rounded-md">
                               <input
                                 className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-                                id={`note-input-${
-                                  question.questionId || question.id
-                                }`}
+                                id={`note-input-${question.questionId || question.id
+                                  }`}
                                 type="text"
                                 value={question.note}
                                 onChange={(e) =>
@@ -2306,7 +2304,7 @@ const FeedbackForm = ({
                   <Button
                     onClick={submitFeedback}
                     className="text-sm bg-custom-blue text-white hover:bg-custom-blue/90"
-                    // disabled={decodedData.schedule}
+                  // disabled={decodedData.schedule}
                   >
                     Submit Feedback
                   </Button>

@@ -132,7 +132,7 @@ const VerticalRoundsViewPosition = ({
           </button>
 
           {isExpanded(round._id) && (
-            <div className="px-4 pb-4">
+            <div className="sm:px-0 px-4 pb-4">
               <PositionRoundCard
                 round={round}
                 interviewData={interviewData}

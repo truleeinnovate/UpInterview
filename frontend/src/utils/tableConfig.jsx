@@ -3,6 +3,9 @@ import { Mail, Eye, CircleUser, Pencil, Trash, Repeat, Calendar, ExternalLink, M
 import { formatDateTime } from "./dateFormatter.js";
 import { capitalizeFirstLetter } from "./CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import StatusBadge from "../Components/SuperAdminComponents/common/StatusBadge";
+// import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
+import Cookies from "js-cookie";
+import { decodeJwt } from './AuthCookieManager/jwtDecode.js';
 
 // Helper to get status color (reused from Candidate.jsx)
 const getStatusColor = (status) => {
@@ -891,14 +894,15 @@ export const getMockInterviewActions = (navigate, options = {}) => {
             key: "edit",
             label: "Edit",
             icon: <Pencil className="w-4 h-4 text-green-600" />,
-            show: (row) => row?.rounds?.[0]?.status === "Draft",
+            show: (row) => !["Completed", "RequestSent", "Scheduled", "Cancelled"].includes(row?.rounds?.[0]?.status),
+            // show: (row) => row?.rounds?.[0]?.status === "Draft",
             onClick: (row) => navigate(`/mock-interviews/${row._id}/edit`, { state: { from: "tableMode" } })
         }] : []),
         {
             key: "reschedule",
             label: "Reschedule",
             icon: <Clock className="w-4 h-4 text-custom-blue" />,
-            show: (row) => !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(row?.rounds?.[0]?.status),
+            show: (row) => !["Draft", "Completed", "Cancelled"].includes(row?.rounds?.[0]?.status),
             onClick: (row) => navigate(`/mock-interviews/${row._id}/edit`, { state: { from: locationState?.pathname || "/" } })
         },
         ...(callbacks.onCancel ? [{
@@ -1288,6 +1292,10 @@ export const getFeedbackColumns = (navigate, options = {}) => {
 export const getFeedbackActions = (navigate, options = {}) => {
     const { callbacks = {} } = options;
 
+    const authToken = Cookies.get("authToken");
+    const tokenPayload = decodeJwt(authToken);
+    // console.log("tokenPayload", tokenPayload);
+
     return [
         {
             key: "view",
@@ -1305,7 +1313,16 @@ export const getFeedbackActions = (navigate, options = {}) => {
             key: "edit",
             label: "Edit",
             icon: <Pencil className="w-4 h-4 text-green-500" />,
-            show: (row) => row.status === "draft",
+            // show: (row) => row.status === "draft",
+            show: (row) => {
+                if (!tokenPayload) return false;
+                console.log("row", row);
+                console.log("tokenPayload", tokenPayload);
+
+                return row.status === "draft" && row?.ownerId?._id === tokenPayload.userId;
+            },
+
+
             onClick: (row) => navigate(`/feedback/edit/${row._id}`, { state: { feedback: { ...row }, mode: "edit" } })
         },
     ];

@@ -386,11 +386,10 @@ export function MeetingContainer({
                 <div key={item.id} className="group relative">
                   <button
                     onClick={() => handleSidebarItemClick(item.id)}
-                    className={`p-2.5 rounded-md flex items-center justify-center transition-colors ${
-                      sideBarMode === item.id.toUpperCase()
+                    className={`p-2.5 rounded-md flex items-center justify-center transition-colors ${sideBarMode === item.id.toUpperCase()
                         ? "bg-blue-100 text-custom-blue border-2 border-custom-blue"
                         : "text-custom-blue hover:bg-gray-100 border border-custom-blue hover:border-custom-blue"
-                    }`}
+                      }`}
                     aria-label={item.label}
                   >
                     {item.icon}
@@ -597,7 +596,7 @@ export function MeetingContainer({
                           }}
                           isAddMode={false}
                           decodedData={{}}
-                          onActionComplete={() => {}}
+                          onActionComplete={() => { }}
                         />
                       </div>
                     ) : sideBarMode === "QUESTIONBANK" ? (

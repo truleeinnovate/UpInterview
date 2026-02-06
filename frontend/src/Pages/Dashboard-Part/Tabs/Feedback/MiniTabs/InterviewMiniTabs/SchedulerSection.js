@@ -55,29 +55,29 @@ const SchedulerSectionComponent = ({
   const schedulerQuestions =
     preselectedQuestionsFromAPI.length > 0
       ? preselectedQuestionsFromAPI.filter((question) => {
-          // console.log(
-          //   "Filtering question",
-          //   question.questionId,
-          //   "addedBy:",
-          //   question.addedBy,
-          // );
-          // Exclude questions added by interviewer
-          return question.addedBy !== "interviewer";
-        })
+        // console.log(
+        //   "Filtering question",
+        //   question.questionId,
+        //   "addedBy:",
+        //   question.addedBy,
+        // );
+        // Exclude questions added by interviewer
+        return question.addedBy !== "interviewer";
+      })
       : Array.isArray(allQuestions)
         ? allQuestions.filter((question) => {
-            // Exclude questions added by interviewer
-            if (question.addedBy === "interviewer") {
-              return false;
-            }
+          // Exclude questions added by interviewer
+          if (question.addedBy === "interviewer") {
+            return false;
+          }
 
-            // Additional logic: Keep questions that have feedback even if they were added by interviewer
-            // (This is commented out as per your requirement to completely exclude interviewer questions)
-            // const hasFeedback = questionsfeedback.some(f => f.questionId === question.questionId);
-            // return question.addedBy !== "interviewer" || hasFeedback;
+          // Additional logic: Keep questions that have feedback even if they were added by interviewer
+          // (This is commented out as per your requirement to completely exclude interviewer questions)
+          // const hasFeedback = questionsfeedback.some(f => f.questionId === question.questionId);
+          // return question.addedBy !== "interviewer" || hasFeedback;
 
-            return true;
-          })
+          return true;
+        })
         : [];
 
   console.log("schedulerQuestions after filtering:", schedulerQuestions);
@@ -253,11 +253,11 @@ const SchedulerSectionComponent = ({
       prev.map((q) =>
         q._id === id
           ? {
-              ...q,
-              isLiked: q.isLiked === "disliked" ? "" : "disliked",
-              // Clear dislike reason when toggling off dislike
-              whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike,
-            }
+            ...q,
+            isLiked: q.isLiked === "disliked" ? "" : "disliked",
+            // Clear dislike reason when toggling off dislike
+            whyDislike: q.isLiked === "disliked" ? "" : q.whyDislike,
+          }
           : q,
       ),
     );
@@ -314,11 +314,11 @@ const SchedulerSectionComponent = ({
       prev.map((q) =>
         q._id === id
           ? {
-              ...q,
-              isLiked: q.isLiked === "liked" ? "" : "liked",
-              // Clear dislike reason when liking
-              whyDislike: q.isLiked === "liked" ? q.whyDislike : "",
-            }
+            ...q,
+            isLiked: q.isLiked === "liked" ? "" : "liked",
+            // Clear dislike reason when liking
+            whyDislike: q.isLiked === "liked" ? q.whyDislike : "",
+          }
           : q,
       ),
     );
@@ -575,25 +575,25 @@ const SchedulerSectionComponent = ({
           >
             <div className="flex items-start justify-between mb-3">
               <span className="px-3 py-1 bg-custom-blue/10 text-custom-blue rounded-full text-sm font-medium">
-                {question.snapshot.technology &&
-                question.snapshot.technology.length > 0
+                {question.snapshot?.technology &&
+                  question.snapshot?.technology.length > 0
                   ? question.snapshot.technology[0]
                   : "N/A"}
               </span>
               <span className="text-sm text-gray-500">
-                {question.snapshot.difficultyLevel}
+                {question.snapshot?.difficultyLevel || "N/A"}
               </span>
             </div>
             <h3 className="sm:text-sm md:text-sm font-semibold text-gray-800 mb-2">
-              {question.snapshot.questionText}
+              {question.snapshot?.questionText || "No question text"}
             </h3>
-            {question.snapshot.correctAnswer && (
+            {question.snapshot?.correctAnswer && (
               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm font-medium text-gray-600 mb-2">
                   Expected Answer:
                 </p>
                 <p className="text-sm text-gray-700">
-                  {question.snapshot.correctAnswer}
+                  {question.snapshot?.correctAnswer}
                 </p>
               </div>
             )}
@@ -625,9 +625,8 @@ const SchedulerSectionComponent = ({
                 {(isEditMode || isViewMode || isAddMode) && (
                   <>
                     <span
-                      className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                        question.isLiked === "liked" ? "text-green-700" : ""
-                      }`}
+                      className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
+                        }`}
                       onClick={() => handleLikeToggle(question._id)}
                     >
                       <ThumbsUp className="h-4 w-4" />
@@ -636,9 +635,8 @@ const SchedulerSectionComponent = ({
                       // className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
                       //   question.isLiked === "disliked" ? "text-red-500" : ""
                       // }`}
-                      className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                        question.isLiked === "disliked" ? "text-red-500" : ""
-                      }`}
+                      className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked" ? "text-red-500" : ""
+                        }`}
                       style={{ cursor: "pointer" }}
                       onClick={() => handleDislikeToggle(question._id)}
                     >

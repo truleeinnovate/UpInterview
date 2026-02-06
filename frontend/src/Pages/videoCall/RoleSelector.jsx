@@ -83,13 +83,20 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   const interviewRoundData =
     interviewData?.rounds[0] || mockinterview?.rounds[0] || {};
 
+  // console.log("interviewRoundData", interviewRoundData);
+
   // console.log("interviewRoundData:", interviewRoundData);
 
   const currentStatus = interviewRoundData?.status;
 
+  // Statuses that allow joining the interview
   const isFinalStatus = ["InProgress", "Scheduled", "Rescheduled"].includes(
     currentStatus,
   );
+
+  // Statuses that should disable the button completely
+  const disabledStatuses = ["Draft", "Completed", "Evaluated", "FeedbackSubmitted"];
+  const isStatusDisabled = disabledStatuses.includes(currentStatus);
 
   // Function to update interview status to "in-progress"
   const updateInterviewStatus = async (role) => {
@@ -416,9 +423,8 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
                   <button
                     onClick={toggleMic}
-                    className={`p-3 rounded-full ${
-                      micOn ? "bg-white text-gray-800" : "bg-red-600 text-white"
-                    }`}
+                    className={`p-3 rounded-full ${micOn ? "bg-white text-gray-800" : "bg-red-600 text-white"
+                      }`}
                     aria-label={micOn ? "Mute microphone" : "Unmute microphone"}
                   >
                     {micOn ? (
@@ -429,11 +435,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                   </button>
                   <button
                     onClick={toggleWebcam}
-                    className={`p-3 rounded-full ${
-                      webcamOn
-                        ? "bg-white text-gray-800"
-                        : "bg-red-600 text-white"
-                    }`}
+                    className={`p-3 rounded-full ${webcamOn
+                      ? "bg-white text-gray-800"
+                      : "bg-red-600 text-white"
+                      }`}
                     aria-label={webcamOn ? "Turn off camera" : "Turn on camera"}
                   >
                     {webcamOn ? (
@@ -569,11 +574,10 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
         </div>
 
         <div
-          className={`grid gap-8 mb-8 ${
-            isSingleRole
-              ? "grid-cols-1"
-              : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
-          }`}
+          className={`grid gap-8 mb-8 ${isSingleRole
+            ? "grid-cols-1"
+            : "grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2"
+            }`}
         >
           {/* Interviewer Instructions */}
           {showInterviewerSection && (
@@ -624,19 +628,25 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                   );
                   // }
                 }}
-                className={`w-full sm:text-sm md:text-sm ${
-                  isButtonEnabled && isFinalStatus
-                    ? "bg-custom-blue hover:bg-custom-blue/90"
-                    : "bg-gray-400 cursor-not-allowed"
-                } text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3`}
+                //  className={`w-full sm:text-sm md:text-sm ${
+                // isButtonEnabled && isFinalStatus
+                // isStatusDisabled ||
+                disabled={!isButtonEnabled || !isFinalStatus}
+                className={`w-full sm:text-sm md:text-sm ${!isStatusDisabled && isButtonEnabled && isFinalStatus
+                  ? "bg-custom-blue hover:bg-custom-blue/90"
+                  : "bg-gray-400 cursor-not-allowed"
+                  } text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3`}
               >
                 <Users className="w-5 h-5" />
                 {/* Join as Interviewer */}
-                {isButtonEnabled && isFinalStatus
-                  ? roleInfo?.isInterviewer
-                    ? "Start Interview"
-                    : "Join as Interviewer"
-                  : "Join (Available 15 mins before)"}
+                {/* {isButtonEnabled && isFinalStatus */}
+                {isStatusDisabled
+                  ? `Interview ${currentStatus}`
+                  : isButtonEnabled && isFinalStatus
+                    ? roleInfo?.isInterviewer
+                      ? "Start Interview"
+                      : "Join as Interviewer"
+                    : "Join (Available 15 mins before)"}
               </button>
 
               {/* <button
