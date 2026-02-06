@@ -79,112 +79,112 @@ function AssessmentTest({
     setShowConfirmSubmit(true);
   };
 
-  const verifyAnswer = (question, selectedAnswer) => {
-    const correctAnswer =
-      question.snapshot?.correctAnswer || question.correctAnswer;
-    const questionType =
-      question.snapshot?.questionType || question.questionType;
-    // ------------------------------ new implementation ------------------------------------
+  // const verifyAnswer = (question, selectedAnswer) => {
+  //   const correctAnswer =
+  //     question.snapshot?.correctAnswer || question.correctAnswer;
+  //   const questionType =
+  //     question.snapshot?.questionType || question.questionType;
+  //   // ------------------------------ new implementation ------------------------------------
 
-    // 1. Get correct answer (Handle potential array from DB)
-    const rawCorrect =
-      question.snapshot?.correctAnswer || question.correctAnswer;
+  //   // 1. Get correct answer (Handle potential array from DB)
+  //   const rawCorrect =
+  //     question.snapshot?.correctAnswer || question.correctAnswer;
 
-    // Normalize both to Arrays for consistent comparison
-    const correctArray = Array.isArray(rawCorrect) ? rawCorrect : [rawCorrect];
-    const selectedArray = Array.isArray(selectedAnswer)
-      ? selectedAnswer
-      : [selectedAnswer];
+  //   // Normalize both to Arrays for consistent comparison
+  //   const correctArray = Array.isArray(rawCorrect) ? rawCorrect : [rawCorrect];
+  //   const selectedArray = Array.isArray(selectedAnswer)
+  //     ? selectedAnswer
+  //     : [selectedAnswer];
 
-    const clean = (val) =>
-      String(val || "")
-        .trim()
-        .toLowerCase();
-    // ------------------------------ new implementation ------------------------------------
+  //   const clean = (val) =>
+  //     String(val || "")
+  //       .trim()
+  //       .toLowerCase();
+  //   // ------------------------------ new implementation ------------------------------------
 
-    const normalizeAnswer = (answer, preserveFormatting = false) => {
-      if (answer === null || answer === undefined || answer === "") return "";
+  //   const normalizeAnswer = (answer, preserveFormatting = false) => {
+  //     if (answer === null || answer === undefined || answer === "") return "";
 
-      let processedAnswer = answer.toString();
+  //     let processedAnswer = answer.toString();
 
-      if (!preserveFormatting) {
-        processedAnswer = processedAnswer.trim();
-      }
+  //     if (!preserveFormatting) {
+  //       processedAnswer = processedAnswer.trim();
+  //     }
 
-      return processedAnswer;
-    };
+  //     return processedAnswer;
+  //   };
 
-    const cleanMCQAnswer = (answer) => {
-      const normalized = normalizeAnswer(answer);
-      if (!normalized) return "";
+  //   const cleanMCQAnswer = (answer) => {
+  //     const normalized = normalizeAnswer(answer);
+  //     if (!normalized) return "";
 
-      const cleaned = normalized
-        .replace(/^[A-Z][).]\s*/, "")
-        .replace(/^\d+[).]\s*/, "")
-        .trim();
+  //     const cleaned = normalized
+  //       .replace(/^[A-Z][).]\s*/, "")
+  //       .replace(/^\d+[).]\s*/, "")
+  //       .trim();
 
-      return cleaned.toLowerCase();
-    };
+  //     return cleaned.toLowerCase();
+  //   };
 
-    const normalizeBoolean = (value) => {
-      const normalized = normalizeAnswer(value);
-      if (!normalized) return "";
+  //   const normalizeBoolean = (value) => {
+  //     const normalized = normalizeAnswer(value);
+  //     if (!normalized) return "";
 
-      const trueValues = ["true", "t", "yes", "y", "1", "correct", "right"];
-      const falseValues = ["false", "f", "no", "n", "0", "incorrect", "wrong"];
+  //     const trueValues = ["true", "t", "yes", "y", "1", "correct", "right"];
+  //     const falseValues = ["false", "f", "no", "n", "0", "incorrect", "wrong"];
 
-      if (trueValues.includes(normalized.toLowerCase())) return "true";
-      if (falseValues.includes(normalized.toLowerCase())) return "false";
+  //     if (trueValues.includes(normalized.toLowerCase())) return "true";
+  //     if (falseValues.includes(normalized.toLowerCase())) return "false";
 
-      return normalized.toLowerCase();
-    };
+  //     return normalized.toLowerCase();
+  //   };
 
-    switch (questionType) {
-      case "MCQ":
-      case "Multiple Choice":
-        // const cleanedSelected = cleanMCQAnswer(selectedAnswer);
-        // const cleanedCorrect = cleanMCQAnswer(correctAnswer);
-        // return cleanedSelected === cleanedCorrect;
-        if (correctArray.length !== selectedArray.length) return false;
-        return correctArray.every((c) =>
-          selectedArray.some((s) => clean(s) === clean(c)),
-        );
+  //   switch (questionType) {
+  //     case "MCQ":
+  //     case "Multiple Choice":
+  //       // const cleanedSelected = cleanMCQAnswer(selectedAnswer);
+  //       // const cleanedCorrect = cleanMCQAnswer(correctAnswer);
+  //       // return cleanedSelected === cleanedCorrect;
+  //       if (correctArray.length !== selectedArray.length) return false;
+  //       return correctArray.every((c) =>
+  //         selectedArray.some((s) => clean(s) === clean(c)),
+  //       );
 
-      case "Short Answer":
-        const shortSelected = normalizeAnswer(selectedAnswer);
-        const shortCorrect = normalizeAnswer(correctAnswer);
-        return shortSelected.toLowerCase() === shortCorrect.toLowerCase();
+  //     case "Short Answer":
+  //       const shortSelected = normalizeAnswer(selectedAnswer);
+  //       const shortCorrect = normalizeAnswer(correctAnswer);
+  //       return shortSelected.toLowerCase() === shortCorrect.toLowerCase();
 
-      case "Long Answer":
-        const longSelected = normalizeAnswer(selectedAnswer);
-        const longCorrect = normalizeAnswer(correctAnswer);
-        return longSelected.toLowerCase() === longCorrect.toLowerCase();
+  //     case "Long Answer":
+  //       const longSelected = normalizeAnswer(selectedAnswer);
+  //       const longCorrect = normalizeAnswer(correctAnswer);
+  //       return longSelected.toLowerCase() === longCorrect.toLowerCase();
 
-      case "Number":
-      case "Numeric":
-        const numSelected = normalizeAnswer(selectedAnswer);
-        const numCorrect = normalizeAnswer(correctAnswer);
-        return parseFloat(numSelected) === parseFloat(numCorrect);
+  //     case "Number":
+  //     case "Numeric":
+  //       const numSelected = normalizeAnswer(selectedAnswer);
+  //       const numCorrect = normalizeAnswer(correctAnswer);
+  //       return parseFloat(numSelected) === parseFloat(numCorrect);
 
-      case "Boolean":
-        // const boolSelected = normalizeBoolean(selectedAnswer);
-        // const boolCorrect = normalizeBoolean(correctAnswer);
-        // return boolSelected === boolCorrect;
-        return clean(correctArray[0]) === clean(selectedArray[0]);
+  //     case "Boolean":
+  //       // const boolSelected = normalizeBoolean(selectedAnswer);
+  //       // const boolCorrect = normalizeBoolean(correctAnswer);
+  //       // return boolSelected === boolCorrect;
+  //       return clean(correctArray[0]) === clean(selectedArray[0]);
 
-      case "Programming":
-      case "Code":
-        const codeSelected = normalizeAnswer(selectedAnswer, true);
-        const codeCorrect = normalizeAnswer(correctAnswer, true);
-        return codeSelected === codeCorrect;
+  //     case "Programming":
+  //     case "Code":
+  //       const codeSelected = normalizeAnswer(selectedAnswer, true);
+  //       const codeCorrect = normalizeAnswer(correctAnswer, true);
+  //       return codeSelected === codeCorrect;
 
-      default:
-        // const defaultSelected = normalizeAnswer(selectedAnswer);
-        // const defaultCorrect = normalizeAnswer(correctAnswer);
-        // return defaultSelected === defaultCorrect;
-        return clean(selectedArray[0]) === clean(correctArray[0]);
-    }
-  };
+  //     default:
+  //       // const defaultSelected = normalizeAnswer(selectedAnswer);
+  //       // const defaultCorrect = normalizeAnswer(correctAnswer);
+  //       // return defaultSelected === defaultCorrect;
+  //       return clean(selectedArray[0]) === clean(correctArray[0]);
+  //   }
+  // };
 
   // const handleConfirmSubmit = async () => {
   //   try {
@@ -274,6 +274,178 @@ function AssessmentTest({
   //   }
   // };
 
+  const verifyAnswer = (question, selectedAnswer) => {
+    const questionType =
+      question.snapshot?.questionType || question.questionType;
+    const options = question.snapshot?.options || question.options || [];
+
+    const clean = (val) =>
+      String(val || "")
+        .trim()
+        .toLowerCase();
+
+    switch (questionType) {
+      case "MCQ":
+      case "Multiple Choice": {
+        // 1. Get correct answers from the options array objects
+        const correctOptions = options
+          .filter((opt) => typeof opt === "object" && opt.isCorrect === true)
+          .map((opt) => clean(opt.optionText));
+
+        // 2. Normalize selected answers to an array
+        const selectedArray = Array.isArray(selectedAnswer)
+          ? selectedAnswer.map((s) => clean(s))
+          : selectedAnswer
+            ? [clean(selectedAnswer)]
+            : [];
+
+        // 3. Comparison
+        if (correctOptions.length === 0) return false;
+        if (correctOptions.length !== selectedArray.length) return false;
+
+        // Ensure every correct option is present in the selection
+        return correctOptions.every((c) => selectedArray.includes(c));
+      }
+
+      case "Boolean": {
+        const rawCorrect =
+          question.snapshot?.correctAnswer || question.correctAnswer;
+        // Handle case where rawCorrect might still be an array from old data
+        const correctVal = Array.isArray(rawCorrect)
+          ? rawCorrect[0]
+          : rawCorrect;
+
+        // Handle selectedAnswer as array or string (based on input component)
+        const selectedVal = Array.isArray(selectedAnswer)
+          ? selectedAnswer[0]
+          : selectedAnswer;
+
+        return clean(correctVal) === clean(selectedVal);
+      }
+
+      case "Short Answer":
+      case "Long Answer":
+      case "Short":
+      case "Long": {
+        const correct =
+          question.snapshot?.correctAnswer || question.correctAnswer;
+        return clean(correct) === clean(selectedAnswer);
+      }
+
+      case "Number":
+      case "Numeric": {
+        const correct =
+          question.snapshot?.correctAnswer || question.correctAnswer;
+        return parseFloat(selectedAnswer) === parseFloat(correct);
+      }
+
+      case "Programming":
+      case "Code": {
+        const correct =
+          question.snapshot?.correctAnswer || question.correctAnswer;
+        return (
+          String(selectedAnswer || "").trim() === String(correct || "").trim()
+        );
+      }
+
+      default:
+        const defCorrect =
+          question.snapshot?.correctAnswer || question.correctAnswer;
+        return clean(defCorrect) === clean(selectedAnswer);
+    }
+  };
+
+  // const handleConfirmSubmit = async () => {
+  //   try {
+  //     const submissionData = {
+  //       candidateAssessmentId,
+  //       scheduledAssessmentId: assessment._id,
+  //       candidateId: candidate._id,
+  //       status: "completed",
+  //       remainingTime: timeLeft,
+  //       sections: questions.sections.map((section) => {
+  //         const sectionQuestions = section.questions.map((question) => {
+  //           // Get raw answer from state
+  //           const rawAnswer = answers[question._id];
+
+  //           // Fix: Explicitly check for null/undefined to allow boolean 'false' or number 0
+  //           const userAnswer =
+  //             rawAnswer !== undefined && rawAnswer !== null ? rawAnswer : "";
+
+  //           const isCorrect = verifyAnswer(question, userAnswer);
+
+  //           // Get weighted points from snapshot or root
+  //           const questionWeight = Number(
+  //             question.snapshot?.score || question.score || 0,
+  //           );
+
+  //           // Calculate actual score earned
+  //           const awardedScore = isCorrect ? questionWeight : 0;
+  //           return {
+  //             questionId: question._id,
+  //             questionType:
+  //               question.snapshot?.questionType || question.questionType,
+  //             userAnswer: userAnswer, // This will now correctly send true/false/0
+  //             correctAnswer:
+  //               question.snapshot?.correctAnswer || question.correctAnswer,
+  //             isCorrect,
+  //             score: awardedScore,
+  //             isAnswerLater: skippedQuestions.includes(question._id),
+  //             submittedAt: new Date().toISOString(),
+  //           };
+  //         });
+
+  //         // Sum the actual awarded scores for the section total
+  //         const sectionTotalScore = sectionQuestions.reduce(
+  //           (sum, q) => sum + q.score,
+  //           0,
+  //         );
+
+  //         const passThreshold = Number(section.passScore || 0);
+  //         const sectionResult =
+  //           sectionTotalScore >= passThreshold ? "pass" : "fail";
+
+  //         return {
+  //           sectionId: section._id,
+  //           sectionName: section.sectionName || "Unnamed Section",
+  //           passScore: passThreshold,
+  //           questions: sectionQuestions,
+  //           totalScore: sectionTotalScore,
+  //           sectionResult,
+  //           sectionPassed: sectionResult === "pass",
+  //         };
+  //       }),
+  //       submittedAt: new Date().toISOString(),
+  //     };
+
+  //     const response = await fetch(
+  //       `${config.REACT_APP_API_URL}/candidate-assessment/submit`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(submissionData),
+  //       },
+  //     );
+
+  //     console.log("Response from backend:", response);
+
+  //     const responseData = await response.json();
+
+  //     if (!response.ok) {
+  //       console.error("Error submitting assessment:", responseData.message);
+  //       throw new Error(responseData.message || "Failed to submit assessment");
+  //     }
+
+  //     console.log("Assessment submitted successfully:", responseData);
+  //     setIsSubmitted(true);
+  //     setShowConfirmSubmit(false);
+  //   } catch (error) {
+  //     console.error("Error submitting assessment:", error);
+  //   }
+  // };
+
   const handleConfirmSubmit = async () => {
     try {
       const submissionData = {
@@ -293,6 +465,34 @@ function AssessmentTest({
 
             const isCorrect = verifyAnswer(question, userAnswer);
 
+            // --- START FIX FOR MCQ & BOOLEAN CORRECT ANSWER DISPLAY ---
+            let displayCorrectAnswer =
+              question.snapshot?.correctAnswer || question.correctAnswer;
+            const qType =
+              question.snapshot?.questionType || question.questionType;
+
+            if (qType === "MCQ") {
+              // Extract correct answers from the options objects
+              const correctOpts = (
+                question.snapshot?.options ||
+                question.options ||
+                []
+              )
+                .filter(
+                  (opt) => typeof opt === "object" && opt.isCorrect === true,
+                )
+                .map((opt) => opt.optionText);
+
+              displayCorrectAnswer =
+                correctOpts.length > 0 ? correctOpts.join(", ") : "";
+            } else if (qType === "Boolean") {
+              // Ensure we send a string even if legacy data was an array
+              displayCorrectAnswer = Array.isArray(displayCorrectAnswer)
+                ? displayCorrectAnswer[0]
+                : displayCorrectAnswer;
+            }
+            // --- END FIX ---
+
             // Get weighted points from snapshot or root
             const questionWeight = Number(
               question.snapshot?.score || question.score || 0,
@@ -304,9 +504,8 @@ function AssessmentTest({
               questionId: question._id,
               questionType:
                 question.snapshot?.questionType || question.questionType,
-              userAnswer: userAnswer, // This will now correctly send true/false/0
-              correctAnswer:
-                question.snapshot?.correctAnswer || question.correctAnswer,
+              userAnswer: userAnswer, // Correctly sends true/false/0 or Array
+              correctAnswer: displayCorrectAnswer, // Cleaned version for backend logs
               isCorrect,
               score: awardedScore,
               isAnswerLater: skippedQuestions.includes(question._id),

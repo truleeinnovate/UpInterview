@@ -79,28 +79,36 @@ function validateCreateTenantQuestion(payload = {}) {
       //   'any.required': 'Max Experience is required',
       // }),
       // ---------------------------------- Multi MCQ select -----------------------------------------
-      // correctAnswer: Joi.string().trim().required().messages({
-      //   'string.empty': 'Answer is required',
-      // }),
-      correctAnswer: Joi.alternatives()
-        .try(
-          Joi.array().items(Joi.string().trim().min(1)).min(1), // Multi-select MCQ
-          Joi.string().trim().min(1), // Short/Long/Boolean/Number
-        )
-        .required()
-        .messages({
-          "alternatives.match": "Answer is required",
-          "any.required": "Answer is required",
-          "array.min": "At least one correct answer must be selected",
-        }),
+      correctAnswer: Joi.string().trim().required().messages({
+        "string.empty": "Answer is required",
+      }),
+      // correctAnswer: Joi.alternatives()
+      //   .try(
+      //     Joi.array().items(Joi.string().trim().min(1)).min(1),
+      //     Joi.string().trim().min(1), // Short/Long/Boolean/Number
+      //   )
+      //   .required()
+      //   .messages({
+      //     "alternatives.match": "Answer is required",
+      //     "any.required": "Answer is required",
+      //     "array.min": "At least one correct answer must be selected",
+      //   }),
       // ---------------------------------- Multi MCQ select -----------------------------------------
       tenantListId: Joi.array().items(objectId).min(1).required().messages({
         "array.min": "Question List is required",
       }),
+      // ... inside validateCreateTenantQuestion ...
       options: Joi.alternatives().conditional("questionType", {
         is: "MCQ",
         then: Joi.array()
-          .items(Joi.string().trim().min(1))
+          .items(
+            Joi.object({
+              optionText: Joi.string().trim().min(1).required().messages({
+                "string.empty": "Option text cannot be empty",
+              }),
+              isCorrect: Joi.boolean().default(false),
+            }),
+          )
           .min(1)
           .required()
           .messages({
@@ -154,13 +162,34 @@ function validateUpdateTenantQuestion(payload = {}) {
     // maxexperience: Joi.number().integer().min(0),
     // ---------------------------------------------------------------------
     // correctAnswer: Joi.string().trim(),
-    correctAnswer: Joi.alternatives().try(
-      Joi.array().items(Joi.string().trim().min(1)).min(1),
-      Joi.string().trim().min(1),
-    ),
+    // correctAnswer: Joi.alternatives().try(
+    //   Joi.array().items(Joi.string().trim().min(1)).min(1),
+    //   Joi.string().trim().min(1),
+    // ),
+
     // ---------------------------------------------------------------------
     tenantListId: Joi.array().items(objectId).min(1),
-    options: Joi.array().items(Joi.string().trim().min(1)).min(1),
+    // options: Joi.array().items(Joi.string().trim().min(1)).min(1),
+    // ... inside validateCreateTenantQuestion ...
+    // ... inside validateCreateTenantQuestion ...
+    options: Joi.alternatives().conditional("questionType", {
+      is: "MCQ",
+      then: Joi.array()
+        .items(
+          Joi.object({
+            optionText: Joi.string().trim().min(1).required().messages({
+              "string.empty": "Option text cannot be empty",
+            }),
+            isCorrect: Joi.boolean().default(false),
+          }),
+        )
+        .min(1)
+        .required()
+        .messages({
+          "array.min": "At least one option is required for MCQ",
+        }),
+      otherwise: Joi.array().items(Joi.string().trim()).optional(),
+    }),
     isInterviewType: Joi.boolean(),
     ownerId: Joi.string(),
     tenantId: Joi.string(),

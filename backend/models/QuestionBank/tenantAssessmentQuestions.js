@@ -17,9 +17,15 @@ const TenantAssessmentQuestionsSchema = new mongoose.Schema(
     skill: [String],
     tags: [String],
     difficultyLevel: String,
-    // correctAnswer: String,
-    correctAnswer: [String],
-    options: [String],
+    correctAnswer: String,
+    // correctAnswer: [String],
+    // options: [String],
+    options: [
+      {
+        optionText: String,
+        isCorrect: { type: Boolean, default: false }
+      }
+    ],
     hints: String,
     charLimits: {
       min: Number,

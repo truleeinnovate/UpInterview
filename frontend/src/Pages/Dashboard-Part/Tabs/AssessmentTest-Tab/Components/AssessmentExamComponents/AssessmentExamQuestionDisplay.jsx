@@ -74,40 +74,104 @@ const AnswerInput = ({
 }) => {
   // Handle different question types
   switch (questionType) {
-    case "MCQ":
-      // v1.0.0 <-----------------------------------------------------------------------------------
-      // v1.0.1 <-----------------------------------------------------------------------------------
+    // case "MCQ":
+    //   // v1.0.0 <-----------------------------------------------------------------------------------
+    //   // v1.0.1 <-----------------------------------------------------------------------------------
+    //   return (
+    //     <div className="space-y-4">
+    //       {options?.map((option, index) => (
+    //         <label
+    //           key={index}
+    //           className={`flex items-center space-x-4 p-3 border rounded-lg transition-all duration-300 cursor-pointer
+    //             ${
+    //               value === option
+    //                 ? "bg-blue-50 border-blue-200 shadow-inner"
+    //                 : "hover:bg-gray-50 border-gray-200 hover:border-gray-300"
+    //             }`}
+    //         >
+    //           <input
+    //             type="checkbox"
+    //             name={`mcq-${questionId}`}
+    //             value={option}
+    //             checked={value === option}
+    //             onChange={(e) => onChange(e.target.value)}
+    //             className="sm:h-3 sm:w-3 h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue"
+    //             disabled={disabled}
+    //           />
+    //           <span className="sm:text-sm md:text-md lg:text-md xl:text-md 2xl:text-md text-gray-900">
+    //             {option}
+    //           </span>
+    //         </label>
+    //       ))}
+    //     </div>
+    //   );
+    // // v1.0.1 ----------------------------------------------------------------------------------->
+    // // v1.0.0 ----------------------------------------------------------------------------------->
+    case "MCQ": {
+      // 1. Determine if this is a Multiple Selection MCQ
+      const isMultiple = options?.filter((opt) => opt.isCorrect).length > 1;
+
+      // 2. Local handler to manage single vs multiple selection
+      const handleMCQChange = (optionValue) => {
+        if (isMultiple) {
+          // Ensure current value is an array
+          const currentSelection = Array.isArray(value)
+            ? value
+            : value
+              ? [value]
+              : [];
+
+          if (currentSelection.includes(optionValue)) {
+            // Remove if already selected
+            onChange(currentSelection.filter((val) => val !== optionValue));
+          } else {
+            // Add if not selected
+            onChange([...currentSelection, optionValue]);
+          }
+        } else {
+          // Single selection: just pass the value directly
+          onChange(optionValue);
+        }
+      };
+
       return (
         <div className="space-y-4">
-          {options?.map((option, index) => (
-            <label
-              key={index}
-              className={`flex items-center space-x-4 p-3 border rounded-lg transition-all duration-300 cursor-pointer
-                ${
-                  value === option
-                    ? "bg-blue-50 border-blue-200 shadow-inner"
-                    : "hover:bg-gray-50 border-gray-200 hover:border-gray-300"
-                }`}
-            >
-              <input
-                type="radio"
-                name={`mcq-${questionId}`}
-                value={option}
-                checked={value === option}
-                onChange={(e) => onChange(e.target.value)}
-                className="sm:h-3 sm:w-3 h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue"
-                disabled={disabled}
-              />
-              <span className="sm:text-sm md:text-md lg:text-md xl:text-md 2xl:text-md text-gray-900">
-                {option}
-              </span>
-            </label>
-          ))}
+          {options?.map((optionObj, index) => {
+            const optionText =
+              typeof optionObj === "object" ? optionObj.optionText : optionObj;
+
+            const isSelected = Array.isArray(value)
+              ? value.includes(optionText)
+              : value === optionText;
+
+            return (
+              <label
+                key={index}
+                className={`flex items-center space-x-4 p-3 border rounded-lg transition-all duration-300 cursor-pointer
+              ${
+                isSelected
+                  ? "bg-blue-50 border-blue-200 shadow-inner"
+                  : "hover:bg-gray-50 border-gray-200 hover:border-gray-300"
+              }`}
+              >
+                <input
+                  type={isMultiple ? "checkbox" : "radio"}
+                  name={`mcq-${questionId}`}
+                  value={optionText}
+                  checked={isSelected}
+                  onChange={() => handleMCQChange(optionText)}
+                  className={`sm:h-3 sm:w-3 h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue ${!isMultiple ? "rounded-full" : "rounded"}`}
+                  disabled={disabled}
+                />
+                <span className="sm:text-sm md:text-md text-gray-900">
+                  {optionText}
+                </span>
+              </label>
+            );
+          })}
         </div>
       );
-    // v1.0.1 ----------------------------------------------------------------------------------->
-    // v1.0.0 ----------------------------------------------------------------------------------->
-
+    }
     case "Short":
       // v1.0.0 <--------------------------------------------------------------------------------
       // v1.0.1 <--------------------------------------------------------------------------------
@@ -186,29 +250,25 @@ const AnswerInput = ({
             <input
               type="radio"
               name={`boolean-${questionId}`}
-              value="true"
-              checked={value === "true"}
+              value="True"
+              checked={value === "True"}
               onChange={(e) => onChange(e.target.value)}
               className="sm:h-3 sm:w-3 h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue"
               disabled={disabled}
             />
-            <span className="ml-2 text-sm">
-              True
-            </span>
+            <span className="ml-2 text-sm">True</span>
           </label>
           <label className="inline-flex items-center">
             <input
               type="radio"
               name={`boolean-${questionId}`}
-              value="false"
-              checked={value === "false"}
+              value="False"
+              checked={value === "False"}
               onChange={(e) => onChange(e.target.value)}
               className="sm:h-3 sm:w-3 h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue"
               disabled={disabled}
             />
-            <span className="ml-2 text-sm">
-              False
-            </span>
+            <span className="ml-2 text-sm">False</span>
           </label>
         </div>
       );

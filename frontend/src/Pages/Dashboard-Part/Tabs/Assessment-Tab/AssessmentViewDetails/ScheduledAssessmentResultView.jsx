@@ -317,7 +317,10 @@ function AssessmentResultView({
                     <div className="p-4 space-y-4">
                       {candidateSection.Answers.map((answer, qIndex) => {
                         const isCorrect = answer.isCorrect;
-                        const userAnswer = answer.userAnswer || "Not Answered";
+                        // const userAnswer = answer.userAnswer || "Not Answered";
+                        const userAnswer = (answer.userAnswer !== undefined && answer.userAnswer !== null && answer.userAnswer !== "") 
+                          ? String(answer.userAnswer) 
+                          : "Not Answered";
                         const marks = answer.score ?? 0;
                         
                         // Find the corresponding question from assessmentQuestions to get the score
@@ -331,7 +334,7 @@ function AssessmentResultView({
                             className="p-4 border border-gray-200 rounded-lg text-sm"
                           >
                             <div className="flex items-start">
-                              <div className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0 text-xs">
+                              <div className="bg-custom-blue/10 text-custom-blue rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0 text-xs">
                                 {qIndex + 1}
                               </div>
                               <div className="flex-1">
@@ -344,8 +347,11 @@ function AssessmentResultView({
                                     <p className="text-xs text-gray-500 mb-1">
                                       Correct Answer
                                     </p>
+
                                     <p className="font-medium break-words whitespace-pre-wrap">
-                                      {answer.correctAnswer || "N/A"}
+                                      {Array.isArray(answer.correctAnswer) 
+                                        ? answer.correctAnswer.join(", ") 
+                                        : (answer.correctAnswer || "N/A")}
                                     </p>
                                   </div>
                                   <div>

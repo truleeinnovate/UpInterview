@@ -82,12 +82,13 @@ function QuestionHeaderBar({
 }) {
   return (
     <div
-      className={`flex items-center sm:justify-start justify-between overflow-x-auto ${type === "interviewerSection" ||
-          type === "feedback" ||
-          type === "assessment"
+      className={`flex items-center sm:justify-start justify-between overflow-x-auto ${
+        type === "interviewerSection" ||
+        type === "feedback" ||
+        type === "assessment"
           ? ""
           : ""
-        }`}
+      }`}
     >
       <div className="flex items-center gap-2">
         {/* Interview Type Dropdown (using DropdownSelect) */}
@@ -122,11 +123,11 @@ function QuestionHeaderBar({
             value={
               selectedLabel
                 ? {
-                  value: selectedLabel,
-                  label:
-                    selectedLabel.charAt(0).toUpperCase() +
-                    selectedLabel.slice(1),
-                }
+                    value: selectedLabel,
+                    label:
+                      selectedLabel.charAt(0).toUpperCase() +
+                      selectedLabel.slice(1),
+                  }
                 : null
             }
             onChange={(opt) => handleLabelChange(opt?.value || "")}
@@ -168,8 +169,9 @@ function QuestionHeaderBar({
           onClick={() => {
             const meta = Array.isArray(createdLists)
               ? createdLists.find(
-                (l) => l?.label === selectedLabel || l?.name === selectedLabel
-              )
+                  (l) =>
+                    l?.label === selectedLabel || l?.name === selectedLabel,
+                )
               : null;
             const listId = meta?._id || selectedLabelId;
             if (listId && selectedLabel) {
@@ -237,10 +239,11 @@ function QuestionHeaderBar({
               title="Previous"
               onClick={onClickLeftPaginationIcon}
               disabled={currentPage === 1}
-              className={`border p-2 mr-2 text-xl rounded-md ${currentPage === 1
+              className={`border p-2 mr-2 text-xl rounded-md ${
+                currentPage === 1
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-gray-100"
-                }`}
+              }`}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -251,10 +254,11 @@ function QuestionHeaderBar({
               disabled={
                 currentPage * itemsPerPage >= totalItems || totalItems === 0
               }
-              className={`border p-2 text-xl rounded-md ${currentPage * itemsPerPage >= totalItems || totalItems === 0
+              className={`border p-2 text-xl rounded-md ${
+                currentPage * itemsPerPage >= totalItems || totalItems === 0
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-gray-100"
-                }`}
+              }`}
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -344,7 +348,7 @@ const removeQuestionFromChild = (questionId, myQuestionsList) => {
     return myQuestionsList;
   return Object.keys(myQuestionsList).reduce((acc, key) => {
     acc[key] = myQuestionsList[key].map((question) =>
-      question._id === questionId ? { ...question, isAdded: false } : question
+      question._id === questionId ? { ...question, isAdded: false } : question,
     );
     return acc;
   }, {});
@@ -371,7 +375,6 @@ const MyQuestionsList = ({
   const { myQuestionsList, createdLists, isLoading } = useQuestions(); //<----v1.0.4---
   const { mutateAsync: deleteQuestions } = useQuestionDeletion();
 
-
   const myQuestionsListRef = useRef(null);
   const sidebarRef = useRef(null);
   const filterIconRef = useRef(null);
@@ -384,7 +387,7 @@ const MyQuestionsList = ({
   const [isOpen, setIsOpen] = useState({});
   const [loading, setLoading] = useState(true);
   const [dropdownValue, setDropdownValue] = useState(
-    type === "assessment" ? "Assessment Questions" : "Interview Questions"
+    type === "assessment" ? "Assessment Questions" : "Interview Questions",
   );
   const [searchInput, setSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -462,7 +465,7 @@ const MyQuestionsList = ({
     setSelectedQuestions((prev) =>
       prev.includes(questionId)
         ? prev.filter((id) => id !== questionId)
-        : [...prev, questionId]
+        : [...prev, questionId],
     );
   };
 
@@ -491,13 +494,11 @@ const MyQuestionsList = ({
   };
 
   const handleDeleteQuestions = async (deleteLabel = false) => {
-
     const allQuestions = Object.values(myQuestionsList || {}).flat();
     const matchingQuestion = allQuestions.find(
-      (q) => q.label === selectedLabel
+      (q) => q.label === selectedLabel,
     );
     const labelId = matchingQuestion.listId;
-
 
     try {
       let payload;
@@ -541,7 +542,7 @@ const MyQuestionsList = ({
         notify.success(
           deleteLabel
             ? "Label and questions deleted successfully"
-            : "Questions deleted successfully"
+            : "Questions deleted successfully",
         );
 
         // Reset selection states
@@ -554,7 +555,7 @@ const MyQuestionsList = ({
         // If label was deleted, reset the selected label
         if (deleteLabel) {
           const availableLabels = Object.keys(groupedQuestions || {}).filter(
-            (label) => label !== selectedLabel
+            (label) => label !== selectedLabel,
           );
           setSelectedLabel(availableLabels[0] || "");
 
@@ -709,7 +710,7 @@ const MyQuestionsList = ({
       .includes("assessment");
     if (!isAssignment) return;
     setSelectedQTypeFilterItems((prev) =>
-      prev.filter((v) => v !== "interview questions")
+      prev.filter((v) => v !== "interview questions"),
     );
   }, [dropdownValue]);
 
@@ -724,8 +725,8 @@ const MyQuestionsList = ({
         allQuestions
           .map((q) => q?.category)
           .filter(Boolean)
-          .map((c) => String(c).trim())
-      )
+          .map((c) => String(c).trim()),
+      ),
     );
 
     const uniqueTechnologies = Array.from(
@@ -736,11 +737,11 @@ const MyQuestionsList = ({
               ? q.technology
               : typeof q?.technology === "string"
                 ? [q.technology]
-                : []
+                : [],
           )
           .filter(Boolean)
-          .map((t) => String(t).trim())
-      )
+          .map((t) => String(t).trim()),
+      ),
     );
 
     const uniqueQTypes = Array.from(
@@ -748,15 +749,15 @@ const MyQuestionsList = ({
         allQuestions
           .map((q) => q?.questionType)
           .filter(Boolean)
-          .map((t) => String(t).trim())
-      )
+          .map((t) => String(t).trim()),
+      ),
     );
 
     setFiltrationData((prev) => {
       const findChecked = (section, val) => {
         if (!section || !Array.isArray(section.options)) return false;
         const found = section.options.find(
-          (o) => (o.value || o.type || o.level) === val
+          (o) => (o.value || o.type || o.level) === val,
         );
         return found ? !!found.isChecked : false;
       };
@@ -914,7 +915,7 @@ const MyQuestionsList = ({
 
     const initialOpenState = Object.keys(myQuestionsList).reduce(
       (acc, key) => ({ ...acc, [key]: true }),
-      {}
+      {},
     );
 
     setIsOpen((prev) => {
@@ -939,7 +940,7 @@ const MyQuestionsList = ({
     ) {
       const allQuestions = Object.values(myQuestionsList).flat();
       const matchingQuestion = allQuestions.find(
-        (q) => q.listId === lastSelectedListId
+        (q) => q.listId === lastSelectedListId,
       );
       if (matchingQuestion) {
         setSelectedLabel(matchingQuestion.label);
@@ -988,7 +989,7 @@ const MyQuestionsList = ({
         closeSidebar();
       }
     },
-    [closeSidebar]
+    [closeSidebar],
   );
 
   useEffect(() => {
@@ -1031,8 +1032,8 @@ const MyQuestionsList = ({
     if (!selectedLabel) return;
     const meta = Array.isArray(createdLists)
       ? createdLists.find(
-        (l) => l?.label === selectedLabel || l?.name === selectedLabel
-      )
+          (l) => l?.label === selectedLabel || l?.name === selectedLabel,
+        )
       : null;
     // if (meta && typeof meta.type !== 'undefined') {
     //   const display = mapListTypeToDisplay(meta.type);
@@ -1045,7 +1046,7 @@ const MyQuestionsList = ({
 
   const toggleActionSection = (sectionIndex) => {
     setActionViewMoreSection((prev) =>
-      prev === sectionIndex ? null : sectionIndex
+      prev === sectionIndex ? null : sectionIndex,
     );
     setDropdownOpen(null);
   };
@@ -1120,10 +1121,9 @@ const MyQuestionsList = ({
   // };
 
   const onClickAddButton = async (question, listName, indx) => {
-
     if (type === "assessment") {
       const isDuplicate = addedSections.some((section) =>
-        section.Questions.some((q) => q.questionId === question._id)
+        section.Questions.some((q) => q.questionId === question._id),
       );
 
       if (isDuplicate) {
@@ -1133,7 +1133,7 @@ const MyQuestionsList = ({
 
       if (checkedCount >= questionsLimit) {
         notify.error(
-          `You've reached the maximum limit of ${questionsLimit} questions`
+          `You've reached the maximum limit of ${questionsLimit} questions`,
         );
         return;
       }
@@ -1151,7 +1151,11 @@ const MyQuestionsList = ({
             isAdded: question.isAdded,
             isAutoAssessment: question.isAutoAssessment,
             isInterviewQuestionOnly: question.isInterviewQuestionOnly,
-            options: question.options,
+            // options: question.options,
+            options: question.options.map((opt) => ({
+              optionText: typeof opt === "object" ? opt.optionText : opt,
+              isCorrect: typeof opt === "object" ? opt.isCorrect : false,
+            })),
             programming: question.programming,
             questionNo: question.questionNo,
             questionText: question.questionText,
@@ -1166,7 +1170,7 @@ const MyQuestionsList = ({
 
         updateQuestionsInAddedSectionFromQuestionBank(
           sectionName,
-          questionToAdd
+          questionToAdd,
         );
         notify.success("Question added successfully!");
 
@@ -1182,7 +1186,6 @@ const MyQuestionsList = ({
       }
     } else {
       try {
-
         const questionToAdd = {
           questionId: question._id,
           source: "system",
@@ -1192,15 +1195,13 @@ const MyQuestionsList = ({
           // mandatory: mandatoryStatus[item._id] ? "true" : "false",
         };
 
-
-
         if (onAddQuestion) {
           onAddQuestion(questionToAdd); // Pass the question and index to the parent
         }
 
         const requiredArray = myQuestionsList[listName];
         const requiredObj = requiredArray.map((item, index) =>
-          index === indx ? { ...item, isAdded: true } : item
+          index === indx ? { ...item, isAdded: true } : item,
         );
         // setMyQuestionsList((prev) => ({
         //   ...prev,
@@ -1259,7 +1260,7 @@ const MyQuestionsList = ({
       }
       const requiredArray = myQuestionsList[listName];
       const requiredObj = requiredArray.map((item) =>
-        item._id === question._id ? { ...item, isAdded: false } : item
+        item._id === question._id ? { ...item, isAdded: false } : item,
       );
       // setMyQuestionsList((prev) => ({
       //   ...prev,
@@ -1295,8 +1296,8 @@ const MyQuestionsList = ({
       prev.map((filter) =>
         filter.id === filterId
           ? { ...filter, isOpen: !filter.isOpen }
-          : { ...filter, isOpen: false }
-      )
+          : { ...filter, isOpen: false },
+      ),
     );
   };
 
@@ -1307,12 +1308,12 @@ const MyQuestionsList = ({
           const updatedOptions = filter.options.map((option, idx) =>
             idx === optionIndex
               ? { ...option, isChecked: !option.isChecked }
-              : option
+              : option,
           );
           return { ...filter, options: updatedOptions };
         }
         return filter;
-      })
+      }),
     );
   };
 
@@ -1335,17 +1336,19 @@ const MyQuestionsList = ({
                     checked={option.isChecked}
                     className="w-4 cursor-pointer accent-custom-blue"
                     value={String(
-                      option.type || option.level || option.value || ""
+                      option.type || option.level || option.value || "",
                     ).toLowerCase()}
-                    id={`${filter.filterType}-${option.type || option.level || option.value
-                      }`}
+                    id={`${filter.filterType}-${
+                      option.type || option.level || option.value
+                    }`}
                     type="checkbox"
                     onChange={() => onChangeCheckbox(filter.id, index)}
                   />
 
                   <label
-                    htmlFor={`${filter.filterType}-${option.type || option.level || option.value
-                      }`}
+                    htmlFor={`${filter.filterType}-${
+                      option.type || option.level || option.value
+                    }`}
                   >
                     {option.type || option.level || option.value}
                   </label>
@@ -1430,7 +1433,7 @@ const MyQuestionsList = ({
     if (!selectedLabel || !myQuestionsList) return null;
     const allQuestions = Object.values(myQuestionsList).flat();
     const matchingQuestion = allQuestions.find(
-      (q) => q.label === selectedLabel
+      (q) => q.label === selectedLabel,
     );
     return matchingQuestion ? matchingQuestion.listId : null;
   }, [selectedLabel, myQuestionsList]);
@@ -1445,7 +1448,7 @@ const MyQuestionsList = ({
     const result = {};
     Object.keys(filteredMyQuestionsList).forEach((listName) => {
       const meta = createdLists.find(
-        (l) => l?.label === listName || l?.name === listName
+        (l) => l?.label === listName || l?.name === listName,
       );
       if (typeof meta?.type === "undefined") return; // skip lists without known type
       const displayType = mapListTypeToDisplay(meta.type);
@@ -1455,7 +1458,6 @@ const MyQuestionsList = ({
     });
     return result;
   }, [filteredMyQuestionsList, createdLists, dropdownValue]);
-
 
   // Ensure selectedLabel is valid for the currently filtered lists
   useEffect(() => {
@@ -1488,14 +1490,14 @@ const MyQuestionsList = ({
         q.tags.some((t) =>
           String(t || "")
             .toLowerCase()
-            .includes(s)
+            .includes(s),
         );
       const inSkill = Array.isArray(q?.skill)
         ? q.skill.some((sk) =>
-          String(sk || "")
-            .toLowerCase()
-            .includes(s)
-        )
+            String(sk || "")
+              .toLowerCase()
+              .includes(s),
+          )
         : typeof q?.skill === "string"
           ? q.skill.toLowerCase().includes(s)
           : false;
@@ -1506,7 +1508,7 @@ const MyQuestionsList = ({
   const totalItems = filteredSelectedItems.length;
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(totalItems / itemsPerPage)),
-    [totalItems]
+    [totalItems],
   );
   const paginatedItems = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -1522,8 +1524,9 @@ const MyQuestionsList = ({
       ? "0/0 Questions"
       : startIndex === endIndex
         ? `${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"}`
-        : `${startIndex}-${endIndex}/${totalItems} ${totalItems > 1 ? "Questions" : "Question"
-        }`;
+        : `${startIndex}-${endIndex}/${totalItems} ${
+            totalItems > 1 ? "Questions" : "Question"
+          }`;
   // v2.0.1 -------------------------------------------------------------------->
 
   // Reset/clamp page on changes
@@ -1616,12 +1619,13 @@ const MyQuestionsList = ({
 
         {/* v1.0.8 <-------------------------------------------------------------------------- */}
         <div
-          className={`${type === "interviewerSection" ||
-              type === "assessment" ||
-              activeTab === "MyQuestionsList"
+          className={`${
+            type === "interviewerSection" ||
+            type === "assessment" ||
+            activeTab === "MyQuestionsList"
               ? ""
               : ""
-            }`}
+          }`}
         >
           {isLoading ? (
             <>
@@ -1630,7 +1634,7 @@ const MyQuestionsList = ({
           ) : (
             <>
               {selectedLabel &&
-                groupedQuestions[selectedLabel]?.length === 0 ? (
+              groupedQuestions[selectedLabel]?.length === 0 ? (
                 <div className="flex flex-col items-center justify-center min-h-[400px]">
                   <div className="text-center max-w-md">
                     <svg
@@ -1690,10 +1694,11 @@ const MyQuestionsList = ({
                         <div key={listName} className="mt-4">
                           {isOpen[listName] && items.length > 0 && (
                             <div
-                              className={`px-2 ${type === "interviewerSection"
+                              className={`px-2 ${
+                                type === "interviewerSection"
                                   ? "h-[62vh]"
                                   : "h-[calc(100vh-200px)]"
-                                } overflow-y-auto`}
+                              } overflow-y-auto`}
                             >
                               {paginatedItems.map((question, index) => (
                                 <div className="flex w-full items-center">
@@ -1703,38 +1708,39 @@ const MyQuestionsList = ({
                                         <input
                                           type="checkbox"
                                           checked={selectedQuestions.includes(
-                                            question._id
+                                            question._id,
                                           )}
                                           onChange={() =>
                                             toggleQuestionSelection(
-                                              question._id
+                                              question._id,
                                             )
                                           }
                                           className="sr-only accent-custom-blue" // Hide the default checkbox
                                         />
                                         <div
-                                          className={`w-4 h-4 rounded border-2 flex items-center justify-center ${selectedQuestions.includes(
-                                            question._id
-                                          )
+                                          className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                                            selectedQuestions.includes(
+                                              question._id,
+                                            )
                                               ? "bg-custom-blue border-custom-blue"
                                               : "bg-white border-gray-300"
-                                            }`}
+                                          }`}
                                         >
                                           {selectedQuestions.includes(
-                                            question._id
+                                            question._id,
                                           ) && (
-                                              <svg
-                                                className="w-3 h-3 text-white"
-                                                viewBox="0 0 20 20"
-                                                fill="currentColor"
-                                              >
-                                                <path
-                                                  fillRule="evenodd"
-                                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                  clipRule="evenodd"
-                                                />
-                                              </svg>
-                                            )}
+                                            <svg
+                                              className="w-3 h-3 text-white"
+                                              viewBox="0 0 20 20"
+                                              fill="currentColor"
+                                            >
+                                              <path
+                                                fillRule="evenodd"
+                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                clipRule="evenodd"
+                                              />
+                                            </svg>
+                                          )}
                                         </div>
                                       </label>
                                     </div>
@@ -1764,10 +1770,11 @@ const MyQuestionsList = ({
                                         </div>
                                         <div className="flex items-center gap-2">
                                           <span
-                                            className={`text-xs px-2 py-1 rounded-md ${question.isCustom
+                                            className={`text-xs px-2 py-1 rounded-md ${
+                                              question.isCustom
                                                 ? "bg-[#BBDEFB] text-blue-800"
                                                 : "bg-[#D1C4E9] text-blue-800"
-                                              }`}
+                                            }`}
                                             title="Question Type"
                                           >
                                             {question.isCustom
@@ -1776,7 +1783,7 @@ const MyQuestionsList = ({
                                           </span>
                                           <span
                                             className={`text-xs px-2 py-1 rounded-md ${getDifficultyStyles(
-                                              question.difficultyLevel
+                                              question.difficultyLevel,
                                             )}`}
                                             title="Difficulty Level"
                                           >
@@ -1785,24 +1792,50 @@ const MyQuestionsList = ({
                                           {(() => {
                                             const actions = getQuestionActions({
                                               callbacks: {
-                                                onEdit: (row) => handleEdit(row._id, row.questionText),
+                                                onEdit: (row) =>
+                                                  handleEdit(
+                                                    row._id,
+                                                    row.questionText,
+                                                  ),
                                                 onDelete: (row) => {
-                                                  setSelectedQuestions([row._id]);
+                                                  setSelectedQuestions([
+                                                    row._id,
+                                                  ]);
                                                   setDeleteConfirmOpen(true);
-                                                }
-                                              }
+                                                },
+                                              },
                                             });
-                                            const addAction = (type === "interviewerSection" || type === "feedback") && !interviewQuestionsLists?.some(q => q.questionId === question._id);
-                                            const removeAction = (type === "interviewerSection" || type === "feedback") && interviewQuestionsLists?.some(q => q.questionId === question._id);
+                                            const addAction =
+                                              (type === "interviewerSection" ||
+                                                type === "feedback") &&
+                                              !interviewQuestionsLists?.some(
+                                                (q) =>
+                                                  q.questionId === question._id,
+                                              );
+                                            const removeAction =
+                                              (type === "interviewerSection" ||
+                                                type === "feedback") &&
+                                              interviewQuestionsLists?.some(
+                                                (q) =>
+                                                  q.questionId === question._id,
+                                              );
 
                                             if (removeAction) {
                                               return (
                                                 <button
                                                   type="button"
-                                                  onClick={() => onClickRemoveQuestion(question, listName, index)}
+                                                  onClick={() =>
+                                                    onClickRemoveQuestion(
+                                                      question,
+                                                      listName,
+                                                      index,
+                                                    )
+                                                  }
                                                   className="sm:flex sm:items-center sm:justify-center rounded-md bg-gray-500 px-3 py-1 text-white text-sm hover:bg-gray-600 transition-colors"
                                                 >
-                                                  <span className="sm:hidden inline">Remove</span>
+                                                  <span className="sm:hidden inline">
+                                                    Remove
+                                                  </span>
                                                   <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                                                 </button>
                                               );
@@ -1812,9 +1845,17 @@ const MyQuestionsList = ({
                                                 <button
                                                   type="button"
                                                   className="sm:flex sm:items-center sm:justify-center bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors"
-                                                  onClick={() => onClickAddButton(question, listName, index)}
+                                                  onClick={() =>
+                                                    onClickAddButton(
+                                                      question,
+                                                      listName,
+                                                      index,
+                                                    )
+                                                  }
                                                 >
-                                                  <span className="sm:hidden inline">Add</span>
+                                                  <span className="sm:hidden inline">
+                                                    Add
+                                                  </span>
                                                   <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                                                 </button>
                                               );
@@ -1827,8 +1868,8 @@ const MyQuestionsList = ({
                                                 s.Questions.some(
                                                   (q) =>
                                                     q.questionId ===
-                                                    question._id
-                                                )
+                                                    question._id,
+                                                ),
                                               ) ? (
                                                 <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
                                                   ✓
@@ -1838,20 +1879,21 @@ const MyQuestionsList = ({
                                                 </span>
                                               ) : (
                                                 <button
-                                                  className={`sm:flex sm:items-center sm:justify-center bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors ${addedSections.reduce(
-                                                    (acc, s) =>
-                                                      acc +
-                                                      s.Questions.length,
-                                                    0
-                                                  ) >= questionsLimit
+                                                  className={`sm:flex sm:items-center sm:justify-center bg-custom-blue px-3 py-1 text-white text-sm rounded-md transition-colors ${
+                                                    addedSections.reduce(
+                                                      (acc, s) =>
+                                                        acc +
+                                                        s.Questions.length,
+                                                      0,
+                                                    ) >= questionsLimit
                                                       ? "opacity-50 cursor-not-allowed"
                                                       : ""
-                                                    }`}
+                                                  }`}
                                                   onClick={() =>
                                                     onClickAddButton(
                                                       question,
                                                       listName,
-                                                      index
+                                                      index,
                                                     )
                                                   }
                                                   disabled={
@@ -1859,7 +1901,7 @@ const MyQuestionsList = ({
                                                       (acc, s) =>
                                                         acc +
                                                         s.Questions.length,
-                                                      0
+                                                      0,
                                                     ) >= questionsLimit
                                                   }
                                                 >
@@ -1883,18 +1925,18 @@ const MyQuestionsList = ({
                                               </button>
                                               {dropdownOpen ===
                                                 question._id && (
-                                                  <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                                                    <p
-                                                      className="px-3 flex items-center gap-2 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
-                                                      onClick={() =>
-                                                        handleEditClick(question)
-                                                      }
-                                                    >
-                                                      <Pencil className="w-4 h-4 text-blue-600" />{" "}
-                                                      Edit
-                                                    </p>
-                                                  </div>
-                                                )}
+                                                <div className="absolute right-0 mt-1 w-24 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                                                  <p
+                                                    className="px-3 flex items-center gap-2 py-1 hover:bg-gray-100 text-sm text-gray-700 cursor-pointer transition-colors"
+                                                    onClick={() =>
+                                                      handleEditClick(question)
+                                                    }
+                                                  >
+                                                    <Pencil className="w-4 h-4 text-blue-600" />{" "}
+                                                    Edit
+                                                  </p>
+                                                </div>
+                                              )}
                                             </div>
                                           )}
                                         </div>
@@ -1910,7 +1952,7 @@ const MyQuestionsList = ({
                                           {question.questionText}
                                         </p>
                                       </div>
-                                      {question.questionType === "MCQ" &&
+                                      {/* {question.questionType === "MCQ" &&
                                         question.options && (
                                           <div className="mb-2 ml-12 mt-2">
                                             <ul className="list-none">
@@ -1946,6 +1988,53 @@ const MyQuestionsList = ({
                                               })()}
                                             </ul>
                                           </div>
+                                        )} */}
+                                      {/* Change is around Line 1055 */}
+                                      {question.questionType === "MCQ" &&
+                                        question.options && (
+                                          <div className="mb-2 ml-12 mt-2">
+                                            <ul className="list-none">
+                                              {(() => {
+                                                // 1. Update length check to use optionText
+                                                const isAnyOptionLong =
+                                                  question.options.some(
+                                                    (option) =>
+                                                      (
+                                                        option?.optionText ||
+                                                        option
+                                                      ).length > 55,
+                                                  );
+                                                return question.options.map(
+                                                  (option, idx) => (
+                                                    <li
+                                                      key={idx}
+                                                      className={`${
+                                                        isAnyOptionLong
+                                                          ? "block w-full"
+                                                          : "inline-block w-1/2"
+                                                      } mb-2`}
+                                                    >
+                                                      {question.isCustom && (
+                                                        <span className="mr-2 text-gray-500">
+                                                          {String.fromCharCode(
+                                                            97 + idx,
+                                                          )}
+                                                          )
+                                                        </span>
+                                                      )}
+                                                      <span className="sm:text-sm text-gray-700">
+                                                        {/* 2. Access the text property of the object */}
+                                                        {typeof option ===
+                                                        "object"
+                                                          ? option.optionText
+                                                          : option}
+                                                      </span>
+                                                    </li>
+                                                  ),
+                                                );
+                                              })()}
+                                            </ul>
+                                          </div>
                                         )}
                                     </div>
                                     <div className="p-4 pt-0">
@@ -1953,16 +2042,66 @@ const MyQuestionsList = ({
                                         <span className="font-medium text-gray-700">
                                           Answer:{" "}
                                         </span>
-                                        <span className="text-gray-600">
-                                          {/* {question.isCustom && question.questionType === "MCQ" && question.options
+                                        {/* <span className="text-gray-600">
+                                          {question.isCustom && question.questionType === "MCQ" && question.options
                                             ? `${String.fromCharCode(97 + question.options.indexOf(question.correctAnswer)) + ") "}`
-                                            : ""} */}
+                                            : ""}
                                           {question.questionType ===
-                                            "Programming"
+                                          "Programming"
                                             ? renderSolutions(
-                                              question.solutions
-                                            )
+                                                question.solutions,
+                                              )
                                             : question.correctAnswer}
+                                        </span> */}
+                                        <span className="text-gray-600">
+                                          {(() => {
+                                            if (
+                                              question.questionType ===
+                                              "Programming"
+                                            ) {
+                                              return renderSolutions(
+                                                question.solutions,
+                                              );
+                                            }
+
+                                            if (
+                                              question.questionType === "MCQ" &&
+                                              Array.isArray(question.options)
+                                            ) {
+                                              const correctAnswers =
+                                                question.options
+                                                  .map((opt, idx) => {
+                                                    const isObject =
+                                                      typeof opt === "object";
+                                                    const isCorrect = isObject
+                                                      ? opt.isCorrect === true
+                                                      : false;
+                                                    const text = isObject
+                                                      ? opt.optionText
+                                                      : opt;
+
+                                                    if (isCorrect) {
+                                                      // Use 97 for lowercase 'a', 98 for 'b', etc.
+                                                      // Use 65 for UPPERCASE 'A', 66 for 'B', etc.
+                                                      const letter =
+                                                        String.fromCharCode(
+                                                          97 + idx,
+                                                        );
+                                                      return `${letter}) ${text}`;
+                                                    }
+                                                    return null;
+                                                  })
+                                                  .filter(Boolean);
+
+                                              return correctAnswers.length > 0
+                                                ? correctAnswers.join(", ")
+                                                : "No correct answer specified";
+                                            }
+
+                                            return (
+                                              question.correctAnswer || "N/A"
+                                            );
+                                          })()}
                                         </span>
                                       </p>
                                       <p className="font-medium pt-2">
@@ -1980,7 +2119,7 @@ const MyQuestionsList = ({
                             </div>
                           )}
                         </div>
-                      )
+                      ),
                   )}
                 </>
               ) : null}
