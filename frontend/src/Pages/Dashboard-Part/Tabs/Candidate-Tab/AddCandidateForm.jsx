@@ -505,9 +505,9 @@ const AddCandidateForm = ({
       CountryCode: sd.candidate_country_code || "+91",
       Phone: sd.candidate_phone
         ? sd.candidate_phone
-            .replace(/^\+\d{1,3}/, "")
-            .replace(/^\d{1,3}/, "")
-            .trim()
+          .replace(/^\+\d{1,3}/, "")
+          .replace(/^\d{1,3}/, "")
+          .trim()
         : "",
 
       // ── Education ───────────────────────────────────
@@ -528,15 +528,15 @@ const AddCandidateForm = ({
       skills:
         parsedSkills.length > 0
           ? parsedSkills.map((name) => ({
-              skill: (name || "").trim(),
-              experience: "",
-              expertise: "Beginner",
-            }))
+            skill: (name || "").trim(),
+            experience: "",
+            expertise: "Beginner",
+          }))
           : (sd.screening_result?.extracted_skills || []).map((name) => ({
-              skill: (name || "").trim(),
-              experience: "",
-              expertise: "Beginner",
-            })),
+            skill: (name || "").trim(),
+            experience: "",
+            expertise: "Beginner",
+          })),
 
       // ── New Fields (Resume Analysis) ─────────────────
       professionalSummary:
@@ -573,11 +573,19 @@ const AddCandidateForm = ({
     setFormData((prev) => ({ ...prev, ...newFormData }));
 
     // Set skill entries (critical for SkillsField to show them)
-    if (newFormData.skills.length > 0) {
-      console.log("Setting entries to", newFormData.skills.length, "skills");
-      setEntries(newFormData.skills);
-      setAllSelectedSkills(newFormData.skills.map((s) => s.skill));
+    // Always ensure at least 3 rows - fill with parsed skills and pad with empty rows
+    const parsedSkillEntries = newFormData.skills || [];
+    const minRows = 3;
+
+    // Create the entries array with parsed skills + empty rows to make at least 3
+    let skillEntries = [...parsedSkillEntries];
+    while (skillEntries.length < minRows) {
+      skillEntries.push({ skill: "", experience: "", expertise: "" });
     }
+
+    console.log("Setting entries to", skillEntries.length, "rows with", parsedSkillEntries.length, "parsed skills");
+    setEntries(skillEntries);
+    setAllSelectedSkills(parsedSkillEntries.map((s) => s.skill).filter(Boolean));
   }, [screeningData, source]);
 
   // Ensure University/College custom input is shown in edit mode when the saved value
@@ -612,10 +620,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry,
       );
       setEntries(updatedEntries);
@@ -1174,14 +1182,14 @@ const AddCandidateForm = ({
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" &&
         mode !== "Edit" && {
-          source: "UPLOAD",
-          // Pass full screeningData so backend can store it
-          screeningData: screeningData, // ← direct pass (full object)
-          parsedJson: screeningData.metadata || screeningData.parsedJson || {},
-          parsedSkills: screeningData.parsed_skills || [],
-          parsedExperience: screeningData.parsed_experience || null,
-          parsedEducation: screeningData.parsed_education || null,
-        }),
+        source: "UPLOAD",
+        // Pass full screeningData so backend can store it
+        screeningData: screeningData, // ← direct pass (full object)
+        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+        parsedSkills: screeningData.parsed_skills || [],
+        parsedExperience: screeningData.parsed_experience || null,
+        parsedEducation: screeningData.parsed_education || null,
+      }),
     };
 
     try {
@@ -1383,8 +1391,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save candidate",
+        error.message ||
+        "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1829,7 +1837,7 @@ const AddCandidateForm = ({
                     // error={errors.Gender}
                     containerRef={fieldRefs.Gender}
                     label="Gender"
-                    // required
+                  // required
                   />
                 </div>
                 {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -2186,9 +2194,8 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${
-                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               Cancel
             </Button>
@@ -2405,7 +2412,7 @@ const AddCandidateForm = ({
                 {/* Project Cards Display */}
                 <div className="grid grid-cols-1 gap-4">
                   {formData?.workExperience &&
-                  formData.workExperience.length > 0 ? (
+                    formData.workExperience.length > 0 ? (
                     formData.workExperience.map((project, index) => (
                       <div
                         key={index}
@@ -2510,9 +2517,8 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${
-                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               Cancel
             </Button>
