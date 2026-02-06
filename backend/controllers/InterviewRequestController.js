@@ -202,9 +202,9 @@ exports.getAllRequests = async (req, res) => {
 
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     const pipeline = [
@@ -427,11 +427,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       roundDetails = mockRound
         ? {
-            roundTitle: mockRound.roundTitle,
-            interviewType: mockRound.interviewType,
-            duration: mockRound.duration,
-            dateTime: mockRound.dateTime,
-          }
+          roundTitle: mockRound.roundTitle,
+          interviewType: mockRound.interviewType,
+          duration: mockRound.duration,
+          dateTime: mockRound.dateTime,
+        }
         : null;
     } else {
       // Fetch from InterviewRounds collection
@@ -442,11 +442,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       roundDetails = interviewRound
         ? {
-            roundTitle: interviewRound.roundTitle,
-            interviewType: interviewRound.interviewType,
-            duration: interviewRound.duration,
-            dateTime: interviewRound.dateTime,
-          }
+          roundTitle: interviewRound.roundTitle,
+          interviewType: interviewRound.interviewType,
+          duration: interviewRound.duration,
+          dateTime: interviewRound.dateTime,
+        }
         : null;
     }
   }
@@ -461,11 +461,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       candidateDetails = contact
         ? {
-            id: contact._id,
-            name: `${contact.firstName} ${contact.lastName}`,
-            email: contact.email,
-            phone: contact.phone,
-          }
+          id: contact._id,
+          name: `${contact.firstName} ${contact.lastName}`,
+          email: contact.email,
+          phone: contact.phone,
+        }
         : null;
     }
   } else {
@@ -477,11 +477,11 @@ const formatInterviewRequest = async (request) => {
         .lean();
       candidateDetails = candidate
         ? {
-            id: candidate._id,
-            name: `${candidate.FirstName} ${candidate.LastName}`,
-            email: candidate.Email,
-            phone: candidate.Phone,
-          }
+          id: candidate._id,
+          name: `${candidate.FirstName} ${candidate.LastName}`,
+          email: candidate.Email,
+          phone: candidate.Phone,
+        }
         : null;
     }
   }
@@ -492,15 +492,16 @@ const formatInterviewRequest = async (request) => {
       .model("Position")
       .findById(request.positionId)
       .select("title description location companyname")
+      .populate("companyname", "name")
       .lean();
     positionDetails = position
       ? {
-          id: position._id,
-          title: position.title,
-          description: position.description,
-          location: position.location,
-          companyname: position.companyname, // Added to match frontend
-        }
+        id: position._id,
+        title: position.title,
+        description: position.description,
+        location: position.location,
+        companyname: position.companyname?.name || position.companyname, // Get name from populated object
+      }
       : null;
   }
 
@@ -856,23 +857,22 @@ exports.acceptInterviewRequest = async (req, res) => {
 
     const successResponse = {
       success: true,
-      message: `${
-        request.isMockInterview ? "Mock i" : "I"
-      }nterview request accepted; funds held and emails processed`,
+      message: `${request.isMockInterview ? "Mock i" : "I"
+        }nterview request accepted; funds held and emails processed`,
       wallet: {
         balance: updatedWallet?.balance,
         holdAmount: updatedWallet?.holdAmount,
       },
       transaction: savedTransaction
         ? {
-            _id: transactionId,
-            type: savedTransaction.type,
-            amount: savedTransaction.amount,
-            description: savedTransaction.description,
-            relatedInvoiceId: savedTransaction.relatedInvoiceId,
-            status: savedTransaction.status,
-            metadata: savedTransaction.metadata,
-          }
+          _id: transactionId,
+          type: savedTransaction.type,
+          amount: savedTransaction.amount,
+          description: savedTransaction.description,
+          relatedInvoiceId: savedTransaction.relatedInvoiceId,
+          status: savedTransaction.status,
+          metadata: savedTransaction.metadata,
+        }
         : null,
       appliedDiscount: request.isMockInterview
         ? appliedDiscountPercentage
