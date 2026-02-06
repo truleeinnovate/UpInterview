@@ -1754,16 +1754,6 @@ const AddCandidateForm = ({
   // The form content (this part is shared)
   const formContent = (
     <div className="sm:p-0 p-4 mb-10" ref={formRef}>
-      <div className="mb-6">
-        <h3 className="text-xl font-bold text-gray-900">
-          {id ? "Update Candidate" : "Add New Candidate"}
-        </h3>
-        <p className="text-sm text-gray-500 mt-1">
-          Step {currentFormStep} of 2 -{" "}
-          {currentFormStep === 1 ? "Basic Details" : "Additional Information"}
-        </p>
-      </div>
-
       {currentFormStep === 1 && (
         <>
           {source !== "candidate-screening" && (
@@ -1839,7 +1829,7 @@ const AddCandidateForm = ({
                     // error={errors.Gender}
                     containerRef={fieldRefs.Gender}
                     label="Gender"
-                  // required
+                    // required
                   />
                 </div>
                 {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
@@ -2012,8 +2002,6 @@ const AddCandidateForm = ({
                     loading={isCurrentRolesFetching}
                   /> */}
                 </div>
-
-
               </div>
 
               <div>
@@ -2051,7 +2039,10 @@ const AddCandidateForm = ({
                     setSelectedExp("");
                     setSelectedLevel("");
                   }}
-                  onAddMultipleSkills={(newSkillEntries, skillsToRemove = []) => {
+                  onAddMultipleSkills={(
+                    newSkillEntries,
+                    skillsToRemove = [],
+                  ) => {
                     setEntries((prevEntries) => {
                       let updatedEntries = [...prevEntries];
 
@@ -2123,8 +2114,13 @@ const AddCandidateForm = ({
                     });
                     // Update allSelectedSkills
                     setAllSelectedSkills((prev) => {
-                      let updated = prev.filter((s) => !skillsToRemove.includes(s));
-                      return [...updated, ...newSkillEntries.map((e) => e.skill)];
+                      let updated = prev.filter(
+                        (s) => !skillsToRemove.includes(s),
+                      );
+                      return [
+                        ...updated,
+                        ...newSkillEntries.map((e) => e.skill),
+                      ];
                     });
                   }}
                   onEditSkill={(index) => {
@@ -2136,7 +2132,9 @@ const AddCandidateForm = ({
                   onDeleteSkill={(index) => {
                     const entry = entries[index];
                     setAllSelectedSkills(
-                      allSelectedSkills.filter((skill) => skill !== entry.skill),
+                      allSelectedSkills.filter(
+                        (skill) => skill !== entry.skill,
+                      ),
                     );
                     setEntries(entries.filter((_, i) => i !== index));
                   }}
@@ -2188,8 +2186,9 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${
+                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Cancel
             </Button>
@@ -2207,7 +2206,8 @@ const AddCandidateForm = ({
       {currentFormStep === 2 && (
         <>
           <div className="bg-custom-blue/10 text-custom-blue p-3 rounded-lg mb-6 text-sm border border-blue-100 flex items-center">
-            The following details are optional but help us understand the candidate better. You can skip and save or add them now.
+            The following details are optional but help us understand the
+            candidate better. You can skip and save or add them now.
           </div>
           <div className="space-y-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2405,7 +2405,7 @@ const AddCandidateForm = ({
                 {/* Project Cards Display */}
                 <div className="grid grid-cols-1 gap-4">
                   {formData?.workExperience &&
-                    formData.workExperience.length > 0 ? (
+                  formData.workExperience.length > 0 ? (
                     formData.workExperience.map((project, index) => (
                       <div
                         key={index}
@@ -2502,7 +2502,6 @@ const AddCandidateForm = ({
                 maxLength={1000}
               />
             </div>
-
           </div>
 
           <div className="flex justify-end gap-3 mt-2">
@@ -2546,7 +2545,7 @@ const AddCandidateForm = ({
           </div>
         </>
       )}
-    </div >
+    </div>
   );
   // ---------------------------------- Uniqueness checking ----------------------------------------
   return (
@@ -2612,7 +2611,9 @@ const AddCandidateForm = ({
 
       {isModal ? (
         // When opened as modal/popup (from screening) → NO sidebar, just content
-        <div className="h-full overflow-y-auto bg-white rounded-lg p-4">{formContent}</div>
+        <div className="h-full overflow-y-auto bg-white rounded-lg p-4">
+          {formContent}
+        </div>
       ) : (
         // Normal page mode → show SidebarPopup
         // <SidebarPopup
@@ -2622,13 +2623,26 @@ const AddCandidateForm = ({
         <div className="fixed top-[62px] inset-x-0 bottom-0 z-40 overflow-y-auto bg-white px-4">
           <div className="relative flex flex-col min-h-full items-center justify-start pb-10 pt-4">
             <div className="w-full max-w-6xl mb-4">
-              <button
-                onClick={handleClose}
-                type="button"
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
-              >
-                <ArrowLeft className="h-5 w-5 mr-2" /> Back to Candidates
-              </button>
+              <div className="mb-6">
+                <button
+                  onClick={handleClose}
+                  type="button"
+                  className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                >
+                  <ArrowLeft className="h-5 w-5 mr-2" /> Back to Candidates
+                </button>
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                  {id ? "Update Candidate" : "Add New Candidate"}
+                </h3>
+                <p className="text-sm text-gray-500 font-semibold">
+                  Step {currentFormStep} of 2 -{" "}
+                  {currentFormStep === 1
+                    ? "Basic Details"
+                    : "Additional Information"}
+                </p>
+              </div>
             </div>
             <div className="w-full max-w-6xl p-4 rounded-lg border bg-white shadow-md">
               {formContent}

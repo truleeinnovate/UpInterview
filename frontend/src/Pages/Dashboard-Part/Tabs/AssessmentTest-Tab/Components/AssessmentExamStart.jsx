@@ -18,12 +18,11 @@ function AssessmentTest({
   duration,
   candidateAssessmentId,
 }) {
-
   const [currentSection, setCurrentSection] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(
-    duration ? parseInt(duration) * 60 : 0
+    duration ? parseInt(duration) * 60 : 0,
   );
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
@@ -68,7 +67,7 @@ function AssessmentTest({
     const allQuestions =
       questions?.sections?.flatMap((section) => section?.questions || []) || [];
     return allQuestions.every(
-      (q) => answers[q._id] !== undefined && answers[q._id] !== ""
+      (q) => answers[q._id] !== undefined && answers[q._id] !== "",
     );
   };
 
@@ -80,13 +79,31 @@ function AssessmentTest({
     setShowConfirmSubmit(true);
   };
 
-
   const verifyAnswer = (question, selectedAnswer) => {
-    const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
-    const questionType = question.snapshot?.questionType || question.questionType;
+    const correctAnswer =
+      question.snapshot?.correctAnswer || question.correctAnswer;
+    const questionType =
+      question.snapshot?.questionType || question.questionType;
+    // ------------------------------ new implementation ------------------------------------
+
+    // 1. Get correct answer (Handle potential array from DB)
+    const rawCorrect =
+      question.snapshot?.correctAnswer || question.correctAnswer;
+
+    // Normalize both to Arrays for consistent comparison
+    const correctArray = Array.isArray(rawCorrect) ? rawCorrect : [rawCorrect];
+    const selectedArray = Array.isArray(selectedAnswer)
+      ? selectedAnswer
+      : [selectedAnswer];
+
+    const clean = (val) =>
+      String(val || "")
+        .trim()
+        .toLowerCase();
+    // ------------------------------ new implementation ------------------------------------
 
     const normalizeAnswer = (answer, preserveFormatting = false) => {
-      if (answer === null || answer === undefined || answer === '') return '';
+      if (answer === null || answer === undefined || answer === "") return "";
 
       let processedAnswer = answer.toString();
 
@@ -99,11 +116,11 @@ function AssessmentTest({
 
     const cleanMCQAnswer = (answer) => {
       const normalized = normalizeAnswer(answer);
-      if (!normalized) return '';
+      if (!normalized) return "";
 
       const cleaned = normalized
-        .replace(/^[A-Z][).]\s*/, '')
-        .replace(/^\d+[).]\s*/, '')
+        .replace(/^[A-Z][).]\s*/, "")
+        .replace(/^\d+[).]\s*/, "")
         .trim();
 
       return cleaned.toLowerCase();
@@ -111,61 +128,154 @@ function AssessmentTest({
 
     const normalizeBoolean = (value) => {
       const normalized = normalizeAnswer(value);
-      if (!normalized) return '';
+      if (!normalized) return "";
 
-      const trueValues = ['true', 't', 'yes', 'y', '1', 'correct', 'right'];
-      const falseValues = ['false', 'f', 'no', 'n', '0', 'incorrect', 'wrong'];
+      const trueValues = ["true", "t", "yes", "y", "1", "correct", "right"];
+      const falseValues = ["false", "f", "no", "n", "0", "incorrect", "wrong"];
 
-      if (trueValues.includes(normalized.toLowerCase())) return 'true';
-      if (falseValues.includes(normalized.toLowerCase())) return 'false';
+      if (trueValues.includes(normalized.toLowerCase())) return "true";
+      if (falseValues.includes(normalized.toLowerCase())) return "false";
 
       return normalized.toLowerCase();
     };
 
     switch (questionType) {
-      case 'MCQ':
-      case 'Multiple Choice':
-        const cleanedSelected = cleanMCQAnswer(selectedAnswer);
-        const cleanedCorrect = cleanMCQAnswer(correctAnswer);
-        return cleanedSelected === cleanedCorrect;
+      case "MCQ":
+      case "Multiple Choice":
+        // const cleanedSelected = cleanMCQAnswer(selectedAnswer);
+        // const cleanedCorrect = cleanMCQAnswer(correctAnswer);
+        // return cleanedSelected === cleanedCorrect;
+        if (correctArray.length !== selectedArray.length) return false;
+        return correctArray.every((c) =>
+          selectedArray.some((s) => clean(s) === clean(c)),
+        );
 
-      case 'Short Answer':
+      case "Short Answer":
         const shortSelected = normalizeAnswer(selectedAnswer);
         const shortCorrect = normalizeAnswer(correctAnswer);
         return shortSelected.toLowerCase() === shortCorrect.toLowerCase();
 
-      case 'Long Answer':
+      case "Long Answer":
         const longSelected = normalizeAnswer(selectedAnswer);
         const longCorrect = normalizeAnswer(correctAnswer);
         return longSelected.toLowerCase() === longCorrect.toLowerCase();
 
-      case 'Number':
-      case 'Numeric':
+      case "Number":
+      case "Numeric":
         const numSelected = normalizeAnswer(selectedAnswer);
         const numCorrect = normalizeAnswer(correctAnswer);
         return parseFloat(numSelected) === parseFloat(numCorrect);
 
-      case 'Boolean':
-        const boolSelected = normalizeBoolean(selectedAnswer);
-        const boolCorrect = normalizeBoolean(correctAnswer);
-        return boolSelected === boolCorrect;
+      case "Boolean":
+        // const boolSelected = normalizeBoolean(selectedAnswer);
+        // const boolCorrect = normalizeBoolean(correctAnswer);
+        // return boolSelected === boolCorrect;
+        return clean(correctArray[0]) === clean(selectedArray[0]);
 
-      case 'Programming':
-      case 'Code':
+      case "Programming":
+      case "Code":
         const codeSelected = normalizeAnswer(selectedAnswer, true);
         const codeCorrect = normalizeAnswer(correctAnswer, true);
         return codeSelected === codeCorrect;
 
       default:
-        const defaultSelected = normalizeAnswer(selectedAnswer);
-        const defaultCorrect = normalizeAnswer(correctAnswer);
-        return defaultSelected === defaultCorrect;
+        // const defaultSelected = normalizeAnswer(selectedAnswer);
+        // const defaultCorrect = normalizeAnswer(correctAnswer);
+        // return defaultSelected === defaultCorrect;
+        return clean(selectedArray[0]) === clean(correctArray[0]);
     }
   };
 
+  // const handleConfirmSubmit = async () => {
+  //   try {
+  //     const submissionData = {
+  //       candidateAssessmentId,
+  //       scheduledAssessmentId: assessment._id,
+  //       candidateId: candidate._id,
+  //       status: "completed",
+  //       remainingTime: timeLeft,
+  //       sections: questions.sections.map((section) => {
+  //         const sectionQuestions = section.questions.map((question) => {
+  //           const selectedAnswer = answers[question._id] || "";
+  //           const correctAnswer =
+  //             question.snapshot?.correctAnswer || question.correctAnswer;
+  //           const questionType =
+  //             question.snapshot?.questionType || question.questionType;
+
+  //           // ----------------------------------------------------------
+  //           const possibleScore =
+  //             question.snapshot?.score || question.score || 0;
+  //           // ----------------------------------------------------------
+  //           const userAnswer = answers[question._id];
+  //           const isCorrect = verifyAnswer(question, userAnswer);
+  //           // const score = isCorrect ? question.score || 0 : 0;
+  //           const score = isCorrect ? Number(possibleScore) : 0;
+
+  //           return {
+  //             questionId: question._id,
+  //             questionType,
+  //             userAnswer: userAnswer,
+  //             correctAnswer: correctAnswer,
+  //             isCorrect,
+  //             score,
+  //             isAnswerLater: skippedQuestions.includes(question._id),
+  //             submittedAt: new Date().toISOString(),
+  //           };
+  //         });
+
+  //         const sectionScore = sectionQuestions.reduce(
+  //           (sum, q) => sum + q.score,
+  //           0,
+  //         );
+  //         console.log("sectionscore:", sectionScore);
+  //         const sectionResult =
+  //           sectionScore >= (section.passScore || 0) ? "pass" : "fail";
+  //         console.log("sectionResult:", sectionResult);
+
+  //         return {
+  //           sectionId: section._id,
+  //           sectionName: section.sectionName || "Unnamed Section",
+  //           passScore: section.passScore || 0,
+  //           questions: sectionQuestions,
+  //           totalScore: sectionScore,
+  //           sectionResult,
+  //           sectionPassed: sectionResult === "pass",
+  //         };
+  //       }),
+  //       submittedAt: new Date().toISOString(),
+  //     };
+
+  //     // Send the data to the backend
+  //     const response = await fetch(
+  //       `${config.REACT_APP_API_URL}/candidate-assessment/submit`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(submissionData),
+  //       },
+  //     );
+
+  //     console.log("Response from backend:", response);
+
+  //     const responseData = await response.json();
+
+  //     if (!response.ok) {
+  //       console.error("Error submitting assessment:", responseData.message);
+  //       throw new Error(responseData.message || "Failed to submit assessment");
+  //     }
+
+  //     console.log("Assessment submitted successfully:", responseData);
+  //     setIsSubmitted(true);
+  //     setShowConfirmSubmit(false);
+  //   } catch (error) {
+  //     console.error("Error submitting assessment:", error);
+  //   }
+  // };
+
   const handleConfirmSubmit = async () => {
     try {
-
       const submissionData = {
         candidateAssessmentId,
         scheduledAssessmentId: assessment._id,
@@ -173,48 +283,60 @@ function AssessmentTest({
         status: "completed",
         remainingTime: timeLeft,
         sections: questions.sections.map((section) => {
-
           const sectionQuestions = section.questions.map((question) => {
+            // Get raw answer from state
+            const rawAnswer = answers[question._id];
 
-            const selectedAnswer = answers[question._id] || "";
-            const correctAnswer = question.snapshot?.correctAnswer || question.correctAnswer;
-            const questionType = question.snapshot?.questionType || question.questionType;
-            
-            const userAnswer = answers[question._id];
+            // Fix: Explicitly check for null/undefined to allow boolean 'false' or number 0
+            const userAnswer =
+              rawAnswer !== undefined && rawAnswer !== null ? rawAnswer : "";
+
             const isCorrect = verifyAnswer(question, userAnswer);
-            const score = isCorrect ? (question.score || 0) : 0;
 
+            // Get weighted points from snapshot or root
+            const questionWeight = Number(
+              question.snapshot?.score || question.score || 0,
+            );
+
+            // Calculate actual score earned
+            const awardedScore = isCorrect ? questionWeight : 0;
             return {
               questionId: question._id,
-              questionType,
-              userAnswer: userAnswer,
-              correctAnswer: correctAnswer,
+              questionType:
+                question.snapshot?.questionType || question.questionType,
+              userAnswer: userAnswer, // This will now correctly send true/false/0
+              correctAnswer:
+                question.snapshot?.correctAnswer || question.correctAnswer,
               isCorrect,
-              score,
+              score: awardedScore,
               isAnswerLater: skippedQuestions.includes(question._id),
-              submittedAt: new Date().toISOString()
+              submittedAt: new Date().toISOString(),
             };
           });
 
-          const sectionScore = sectionQuestions.reduce((sum, q) => sum + q.score, 0);
-          console.log('sectionscore:', sectionScore);
-          const sectionResult = sectionScore >= (section.passScore || 0) ? "pass" : "fail";
-          console.log('sectionResult:', sectionResult);
+          // Sum the actual awarded scores for the section total
+          const sectionTotalScore = sectionQuestions.reduce(
+            (sum, q) => sum + q.score,
+            0,
+          );
+
+          const passThreshold = Number(section.passScore || 0);
+          const sectionResult =
+            sectionTotalScore >= passThreshold ? "pass" : "fail";
 
           return {
             sectionId: section._id,
             sectionName: section.sectionName || "Unnamed Section",
-            passScore: section.passScore || 0,
+            passScore: passThreshold,
             questions: sectionQuestions,
-            totalScore: sectionScore,
+            totalScore: sectionTotalScore,
             sectionResult,
-            sectionPassed: sectionResult === "pass"
+            sectionPassed: sectionResult === "pass",
           };
         }),
-        submittedAt: new Date().toISOString()
+        submittedAt: new Date().toISOString(),
       };
 
-      // Send the data to the backend
       const response = await fetch(
         `${config.REACT_APP_API_URL}/candidate-assessment/submit`,
         {
@@ -223,7 +345,7 @@ function AssessmentTest({
             "Content-Type": "application/json",
           },
           body: JSON.stringify(submissionData),
-        }
+        },
       );
 
       console.log("Response from backend:", response);
@@ -238,7 +360,6 @@ function AssessmentTest({
       console.log("Assessment submitted successfully:", responseData);
       setIsSubmitted(true);
       setShowConfirmSubmit(false);
-
     } catch (error) {
       console.error("Error submitting assessment:", error);
     }
@@ -260,7 +381,7 @@ function AssessmentTest({
     return (
       questions?.sections?.reduce(
         (acc, section) => acc + (section?.questions?.length || 0),
-        0
+        0,
       ) || 0
     );
   };
@@ -333,10 +454,11 @@ function AssessmentTest({
                       </button>
                     ) : (
                       <div
-                        className={`flex items-center px-4 py-2 rounded-lg ${timeLeft < 300
+                        className={`flex items-center px-4 py-2 rounded-lg ${
+                          timeLeft < 300
                             ? "bg-red-100 text-red-800"
                             : "bg-blue-100 text-custom-blue"
-                          }`}
+                        }`}
                       >
                         <ClockIcon className="sm:h-4 sm:w-4 h-5 w-5 mr-3" />
                         <span className="sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm font-mono font-semibold">
