@@ -296,18 +296,27 @@ const createApplication = async (req, res) => {
         }
 
         // Check if application already exists
-        const existingApplication = await Application.findOne({
+        const existingApplications = await Application.find({
             candidateId,
             positionId,
             tenantId,
-        });
+        }).lean();   // lean() is good for performance here
 
-        if (existingApplication) {
+        // Look for any still-active application
+        const activeApplication = existingApplications.find(app =>
+            !["REJECTED", "WITHDRAWN"].includes((app.status || "").toUpperCase())
+        );
+
+        if (activeApplication) {
             return res.status(409).json({
-                message: "Application already exists for this candidate and position",
-                data: existingApplication,
+                success: false,
+                message: `Cannot create new application – an active application already exists (status: ${activeApplication.status})`,
+                existingStatus: activeApplication.status,
+                existingApplicationId: activeApplication._id,
             });
         }
+        // If we reach here → either NO application, or ALL are REJECTED/WITHDRAWN → allowed
+
 
         // Generate application number in format: NAME-TECH-YEAR-0001
         const applicationNumber = await generateApplicationNumber(candidate, position, tenantId);

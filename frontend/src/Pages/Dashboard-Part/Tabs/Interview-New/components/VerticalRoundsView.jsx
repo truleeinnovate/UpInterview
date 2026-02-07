@@ -139,13 +139,20 @@ const VerticalRoundsView = ({
     }
   }
 
-  const handleJoinMeeting = (round) => {
-    const url = createJoinMeetingUrl(round, interviewData);
-    if (url) {
-      window.location.assign(url);   // or window.location.href = url;
-    }
-  };
+const handleJoinMeeting = (round) => {
+  const url = createJoinMeetingUrl(round, interviewData);
 
+  if (!url) {
+    console.warn("No valid join URL");
+    return;
+  }
+
+  // ONLY this line — no location.href, no useNavigate, no extra calls
+  window.open(url, '_blank', 'noopener,noreferrer');
+
+  // Optional: prevent any default/fallback behavior
+  // Do NOT add window.location or navigate here
+};
   return (
     <div className="space-y-4">
       {sortedRounds.map((round, index) => {
@@ -186,8 +193,8 @@ const VerticalRoundsView = ({
                           ? "In Progress"
                           : round?.status === "FeedbackPending"
                             ? "Feedback Pending"
-                            : round?.status === "FeedbackCompleted"
-                              ? "Feedback Completed"
+                          : round?.status === "FeedbackSubmitted"
+                            ? "Feedback Submitted"
                               :
                               // : round?.status,
                               capitalizeFirstLetter(round?.status)}

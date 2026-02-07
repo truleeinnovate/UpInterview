@@ -1625,7 +1625,7 @@ const updateInterviewRoundStatus = async (req, res) => {
           actingAsUserId,
           statusChanged: true,
         });
-      } else if (!allInterviewersDraft) {
+      } else if (!allInterviewersDraft && action === "Completed") {
         smartUpdate = await buildSmartRoundUpdate({
           existingRound,
           body: {
