@@ -21,6 +21,7 @@ import { JoiningScreen } from "./components/screens/JoiningScreen";
 import { useInterviews } from "../apiHooks/useInterviews";
 import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
 import { useMockInterviewById } from "../apiHooks/useMockInterviews";
+import { useSingleContact } from "../apiHooks/useUsers";
 // import { extractUrlData } from "../apiHooks/useVideoCall";
 
 const Dashboard = () => {
@@ -76,8 +77,8 @@ const Dashboard = () => {
     roundId: !isMockInterview ? urlData?.interviewRoundId : null,
     enabled: !isMockInterview,
   });
-
-  // console.log("location.search from dashboard main url", urlData);
+  const { singleContact, isLoading: singleContactLoading } = useSingleContact();
+  // console.log("location.search from dashboard main url", singleContact);
 
   // const candidateData = interviewData?.candidateId || {};
   // const positionData = interviewData?.positionId || {};
@@ -95,11 +96,19 @@ const Dashboard = () => {
   const interviewRoundData =
     interviewData?.rounds?.[0] || mockinterview?.rounds?.[0] || {};
 
-  const FinalName = urlData?.isCandidate
-    ? (candidateData?.FirstName || "") + " " + (candidateData?.LastName || "")
-    : (interviewRoundData?.interviewers?.[0]?.FirstName || interviewRoundData?.interviewers?.[0]?.firstName || "") +
+  const NameCandidate = urlData?.isCandidate
+    &&
+    (candidateData?.FirstName || "") + " " + (candidateData?.LastName || "")
+  // : (interviewRoundData?.interviewers?.[0]?.FirstName || interviewRoundData?.interviewers?.[0]?.firstName || "") +
+  // " " +
+  // (interviewRoundData?.interviewers?.[0]?.LastName || interviewRoundData?.interviewers?.[0]?.lastName || "");
+
+  const interviwerName = !urlData?.isCandidate &&
+    (singleContact?.firstName || "") +
     " " +
-    (interviewRoundData?.interviewers?.[0]?.LastName || interviewRoundData?.interviewers?.[0]?.lastName || "");
+    (singleContact?.lastName || "");
+
+  const FinalName = urlData?.isCandidate ? NameCandidate : interviwerName
 
   console.log("interviewRoundData1", interviewRoundData);
 
@@ -310,7 +319,7 @@ const Dashboard = () => {
     }
   };
 
-  const isAnyLoading = preAuthLoading || isAuthChecking;
+  const isAnyLoading = preAuthLoading || isAuthChecking || singleContactLoading;
   const anyError = authError;
 
   if (isAnyLoading) {

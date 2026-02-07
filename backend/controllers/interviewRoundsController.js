@@ -1328,6 +1328,7 @@ const updateInterviewRoundStatus = async (req, res) => {
       ) {
         return res.status(400).json({
           success: false,
+          code: "FEEDBACK_REQUIRED_FOR_EXTERNAL",
           message:
             "Please submit feedback before marking this round as Evaluated",
           // Optional: you can send more context if frontend needs it
@@ -1625,7 +1626,7 @@ const updateInterviewRoundStatus = async (req, res) => {
           actingAsUserId,
           statusChanged: true,
         });
-      } else if (!allInterviewersDraft) {
+      } else if (!allInterviewersDraft && action === "Completed") {
         smartUpdate = await buildSmartRoundUpdate({
           existingRound,
           body: {
@@ -1845,7 +1846,7 @@ const updateInterviewRoundStatus = async (req, res) => {
             comment,
           },
         },
-        { status: () => ({ json: () => {} }), locals: {} },
+        { status: () => ({ json: () => { } }), locals: {} },
       );
     }
 
@@ -2192,7 +2193,7 @@ async function handleInterviewerRequestFlow({
           isMockInterview: false,
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} },
+      { status: () => ({ json: () => { } }), locals: {} },
     );
   }
 
@@ -2211,7 +2212,7 @@ async function handleInterviewerRequestFlow({
           type: "interview",
         },
       },
-      { status: () => ({ json: () => {} }), locals: {} },
+      { status: () => ({ json: () => { } }), locals: {} },
     );
     console.log(
       "Outsource interview request emails sent successfully",
@@ -2251,7 +2252,7 @@ async function handleInternalRoundEmails({
       },
     },
     {
-      status: () => ({ json: () => {} }),
+      status: () => ({ json: () => { } }),
       locals: {},
     },
   );

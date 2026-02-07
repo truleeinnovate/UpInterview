@@ -545,18 +545,26 @@ const InterviewsMiniTabComponent = ({
         className="flex items-center gap-2 cursor-pointer md:text-sm px-2 mt-2 mb-4 
              overflow-x-auto whitespace-nowrap scrollbar-hide"
       >
-        {interviewMiniTabsList.map((each) => (
-          <li
-            key={each.id}
-            className={`px-4 py-2 rounded-t-md text-sm font-medium transition-colors flex-shrink-0 ${interviewMiniTab === each.id
-              ? "bg-[#227a8a] text-white"
-              : "text-gray-700 hover:bg-gray-100"
-              }`}
-            onClick={() => handleTabChange(each.id)}
-          >
-            {each.name}
-          </li>
-        ))}
+        {interviewMiniTabsList
+          .filter((each) => {
+            // Hide "Interviewer - added Questions" tab when isSchedule is true
+            if (urlData?.isSchedule && each.id === 2) {
+              return false;
+            }
+            return true;
+          })
+          .map((each) => (
+            <li
+              key={each.id}
+              className={`px-4 py-2 rounded-t-md text-sm font-medium transition-colors flex-shrink-0 ${interviewMiniTab === each.id
+                ? "bg-[#227a8a] text-white"
+                : "text-gray-700 hover:bg-gray-100"
+                }`}
+              onClick={() => handleTabChange(each.id)}
+            >
+              {each.name}
+            </li>
+          ))}
       </ul>
       {/* v1.0.1 -------------------------------------------------------------------------> */}
 
