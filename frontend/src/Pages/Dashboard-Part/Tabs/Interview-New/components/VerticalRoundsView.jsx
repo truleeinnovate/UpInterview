@@ -140,11 +140,9 @@ const VerticalRoundsView = ({
   }
 
   const handleJoinMeeting = (round) => {
-    // in your button click handler
     const url = createJoinMeetingUrl(round, interviewData);
     if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
-      // or just: window.open(url, '_blank');
+      window.location.assign(url);   // or window.location.href = url;
     }
   };
 
@@ -186,9 +184,9 @@ const VerticalRoundsView = ({
                         ? "Request Sent"
                         : round?.status === "InProgress"
                           ? "In Progress"
-                          : round?.status === "feedbackPending"
+                          : round?.status === "FeedbackPending"
                             ? "Feedback Pending"
-                            : round?.status === "feedbackCompleted"
+                            : round?.status === "FeedbackCompleted"
                               ? "Feedback Completed"
                               :
                               // : round?.status,
