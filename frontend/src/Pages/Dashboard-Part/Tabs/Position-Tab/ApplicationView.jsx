@@ -252,7 +252,7 @@ export default function ApplicationView({ application, onBack }) {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h3 className="text-lg font-bold text-gray-900 truncate">{candidateName}</h3>
-                                        <p className="text-sm text-gray-600 truncate">{candidate.CurrentRole || 'Candidate'}</p>
+                                        <p className="text-sm text-gray-600 truncate">{candidate.roleDetails?.roleLabel || 'Candidate'}</p>
                                         <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
                                             <Briefcase size={12} />
                                             <span>{candidate.CurrentExperience || '0'} Years</span>
