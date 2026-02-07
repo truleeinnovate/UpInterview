@@ -85,45 +85,45 @@ const AnswerSchema = new mongoose.Schema(
     userAnswer: {
       type: mongoose.Schema.Types.Mixed,
       required: true,
-      set: function (answer) {
-        if (Array.isArray(answer)) {
-          return answer;
-        }
-        // If it's an object (like from interview questions), stringify it
-        if (typeof answer === "object" && answer !== null) {
-          return JSON.stringify(answer);
-        }
-        // If it's already a string, return as is
-        return answer;
-      },
-      get: function (answer) {
-        try {
-          // Try to parse the answer if it's a JSON string
-          return JSON.parse(answer);
-        } catch (e) {
-          // If parsing fails, return as is
-          return answer;
-        }
-      },
+      // set: function (answer) {
+      //   if (Array.isArray(answer)) {
+      //     return answer;
+      //   }
+      //   // If it's an object (like from interview questions), stringify it
+      //   if (typeof answer === "object" && answer !== null) {
+      //     return JSON.stringify(answer);
+      //   }
+      //   // If it's already a string, return as is
+      //   return answer;
+      // },
+      // get: function (answer) {
+      //   try {
+      //     // Try to parse the answer if it's a JSON string
+      //     return JSON.parse(answer);
+      //   } catch (e) {
+      //     // If parsing fails, return as is
+      //     return answer;
+      //   }
+      // },
     },
     correctAnswer: {
       type: mongoose.Schema.Types.Mixed,
-      set: function (answer) {
-        if (answer === undefined || answer === null) return undefined;
-        // If it's an object, stringify it
-        if (typeof answer === "object") {
-          return JSON.stringify(answer);
-        }
-        return answer;
-      },
-      get: function (answer) {
-        if (answer === undefined || answer === null) return undefined;
-        try {
-          return JSON.parse(answer);
-        } catch (e) {
-          return answer;
-        }
-      },
+      // set: function (answer) {
+      //   if (answer === undefined || answer === null) return undefined;
+      //   // If it's an object, stringify it
+      //   if (typeof answer === "object") {
+      //     return JSON.stringify(answer);
+      //   }
+      //   return answer;
+      // },
+      // get: function (answer) {
+      //   if (answer === undefined || answer === null) return undefined;
+      //   try {
+      //     return JSON.parse(answer);
+      //   } catch (e) {
+      //     return answer;
+      //   }
+      // },
     },
     isCorrect: { type: Boolean, default: null },
     score: { type: Number, default: 0 },

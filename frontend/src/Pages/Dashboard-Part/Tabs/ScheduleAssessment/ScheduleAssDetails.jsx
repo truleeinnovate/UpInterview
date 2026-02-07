@@ -126,7 +126,8 @@ function ScheduleAssDetails() {
         LastName: candidate.candidateId?.LastName || "",
         Email: candidate.candidateId?.Email || "No email",
         status: candidate.status,
-        totalScore: candidate.totalScore,
+        // totalScore: candidate.totalScore,
+        totalScore: candidate.totalScore?.toFixed(2),
         endedAt: candidate.endedAt,
         expiryAt: candidate.expiryAt, // Add expiry date
         result:

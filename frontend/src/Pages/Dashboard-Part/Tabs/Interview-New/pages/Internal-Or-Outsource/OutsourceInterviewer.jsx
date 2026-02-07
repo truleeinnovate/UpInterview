@@ -1682,9 +1682,10 @@ function OutsourcedInterviewerModal({
             </div>
           ) : null
         }
+        width={60}
       >
         {/* v1.0.3 <------------------------- */}
-        <div className="pb-10">
+        <div className="pb-16">
           {/* v1.0.3 -------------------------> */}
           {/* Fixed Search and Info Section */}
           {/* <------------------------------- v1.0.0  */}
@@ -2294,7 +2295,7 @@ function OutsourcedInterviewerModal({
 
           {navigatedfrom !== "dashboard" && (
             // <div className="flex justify-end mt-5 mr-6">
-            <div className="fixed bottom-0 left-0 right-0   py-4 px-6 ">
+            <div className="fixed bottom-0 left-0 right-4   py-4 px-6">
               <div className="flex justify-end">
                 <button
                   onClick={handleProceed}

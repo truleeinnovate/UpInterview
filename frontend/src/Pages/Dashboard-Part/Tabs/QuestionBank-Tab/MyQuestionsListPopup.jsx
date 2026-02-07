@@ -622,9 +622,9 @@ const MyQuestionsList1 = forwardRef(
 
         {showNewListPopup && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white rounded-xl shadow-2xl w-[360px] max-w-full">
+            <div className="bg-white rounded-xl shadow-2xl w-[400px] max-w-full mx-4">
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 bg-white rounded-t-xl">
+              <div className="flex items-center justify-between px-6 py-4 bg-white rounded-t-xl">
                 <h2 className="text-lg font-semibold text-custom-blue">
                   {isEditing ? "Edit List" : "New List"}
                 </h2>
@@ -641,7 +641,7 @@ const MyQuestionsList1 = forwardRef(
               </div>
 
               {/* Input Fields */}
-              <div className="px-5 py-2 space-y-4">
+              <div className="px-6 py-2 space-y-4">
                 {/* Label */}
                 <div className="flex items-center">
                   <label className="text-sm font-medium w-20">
@@ -674,7 +674,7 @@ const MyQuestionsList1 = forwardRef(
                         <div></div>
                       )}
                       <span className="text-xs">
-                        {newListName.length}/30 characters
+                        {newListName.length}/30
                       </span>
                     </div>
                   </div>
