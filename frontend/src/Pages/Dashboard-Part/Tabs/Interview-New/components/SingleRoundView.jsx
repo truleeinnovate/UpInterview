@@ -55,9 +55,17 @@ const SingleRoundView = ({
   }
   const handleJoinMeeting = (round) => {
     const url = createJoinMeetingUrl(round, interviewData);
-    if (url) {
-      window.location.assign(url);   // or window.location.href = url;
+
+    if (!url) {
+      console.warn("No valid join URL");
+      return;
     }
+
+    // ONLY this line — no location.href, no useNavigate, no extra calls
+    window.open(url, '_blank', 'noopener,noreferrer');
+
+    // Optional: prevent any default/fallback behavior
+    // Do NOT add window.location or navigate here
   };
 
   return (
@@ -124,8 +132,12 @@ const SingleRoundView = ({
                     ? "Request Sent"
                     : currentRound?.status === "InProgress"
                       ? "In Progress"
-                      : // : round?.status,
-                      capitalizeFirstLetter(currentRound?.status)}
+                      : currentRound?.status === "FeedbackSubmitted"
+                        ? "Feedback Submitted"
+                        : currentRound?.status === "FeedbackPending"
+                          ? "Feedback Pending"
+                          : // : round?.status,
+                          capitalizeFirstLetter(currentRound?.status)}
                   {/* {currentRound?.status === "RequestSent" ? "Request Sent" : currentRound?.status} */}
                 </span>
               </div>

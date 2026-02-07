@@ -107,6 +107,7 @@ const ApplyPositionPopup = ({ candidate, onClose, onSuccess }) => {
             // Notify parent of success
             if (onSuccess) {
                 onSuccess();
+                onClose()
             }
         } catch (err) {
             console.error("Failed to create application:", err);
