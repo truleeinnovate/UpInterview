@@ -20,14 +20,25 @@ export const encryptData = (data) => {
 
 export const createJoinMeetingUrl = (round, interviewData) => {
     if (!round?._id || !interviewData?._id || !interviewData?.ownerId) return null;
-    const type = "interview"
-    const baseUrl = `${config.REACT_APP_API_URL_FRONTEND}/join-meeting`;
+
+    let base = config.REACT_APP_API_URL_FRONTEND;
+
+    // Force https if missing protocol (very common mistake in env files)
+    if (!base.startsWith('http://') && !base.startsWith('https://')) {
+        base = 'https://' + base;
+    }
+
+    // Remove trailing slash if present
+    base = base.replace(/\/+$/, '');
+
+    const type = "interview";
+    const baseUrl = `${base}/join-meeting`;
 
     const encryptedRoundId = encryptData(round._id);
     const encryptedSchedulerId = encryptData(interviewData._id);
-    const encryptedSchedulerOwnerId = encryptData(interviewData.ownerId);
+    const encryptedOwnerId = encryptData(interviewData.ownerId);
 
-    if (!encryptedRoundId || !encryptedSchedulerId || !encryptedSchedulerOwnerId) return null;
+    if (!encryptedRoundId || !encryptedSchedulerId || !encryptedOwnerId) return null;
 
-    return `${baseUrl}?scheduler=true&round=${encodeURIComponent(encryptedRoundId)}&schedulertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedSchedulerOwnerId)}${type ? `&type=${type}` : ''}`;
+    return `${baseUrl}?scheduler=true&round=${encodeURIComponent(encryptedRoundId)}&schedulertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedOwnerId)}${type ? `&type=${type}` : ''}`;
 };

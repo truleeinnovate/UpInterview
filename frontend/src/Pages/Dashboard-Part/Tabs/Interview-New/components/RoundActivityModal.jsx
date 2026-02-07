@@ -45,6 +45,12 @@ const RoundActivityModal = ({ isOpen, onClose, round, interviewData }) => {
     if (status === "RequestSent") return "Request Sent";
     if (status === "NoShow") return "No Show";
     if (status === "InComplete") return "Incomplete";
+    if (status === "FeedbackPending") return "Feedback Pending";
+    if (status === "FeedbackCompleted") return "Feedback Completed";
+    if (status === "InProgress") return "In Progress";
+
+
+
     return status;
   };
 
