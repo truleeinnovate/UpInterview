@@ -2,7 +2,7 @@ import React from 'react';
 import { Mail, Eye, CircleUser, Pencil, Trash, Repeat, Calendar, ExternalLink, MessageSquare, Building2, Users, Tag, FileText, Video, User, Building, CheckCircle2, XCircle, Clock, Star, Plus, AlertTriangle, Timer } from "lucide-react";
 import { formatDateTime } from "./dateFormatter.js";
 import { capitalizeFirstLetter } from "./CapitalizeFirstLetter/capitalizeFirstLetter.js";
-import StatusBadge from "../Components/SuperAdminComponents/common/StatusBadge";
+import StatusBadge from "../Components/SuperAdminComponents/common/StatusBadge.jsx";
 // import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
 import { decodeJwt } from './AuthCookieManager/jwtDecode.js';
@@ -251,6 +251,10 @@ export const getCandidateActions = (navigate, options = {}) => {
                             </svg>
                         </div>
                     ) : <Repeat className="w-4 h-4 text-custom-blue" />;
+                },
+                show: (row) => {
+                    const status = row?.status?.toLowerCase();
+                    return status === "inprogress" || status === "extended";
                 },
                 onClick: (row) => callbacks.onResendLink?.(row)
             }

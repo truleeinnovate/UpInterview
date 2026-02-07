@@ -39,7 +39,7 @@ import { formatDateTime } from "../../utils/dateFormatter.js";
 import {
   getTenantColumns,
   getTenantActions,
-} from "../../utils/tableConfig.jsx";
+} from "../../utils/tableColumnAndActionData.jsx";
 
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -733,8 +733,8 @@ function TenantsPage() {
             <div className="flex self-end rounded-lg border border-gray-300 p-1 mb-4">
               <button
                 className={`px-4 py-1 rounded-md text-sm ${selectedType === "all"
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:text-gray-900"
+                  ? "bg-gray-100 text-gray-900"
+                  : "text-gray-600 hover:text-gray-900"
                   }`}
                 onClick={() => {
                   setSelectedType("all");
@@ -745,8 +745,8 @@ function TenantsPage() {
               </button>
               <button
                 className={`px-4 py-1 rounded-md text-sm ${selectedType === "organization"
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:text-gray-900"
+                  ? "bg-gray-100 text-gray-900"
+                  : "text-gray-600 hover:text-gray-900"
                   }`}
                 onClick={() => {
                   setSelectedType("organization");
@@ -757,8 +757,8 @@ function TenantsPage() {
               </button>
               <button
                 className={`px-4 py-1 rounded-md text-sm ${selectedType === "individual"
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-600 hover:text-gray-900"
+                  ? "bg-gray-100 text-gray-900"
+                  : "text-gray-600 hover:text-gray-900"
                   }`}
                 onClick={() => {
                   setSelectedType("individual");

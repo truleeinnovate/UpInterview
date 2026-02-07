@@ -43,7 +43,7 @@ import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyS
 import {
   getFeedbackColumns,
   getFeedbackActions,
-} from "../../../../utils/tableConfig.jsx";
+} from "../../../../utils/tableColumnAndActionData.jsx";
 
 
 const Feedback = () => {

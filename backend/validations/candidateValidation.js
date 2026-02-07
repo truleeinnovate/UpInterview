@@ -81,7 +81,14 @@ const candidateValidationSchema = Joi.object({
     .allow(null),
 
   certifications: Joi.array()
-    .items(Joi.string().trim().max(200))
+    .items(
+      Joi.object({
+        _id: Joi.string().optional().allow("", null), // Allow _id for existing items
+        name: Joi.string().trim().optional().allow(""),
+        issuingFrom: Joi.string().trim().optional().allow(""),
+        issuingYear: Joi.number().optional().allow("", null),
+      })
+    )
     .optional()
     .allow(null),
 
@@ -168,6 +175,7 @@ const candidateValidationSchema = Joi.object({
         role: Joi.string().optional().allow(""),
         fromDate: Joi.string().optional().allow(""),
         toDate: Joi.string().optional().allow(""),
+        currentlyWorking: Joi.boolean().optional().allow(null),
         responsibilities: Joi.string()
           .min(150)
           .max(1000)

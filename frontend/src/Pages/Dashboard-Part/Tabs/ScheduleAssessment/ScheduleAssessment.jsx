@@ -61,7 +61,7 @@ import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyS
 import {
   getScheduleAssessmentColumns,
   getScheduleAssessmentActions,
-} from "../../../../utils/tableConfig.jsx";
+} from "../../../../utils/tableColumnAndActionData.jsx";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);

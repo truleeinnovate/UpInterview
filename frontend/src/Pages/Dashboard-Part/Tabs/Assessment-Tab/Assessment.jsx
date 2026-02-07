@@ -46,7 +46,7 @@ import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyS
 import {
   getAssessmentTemplateColumns,
   getAssessmentTemplateActions,
-} from "../../../../utils/tableConfig.jsx";
+} from "../../../../utils/tableColumnAndActionData.jsx";
 
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => (
   <Dialog

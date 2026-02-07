@@ -28,7 +28,7 @@ import { getEmptyStateMessage } from "../../utils/EmptyStateMessage/emptyStateMe
 import {
   getInterviewTemplateColumns,
   getInterviewTemplateActions,
-} from "../../utils/tableConfig.jsx";
+} from "../../utils/tableColumnAndActionData.jsx";
 
 const InterviewTemplates = () => {
   const navigate = useNavigate();

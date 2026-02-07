@@ -48,7 +48,7 @@ import { formatDateTime } from "../../../../utils/dateFormatter";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
-import { getPositionColumns, getPositionActions } from "../../../../utils/tableConfig.jsx";
+import { getPositionColumns, getPositionActions } from "../../../../utils/tableColumnAndActionData.jsx";
 
 // v1.0.8 <---------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
