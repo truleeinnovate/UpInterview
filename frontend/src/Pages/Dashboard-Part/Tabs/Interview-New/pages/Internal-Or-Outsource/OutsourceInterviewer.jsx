@@ -79,15 +79,15 @@ export const OutsourcedInterviewerCard = ({
   const currentRole =
     source === "internal-interview"
       ? interviewer?.contactDetails?.roleLabel ||
-        interviewer?.contactId?.roleLabel ||
-        interviewer?.contactId?.currentRole
+      interviewer?.contactId?.roleLabel ||
+      interviewer?.contactId?.currentRole
       : interviewer?.contact?.roleLabel || "Interviewer";
 
   const companyName =
     source === "internal-interview"
       ? interviewer?.contactDetails?.company ||
-        interviewer?.contactId?.company ||
-        interviewer?.contactId?.company
+      interviewer?.contactId?.company ||
+      interviewer?.contactId?.company
       : interviewer?.contact?.company || "N/A";
   const rating = interviewer?.contact?.rating || "4.6";
   const introduction = interviewer?.contact?.bio || "No introduction provided.";
@@ -224,10 +224,9 @@ export const OutsourcedInterviewerCard = ({
     <div
       className={`
         bg-white rounded-lg border shadow-sm transition-all duration-200
-        ${
-          isSelected
-            ? "border-orange-500 ring-2 ring-orange-200"
-            : "border-gray-200 hover:shadow-md"
+        ${isSelected
+          ? "border-orange-500 ring-2 ring-orange-200"
+          : "border-gray-200 hover:shadow-md"
         }
       `}
     >
@@ -323,9 +322,8 @@ export const OutsourcedInterviewerCard = ({
             <>
               <div
                 ref={textRef}
-                className={`text-sm text-gray-600 leading-relaxed ${
-                  isExpanded ? "" : "line-clamp-5"
-                }`}
+                className={`text-sm text-gray-600 leading-relaxed ${isExpanded ? "" : "line-clamp-5"
+                  }`}
               >
                 {capitalizeFirstLetter(introduction)}
               </div>
@@ -381,9 +379,8 @@ export const OutsourcedInterviewerCard = ({
               {skillsArray.map((skill, i) => (
                 <span
                   key={i}
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 h-[22px] ${
-                    i >= visibleCount ? "hidden" : ""
-                  }`}
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 h-[22px] ${i >= visibleCount ? "hidden" : ""
+                    }`}
                 >
                   {typeof skill === "string"
                     ? skill
@@ -554,17 +551,23 @@ function OutsourcedInterviewerModal({
   const [isRateApplied, setIsRateApplied] = useState(false);
 
   // Add this state to track if all filters should be applied
-  const [isFiltersApplied, setIsFiltersApplied] = useState(false);
+  // Auto-apply filter if parent passes skills or currentRole
+  const [isFiltersApplied, setIsFiltersApplied] = useState(
+    () => (skills?.length > 0 || (currentRole && currentRole.trim() !== ""))
+  );
   const [tempSearchTerm, setTempSearchTerm] = useState("");
   const [tempSelectedSkills, setTempSelectedSkills] = useState([]);
   const [tempRateRange, setTempRateRange] = useState(["", ""]);
   // Add to existing state declarations
-  // const [tempSelectedRole, setTempSelectedRole] = useState("");
-  const [selectedRole, setSelectedRole] = useState("");
-  const [tempSelectedRole, setTempSelectedRole] = useState("");
+  // Initialize selectedRole and tempSelectedRole from parent currentRole
+  const [selectedRole, setSelectedRole] = useState(currentRole || "");
+  const [tempSelectedRole, setTempSelectedRole] = useState(currentRole || "");
 
   console.log("selectedRole", selectedRole);
 
+  console.log("currentRole", currentRole);
+
+  console.log("currentRoles", currentRoles);
   console.log("tempSelectedSkills", tempSelectedSkills);
 
   // Fetch tenant tax configuration (GST, service charge, etc.)
@@ -611,56 +614,30 @@ function OutsourcedInterviewerModal({
   //     hasInitializedRole.current = true;
   //   }
   // }, [currentRole]);
-  // Replace the existing role initialization useEffect
+  // Initialize with parent role
   useEffect(() => {
     if (currentRole && currentRole.trim() !== "") {
       setSelectedRole(currentRole);
+      setTempSelectedRole(currentRole);
     }
   }, [currentRole]);
 
-  // Initialize with parent skills - ONLY ONCE
+  // Initialize with parent skills - ONLY ONCE on mount
+  const hasInitializedSkillsRef = useRef(false);
 
   useEffect(() => {
-    if (skills && Array.isArray(skills) && skills.length > 0) {
+    if (skills && Array.isArray(skills) && skills.length > 0 && !hasInitializedSkillsRef.current) {
+      hasInitializedSkillsRef.current = true;
       const formattedSkills = skills.map((skill) => {
         const skillName = skill?.skill || skill?.SkillName || skill;
         return {
-          SkillName: skillName,
-          fromParent: true, // Mark as parent skill
-          id: `${skillName}_${Date.now()}_${Math.random()}`, // Unique ID for better tracking
+          SkillName: typeof skillName === 'string' ? skillName : String(skillName),
+          fromParent: true,
         };
       });
-
-      // Only initialize if no skills exist yet or we need to preserve parent skills
-      if (tempSelectedSkills.length === 0) {
-        setTempSelectedSkills(formattedSkills);
-      } else {
-        // Merge parent skills with existing user-added skills
-        const existingUserSkills = tempSelectedSkills.filter(
-          (skill) => !skill.fromParent,
-        );
-        const mergedSkills = [...formattedSkills, ...existingUserSkills];
-
-        // Remove duplicates (case-insensitive)
-        const uniqueSkills = [];
-        const seen = new Set();
-
-        mergedSkills.forEach((skill) => {
-          const skillName = (
-            skill?.SkillName ||
-            skill?.skill ||
-            skill
-          ).toLowerCase();
-          if (!seen.has(skillName)) {
-            seen.add(skillName);
-            uniqueSkills.push(skill);
-          }
-        });
-
-        setTempSelectedSkills(uniqueSkills);
-      }
+      setTempSelectedSkills(formattedSkills);
     }
-  }, [skills]); // Only depend on parent skills
+  }, [skills]);
 
   // Fetch and filter interviewers based on skills and availability added by Ranjith
   useEffect(() => {
@@ -776,8 +753,7 @@ function OutsourcedInterviewerModal({
                 });
 
                 console.log(
-                  `🎯 ${
-                    interviewer.contact?.firstName || "Unknown"
+                  `🎯 ${interviewer.contact?.firstName || "Unknown"
                   } Skill Match Status: ${hasMatchingSkill}`,
                 );
                 return hasMatchingSkill;
@@ -1383,10 +1359,60 @@ function OutsourcedInterviewerModal({
       return 0;
     });
 
-    // 5. Only hide non-matching when filters are explicitly applied
+    // 5. When filters are applied, filter interviewers that match AT LEAST ONE criterion
     if (isFiltersApplied && (selectedRole || tempSelectedSkills.length > 0)) {
-      // Show ALL but sorted (matched first, then others)
-      setFilteredInterviewers(scoredInterviewers);
+      // Filter to show interviewers matching AT LEAST ONE filter (OR logic)
+      const matchingInterviewers = scoredInterviewers.filter((interviewer) => {
+        let matchesRole = false;
+        let matchesSkill = false;
+
+        // Check role match
+        if (selectedRole) {
+          const interviewerRole =
+            interviewer?.contact?.currentRole ||
+            interviewer?.contact?.roleLabel ||
+            interviewer?.contact?.roleName ||
+            "";
+          matchesRole = interviewerRole.toLowerCase() === selectedRole.toLowerCase();
+        }
+
+        // Check skill match
+        if (tempSelectedSkills.length > 0) {
+          matchesSkill = interviewer.skillsMatchCount > 0;
+        }
+
+        // Return true if matches role OR has matching skills (OR logic)
+        // If only role is selected, must match role
+        // If only skills selected, must have at least one skill match
+        // If both selected, must match at least one
+        if (selectedRole && tempSelectedSkills.length > 0) {
+          return matchesRole || matchesSkill; // OR logic when both filters
+        } else if (selectedRole) {
+          return matchesRole;
+        } else if (tempSelectedSkills.length > 0) {
+          return matchesSkill;
+        }
+
+        return true;
+      });
+
+      // Sort matching interviewers by best match first:
+      // 1. Role + skills match (highest priority)
+      // 2. More skills matched
+      // 3. Role only match
+      // 4. Fewer skills matched
+      matchingInterviewers.sort((a, b) => {
+        const aMatchesRole = a.isRoleMatch ? 1 : 0;
+        const bMatchesRole = b.isRoleMatch ? 1 : 0;
+
+        // Calculate total score: role match worth 100, each skill worth 10
+        const aScore = (aMatchesRole * 100) + (a.skillsMatchCount * 10);
+        const bScore = (bMatchesRole * 100) + (b.skillsMatchCount * 10);
+
+        return bScore - aScore; // Higher score first
+      });
+
+      setFilteredInterviewers(matchingInterviewers);
     } else {
       // No filters applied, show all (still sorted by search if applicable)
       setFilteredInterviewers(scoredInterviewers);
@@ -1542,27 +1568,12 @@ function OutsourcedInterviewerModal({
 
   // Function to handle applying all filters
   const handleApplyRateFilter = () => {
-    // Apply search term
-    // setSearchTerm(tempSearchTerm);
-
     // Apply role filter - store it in selectedRole for actual filtering
     setSelectedRole(tempSelectedRole);
 
-    // Apply skills
-    // setTempSelectedSkills([...tempSelectedSkills]);
-    // setSearchTerm("");
-
-    // Clear skills - reset to parent skills or empty
-    if (
-      (skills && Array.isArray(skills) && skills.length > 0) ||
-      (tempSelectedSkills &&
-        Array.isArray(tempSelectedSkills) &&
-        tempSelectedSkills.length > 0)
-    ) {
-      setTempSelectedSkills([...skills, ...tempSelectedSkills]);
-    } else {
-      setTempSelectedSkills([]);
-    }
+    // DO NOT merge parent skills - only use what user has selected in tempSelectedSkills
+    // Parent skills are already cleared when user clicks "Clear Filter"
+    // tempSelectedSkills now only contains user-selected skills
 
     // Apply rate range
     const minVal = parseInt(tempRateRange[0]) || 0;
@@ -1580,25 +1591,19 @@ function OutsourcedInterviewerModal({
 
   // Function to clear all filters
   const handleClearRateFilter = () => {
-    // Clear role
-    // setSelectedRole("");
-    // setSelectedRole("");
-    // setSelectedRole("");
-
-    // Clear role (reset to parent if exists, otherwise empty)
-    // if (currentRole) {
-    //   setSelectedRole(currentRole);
-    // } else {
+    // Clear role - completely reset (not restoring parent values)
     setSelectedRole("");
     setTempSelectedRole("");
-    // }
+
     // Clear search
     setTempSearchTerm("");
     setSearchTerm("");
 
-    // Clear skills
+    // Clear skills - completely reset
     setTempSelectedSkills([]);
-    // setTempSelectedSkills([]);
+
+    // Reset the initialization ref so skills won't be re-initialized from parent
+    hasInitializedSkillsRef.current = true; // Keep true to prevent re-init from parent
 
     // Clear rate range
     setTempRateRange(["", ""]);
@@ -1609,7 +1614,7 @@ function OutsourcedInterviewerModal({
     setIsFiltersApplied(false);
     setIsRateApplied(false);
 
-    // Reset filtered interviewers to base interviewers
+    // Reset filtered interviewers to base interviewers (show all)
     setFilteredInterviewers(baseInterviewers);
   };
 
@@ -1804,14 +1809,29 @@ function OutsourcedInterviewerModal({
                           Filter by Role
                         </label>
                         <DropdownWithSearchField
-                          value={selectedRole || null} // ← changed: just the string or null
-                          options={
-                            currentRoles?.map((role) => ({
-                              value: role.roleName,
-                              label: role.roleLabel,
-                            })) || []
+                          value={
+                            (tempSelectedRole || selectedRole)
+                              ? { value: tempSelectedRole || selectedRole, label: tempSelectedRole || selectedRole }
+                              : null
                           }
+                          menuIsOpen={isFiltersApplied ? false : undefined}
+                          options={(() => {
+                            // Build options from currentRoles
+                            const baseOptions = currentRoles?.map((role) => ({
+                              value: role.roleName,
+                              label: role.roleLabel || role.roleName,
+                            })) || [];
+
+                            // Add parent role to options if not already present
+                            const currentVal = tempSelectedRole || selectedRole;
+                            if (currentVal && !baseOptions.some(opt => opt.value === currentVal)) {
+                              baseOptions.unshift({ value: currentVal, label: currentVal });
+                            }
+
+                            return baseOptions;
+                          })()}
                           onChange={(selected) => {
+                            if (isFiltersApplied) return; // Prevent changes when filters applied
                             let newValue = "";
 
                             if (selected === null || selected === undefined) {
@@ -1827,12 +1847,15 @@ function OutsourcedInterviewerModal({
                             }
                             console.log("selected in newValue===", newValue);
                             setTempSelectedRole(newValue);
-                            // setSelectedRole(newValue);
+                            setSelectedRole(newValue); // Also update selectedRole for immediate filtering
                           }}
-                          onMenuOpen={loadCurrentRoles}
+                          onMenuOpen={() => {
+                            if (isFiltersApplied) return; // Don't open menu when filters applied
+                            loadCurrentRoles();
+                          }}
                           loading={isCurrentRolesFetching}
                           placeholder="Select role"
-                          isClearable={true}
+                          isClearable={!isFiltersApplied}
                         />
                       </div>
                       <div className="md:col-span-4 lg:col-span-4 xl:col-span-5 2xl:col-span-5">
@@ -1843,6 +1866,7 @@ function OutsourcedInterviewerModal({
                         <DropdownWithSearchField
                           ref={skillsInputRef}
                           value={null}
+                          menuIsOpen={isFiltersApplied ? false : undefined}
                           options={
                             skillsData
                               ?.filter(
@@ -1856,50 +1880,8 @@ function OutsourcedInterviewerModal({
                                 label: skill.SkillName,
                               })) || []
                           }
-                          // onChange={(option) => {
-                          //   if (!option) return;
-
-                          //   const value =
-                          //     option?.value || option?.target?.value;
-                          //   if (!value) return;
-
-                          //   setTempSelectedSkills((prev) => {
-                          //     // prevent duplicates
-                          //     if (prev.some((s) => s.SkillName === value))
-                          //       return prev;
-                          //     return [...prev, { SkillName: value }];
-                          //   });
-                          // }}
-                          // REPLACE the DropdownWithSearchField onChange for skills:
-                          // onChange={(option) => {
-                          //   if (!option) return;
-
-                          //   const value =
-                          //     option?.value || option?.target?.value;
-                          //   if (!value) return;
-
-                          //   setTempSelectedSkills((prev) => {
-                          //     // Prevent duplicates (case-insensitive)
-                          //     const existingSkill = prev.find((s) => {
-                          //       const sName = (
-                          //         s?.SkillName ||
-                          //         s?.skill ||
-                          //         s
-                          //       ).toLowerCase();
-                          //       return sName === value.toLowerCase();
-                          //     });
-
-                          //     if (existingSkill) return prev;
-
-                          //     // Add new user-selected skill (NOT from parent)
-                          //     return [
-                          //       ...prev,
-                          //       { SkillName: value, fromParent: false },
-                          //     ];
-                          //   });
-                          // }}
-
                           onChange={(option) => {
+                            if (isFiltersApplied) return; // Prevent changes when filters applied
                             if (!option) return;
 
                             const value =
@@ -1926,28 +1908,30 @@ function OutsourcedInterviewerModal({
                               ];
                             });
                           }}
-                          onMenuOpen={loadSkills}
+                          onMenuOpen={() => {
+                            if (isFiltersApplied) return; // Don't open menu when filters applied
+                            loadSkills();
+                          }}
                           loading={isSkillsFetching}
                           placeholder="Filter by skills"
                         />
                       </div>
-                      <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-3 flex items-end mt-6">
-                        <button
-                          className={`w-full h-10 px-4 text-sm rounded-md  duration-200 flex items-center justify-center whitespace-nowrap
-                            ${
-                              isFiltersApplied
-                                ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
-                                : "bg-custom-blue text-white hover:bg-custom-blue/90"
-                            }`}
-                          onClick={
-                            isFiltersApplied
-                              ? handleClearRateFilter
-                              : handleApplyRateFilter
-                          }
-                        >
-                          {isFiltersApplied ? "Clear Filter" : "Apply Filter"}
-                        </button>
-                      </div>
+                      {/* <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-3 flex items-end mt-6"> */}
+                      <button
+                        className={`w-full md:col-span-4  mt-6 lg:col-span-4 xl:col-span-5 2xl:col-span-2 h-10 px-4 text-sm rounded-md  duration-200 flex items-center justify-center whitespace-nowrap
+                            ${isFiltersApplied
+                            ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
+                            : "bg-custom-blue text-white hover:bg-custom-blue/90"
+                          }`}
+                        onClick={
+                          isFiltersApplied
+                            ? handleClearRateFilter
+                            : handleApplyRateFilter
+                        }
+                      >
+                        {isFiltersApplied ? "Clear Filter" : "Apply Filter"}
+                      </button>
+                      {/* </div> */}
                       {/* Hourly Rate Range */}
                       {/* <div className="md:col-span-1 lg:col-span-1">
                         <div className="flex flex-col h-full"> */}
@@ -2034,7 +2018,9 @@ function OutsourcedInterviewerModal({
                               {skillName}
 
                               <button
+                                disabled={isFiltersApplied}
                                 onClick={() => {
+                                  if (isFiltersApplied) return;
                                   // Remove this specific skill
                                   setTempSelectedSkills((prev) =>
                                     prev.filter((s) => {
@@ -2048,7 +2034,7 @@ function OutsourcedInterviewerModal({
                                     }),
                                   );
                                 }}
-                                className="ml-1 text-gray-500 hover:text-red-500"
+                                className={`ml-1 ${isFiltersApplied ? "opacity-50 cursor-not-allowed text-gray-400" : "text-gray-500 hover:text-red-500"}`}
                               >
                                 <X className="h-3 w-3" />
                               </button>
@@ -2247,10 +2233,9 @@ function OutsourcedInterviewerModal({
             <div
               className={`
                 grid gap-4 sm:gap-5 px-1 sm:px-2
-                ${
-                  isFullscreen
-                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
-                    : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
+                ${isFullscreen
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
+                  : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
                 }
               `}
             >
