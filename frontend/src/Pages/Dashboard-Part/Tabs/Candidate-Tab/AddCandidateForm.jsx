@@ -58,6 +58,8 @@ import {
   Edit,
   ExternalLink,
   Info,
+  Plus,
+  Trash,
   X,
 } from "lucide-react";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
@@ -215,6 +217,7 @@ const AddCandidateForm = ({
     role: "",
     fromDate: "",
     toDate: "",
+    currentlyWorking: false,
     responsibilities: "",
   });
   const [editingProjectIndex, setEditingProjectIndex] = useState(null);
@@ -290,47 +293,82 @@ const AddCandidateForm = ({
   // const userId = tokenPayload?.userId;
 
   // --------------------------------------- new fields version 2 -----------------------
-  const [certInput, setCertInput] = useState("");
+  // Removed old certInput state, now using formData.certifications as array of objects
 
-  const handleCertKeyDown = (e) => {
-    if (e.key === "Enter") {
-      // Stop the form from submitting
-      e.preventDefault();
-      e.stopPropagation();
-
-      const newCert = certInput.trim();
-
-      if (newCert) {
-        if (formData.certifications.length >= 10) {
-          notify.warning("Maximum 10 certifications allowed");
-          return;
-        }
-
-        if (
-          formData.certifications.some(
-            (c) => c.toLowerCase() === newCert.toLowerCase(),
-          )
-        ) {
-          notify.info("This certification is already added");
-          return;
-        }
-
-        setFormData((prev) => ({
-          ...prev,
-          certifications: [...prev.certifications, newCert],
-        }));
-
-        // Clear the input
-        setCertInput("");
-      }
+  // Add a new certification row
+  const addCertificationRow = () => {
+    if (formData.certifications?.length >= 10) {
+      notify.warning("Maximum 10 certifications allowed");
+      return;
     }
-  };
-
-  const removeCert = (certToRemove) => {
     setFormData((prev) => ({
       ...prev,
-      certifications: prev.certifications.filter((c) => c !== certToRemove),
+      certifications: [
+        ...prev.certifications,
+        { name: "", issuingFrom: "", issuingYear: "" },
+      ],
     }));
+  };
+
+  // Update a specific certification row
+  const updateCertificationRow = (index, field, value) => {
+    setFormData((prev) => {
+      const updated = [...prev.certifications];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, certifications: updated };
+    });
+  };
+
+  // Remove a certification row (not for first row)
+  const removeCertificationRow = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      certifications: prev.certifications.filter((_, i) => i !== index),
+    }));
+    // Clear errors for removed row
+    setCertificationErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[index];
+      return newErrors;
+    });
+  };
+
+  // Certification errors state - tracks errors per row { rowIndex: { name: true, issuingFrom: true, issuingYear: true } }
+  const [certificationErrors, setCertificationErrors] = useState({});
+
+  // Validate certifications - if any field in a row has data, all fields are required
+  const validateCertifications = () => {
+    const newErrors = {};
+    let hasErrors = false;
+
+    formData.certifications?.forEach((cert, index) => {
+      const hasName = cert?.name?.trim();
+      const hasIssuingFrom = cert?.issuingFrom?.trim();
+      const hasIssuingYear = cert?.issuingYear;
+
+      // If any field has data, check if others are empty
+      if (hasName || hasIssuingFrom || hasIssuingYear) {
+        const rowErrors = {};
+        if (!hasName) {
+          rowErrors.name = true;
+          hasErrors = true;
+        }
+        if (!hasIssuingFrom) {
+          rowErrors.issuingFrom = true;
+          hasErrors = true;
+        }
+        if (!hasIssuingYear) {
+          rowErrors.issuingYear = true;
+          hasErrors = true;
+        }
+        if (Object.keys(rowErrors).length > 0) {
+          newErrors[index] = rowErrors;
+        }
+      }
+    });
+
+    setCertificationErrors(newErrors);
+    return !hasErrors;
   };
 
   // Inside AddCandidateForm component
@@ -1132,6 +1170,18 @@ const AddCandidateForm = ({
       return;
     }
 
+    // Validate certifications - if any field has data, all fields in that row are required
+    const certificationsValid = validateCertifications();
+    if (!certificationsValid) {
+      setActiveButton(null);
+      // Scroll to certifications section
+      const certSection = document.getElementById("certifications-section");
+      if (certSection) {
+        certSection.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
+    }
+
     // Filter out empty skill rows - only include rows where at least one field has a value
     const filledSkills = entries
       .filter((entry) => entry.skill || entry.experience || entry.expertise)
@@ -1173,7 +1223,7 @@ const AddCandidateForm = ({
       minSalary: formData.minSalary ? Number(formData.minSalary) : undefined,
       maxSalary: formData.maxSalary ? Number(formData.maxSalary) : undefined,
       languages: formData.languages?.filter((lang) => lang.trim() !== "") || [], // remove empty strings
-      certifications: formData.certifications?.filter(Boolean) || [],
+      certifications: formData.certifications?.filter((cert) => cert?.name?.trim() || cert?.issuingFrom?.trim() || cert?.issuingYear) || [],
       noticePeriod: formData.noticePeriod || undefined,
     };
 
@@ -1500,6 +1550,7 @@ const AddCandidateForm = ({
     // Edit mode + value didn't change → immediately clear error (most important)
     if (id && current === original) {
       setErrors((prev) => {
+        if (!prev.Email) return prev;
         const next = { ...prev };
         delete next.Email;
         return next;
@@ -1510,6 +1561,7 @@ const AddCandidateForm = ({
     // No value → no error
     if (!current) {
       setErrors((prev) => {
+        if (!prev.Email) return prev;
         const next = { ...prev };
         delete next.Email;
         return next;
@@ -1524,12 +1576,17 @@ const AddCandidateForm = ({
 
     // Real conflict
     if (emailCheck.data.exists) {
-      setErrors((prev) => ({
-        ...prev,
-        Email: "This email is already in use by another candidate.",
-      }));
+      setErrors((prev) => {
+        const msg = "This email is already in use by another candidate.";
+        if (prev.Email === msg) return prev;
+        return {
+          ...prev,
+          Email: msg,
+        };
+      });
     } else {
       setErrors((prev) => {
+        if (!prev.Email) return prev;
         const next = { ...prev };
         delete next.Email;
         return next;
@@ -1550,6 +1607,7 @@ const AddCandidateForm = ({
 
     if (id && current === original) {
       setErrors((prev) => {
+        if (!prev.Phone) return prev;
         const next = { ...prev };
         delete next.Phone;
         return next;
@@ -1559,6 +1617,7 @@ const AddCandidateForm = ({
 
     if (!current) {
       setErrors((prev) => {
+        if (!prev.Phone) return prev;
         const next = { ...prev };
         delete next.Phone;
         return next;
@@ -1569,12 +1628,17 @@ const AddCandidateForm = ({
     if (phoneCheck.isLoading || !phoneCheck.data) return;
 
     if (phoneCheck.data.exists) {
-      setErrors((prev) => ({
-        ...prev,
-        Phone: "This phone number is already in use by another candidate.",
-      }));
+      setErrors((prev) => {
+        const msg = "This phone number is already in use by another candidate.";
+        if (prev.Phone === msg) return prev;
+        return {
+          ...prev,
+          Phone: msg,
+        };
+      });
     } else {
       setErrors((prev) => {
+        if (!prev.Phone) return prev;
         const next = { ...prev };
         delete next.Phone;
         return next;
@@ -1595,6 +1659,7 @@ const AddCandidateForm = ({
 
     if (id && current === original) {
       setErrors((prev) => {
+        if (!prev.linkedInUrl) return prev;
         const next = { ...prev };
         delete next.linkedInUrl;
         return next;
@@ -1604,6 +1669,7 @@ const AddCandidateForm = ({
 
     if (!current) {
       setErrors((prev) => {
+        if (!prev.linkedInUrl) return prev;
         const next = { ...prev };
         delete next.linkedInUrl;
         return next;
@@ -1614,13 +1680,17 @@ const AddCandidateForm = ({
     if (linkedinCheck.isLoading || !linkedinCheck.data) return;
 
     if (linkedinCheck.data.exists) {
-      setErrors((prev) => ({
-        ...prev,
-        linkedInUrl:
-          "This LinkedIn URL is already in use by another candidate.",
-      }));
+      setErrors((prev) => {
+        const msg = "This LinkedIn URL is already in use by another candidate.";
+        if (prev.linkedInUrl === msg) return prev;
+        return {
+          ...prev,
+          linkedInUrl: msg,
+        };
+      });
     } else {
       setErrors((prev) => {
+        if (!prev.linkedInUrl) return prev;
         const next = { ...prev };
         delete next.linkedInUrl;
         return next;
@@ -1635,8 +1705,14 @@ const AddCandidateForm = ({
   ]);
 
   const handleEditProject = (index) => {
+    const project = formData.workExperience[index];
     setEditingProjectIndex(index);
-    setCurrentProject(formData.workExperience[index]);
+    setCurrentProject({
+      ...project,
+      // Set currentlyWorking to true if toDate is "Present" or empty
+      currentlyWorking: project.toDate === "Present" || project.toDate === "" || !project.toDate,
+      toDate: project.toDate === "Present" ? "" : project.toDate || "",
+    });
     setIsProjectModalOpen(true);
   };
 
@@ -1684,7 +1760,10 @@ const AddCandidateForm = ({
 
     let finalToDate = currentProject.toDate;
 
-    if (currentProject.fromDate && currentProject.toDate) {
+    // If currently working, set toDate to "Present"
+    if (currentProject.currentlyWorking) {
+      finalToDate = "Present";
+    } else if (currentProject.fromDate && currentProject.toDate) {
       // 1. If user selects current month/year, treat it as "Present" (null/empty)
       if (currentProject.toDate === currentYearMonth) {
         finalToDate = "";
@@ -1748,6 +1827,7 @@ const AddCandidateForm = ({
       role: "",
       fromDate: "",
       toDate: "",
+      currentlyWorking: false,
       responsibilities: "",
     });
     setProjectErrors({});
@@ -2321,43 +2401,145 @@ const AddCandidateForm = ({
                 />
               </div>
             </div>
-            {/* Certifications Tags */}
+            {/* Certifications Section */}
+            <div className="mb-4 col-span-2" id="certifications-section">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm font-medium text-gray-700">
+                  Certifications ({formData?.certifications?.length || 0}/10)
+                </label>
+                <button
+                  type="button"
+                  onClick={addCertificationRow}
+                  disabled={formData?.certifications?.length >= 10}
+                  className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors ${formData?.certifications?.length >= 10
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-custom-blue text-white hover:bg-custom-blue/90"
+                    }`}
+                >
+                  <Plus className="w-4 h-4" />
+                  Add
+                </button>
+              </div>
 
-            {/* Certifications Tags */}
-            <div className="mb-4 col-span-1">
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Certifications ({formData?.certifications?.length}/10)
-              </label>
-
-              {/* The Input Field */}
-              <InputField
-                name="text"
-                value={certInput}
-                onChange={(e) => setCertInput(e.target.value)}
-                placeholder={
-                  formData?.certifications?.length >= 10
-                    ? "Limit reached"
-                    : "Type certification and press Enter"
-                }
-                // IMPORTANT: Ensure your InputField component passes this to the internal <input>
-                onKeyDown={handleCertKeyDown}
-                disabled={formData?.certifications?.length >= 10}
-              />
-
-              {/* Tag Display Area */}
-              <div className="flex flex-wrap gap-2 mb-2 mt-3">
-                {formData.certifications?.map((cert, index) => (
-                  <div className="flex items-center justify-center gap-2 bg-custom-blue/10 text-custom-blue px-3 py-2 rounded-full border border-blue-200">
-                    <p key={index} className="text-sm font-medium leading-none">
-                      {cert}
-                    </p>
-                    <button
-                      type="button"
-                      className="flex items-center justify-center mt-[1px]"
-                      onClick={() => removeCert(cert)}
-                    >
-                      <X className="w-3 h-3 cursor-pointer text-red-500" />
-                    </button>
+              {/* Certification Rows */}
+              <div className="space-y-3">
+                {(formData?.certifications?.length === 0 ? [{ name: "", issuingFrom: "", issuingYear: "" }] : formData?.certifications)?.map((cert, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="grid grid-cols-3 gap-3 flex-1">
+                      <div className="w-full">
+                        <input
+                          type="text"
+                          value={cert?.name || ""}
+                          onChange={(e) => {
+                            // If this is the placeholder row (when length is 0), add it first
+                            if (formData?.certifications?.length === 0) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                certifications: [{ name: e.target.value, issuingFrom: "", issuingYear: "" }],
+                              }));
+                            } else {
+                              updateCertificationRow(index, "name", e.target.value);
+                            }
+                            // Clear error if present
+                            if (certificationErrors[index]?.name) {
+                              setCertificationErrors(prev => {
+                                const newErrors = { ...prev };
+                                if (newErrors[index]) {
+                                  delete newErrors[index].name;
+                                  if (Object.keys(newErrors[index]).length === 0) delete newErrors[index];
+                                }
+                                return newErrors;
+                              });
+                            }
+                          }}
+                          placeholder="Certification Name"
+                          className={`w-full px-3 py-2 border ${certificationErrors[index]?.name ? "border-red-500" : "border-gray-300"} rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-custom-blue`}
+                        />
+                        {certificationErrors[index]?.name && (
+                          <p className="text-red-500 text-xs mt-1">Field is required</p>
+                        )}
+                      </div>
+                      <div className="w-full">
+                        <input
+                          type="text"
+                          value={cert?.issuingFrom || ""}
+                          onChange={(e) => {
+                            if (formData?.certifications?.length === 0) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                certifications: [{ name: "", issuingFrom: e.target.value, issuingYear: "" }],
+                              }));
+                            } else {
+                              updateCertificationRow(index, "issuingFrom", e.target.value);
+                            }
+                            // Clear error if present
+                            if (certificationErrors[index]?.issuingFrom) {
+                              setCertificationErrors(prev => {
+                                const newErrors = { ...prev };
+                                if (newErrors[index]) {
+                                  delete newErrors[index].issuingFrom;
+                                  if (Object.keys(newErrors[index]).length === 0) delete newErrors[index];
+                                }
+                                return newErrors;
+                              });
+                            }
+                          }}
+                          placeholder="Issuing From"
+                          className={`w-full px-3 py-2 border ${certificationErrors[index]?.issuingFrom ? "border-red-500" : "border-gray-300"} rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-custom-blue`}
+                        />
+                        {certificationErrors[index]?.issuingFrom && (
+                          <p className="text-red-500 text-xs mt-1">Field is required</p>
+                        )}
+                      </div>
+                      <div className="w-full">
+                        <input
+                          type="number"
+                          value={cert?.issuingYear || ""}
+                          onChange={(e) => {
+                            const value = e.target.value.slice(0, 4); // Max 4 digits
+                            if (formData?.certifications?.length === 0) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                certifications: [{ name: "", issuingFrom: "", issuingYear: value ? Number(value) : "" }],
+                              }));
+                            } else {
+                              updateCertificationRow(index, "issuingYear", value ? Number(value) : "");
+                            }
+                            // Clear error if present
+                            if (certificationErrors[index]?.issuingYear) {
+                              setCertificationErrors(prev => {
+                                const newErrors = { ...prev };
+                                if (newErrors[index]) {
+                                  delete newErrors[index].issuingYear;
+                                  if (Object.keys(newErrors[index]).length === 0) delete newErrors[index];
+                                }
+                                return newErrors;
+                              });
+                            }
+                          }}
+                          placeholder="IssuingYear"
+                          min="1900"
+                          max="2100"
+                          className={`w-full px-3 py-2 border ${certificationErrors[index]?.issuingYear ? "border-red-500" : "border-gray-300"} rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-custom-blue`}
+                        />
+                        {certificationErrors[index]?.issuingYear && (
+                          <p className="text-red-500 text-xs mt-1">Field is required</p>
+                        )}
+                      </div>
+                    </div>
+                    {/* Delete button - only show for rows after the first one */}
+                    {formData?.certifications?.length > 0 && index > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => removeCertificationRow(index)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                        title="Remove certification"
+                      >
+                        <Trash className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <div className="w-8" /> // Spacer to maintain alignment
+                    )}
                   </div>
                 ))}
               </div>
@@ -2708,7 +2890,7 @@ const AddCandidateForm = ({
                 <InputField
                   label="Duration To"
                   type="month"
-                  value={currentProject.toDate}
+                  value={currentProject.currentlyWorking ? "" : currentProject.toDate}
                   onChange={(e) => {
                     const newToDate = e.target.value;
                     setCurrentProject({
@@ -2727,7 +2909,37 @@ const AddCandidateForm = ({
                     }
                   }}
                   error={projectErrors.toDate}
+                  disabled={currentProject.currentlyWorking}
                 />
+              </div>
+              {/* Currently Working Checkbox */}
+              <div className="col-span-2 flex items-center gap-2 mt-2">
+                <input
+                  type="checkbox"
+                  id="currentlyWorking"
+                  checked={currentProject.currentlyWorking}
+                  onChange={(e) => {
+                    setCurrentProject({
+                      ...currentProject,
+                      currentlyWorking: e.target.checked,
+                      toDate: e.target.checked ? "" : currentProject.toDate,
+                    });
+                    // Clear toDate error when checking "currently working"
+                    if (e.target.checked) {
+                      setProjectErrors((prev) => {
+                        const { toDate, ...rest } = prev;
+                        return rest;
+                      });
+                    }
+                  }}
+                  className="w-4 h-4 accent-custom-blue rounded border-gray-300 focus:ring-custom-blue cursor-pointer"
+                />
+                <label
+                  htmlFor="currentlyWorking"
+                  className="text-sm text-gray-700 cursor-pointer select-none"
+                >
+                  Currently working here
+                </label>
               </div>
               <div>
                 <DescriptionField

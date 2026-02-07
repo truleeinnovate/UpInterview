@@ -59,7 +59,7 @@ import { formatDateTime } from "../../../../utils/dateFormatter.js";
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import CandidateBulkUpload from "./CandidateBulkUpload.jsx";
-import { getCandidateColumns, getCandidateActions } from "../../../../utils/tableConfig.jsx";
+import { getCandidateColumns, getCandidateActions } from "../../../../utils/tableColumnAndActionData.jsx";
 
 // v2.0.1 <-----------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {

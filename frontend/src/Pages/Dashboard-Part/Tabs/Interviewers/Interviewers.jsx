@@ -28,7 +28,7 @@ import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPop
 import {
   getInterviewerColumns,
   getInterviewerActions,
-} from "../../../../utils/tableConfig";
+} from "../../../../utils/tableColumnAndActionData.jsx";
 
 // Card Component for Kanban View
 export const InterviewerCard = ({

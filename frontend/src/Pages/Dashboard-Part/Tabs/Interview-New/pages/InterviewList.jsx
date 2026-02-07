@@ -27,7 +27,7 @@ import Toolbar from "../../../../../Components/Shared/Toolbar/Toolbar.jsx";
 import TableView from "../../../../../Components/Shared/Table/TableView.jsx";
 import { FilterPopup } from "../../../../../Components/Shared/FilterPopup/FilterPopup.jsx";
 import KanbanBoard from "../components/KanbanBoard.jsx";
-import { getInterviewColumns, getInterviewActions } from "../../../../../utils/tableConfig.jsx";
+import { getInterviewColumns, getInterviewActions } from "../../../../../utils/tableColumnAndActionData.jsx";
 import StatusBadge from "../../../../../Components/SuperAdminComponents/common/StatusBadge.jsx";
 import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
 import { useInterviews } from "../../../../../apiHooks/useInterviews.js";

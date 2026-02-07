@@ -8,7 +8,7 @@ const resumeSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    
+
     // Professional/Education details moved from Candidate
     HigherQualification: String,
     UniversityCollege: String,
@@ -32,6 +32,7 @@ const resumeSchema = new mongoose.Schema(
         role: String,
         fromDate: String,
         toDate: String,
+        currentlyWorking: Boolean,
         responsibilities: String,
       },
     ],

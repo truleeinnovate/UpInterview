@@ -38,7 +38,7 @@ import { formatDateTime } from "../../../../utils/dateFormatter.js";
 import {
   getMockInterviewColumns,
   getMockInterviewActions,
-} from "../../../../utils/tableConfig.jsx";
+} from "../../../../utils/tableColumnAndActionData.jsx";
 
 // v1.0.5 <----------------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {

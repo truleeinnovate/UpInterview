@@ -373,7 +373,7 @@ import StatusBadge from "../../../../Components/SuperAdminComponents/common/Stat
 import {
   getTagColumns,
   getTagActions,
-} from "../../../../utils/tableConfig.jsx";
+} from "../../../../utils/tableColumnAndActionData.jsx";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -405,8 +405,8 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
             action.onClick(item);
           }}
           className={`p-1.5 rounded-lg transition-colors ${action.key === "view"
-              ? "text-custom-blue hover:bg-custom-blue/10"
-              : "text-green-600 hover:bg-green-600/10"
+            ? "text-custom-blue hover:bg-custom-blue/10"
+            : "text-green-600 hover:bg-green-600/10"
             }`}
           title={action.label}
         >
