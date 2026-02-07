@@ -214,7 +214,7 @@ function AssessmentResultView({
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Total Score</p>
-                    <p className="font-medium">{candidate.totalScore}</p>
+                    <p className="font-medium">{candidate.totalScore?.toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Pass Score</p>

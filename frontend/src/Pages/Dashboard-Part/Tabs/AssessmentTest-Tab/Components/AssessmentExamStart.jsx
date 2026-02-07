@@ -349,13 +349,15 @@ function AssessmentTest({
         // Use Set to ensure unique selections if the UI allows multiple clicks
         const selectedArray = Array.isArray(selectedAnswer)
           ? [...new Set(selectedAnswer.map((s) => clean(s)))]
-          : selectedAnswer ? [clean(selectedAnswer)] : [];
+          : selectedAnswer
+            ? [clean(selectedAnswer)]
+            : [];
 
         if (correctOptionTexts.length === 0) return false;
 
         // Length must match unique selections
         if (correctOptionTexts.length !== selectedArray.length) return false;
-        
+
         // Every correct answer must be found in the user's selection
         return correctOptionTexts.every((c) => selectedArray.includes(c));
       }
@@ -499,87 +501,210 @@ function AssessmentTest({
   //   }
   // };
 
+  // const handleConfirmSubmit = async () => {
+  //   try {
+  //     const submissionData = {
+  //       candidateAssessmentId,
+  //       scheduledAssessmentId: assessment._id,
+  //       candidateId: candidate._id,
+  //       status: "completed",
+  //       remainingTime: timeLeft,
+  //       sections: questions.sections.map((section) => {
+  //         const sectionQuestions = section.questions.map((question) => {
+  //           const rawAnswer = answers[question._id];
+
+  //           const userAnswer =
+  //             rawAnswer !== undefined && rawAnswer !== null ? rawAnswer : "";
+
+  //           const isCorrect = verifyAnswer(question, userAnswer);
+
+  //           let displayCorrectAnswer =
+  //             question.snapshot?.correctAnswer || question.correctAnswer;
+  //           const qType =
+  //             question.snapshot?.questionType || question.questionType;
+
+  //           if (qType === "MCQ") {
+  //             const correctOpts = (
+  //               question.snapshot?.options ||
+  //               question.options ||
+  //               []
+  //             )
+  //               .filter(
+  //                 (opt) => typeof opt === "object" && opt.isCorrect === true,
+  //               )
+  //               .map((opt) => opt.optionText);
+
+  //             displayCorrectAnswer =
+  //               correctOpts.length > 0 ? correctOpts.join(", ") : "";
+  //           } else if (qType === "Boolean") {
+  //             displayCorrectAnswer = Array.isArray(displayCorrectAnswer)
+  //               ? displayCorrectAnswer[0]
+  //               : displayCorrectAnswer;
+  //           }
+
+  //           // Get weighted points from snapshot or root
+  //           const questionWeight = Number(
+  //             question.snapshot?.score || question.score || 0,
+  //           );
+
+  //           // Calculate actual score earned
+  //           const awardedScore = isCorrect ? questionWeight : 0;
+  //           return {
+  //             questionId: question._id,
+  //             questionType:
+  //               question.snapshot?.questionType || question.questionType,
+  //             userAnswer: userAnswer, // Correctly sends true/false/0 or Array
+  //             correctAnswer: displayCorrectAnswer, // Cleaned version for backend logs
+  //             isCorrect,
+  //             score: awardedScore,
+  //             isAnswerLater: skippedQuestions.includes(question._id),
+  //             submittedAt: new Date().toISOString(),
+  //           };
+  //         });
+
+  //         // Sum the actual awarded scores for the section total
+  //         const sectionTotalScore = sectionQuestions.reduce(
+  //           (sum, q) => sum + q.score,
+  //           0,
+  //         );
+
+  //         const passThreshold = Number(section.passScore || 0);
+  //         const sectionResult =
+  //           sectionTotalScore >= passThreshold ? "pass" : "fail";
+
+  //         return {
+  //           sectionId: section._id,
+  //           sectionName: section.sectionName || "Unnamed Section",
+  //           passScore: passThreshold,
+  //           questions: sectionQuestions,
+  //           totalScore: sectionTotalScore,
+  //           sectionResult,
+  //           sectionPassed: sectionResult === "pass",
+  //         };
+  //       }),
+  //       submittedAt: new Date().toISOString(),
+  //     };
+
+  //     const response = await fetch(
+  //       `${config.REACT_APP_API_URL}/candidate-assessment/submit`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(submissionData),
+  //       },
+  //     );
+
+  //     console.log("Response from backend:", response);
+
+  //     const responseData = await response.json();
+
+  //     if (!response.ok) {
+  //       console.error("Error submitting assessment:", responseData.message);
+  //       throw new Error(responseData.message || "Failed to submit assessment");
+  //     }
+
+  //     console.log("Assessment submitted successfully:", responseData);
+  //     setIsSubmitted(true);
+  //     setShowConfirmSubmit(false);
+  //   } catch (error) {
+  //     console.error("Error submitting assessment:", error);
+  //   }
+  // };
+
   const handleConfirmSubmit = async () => {
     try {
+      const evaluatedSections = questions.sections.map((section) => {
+        const sectionQuestions = section.questions.map((question) => {
+          const rawAnswer = answers[question._id];
+
+          const userAnswer =
+            rawAnswer !== undefined && rawAnswer !== null ? rawAnswer : "";
+
+          const isCorrect = verifyAnswer(question, userAnswer);
+
+          let displayCorrectAnswer =
+            question.snapshot?.correctAnswer || question.correctAnswer;
+          const qType =
+            question.snapshot?.questionType || question.questionType;
+
+          if (qType === "MCQ") {
+            const correctOpts = (
+              question.snapshot?.options ||
+              question.options ||
+              []
+            )
+              .filter(
+                (opt) => typeof opt === "object" && opt.isCorrect === true,
+              )
+              .map((opt) => opt.optionText);
+
+            displayCorrectAnswer =
+              correctOpts.length > 0 ? correctOpts.join(", ") : "";
+          } else if (qType === "Boolean") {
+            displayCorrectAnswer = Array.isArray(displayCorrectAnswer)
+              ? displayCorrectAnswer[0]
+              : displayCorrectAnswer;
+          }
+
+          const questionWeight = Number(
+            question.snapshot?.score || question.score || 0,
+          );
+
+          const awardedScore = isCorrect ? questionWeight : 0;
+
+          return {
+            questionId: question._id,
+            questionType:
+              question.snapshot?.questionType || question.questionType,
+            userAnswer,
+            correctAnswer: displayCorrectAnswer,
+            isCorrect,
+            score: awardedScore,
+            isAnswerLater: skippedQuestions.includes(question._id),
+            submittedAt: new Date().toISOString(),
+          };
+        });
+
+        const sectionTotalScore = sectionQuestions.reduce(
+          (sum, q) => sum + q.score,
+          0,
+        );
+
+        const passThreshold = Number(section.passScore || 0);
+        const sectionResult =
+          sectionTotalScore >= passThreshold ? "pass" : "fail";
+
+        return {
+          sectionId: section._id,
+          sectionName: section.sectionName || "Unnamed Section",
+          passScore: passThreshold,
+          questions: sectionQuestions,
+          totalScore: sectionTotalScore,
+          sectionResult,
+          sectionPassed: sectionResult === "pass",
+        };
+      });
+
+      const totalScore = evaluatedSections.reduce(
+        (sum, section) => sum + section.totalScore,
+        0,
+      );
+
+      const formattedTotalScore = Number(totalScore.toFixed(2));
+
       const submissionData = {
         candidateAssessmentId,
         scheduledAssessmentId: assessment._id,
         candidateId: candidate._id,
         status: "completed",
         remainingTime: timeLeft,
-        sections: questions.sections.map((section) => {
-          const sectionQuestions = section.questions.map((question) => {
-            const rawAnswer = answers[question._id];
 
-            const userAnswer =
-              rawAnswer !== undefined && rawAnswer !== null ? rawAnswer : "";
+        sections: evaluatedSections,
 
-            const isCorrect = verifyAnswer(question, userAnswer);
+        totalScore: formattedTotalScore,
 
-            let displayCorrectAnswer =
-              question.snapshot?.correctAnswer || question.correctAnswer;
-            const qType =
-              question.snapshot?.questionType || question.questionType;
-
-            if (qType === "MCQ") {
-              const correctOpts = (
-                question.snapshot?.options ||
-                question.options ||
-                []
-              )
-                .filter(
-                  (opt) => typeof opt === "object" && opt.isCorrect === true,
-                )
-                .map((opt) => opt.optionText);
-
-              displayCorrectAnswer =
-                correctOpts.length > 0 ? correctOpts.join(", ") : "";
-            } else if (qType === "Boolean") {
-              displayCorrectAnswer = Array.isArray(displayCorrectAnswer)
-                ? displayCorrectAnswer[0]
-                : displayCorrectAnswer;
-            }
-
-            // Get weighted points from snapshot or root
-            const questionWeight = Number(
-              question.snapshot?.score || question.score || 0,
-            );
-
-            // Calculate actual score earned
-            const awardedScore = isCorrect ? questionWeight : 0;
-            return {
-              questionId: question._id,
-              questionType:
-                question.snapshot?.questionType || question.questionType,
-              userAnswer: userAnswer, // Correctly sends true/false/0 or Array
-              correctAnswer: displayCorrectAnswer, // Cleaned version for backend logs
-              isCorrect,
-              score: awardedScore,
-              isAnswerLater: skippedQuestions.includes(question._id),
-              submittedAt: new Date().toISOString(),
-            };
-          });
-
-          // Sum the actual awarded scores for the section total
-          const sectionTotalScore = sectionQuestions.reduce(
-            (sum, q) => sum + q.score,
-            0,
-          );
-
-          const passThreshold = Number(section.passScore || 0);
-          const sectionResult =
-            sectionTotalScore >= passThreshold ? "pass" : "fail";
-
-          return {
-            sectionId: section._id,
-            sectionName: section.sectionName || "Unnamed Section",
-            passScore: passThreshold,
-            questions: sectionQuestions,
-            totalScore: sectionTotalScore,
-            sectionResult,
-            sectionPassed: sectionResult === "pass",
-          };
-        }),
         submittedAt: new Date().toISOString(),
       };
 

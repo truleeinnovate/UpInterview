@@ -9,7 +9,7 @@
 // v1.0.6 - Ashok - Made Edit button fully reusable (supports onEdit or editPath, optional, safe fallback)
 // v1.0.7 - Ashok - Changed icons to lucide-react for consistency
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Minimize, Expand, X, ExternalLink, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
@@ -29,7 +29,19 @@ function SidebarPopup({
   onEdit, // optional callback for edit
   editPath, // optional route prefix for edit
   headerAction, // custom header action buttons
+  width, // to set custom width ex: 60, "60%"
 }) {
+  const [isDesktop, setIsDesktop] = useState(
+    window.matchMedia("(min-width: 1024px)").matches,
+  );
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)");
+    const listener = () => setIsDesktop(media.matches);
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
+  }, []);
+
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
 
@@ -54,6 +66,13 @@ function SidebarPopup({
     }
   };
 
+  const resolvedWidth =
+    typeof width === "number"
+      ? `${width}%`
+      : typeof width === "string"
+        ? width
+        : null;
+
   const popupContent = (
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
@@ -64,12 +83,19 @@ function SidebarPopup({
 
       {/* Main Popup */}
       <div
-        className={`relative bg-white shadow-xl overflow-hidden transition-all duration-300 max-w-full h-screen flex flex-col ${
-          isExpanded
-            ? "w-full"
-            : // : `${`w-full sm:w-full md:w-full `title === "out" ? : }`
-              "w-full sm:w-full md:w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2"
+        // className={`relative bg-white shadow-xl overflow-hidden transition-all duration-300 max-w-full h-screen flex flex-col ${
+        //   isExpanded
+        //     ? "w-full"
+        //     : "w-full sm:w-full md:w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2"
+        // }`}
+        className={`relative bg-white shadow-xl overflow-hidden transition-all duration-300 max-w-full h-screen flex flex-col w-full ${
+          !isExpanded && !resolvedWidth ? "xl:w-1/2 2xl:w-1/2" : ""
         }`}
+        style={
+          !isExpanded && resolvedWidth && isDesktop
+            ? { width: resolvedWidth }
+            : undefined
+        }
       >
         {/* Header */}
         <div className="sticky top-0 bg-white px-4 py-3 z-10">

@@ -372,7 +372,6 @@ const handleCorrectAnswerChange = (index) => {
 
   useEffect(() => {
     if (isEdit && Object.keys(question).length > 0) {
-      console.log("1. DEBUG: Initialized MCQ State =========================>:", question);
 
       setFormData({
         questionText: question.questionText || "",
@@ -437,7 +436,6 @@ const handleCorrectAnswerChange = (index) => {
           isEditing: false,
           isCorrect: typeof opt === 'object' ? !!opt.isCorrect : false,
         }));
-        console.log("2. DEBUG: Initialized MCQ State: ======================>", initializedOptions);
 
         setMcqOptions(initializedOptions);
         setShowMcqFields(true);
@@ -878,8 +876,6 @@ const handleCorrectAnswerChange = (index) => {
     }
 
     console.log("questionData", questionData);
-    console.log("4. DEBUG: Full Submission Object ==========================> :", questionData);
-
     try {
       // Use saveOrUpdateQuestion mutation instead of direct axios call
       const questionResponse = await saveOrUpdateQuestion({
@@ -1236,8 +1232,7 @@ const handleCorrectAnswerChange = (index) => {
   // };
   const handleOptionChange = (index, e) => {
   const newValue = e.target.value;
-  console.log(`3. DEBUG: Option Index ${index} changing to : ===================>`, newValue);
-  
+
     setMcqOptions((prevOptions) => {
       const newOptions = [...prevOptions];
       newOptions[index] = { ...newOptions[index], option: newValue };
@@ -2178,15 +2173,15 @@ const handleCorrectAnswerChange = (index) => {
                                 ))} */}
                                 {mcqOptions.map((opt, idx) => (
                                   opt.isCorrect && opt.option.trim() !== "" && (
-                                    <span key={idx} className="bg-custom-blue text-white px-3 py-1 rounded-full text-xs font-bold">
-                                      {/* FIX: Access the string property '.option' (or .optionText depending on your state) */}
-                                      {optionLabels[idx]}) {opt.option} 
+                                    <span key={idx} className="bg-custom-blue text-white px-3 py-2 rounded-sm text-xs font-bold">
+                                      {/* {optionLabels[idx]}) {opt.option}  */}
+                                      {optionLabels[idx]}
                                     </span>
                                   )
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-red-400 text-sm italic">No option marked as correct yet.</span>
+                              <span className="text-red-400 text-sm">No option marked as correct yet.</span>
                             )}
                           </div>
                         </div>
