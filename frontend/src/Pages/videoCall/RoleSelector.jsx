@@ -631,7 +631,9 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                 //  className={`w-full sm:text-sm md:text-sm ${
                 // isButtonEnabled && isFinalStatus
                 // isStatusDisabled ||
-                disabled={!isButtonEnabled || !isFinalStatus}
+                disabled={
+                  // !isButtonEnabled ||
+                  !isFinalStatus}
                 className={`w-full sm:text-sm md:text-sm ${!isStatusDisabled && isButtonEnabled && isFinalStatus
                   ? "bg-custom-blue hover:bg-custom-blue/90"
                   : "bg-gray-400 cursor-not-allowed"

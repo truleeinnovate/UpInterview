@@ -72,6 +72,7 @@ const createFeedback = async (req, res) => {
       questionFeedback,
       generalComments,
       overallImpression,
+      isMockInterview,
       status,
       feedbackCode,
     } = req.body; //validatedData;
@@ -193,6 +194,7 @@ const createFeedback = async (req, res) => {
             generalComments: generalComments || "",
             overallImpression: overallImpression || {},
             status: "draft",
+            isMockInterview,
           },
         },
         {
@@ -767,18 +769,32 @@ const updateFeedback = async (req, res) => {
 const getfeedbackById = async (req, res) => {
   try {
     const { id } = req.params;
-    const feedback = await FeedbackModel.findById(id)
+    // First get feedback without populating interviewRoundId
+    let feedback = await FeedbackModel.findById(id)
       .populate("candidateId", "FirstName LastName Email Phone")
       .populate("positionId", "title companyname jobDescription")
-      .populate("interviewRoundId", "roundTitle interviewMode interviewType")
       .populate("interviewerId", "firstName lastName")
-      .populate("ownerId", "firstName lastName email");
+      .populate("ownerId", "firstName lastName email")
+      .lean();
+
     if (!feedback) {
       return res.status(404).json({
         success: false,
         message: "Feedback not found",
       });
     }
+
+    // Conditionally populate interviewRoundId based on isMockInterview
+    if (feedback.interviewRoundId) {
+      const RoundModel = feedback.isMockInterview
+        ? MockInterviewRound
+        : InterviewRounds;
+      const roundData = await RoundModel.findById(feedback.interviewRoundId)
+        .select("roundTitle interviewMode interviewType")
+        .lean();
+      feedback.interviewRoundId = roundData || feedback.interviewRoundId;
+    }
+
     return res.status(200).json({
       success: true,
       message: "Feedback retrieved successfully",
@@ -796,25 +812,44 @@ const getfeedbackById = async (req, res) => {
 
 const getAllFeedback = async (req, res) => {
   try {
-    const feedback = await FeedbackModel.find()
+    // Get all feedback without populating interviewRoundId
+    let feedbackList = await FeedbackModel.find()
       .populate("candidateId", "FirstName LastName Email Phone")
       .populate("positionId", "title companyname jobDescription")
-      .populate("interviewRoundId", "roundTitle interviewMode interviewType")
       .populate("interviewerId", "firstName lastName")
-      .populate("ownerId", "firstName lastName email");
-    if (!feedback) {
+      .populate("ownerId", "firstName lastName email")
+      .lean();
+
+    if (!feedbackList || feedbackList.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Feedback not found",
       });
     }
+
+    // Conditionally populate interviewRoundId for each feedback based on isMockInterview
+    const populatedFeedback = await Promise.all(
+      feedbackList.map(async (feedback) => {
+        if (feedback.interviewRoundId) {
+          const RoundModel = feedback.isMockInterview
+            ? MockInterviewRound
+            : InterviewRounds;
+          const roundData = await RoundModel.findById(feedback.interviewRoundId)
+            .select("roundTitle interviewMode interviewType")
+            .lean();
+          feedback.interviewRoundId = roundData || feedback.interviewRoundId;
+        }
+        return feedback;
+      })
+    );
+
     return res.status(200).json({
       success: true,
       message: "Feedback retrieved successfully",
-      data: feedback,
+      data: populatedFeedback,
     });
   } catch (error) {
-    console.error("Error getting feedback by ID:", error);
+    console.error("Error getting all feedback:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error while getting feedback",
@@ -1356,8 +1391,8 @@ const validateFeedback = async (req, res) => {
       errors,
       value: validatedData,
     } = isUpdate
-      ? validateUpdateFeedback(req.body)
-      : validateCreateFeedback(req.body);
+        ? validateUpdateFeedback(req.body)
+        : validateCreateFeedback(req.body);
 
     if (!isValid) {
       return res.status(400).json({

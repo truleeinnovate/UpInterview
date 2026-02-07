@@ -150,7 +150,7 @@ const FeedbackForm = ({
     return locationFeedback || feedbackDatas || {};
   }, [locationFeedback, feedbackDatas]);
 
-  console.log("feedbackData", feedbackData);
+  // console.log("feedbackData", feedbackData);
 
   const [interviewerSectionData, setInterviewerSectionData] = useState(() => {
     if (!feedbackData?.questionFeedback) return [];
@@ -757,6 +757,7 @@ const FeedbackForm = ({
       undefined,
     ownerId: currentOwnerId,
     feedbackId: autoSaveFeedbackId,
+    isMockInterview: urlData?.interviewType === "mockinterview" || false,
     feedbackCode:
       feedbackData?.rounds?.[0]?.interviewCode ||
       "" + "-" + (feedbackData?.rounds?.[0]?.sequence || ""),
@@ -1329,9 +1330,8 @@ const FeedbackForm = ({
           "",
         candidateId: candidateData?._id || "",
         feedbackCode:
-          feedbackData?.rounds[0]?.interviewCode ||
-          "" + "-" + feedbackData?.rounds[0]?.sequence ||
-          "",
+          feedbackDatas?.interviewRound?.interviewCode ||
+          "" + "-" + (feedbackDatas?.interviewRound?.sequence || ""),
         positionId:
           positionId ||
           positionData?._id ||

@@ -241,6 +241,8 @@ const InterviewsMiniTabComponent = ({
       undefined,
     ownerId: currentOwnerId,
     feedbackId: autoSaveFeedbackId,
+    isMockInterview: urlData?.interviewType === "mockinterview" || false,
+
     feedbackCode:
       feedbackData?.rounds?.[0]?.interviewCode ||
       "" + "-" + (feedbackData?.rounds?.[0]?.sequence || ""),
