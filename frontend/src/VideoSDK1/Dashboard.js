@@ -93,20 +93,22 @@ const Dashboard = () => {
   const positionData = isMockInterview ? {} : interviewData?.positionId;
 
   const interviewRoundData =
-    interviewData?.rounds[0] || mockinterview?.rounds[0] || {};
+    interviewData?.rounds?.[0] || mockinterview?.rounds?.[0] || {};
 
-  const FinalName = urlData?.isCandidate ? candidateData?.FirstName + " " + candidateData?.LastName :
-    // isMockInterview ?
-    interviewerDetails?.interviewers[0]?.FirstName + " " + interviewerDetails?.interviewerId[0]?.LastName
-  // : interviewerDetails?.interviewers[0]?.FirstName + " " + interviewerDetails?.interviewerId?.LastName
+  const FinalName = urlData?.isCandidate
+    ? (candidateData?.FirstName || "") + " " + (candidateData?.LastName || "")
+    : (interviewRoundData?.interviewers?.[0]?.FirstName || interviewRoundData?.interviewers?.[0]?.firstName || "") +
+    " " +
+    (interviewRoundData?.interviewers?.[0]?.LastName || interviewRoundData?.interviewers?.[0]?.lastName || "");
 
+  console.log("interviewRoundData1", interviewRoundData);
 
   // const interviewRoundData = interviewData?.rounds[0] || {};
 
   // console.log("data", interviewData);
   console.log("candidateData1", candidateData);
   // console.log("positionData1", positionData);
-  console.log("interviewRoundData1", interviewRoundData);
+
 
   const navigate = useNavigate();
   const [isAuthChecking, setIsAuthChecking] = useState(true);

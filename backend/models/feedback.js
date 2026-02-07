@@ -66,7 +66,7 @@ const feedbackSchema = new mongoose.Schema(
     },
     interviewRoundId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "InterviewRounds",
+      // ref: "InterviewRounds",
     }, // reference to interview session
 
     candidateId: {

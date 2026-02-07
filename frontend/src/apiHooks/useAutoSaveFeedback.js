@@ -23,6 +23,8 @@ const useAutoSaveFeedback = ({
   candidateId,
   positionId,
   ownerId,
+  feedbackCode,
+  isMockInterview,
   feedbackId, // For PATCH operations if feedback already exists
 }) => {
   const timeoutRef = useRef(null);
@@ -54,7 +56,9 @@ const useAutoSaveFeedback = ({
     candidateId,
     positionId,
     ownerId,
+    feedbackCode,
     feedbackId, // For PATCH operations if feedback already exists
+    isMockInterview
   });
 
   // Prepare feedback payload
@@ -70,10 +74,10 @@ const useAutoSaveFeedback = ({
       skills:
         skillRatings.length > 0
           ? skillRatings.map((skill) => ({
-              skillName: skill.skill,
-              rating: skill.rating,
-              note: skill.comments || "",
-            }))
+            skillName: skill.skill,
+            rating: skill.rating,
+            note: skill.comments || "",
+          }))
           : undefined,
       questionFeedback: [
         // Interviewer section questions
@@ -110,6 +114,7 @@ const useAutoSaveFeedback = ({
           },
         })),
       ],
+      isMockInterview: isMockInterview,
       generalComments: comments || "",
       overallImpression: {
         overallRating: overallRating || 0,
@@ -132,7 +137,9 @@ const useAutoSaveFeedback = ({
     comments,
     overallRating,
     communicationRating,
+    isMockInterview,
     recommendation,
+    feedbackCode
     // feedbackId,
   ]);
 
