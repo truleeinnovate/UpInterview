@@ -244,17 +244,13 @@ export const OutsourcedInterviewerCard = ({
                   {capitalizeFirstLetter(fullName)}
                 </h3>
 
-                {currentRole && (
-                  <p className="text-sm text-gray-500 mt-0.2">
-                    {capitalizeFirstLetter(currentRole) || "Role not specified"}
-                  </p>
-                )}
+                {/* {currentRole && ( */}
+                <p className="text-sm text-gray-500 mt-0.2">
+                  {capitalizeFirstLetter(currentRole) || "Role not specified"}
+                </p>
+                {/* )} */}
 
-                {source !== "internal-interview" ? null : (
-                  <p className="text-sm text-gray-500 mt-0.1">
-                    {interviewerEmail}
-                  </p>
-                )}
+
               </div>
 
               {source === "internal-interview" ? null : (
@@ -306,10 +302,12 @@ export const OutsourcedInterviewerCard = ({
         )} */}
 
         <div className="mt-3">
-          {/* {source === "internal-interview" ? null : ( */}
-          {/* <p className="text-sm mt-1">{capitalizeFirstLetter(companyName)}</p> */}
-          {/* )} */}
-          <div className="flex items-center space-x-[2px] text-xs text-gray-500">
+           {source !== "internal-interview" ? null : (
+            <p className="text-sm text-gray-500 mt-0.1">
+              {interviewerEmail}
+            </p>
+          )}
+          <div className="flex mt-1 items-center space-x-[2px] text-xs text-gray-500">
             <Building size={14} className="text-black" />
             <span className="truncate">
               {companyName
@@ -318,8 +316,11 @@ export const OutsourcedInterviewerCard = ({
             </span>
           </div>
 
+         
+
           {source === "internal-interview" ? null : (
             <>
+
               <div
                 ref={textRef}
                 className={`text-sm text-gray-600 leading-relaxed ${isExpanded ? "" : "line-clamp-5"
@@ -1918,7 +1919,7 @@ function OutsourcedInterviewerModal({
                       </div>
                       {/* <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-3 flex items-end mt-6"> */}
                       <button
-                        className={`w-full md:col-span-4  mt-6 lg:col-span-4 xl:col-span-5 2xl:col-span-2 h-10 px-4 text-sm rounded-md  duration-200 flex items-center justify-center whitespace-nowrap
+                        className={`w-full md:col-span-2 items-center mt-6 lg:col-span-2 xl:col-span-2 2xl:col-span-2 h-10 px-4 text-sm rounded-md  duration-200 flex items-center justify-center whitespace-nowrap
                             ${isFiltersApplied
                             ? "bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
                             : "bg-custom-blue text-white hover:bg-custom-blue/90"

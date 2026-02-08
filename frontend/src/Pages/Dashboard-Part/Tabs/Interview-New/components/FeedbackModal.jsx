@@ -20,7 +20,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
   const [isConsolidatedFeedback, setIsConsolidatedFeedback] = useState(true);
 
   // Get interviewers for this round
-  const interviewers = round.interviewers
+  const interviewers = round?.interviewers
     // .map(id => getInterviewerById(id))
     // .filter(Boolean);
     
@@ -41,7 +41,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
 
   useEffect(() => {
     // If there's only one interviewer, select them by default
-    if (interviewers.length === 1 && interviewers[0]) {
+    if (interviewers?.length === 1 && interviewers[0]) {
       setSelectedInterviewer(interviewers[0].id);
     }
   }, [interviewers]);
@@ -93,7 +93,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
       return;
     }
 
-    if (interviewers.length > 1 && !selectedInterviewer && !isConsolidatedFeedback) {
+    if (interviewers?.length > 1 && !selectedInterviewer && !isConsolidatedFeedback) {
       setError('Please select an interviewer or choose consolidated feedback');
       return;
     }
@@ -143,7 +143,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-foreground">Feedback for: {round.name}</h2>
+          <h2 className="text-xl font-semibold text-foreground">Feedback for: {round?.name}</h2>
           <Button
             onClick={onClose}
             variant="ghost"
@@ -160,7 +160,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
             </div>
           )}
           
-          {interviewers.length > 1 && (
+          {interviewers?.length > 1 && (
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md">
               <div className="flex items-center mb-3">
                 <Users className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
@@ -308,7 +308,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
                     variant="ghost"
                     size="icon"
                     className="text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
-                    disabled={skillRatings.length <= 1}
+                    disabled={skillRatings?.length <= 1}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -350,7 +350,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
                     variant="ghost"
                     size="icon"
                     className="text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
-                    disabled={questionsAsked.length <= 1}
+                    disabled={questionsAsked?.length <= 1}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
