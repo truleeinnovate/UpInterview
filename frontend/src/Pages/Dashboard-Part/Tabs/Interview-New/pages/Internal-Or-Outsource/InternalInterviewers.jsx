@@ -57,7 +57,10 @@ const InternalInterviews = ({
 
   // CHANGED: Use props as initial state
   // Add this state with other state declarations
-  const [isFiltersApplied, setIsFiltersApplied] = useState(false);
+  // Auto-apply filter if parent passes tags or teams
+  const [isFiltersApplied, setIsFiltersApplied] = useState(
+    () => (propSelectedTagIds?.length > 0 || propSelectedTeamIds?.length > 0)
+  );
 
   const [activeTagIds, setActiveTagIds] = useState(propSelectedTagIds || []);
   const [activeTeamIds, setActiveTeamIds] = useState(propSelectedTeamIds || []);
@@ -156,9 +159,6 @@ const InternalInterviews = ({
     const propTeamSet = new Set(propSelectedTeamIds || []);
     const activeTagSet = new Set(activeTagIds || []);
     const activeTeamSet = new Set(activeTeamIds || []);
-    // const selectedSkillSet = new Set(
-    //   selectedSkills.map((s) => s.toLowerCase()),
-    // );
     const selectedSkillSet = new Set(
       selectedSkills.map((s) =>
         typeof s === "string"
@@ -168,55 +168,105 @@ const InternalInterviews = ({
     );
     const searchLower = searchQuery.toLowerCase().trim();
 
+    // Helper function to check if interviewer matches filter criteria
+    const matchesFilters = (interviewer) => {
+      const teamId = interviewer.team_id?._id || interviewer.team_id;
+      const tags = interviewer.tag_ids || interviewer.tags || [];
+
+      // If filters are applied, check each active filter
+      if (isFiltersApplied) {
+        let matchesTeam = true;
+        let matchesTags = true;
+        let matchesSkills = true;
+
+        // Check team filter (if any teams are selected)
+        if (activeTeamIds.length > 0) {
+          matchesTeam = teamId && activeTeamSet.has(teamId);
+        }
+
+        // Check tags filter (if any tags are selected) - OR logic
+        if (activeTagIds.length > 0) {
+          matchesTags = tags.some((t) => {
+            const tid = t?._id || t;
+            return tid && activeTagSet.has(tid);
+          });
+        }
+
+        // Check skills filter (if any skills are selected) - OR logic
+        if (selectedSkills.length > 0) {
+          const interviewerSkills = interviewer.contactId?.skills || [];
+          matchesSkills = interviewerSkills.some((s) =>
+            selectedSkillSet.has(s.toLowerCase()),
+          );
+        }
+
+        // Must match ALL active filter types (AND between filter types)
+        // But within each filter type, it's OR (e.g., tag1 OR tag2)
+        const hasTeamFilter = activeTeamIds.length > 0;
+        const hasTagFilter = activeTagIds.length > 0;
+        const hasSkillFilter = selectedSkills.length > 0;
+
+        // If no filters are selected, show all
+        if (!hasTeamFilter && !hasTagFilter && !hasSkillFilter) {
+          return true;
+        }
+
+        // Check each active filter
+        if (hasTeamFilter && !matchesTeam) return false;
+        if (hasTagFilter && !matchesTags) return false;
+        if (hasSkillFilter && !matchesSkills) return false;
+
+        return true;
+      }
+
+      return true; // If filters not applied, show all
+    };
+
+    // Helper function to check if interviewer matches search query
+    const matchesSearch = (interviewer) => {
+      if (!searchLower) return true;
+
+      const name =
+        `${interviewer.contactId?.firstName || ""} ${interviewer.contactId?.lastName || ""}`.toLowerCase();
+      const email = interviewer.contactId?.email?.toLowerCase() || "";
+
+      return name.includes(searchLower) || email.includes(searchLower);
+    };
+
+    // Priority scoring for sorting matched results
     const getPriority = (interviewer) => {
       let score = 0;
 
+      const teamId = interviewer.team_id?._id || interviewer.team_id;
+      const tags = interviewer.tag_ids || interviewer.tags || [];
+
+      // ── 1. Parent (prop) match ─ highest priority ──
+      if (teamId && propTeamSet.has(teamId)) {
+        score += 1000;
+      }
+
+      const hasPropTag = tags.some((t) => {
+        const tid = t?._id || t;
+        return tid && propTagSet.has(tid);
+      });
+      if (hasPropTag) {
+        score += 900;
+      }
+
+      // ── 2. Current UI filters match ──
       if (isFiltersApplied) {
-        // ── 1. Parent (prop) match ─ highest priority ──
-        const teamId = interviewer.team_id?._id || interviewer.team_id;
-        if (teamId && propTeamSet.has(teamId)) {
-          score += 1000;
+        if (activeTeamIds.length > 0 && teamId && activeTeamSet.has(teamId)) {
+          score += 500;
         }
 
-        const tags = interviewer.tag_ids || interviewer.tags || [];
-        const hasPropTag = tags.some((t) => {
-          const tid = t?._id || t;
-          return tid && propTagSet.has(tid);
-        });
-        if (hasPropTag) {
-          score += 900;
-        }
-
-        // ── 2. Current UI filters match ──
-        let matchesCurrent = false;
-
-        // Teams
-        if (activeTeamIds.length > 0) {
-          if (teamId && activeTeamSet.has(teamId)) {
-            matchesCurrent = true;
-          }
-        } else {
-          matchesCurrent = true; // no team filter → neutral
-        }
-
-        // Tags (OR)
         if (activeTagIds.length > 0) {
           const hasActiveTag = tags.some((t) => {
             const tid = t?._id || t;
             return tid && activeTagSet.has(tid);
           });
-          if (hasActiveTag) {
-            matchesCurrent = true;
-          } else if (activeTeamIds.length === 0) {
-            matchesCurrent = false; // only tags filter active → must match
-          }
+          if (hasActiveTag) score += 400;
         }
 
-        if (matchesCurrent) {
-          score += 500;
-        }
-
-        // ── 3. Skills match ──
         if (selectedSkills.length > 0) {
           const hasSkill = (interviewer.contactId?.skills || []).some((s) =>
             selectedSkillSet.has(s.toLowerCase()),
@@ -225,39 +275,31 @@ const InternalInterviews = ({
         }
       }
 
-      // ── 4. Search match ──
-      if (searchLower) {
-        const name =
-          `${interviewer.contactId?.firstName || ""} ${interviewer.contactId?.lastName || ""}`.toLowerCase();
-        const email = interviewer.contactId?.email?.toLowerCase() || "";
-        if (name.includes(searchLower) || email.includes(searchLower)) {
-          score += 100;
-        }
-      }
-
       return score;
     };
 
-    // Sort descending by priority score, then alphabetically
-    return [...interviewers].sort((a, b) => {
-      const scoreA = getPriority(a);
-      const scoreB = getPriority(b);
+    // First filter, then sort
+    return [...interviewers]
+      .filter((interviewer) => matchesFilters(interviewer) && matchesSearch(interviewer))
+      .sort((a, b) => {
+        const scoreA = getPriority(a);
+        const scoreB = getPriority(b);
 
-      if (scoreA !== scoreB) {
-        return scoreB - scoreA; // higher score first
-      }
+        if (scoreA !== scoreB) {
+          return scoreB - scoreA; // higher score first
+        }
 
-      // Alphabetical fallback
-      const nameA =
-        `${a.contactId?.firstName || ""} ${a.contactId?.lastName || ""}`
-          .toLowerCase()
-          .trim();
-      const nameB =
-        `${b.contactId?.firstName || ""} ${b.contactId?.lastName || ""}`
-          .toLowerCase()
-          .trim();
-      return nameA.localeCompare(nameB);
-    });
+        // Alphabetical fallback
+        const nameA =
+          `${a.contactId?.firstName || ""} ${a.contactId?.lastName || ""}`
+            .toLowerCase()
+            .trim();
+        const nameB =
+          `${b.contactId?.firstName || ""} ${b.contactId?.lastName || ""}`
+            .toLowerCase()
+            .trim();
+        return nameA.localeCompare(nameB);
+      });
   }, [
     interviewers,
     propSelectedTagIds,
@@ -528,7 +570,7 @@ const InternalInterviews = ({
       onClose={onClose}
       // v1.0.2 <--------------------------------
       setIsFullscreen={setIsFullscreen}
-      // v1.0.2 -------------------------------->
+    // v1.0.2 -------------------------------->
     >
       <div className="pb-10">
         {/* <------------------------------- v1.0.0  */}
@@ -590,11 +632,10 @@ const InternalInterviews = ({
                               setFilterType(type);
                               setShowFilterDropdown(false);
                             }}
-                            className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${
-                              filterType === type
-                                ? "font-medium text-custom-blue"
-                                : ""
-                            }`}
+                            className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${filterType === type
+                              ? "font-medium text-custom-blue"
+                              : ""
+                              }`}
                           >
                             {capitalizeFirstLetter(type)}
                           </div>
@@ -621,6 +662,7 @@ const InternalInterviews = ({
                     <DropdownWithSearchField
                       ref={skillsInputRef}
                       value={null}
+                      isDisabled={isFiltersApplied}
                       options={
                         skills
                           ?.filter(
@@ -635,6 +677,7 @@ const InternalInterviews = ({
                           })) || []
                       }
                       onChange={(option) => {
+                        if (isFiltersApplied) return; // Prevent changes when filters applied
                         if (!option) return;
 
                         const value = option?.value || option?.target?.value;
@@ -665,31 +708,32 @@ const InternalInterviews = ({
                   </div>
 
                   {/* Add this Apply/Clear Filter button */}
-                  <div className="md:col-span-3 lg:col-span-3 xl:col-span-2 2xl:col-span-3 flex items-end h-full">
-                    <button
-                      className={`w-full text-sm px-3 h-10 rounded-md font-medium transition-colors flex items-center justify-center whitespace-nowrap ${
-                        isFiltersApplied
-                          ? "bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
-                          : "bg-custom-blue text-white hover:bg-custom-blue/90"
+                  {/* <div className="md:col-span-3 lg:col-span-3 xl:col-span-2 2xl:col-span-3 flex items-end h-full"> */}
+                  {/* <div className="md:col-span-4 lg:col-span-4 xl:col-span-5 2xl:col-span-2"> */}
+                  <button
+                    className={`w-full md:col-span-4 lg:col-span-4 xl:col-span-5 2xl:col-span-2 text-sm px-3 h-10 rounded-md font-medium transition-colors flex items-center justify-center whitespace-nowrap ${isFiltersApplied
+                      ? "bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
+                      : "bg-custom-blue text-white hover:bg-custom-blue/90"
                       }`}
-                      onClick={() => {
-                        if (isFiltersApplied) {
-                          // Clear all filters
-                          setSearchQuery("");
-                          setActiveTagIds(propSelectedTagIds || []);
-                          setActiveTeamIds(propSelectedTeamIds || []);
-                          setSelectedSkills([]);
-                          setFilterType("tags");
-                          setIsFiltersApplied(false);
-                        } else {
-                          // Mark filters as applied (existing states will be used)
-                          setIsFiltersApplied(true);
-                        }
-                      }}
-                    >
-                      {isFiltersApplied ? "Clear Filter" : "Apply Filter"}
-                    </button>
-                  </div>
+                    onClick={() => {
+                      if (isFiltersApplied) {
+                        // Clear all filters including parent data - show all interviewers
+                        setSearchQuery("");
+                        setActiveTagIds([]);
+                        setActiveTeamIds([]);
+                        setSelectedSkills([]);
+                        setFilterType("tags");
+                        setIsFiltersApplied(false);
+                      } else {
+                        // Mark filters as applied (existing states will be used)
+                        setIsFiltersApplied(true);
+                      }
+                    }}
+                  >
+                    {isFiltersApplied ? "Clear Filter" : "Apply Filter"}
+                  </button>
+                  {/* </div> */}
+                  {/* </div> */}
                 </div>
 
                 {/* Fixed Dropdown and Search Section */}
@@ -710,18 +754,20 @@ const InternalInterviews = ({
                             <button
                               key={tag._id}
                               type="button"
-                              onClick={() =>
-                                toggleSelection(tag._id, setActiveTagIds)
-                              }
+                              disabled={isFiltersApplied}
+                              onClick={() => {
+                                if (isFiltersApplied) return;
+                                toggleSelection(tag._id, setActiveTagIds);
+                              }}
                               className={`
             flex items-center gap-1.5 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${
-              isSelected
-                ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
-                : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
-            }
+            ${isFiltersApplied ? "opacity-60 cursor-not-allowed" : ""}
+            ${isSelected
+                                  ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
+                                  : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
+                                }
           `}
                               style={{ "--tag-color": tag.color }}
                             >
@@ -770,18 +816,20 @@ const InternalInterviews = ({
                             <button
                               key={team._id}
                               type="button"
-                              onClick={() =>
-                                toggleSelection(team._id, setActiveTeamIds)
-                              }
+                              disabled={isFiltersApplied}
+                              onClick={() => {
+                                if (isFiltersApplied) return;
+                                toggleSelection(team._id, setActiveTeamIds);
+                              }}
                               className={`
             flex items-center gap-2 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${
-              isSelected
-                ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
-                : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
-            }
+            ${isFiltersApplied ? "opacity-60 cursor-not-allowed" : ""}
+            ${isSelected
+                                  ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
+                                  : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
+                                }
           `}
                             >
                               <span className="text-base">👥</span>
@@ -817,12 +865,14 @@ const InternalInterviews = ({
                         >
                           {skill}
                           <button
-                            onClick={() =>
+                            disabled={isFiltersApplied}
+                            onClick={() => {
+                              if (isFiltersApplied) return;
                               setSelectedSkills((prev) =>
                                 prev.filter((s) => s !== skill),
-                              )
-                            }
-                            className="ml-1 text-gray-500 hover:text-red-500"
+                              );
+                            }}
+                            className={`ml-1 ${isFiltersApplied ? "opacity-50 cursor-not-allowed text-gray-400" : "text-gray-500 hover:text-red-500"}`}
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -861,10 +911,9 @@ const InternalInterviews = ({
 
             className={`
               grid gap-4 sm:gap-5 px-1 sm:px-2
-              ${
-                isFullscreen
-                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
-                  : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
+              ${isFullscreen
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3"
+                : "grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1"
               }
             `}
           >
@@ -878,10 +927,10 @@ const InternalInterviews = ({
                 className={`
                   ${navigatedfrom === "dashboard" && "transition-all duration-200"}
                   ${
-                    // navigatedfrom !== "dashboard"
-                    //   ? "cursor-pointer"
-                    //   :
-                    navigatedfrom === "dashboard" && "cursor-default"
+                  // navigatedfrom !== "dashboard"
+                  //   ? "cursor-pointer"
+                  //   :
+                  navigatedfrom === "dashboard" && "cursor-default"
                   }
                 
                   `}
