@@ -60,7 +60,6 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
       sendEmails = true, // Default to true, can be controlled by caller
       type
     } = req.body;
-    console.log("sendInterviewRoundEmails");
 
 
     // Set company name and support email from environment variables or defaults
@@ -560,7 +559,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           // const meetingLink = round.meetingId;
 
           // if (meetingLink && meetingLink.length > 0) {
-          const encryptedInterviewerId = encryptData(interviewer._id);
+          const encryptedInterviewerId = encryptData(interviewer._id);//passing contact id
           const encryptedOwnerId = encryptData(interviewer.ownerId);
           // const interviewerLink = `${baseUrl}?interviewer=true&meeting=${encodeURIComponent(
           //   encryptedMeetingLink
@@ -633,7 +632,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{position}}/g, position);
 
         // if (meetingLink && meetingLink.length > 0) {
-        const encryptedSchedulerId = encryptData(scheduler?._id);
+        const encryptedSchedulerId = encryptData(scheduler?._id);//passing contact id
         const encryptedSchedulerOwnerId = encryptData(scheduler?.ownerId);
         // const schedulerLink = `${baseUrl}?scheduler=true&meeting=${encodeURIComponent(
         //   encryptedMeetingLink

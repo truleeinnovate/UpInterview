@@ -301,10 +301,7 @@ const RoundCard = ({
         }
       }
 
-      console.log("payload", payload);
-
-      let response = await updateRoundStatus(payload);
-      console.log("response updateRoundStatus", response);
+      await updateRoundStatus(payload);
 
       // await updateRoundStatus({
       //   roundId: round?._id,
@@ -315,13 +312,7 @@ const RoundCard = ({
       // Show success toast
       notify.success(`Round Status updated to ${newStatus}`, {});
     } catch (error) {
-      const response = error?.response?.data;
-
-      if (response?.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
-        notify.error(response?.message);
-        setEvaluatedReasonModalOpen(false);
-      }
-      // console.error("Error updating status:", error);
+      console.error("Error updating status:", error);
     }
   };
 
@@ -422,7 +413,9 @@ const RoundCard = ({
         setActionInProgress(false);
       }
     } catch (error) {
-
+      if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
+        notify.error(error.message);
+      }
       setActionInProgress(false);
     }
   };

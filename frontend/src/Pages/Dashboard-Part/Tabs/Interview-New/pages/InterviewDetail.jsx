@@ -491,24 +491,6 @@ const InterviewDetail = () => {
     }
   };
 
-  // const updateInterviewStatus = async (newStatus, reason = null) => {
-  //   if (rounds) {
-  //     const interviewData = {
-  //       status: newStatus,
-  //       ...(reason && { completionReason: reason }) // Add reason only if provided
-  //     };
-
-  //     try {
-  //       await axios.post(`${config.REACT_APP_API_URL}/interview`, {
-  //         ...interviewData,
-  //         interviewId: id,
-  //         updatingInterviewStatus: true
-  //       });
-  //     } catch (error) {
-  //       console.error("Error updating interview status:", error);
-  //     }
-  //   }
-  // };
 
   const handleUpdateStatus = async (newStatus, reason = null) => {
     try {
@@ -621,7 +603,7 @@ const InterviewDetail = () => {
       path: "/interviews",
     },
     {
-      label: candidate?.LastName || "Interview",
+      label: interview?.interviewCode || "Interview",
       path: `/interviews/${id}`,
       // status: interview?.status,
     },
