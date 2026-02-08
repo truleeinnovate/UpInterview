@@ -711,7 +711,7 @@ const InternalInterviews = ({
                   {/* <div className="md:col-span-3 lg:col-span-3 xl:col-span-2 2xl:col-span-3 flex items-end h-full"> */}
                   {/* <div className="md:col-span-4 lg:col-span-4 xl:col-span-5 2xl:col-span-2"> */}
                   <button
-                    className={`w-full md:col-span-4 lg:col-span-4 xl:col-span-5 2xl:col-span-2 text-sm px-3 h-10 rounded-md font-medium transition-colors flex items-center justify-center whitespace-nowrap ${isFiltersApplied
+                    className={`w-full md:col-span-2 items-center lg:col-span-2 xl:col-span-2 2xl:col-span-2 h-10 px-4 text-sm rounded-md  duration-200 flex items-center justify-center whitespace-nowrap ${isFiltersApplied
                       ? "bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
                       : "bg-custom-blue text-white hover:bg-custom-blue/90"
                       }`}

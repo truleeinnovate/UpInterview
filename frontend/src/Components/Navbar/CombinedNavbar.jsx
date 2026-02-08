@@ -1477,9 +1477,11 @@ const CombinedNavbar = React.memo(() => {
             </nav>
 
             {/* Global Search */}
+             {userType !== "superAdmin" && (
             <div className="hidden lg:flex xl:flex 2xl:flex items-center mr-4">
               <GlobalSearch />
             </div>
+            )}
 
             {/* Icons (both mobile and desktop) */}
             <div className="flex items-center space-x-2 sm:space-x-3">
