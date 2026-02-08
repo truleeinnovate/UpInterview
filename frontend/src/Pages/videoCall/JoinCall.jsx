@@ -237,7 +237,7 @@ function JoinMeeting() {
         redirectToLogin(authType === "individual");
         return false;
       }
-
+      //taking owner id from params
       const params = new URLSearchParams(location.search);
       const encryptedOwnerId = params.get("owner");
 
@@ -320,7 +320,7 @@ function JoinMeeting() {
       <RoleSelector
         onRoleSelect={setCurrentRole}
         roleInfo={urlRoleInfo}
-        // feedbackData={feedbackDatas}
+      // feedbackData={feedbackDatas}
       />
     );
   }

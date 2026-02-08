@@ -1,12 +1,15 @@
 // v1.0.0 - Ashok - Improved responsiveness
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import RoundCard from "./RoundCard";
 import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
 import { createJoinMeetingUrl } from "./joinMeeting";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
-
+import { useSingleContact } from "../../../../../apiHooks/useUsers";
+import { notify } from "../../../../../services/toastService.js";
+import { config } from "../../../../../config.js";
+import axios from "axios";
 const SingleRoundView = ({
   rounds,
   interviewData,
@@ -18,6 +21,8 @@ const SingleRoundView = ({
 }) => {
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
+  const { singleContact } = useSingleContact();
+  const [resendingRoundId, setResendingRoundId] = useState(null);
 
   // Find the current round index
   const currentIndex = sortedRounds.findIndex(
@@ -54,7 +59,10 @@ const SingleRoundView = ({
     return <div className="text-center py-8">No round selected</div>;
   }
   const handleJoinMeeting = (round) => {
-    const url = createJoinMeetingUrl(round, interviewData);
+
+    const url = createJoinMeetingUrl(round, interviewData, singleContact.contactId
+    );
+
 
     if (!url) {
       console.warn("No valid join URL");
@@ -66,6 +74,44 @@ const SingleRoundView = ({
 
     // Optional: prevent any default/fallback behavior
     // Do NOT add window.location or navigate here
+  };
+const isResending = resendingRoundId === currentRound._id;
+  const handleResendEmails = async (round) => {
+    if (!round?._id) return;
+
+    // Prevent action if already in progress
+    if (resendingRoundId === round._id) return;
+
+    setResendingRoundId(round._id);
+    try {
+      const payload = {
+        interviewId: interviewData?._id,
+        roundId: round._id,
+        sendEmails: true,
+        type: "interview"
+      };
+
+      const response = await axios.post(`${config.REACT_APP_API_URL}/emails/interview/round-emails`, payload);
+
+      if (response.data?.success) {
+        notify.success("Links resent successfully!", { id: "resend-emails" });
+      } else {
+        notify.error(response.data?.message || "Failed to resend links", {
+          id: "resend-emails",
+        });
+      }
+    } catch (err) {
+      console.error("Resend emails failed:", err);
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        "Something went wrong while resending links";
+
+      notify.error(message, { id: "resend-emails" });
+    } finally {
+      // Always clear loading state
+      setResendingRoundId(null);
+    }
   };
 
   return (
@@ -153,20 +199,45 @@ const SingleRoundView = ({
                 </span>
                 {currentRound?.meetPlatform &&
                   currentRound?.roundTitle !== "Assessment" && (
-                    <MeetPlatformBadge platform={currentRound?.meetPlatform} />
-                  )}
-                {(currentRound?.status === "Scheduled" ||
-                  currentRound?.status === "Rescheduled" ||
-                  currentRound?.status === "InProgress") && (
-                    <span
-                      onClick={(e) => {
-                        e.stopPropagation(); // ⛔ stop toggle
-                        handleJoinMeeting(currentRound); // ✅ join only
-                      }}
-                      className="cursor-pointer text-custom-blue hover:underline font-medium"
-                    >
-                      Join Meeting
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <MeetPlatformBadge platform={currentRound?.meetPlatform} />
+
+                      {(currentRound?.status === "Scheduled" ||
+                        currentRound?.status === "Rescheduled" ||
+                        currentRound?.status === "InProgress") && (
+                          <>
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation(); // ⛔ stop toggle
+                                handleJoinMeeting(currentRound); // ✅ join only
+                              }}
+                              className="cursor-pointer text-custom-blue hover:underline font-medium"
+                            >
+                              Join Meeting
+                            </span>
+                            {/* Vertical divider */}
+                            <div className="h-4 w-px bg-gray-300" aria-hidden="true" />
+                            {/* ─────────────── New Resend Links Button ─────────────── */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isResending) handleResendEmails(currentRound);
+                              }}
+                              disabled={isResending}
+                              className={`
+                            text-sm font-medium transition-colors
+                            ${isResending
+                                  ? "text-gray-400 cursor-not-allowed"
+                                  : "cursor-pointer text-custom-blue hover:underline"}
+                          `}
+                              title="Resend interview links to candidate, interviewers & scheduler"
+                            >
+                              {isResending ? "Resending..." : "Resend Links"}
+                            </button>
+                          </>
+                        )}
+                    </div>
                   )}
               </div>
             </div>
@@ -185,7 +256,7 @@ const SingleRoundView = ({
           hideHeader={true}
         />
       </div>
-    </div>
+    </div >
   );
 };
 

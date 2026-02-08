@@ -18,8 +18,8 @@ export const encryptData = (data) => {
     }
 };
 
-export const createJoinMeetingUrl = (round, interviewData) => {
-    if (!round?._id || !interviewData?._id || !interviewData?.ownerId) return null;
+export const createJoinMeetingUrl = (round, interviewData,contactId) => {
+    if (!round?._id || !interviewData?._id || !interviewData?.ownerId || !contactId) return null;
 
     let base = config.REACT_APP_API_URL_FRONTEND;
 
@@ -35,7 +35,7 @@ export const createJoinMeetingUrl = (round, interviewData) => {
     const baseUrl = `${base}/join-meeting`;
 
     const encryptedRoundId = encryptData(round._id);
-    const encryptedSchedulerId = encryptData(interviewData._id);
+    const encryptedSchedulerId = encryptData(contactId);
     const encryptedOwnerId = encryptData(interviewData.ownerId);
 
     if (!encryptedRoundId || !encryptedSchedulerId || !encryptedOwnerId) return null;

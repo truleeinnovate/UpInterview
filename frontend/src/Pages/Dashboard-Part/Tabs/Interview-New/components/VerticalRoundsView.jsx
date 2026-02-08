@@ -10,6 +10,10 @@ import { createJoinMeetingUrl } from "./joinMeeting";
 
 // import { useAssessments } from "../../../../../apiHooks/useAssessments";
 import { useScheduleAssessments } from "../../../../../apiHooks/useScheduleAssessments.js";
+import { useSingleContact } from "../../../../../apiHooks/useUsers";
+import { notify } from "../../../../../services/toastService.js";
+import { config } from "../../../../../config.js";
+import axios from "axios";
 
 const VerticalRoundsView = ({
   rounds,
@@ -22,10 +26,11 @@ const VerticalRoundsView = ({
   // const { scheduleData } = useScheduleAssessments();
   // Sort rounds by sequence
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
+  const { singleContact } = useSingleContact();
 
   // Track expanded rounds
   const [expandedRounds, setExpandedRounds] = useState({});
-
+  const [resendingRoundId, setResendingRoundId] = useState(null);
   // v1.0.1 <-------------------------------------------------------------------------------------
   // v1.0.0 <----------------------------------------------------------
   // Open first round by default
@@ -139,29 +144,63 @@ const VerticalRoundsView = ({
     }
   }
 
-const handleJoinMeeting = (round) => {
-  const url = createJoinMeetingUrl(round, interviewData);
+  const handleJoinMeeting = (round) => {
+    const url = createJoinMeetingUrl(round, interviewData, singleContact.contactId
+    );
 
-  if (!url) {
-    console.warn("No valid join URL");
-    return;
-  }
+    if (!url) {
+      console.warn("No valid join URL");
+      return;
+    }
 
-  // ONLY this line — no location.href, no useNavigate, no extra calls
-  window.open(url, '_blank', 'noopener,noreferrer');
+    // ONLY this line — no location.href, no useNavigate, no extra calls
+    window.open(url, '_blank', 'noopener,noreferrer');
 
-  // Optional: prevent any default/fallback behavior
-  // Do NOT add window.location or navigate here
-};
+    // Optional: prevent any default/fallback behavior
+    // Do NOT add window.location or navigate here
+  };
+
+  const handleResendEmails = async (round) => {
+    if (!round?._id) return;
+
+    // Prevent action if already in progress
+    if (resendingRoundId === round._id) return;
+
+    setResendingRoundId(round._id);
+    try {
+      const payload = {
+        interviewId: interviewData?._id,
+        roundId: round._id,
+        sendEmails: true,
+        type: "interview"
+      };
+
+      const response = await axios.post(`${config.REACT_APP_API_URL}/emails/interview/round-emails`, payload);
+
+      if (response.data?.success) {
+        notify.success("Links resent successfully!", { id: "resend-emails" });
+      } else {
+        notify.error(response.data?.message || "Failed to resend links", {
+          id: "resend-emails",
+        });
+      }
+    } catch (err) {
+      console.error("Resend emails failed:", err);
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        "Something went wrong while resending links";
+
+      notify.error(message, { id: "resend-emails" });
+    } finally {
+      // Always clear loading state
+      setResendingRoundId(null);
+    }
+  };
   return (
     <div className="space-y-4">
       {sortedRounds.map((round, index) => {
-        // let roundStatus =
-        //   round.roundTitle === "Assessment"
-        //     ? getAssessmentRoundStatus(round)
-        //     : round?.status;
-
-        // console.log("round round", round);
+        const isResending = resendingRoundId === round._id;
         return (
           <div
             key={round._id || `${round.sequence}-${index}`}
@@ -193,8 +232,8 @@ const handleJoinMeeting = (round) => {
                           ? "In Progress"
                           : round?.status === "FeedbackPending"
                             ? "Feedback Pending"
-                          : round?.status === "FeedbackSubmitted"
-                            ? "Feedback Submitted"
+                            : round?.status === "FeedbackSubmitted"
+                              ? "Feedback Submitted"
                               :
                               // : round?.status,
                               capitalizeFirstLetter(round?.status)}
@@ -215,15 +254,37 @@ const handleJoinMeeting = (round) => {
                           {(round?.status === "Scheduled" ||
                             round?.status === "Rescheduled" ||
                             round?.status === "InProgress") && (
-                              <span
-                                onClick={(e) => {
-                                  e.stopPropagation(); // ⛔ stop toggle
-                                  handleJoinMeeting(round); // ✅ join only
-                                }}
-                                className="cursor-pointer text-custom-blue hover:underline font-medium"
-                              >
-                                Join Meeting
-                              </span>
+                              <>
+                                <span
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // ⛔ stop toggle
+                                    handleJoinMeeting(round); // ✅ join only
+                                  }}
+                                  className="cursor-pointer text-custom-blue hover:underline font-medium"
+                                >
+                                  Join Meeting
+                                </span>
+                                {/* Vertical divider */}
+                                <div className="h-4 w-px bg-gray-300" aria-hidden="true" />
+                                {/* ─────────────── New Resend Links Button ─────────────── */}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!isResending) handleResendEmails(round);
+                                  }}
+                                  disabled={isResending}
+                                  className={`
+                            text-sm font-medium transition-colors
+                            ${isResending
+                                      ? "text-gray-400 cursor-not-allowed"
+                                      : "cursor-pointer text-custom-blue hover:underline"}
+                          `}
+                                  title="Resend interview links to candidate, interviewers & scheduler"
+                                >
+                                  {isResending ? "Resending..." : "Resend Links"}
+                                </button>
+                              </>
                             )}
                         </div>
                       )}
