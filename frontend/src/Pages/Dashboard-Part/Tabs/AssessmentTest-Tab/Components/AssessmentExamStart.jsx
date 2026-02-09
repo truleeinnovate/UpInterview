@@ -18,7 +18,7 @@ function AssessmentTest({
   duration,
   candidateAssessmentId,
 }) {
-  console.log("QUESTIONS ===========================> ", questions);
+
   const [currentSection, setCurrentSection] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -276,8 +276,6 @@ function AssessmentTest({
   // };
 
   const verifyAnswer = (question, selectedAnswer) => {
-    console.log("QUESTION =======================> ", question);
-    console.log("SELECTED ANSWER =======================> ", selectedAnswer);
     // const questionType =
     //   question.snapshot?.questionType || question.questionType;
     // const options = question.snapshot?.options || question.options || [];
