@@ -214,7 +214,9 @@ function AssessmentResultView({
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Total Score</p>
-                    <p className="font-medium">{candidate.totalScore?.toFixed(2)}</p>
+                    <p className="font-medium">
+                      {candidate.totalScore?.toFixed(2)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Pass Score</p>
@@ -340,24 +342,77 @@ function AssessmentResultView({
                         //     ? String(answer.userAnswer)
                         //     : "Not Answered";
 
+                        // const userAnswer = (() => {
+                        //   let raw = answer?.userAnswer;
+
+                        //   if (raw === undefined || raw === null || raw === "")
+                        //     return "Not Answered";
+
+                        //   if (Array.isArray(raw)) return raw.join(", ");
+
+                        //   if (typeof raw === "string" && raw.startsWith("[")) {
+                        //     try {
+                        //       const parsed = JSON.parse(raw);
+                        //       if (Array.isArray(parsed))
+                        //         return parsed.join(", ");
+                        //     } catch (e) {
+
+                        //     }
+                        //   }
+
+                        //   return String(raw);
+                        // })();
+
                         const userAnswer = (() => {
                           let raw = answer?.userAnswer;
 
                           if (raw === undefined || raw === null || raw === "")
                             return "Not Answered";
 
-                          if (Array.isArray(raw)) return raw.join(", ");
+                          // 1. Resolve Question ID and Snapshot
+                          const targetId =
+                            answer.questionId?.$oid || answer.questionId;
+                          const questionData = assessmentQuestions?.sections
+                            ?.flatMap((s) => s.questions || [])
+                            ?.find((q) => (q._id?.$oid || q._id) === targetId);
 
-                          if (typeof raw === "string" && raw.startsWith("[")) {
-                            try {
-                              const parsed = JSON.parse(raw);
-                              if (Array.isArray(parsed))
-                                return parsed.join(", ");
-                            } catch (e) {
-                             
-                            }
+                          const snapshot = questionData?.snapshot;
+
+                          // 2. MCQ Logic
+                          if (
+                            snapshot?.questionType === "MCQ" &&
+                            Array.isArray(snapshot.options)
+                          ) {
+                            const selections = Array.isArray(raw) ? raw : [raw];
+
+                            const labeledSelections = selections.map(
+                              (selection) => {
+                                // Clean the current string from the user's selection array
+                                const cleanSelection = String(selection).trim();
+
+                                // Find the index by matching exactly against the optionText in the database
+                                const optionIndex = snapshot.options.findIndex(
+                                  (opt) =>
+                                    String(opt.optionText).trim() ===
+                                    cleanSelection, // Fixed variable name here
+                                );
+
+                                if (optionIndex !== -1) {
+                                  const label = String.fromCharCode(
+                                    97 + optionIndex,
+                                  ); // a, b, c...
+                                  return `${label}) ${selection}`;
+                                }
+
+                                return selection;
+                              },
+                            );
+
+                            return labeledSelections.join(", ");
                           }
 
+                          // 3. Fallback for non-MCQ types
+                          if (Array.isArray(raw)) return raw.join(", ");
                           return String(raw);
                         })();
 
