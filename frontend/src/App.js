@@ -47,6 +47,7 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { queryClient } from "./utils/queryClient"; // Import shared query client
 import { usePersistenceConfig } from "./utils/persistenceConfig"; // Import persistence config
 import VideoSdkPanel from "./VideoSDK1/VideoSdkPanel.js";
+import { WalletTopupPopup } from "./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTopupPopup.jsx";
 
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
 const SelectProfession = lazy(() => import("./Pages/Login-Part/Individual-3"));
@@ -957,6 +958,10 @@ const MainAppRoutes = ({
               </Route>
             )}
 
+            {hasPermission("Wallet") &&
+              <Route path="/wallet-topup" element={<WalletTopupPopup />} />
+            }
+
             {hasPermission("Billing") && (
               <Route path="billing-details" element={<BillingSubtabs />}>
                 <Route index element={null} />
@@ -1004,6 +1009,8 @@ const MainAppRoutes = ({
                   />
                 </Route>
               )}
+
+
 
               {hasPermission("MyProfile") && (
                 <Route path="my-profile" element={<MyProfile />}>
@@ -1568,6 +1575,8 @@ const MainAppRoutes = ({
                   )}
                 </>
               )} */}
+
+
 
                 {hasPermission("Settings") && (
                   <Route path="/settings" element={<SettingsPage />} />

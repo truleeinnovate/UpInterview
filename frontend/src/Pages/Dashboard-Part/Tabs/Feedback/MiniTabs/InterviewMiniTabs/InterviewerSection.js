@@ -286,11 +286,11 @@ const InterviewerSectionComponent = ({
         const updated = prev.map((q) =>
           (q.questionId || q.id) === questionId
             ? {
-                ...q,
-                note: notes,
-                notesBool: true,
-                ...(isEditMode && { isEdited: true }),
-              }
+              ...q,
+              note: notes,
+              notesBool: true,
+              ...(isEditMode && { isEdited: true }),
+            }
             : q,
         );
 
@@ -523,10 +523,10 @@ const InterviewerSectionComponent = ({
         const updated = prev.map((q) =>
           (q.questionId || q.id) === questionId
             ? {
-                ...q,
-                isAnswered: value,
-                ...(isEditMode && { isEdited: true }),
-              }
+              ...q,
+              isAnswered: value,
+              ...(isEditMode && { isEdited: true }),
+            }
             : q,
         );
 
@@ -723,10 +723,10 @@ const InterviewerSectionComponent = ({
         const updated = prev.map((q) =>
           (q.questionId || q.id) === id
             ? {
-                ...q,
-                isLiked: q.isLiked === "liked" ? "" : "liked",
-                whyDislike: q.isLiked === "liked" ? "" : q.whyDislike,
-              }
+              ...q,
+              isLiked: q.isLiked === "liked" ? "" : "liked",
+              whyDislike: q.isLiked === "liked" ? "" : q.whyDislike,
+            }
             : q,
         );
 
@@ -789,9 +789,9 @@ const InterviewerSectionComponent = ({
         return prev.map((q) =>
           (q.questionId || q.id) === id
             ? {
-                ...q,
-                isLiked: q.isLiked === "disliked" ? "" : "disliked",
-              }
+              ...q,
+              isLiked: q.isLiked === "disliked" ? "" : "disliked",
+            }
             : q,
         );
       } else {
@@ -855,9 +855,8 @@ const InterviewerSectionComponent = ({
                     }
                   />
                   <label
-                    htmlFor={`dislike-${each.questionId || each.id}-${
-                      option.value
-                    }`}
+                    htmlFor={`dislike-${each.questionId || each.id}-${option.value
+                      }`}
                     className="text-sm cursor-pointer"
                   >
                     {option.label}
@@ -898,13 +897,13 @@ const InterviewerSectionComponent = ({
   // v1.0.5 <-----------------------------------------------------
   const RadioGroupInput = React.memo(({ each }) => {
     return (
-      <div className="flex sm:flex-col md:flex-col lg:flex-col rounded-md mt-2">
+      <div className="flex sm:flex-col md:flex-col lg:flex-col  xl:flex-col  2xl:flex-col  rounded-md mt-2">
         <p className="sm:text-sm md:text-sm w-[200px] font-bold text-gray-700 sm:mb-2 md:mb-2">
           Response Type{" "}
           {(each.mandatory === "true" ||
             each.snapshot?.mandatory === "true") && (
-            <span className="text-[red]">*</span>
-          )}
+              <span className="text-[red]">*</span>
+            )}
         </p>
         <div
           className={`w-full grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-x-8 gap-y-2`}
@@ -1229,7 +1228,7 @@ const InterviewerSectionComponent = ({
                     <span>
                       Mandatory:{" "}
                       {question.mandatory === "true" ||
-                      question.snapshot?.mandatory === "true"
+                        question.snapshot?.mandatory === "true"
                         ? "Yes"
                         : "No"}
                     </span>
@@ -1254,31 +1253,29 @@ const InterviewerSectionComponent = ({
                     {(isEditMode || isViewMode || isAddMode) && (
                       <>
                         <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out  ${
-                            question.isLiked === "liked" ? "text-green-700" : ""
-                          }`}
+                          className={`transition-transform hover:scale-110 duration-300 ease-in-out  ${question.isLiked === "liked" ? "text-green-700" : ""
+                            }`}
                           onClick={() =>
                             handleLikeToggle(
                               question.questionId ||
-                                question._id ||
-                                question.id,
+                              question._id ||
+                              question.id,
                             )
                           }
                         >
                           <ThumbsUp className="h-4 w-4" />
                         </span>
                         <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                            question.isLiked === "disliked"
-                              ? "text-red-500"
-                              : ""
-                          }`}
+                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked"
+                            ? "text-red-500"
+                            : ""
+                            }`}
                           style={{ cursor: "pointer" }}
                           onClick={() =>
                             handleDislikeToggle(
                               question.questionId ||
-                                question._id ||
-                                question.id,
+                              question._id ||
+                              question.id,
                             )
                           }
                         >
@@ -1292,9 +1289,8 @@ const InterviewerSectionComponent = ({
                   <div>
                     <div className="flex flex-col justify-start mt-4">
                       <label
-                        htmlFor={` note-input-${
-                          question.questionId || question._id || question.id
-                        }`}
+                        htmlFor={` note-input-${question.questionId || question._id || question.id
+                          }`}
                         className="w-[170px] font-bold text-gray-700"
                       >
                         Note
@@ -1304,18 +1300,17 @@ const InterviewerSectionComponent = ({
                           <div className="w-full relative  rounded-md ">
                             <input
                               className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-                              id={`note-input-${
-                                question.questionId ||
+                              id={`note-input-${question.questionId ||
                                 question._id ||
                                 question.id
-                              }`}
+                                }`}
                               type="text"
                               value={question.note}
                               onChange={(e) =>
                                 onChangeInterviewQuestionNotes(
                                   question.questionId ||
-                                    question._id ||
-                                    question.id,
+                                  question._id ||
+                                  question.id,
                                   e.target.value.slice(0, 250),
                                 )
                               }

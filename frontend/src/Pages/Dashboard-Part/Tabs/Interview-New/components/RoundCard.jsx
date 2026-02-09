@@ -643,8 +643,8 @@ const RoundCard = ({
     if (round.roundTitle !== "Assessment") return false;
 
     if (candidateAssessment?.status) {
-      const showStatuses = ["completed", "failed", "pass"];
-      return showStatuses.includes(candidateAssessment.status.toLowerCase());
+      const showStatuses = ["completed", "failed", "pass", "evaluated"];
+      return showStatuses.includes(round?.status.toLowerCase());
     }
 
     return false;
@@ -1993,7 +1993,7 @@ const RoundCard = ({
                     </button>
                   )} */}
                   {/* Feedback */}
-                  {permissions.canFeedback && (
+                  {permissions.canFeedback && round?.roundTitle !== "Assessment" && (
                     <button
                       onClick={() => setShowFeedbackModal(true)}
                       className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
