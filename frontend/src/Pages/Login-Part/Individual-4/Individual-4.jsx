@@ -737,7 +737,7 @@ const MultiStepForm = () => {
 
         if (!interviewDetailsData.professionalTitle?.trim()) {
           currentErrors.professionalTitle = "Professional title is required";
-        } else if (interviewDetailsData.professionalTitle.length < 50) {
+        } else if (interviewDetailsData.professionalTitle.length < 30) {
           currentErrors.professionalTitle =
             "Professional title must be at least 50 characters";
         } else if (interviewDetailsData.professionalTitle.length > 100) {

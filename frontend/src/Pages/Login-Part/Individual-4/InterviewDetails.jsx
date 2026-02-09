@@ -1725,11 +1725,11 @@ const InterviewDetails = ({
                   ...prev,
                   professionalTitle: "Professional title is required",
                 }));
-              } else if (value.length < 50) {
+              } else if (value.length < 30) {
                 setErrors((prev) => ({
                   ...prev,
                   professionalTitle:
-                    "Professional title must be at least 50 characters",
+                    "Professional title must be at least 30 characters",
                 }));
               } else if (value.length > 100) {
                 setErrors((prev) => ({
@@ -1752,15 +1752,15 @@ const InterviewDetails = ({
           <div className="flex justify-between mt-1">
             <p className="text-xs text-gray-500">
               {errors.professionalTitle ? (
-                <span className="text-red-500">Min 50 characters</span>
+                <span className="text-red-500">Min 30 characters</span>
               ) : (
-                "Min 50 characters"
+                "Min 30 characters"
               )}
             </p>
             {interviewDetailsData.professionalTitle?.length > 0 && (
               <p
                 className={`text-xs ${
-                  interviewDetailsData.professionalTitle.length < 50 ||
+                  interviewDetailsData.professionalTitle.length < 30 ||
                   errors.professionalTitle
                     ? "text-red-500"
                     : "text-gray-500"

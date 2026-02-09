@@ -1999,7 +1999,7 @@ const EditInterviewDetails = ({
                         ...prev,
                         professionalTitle: "Professional title is required",
                       }));
-                    } else if (value.length < 50) {
+                    } else if (value.length < 30) {
                       setErrors((prev) => ({
                         ...prev,
                         professionalTitle:
@@ -2020,11 +2020,11 @@ const EditInterviewDetails = ({
                   required
                 />
                 <div className="flex justify-between ">
-                  <p className="text-xs text-gray-500">Min 50 characters</p>
+                  <p className="text-xs text-gray-500">Min 30 characters</p>
 
                   {formData.professionalTitle?.length > 0 && (
                     <p
-                      className={`text-xs ${formData.professionalTitle.length < 50 ||
+                      className={`text-xs ${formData.professionalTitle.length < 30 ||
                           errors.professionalTitle
                           ? "text-red-500"
                           : "text-gray-500"
