@@ -2,7 +2,9 @@
 
 import React from "react";
 import ReactQuill from "react-quill";
+
 import "react-quill/dist/quill.snow.css";
+import DescriptionField from "../../../../../Components/FormFields/DescriptionField";
 
 const AssessmentTestDetailsTab = ({
   includePhone,
@@ -94,23 +96,15 @@ const AssessmentTestDetailsTab = ({
             Instructions <span className="text-red-500">*</span>
           </label>
           <div className="flex-grow relative sm:ml-0 ml-8 sm:w-full md:w-full">
-            <textarea
-              className="border focus:outline-none mb-2 p-2 w-full rounded-md text-sm pr-10"
-              rows="20"
+            <DescriptionField
               value={instructions}
               onChange={handleInstructionsChange}
+              error={instructionError}
               placeholder="Enter instructions here..."
-              style={{ whiteSpace: "pre-wrap" }}
-            ></textarea>
-
-            <div className="flex items-center w-full">
-              {instructionError && (
-                <p className="text-red-500 sm:text-xs text-sm">
-                  {instructionError}
-                </p>
-              )}
-              <div className="text-sm ml-auto">{instructions.length}/2000</div>
-            </div>
+              rows={20}
+              maxLength={2000}
+              showCounter={true}
+            />
           </div>
         </div>
 
