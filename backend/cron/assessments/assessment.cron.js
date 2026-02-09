@@ -3,7 +3,7 @@ const {
   runScheduleAssessmentStatusUpdateJob
 } = require("../../controllers/candidateAssessmentController");
 
-cron.schedule("*/1 * * * *", async () => {
+cron.schedule("*/5 * * * *", async () => {
   await runScheduleAssessmentStatusUpdateJob();
   console.log("Schedule assessment status update job executed");
 });
