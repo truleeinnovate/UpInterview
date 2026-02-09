@@ -173,13 +173,13 @@ function RoundFormPosition() {
       interviewQuestionsList: prev.interviewQuestionsList.map((question) =>
         question.questionId === questionId
           ? {
-              ...question,
-              snapshot: {
-                ...question.snapshot,
-                mandatory:
-                  question.snapshot.mandatory === "true" ? "false" : "true",
-              },
-            }
+            ...question,
+            snapshot: {
+              ...question.snapshot,
+              mandatory:
+                question.snapshot.mandatory === "true" ? "false" : "true",
+            },
+          }
           : question,
       ),
     }));
@@ -194,12 +194,12 @@ function RoundFormPosition() {
         )
           ? prev.interviewQuestionsList
           : [
-              ...prev.interviewQuestionsList,
-              {
-                ...question,
-                mandatory: "false",
-              },
-            ],
+            ...prev.interviewQuestionsList,
+            {
+              ...question,
+              mandatory: "false",
+            },
+          ],
       }));
 
       setErrors((prev) => ({
@@ -231,28 +231,28 @@ function RoundFormPosition() {
       // Reset fields that don't apply to Assessment
       ...(isAssessment
         ? {
-            interviewMode: "Virtual", // Assessment is always virtual
-            interviewerType: null,
-            interviewers: [],
-            instructions: "", // Clear instructions for Assessment
-            interviewQuestionsList: [],
-          }
+          interviewMode: "Virtual", // Assessment is always virtual
+          interviewerType: null,
+          interviewers: [],
+          instructions: "", // Clear instructions for Assessment
+          interviewQuestionsList: [],
+        }
         : {
-            // When switching FROM Assessment to other types, clear assessment-related fields
-            ...(wasAssessment
-              ? {
-                  assessmentTemplate: { assessmentId: "", assessmentName: "" },
-                  instructions: "", // Clear instructions when switching from Assessment
-                }
-              : {}),
-            // For other transitions, keep existing instructions unless switching to Other
-            instructions:
-              selectedTitle === "Other"
+          // When switching FROM Assessment to other types, clear assessment-related fields
+          ...(wasAssessment
+            ? {
+              assessmentTemplate: { assessmentId: "", assessmentName: "" },
+              instructions: "", // Clear instructions when switching from Assessment
+            }
+            : {}),
+          // For other transitions, keep existing instructions unless switching to Other
+          instructions:
+            selectedTitle === "Other"
+              ? ""
+              : wasAssessment
                 ? ""
-                : wasAssessment
-                  ? ""
-                  : prev.instructions,
-          }),
+                : prev.instructions,
+        }),
       // Preserve sequence in all cases
       sequence: prev.sequence,
     }));
@@ -330,40 +330,40 @@ function RoundFormPosition() {
   const assessmentOptions = React.useMemo(() => {
     const baseOptions = Array.isArray(assessmentData)
       ? assessmentData.map((a) => {
-          const titleLabel = a.AssessmentTitle || "Untitled Assessment";
-          const typeLabel = a.type
-            ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
-            : "";
+        const titleLabel = a.AssessmentTitle || "Untitled Assessment";
+        const typeLabel = a.type
+          ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
+          : "";
 
-          return {
-            value: a._id,
-            label: (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  width: "98%",
-                }}
-              >
-                <span>{titleLabel}</span>
-                {typeLabel && (
-                  <span
-                    className={
-                      "text-md " +
-                      (a.type === "custom"
-                        ? "text-custom-blue"
-                        : "text-green-600")
-                    }
-                  >
-                    {typeLabel}
-                  </span>
-                )}
-              </div>
-            ),
-            searchLabel: titleLabel,
-          };
-        })
+        return {
+          value: a._id,
+          label: (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "98%",
+              }}
+            >
+              <span>{titleLabel}</span>
+              {typeLabel && (
+                <span
+                  className={
+                    "text-md " +
+                    (a.type === "custom"
+                      ? "text-custom-blue"
+                      : "text-green-600")
+                  }
+                >
+                  {typeLabel}
+                </span>
+              )}
+            </div>
+          ),
+          searchLabel: titleLabel,
+        };
+      })
       : [];
 
     if (editingAssessmentId && editingAssessment) {
@@ -379,7 +379,7 @@ function RoundFormPosition() {
 
         const editingTypeLabel = editingAssessment.type
           ? editingAssessment.type.charAt(0).toUpperCase() +
-            editingAssessment.type.slice(1)
+          editingAssessment.type.slice(1)
           : "";
 
         baseOptions.push({
@@ -478,11 +478,11 @@ function RoundFormPosition() {
           ...prev,
           assessmentTemplate:
             roundEditData.roundTitle === "Assessment" &&
-            roundEditData.assessmentId
+              roundEditData.assessmentId
               ? {
-                  assessmentId: roundEditData.assessmentId,
-                  assessmentName: "",
-                }
+                assessmentId: roundEditData.assessmentId,
+                assessmentName: "",
+              }
               : { assessmentId: "", assessmentName: "" },
           // roundTitle: roundEditData.roundTitle || '',
           // customRoundTitle: '',
@@ -764,8 +764,8 @@ function RoundFormPosition() {
   const selectedInterviewersData =
     isInternalSelected && Array.isArray(selectedInterviewers)
       ? selectedInterviewers
-          .map((interviewer) => interviewer?._id)
-          .filter(Boolean)
+        .map((interviewer) => interviewer?._id)
+        .filter(Boolean)
       : [];
 
   // Validate form
@@ -942,23 +942,23 @@ function RoundFormPosition() {
       //     : "", // added newly
 
       ...(formData.roundTitle === "Assessment" &&
-      formData.assessmentTemplate.assessmentId
+        formData.assessmentTemplate.assessmentId
         ? {
-            assessmentId: formData.assessmentTemplate.assessmentId,
-            questions: [],
-          }
+          assessmentId: formData.assessmentTemplate.assessmentId,
+          questions: [],
+        }
         : // {
-          //   questions: formData.interviewQuestionsList.map(q => ({
-          //    questionId: q.questionId,
-          //    snapshot: {
-          //     ...q.snapshot,
-          //      mandatory: q.snapshot.mandatory || "false"
-          //   }
-          // })) || []
-          {
-            assessmentId: null,
-            questions: formData.interviewQuestionsList || [],
-          }),
+        //   questions: formData.interviewQuestionsList.map(q => ({
+        //    questionId: q.questionId,
+        //    snapshot: {
+        //     ...q.snapshot,
+        //      mandatory: q.snapshot.mandatory || "false"
+        //   }
+        // })) || []
+        {
+          assessmentId: null,
+          questions: formData.interviewQuestionsList || [],
+        }),
       instructions: formData.instructions,
       interviewerType:
         formData.roundTitle === "Assessment"
@@ -1056,7 +1056,12 @@ function RoundFormPosition() {
     setFormData((prev) => ({
       ...prev,
       assessmentTemplate: assessmentData,
-      duration: parseInt(assessment.Duration.replace(" minutes", "")),
+      duration: (() => {
+        const rawDuration = assessment.Duration || assessment.duration;
+        if (!rawDuration) return 60;
+        const parsed = parseInt(rawDuration.toString().replace(/ minutes?/i, ""));
+        return isNaN(parsed) ? 60 : parsed;
+      })(),
       instructions: assessment.Instructions,
       interviewQuestionsList: [],
     }));
@@ -1369,8 +1374,8 @@ function RoundFormPosition() {
                                 <span className="text-xs font-medium text-red-500">
                                   {formData.assessmentTemplate?.expiryDate
                                     ? new Date(
-                                        formData.assessmentTemplate.expiryDate,
-                                      ).toLocaleDateString()
+                                      formData.assessmentTemplate.expiryDate,
+                                    ).toLocaleDateString()
                                     : "N/A"}
                                 </span>
                               </div>
@@ -1399,176 +1404,173 @@ function RoundFormPosition() {
                           ) : (
                             <div className="space-y-4">
                               {!sectionQuestions ||
-                              sectionQuestions.noQuestions ? (
+                                sectionQuestions.noQuestions ? (
                                 <div className="text-center py-4 text-gray-500">
                                   No Sections Available for this Assessment
                                 </div>
                               ) : //  <div className="space-y-4">
-                              Object.keys(sectionQuestions).length > 0 ? (
-                                Object.entries(sectionQuestions).map(
-                                  ([sectionId, sectionData]) => {
-                                    // Find section details from assessmentData
-                                    // const selectedAssessment = assessmentData.find(
-                                    //   a => a._id === formData.assessmentTemplate[0].assessmentId
-                                    // );
+                                Object.keys(sectionQuestions).length > 0 ? (
+                                  Object.entries(sectionQuestions).map(
+                                    ([sectionId, sectionData]) => {
+                                      // Find section details from assessmentData
+                                      // const selectedAssessment = assessmentData.find(
+                                      //   a => a._id === formData.assessmentTemplate[0].assessmentId
+                                      // );
 
-                                    // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
+                                      // const section = selectedAssessment?.Sections?.find(s => s._id === sectionId);
 
-                                    if (
-                                      !sectionData ||
-                                      !Array.isArray(sectionData.questions)
-                                    ) {
+                                      if (
+                                        !sectionData ||
+                                        !Array.isArray(sectionData.questions)
+                                      ) {
+                                        return (
+                                          <div
+                                            key={sectionId}
+                                            className="border rounded-md shadow-sm p-4"
+                                          >
+                                            <div className="text-center py-4 text-gray-500">
+                                              No valid data for this section
+                                            </div>
+                                          </div>
+                                        );
+                                      }
+
                                       return (
                                         <div
                                           key={sectionId}
                                           className="border rounded-md shadow-sm p-4"
                                         >
-                                          <div className="text-center py-4 text-gray-500">
-                                            No valid data for this section
-                                          </div>
-                                        </div>
-                                      );
-                                    }
+                                          <button
+                                            onClick={() =>
+                                              toggleSection(sectionId)
+                                            }
+                                            className="flex justify-between items-center w-full"
+                                          >
+                                            <span className="font-medium">
+                                              {sectionData?.sectionName ||
+                                                "Unnamed Section"}
+                                            </span>
+                                            <ChevronUp
+                                              className={`transform transition-transform ${expandedSections[sectionId]
+                                                  ? ""
+                                                  : "rotate-180"
+                                                }`}
+                                            />
+                                          </button>
 
-                                    return (
-                                      <div
-                                        key={sectionId}
-                                        className="border rounded-md shadow-sm p-4"
-                                      >
-                                        <button
-                                          onClick={() =>
-                                            toggleSection(sectionId)
-                                          }
-                                          className="flex justify-between items-center w-full"
-                                        >
-                                          <span className="font-medium">
-                                            {sectionData?.sectionName ||
-                                              "Unnamed Section"}
-                                          </span>
-                                          <ChevronUp
-                                            className={`transform transition-transform ${
-                                              expandedSections[sectionId]
-                                                ? ""
-                                                : "rotate-180"
-                                            }`}
-                                          />
-                                        </button>
-
-                                        {expandedSections[sectionId] && (
-                                          <div className="mt-4 space-y-3">
-                                            {sectionData?.questions.length >
-                                            0 ? (
-                                              sectionData?.questions.map(
-                                                (question, idx) => (
-                                                  <div
-                                                    key={question._id || idx}
-                                                    className="border rounded-md shadow-sm overflow-hidden"
-                                                  >
+                                          {expandedSections[sectionId] && (
+                                            <div className="mt-4 space-y-3">
+                                              {sectionData?.questions.length >
+                                                0 ? (
+                                                sectionData?.questions.map(
+                                                  (question, idx) => (
                                                     <div
-                                                      onClick={() =>
-                                                        setExpandedQuestions(
-                                                          (prev) => ({
-                                                            ...prev,
-                                                            [question._id]:
-                                                              !prev[
-                                                                question._id
-                                                              ],
-                                                          }),
-                                                        )
-                                                      }
-                                                      className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                                      key={question._id || idx}
+                                                      className="border rounded-md shadow-sm overflow-hidden"
                                                     >
-                                                      <div className="flex items-center gap-2">
-                                                        <span className="font-medium text-gray-600">
-                                                          {idx + 1}.
-                                                        </span>
-                                                        <p className="text-sm text-gray-700">
-                                                          {question.snapshot
-                                                            ?.questionText ||
-                                                            "No question text"}
-                                                        </p>
-                                                      </div>
-                                                      <ChevronDown
-                                                        className={`w-5 h-5 text-gray-400 transition-transform ${
-                                                          expandedQuestions[
-                                                            question._id
-                                                          ]
-                                                            ? "transform rotate-180"
-                                                            : ""
-                                                        }`}
-                                                      />
-                                                    </div>
-
-                                                    {expandedQuestions[
-                                                      question._id
-                                                    ] && (
-                                                      <div className="px-4 py-3">
-                                                        <div className="flex justify-between mb-2">
-                                                          <div className="flex items-center gap-2">
-                                                            <span className="text-sm font-medium text-gray-500">
-                                                              Type:
-                                                            </span>
-                                                            <span className="text-sm text-gray-700">
-                                                              {question.snapshot
-                                                                ?.questionType ||
-                                                                "Not specified"}
-                                                            </span>
-                                                          </div>
-                                                          <div className="flex items-center gap-2">
-                                                            <span className="text-sm font-medium text-gray-500">
-                                                              Score:
-                                                            </span>
-                                                            <span className="text-sm text-gray-700">
-                                                              {question.snapshot
-                                                                ?.score || "0"}
-                                                            </span>
-                                                          </div>
+                                                      <div
+                                                        onClick={() =>
+                                                          setExpandedQuestions(
+                                                            (prev) => ({
+                                                              ...prev,
+                                                              [question._id]:
+                                                                !prev[
+                                                                question._id
+                                                                ],
+                                                            }),
+                                                          )
+                                                        }
+                                                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                                                      >
+                                                        <div className="flex items-center gap-2">
+                                                          <span className="font-medium text-gray-600">
+                                                            {idx + 1}.
+                                                          </span>
+                                                          <p className="text-sm text-gray-700">
+                                                            {question.snapshot
+                                                              ?.questionText ||
+                                                              "No question text"}
+                                                          </p>
                                                         </div>
+                                                        <ChevronDown
+                                                          className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
+                                                              question._id
+                                                            ]
+                                                              ? "transform rotate-180"
+                                                              : ""
+                                                            }`}
+                                                        />
+                                                      </div>
 
-                                                        {/* Display question options if MCQ */}
-                                                        {question.snapshot
-                                                          ?.questionType ===
-                                                          "MCQ" && (
-                                                          <div className="mt-2">
-                                                            <span className="text-sm font-medium text-gray-500">
-                                                              Options:
-                                                            </span>
-                                                            <div className="grid grid-cols-2 gap-2 mt-1">
-                                                              {question.snapshot?.options?.map(
-                                                                (
-                                                                  option,
-                                                                  optIdx,
-                                                                ) => (
-                                                                  <div
-                                                                    key={optIdx}
-                                                                    //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
-                                                                    className={`text-sm p-2 rounded border ${
-                                                                      option ===
-                                                                      question
-                                                                        .snapshot
-                                                                        .correctAnswer
-                                                                        ? "bg-green-50 border-green-200 text-green-800"
-                                                                        : "bg-gray-50 border-gray-200"
-                                                                    }`}
-                                                                  >
-                                                                    {option}
-                                                                    {option ===
-                                                                      question
-                                                                        .snapshot
-                                                                        .correctAnswer && (
-                                                                      <span className="ml-2 text-green-600">
-                                                                        ✓
-                                                                      </span>
+                                                      {expandedQuestions[
+                                                        question._id
+                                                      ] && (
+                                                          <div className="px-4 py-3">
+                                                            <div className="flex justify-between mb-2">
+                                                              <div className="flex items-center gap-2">
+                                                                <span className="text-sm font-medium text-gray-500">
+                                                                  Type:
+                                                                </span>
+                                                                <span className="text-sm text-gray-700">
+                                                                  {question.snapshot
+                                                                    ?.questionType ||
+                                                                    "Not specified"}
+                                                                </span>
+                                                              </div>
+                                                              <div className="flex items-center gap-2">
+                                                                <span className="text-sm font-medium text-gray-500">
+                                                                  Score:
+                                                                </span>
+                                                                <span className="text-sm text-gray-700">
+                                                                  {question.snapshot
+                                                                    ?.score || "0"}
+                                                                </span>
+                                                              </div>
+                                                            </div>
+
+                                                            {/* Display question options if MCQ */}
+                                                            {question.snapshot
+                                                              ?.questionType ===
+                                                              "MCQ" && (
+                                                                <div className="mt-2">
+                                                                  <span className="text-sm font-medium text-gray-500">
+                                                                    Options:
+                                                                  </span>
+                                                                  <div className="grid grid-cols-2 gap-2 mt-1">
+                                                                    {question.snapshot?.options?.map(
+                                                                      (
+                                                                        option,
+                                                                        optIdx,
+                                                                      ) => (
+                                                                        <div
+                                                                          key={optIdx}
+                                                                          //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
+                                                                          className={`text-sm p-2 rounded border ${option ===
+                                                                              question
+                                                                                .snapshot
+                                                                                .correctAnswer
+                                                                              ? "bg-green-50 border-green-200 text-green-800"
+                                                                              : "bg-gray-50 border-gray-200"
+                                                                            }`}
+                                                                        >
+                                                                          {option}
+                                                                          {option ===
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer && (
+                                                                              <span className="ml-2 text-green-600">
+                                                                                ✓
+                                                                              </span>
+                                                                            )}
+                                                                        </div>
+                                                                      ),
                                                                     )}
                                                                   </div>
-                                                                ),
+                                                                </div>
                                                               )}
-                                                            </div>
-                                                          </div>
-                                                        )}
 
-                                                        {/* Display correct answer */}
-                                                        {/* <div className="mt-2">
+                                                            {/* Display correct answer */}
+                                                            {/* <div className="mt-2">
                                                                   <span className="text-sm font-medium text-gray-500">
                                                                     Correct Answer:
                                                                   </span>
@@ -1577,51 +1579,51 @@ function RoundFormPosition() {
                                                                   </div>
                                                                 </div> */}
 
-                                                        {/* Additional question metadata */}
-                                                        <div className="grid grid-cols-2 gap-4 mt-3">
-                                                          <div>
-                                                            <span className="text-xs font-medium text-gray-500">
-                                                              Difficulty:
-                                                            </span>
-                                                            <span className="text-xs text-gray-700 ml-1">
-                                                              {question.snapshot
-                                                                ?.difficultyLevel ||
-                                                                "Not specified"}
-                                                            </span>
+                                                            {/* Additional question metadata */}
+                                                            <div className="grid grid-cols-2 gap-4 mt-3">
+                                                              <div>
+                                                                <span className="text-xs font-medium text-gray-500">
+                                                                  Difficulty:
+                                                                </span>
+                                                                <span className="text-xs text-gray-700 ml-1">
+                                                                  {question.snapshot
+                                                                    ?.difficultyLevel ||
+                                                                    "Not specified"}
+                                                                </span>
+                                                              </div>
+                                                              <div>
+                                                                <span className="text-xs font-medium text-gray-500">
+                                                                  Skills:
+                                                                </span>
+                                                                <span className="text-xs text-gray-700 ml-1">
+                                                                  {question.snapshot?.skill?.join(
+                                                                    ", ",
+                                                                  ) || "None"}
+                                                                </span>
+                                                              </div>
+                                                            </div>
                                                           </div>
-                                                          <div>
-                                                            <span className="text-xs font-medium text-gray-500">
-                                                              Skills:
-                                                            </span>
-                                                            <span className="text-xs text-gray-700 ml-1">
-                                                              {question.snapshot?.skill?.join(
-                                                                ", ",
-                                                              ) || "None"}
-                                                            </span>
-                                                          </div>
-                                                        </div>
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                ),
-                                              )
-                                            ) : (
-                                              <div className="text-center py-4 text-gray-500">
-                                                No Questions found in this
-                                                section
-                                              </div>
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  },
-                                )
-                              ) : (
-                                <div className="text-center py-4 text-gray-500">
-                                  No Assessment data available
-                                </div>
-                              )}
+                                                        )}
+                                                    </div>
+                                                  ),
+                                                )
+                                              ) : (
+                                                <div className="text-center py-4 text-gray-500">
+                                                  No Questions found in this
+                                                  section
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    },
+                                  )
+                                ) : (
+                                  <div className="text-center py-4 text-gray-500">
+                                    No Assessment data available
+                                  </div>
+                                )}
                             </div>
                           )}
                         </div>
@@ -1667,11 +1669,10 @@ function RoundFormPosition() {
             flex items-center gap-1.5 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${
-              isSelected
-                ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
-                : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
-            }
+            ${isSelected
+                                        ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
+                                        : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
+                                      }
           `}
                                     style={{ "--tag-color": tag.color }}
                                   >
@@ -1721,11 +1722,10 @@ function RoundFormPosition() {
             flex items-center gap-2 
             px-4 py-2 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${
-              isSelected
-                ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
-                : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
-            }
+            ${isSelected
+                                        ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
+                                        : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
+                                      }
           `}
                                   >
                                     <span className="text-base">👥</span>
@@ -1754,11 +1754,10 @@ function RoundFormPosition() {
                               }}
                               variant="outline"
                               size="sm"
-                              className={`${
-                                isExternalSelected
+                              className={`${isExternalSelected
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
-                              }`}
+                                }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -1782,11 +1781,10 @@ function RoundFormPosition() {
                               }}
                               variant="outline"
                               size="sm"
-                              className={`${
-                                isExternalSelected
+                              className={`${isExternalSelected
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
-                              }`}
+                                }`}
                               disabled={isExternalSelected}
                               title={
                                 isExternalSelected
@@ -1814,11 +1812,10 @@ function RoundFormPosition() {
                             }}
                             variant="outline"
                             size="sm"
-                            className={`${
-                              isInternalSelected
+                            className={`${isInternalSelected
                                 ? "opacity-50 cursor-not-allowed"
                                 : ""
-                            }`}
+                              }`}
                             disabled={isInternalSelected}
                             title={
                               isInternalSelected
@@ -1858,13 +1855,11 @@ function RoundFormPosition() {
                                 <Users className="h-4 w-4 text-gray-500 mr-2" />
                                 <span className="text-sm text-gray-700">
                                   {isInternalSelected
-                                    ? `${
-                                        formData.interviewers.length
-                                      } Interviewer${
-                                        formData.interviewers.length !== 1
-                                          ? "s"
-                                          : ""
-                                      }`
+                                    ? `${formData.interviewers.length
+                                    } Interviewer${formData.interviewers.length !== 1
+                                      ? "s"
+                                      : ""
+                                    }`
                                     : "Outsourced Interviewers"}{" "}
                                   {/* v1.0.2 <------------------------------------------------ */}
                                   <span className="sm:hidden inline">
@@ -1951,47 +1946,45 @@ function RoundFormPosition() {
                                           <ul className="list-disc list-inside text-xs text-blue-800 ml-1">
                                             {/* Check if we have a group with usersNames */}
                                             {formData.interviewerGroupId &&
-                                            formData.interviewers[0]?.usersNames
+                                              formData.interviewers[0]?.usersNames
                                               ? // Render group members from usersNames
-                                                formData.interviewers[0].usersNames.map(
-                                                  (name, i) => (
+                                              formData.interviewers[0].usersNames.map(
+                                                (name, i) => (
+                                                  <li
+                                                    key={`${formData.interviewers[0]._id}-user-${i}`}
+                                                  >
+                                                    {name}
+                                                  </li>
+                                                ),
+                                              )
+                                              : formData.interviewerGroupId &&
+                                                formData.interviewers[0]
+                                                  ?.userIds
+                                                ? // Fallback: if we have group but no usersNames, show placeholder
+                                                formData.interviewers[0].userIds.map(
+                                                  (userId, i) => (
                                                     <li
                                                       key={`${formData.interviewers[0]._id}-user-${i}`}
                                                     >
-                                                      {name}
+                                                      User ID: {userId}
                                                     </li>
                                                   ),
                                                 )
-                                              : formData.interviewerGroupId &&
-                                                  formData.interviewers[0]
-                                                    ?.userIds
-                                                ? // Fallback: if we have group but no usersNames, show placeholder
-                                                  formData.interviewers[0].userIds.map(
-                                                    (userId, i) => (
-                                                      <li
-                                                        key={`${formData.interviewers[0]._id}-user-${i}`}
-                                                      >
-                                                        User ID: {userId}
-                                                      </li>
-                                                    ),
-                                                  )
                                                 : // Render individual interviewers
-                                                  formData.interviewers.map(
-                                                    (interviewer, index) => (
-                                                      <li
-                                                        key={`${interviewer._id}-${index}`}
-                                                      >
-                                                        {`${
-                                                          interviewer.firstName ||
-                                                          ""
-                                                        } ${
-                                                          interviewer.lastName ||
-                                                          ""
+                                                formData.interviewers.map(
+                                                  (interviewer, index) => (
+                                                    <li
+                                                      key={`${interviewer._id}-${index}`}
+                                                    >
+                                                      {`${interviewer.firstName ||
+                                                        ""
+                                                        } ${interviewer.lastName ||
+                                                        ""
                                                         }`.trim() ||
-                                                          interviewer.email}
-                                                      </li>
-                                                    ),
-                                                  )}
+                                                        interviewer.email}
+                                                    </li>
+                                                  ),
+                                                )}
                                           </ul>
                                         </div>
                                       </div>
@@ -2008,12 +2001,11 @@ function RoundFormPosition() {
                                             <div className="flex items-center">
                                               <User className="h-4 w-4 text-blue-600 mr-2" />
                                               <span className="text-sm font-medium text-blue-900 truncate">
-                                                {`${interviewer?.contactId?.firstName || interviewer?.firstName || ""} ${
-                                                  interviewer?.contactId
+                                                {`${interviewer?.contactId?.firstName || interviewer?.firstName || ""} ${interviewer?.contactId
                                                     ?.lastName ||
                                                   interviewer?.lastName ||
                                                   ""
-                                                }`.trim() ||
+                                                  }`.trim() ||
                                                   interviewer?.email ||
                                                   interviewer?.contactId?.email}
                                               </span>
@@ -2112,11 +2104,10 @@ function RoundFormPosition() {
                                       <li
                                         key={qIndex}
                                         className={`flex justify-between items-center p-3 border rounded-md
-                                        ${
-                                          isMandatory
+                                        ${isMandatory
                                             ? "border-red-500"
                                             : "border-gray-300"
-                                        }`}
+                                          }`}
                                       >
                                         <span className="sm:text-sm text-gray-900 font-medium">
                                           {qIndex + 1}. {questionText}
