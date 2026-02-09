@@ -1,6 +1,7 @@
 // controllers/interviewerController.js - CRUD operations for Interviewers
 const Interviewer = require("../models/Interviewer");
 const { Users } = require("../models/Users");
+const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
 
 // Get all interviewers with pagination and filters
 const getAllInterviewers = async (req, res) => {
@@ -75,7 +76,7 @@ const getAllInterviewers = async (req, res) => {
       .populate({
         path: "contactId",
         select:
-          "firstName lastName email currentRole imageData rating skills availability",
+          "firstName lastName email phone countryCode currentRole imageData rating skills availability",
         populate: {
           path: "availability",
           model: "InterviewAvailability",
@@ -102,24 +103,24 @@ const getAllInterviewers = async (req, res) => {
       return {
         user: user
           ? {
-              _id: user?._id,
-              //   firstName: user?.firstName,
-              //   lastName: user?.lastName,
-              //   email: user?.email,
-              status: user?.status,
-              role: user?.roleId,
-              profileId: user?.profileId,
-              isFreelancer: user?.isFreelancer,
-              isAddedTeam: user?.isAddedTeam,
-              createdAt: user?.createdAt,
-            }
+            _id: user?._id,
+            //   firstName: user?.firstName,
+            //   lastName: user?.lastName,
+            //   email: user?.email,
+            status: user?.status,
+            role: user?.roleId,
+            profileId: user?.profileId,
+            isFreelancer: user?.isFreelancer,
+            isAddedTeam: user?.isAddedTeam,
+            createdAt: user?.createdAt,
+          }
           : null,
         contactDetails: {
           _id: contact?.contactId?._id,
           firstName: contact?.contactId?.firstName,
           lastName: contact?.contactId?.lastName,
           email: contact?.contactId?.email,
-          //   phone: contact?.contactId?.phone,
+          phone: `${contact?.contactId?.countryCode || ""}${contact?.contactId?.phone || ""}`,
           currentRole: contact?.contactId?.currentRole,
           imageData: contact?.contactId?.imageData,
           rating: contact?.contactId?.rating,
@@ -175,6 +176,23 @@ const getAllInterviewers = async (req, res) => {
     // }
 
     // console.log("finalInterviewers", finalInterviewers);
+
+    // Populate role labels
+    const roleNames = [...new Set(finalInterviewers.map(i => i.contactDetails?.currentRole).filter(Boolean))];
+
+    if (roleNames.length > 0) {
+      const roles = await RoleMaster.find({ roleName: { $in: roleNames } }).select('roleName roleLabel').lean();
+      const roleMap = roles.reduce((acc, role) => {
+        acc[role.roleName] = role.roleLabel;
+        return acc;
+      }, {});
+
+      finalInterviewers.forEach(interviewer => {
+        if (interviewer.contactDetails?.currentRole) {
+          interviewer.contactDetails.currentRole = roleMap[interviewer.contactDetails.currentRole];
+        }
+      });
+    }
 
     return res.status(200).json({
       data: finalInterviewers,
@@ -257,7 +275,7 @@ const getInterviewerById = async (req, res) => {
       .populate("team_id", "name color description department")
       .populate(
         "contactId",
-        "firstName lastName email currentRole imageData rating",
+        "firstName lastName email phone countryCode currentRole imageData rating",
       )
       .lean();
 
@@ -343,7 +361,7 @@ const createInterviewer = async (req, res) => {
       .populate("team_id", "name color")
       .populate(
         "contactId",
-        "firstName lastName email currentRole imageData rating",
+        "firstName lastName email phone countryCode currentRole imageData rating",
       )
       .lean();
 
