@@ -70,7 +70,7 @@ export const InterviewerCard = ({
   let displayAvatar = interviewer?.contactDetails
     ? interviewer?.contactId?.imageData
     : interviewer?.contactDetails?.imageData;
-  let displayRole = interviewer.title || "Interviewer";
+  let displayRole = interviewer?.contactDetails?.currentRoleLabel || interviewer?.contactDetails?.currentRole || interviewer.title || "Interviewer";
 
   if (
     (interviewer?.interviwer?.interviewer_type ||
@@ -84,7 +84,7 @@ export const InterviewerCard = ({
     if (userName) displayName = userName;
     if (user.email) displayEmail = user.email;
     if (user.imageData?.path) displayAvatar = user.imageData.path;
-    if (user.currentRole) displayRole = user.currentRole;
+    if (user.currentRoleLabel || user.currentRole) displayRole = user.currentRoleLabel || user.currentRole;
   }
 
   // Calculate available slots from contactDetails.availability
@@ -118,14 +118,16 @@ export const InterviewerCard = ({
   return (
     <div
       className={
-        from !== "outsource-interview" &&
-        `bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow h-full flex flex-col justify-between`
+        from !== "outsource-interview"
+          ? `bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow h-full flex flex-col justify-between`
+          : ""
       }
     >
       <div
         className={
-          from === "outsource-interview" &&
-          "flex flex-col justify-between w-full"
+          from === "outsource-interview"
+            ? "flex flex-col justify-between w-full"
+            : ""
         }
       >
         <div className="flex justify-between items-start mb-4">
@@ -144,7 +146,7 @@ export const InterviewerCard = ({
             <div>
               <h3
                 className="font-bold text-gray-900 text-lg leading-tight cursor-pointer hover:text-blue-600"
-                onClick={() => onView(interviewer?.interviwer?._id)}
+                onClick={() => onView(interviewer?.interviwer?._id || interviewer?._id)}
               >
                 {displayName || "Unknown"}
               </h3>
@@ -168,7 +170,7 @@ export const InterviewerCard = ({
                 <button
                   onClick={() => {
                     setShowMenu(false);
-                    onEdit(interviewer?.interviwer?._id);
+                    onEdit(interviewer?.interviwer?._id || interviewer?._id);
                   }}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 >
@@ -177,7 +179,7 @@ export const InterviewerCard = ({
                 <button
                   onClick={() => {
                     setShowMenu(false);
-                    onDelete(interviewer?.interviwer?._id);
+                    onDelete(interviewer?.interviwer?._id || interviewer?._id);
                   }}
                   className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
@@ -211,7 +213,7 @@ export const InterviewerCard = ({
             <span className="text-sm font-semibold text-gray-700">
               {interviewer?.contactDetails?.rating
                 ? interviewer?.contactDetails?.rating.toFixed(1) || "N/A"
-                : interviewer?.conactId?.rating.toFixed(1) || "N/A"}
+                : interviewer?.contactId?.rating?.toFixed(1) || "N/A"}
             </span>
             <span className="text-xs text-gray-400">rating</span>
           </div>
@@ -227,7 +229,7 @@ export const InterviewerCard = ({
 
           <div className="flex flex-wrap gap-1 mt-2">
             {(interviewer?.interviwer?.tags || interviewer?.tag_ids) &&
-              (interviewer?.tag_ids || interviewer?.interviwer?.tags)
+              (interviewer?.tag_ids || interviewer?.interviwer?.tags || [])
                 .slice(0, 3)
                 .map((tag, idx) => (
                   <span
@@ -247,13 +249,13 @@ export const InterviewerCard = ({
         >
           <Clock
             size={16}
-            className={`mt-0.5 ${slotsInfo.hasSlots ? "text-green-500" : "text-blue-500"}`}
+            className={`mt-0.5 ${slotsInfo.hasSlots ? "text-green-600" : "text-blue-500"}`}
           />
           <div>
             <p
-              className={`text-xs font-semibold ${slotsInfo.hasSlots ? "text-green-700" : "text-blue-700"}`}
+              className={`text-sm font-medium ${slotsInfo.hasSlots ? "text-green-700" : "text-blue-700"}`}
             >
-              Available Slots
+              {slotsInfo.hasSlots ? "Available Slots" : "Available Slots"}
             </p>
             <p
               className={`text-xs ${slotsInfo.hasSlots ? "text-green-600" : "text-blue-600"}`}
@@ -270,21 +272,26 @@ export const InterviewerCard = ({
         {/* </div> */}
       </div>
       {from !== "outsource-interview" && (
-        <div className="flex justify-between items-center pt-2 mt-auto">
+        <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100">
           <div className="flex items-center gap-2">
-            <div
-              className={`w-10 h-5 flex items-center rounded-full p-1 duration-300 ease-in-out ${isActive ? "bg-black" : "bg-gray-300"}`}
+            <button
+              //onClick={() => onToggleActive(interviewer?.interviwer?._id || interviewer?._id, !isActive)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isActive ? "bg-custom-blue" : "bg-gray-200"
+                }`}
             >
-              <div
-                className={`bg-white w-3 h-3 rounded-full shadow-md transform duration-300 ease-in-out ${isActive ? "translate-x-5" : ""}`}
-              ></div>
-            </div>
-            <span className="text-sm text-gray-600">Active</span>
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isActive ? "translate-x-6" : "translate-x-1"
+                  }`}
+              />
+            </button>
+            <span className="text-sm text-gray-600">
+              {isActive ? "Active" : "Inactive"}
+            </span>
           </div>
 
           <button
-            onClick={() => onView(interviewer?.interviwer?._id)}
-            className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+            onClick={() => onView(interviewer?.interviwer?._id || interviewer?._id)}
+            className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
           >
             <Eye size={14} />
             View
@@ -329,25 +336,37 @@ const Interviewers = () => {
     setCurrentPage(0);
   };
 
-  const handleEdit = (row) => {
-    navigate(`/interviewers/${row?.interviwer?._id}/edit`);
+  const handleEdit = (rowOrId) => {
+    const id = typeof rowOrId === 'string' ? rowOrId : rowOrId?.interviwer?._id || rowOrId?._id;
+    if (id) navigate(`/interviewers/${id}/edit`);
   };
 
-  const handleView = (row) => {
-    navigate(`/interviewers/${row?.interviwer?._id}`);
+  const handleView = (rowOrId) => {
+    const id = typeof rowOrId === 'string' ? rowOrId : rowOrId?.interviwer?._id || rowOrId?._id;
+    if (id) navigate(`/interviewers/${id}`);
   };
 
-  const handleDelete = async (row) => {
-    const id = row?.interviwer?._id;
-    if (window.confirm("Are you sure you want to delete this interviewer?")) {
+  const handleDelete = async (rowOrId) => {
+    const id = typeof rowOrId === 'string' ? rowOrId : rowOrId?.interviwer?._id || rowOrId?._id;
+    if (id && window.confirm("Are you sure you want to delete this interviewer?")) {
       await deleteMutation.mutateAsync(id);
     }
   };
 
-  const handleToggleActive = async (row) => {
-    const id = row?.interviwer?._id;
-    const isActive = !row?.interviwer?.is_active;
-    await toggleActiveMutation.mutateAsync({ id, is_active: isActive });
+  const handleToggleActive = async (rowOrId, statusOverride) => {
+    let id, isActive;
+
+    if (typeof rowOrId === 'string') {
+      id = rowOrId;
+      isActive = statusOverride;
+    } else {
+      id = rowOrId?.interviwer?._id || rowOrId?._id;
+      isActive = !rowOrId?.interviwer?.is_active; // Should we check outer is_active too? relying on controller structure
+    }
+
+    if (id) {
+      await toggleActiveMutation.mutateAsync({ id, is_active: isActive });
+    }
   };
 
   // Filter handlers
@@ -489,7 +508,7 @@ const Interviewers = () => {
             {emptyStateMessage}
           </div>
         ) : (
-          <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 grid-cols-4 gap-6 px-4">
             {interviewers.map((interviewer) => (
               <InterviewerCard
                 key={interviewer?.interviwer?._id}

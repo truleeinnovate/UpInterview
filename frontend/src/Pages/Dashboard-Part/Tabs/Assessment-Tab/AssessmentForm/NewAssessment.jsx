@@ -133,16 +133,15 @@ const NewAssessment = () => {
   }, [debouncedPositionSearch]);
 
   const [matchingSection, setMatchingSection] = useState([]);
-  const defaultInstructions = `
-  • Ensure your camera and microphone are functional and remain 'ON' throughout the assessment.
-  • Maintain a stable and uninterrupted internet connection.
-  • All questions are compulsory.
-  • Click 'Submit' to complete the test.
-  • If time runs out, the test will auto-submit your answers.
-  • Avoid any malpractice, as it will result in disqualification.
-  • Make sure to read each question carefully before answering.
-  • You can review your answers before submitting.
-  • Ensure you are in a quiet environment to avoid distractions.`;
+  const defaultInstructions = `Ensure your camera and microphone are functional and remain 'ON' throughout the assessment.
+Maintain a stable and uninterrupted internet connection.
+All questions are compulsory.
+Click 'Submit' to complete the test.
+If time runs out, the test will auto-submit your answers.
+Avoid any malpractice, as it will result in disqualification.
+Make sure to read each question carefully before answering.
+You can review your answers before submitting.
+Ensure you are in a quiet environment to avoid distractions.`;
   const [checkedState, setCheckedState] = useState({});
   const [checkedCount, setCheckedCount] = useState(0);
   const [questionsBySection, setQuestionsBySection] = useState({});
@@ -180,7 +179,7 @@ const NewAssessment = () => {
   const assessment = isEditing
     ? assessmentById
     : // assessmentData.find((assessment) => assessment._id === id)
-      null;
+    null;
 
   const selectedPositionId =
     (formData.Position && formData.Position) ||
@@ -204,8 +203,8 @@ const NewAssessment = () => {
 
   const positionsForDropdown =
     selectedPosition &&
-    selectedPosition._id &&
-    !filteredPositionData.some((p) => p._id === selectedPosition._id)
+      selectedPosition._id &&
+      !filteredPositionData.some((p) => p._id === selectedPosition._id)
       ? [selectedPosition, ...filteredPositionData]
       : filteredPositionData;
 
@@ -851,12 +850,12 @@ const NewAssessment = () => {
         // Only include passScoreType and passScoreBy if they have values
         ...(formData.passScoreType &&
           formData.passScoreType.trim() !== "" && {
-            passScoreType: formData.passScoreType,
-          }),
+          passScoreType: formData.passScoreType,
+        }),
         ...(formData.passScoreBy &&
           formData.passScoreBy.trim() !== "" && {
-            passScoreBy: formData.passScoreBy,
-          }),
+          passScoreBy: formData.passScoreBy,
+        }),
         ...(formData.passScoreBy === "Overall" && { totalScore: totalScore }),
         ...(formData.passScoreBy === "Overall" &&
           formData.passScore && { passScore: formData.passScore }),
@@ -878,11 +877,11 @@ const NewAssessment = () => {
         ...assessmentData,
         ...(includePosition || includePhone
           ? {
-              CandidateDetails: {
-                ...(includePosition ? { includePosition } : {}),
-                ...(includePhone ? { includePhone } : {}),
-              },
-            }
+            CandidateDetails: {
+              ...(includePosition ? { includePosition } : {}),
+              ...(includePhone ? { includePhone } : {}),
+            },
+          }
           : {}),
         ...(instructions ? { Instructions: instructions } : {}),
         ...(additionalNotes ? { AdditionalNotes: additionalNotes } : {}),
@@ -1379,8 +1378,8 @@ const NewAssessment = () => {
   const toggleAction = (sectionName, questionIndex) => {
     setActionViewMore((prev) =>
       prev &&
-      prev.sectionName === sectionName &&
-      prev.questionIndex === questionIndex
+        prev.sectionName === sectionName &&
+        prev.questionIndex === questionIndex
         ? null
         : { sectionName, questionIndex },
     );

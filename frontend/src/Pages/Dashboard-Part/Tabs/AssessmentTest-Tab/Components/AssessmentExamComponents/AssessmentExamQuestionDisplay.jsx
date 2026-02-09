@@ -107,38 +107,138 @@ const AnswerInput = ({
     //   );
     // // v1.0.1 ----------------------------------------------------------------------------------->
     // // v1.0.0 ----------------------------------------------------------------------------------->
+    case "MCQ": {
+      // 1. Determine if this is a Multiple Selection MCQ
+      const isMultiple = options?.filter((opt) => opt.isCorrect).length > 1;
+      const correctOptionsCount =
+        options?.filter((opt) => opt.isCorrect).length || 1;
+
+      // 2. Local handler to manage single vs multiple selection
+      // const handleMCQChange = (optionValue) => {
+      //   if (isMultiple) {
+      //     // Ensure current value is an array
+      //     const currentSelection = Array.isArray(value)
+      //       ? value
+      //       : value
+      //         ? [value]
+      //         : [];
+
+      //     if (currentSelection.includes(optionValue)) {
+      //       // Remove if already selected
+      //       onChange(currentSelection.filter((val) => val !== optionValue));
+      //     } else {
+      //       // Add if not selected
+      //       onChange([...currentSelection, optionValue]);
+      //     }
+      //   } else {
+      //     // Single selection: just pass the value directly
+      //     onChange(optionValue);
+      //   }
+      // };
+      const handleMCQChange = (optionValue) => {
+        if (isMultiple) {
+          const currentSelection = Array.isArray(value)
+            ? value
+            : value
+              ? [value]
+              : [];
+
+          if (currentSelection.includes(optionValue)) {
+            // Always allow removing a selection
+            onChange(currentSelection.filter((val) => val !== optionValue));
+          } else {
+            // ONLY add if the user hasn't reached the limit yet
+            if (currentSelection.length < correctOptionsCount) {
+              onChange([...currentSelection, optionValue]);
+            }
+          }
+        } else {
+          onChange(optionValue);
+        }
+      };
+
+      return (
+        <div className="space-y-4">
+          {/* Dynamic Selection Message */}
+          {isMultiple && (
+            <div className="mb-6">
+              <p className="text-sm text-gray-800 font-semibold flex items-center">
+                Choose {correctOptionsCount} Options.
+              </p>
+            </div>
+          )}
+          {options?.map((optionObj, index) => {
+            const optionText =
+              typeof optionObj === "object" ? optionObj.optionText : optionObj;
+
+            const optionLabel = String.fromCharCode(97 + index);
+
+            const isSelected = Array.isArray(value)
+              ? value.includes(optionText)
+              : value === optionText;
+
+            return (
+              <label
+                key={index}
+                className={`flex items-center space-x-4 p-3 border rounded-lg transition-all duration-300 cursor-pointer
+              ${
+                isSelected
+                  ? "bg-blue-50 border-blue-200 shadow-inner"
+                  : "hover:bg-gray-50 border-gray-200 hover:border-gray-300"
+              }`}
+              >
+                <input
+                  type={isMultiple ? "checkbox" : "radio"}
+                  name={`mcq-${questionId}`}
+                  value={optionText}
+                  checked={isSelected}
+                  onChange={() => handleMCQChange(optionText)}
+                  className={`sm:h-3 sm:w-3 h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue ${!isMultiple ? "rounded-full" : "rounded"}`}
+                  disabled={disabled}
+                />
+                <span className="sm:text-sm md:text-md text-gray-900">
+                  <span className="font-medium mr-2">{optionLabel})</span>
+                  {optionText}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      );
+    }
     // case "MCQ": {
-    //   // 1. Determine if this is a Multiple Selection MCQ
-    //   const isMultiple = options?.filter((opt) => opt.isCorrect).length > 1;
+    //   const correctOptionsCount = options?.filter((opt) => opt.isCorrect).length || 1;
+    //   const isMultiple = correctOptionsCount > 1;
 
-    //   // 2. Local handler to manage single vs multiple selection
     //   const handleMCQChange = (optionValue) => {
-    //     if (isMultiple) {
-    //       // Ensure current value is an array
-    //       const currentSelection = Array.isArray(value)
-    //         ? value
-    //         : value
-    //           ? [value]
-    //           : [];
+    //     const currentSelection = Array.isArray(value)
+    //       ? value
+    //       : value ? [value] : [];
 
-    //       if (currentSelection.includes(optionValue)) {
-    //         // Remove if already selected
-    //         onChange(currentSelection.filter((val) => val !== optionValue));
-    //       } else {
-    //         // Add if not selected
+    //     if (currentSelection.includes(optionValue)) {
+    //       onChange(currentSelection.filter((val) => val !== optionValue));
+    //     } else {
+    //       if (!isMultiple) {
+    //         onChange([optionValue]);
+    //       } else if (currentSelection.length < correctOptionsCount) {
     //         onChange([...currentSelection, optionValue]);
     //       }
-    //     } else {
-    //       // Single selection: just pass the value directly
-    //       onChange(optionValue);
     //     }
     //   };
 
     //   return (
-    //     <div className="space-y-4">
+    //     <div>
+    //       {/* Validation Message */}
+    //       <div className="mb-8 p-3 bg-custom-blue/10 border-l-4 border-custom-blue">
+    //         <p className="text-sm text-custom-blue font-semibold">
+    //           {isMultiple
+    //             ? `Please select exactly ${correctOptionsCount} options.`
+    //             : "Please select 1 option."}
+    //         </p>
+    //       </div>
+
     //       {options?.map((optionObj, index) => {
-    //         const optionText =
-    //           typeof optionObj === "object" ? optionObj.optionText : optionObj;
+    //         const optionText = typeof optionObj === "object" ? optionObj.optionText : optionObj;
 
     //         const isSelected = Array.isArray(value)
     //           ? value.includes(optionText)
@@ -147,7 +247,7 @@ const AnswerInput = ({
     //         return (
     //           <label
     //             key={index}
-    //             className={`flex items-center space-x-4 p-3 border rounded-lg transition-all duration-300 cursor-pointer
+    //             className={`mb-4 flex items-center space-x-4 p-3 border rounded-lg transition-all duration-300 cursor-pointer
     //           ${
     //             isSelected
     //               ? "bg-blue-50 border-blue-200 shadow-inner"
@@ -155,12 +255,12 @@ const AnswerInput = ({
     //           }`}
     //           >
     //             <input
-    //               type={isMultiple ? "checkbox" : "radio"}
+    //               type="checkbox"
     //               name={`mcq-${questionId}`}
     //               value={optionText}
     //               checked={isSelected}
     //               onChange={() => handleMCQChange(optionText)}
-    //               className={`sm:h-3 sm:w-3 h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue ${!isMultiple ? "rounded-full" : "rounded"}`}
+    //               className="sm:h-3 sm:w-3 h-4 w-4 rounded accent-custom-blue text-custom-blue focus:ring-custom-blue"
     //               disabled={disabled}
     //             />
     //             <span className="sm:text-sm md:text-md text-gray-900">
@@ -172,72 +272,6 @@ const AnswerInput = ({
     //     </div>
     //   );
     // }
-    case "MCQ": {
-      const correctOptionsCount = options?.filter((opt) => opt.isCorrect).length || 1;
-      const isMultiple = correctOptionsCount > 1;
-
-      const handleMCQChange = (optionValue) => {
-        const currentSelection = Array.isArray(value)
-          ? value
-          : value ? [value] : [];
-
-        if (currentSelection.includes(optionValue)) {
-          onChange(currentSelection.filter((val) => val !== optionValue));
-        } else {
-          if (!isMultiple) {
-            onChange([optionValue]);
-          } else if (currentSelection.length < correctOptionsCount) {
-            onChange([...currentSelection, optionValue]);
-          }
-        }
-      };
-
-      return (
-        <div>
-          {/* Validation Message */}
-          <div className="mb-8 p-3 bg-custom-blue/10 border-l-4 border-custom-blue">
-            <p className="text-sm text-custom-blue font-semibold">
-              {isMultiple 
-                ? `Please select exactly ${correctOptionsCount} options.` 
-                : "Please select 1 option."}
-            </p>
-          </div>
-
-          {options?.map((optionObj, index) => {
-            const optionText = typeof optionObj === "object" ? optionObj.optionText : optionObj;
-            
-            const isSelected = Array.isArray(value)
-              ? value.includes(optionText)
-              : value === optionText;
-
-            return (
-              <label
-                key={index}
-                className={`mb-4 flex items-center space-x-4 p-3 border rounded-lg transition-all duration-300 cursor-pointer
-              ${
-                isSelected
-                  ? "bg-blue-50 border-blue-200 shadow-inner"
-                  : "hover:bg-gray-50 border-gray-200 hover:border-gray-300"
-              }`}
-              >
-                <input
-                  type="checkbox"
-                  name={`mcq-${questionId}`}
-                  value={optionText}
-                  checked={isSelected}
-                  onChange={() => handleMCQChange(optionText)}
-                  className="sm:h-3 sm:w-3 h-4 w-4 rounded accent-custom-blue text-custom-blue focus:ring-custom-blue"
-                  disabled={disabled}
-                />
-                <span className="sm:text-sm md:text-md text-gray-900">
-                  {optionText}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      );
-    }
     case "Short":
       // v1.0.0 <--------------------------------------------------------------------------------
       // v1.0.1 <--------------------------------------------------------------------------------

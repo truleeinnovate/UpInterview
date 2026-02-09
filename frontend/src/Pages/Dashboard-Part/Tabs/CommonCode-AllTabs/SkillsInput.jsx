@@ -18,6 +18,13 @@ import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import { createPortal } from "react-dom";
 
+// Helper to safely get skill name regardless of casing
+const getSkillName = (skill) => {
+  if (!skill) return "";
+  if (typeof skill === "string") return skill;
+  return skill.SkillName || skill.skillName || skill.name || "";
+};
+
 const SkillsField = forwardRef(
   (
     {
@@ -105,13 +112,13 @@ const SkillsField = forwardRef(
       const currentRowSkill = entries[rowIndex]?.skill;
       const availableSkills = skills.filter(
         (skill) =>
-          !otherSelectedSkills.includes(skill.SkillName) ||
-          skill.SkillName === currentRowSkill,
+          !otherSelectedSkills.includes(getSkillName(skill)) ||
+          getSkillName(skill) === currentRowSkill,
       );
 
       // Add "Other" option at the end for custom skills
       return [
-        ...availableSkills.map((s) => ({ SkillName: s.SkillName })),
+        ...availableSkills.map((s) => ({ SkillName: getSkillName(s) })),
         { SkillName: "__other__" },
       ];
     };
@@ -222,7 +229,7 @@ const SkillsField = forwardRef(
           if (entry.skill) {
             // Check if the skill exists in the predefined skills list
             const isSkillInList = skills.some(
-              (skill) => skill.SkillName === entry.skill,
+              (skill) => getSkillName(skill) === entry.skill,
             );
             // If not in list and not the special "__other__" value, it's custom
             if (!isSkillInList && entry.skill !== "__other__") {
@@ -322,9 +329,11 @@ const SkillsField = forwardRef(
     const getFilteredSkillsForPopup = () => {
       return skills
         .filter((skill) =>
-          skill.SkillName.toLowerCase().includes(popupSearchTerm.toLowerCase()),
+          getSkillName(skill)
+            .toLowerCase()
+            .includes(popupSearchTerm.toLowerCase()),
         )
-        .map((s) => s.SkillName);
+        .map((s) => getSkillName(s));
     };
 
     return (

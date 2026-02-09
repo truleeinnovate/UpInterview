@@ -589,16 +589,63 @@ export const getInterviewerColumns = (navigate, options = {}) => {
             key: "full_name",
             header: "Name",
             render: (value, row) => {
-                const interviewer = row?.interviwer;
-                const displayName = interviewer ? `${interviewer.firstName} ${interviewer.lastName}` : "Unknown";
-                const initials = interviewer ? `${interviewer.firstName?.charAt(0)}${interviewer.lastName?.charAt(0)}`.toUpperCase() : "?";
+                // Logic directly from InterviewerCard to ensure consistency
+                let displayName =
+                    row?.contactDetails
+                        ? row?.contactDetails?.firstName
+                        : row?.contactId?.firstName + " " + (row?.contactDetails
+                            ? row?.contactDetails?.lastName
+                            : row?.contactDetails?.lastName);
+
+                // Fallback or specific internal logic
+                if (
+                    (row?.interviwer?.interviewer_type ||
+                        row?.interviewer_type) === "internal" &&
+                    row.contactId &&
+                    typeof row.contactId === "object"
+                ) {
+                    const user = row?.contactDetails || row?.contactId;
+                    const userName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+                    if (userName) displayName = userName;
+                }
+
+                // Initial fallback if above logic fails or returns partial data
+                if (!displayName || displayName.trim() === "undefined undefined") {
+                    const interviewer = row?.interviwer;
+                    if (interviewer) {
+                        displayName = `${interviewer.firstName || ""} ${interviewer.lastName || ""}`.trim();
+                    }
+                }
+                if (!displayName) displayName = "Unknown";
+
+
+                let displayAvatar = row?.contactDetails
+                    ? row?.contactId?.imageData
+                    : row?.contactDetails?.imageData;
+
+                if (
+                    (row?.interviwer?.interviewer_type ||
+                        row?.interviewer_type) === "internal" &&
+                    row.contactId &&
+                    typeof row.contactId === "object"
+                ) {
+                    const user = row?.contactDetails || row?.contactId;
+                    if (user.imageData?.path) displayAvatar = user.imageData.path;
+                }
+
+                if (!displayAvatar && row?.interviwer?.imageData?.path) {
+                    displayAvatar = row.interviwer.imageData.path;
+                }
+
 
                 return (
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-xs font-semibold overflow-hidden">
-                            {interviewer?.imageData ? (
-                                <img src={interviewer.imageData.path} alt={displayName} className="w-full h-full object-cover" />
-                            ) : initials}
+                            {displayAvatar ? (
+                                <img src={displayAvatar} alt={displayName} className="w-full h-full object-cover" />
+                            ) : (
+                                displayName.charAt(0).toUpperCase()
+                            )}
                         </div>
                         <div className="flex flex-col">
                             <span
@@ -609,9 +656,10 @@ export const getInterviewerColumns = (navigate, options = {}) => {
                                         return;
                                     }
                                     if (permissions.Interviewers?.View) {
-                                        navigate(`/interviewers/${interviewer?._id}`);
+                                        navigate(`/interviewers/${row?.interviwer?._id}`);
                                     }
                                 }}
+                                title={displayName}
                             >
                                 {displayName}
                             </span>
@@ -623,39 +671,102 @@ export const getInterviewerColumns = (navigate, options = {}) => {
         {
             key: "role",
             header: "Role",
-            render: (value, row) => (
-                <span className="text-gray-600 truncate max-w-[150px]" title={row?.interviwer?.role}>
-                    {row?.interviwer?.role || "N/A"}
-                </span>
-            ),
+            render: (value, row) => {
+                let displayRole = row?.contactDetails?.currentRoleLabel || row?.contactDetails?.currentRole || "Interviewer";
+                if (
+                    (row?.interviwer?.interviewer_type ||
+                        row?.interviewer_type) === "internal" &&
+                    row.contactId &&
+                    typeof row.contactId === "object"
+                ) {
+                    const user = row?.contactDetails?.currentRole;
+                    if (user) displayRole = user;
+                }
+                // // Fallback to row.interviwer.role if specific logic didn't catch it
+                // if (displayRole === "Interviewer" && row?.interviwer?.role) {
+                //     displayRole = row.interviwer.role;
+                // }
+
+
+                return (
+                    <span className="text-gray-600 truncate max-w-[150px]" title={displayRole}>
+                        {displayRole}
+                    </span>
+                );
+            },
         },
         {
             key: "email",
             header: "Email",
-            render: (value, row) => (
-                <div className="flex items-center gap-2 text-gray-600">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <span className="truncate max-w-[180px]" title={row?.interviwer?.email}>
-                        {row?.interviwer?.email || "N/A"}
-                    </span>
-                </div>
-            ),
+            render: (value, row) => {
+                let displayEmail = row?.contactDetails
+                    ? row?.contactDetails?.email
+                    : row?.contactId?.email;
+
+                if (
+                    (row?.interviwer?.interviewer_type ||
+                        row?.interviewer_type) === "internal" &&
+                    row.contactId &&
+                    typeof row.contactId === "object"
+                ) {
+                    const user = row?.contactDetails || row?.contactId;
+                    if (user.email) displayEmail = user.email;
+                }
+                if (!displayEmail && row?.interviwer?.email) {
+                    displayEmail = row.interviwer.email;
+                }
+
+
+                return (
+                    <div className="flex items-center gap-2 text-gray-600">
+                        <Mail className="w-4 h-4 text-gray-400" />
+                        <span className="truncate max-w-[180px]" title={displayEmail}>
+                            {displayEmail || "N/A"}
+                        </span>
+                    </div>
+                );
+            },
         },
         {
             key: "phone",
             header: "Phone",
-            render: (value, row) => (
-                <span className="text-gray-600">
-                    {row?.interviwer?.phone || "N/A"}
-                </span>
-            ),
+            render: (value, row) => {
+                // Add phone logic if available in contactDetails or contactId, fallback to interviwer.phone
+                // let displayPhone = row?.contactDetails?.phone;
+
+                // if (
+                //     (row?.interviwer?.interviewer_type ||
+                //         row?.interviewer_type) === "internal" &&
+                //     row.contactId &&
+                //     typeof row.contactId === "object"
+                // ) {
+                //     const user = row?.contactDetails;
+                //     if (user.phone) displayPhone = user.phone;
+                // }
+
+                // if (!displayPhone) {
+                //     displayPhone = row?.contactDetails?.phone;
+                // }
+                //console.log(row?.contactDetails, "row");
+
+
+                return (
+                    <span className="text-gray-600">
+                        {row?.contactDetails?.phone || "N/A"}
+                    </span>
+                );
+            },
         },
         {
             key: "status",
             header: "Status",
-            render: (value, row) => (
-                <StatusBadge status={row?.interviwer?.status || "Inactive"} />
-            ),
+            render: (value, row) => {
+                const isActive = row?.interviwer?.is_active;
+                const statusLabel = isActive ? "Active" : "Inactive";
+                return (
+                    <StatusBadge status={statusLabel} />
+                );
+            },
         },
     ];
 };

@@ -105,15 +105,15 @@ const sendAssessmentInvitationEmails = async ({
         [candidate.FirstName, candidate.LastName].filter(Boolean).join(" ") ||
         "Candidate";
 
-      const formattedExpiryDate = ca.expiryAt.toLocaleString("en-US", {
-        weekday: "long",
+      const formattedExpiryDate = new Intl.DateTimeFormat("en-US", {
         year: "numeric",
-        month: "long",
+        month: "numeric",
         day: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-        timeZoneName: "short",
-      });
+        // second: "2-digit",    // ← optional, include only if you want seconds
+        hour12: false,
+      }).format(ca.expiryAt);
 
       // Clean body once
       const cleanedBody = emailTemplate.body.replace(/[\n\r]/g, "");
