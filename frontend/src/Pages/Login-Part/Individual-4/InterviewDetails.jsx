@@ -1745,7 +1745,7 @@ const InterviewDetails = ({
             error={errors.professionalTitle}
             label="Professional Title"
             required
-            minLength={50}
+            minLength={30}
             maxLength={100}
             placeholder="Senior Software Engineer With 5+ Years Of Experience In FullStack Development"
           />
