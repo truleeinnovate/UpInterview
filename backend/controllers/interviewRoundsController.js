@@ -708,7 +708,7 @@ const updateInterviewRound = async (req, res) => {
 
   console.log("changesDone", changes);
 
-  if (!changes.anyChange) {
+  if (!changes.anyChange && updateType !== "FULL_UPDATE") {
     return res.status(200).json({
       message: "No changes detected. Round not updated.",
       status: "noop",

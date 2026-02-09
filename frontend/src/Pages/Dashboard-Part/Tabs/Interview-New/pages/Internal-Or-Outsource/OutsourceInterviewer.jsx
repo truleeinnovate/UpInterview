@@ -40,6 +40,7 @@ import DropdownWithSearchField from "../../../../../../Components/FormFields/Dro
 import { useMasterData } from "../../../../../../apiHooks/useMasterData.js";
 import { ReactComponent as LuFilterX } from "../../../../../../icons/LuFilterX.svg";
 import { ReactComponent as LuFilter } from "../../../../../../icons/LuFilter.svg";
+import { useNavigate } from "react-router-dom";
 
 export const OutsourcedInterviewerCard = ({
   interviewer,
@@ -302,7 +303,7 @@ export const OutsourcedInterviewerCard = ({
         )} */}
 
         <div className="mt-3">
-           {source !== "internal-interview" ? null : (
+          {source !== "internal-interview" ? null : (
             <p className="text-sm text-gray-500 mt-0.1">
               {interviewerEmail}
             </p>
@@ -316,7 +317,7 @@ export const OutsourcedInterviewerCard = ({
             </span>
           </div>
 
-         
+
 
           {source === "internal-interview" ? null : (
             <>
@@ -507,6 +508,7 @@ function OutsourcedInterviewerModal({
     type,
   });
   const { data: walletBalance, refetch } = useWallet();
+  const navigate = useNavigate();
   //   const { contacts } = useCustomContext(); //<----v1.0.1-----
   //   console.log("contacts===", contacts);
   const contacts = matchedContact;
@@ -564,12 +566,16 @@ function OutsourcedInterviewerModal({
   const [selectedRole, setSelectedRole] = useState(currentRole || "");
   const [tempSelectedRole, setTempSelectedRole] = useState(currentRole || "");
 
-  console.log("selectedRole", selectedRole);
+  // console.log("selectedRole", selectedRole);
 
-  console.log("currentRole", currentRole);
+  // console.log("currentRole", currentRole);
 
-  console.log("currentRoles", currentRoles);
-  console.log("tempSelectedSkills", tempSelectedSkills);
+  // console.log("currentRoles", currentRoles);
+  // console.log("tempSelectedSkills", tempSelectedSkills);
+
+  useEffect(() => {
+    setSelectedInterviewersLocal(previousSelectedInterviewers || []);
+  }, [previousSelectedInterviewers]);
 
   // Fetch tenant tax configuration (GST, service charge, etc.)
   const { data: tenantTaxConfig } = useTenantTaxConfig();
@@ -1675,14 +1681,29 @@ function OutsourcedInterviewerModal({
                     ₹{Number(availableBalance || 0).toFixed(2)}
                   </p>
                 </div>
+
               </div>
-              <Button
-                onClick={() => setShowWalletModal(true)}
+              {/* <Button
+                asChild
                 size="sm"
                 variant="outline"
                 className="gap-1 text-sm"
               >
-                <Plus className="h-3 w-3" />
+                <a href="/wallet-topup" target="_blank" rel="noopener noreferrer">
+                  <Plus className="h-3 w-3" />
+                  Top Up
+                </a>
+              </Button> */}
+
+              <Button
+                // onClick={() => setShowWalletModal(true)}
+                onClick={() => window.open("/wallet-topup", "_blank")}
+                size="sm"
+                variant="outline"
+                className="gap-1 text-sm"
+              >
+                <ExternalLink className="h-3 w-3 ml-1 opacity-70" />
+                {/* <Plus className="h-3 w-3" /> */}
                 Top Up
               </Button>
             </div>
@@ -2307,12 +2328,13 @@ function OutsourcedInterviewerModal({
         )}
       </AnimatePresence>
 
-      {showWalletModal && (
+      {/* {showWalletModal && (
         <WalletTopupPopup
-          onClose={() => setShowWalletModal(false)}
+        // /wallet-topup
+        onClose={() => setShowWalletModal(false)}
           onTopup={handleTopup}
         />
-      )}
+      )} */}
     </>
   );
 }

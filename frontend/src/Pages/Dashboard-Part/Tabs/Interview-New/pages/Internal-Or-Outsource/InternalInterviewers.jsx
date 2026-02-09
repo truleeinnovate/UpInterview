@@ -78,6 +78,11 @@ const InternalInterviews = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
+
+  useEffect(() => {
+    setSelectedInterviewers(selectedInterviewersProp || []);
+  }, [selectedInterviewersProp]);
+
   // CHANGED: Enhanced useEffect to sync props with local state
   useEffect(() => {
     if (propSelectedTagIds?.length > 0) {

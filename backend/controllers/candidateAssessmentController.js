@@ -485,13 +485,15 @@ exports.extendCandidateAssessment = async (req, res) => {
           interviewRound &&
           interviewRound.status !== candidateAssessment.status
         ) {
-          // const newStatus = "Evaluated";
+
+          const newStatus = 'Rescheduled';
           await InterviewRounds.findByIdAndUpdate(
             interviewRound._id,
             {
               $set: {
-                status: candidateAssessment.status,
-                currentAction: candidateAssessment.status,
+                status: newStatus,
+                // candidateAssessment.status,
+                currentAction: newStatus,
                 previousAction: interviewRound.status,
               },
             },
@@ -948,9 +950,8 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
 
         updatedAssessments.push({
           id: assessment._id,
-          candidateName: `${assessment.candidateId?.FirstName || ""} ${
-            assessment.candidateId?.LastName || ""
-          }`.trim(),
+          candidateName: `${assessment.candidateId?.FirstName || ""} ${assessment.candidateId?.LastName || ""
+            }`.trim(),
           email: assessment.candidateId?.Email || "N/A",
           expiredAt: assessment.expiryAt,
         });
