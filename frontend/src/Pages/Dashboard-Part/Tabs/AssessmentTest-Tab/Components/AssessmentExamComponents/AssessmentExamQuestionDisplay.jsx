@@ -110,11 +110,33 @@ const AnswerInput = ({
     case "MCQ": {
       // 1. Determine if this is a Multiple Selection MCQ
       const isMultiple = options?.filter((opt) => opt.isCorrect).length > 1;
+      const correctOptionsCount =
+        options?.filter((opt) => opt.isCorrect).length || 1;
 
       // 2. Local handler to manage single vs multiple selection
+      // const handleMCQChange = (optionValue) => {
+      //   if (isMultiple) {
+      //     // Ensure current value is an array
+      //     const currentSelection = Array.isArray(value)
+      //       ? value
+      //       : value
+      //         ? [value]
+      //         : [];
+
+      //     if (currentSelection.includes(optionValue)) {
+      //       // Remove if already selected
+      //       onChange(currentSelection.filter((val) => val !== optionValue));
+      //     } else {
+      //       // Add if not selected
+      //       onChange([...currentSelection, optionValue]);
+      //     }
+      //   } else {
+      //     // Single selection: just pass the value directly
+      //     onChange(optionValue);
+      //   }
+      // };
       const handleMCQChange = (optionValue) => {
         if (isMultiple) {
-          // Ensure current value is an array
           const currentSelection = Array.isArray(value)
             ? value
             : value
@@ -122,23 +144,34 @@ const AnswerInput = ({
               : [];
 
           if (currentSelection.includes(optionValue)) {
-            // Remove if already selected
+            // Always allow removing a selection
             onChange(currentSelection.filter((val) => val !== optionValue));
           } else {
-            // Add if not selected
-            onChange([...currentSelection, optionValue]);
+            // ONLY add if the user hasn't reached the limit yet
+            if (currentSelection.length < correctOptionsCount) {
+              onChange([...currentSelection, optionValue]);
+            }
           }
         } else {
-          // Single selection: just pass the value directly
           onChange(optionValue);
         }
       };
 
       return (
         <div className="space-y-4">
+          {/* Dynamic Selection Message */}
+          {isMultiple && (
+            <div className="mb-6">
+              <p className="text-sm text-gray-800 font-semibold flex items-center">
+                Choose {correctOptionsCount} Options.
+              </p>
+            </div>
+          )}
           {options?.map((optionObj, index) => {
             const optionText =
               typeof optionObj === "object" ? optionObj.optionText : optionObj;
+
+            const optionLabel = String.fromCharCode(97 + index);
 
             const isSelected = Array.isArray(value)
               ? value.includes(optionText)
@@ -164,6 +197,7 @@ const AnswerInput = ({
                   disabled={disabled}
                 />
                 <span className="sm:text-sm md:text-md text-gray-900">
+                  <span className="font-medium mr-2">{optionLabel})</span>
                   {optionText}
                 </span>
               </label>
@@ -197,15 +231,15 @@ const AnswerInput = ({
     //       {/* Validation Message */}
     //       <div className="mb-8 p-3 bg-custom-blue/10 border-l-4 border-custom-blue">
     //         <p className="text-sm text-custom-blue font-semibold">
-    //           {isMultiple 
-    //             ? `Please select exactly ${correctOptionsCount} options.` 
+    //           {isMultiple
+    //             ? `Please select exactly ${correctOptionsCount} options.`
     //             : "Please select 1 option."}
     //         </p>
     //       </div>
 
     //       {options?.map((optionObj, index) => {
     //         const optionText = typeof optionObj === "object" ? optionObj.optionText : optionObj;
-            
+
     //         const isSelected = Array.isArray(value)
     //           ? value.includes(optionText)
     //           : value === optionText;
