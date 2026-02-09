@@ -15,8 +15,8 @@ const AvailabilityDetails = ({
     setErrors,
 }) => {
 
-    const [selectedOption, setSelectedOption] = useState(
-        availabilityDetailsData.preferredDuration || null
+const [selectedOption, setSelectedOption] = useState(
+        availabilityDetailsData?.preferredDuration || '60'   // ← fallback to '60'
     );
 
     const [isAutoDetecting, setIsAutoDetecting] = useState(true);

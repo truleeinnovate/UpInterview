@@ -69,9 +69,9 @@ const contactPatchSchema = Joi.object({
   // technologies: Joi.array().min(1).messages({
   //   "array.min": "At least one technology is required",
   // }),
-  professionalTitle: Joi.string().min(50).max(100).messages({
+  professionalTitle: Joi.string().min(30).max(100).messages({
     "string.empty": "Professional Title is required",
-    "string.min": "Professional Title must be at least 50 characters",
+    "string.min": "Professional Title must be at least 30 characters",
     "string.max": "Professional Title cannot exceed 100 characters",
   }),
   bio: Joi.string().min(150).max(500).messages({

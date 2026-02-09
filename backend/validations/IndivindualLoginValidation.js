@@ -83,9 +83,9 @@ const interviewDetailsSchema = Joi.object({
     .messages({
       "array.min": "At least one interview format is required",
     }),
-  professionalTitle: Joi.string().trim().min(50).max(100).required().messages({
+  professionalTitle: Joi.string().trim().min(30).max(100).required().messages({
     "string.empty": "Professional title is required",
-    "string.min": "Professional title must be at least 50 characters",
+    "string.min": "Professional title must be at least 30 characters",
     "string.max": "Professional title cannot exceed 100 characters",
   }),
   bio: Joi.string().trim().min(150).required().messages({
