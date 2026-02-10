@@ -1279,7 +1279,10 @@ const RoundFormInterviews = () => {
       setHasManuallyClearedInterviewers(true);
     } else {
       // setInterviewMode("");
-      setInstructions(previousRoundTitle === "Assessment" ? "" : instructions); // Clear instructions for non-Assessment rounds
+      const clearInstructions = instructions.replace(/[•\u2022]\s*/g, "");
+      setInstructions(previousRoundTitle === "Assessment" ? "" : clearInstructions); // Clear instructions for non-Assessment rounds
+
+      // setInstructions(previousRoundTitle === "Assessment" ? "" : instructions); // Clear instructions for non-Assessment rounds
 
       setAssessmentTemplate({ assessmentId: "", assessmentName: "" });
       setSelectedAssessmentData(null);
@@ -2392,9 +2395,11 @@ const RoundFormInterviews = () => {
     };
     setAssessmentTemplate(assessmentData);
     setSelectedAssessmentData(assessment);
+    const clearInstructions = assessment.Instructions.replace(/[•\u2022]\s*/g, "")
+    setInstructions(clearInstructions);
 
     setDuration(parseInt(assessment.Duration.replace(" minutes", "")));
-    setInstructions(assessment.Instructions);
+    // setInstructions(assessment.Instructions);
     setExpandedSections({});
     setSectionQuestions({});
     setInternalInterviewers([]);
@@ -2577,11 +2582,11 @@ const RoundFormInterviews = () => {
               </>,
               <>
                 <span className="font-medium">Question Management:</span> Add
-                questions from your question bank or create new ones on the fly
+                questions from question bank or create new ones on the fly
               </>,
               <>
                 <span className="font-medium">Custom Instructions:</span>{" "}
-                Provide detailed instructions for each round (minimum 50
+                Provide detailed instructions for each round (minimum 150
                 characters)
               </>,
               <>
@@ -4288,7 +4293,7 @@ const RoundFormInterviews = () => {
                       label="Instructions"
                       id="instructions"
                       rows="10"
-                      minLength={50}
+                      minLength={150}
                       maxLength={1000}
                       placeholder="Provide detailed instructions for interviewers including evaluation criteria, scoring guidelines (e.g., 1-10 scale), key focus areas, time allocation, and specific protocols to follow during the interview session."
                       value={instructions}

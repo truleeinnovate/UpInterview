@@ -4,13 +4,26 @@ module.exports = (agenda) => {
   agenda.define("round-no-show", async (job) => {
     const { roundId } = job.attrs.data;
 
-    const round = await InterviewRounds.findById(roundId);
-    if (!round) return;
+    console.log("\n[NoShow-Job] ========== round-no-show JOB FIRED ==========");
+    console.log("[NoShow-Job] roundId:", roundId);
 
-    // 🔐 Double safety
-    if (round.status !== "Scheduled") return;
+    const round = await InterviewRounds.findById(roundId);
+    if (!round) {
+      console.log("[NoShow-Job] ❌ Round not found in DB, exiting");
+      return;
+    }
+
+    console.log("[NoShow-Job] Round found:", round._id, "| status:", round.status, "| interviewerType:", round.interviewerType);
+
+    // 🔐 Double safety — must be Scheduled or Rescheduled (matches scheduler guard)
+    if (!["Scheduled", "Rescheduled"].includes(round.status)) {
+      console.log("[NoShow-Job] ❌ Status is", round.status, "(not Scheduled/Rescheduled) → skipping no-show");
+      return;
+    }
 
     const participants = round.participants || [];
+    console.log("[NoShow-Job] Participants count:", participants.length);
+    console.log("[NoShow-Job] Participants:", JSON.stringify(participants));
 
     const candidateJoined = participants.some(
       (p) => p.role === "Candidate" && p.status === "Joined"
@@ -19,7 +32,12 @@ module.exports = (agenda) => {
       (p) => p.role === "Interviewer" && p.status === "Joined"
     );
 
-    if (candidateJoined && interviewerJoined) return;
+    console.log("[NoShow-Job] candidateJoined:", candidateJoined, "| interviewerJoined:", interviewerJoined);
+
+    if (candidateJoined && interviewerJoined) {
+      console.log("[NoShow-Job] ✅ Both joined, no no-show needed → exiting");
+      return;
+    }
 
     let currentAction = "Candidate_NoShow";
     if (!interviewerJoined && candidateJoined) {
@@ -28,10 +46,16 @@ module.exports = (agenda) => {
       currentAction = "Both_NoShow";
     }
 
+    console.log("[NoShow-Job] 🚨 Marking round as NoShow | currentAction:", currentAction);
+
     await InterviewRounds.findByIdAndUpdate(roundId, {
       status: "NoShow",
       currentAction,
       noShowJobId: null,
     });
+
+    console.log("[NoShow-Job] ✅ Round updated to NoShow successfully");
+    console.log("[NoShow-Job] ========== round-no-show JOB COMPLETE ==========\n");
   });
 };
+

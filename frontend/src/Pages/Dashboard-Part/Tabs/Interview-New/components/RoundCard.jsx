@@ -999,6 +999,9 @@ const RoundCard = ({
       canNoShow: true,
       canSkipped: false,
       canEvaluated: false,
+      //only for if round title assessment
+      canExtendAssessment: true,
+      canCancelAssessment: true,
     },
     Completed: {
       canEdit: false,
@@ -1861,7 +1864,8 @@ const RoundCard = ({
 
                   {/* Skipped */}
                   {permissions.canSkipped &&
-                    round.roundTitle !== "Assessment" && (
+                    // round.roundTitle !== "Assessment" && 
+                    (
                       <button
                         onClick={() => handleActionClick("Skipped")}
                         className="inline-flex items-center px-3 py-2 border border-orange-300 text-sm rounded-md text-orange-700 bg-orange-50 hover:bg-orange-100"
@@ -1900,8 +1904,11 @@ const RoundCard = ({
                   {/* Edit */}
                   {permissions.canEdit &&
                     ((round?.status === "Draft" &&
-                      round?.interviewType?.toLowerCase() === "instant") ||
-                      round?.interviewType?.toLowerCase() !== "instant") && (
+
+                      round?.interviewType?.toLowerCase() === "instant")
+                      ||
+                      round?.interviewType?.toLowerCase() !== "instant") &&
+                    round?.roundTitle !== "Assessment" && (
                       <button
                         onClick={() => onEdit(round, { isEdit: true })}
                         className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
@@ -2057,6 +2064,19 @@ const RoundCard = ({
                           Extend
                         </button>
                       )}
+
+                      {round?.roundTitle === "Assessment" && round?.status === "Draft" &&
+                        (
+                          <button
+                            onClick={() => onEdit(round, { isEdit: true })}
+                            className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            {round?.status === "Draft"
+                              ? "Edit & Schedule"
+                              : "Edit Round"}
+                          </button>
+                        )}
 
                       {permissions.canCancelAssessment && (
                         <button

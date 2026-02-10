@@ -633,13 +633,13 @@ exports.cancelCandidateAssessments = async (req, res) => {
           interviewRound &&
           interviewRound.status !== candidateAssessment.status
         ) {
-          // const newStatus = "Evaluated";
+          const newStatus = "Cancelled";
           await InterviewRounds.findByIdAndUpdate(
             interviewRound._id,
             {
               $set: {
-                status: candidateAssessment.status,
-                currentAction: candidateAssessment.status,
+                status: newStatus,
+                currentAction: newStatus,
                 previousAction: interviewRound.status,
               },
             },

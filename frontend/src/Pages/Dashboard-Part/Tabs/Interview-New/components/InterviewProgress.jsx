@@ -15,17 +15,49 @@ const InterviewProgress = ({
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
 
   const getStatusIcon = (round) => {
-    switch (round.status) {
-      case "Completed":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+    console.log("round", round.status);
+    switch (round?.status) {
+      // Active/In-Progress statuses
+      case "Draft":
+        return <Circle className="h-5 w-5 text-gray-400" />;
+      case "RequestSent":
+        return <Clock className="h-5 w-5 text-orange-500" />;
       case "Scheduled":
         return <Clock className="h-5 w-5 text-blue-500" />;
-      case "Cancelled":
-        return <XCircle className="h-5 w-5 text-red-500" />;
-      case "Rejected":
-        return <ThumbsDown className="h-5 w-5 text-purple-500" />;
+      case "InProgress":
+        return <Clock className="h-5 w-5 text-blue-600" />;
+      case "Rescheduled":
+        return <Clock className="h-5 w-5 text-blue-400" />;
+
+      // Completed statuses
+      case "Completed":
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case "Selected":
+        return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case "Evaluated":
+        return <CheckCircle className="h-5 w-5 text-green-700" />;
+      case "FeedbackSubmitted":
+        return <CheckCircle className="h-5 w-5 text-teal-500" />;
+
+      // Pending statuses
+      case "FeedbackPending":
+        return <Circle className="h-5 w-5 text-yellow-500" />;
       case "Pending":
         return <Circle className="h-5 w-5 text-yellow-500" />;
+      case "InCompleted":
+      case "InComplete":
+        return <Circle className="h-5 w-5 text-yellow-600" />;
+
+      // Negative statuses
+      case "Cancelled":
+        return <XCircle className="h-5 w-5 text-red-500" />;
+      case "NoShow":
+        return <XCircle className="h-5 w-5 text-red-600" />;
+      case "Skipped":
+        return <XCircle className="h-5 w-5 text-gray-500" />;
+      case "Rejected":
+        return <ThumbsDown className="h-5 w-5 text-purple-500" />;
+
       default:
         return <Circle className="h-5 w-5 text-gray-300" />;
     }
@@ -34,25 +66,46 @@ const InterviewProgress = ({
   const getStatusColor = (round, isCurrent) => {
     if (isCurrent) return "bg-blue-100 border-blue-500";
 
-    switch (round.status) {
+    switch (round?.status) {
+      // Active/In-Progress statuses
       case "Draft":
         return "bg-gray-100 border-gray-400";
       case "RequestSent":
         return "bg-orange-50 border-orange-200";
       case "Scheduled":
         return "bg-blue-50 border-blue-200";
+      case "InProgress":
+        return "bg-blue-100 border-blue-300";
       case "Rescheduled":
         return "bg-blue-100 border-blue-400";
+
+      // Completed statuses
       case "Completed":
         return "bg-green-50 border-green-200";
-      case "Cancelled":
-        return "bg-red-50 border-red-200";
-      case "Rejected":
-        return "bg-purple-50 border-purple-200";
       case "Selected":
         return "bg-teal-50 border-teal-200";
+      case "Evaluated":
+        return "bg-green-100 border-green-400";
+      case "FeedbackSubmitted":
+        return "bg-teal-100 border-teal-300";
+
+      // Pending statuses
+      case "FeedbackPending":
+        return "bg-yellow-50 border-yellow-300";
+      case "InCompleted":
       case "InComplete":
         return "bg-yellow-50 border-yellow-200";
+
+      // Negative statuses
+      case "Cancelled":
+        return "bg-red-50 border-red-200";
+      case "NoShow":
+        return "bg-red-100 border-red-300";
+      case "Skipped":
+        return "bg-gray-100 border-gray-300";
+      case "Rejected":
+        return "bg-purple-50 border-purple-200";
+
       default:
         return "bg-gray-50 border-gray-200";
     }

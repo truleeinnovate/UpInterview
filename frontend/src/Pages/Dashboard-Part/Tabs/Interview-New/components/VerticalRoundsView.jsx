@@ -31,6 +31,15 @@ const VerticalRoundsView = ({
   // Track expanded rounds
   const [expandedRounds, setExpandedRounds] = useState({});
   const [resendingRoundId, setResendingRoundId] = useState(null);
+
+  // Priority statuses for default expansion (initial/active stage)
+  const priorityStatuses = ["RequestSent", "Scheduled", "InProgress", "Rescheduled"];
+
+  // Check if a round has priority status for default expansion
+  const hasPriorityStatus = (round) => {
+    return priorityStatuses.includes(round?.status);
+  };
+
   // v1.0.1 <-------------------------------------------------------------------------------------
   // v1.0.0 <----------------------------------------------------------
   // Open first round by default
@@ -40,13 +49,22 @@ const VerticalRoundsView = ({
   //   }
   // }, [rounds]);
 
+  // Auto-expand the first round in initial/active stage based on sequence
   useEffect(() => {
     if (sortedRounds.length > 0) {
-      setExpandedRounds(sortedRounds[0]._id);
+      // Find the first round with priority status based on sequence
+      const firstPriorityRound = sortedRounds.find(round => hasPriorityStatus(round));
+      if (firstPriorityRound) {
+        // Priority: expand first round with matching status
+        setExpandedRounds(firstPriorityRound._id);
+      } else {
+        // Fallback: expand first round if no priority status found
+        setExpandedRounds(sortedRounds[0]._id);
+      }
     }
   }, [rounds]);
 
-  // v1.0.0 ---------------------------------------------------------->
+  // v1.0.0 ------------------------------------------------------------>
 
   // Toggle round expansion
   // const toggleRound = (roundId) => {
@@ -59,7 +77,7 @@ const VerticalRoundsView = ({
   // Check if a round is expanded
   // const isExpanded = (roundId) => !!expandedRounds[roundId];
 
-  // Toggle round expansion (only one open at a time)
+  // Toggle round expansion (only one open at a time) - ALL rounds can expand
   const toggleRound = (roundId) => {
     setExpandedRounds((prev) => (prev === roundId ? null : roundId));
   };
@@ -292,6 +310,7 @@ const VerticalRoundsView = ({
                 </div>
               </div>
               <div className="flex items-center space-x-4">
+                {/* Show expand chevron for all rounds */}
                 {isExpanded(round._id) ? (
                   <ChevronUp className="h-5 w-5 text-gray-400" />
                 ) : (
