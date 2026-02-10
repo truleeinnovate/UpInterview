@@ -928,7 +928,7 @@ const InterviewDetail = () => {
                 </div>
 
                 {/* Application Section */}
-                <div className="sm:col-span-1">
+                {isOrganization && <div className="sm:col-span-1">
                   <dt className="text-sm font-medium text-gray-500 flex items-center">
                     <FileText className="h-5 w-5 mr-1" />
                     Application
@@ -952,7 +952,7 @@ const InterviewDetail = () => {
                         "No linked application"}
                     </div>
                   </dd>
-                </div>
+                </div>}
 
                 <div className="sm:col-span-1">
                   <dt className="text-sm font-medium text-gray-500 flex items-center">

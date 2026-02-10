@@ -78,7 +78,7 @@ function HeaderBar({
           </span>
           <input
             type="search"
-            placeholder="Search by Tags & Questions"
+            placeholder="Search by Tags,Questions..."
             className="flex-1 rounded-md focus:outline-none pr-2"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}

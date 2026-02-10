@@ -1059,7 +1059,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
 
   const tabs = [
     { id: "Overview", name: "Overview" },
-    { id: "Applications", name: "Applications" },
+    ...(isOrganization ? [{ id: "Applications", name: "Applications" }] : []),
     { id: "Resumes", name: "Resumes" },
     { id: "Feeds", name: "Feeds" },
   ];
@@ -1145,8 +1145,8 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`${activeTab === tab.id
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     } whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2`}
                 >
                   {tab.name}
@@ -1199,15 +1199,17 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                       Edit
                       <span className="sm:hidden inline ml-1">Candidate</span>
                     </Button>
-                    <Button
-                      title="Apply Position"
-                      onClick={() => setShowApplyPositionPopup(true)}
-                      className="inline-flex items-center border text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Apply
-                      <span className="sm:hidden inline ml-1">Position</span>
-                    </Button>
+                    {isOrganization && (
+                      <Button
+                        title="Apply Position"
+                        onClick={() => setShowApplyPositionPopup(true)}
+                        className="inline-flex items-center border text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Apply
+                        <span className="sm:hidden inline ml-1">Position</span>
+                      </Button>
+                    )}
                   </div>
                 </div>
                 <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">

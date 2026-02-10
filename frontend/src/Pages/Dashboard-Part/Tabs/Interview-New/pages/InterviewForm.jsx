@@ -160,7 +160,7 @@ const InterviewForm = () => {
   // Application Filtering State
   const [applicationId, setApplicationId] = useState("");
   const { applications: filteredApplications, isLoading: applicationsLoading } = useFilteredApplications({
-    status: "New,APPLIED,SCREENED", // Match strict enum casing from Application model
+    status: id ? "INTERVIEWING" : "New,APPLIED,SCREENED", // Edit mode: only INTERVIEWING, Create mode: eligible for new interview
     tenantId: orgId
   });
 
@@ -321,6 +321,11 @@ const InterviewForm = () => {
       setPositionId(interview.positionId?._id || "");
       setExternalId(interview.externalId || "");
       setAllowParallelScheduling(interview.allowParallelScheduling || false);
+
+      // Set applicationId if it exists matches with the application dropdown logic
+      if (interview.applicationId) {
+        setApplicationId(interview.applicationId._id || interview.applicationId);
+      }
 
       // Fix for template - handle the nested object structure
       if (interview.templateId) {
@@ -724,13 +729,16 @@ const InterviewForm = () => {
                           isClearable={true}
                           loading={applicationsLoading}
                           value={applicationId || ""}
-                          options={
-                            filteredApplications?.map((app) => ({
-                              value: app._id,
-                              label: app.applicationNumber, // search key
-                              application: app,
-                            })) || []
-                          }
+                          options={[
+                            ...(filteredApplications || []),
+                            ...(isEditing && interview?.applicationId && typeof interview.applicationId === 'object' && !filteredApplications?.find(app => app._id === interview.applicationId._id)
+                              ? [interview.applicationId]
+                              : [])
+                          ].map((app) => ({
+                            value: app._id,
+                            label: app.applicationNumber, // search key
+                            application: app,
+                          }))}
                           onChange={(e) => {
                             const value = e?.target?.value || e?.value;
                             handleApplicationChange(value);

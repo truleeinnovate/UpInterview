@@ -1318,7 +1318,8 @@ const AddCandidateForm = ({
         source === "candidate-screening" &&
         !!positionId && // make sure it's truthy
         isSuccess &&
-        shouldCreateApplication; // from CandidateViewer: !hasActiveApplication
+        shouldCreateApplication &&
+        isOrganization; // Only create application for organization users
 
       console.log(
         "shouldCreateApplicationFinal FINAL result:",
