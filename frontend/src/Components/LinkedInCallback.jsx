@@ -156,7 +156,13 @@ const LinkedInCallback = () => {
         });
       }
       await refreshPermissions();
-      // For any status, default to home
+      // If returnUrl exists in sessionStorage, redirect there instead of home
+      const returnUrl = sessionStorage.getItem('linkedin_return_url');
+      if (returnUrl) {
+        sessionStorage.removeItem('linkedin_return_url');
+        window.location.href = returnUrl;
+        return;
+      }
       return navigate("/home", {
         replace: true,
         state: { token, linkedIn_email: email },
@@ -197,6 +203,16 @@ const LinkedInCallback = () => {
           }
         }
 
+        // Fallback: read returnUrl from localStorage if not found in OAuth state
+        if (!returnUrl) {
+          const storedReturnUrl = localStorage.getItem('linkedin_return_url');
+          if (storedReturnUrl) {
+            returnUrl = storedReturnUrl;
+          }
+        }
+        // Always clean up the stored returnUrl
+        localStorage.removeItem('linkedin_return_url');
+
         if (!code) {
           throw new Error("No authorization code received from LinkedIn");
         }
@@ -232,8 +248,7 @@ const LinkedInCallback = () => {
             verified = !!authToken;
             if (!verified) {
               console.warn(
-                `Retry ${
-                  retries + 1
+                `Retry ${retries + 1
                 }: authToken not set, re-clearing and re-setting`
               );
               await clearAllAuth();
@@ -246,48 +261,6 @@ const LinkedInCallback = () => {
           }
         } else {
           throw new Error("No token received from LinkedIn");
-        }
-
-        // Handle returnUrl if present
-        if (returnUrl) {
-          // Basic validation to ensure returnUrl is for the correct domain
-          const currentDomain = window.location.hostname;
-          const validDomains = [
-            currentDomain,
-            `${config.REACT_APP_API_URL_FRONTEND}`,
-            ...(process.env.NODE_ENV === "development" ? ["localhost"] : []),
-          ];
-
-          // Check if returnUrl starts with a valid protocol and domain
-          if (
-            returnUrl.startsWith("http://") ||
-            returnUrl.startsWith("https://")
-          ) {
-            const hostname = returnUrl.split("/")[2]; // Extract hostname from URL
-            const isValidDomain = validDomains.some(
-              (domain) => hostname === domain || hostname.endsWith(domain)
-            );
-
-            if (isValidDomain) {
-              await new Promise((resolve) => setTimeout(resolve, 2000));
-              window.location.href = returnUrl; // Use returnUrl as-is
-              return;
-            } else {
-              console.warn(
-                "Invalid returnUrl domain, proceeding with default navigation"
-              );
-            }
-          } else if (returnUrl.startsWith("/")) {
-            // Support relative internal paths (e.g., /candidate/view-details/123)
-            const target = `${window.location.origin}${returnUrl}`;
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            window.location.href = target;
-            return;
-          } else {
-            console.warn(
-              "Invalid returnUrl format, proceeding with default navigation"
-            );
-          }
         }
 
         // Existing navigation logic

@@ -223,7 +223,7 @@ const InterviewDetails = ({
     try {
       const token = localStorage.getItem("token");
       const baseUrl = process.env.REACT_APP_API_URL || "";
-      
+
       // Fetch all rate cards instead of searching by specific technology name
       // This allows us to filter client-side for roleName array matching
       const apiUrl = `${baseUrl}/rate-cards`;
@@ -242,9 +242,9 @@ const InterviewDetails = ({
         const rateCardsData = Array.isArray(response.data)
           ? response.data
           : [response.data];
-        
+
         console.log('Total rate cards fetched:', rateCardsData.length);
-        
+
         // Filter rate cards to match the selected technology/role
         // Only use the new structure (roleName array)
         const filteredRateCards = rateCardsData.filter(card => {
@@ -253,23 +253,23 @@ const InterviewDetails = ({
               .replace(/\s+/g, '') // Remove all spaces
               .replace(/[^a-zA-Z0-9]/g, ''); // Remove special characters
           };
-          
+
           const normalizedSelectedValue = normalizeString(techName);
-          
+
           // Debug logging
           console.log('Matching techName:', techName, 'normalized:', normalizedSelectedValue);
           console.log('Card data:', {
             roleName: card.roleName,
             category: card.category
           });
-          
+
           // Check new structure (roleName array)
           if (card.roleName && Array.isArray(card.roleName)) {
             const match = card.roleName.some(role => {
               const normalizedRole = normalizeString(role);
               const isMatch = normalizedRole === normalizedSelectedValue ||
-                     normalizedRole.includes(normalizedSelectedValue) ||
-                     normalizedSelectedValue.includes(normalizedRole);
+                normalizedRole.includes(normalizedSelectedValue) ||
+                normalizedSelectedValue.includes(normalizedRole);
               console.log('Checking role:', role, 'normalized:', normalizedRole, 'match:', isMatch);
               return isMatch;
             });
@@ -278,13 +278,13 @@ const InterviewDetails = ({
               return true;
             }
           }
-          
+
           return false;
         });
-        
+
         console.log('Filtered rate cards:', filteredRateCards);
         console.log('Total rate cards before filtering:', rateCardsData.length, 'after filtering:', filteredRateCards.length);
-        
+
         setRateCards(filteredRateCards);
       }
     } catch (error) {
@@ -329,8 +329,8 @@ const InterviewDetails = ({
     console.log('Level data found:', levelData);
 
     // Handle new data structure (direct properties) or fallback to old structure (nested rateRange)
-    if (levelData.inrMin !== undefined && levelData.inrMax !== undefined && 
-        levelData.usdMin !== undefined && levelData.usdMax !== undefined) {
+    if (levelData.inrMin !== undefined && levelData.inrMax !== undefined &&
+      levelData.usdMin !== undefined && levelData.usdMax !== undefined) {
       // New data structure
       const rates = {
         inr: { min: levelData.inrMin, max: levelData.inrMax },
@@ -350,7 +350,7 @@ const InterviewDetails = ({
 
   const handleTechnologyChange = async (event) => {
     const selectedValue = event.target.value;
-    
+
     // Console log the selected technology
     console.log('=== TECHNOLOGY SELECTION ===');
     console.log('Selected Technology/Role:', selectedValue);
@@ -369,10 +369,10 @@ const InterviewDetails = ({
         // Fetch rate cards for the selected technology/role
         console.log('Fetching rate cards for:', selectedValue);
         await fetchRateCards(selectedValue);
-        
+
         // The rate cards state will be updated, and the rates will be applied in the next render cycle
         // This ensures we have the latest rate data before updating the rates
-        
+
         setInterviewDetailsData((prev) => {
           let ratesUpdate = {
             junior: { usd: 0, inr: 0, isVisible: showJuniorLevel },
@@ -382,9 +382,9 @@ const InterviewDetails = ({
 
           // We'll apply the rates after fetchRateCards completes and rateCards state is updated
           // This is handled by the useEffect that watches for rateCards changes
-          
+
           console.log('Initial rates set to:', ratesUpdate);
-          
+
           return {
             ...prev,
             currentRole: selectedValue,
@@ -464,7 +464,7 @@ const InterviewDetails = ({
   //     console.log('=== APPLYING RATES ===');
   //     console.log('Current Role:', additionalDetailsData.currentRole);
   //     console.log('Rate Cards Found:', rateCards.length);
-      
+
   //     const juniorRange = getRateRanges("Junior") || {
   //       usd: { min: 0 },
   //       inr: { min: 0 },
@@ -746,12 +746,12 @@ const InterviewDetails = ({
               selectedSkill.SkillName &&
               typeof selectedSkill.SkillName === "string" &&
               selectedSkill.SkillName.trim().toLowerCase() ===
-                skill.SkillName.trim().toLowerCase()
+              skill.SkillName.trim().toLowerCase()
           ) &&
           (searchSkillValue
             ? skill.SkillName.toLowerCase().includes(
-                searchSkillValue.toLowerCase()
-              )
+              searchSkillValue.toLowerCase()
+            )
             : true)
       )
       .map((skill) => ({
@@ -1347,9 +1347,8 @@ const InterviewDetails = ({
                             <span>
                               Range: ${getRateRanges(level.rangeKey).usd.min}-$
                               {getRateRanges(level.rangeKey).usd.max} (
-                              {`₹${getRateRanges(level.rangeKey).inr.min}–${
-                                getRateRanges(level.rangeKey).inr.max
-                              }`}
+                              {`₹${getRateRanges(level.rangeKey).inr.min}–${getRateRanges(level.rangeKey).inr.max
+                                }`}
                               )
                             </span>
                           )}
@@ -1640,7 +1639,7 @@ const InterviewDetails = ({
                     </svg>
                   </button>
                   {errors.mock_interview_discount && (
-                    <p className="mt-2 text-sm text-red-600">
+                    <p className="absolute -bottom-5 left-0 text-sm text-red-600 whitespace-nowrap">
                       {errors.mock_interview_discount}
                     </p>
                   )}
@@ -1653,9 +1652,9 @@ const InterviewDetails = ({
                     value={
                       interviewDetailsData.mock_interview_discount
                         ? {
-                            value: interviewDetailsData.mock_interview_discount,
-                            label: `${interviewDetailsData.mock_interview_discount}% discount`,
-                          }
+                          value: interviewDetailsData.mock_interview_discount,
+                          label: `${interviewDetailsData.mock_interview_discount}% discount`,
+                        }
                         : null
                     }
                     onChange={(selected) => {
@@ -1697,7 +1696,10 @@ const InterviewDetails = ({
                 </div>
               )}
             </div>
-            <p className="mt-1.5 text-xs text-custom-blue">
+            <p
+              className={`mt-1.5 text-xs text-custom-blue ${showCustomDiscount && errors.mock_interview_discount ? "mt-7" : "mt-1.5"
+                }`}
+            >
               Offer a discount for mock interviews to attract more candidates
             </p>
           </div>
@@ -1759,12 +1761,11 @@ const InterviewDetails = ({
             </p>
             {interviewDetailsData.professionalTitle?.length > 0 && (
               <p
-                className={`text-xs ${
-                  interviewDetailsData.professionalTitle.length < 30 ||
+                className={`text-xs ${interviewDetailsData.professionalTitle.length < 30 ||
                   errors.professionalTitle
-                    ? "text-red-500"
-                    : "text-gray-500"
-                }`}
+                  ? "text-red-500"
+                  : "text-gray-500"
+                  }`}
               >
                 {interviewDetailsData.professionalTitle.length}/100
               </p>
@@ -1817,13 +1818,12 @@ const InterviewDetails = ({
             </p>
             {interviewDetailsData.bio?.length > 0 && (
               <p
-                className={`text-xs ${
-                  interviewDetailsData.bio.length < 150 || errors.bio
-                    ? "text-red-500"
-                    : interviewDetailsData.bio.length > 450
+                className={`text-xs ${interviewDetailsData.bio.length < 150 || errors.bio
+                  ? "text-red-500"
+                  : interviewDetailsData.bio.length > 450
                     ? "text-yellow-500"
                     : "text-gray-500"
-                }`}
+                  }`}
               >
                 {interviewDetailsData.bio.length}/500
               </p>

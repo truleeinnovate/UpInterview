@@ -46,11 +46,10 @@ const FooterButtons = ({
           type="button"
           onClick={onPrev}
           disabled={isSubmitting}
-          className={`border ${
-            isSubmitting
+          className={`border ${isSubmitting
               ? "border-gray-300 text-gray-300 cursor-not-allowed"
               : "border-custom-blue text-custom-blue hover:bg-gray-50"
-          } rounded px-6 sm:px-3 py-1 transition-colors duration-200`}
+            } rounded px-6 sm:px-3 py-1 transition-colors duration-200`}
         >
           Prev
         </button>
@@ -60,11 +59,10 @@ const FooterButtons = ({
       <button
         onClick={onNext}
         disabled={isSubmitting}
-        className={`px-6 sm:px-3 py-1.5 rounded text-white flex items-center justify-center min-w-24 ${
-          isSubmitting
+        className={`px-6 sm:px-3 py-1.5 rounded text-white flex items-center justify-center min-w-24 ${isSubmitting
             ? "bg-custom-blue/60 cursor-not-allowed"
             : "bg-custom-blue hover:bg-custom-blue/90"
-        } transition-colors duration-200`}
+          } transition-colors duration-200`}
         type="button"
       >
         {isSubmitting ? (
@@ -567,9 +565,8 @@ const MultiStepForm = () => {
         if (!basicDetailsData.phone) {
           currentErrors.phone = "Phone number is required";
         } else {
-          const fullNumber = `${
-            basicDetailsData.countryCode
-          }${basicDetailsData.phone.replace(/\D/g, "")}`;
+          const fullNumber = `${basicDetailsData.countryCode
+            }${basicDetailsData.phone.replace(/\D/g, "")}`;
           const phoneNumber = parsePhoneNumberFromString(fullNumber);
           if (!phoneNumber || !phoneNumber.isValid()) {
             // 👈 v1.0.5: Dynamic expected length matching PhoneField
@@ -771,6 +768,16 @@ const MultiStepForm = () => {
           currentErrors.timeZone = "Timezone is required";
         if (!availabilityDetailsData.preferredDuration)
           currentErrors.preferredDuration = "Preferred duration is required";
+
+        // Validate that at least one availability time slot is selected
+        const hasValidTimeSlot = Object.values(times).some((daySlots) =>
+          daySlots.some(
+            (slot) => slot.startTime && slot.endTime
+          )
+        );
+        if (!hasValidTimeSlot) {
+          currentErrors.TimeSlot = "Please select at least one availability time slot";
+        }
         // Check if there are any errors in the nested rates object
         if (
           interviewDetailsData.previousInterviewExperience === true &&
@@ -920,11 +927,11 @@ const MultiStepForm = () => {
         [currentStepKey]: true,
         ...(isLastStep
           ? {
-              basicDetails: true,
-              additionalDetails: true,
-              interviewDetails: true,
-              availabilityDetails: true,
-            }
+            basicDetails: true,
+            additionalDetails: true,
+            interviewDetails: true,
+            availabilityDetails: true,
+          }
           : {}),
       };
       // Update local state
@@ -1020,21 +1027,21 @@ const MultiStepForm = () => {
       const availabilityData =
         (isInternalInterviewer || Freelancer) && currentStep === 3
           ? Object.keys(times)
-              .map((day) => ({
-                day,
-                timeSlots: times[day]
-                  .filter(
-                    (slot) =>
-                      slot.startTime &&
-                      slot.endTime &&
-                      slot.startTime !== "unavailable"
-                  )
-                  .map((slot) => ({
-                    startTime: slot.startTime,
-                    endTime: slot.endTime,
-                  })),
-              }))
-              .filter((dayData) => dayData.timeSlots.length > 0)
+            .map((day) => ({
+              day,
+              timeSlots: times[day]
+                .filter(
+                  (slot) =>
+                    slot.startTime &&
+                    slot.endTime &&
+                    slot.startTime !== "unavailable"
+                )
+                .map((slot) => ({
+                  startTime: slot.startTime,
+                  endTime: slot.endTime,
+                })),
+            }))
+            .filter((dayData) => dayData.timeSlots.length > 0)
           : [];
       // Prepare interview details with proper type conversion
       const interviewDetails = {
@@ -1466,7 +1473,7 @@ const MultiStepForm = () => {
                     isProfileCompleteStateOrg={isProfileCompleteStateOrg}
                     // v1.0.1 <-------------------------------------------------------
                     requiresResume={requiresResume}
-                    // v1.0.1 ------------------------------------------------------->
+                  // v1.0.1 ------------------------------------------------------->
                   />
                 )}
                 {(Freelancer || isInternalInterviewer) && !showLimitedSteps && (
@@ -1493,9 +1500,8 @@ const MultiStepForm = () => {
                         yearsOfExperience={
                           additionalDetailsData?.yearsOfExperience || 0
                         }
-                        key={`interview-details-${
-                          additionalDetailsData?.yearsOfExperience || 0
-                        }`}
+                        key={`interview-details-${additionalDetailsData?.yearsOfExperience || 0
+                          }`}
                         setAdditionalDetailsData={setAdditionalDetailsData} // <-- Add this
                       />
                     )}

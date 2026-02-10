@@ -483,7 +483,7 @@ const Availability = ({
                           : [...prev, value]
                       );
                     }}
-                    className="mr-2 h-4 w-4 text-custom-blue rounded"
+                    className="mr-2 h-4 w-4 accent-custom-blue rounded"
                   />
                   <span className="text-sm">{dayOption}</span>
                 </label>
