@@ -277,6 +277,7 @@ const createInterview = async (req, res) => {
       currentReason, // Added currentReason
       externalId,
       allowParallelScheduling,
+      isOrganization,
       applicationId, // <--- Added applicationId
     } = req.body;
     let candidate = null;
@@ -466,86 +467,88 @@ const createInterview = async (req, res) => {
       status: "applied",
     });
 
-    // Create Application document
-    try {
-      const position = await Position.findById(positionId).lean();
+    // Create Application document - Only if explicitly requested by Organization
+    if (isOrganization) {
+      try {
+        const position = await Position.findById(positionId).lean();
 
-      // Check if application already exists - logic updated to prioritize applicationId
-      let existingApp;
-      if (applicationId) {
-        existingApp = await Application.findById(applicationId);
+        // Check if application already exists - logic updated to prioritize applicationId
+        let existingApp;
+        if (applicationId) {
+          existingApp = await Application.findById(applicationId);
+        }
+
+        if (!existingApp) {
+          existingApp = await Application.findOne({
+            candidateId,
+            positionId,
+            tenantId: orgId,
+          });
+        }
+
+        if (!existingApp) {
+          // Get candidate for application number generation
+          const candidate = await Candidate.findById(candidateId).lean();
+
+          // Generate applicationNumber using the new format: NAME-TECH-YEAR-0001
+          const applicationNumber = await generateApplicationNumber(
+            candidate,
+            position,
+            orgId,
+          );
+
+          // Validate companyId - only use if it's a valid ObjectId, not a string
+          const companyId =
+            position?.companyname &&
+              mongoose.Types.ObjectId.isValid(position.companyname)
+              ? position.companyname
+              : null;
+
+          const newApp = await Application.create({
+            applicationNumber,
+            candidateId,
+            positionId,
+            tenantId: orgId,
+            companyId,
+            interviewId: interview._id,
+            status: "INTERVIEWING", // Directly set to INTERVIEWING as we are creating an interview
+            currentStage: "Interview Created",
+            ownerId: userId,
+            createdBy: userId,
+          });
+
+          // <--- BACK-POPULATE applicationId to Interview
+          await Interview.findByIdAndUpdate(interview._id, {
+            applicationId: newApp._id,
+          });
+
+          console.log(
+            "[INTERVIEW] Application created with number:",
+            applicationNumber,
+          );
+        } else {
+          // Update existing application with interview reference and status
+          // Always update status to INTERVIEWING when a new interview is created
+          await Application.findByIdAndUpdate(existingApp._id, {
+            interviewId: interview._id,
+            status: "INTERVIEWING",
+            currentStage: "Interview Created",
+          });
+
+          // <--- BACK-POPULATE applicationId to Interview (even if existing)
+          await Interview.findByIdAndUpdate(interview._id, {
+            applicationId: existingApp._id,
+          });
+
+          console.log(
+            "[INTERVIEW] Application already exists for candidate:",
+            candidateId,
+          );
+        }
+      } catch (appError) {
+        console.error("[INTERVIEW] Error creating Application:", appError);
+        // Continue execution even if Application creation fails
       }
-
-      if (!existingApp) {
-        existingApp = await Application.findOne({
-          candidateId,
-          positionId,
-          tenantId: orgId,
-        });
-      }
-
-      if (!existingApp) {
-        // Get candidate for application number generation
-        const candidate = await Candidate.findById(candidateId).lean();
-
-        // Generate applicationNumber using the new format: NAME-TECH-YEAR-0001
-        const applicationNumber = await generateApplicationNumber(
-          candidate,
-          position,
-          orgId,
-        );
-
-        // Validate companyId - only use if it's a valid ObjectId, not a string
-        const companyId =
-          position?.companyname &&
-          mongoose.Types.ObjectId.isValid(position.companyname)
-            ? position.companyname
-            : null;
-
-        const newApp = await Application.create({
-          applicationNumber,
-          candidateId,
-          positionId,
-          tenantId: orgId,
-          companyId,
-          interviewId: interview._id,
-          status: "INTERVIEWING", // Directly set to INTERVIEWING as we are creating an interview
-          currentStage: "Interview Created",
-          ownerId: userId,
-          createdBy: userId,
-        });
-
-        // <--- BACK-POPULATE applicationId to Interview
-        await Interview.findByIdAndUpdate(interview._id, {
-          applicationId: newApp._id,
-        });
-
-        console.log(
-          "[INTERVIEW] Application created with number:",
-          applicationNumber,
-        );
-      } else {
-        // Update existing application with interview reference and status
-        // Always update status to INTERVIEWING when a new interview is created
-        await Application.findByIdAndUpdate(existingApp._id, {
-          interviewId: interview._id,
-          status: "INTERVIEWING",
-          currentStage: "Interview Created",
-        });
-
-        // <--- BACK-POPULATE applicationId to Interview (even if existing)
-        await Interview.findByIdAndUpdate(interview._id, {
-          applicationId: existingApp._id,
-        });
-
-        console.log(
-          "[INTERVIEW] Application already exists for candidate:",
-          candidateId,
-        );
-      }
-    } catch (appError) {
-      console.error("[INTERVIEW] Error creating Application:", appError);
-      // Continue execution even if Application creation fails
     }
 
     res.locals.logData = {
@@ -780,6 +783,47 @@ const updateInterview = async (req, res) => {
             }
           }
         }
+      }
+    }
+
+    // Handle Application update if candidate or position changed
+    // Only perform this if explicitly requested by Organization
+
+    if ((interviewData.candidateId || interviewData.positionId) && isOrganization) {
+      try {
+        // Find the application currently linked to this interview
+        let linkedApplication = await Application.findOne({ interviewId: existingInterview._id });
+
+        // Fallback to searching by applicationId if stored on interview
+        if (!linkedApplication && existingInterview.applicationId) {
+          linkedApplication = await Application.findById(existingInterview.applicationId);
+        }
+
+        if (linkedApplication) {
+          const updatePayload = {};
+
+          if (interviewData.candidateId) {
+            updatePayload.candidateId = interviewData.candidateId;
+          }
+
+          if (interviewData.positionId) {
+            updatePayload.positionId = interviewData.positionId;
+
+            // Update companyId if position changed
+            const position = await Position.findById(interviewData.positionId).lean();
+            if (position?.companyname && mongoose.Types.ObjectId.isValid(position.companyname)) {
+              updatePayload.companyId = position.companyname;
+            }
+          }
+
+          // Update the found application with new details
+          await Application.findByIdAndUpdate(linkedApplication._id, updatePayload);
+          console.log(`[INTERVIEW] Updated linked application ${linkedApplication._id} with new candidate/position`);
+        } else {
+          console.log("[INTERVIEW] No linked application found to update");
+        }
+      } catch (appError) {
+        console.error("[INTERVIEW] Error handling application update:", appError);
       }
     }
 
@@ -2342,26 +2386,26 @@ const getAllInterviewRounds = async (req, res) => {
       .toLowerCase();
     const statusValues = statusParam
       ? statusParam
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
       : [];
 
     // Base pipeline shared for both regular and mock
     const interviewerTypeMatch = isMock ? "external" : "External";
     const mainLookup = isMock
       ? {
-          from: "mockinterviews",
-          localField: "mockInterviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        }
+        from: "mockinterviews",
+        localField: "mockInterviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      }
       : {
-          from: "interviews",
-          localField: "interviewId",
-          foreignField: "_id",
-          as: "mainInterview",
-        };
+        from: "interviews",
+        localField: "interviewId",
+        foreignField: "_id",
+        as: "mainInterview",
+      };
     const mainCodeField = isMock ? "mockInterviewCode" : "interviewCode";
 
     const collectionModel = isMock ? MockInterviewRound : InterviewRounds;
@@ -2383,23 +2427,23 @@ const getAllInterviewRounds = async (req, res) => {
       // Normalize tenantId for mock (string -> ObjectId) before tenant lookup
       ...(isMock
         ? [
-            {
-              $addFields: {
-                mainTenantIdNormalized: {
-                  $cond: [
-                    {
-                      $and: [
-                        { $ne: ["$mainInterview.tenantId", null] },
-                        { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                      ],
-                    },
-                    { $toObjectId: "$mainInterview.tenantId" },
-                    null,
-                  ],
-                },
+          {
+            $addFields: {
+              mainTenantIdNormalized: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ["$mainInterview.tenantId", null] },
+                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                    ],
+                  },
+                  { $toObjectId: "$mainInterview.tenantId" },
+                  null,
+                ],
               },
             },
-          ]
+          },
+        ]
         : []),
       // Lookup tenant for organization info
       {
