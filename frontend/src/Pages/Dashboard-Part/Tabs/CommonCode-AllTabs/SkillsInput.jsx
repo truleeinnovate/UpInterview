@@ -505,6 +505,7 @@ const SkillsField = forwardRef(
                             key={skillName}
                             type="button"
                             onClick={() => toggleSkillInPopup(skillName)}
+                            title={skillName}
                             className={`
                               px-4 py-3 rounded-lg border-2 text-left text-sm font-medium transition-all duration-150
                               ${isSelected

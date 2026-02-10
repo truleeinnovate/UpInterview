@@ -44,11 +44,26 @@ const useOnDemandQuery = (
 const sortByAlphabet = (data, field) => {
   if (!Array.isArray(data)) return [];
 
-  return [...data].sort((a, b) =>
-    (a?.[field] || "").localeCompare(b?.[field] || "", "en", {
+  return [...data].sort((a, b) => {
+    // Helper to get value case-insensitively if direct access fails
+    const getValue = (item, key) => {
+      if (!item) return "";
+      if (item[key]) return item[key];
+      // Fallbacks for known variations (especially for skills)
+      if (key === "SkillName") return item.skillName || item.name || "";
+      if (key === "LocationName") return item.locationName || item.name || "";
+      if (key === "IndustryName") return item.industryName || item.name || "";
+      if (key === "roleName") return item.RoleName || item.name || "";
+      return "";
+    };
+
+    const valA = getValue(a, field);
+    const valB = getValue(b, field);
+
+    return (valA || "").localeCompare(valB || "", "en", {
       sensitivity: "base",
-    }),
-  );
+    });
+  });
 };
 
 const maybeSortByAlphabet = (data, field, shouldSort) => {
