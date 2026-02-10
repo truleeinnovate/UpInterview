@@ -199,6 +199,16 @@ const InterviewForm = () => {
       const app = existingApplications[0]; // Assuming one app per candidate-position pair
       const allowedStatuses = ["New", "APPLIED", "SCREENED"];
 
+      // Allow INTERVIEWING status if we are in edit mode AND we haven't changed the candidate/position
+      // This prevents the error from showing for the current interview's application
+      const isOriginalSelection = isEditing &&
+        candidateId === interview?.candidateId?._id &&
+        positionId === interview?.positionId?._id;
+
+      if (isOriginalSelection) {
+        allowedStatuses.push("INTERVIEWING");
+      }
+
       if (!allowedStatuses.includes(app.status)) {
         setManualValidationMsg(`Cannot create interview: Application exists in '${app.status}' status. Only New, Applied, or Screened applications can proceed.`);
       }
@@ -554,6 +564,7 @@ const InterviewForm = () => {
         allowParallelScheduling,
         applicationId: appToLink, // Pass determined application ID
         id, // interviewId
+        isOrganization, // Pass explicit flag for application logic
       });
 
       // On success, navigate to rounds step and pass state
@@ -1115,12 +1126,12 @@ const InterviewForm = () => {
           className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
           onClick={(e) => handleModalBackdropClick(e, 'candidate')}
         >
-        <AddCandidateForm
-          mode="Create"
-          onClose={handleCandidateCreated}
-          isModal={true}
-          hideAddButton={true}
-        />
+          <AddCandidateForm
+            mode="Create"
+            onClose={handleCandidateCreated}
+            isModal={true}
+            hideAddButton={true}
+          />
         </div>
       )}
 

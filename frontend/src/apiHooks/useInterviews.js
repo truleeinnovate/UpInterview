@@ -145,6 +145,7 @@ export const useInterviews = (
       id,
       allowParallelScheduling,
       applicationId, // <--- Add this
+      isOrganization, // <--- Add this flag
     }) => {
       const interviewData = {
         candidateId,
@@ -156,6 +157,7 @@ export const useInterviews = (
         ...(applicationId && { applicationId }), // <--- Add this
         allowParallelScheduling,
         status: "Draft",
+        isOrganization, // <--- Include in payload
       };
 
       // const response = await axios.post(`${config.REACT_APP_API_URL}/interview`, {
