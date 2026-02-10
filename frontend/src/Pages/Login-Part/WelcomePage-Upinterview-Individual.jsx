@@ -20,6 +20,12 @@ const WelcomePageUpinterviewIndividual = () => {
       const params = new URLSearchParams(window.location.search);
       const existingReturnUrl = params.get('returnUrl');
 
+      // Persist returnUrl in sessionStorage as a reliable fallback across the LinkedIn redirect
+      // (localStorage is wiped by clearAllAuth during token setup)
+      if (existingReturnUrl) {
+        sessionStorage.setItem('linkedin_return_url', existingReturnUrl);
+      }
+
       // Build OAuth state payload to carry returnUrl through the LinkedIn flow
       const csrfToken = Math.random().toString(36).substring(7);
       const statePayload = { csrf: csrfToken, returnUrl: existingReturnUrl || null };

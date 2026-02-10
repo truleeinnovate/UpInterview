@@ -70,6 +70,14 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
               {contactData?.currentRoleLabel || "Not Provided"}
             </p>
           </div>
+                      <div>
+              <p className="text-sm text-gray-500">Years of Experience</p>
+              <p className="font-medium sm:text-sm">
+                {contactData.yearsOfExperience
+                  ? `${contactData.yearsOfExperience} Years`
+                  : "Not Provided"}
+              </p>
+            </div>
           <div>
             <p className="text-sm text-gray-500">Current Company</p>
             <p className="font-medium sm:text-sm">
@@ -78,14 +86,12 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
           </div>
 
 
-            <div>
-              <p className="text-sm text-gray-500">Years of Experience</p>
+   <div>
+              <p className="text-sm text-gray-500">Industry</p>
               <p className="font-medium sm:text-sm">
-                {contactData.yearsOfExperience
-                  ? `${contactData.yearsOfExperience} Years`
-                  : "Not Provided"}
+                {contactData?.industry || "Not Provided"}
               </p>
-            </div>
+          </div>
 
             <div>
               <p className="text-sm text-gray-500">Location</p>
@@ -94,12 +100,7 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
               </p>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-500">Industry</p>
-              <p className="font-medium sm:text-sm">
-                {contactData?.industry || "Not Provided"}
-              </p>
-          </div>
+         
         </div>
         {/* v1.0.1 <--------------------------------------------------------------------------------------------- */}
 

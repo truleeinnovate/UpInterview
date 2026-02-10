@@ -1,5 +1,5 @@
 // v1.0.0 - mansoor - changed the colors of timezone select and duplicate button to custom blue
-import React, { useState, useEffect, useCallback } from 'react';   
+import React, { useState, useEffect, useCallback } from 'react';
 import TimezoneSelect from 'react-timezone-select';
 import Availability from '../../Dashboard-Part/Tabs/CommonCode-AllTabs/Availability';
 import InfoBox from './InfoBox.jsx';
@@ -15,9 +15,23 @@ const AvailabilityDetails = ({
     setErrors,
 }) => {
 
-const [selectedOption, setSelectedOption] = useState(
+    const [selectedOption, setSelectedOption] = useState(
         availabilityDetailsData?.preferredDuration || '60'   // ← fallback to '60'
     );
+
+    // Sync the default selectedOption into availabilityDetailsData when it mounts with no preferredDuration
+    useEffect(() => {
+        if (selectedOption && !availabilityDetailsData?.preferredDuration) {
+            setAvailabilityDetailsData((prev) => ({
+                ...prev,
+                preferredDuration: selectedOption,
+            }));
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                preferredDuration: '',
+            }));
+        }
+    }, []); // Run once on mount
 
     const [isAutoDetecting, setIsAutoDetecting] = useState(true);
 
@@ -176,8 +190,8 @@ const [selectedOption, setSelectedOption] = useState(
                                 <li
                                     key={duration}
                                     className={`option cursor-pointer inline-block py-2 px-3 rounded-lg border border-custom-blue ${selectedOption === duration
-                                            ? 'text-white bg-custom-blue'
-                                            : 'bg-white'
+                                        ? 'text-white bg-custom-blue'
+                                        : 'bg-white'
                                         }`}
                                     onClick={() => handleOptionClick(duration)}
                                 >

@@ -221,34 +221,6 @@ const AdditionalDetails = ({
       <div className="grid grid-cols-2 gap-x-6 gap-y-8">
         {/* Current Role */}
         <div className="sm:col-span-2 col-span-1">
-          {/* <DropdownWithSearchField
-            value={additionalDetailsData.currentRole || ""}
-            options={[
-              // Include the current value in options even if not in the database yet
-              ...(additionalDetailsData.currentRole &&
-              !currentRoles?.some(
-                (role) => role.roleName === additionalDetailsData.currentRole
-              )
-                ? [
-                    {
-                      value: additionalDetailsData.currentRole,
-                      label: additionalDetailsData.currentRole,
-                    },
-                  ]
-                : []),
-              ...(currentRoles?.map((role) => ({
-                value: role.roleName,
-                label: role.roleLabel,
-              })) || []),
-            ]}
-            onChange={handleChange}
-            error={errors.currentRole}
-            label="Current Role"
-            name="currentRole"
-            required
-            onMenuOpen={loadCurrentRoles}
-            loading={isCurrentRolesFetching}
-          /> */}
           <DropdownWithSearchField
             value={additionalDetailsData.currentRole || ""}
             options={[
@@ -284,18 +256,6 @@ const AdditionalDetails = ({
           />
         </div>
 
-      
-        <div className="sm:col-span-2 col-span-1">
-
-          <InputField
-            value={additionalDetailsData.company || ""}
-            onChange={handleChange}
-            label="Current Company"
-            name="company"
-            required
-            error={errors.company}
-          />
-        </div>
         {/* Experience */}
         <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
@@ -314,27 +274,53 @@ const AdditionalDetails = ({
             ]}
             placeholder="Select Years of Experience"
           />
+        </div>
 
-          {/* <IncreaseAndDecreaseField
-            value={additionalDetailsData.yearsOfExperience}
-            onChange={(e) => {
-              const value = e.target.value;
-              setAdditionalDetailsData((prev) => ({
-                ...prev,
-                yearsOfExperience: value,
-              }));
-              setErrors((prev) => ({
-                ...prev,
-                yearsOfExperience: "",
-              }));
-            }}
-            name="yearsOfExperience"
-            error={errors.yearsOfExperience}
-            label="Years of Experience"
+
+        <div className="sm:col-span-2 col-span-1">
+
+          <InputField
+            value={additionalDetailsData.company || ""}
+            onChange={handleChange}
+            label="Current Company"
+            name="company"
+            required
+            error={errors.company}
+          />
+        </div>
+        {/* Industry */}
+        <div className="sm:col-span-2 col-span-1">
+          <DropdownWithSearchField
+            value={additionalDetailsData.industry || ""}
+            options={[
+              // Include the current value in options even if not in the database yet
+              ...(additionalDetailsData.industry &&
+                !industries?.some(
+                  (ind) => ind.IndustryName === additionalDetailsData.industry
+                )
+                ? [
+                  {
+                    value: additionalDetailsData.industry,
+                    label: additionalDetailsData.industry,
+                  },
+                ]
+                : []),
+              ...(industries
+                ?.filter((industry) => industry.IndustryName)
+                .map((industry) => ({
+                  value: industry.IndustryName,
+                  label: industry.IndustryName,
+                })) || []),
+            ]}
+            name="industry"
+            onChange={handleChange}
+            error={errors.industry}
+            label="Industry"
+            placeholder="Select Industry"
             required={true}
-            min={1}
-            max={15}
-          /> */}
+            onMenuOpen={loadIndustries}
+            loading={isIndustriesFetching}
+          />
         </div>
 
         {/* Location */}
@@ -372,40 +358,7 @@ const AdditionalDetails = ({
           />
         </div>
 
-          {/* Industry */}
-        <div className="sm:col-span-2 col-span-1">
-          <DropdownWithSearchField
-            value={additionalDetailsData.industry || ""}
-            options={[
-              // Include the current value in options even if not in the database yet
-              ...(additionalDetailsData.industry &&
-                !industries?.some(
-                  (ind) => ind.IndustryName === additionalDetailsData.industry
-                )
-                ? [
-                  {
-                    value: additionalDetailsData.industry,
-                    label: additionalDetailsData.industry,
-                  },
-                ]
-                : []),
-              ...(industries
-                ?.filter((industry) => industry.IndustryName)
-                .map((industry) => ({
-                  value: industry.IndustryName,
-                  label: industry.IndustryName,
-                })) || []),
-            ]}
-            name="industry"
-            onChange={handleChange}
-            error={errors.industry}
-            label="Industry"
-            placeholder="Select Industry"
-            required={true}
-            onMenuOpen={loadIndustries}
-            loading={isIndustriesFetching}
-          />
-        </div>
+
 
         {!isProfileCompleteStateOrg && (
           <>

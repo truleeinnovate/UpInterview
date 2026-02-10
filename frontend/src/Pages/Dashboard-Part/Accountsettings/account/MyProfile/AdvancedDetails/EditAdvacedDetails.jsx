@@ -367,6 +367,20 @@ const EditAdvacedDetails = ({
               />
             </div>
 
+              <div className="flex flex-col">
+              <IncreaseAndDecreaseField
+                value={formData.yearsOfExperience}
+                onChange={handleInputChange}
+                min={0}
+                max={30}
+                inputRef={fieldRefs.yearsOfExperience}
+                error={errors.yearsOfExperience}
+                label="Years of Experience"
+                name="yearsOfExperience"
+                required
+              />
+            </div>
+
             <div className="flex flex-col">
               <InputField
                 label="Current Company"
@@ -393,19 +407,7 @@ const EditAdvacedDetails = ({
               />
             </div>
 
-            <div className="flex flex-col">
-              <IncreaseAndDecreaseField
-                value={formData.yearsOfExperience}
-                onChange={handleInputChange}
-                min={0}
-                max={30}
-                inputRef={fieldRefs.yearsOfExperience}
-                error={errors.yearsOfExperience}
-                label="Years of Experience"
-                name="yearsOfExperience"
-                required
-              />
-            </div>
+          
 
             <div className="flex flex-col">
               <DropdownWithSearchField
