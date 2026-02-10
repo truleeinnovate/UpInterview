@@ -56,6 +56,7 @@ function HeaderBar({
   onClickRightPagination,
   type,
   isMeetingSidePanel,
+  onAddSearchTag,
 }) {
   // Using DropdownSelect for interview type selection; no manual portal/open-state needed.
 
@@ -63,10 +64,9 @@ function HeaderBar({
     // <div className="flex items-center sm:justify-start justify-end px-4 py-3 marker:flex-shrink-0 overflow-x-auto">
     <div
       className={`flex items-center px-4 py-3 flex-shrink-0
-        ${
-          isMeetingSidePanel
-            ? "justify-start overflow-auto"
-            : "justify-end sm:justify-start md:justify-start lg:justify-start overflow-x-auto"
+        ${isMeetingSidePanel
+          ? "justify-start overflow-auto"
+          : "justify-end sm:justify-start md:justify-start lg:justify-start overflow-x-auto"
         }
       `}
     >
@@ -78,10 +78,20 @@ function HeaderBar({
           </span>
           <input
             type="search"
-            placeholder="Search by Skills & Questions"
+            placeholder="Search by Tags & Questions"
             className="flex-1 rounded-md focus:outline-none pr-2"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && searchInput.trim()) {
+                e.preventDefault();
+                // onAddSearchTag prop needs to be passed to HeaderBar
+                if (typeof onAddSearchTag === 'function') {
+                  onAddSearchTag(searchInput.trim());
+                }
+                setSearchInput("");
+              }
+            }}
           />
         </div>
 
@@ -165,11 +175,10 @@ function HeaderBar({
             <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
               <span
                 onClick={onClickLeftPaginationIcon}
-                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${
-                  currentPage === 1
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 1
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-gray-100"
+                  }`}
               >
                 <IoIosArrowBack />
               </span>
@@ -177,11 +186,10 @@ function HeaderBar({
             <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
               <span
                 onClick={onClickRightPagination}
-                className={`border p-2 text-xl rounded-md cursor-pointer ${
-                  currentPage === totalPages || totalPages === 0
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`border p-2 text-xl rounded-md cursor-pointer ${currentPage === totalPages || totalPages === 0
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-gray-100"
+                  }`}
               >
                 <IoIosArrowForward />
               </span>
@@ -285,13 +293,34 @@ const SuggestedQuestionsComponent = ({
     };
   }, [searchInput]);
 
+  // Reset page to 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    debouncedSearchInput,
+    selectedSkills,
+    difficultyLevelFilterItems,
+    categoryFilterItems,
+    technologyFilterItems,
+    questionTypeFilterItems,
+    selectedQuestionType
+  ]);
+
+  // Handle adding search tag
+  const handleAddSearchTag = (tag) => {
+    if (tag && !selectedSkills.includes(tag)) {
+      setSelectedSkills(prev => [...prev, tag]);
+    }
+  };
+
   // Combine all filters for API call
   const apiFilters = useMemo(
     () => ({
       questionType: selectedQuestionType,
       page: currentPage,
       limit: itemsPerPage,
-      search: debouncedSearchInput,
+      // Search is combination of active search tags and current typed text
+      search: [...selectedSkills, debouncedSearchInput].filter(Boolean),
       difficultyLevel: difficultyLevelFilterItems,
       category: categoryFilterItems,
       technology: technologyFilterItems,
@@ -302,6 +331,7 @@ const SuggestedQuestionsComponent = ({
       currentPage,
       itemsPerPage,
       debouncedSearchInput,
+      selectedSkills,
       difficultyLevelFilterItems,
       categoryFilterItems,
       technologyFilterItems,
@@ -405,7 +435,7 @@ const SuggestedQuestionsComponent = ({
     });
     sections.push({
       id: 4,
-      filterType: "Technology",
+      filterType: "Skills/Tags",
       isOpen: false,
       options: uniqueTechnologies.map((t) => ({ value: t, isChecked: false })),
     });
@@ -519,16 +549,13 @@ const SuggestedQuestionsComponent = ({
     totalAvailable === 0
       ? "0/0"
       : beyondAccessible
-        ? `${planAccessibleTotal}/${totalAvailable} ${
-            totalAvailable > 1 ? "Questions" : "Question"
-          }`
+        ? `${planAccessibleTotal}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"
+        }`
         : startIndex === endIndex
-          ? `${endIndex}/${totalAvailable} ${
-              totalAvailable > 1 ? "Questions" : "Question"
-            }`
-          : `${startIndex}-${endIndex}/${totalAvailable} ${
-              totalAvailable > 1 ? "Questions" : "Question"
-            }`;
+          ? `${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"
+          }`
+          : `${startIndex}-${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"
+          }`;
 
   // Update mandatory status
   useEffect(() => {
@@ -698,13 +725,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 1
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  opt.type.toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt,
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                opt.type.toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt,
+              ),
+            }
             : category,
         ),
       );
@@ -714,13 +741,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 2
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  opt.level.toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt,
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                opt.level.toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt,
+              ),
+            }
             : category,
         ),
       );
@@ -731,13 +758,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 3
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  String(opt.value).toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt,
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                String(opt.value).toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt,
+              ),
+            }
             : category,
         ),
       );
@@ -747,13 +774,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 4
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  String(opt.value).toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt,
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                String(opt.value).toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt,
+              ),
+            }
             : category,
         ),
       );
@@ -1121,6 +1148,7 @@ const SuggestedQuestionsComponent = ({
         onClickRightPagination={onClickRightPagination}
         type={type}
         isMeetingSidePanel={isMeetingSidePanel}
+        onAddSearchTag={handleAddSearchTag}
       />
 
       {/* v1.0.5 -----------------------------------------------------------------> */}
@@ -1132,69 +1160,65 @@ const SuggestedQuestionsComponent = ({
           {/* v1.0.5 <----------------------------------------------------------------- */}
           {/* v1.0.7 <----------------------------------------------------------------------------------------- */}
           <div className="flex-1 overflow-y-auto sm:px-2 px-5 py-4">
-            {selectedSkills.length > 0 && (
-              <ul className="flex gap-2 flex-wrap px-4 pb-2">
-                {selectedSkills.map((skill, index) => (
-                  <li
-                    key={index}
-                    className="flex gap-2 items-center border border-custom-blue rounded-full px-3 py-1 text-custom-blue bg-blue-50 text-sm"
-                  >
-                    <span>{skill}</span>
-                    <button
-                      type="button"
-                      className="cursor-pointer hover:text-red-500 transition-colors"
-                      onClick={() => onClickCrossIcon(skill)}
-                    >
-                      <X size={14} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {[
+            {([
+              ...selectedSkills,
               ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
               ...difficultyLevelFilterItems,
               ...categoryFilterItems,
               ...technologyFilterItems,
-            ].length > 0 && (
-              /* v1.0.6 <---------------------------------------------------------------------- */
-              /* v1.0.8 <---------------------------------------------------------------------- */
-              <div className="flex items-center flex-wrap px-4 pt-2 mb-3 gap-3">
-                <h3 className="font-medium text-gray-700 text-sm">
-                  Filters applied:
-                </h3>
-                <ul className="flex gap-2 flex-wrap">
-                  {[
-                    ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
-                    ...difficultyLevelFilterItems,
-                    ...categoryFilterItems,
-                    ...technologyFilterItems,
-                  ].map((filterItem, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center gap-1 rounded-full border border-custom-blue px-3 py-1 text-custom-blue font-medium bg-blue-50 text-sm"
-                    >
-                      <span>{capitalizeFirstLetter(filterItem)}</span>
-                      <button
-                        className="hover:text-red-500 transition-colors"
-                        onClick={() =>
-                          onClickRemoveSelectedFilterItem(filterItem)
-                        }
-                        type="button"
+            ].length > 0) && (
+                <div className="flex items-center flex-wrap px-4 pt-2 mb-3 gap-3">
+                  <h3 className="font-medium text-gray-700 text-sm">
+                    Filters applied:
+                  </h3>
+                  <ul className="flex gap-2 flex-wrap">
+                    {/* Render Search Tags */}
+                    {selectedSkills.map((skill, index) => (
+                      <li
+                        key={`skill-${index}`}
+                        className="flex gap-2 items-center border border-custom-blue rounded-full px-3 py-1 text-custom-blue bg-blue-50 text-sm"
                       >
-                        <X size={14} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              // v1.0.8 ---------------------------------------------------------------------->
-              // v1.0.6 ---------------------------------------------------------------------->
-            )}
+                        <span>{skill}</span>
+                        <button
+                          type="button"
+                          className="cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => onClickCrossIcon(skill)}
+                        >
+                          <X size={14} />
+                        </button>
+                      </li>
+                    ))}
+
+                    {/* Render Other Filters */}
+                    {[
+                      ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
+                      ...difficultyLevelFilterItems,
+                      ...categoryFilterItems,
+                      ...technologyFilterItems,
+                    ].map((filterItem, index) => (
+                      <li
+                        key={`filter-${index}`}
+                        className="flex items-center gap-1 rounded-full border border-custom-blue px-3 py-1 text-custom-blue font-medium bg-blue-50 text-sm"
+                      >
+                        <span>{capitalizeFirstLetter(filterItem)}</span>
+                        <button
+                          className="hover:text-red-500 transition-colors"
+                          onClick={() =>
+                            onClickRemoveSelectedFilterItem(filterItem)
+                          }
+                          type="button"
+                        >
+                          <X size={14} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             {/* v1.0.7 <----------------------------------------------------------------------- */}
             <ul
               // className="flex flex-col gap-4 pr-2 h-[calc(100vh-362px)] overflow-y-auto"
-              className="flex flex-col gap-4 pr-2 overflow-y-auto pb-6"
+              className="flex flex-col gap-4 pr-2 overflow-y-auto pb-20"
               style={{
                 height: `calc(100vh - ${isMeetingSidePanel ? 362 : 206}px)`,
               }}
@@ -1202,73 +1226,70 @@ const SuggestedQuestionsComponent = ({
               {/* Render only unlocked cards first */}
               {unlockedPaginatedData.length > 0
                 ? unlockedPaginatedData.map((item, index) => {
-                    // Regular unlocked card
-                    return (
-                      <div
-                        key={index}
-                        className="border rounded-lg h-full shadow-sm transition-shadow text-sm border-gray-200 hover:shadow-md"
-                      >
-                        <div className="flex justify-between items-center border-b border-gray-200 px-4">
-                          {/* v1.0.6 <---------------------------------------------------------------------------- */}
-                          <div className="flex items-start justify-start sm:w-[50%] md:w-[58%] w-[80%]">
-                            <div className="flex items-center gap-2 justify-center rounded-md px-3 py-1 text-white text-sm transition-colors bg-custom-blue/80">
-                              <p className="text-xs font-medium">
-                                {item.technology[0]}
-                              </p>
-                            </div>
-                          </div>
-                          {/* v1.0.6 ----------------------------------------------------------------------------> */}
-                          <div
-                            className={`text-xs font-medium flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${
-                              type === "interviewerSection" ||
-                              type === "feedback" ||
-                              type === "assessment"
-                                ? "w-[15%]"
-                                : "sm:w-[28%] md:w-[20%] w-[10%]"
-                            } ${isMeetingSidePanel && "w-[20%] mx-4"}`}
-                          >
-                            <p
-                              className={`w-16 text-center ${getDifficultyStyles(
-                                item.difficultyLevel,
-                              )} rounded-full py-1`}
-                              title="Difficulty Level"
-                            >
-                              {item.difficultyLevel}
+                  // Regular unlocked card
+                  return (
+                    <div
+                      key={index}
+                      className="border rounded-lg h-full shadow-sm transition-shadow text-sm border-gray-200 hover:shadow-md"
+                    >
+                      <div className="flex justify-between items-center border-b border-gray-200 px-4">
+                        {/* v1.0.6 <---------------------------------------------------------------------------- */}
+                        <div className="flex items-start justify-start sm:w-[50%] md:w-[58%] w-[80%]">
+                          <div className="flex items-center gap-2 justify-center rounded-md px-3 py-1 text-white text-sm transition-colors bg-custom-blue/80">
+                            <p className="text-xs font-medium">
+                              {item.technology[0]}
                             </p>
                           </div>
-                          {fromScheduleLater && (
-                            <div className="flex justify-center text-center h-12 sm:border-0 border-r border-gray-200">
-                              <div className="flex items-center w-14 justify-center">
-                                <button
-                                  onClick={() => {
-                                    if (
-                                      interviewQuestionsLists?.some(
-                                        (q) => q.questionId === item._id,
-                                      )
-                                    ) {
-                                      handleToggle(item._id, item);
-                                    }
-                                  }}
-                                  className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${
-                                    mandatoryStatus[item._id]
-                                      ? "bg-blue-100 border-custom-blue justify-end"
-                                      : "bg-gray-200 border-gray-300 justify-start"
+                        </div>
+                        {/* v1.0.6 ----------------------------------------------------------------------------> */}
+                        <div
+                          className={`text-xs font-medium flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${type === "interviewerSection" ||
+                            type === "feedback" ||
+                            type === "assessment"
+                            ? "w-[15%]"
+                            : "sm:w-[28%] md:w-[20%] w-[10%]"
+                            } ${isMeetingSidePanel && "w-[20%] mx-4"}`}
+                        >
+                          <p
+                            className={`w-16 text-center ${getDifficultyStyles(
+                              item.difficultyLevel,
+                            )} rounded-full py-1`}
+                            title="Difficulty Level"
+                          >
+                            {item.difficultyLevel}
+                          </p>
+                        </div>
+                        {fromScheduleLater && (
+                          <div className="flex justify-center text-center h-12 sm:border-0 border-r border-gray-200">
+                            <div className="flex items-center w-14 justify-center">
+                              <button
+                                onClick={() => {
+                                  if (
+                                    interviewQuestionsLists?.some(
+                                      (q) => q.questionId === item._id,
+                                    )
+                                  ) {
+                                    handleToggle(item._id, item);
+                                  }
+                                }}
+                                className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
+                                  ? "bg-blue-100 border-custom-blue justify-end"
+                                  : "bg-gray-200 border-gray-300 justify-start"
                                   }`}
-                                  type="button"
-                                >
-                                  <span
-                                    className={`w-3 h-3 rounded-full transition-colors ${
-                                      mandatoryStatus[item._id]
-                                        ? "bg-custom-blue"
-                                        : "bg-gray-400"
+                                type="button"
+                              >
+                                <span
+                                  className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
+                                    ? "bg-custom-blue"
+                                    : "bg-gray-400"
                                     }`}
-                                  />
-                                </button>
-                              </div>
+                                />
+                              </button>
                             </div>
-                          )}
-                          {(type === "interviewerSection" ||
-                            type === "feedback") && (
+                          </div>
+                        )}
+                        {(type === "interviewerSection" ||
+                          type === "feedback") && (
                             <div className="p-1 flex justify-center w-[8%]">
                               {item.isLocked ? (
                                 <button
@@ -1280,18 +1301,17 @@ const SuggestedQuestionsComponent = ({
                                 >
                                   <Lock className="h-4 w-4 mr-1" />
                                   <span
-                                    className={`${
-                                      isMeetingSidePanel
-                                        ? "hidden"
-                                        : "sm:hidden inline"
-                                    }`}
+                                    className={`${isMeetingSidePanel
+                                      ? "hidden"
+                                      : "sm:hidden inline"
+                                      }`}
                                   >
                                     Upgrade
                                   </span>
                                 </button>
                               ) : interviewQuestionsLists?.some(
-                                  (q) => q.questionId === item._id,
-                                ) ? (
+                                (q) => q.questionId === item._id,
+                              ) ? (
                                 <button
                                   type="button"
                                   onClick={() =>
@@ -1300,11 +1320,10 @@ const SuggestedQuestionsComponent = ({
                                   className="text-xs font-medium sm:flex sm:items-center sm:justify-center rounded-md md:ml-4 bg-gray-500 px-2 py-1 text-white hover:bg-gray-600 transition-colors"
                                 >
                                   <span
-                                    className={`${
-                                      isMeetingSidePanel
-                                        ? "hidden"
-                                        : "sm:hidden inline"
-                                    }`}
+                                    className={`${isMeetingSidePanel
+                                      ? "hidden"
+                                      : "sm:hidden inline"
+                                      }`}
                                   >
                                     Remove
                                   </span>
@@ -1317,11 +1336,10 @@ const SuggestedQuestionsComponent = ({
                                   onClick={() => onClickAddButton(item)}
                                 >
                                   <span
-                                    className={`${
-                                      isMeetingSidePanel
-                                        ? "hidden"
-                                        : "sm:hidden inline"
-                                    }`}
+                                    className={`${isMeetingSidePanel
+                                      ? "hidden"
+                                      : "sm:hidden inline"
+                                      }`}
                                   >
                                     Add
                                   </span>
@@ -1330,135 +1348,130 @@ const SuggestedQuestionsComponent = ({
                               )}
                             </div>
                           )}
-                          {type === "assessment" && (
-                            <div className="w-[8%] flex justify-center">
-                              {addedSections.some((s) =>
-                                s.Questions.some(
-                                  (q) => q.questionId === item._id,
-                                ),
-                              ) ? (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    onClickRemoveQuestion(item?._id)
-                                  }
-                                  className="text-xs font-medium sm:flex sm:items-center sm:justify-center rounded-md bg-red-500 px-2 py-1 text-white hover:bg-red-600 transition-colors"
-                                >
-                                  <span
-                                    className={`${
-                                      isMeetingSidePanel
-                                        ? "hidden"
-                                        : "sm:hidden inline"
-                                    }`}
-                                  >
-                                    Remove
-                                  </span>
-                                  <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                                </button>
-                              ) : (
-                                // (
-                                //   <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
-                                //     ✓ <span className="sm:hidden inline">Added</span>
-                                //   </span>
-                                // )
-                                <button
-                                  type="button"
-                                  className={`text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${
-                                    addedSections.reduce(
-                                      (acc, s) => acc + s.Questions.length,
-                                      0,
-                                    ) >= questionsLimit
-                                      ? "opacity-50 cursor-not-allowed"
-                                      : ""
-                                  }`}
-                                  onClick={() => onClickAddButton(item)}
-                                  disabled={
-                                    addedSections.reduce(
-                                      (acc, s) => acc + s.Questions.length,
-                                      0,
-                                    ) >= questionsLimit
-                                  }
-                                >
-                                  <span
-                                    className={`${
-                                      isMeetingSidePanel
-                                        ? "hidden"
-                                        : "sm:hidden inline"
-                                    }`}
-                                  >
-                                    Add
-                                  </span>
-                                  <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                                </button>
-                              )}
-                            </div>
-                          )}
-
-                          {!type && !fromScheduleLater && (
-                            <div className="flex justify-center relative">
+                        {type === "assessment" && (
+                          <div className="w-[8%] flex justify-center">
+                            {addedSections.some((s) =>
+                              s.Questions.some(
+                                (q) => q.questionId === item._id,
+                              ),
+                            ) ? (
                               <button
                                 type="button"
-                                className="text-xs font-medium border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
-                                onClick={() => toggleDropdown(item._id)}
+                                onClick={() =>
+                                  onClickRemoveQuestion(item?._id)
+                                }
+                                className="text-xs font-medium sm:flex sm:items-center sm:justify-center rounded-md bg-red-500 px-2 py-1 text-white hover:bg-red-600 transition-colors"
                               >
-                                Add{" "}
                                 <span
-                                  className={`${
-                                    isMeetingSidePanel
-                                      ? "hidden"
-                                      : "sm:hidden md:hidden inline"
-                                  }`}
+                                  className={`${isMeetingSidePanel
+                                    ? "hidden"
+                                    : "sm:hidden inline"
+                                    }`}
                                 >
-                                  to list
+                                  Remove
                                 </span>
+                                <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
                               </button>
-                              {dropdownOpen === item._id && (
-                                <MyQuestionList
-                                  question={item}
-                                  closeDropdown={closeDropdown}
-                                  isInterviewType={
-                                    dropdownValue === "Interview Questions"
-                                  }
-                                />
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-4 border-b relative">
-                          <div className="flex items-start w-full pt-2 gap-2">
-                            <span className="sm:text-sm font-semibold">
-                              {(currentPage - 1) * itemsPerPage + index + 1}.
-                            </span>
-                            <p className="sm:text-sm text-gray-700 break-words w-full">
-                              {item.questionText}
-                            </p>
+                            ) : (
+                              // (
+                              //   <span className="flex items-center sm:text-lg gap-2 text-green-600 font-medium py-1 px-1">
+                              //     ✓ <span className="sm:hidden inline">Added</span>
+                              //   </span>
+                              // )
+                              <button
+                                type="button"
+                                className={`text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${addedSections.reduce(
+                                  (acc, s) => acc + s.Questions.length,
+                                  0,
+                                ) >= questionsLimit
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                                  }`}
+                                onClick={() => onClickAddButton(item)}
+                                disabled={
+                                  addedSections.reduce(
+                                    (acc, s) => acc + s.Questions.length,
+                                    0,
+                                  ) >= questionsLimit
+                                }
+                              >
+                                <span
+                                  className={`${isMeetingSidePanel
+                                    ? "hidden"
+                                    : "sm:hidden inline"
+                                    }`}
+                                >
+                                  Add
+                                </span>
+                                <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
+                              </button>
+                            )}
                           </div>
-                          {item.questionType === "MCQ" && item.options && (
-                            <div className="mb-2 ml-12 mt-2">
-                              <ul className="list-none">
-                                {(() => {
-                                  const isAnyOptionLong = item.options.some(
-                                    (option) => option.length > 55,
-                                  );
-                                  return item.options.map((option, idx) => (
-                                    <li
-                                      key={idx}
-                                      className={`${
-                                        isAnyOptionLong
-                                          ? "block w-full"
-                                          : "inline-block w-1/2"
+                        )}
+
+                        {!type && !fromScheduleLater && (
+                          <div className="flex justify-center relative">
+                            <button
+                              type="button"
+                              className="text-xs font-medium border cursor-pointer rounded-md px-2 py-1 border-custom-blue transition-colors"
+                              onClick={() => toggleDropdown(item._id)}
+                            >
+                              Add{" "}
+                              <span
+                                className={`${isMeetingSidePanel
+                                  ? "hidden"
+                                  : "sm:hidden md:hidden inline"
+                                  }`}
+                              >
+                                to list
+                              </span>
+                            </button>
+                            {dropdownOpen === item._id && (
+                              <MyQuestionList
+                                question={item}
+                                closeDropdown={closeDropdown}
+                                isInterviewType={
+                                  dropdownValue === "Interview Questions"
+                                }
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4 border-b relative">
+                        <div className="flex items-start w-full pt-2 gap-2">
+                          <span className="sm:text-sm font-semibold">
+                            {(currentPage - 1) * itemsPerPage + index + 1}.
+                          </span>
+                          <p className="sm:text-sm text-gray-700 break-words w-full">
+                            {item.questionText}
+                          </p>
+                        </div>
+                        {item.questionType === "MCQ" && item.options && (
+                          <div className="mb-2 ml-12 mt-2">
+                            <ul className="list-none">
+                              {(() => {
+                                const isAnyOptionLong = item.options.some(
+                                  (option) => option.length > 55,
+                                );
+                                return item.options.map((option, idx) => (
+                                  <li
+                                    key={idx}
+                                    className={`${isAnyOptionLong
+                                      ? "block w-full"
+                                      : "inline-block w-1/2"
                                       } mb-2`}
-                                    >
-                                      <span className="text-gray-700">
-                                        {option}
-                                      </span>
-                                    </li>
-                                  ));
-                                })()}
-                              </ul>
-                            </div>
-                          )}
-                          {/* do not remove this commented code used in future */}
+                                  >
+                                    <span className="text-gray-700">
+                                      {option}
+                                    </span>
+                                  </li>
+                                ));
+                              })()}
+                            </ul>
+                          </div>
+                        )}
+                        {/* do not remove this commented code used in future */}
                         {/* {item.questionType === "MCQ" && item.options && (
                           <div className="mb-2 ml-12 mt-2">
                             <ul className="list-none">
@@ -1483,19 +1496,19 @@ const SuggestedQuestionsComponent = ({
                             </ul>
                           </div>
                         )} */}
-                        </div>
-                        <div className="p-4">
-                          <p className="text-sm break-words whitespace-pre-wrap">
-                            <span className="sm:text-sm font-medium text-gray-700">
-                              Answer:{" "}
-                            </span>
-                            <span className="sm:text-sm text-gray-600">
-                              {item.questionType === "Programming"
-                                ? renderSolutions(item.solutions)
-                                : item.correctAnswer}
-                            </span>
-                            {/* do not remove this line used in future */}
-                            {/* <span className="sm:text-sm text-gray-600">
+                      </div>
+                      <div className="p-4">
+                        <p className="text-sm break-words whitespace-pre-wrap">
+                          <span className="sm:text-sm font-medium text-gray-700">
+                            Answer:{" "}
+                          </span>
+                          <span className="sm:text-sm text-gray-600">
+                            {item.questionType === "Programming"
+                              ? renderSolutions(item.solutions)
+                              : item.correctAnswer}
+                          </span>
+                          {/* do not remove this line used in future */}
+                          {/* <span className="sm:text-sm text-gray-600">
                               {(() => {
                                 if (item.questionType === "Programming") {
                                   return renderSolutions(item.solutions);
@@ -1509,45 +1522,45 @@ const SuggestedQuestionsComponent = ({
                                 return item.correctAnswer;
                               })()}
                             </span> */}
-                          </p>
-                          <p className="sm:text-sm font-medium pt-2">
-                            Tags:{" "}
-                            <span className="text-sm text-gray-600">
-                              {Array.isArray(item.tags)
-                                ? item.tags.join(", ")
-                                : String(item.tags || "")}
-                            </span>
-                          </p>
-                        </div>
+                        </p>
+                        <p className="sm:text-sm font-medium pt-2">
+                          Tags:{" "}
+                          <span className="text-sm text-gray-600">
+                            {Array.isArray(item.tags)
+                              ? item.tags.join(", ")
+                              : String(item.tags || "")}
+                          </span>
+                        </p>
                       </div>
-                    );
-                  })
-                : !hasLockedOnPage && (
-                    <div className="h-full flex flex-col gap-4 justify-center items-center text-center mt-24">
-                      <div className="text-gray-400">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-12 w-12"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                      </div>
-                      <h2 className="sm:text-sm text-gray-700 font-semibold text-lg">
-                        No Questions Found
-                      </h2>
-                      <p className="sm:text-sm text-gray-500">
-                        Try again with different filter options
-                      </p>
                     </div>
-                  )}
+                  );
+                })
+                : !hasLockedOnPage && (
+                  <div className="h-full flex flex-col gap-4 justify-center items-center text-center mt-24">
+                    <div className="text-gray-400">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-12 w-12"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <h2 className="sm:text-sm text-gray-700 font-semibold text-lg">
+                      No Questions Found
+                    </h2>
+                    <p className="sm:text-sm text-gray-500">
+                      Try again with different filter options
+                    </p>
+                  </div>
+                )}
 
               {/* Show a single lock banner at the end if any items are locked on this page */}
               {hasLockedOnPage && (
@@ -1812,7 +1825,7 @@ const SuggestedQuestionsComponent = ({
                     )
                   }
                 >
-                  <h3 className="font-medium">Technology</h3>
+                  <h3 className="font-medium">{section.filterType}</h3>
                   <button type="button">
                     {section.isOpen ? <ChevronUp /> : <ChevronDown />}
                   </button>

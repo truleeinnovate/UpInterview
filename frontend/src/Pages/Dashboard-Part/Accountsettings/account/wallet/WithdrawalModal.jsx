@@ -462,7 +462,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg hover:bg-blue-50"
+              className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>

@@ -43,6 +43,7 @@ const {
   createWalletTransaction,
   WALLET_BUSINESS_TYPES,
 } = require("../utils/interviewWalletUtil");
+const { TenantCompany } = require("../models/TenantCompany/TenantCompany");
 
 // Platform wallet owner for capturing platform fees & GST
 const PLATFORM_WALLET_OWNER_ID =
@@ -1783,8 +1784,9 @@ const createWithdrawalRequest = async (req, res) => {
 
       // Calculate fees (example: 2% or flat ₹10)
       const processingFee = Math.max(amount * 0.02, 10);
-      const tax = processingFee * 0.18; // 18% GST
-      const netAmount = amount - processingFee - tax;
+      const tax = amount * 0.18; // 18% GST
+      const totalFees = processingFee + tax;
+      const netAmount = amount - totalFees;
 
       // Create withdrawal request with enhanced metadata for manual processing
       withdrawalRequest = await WithdrawalRequest.create({
@@ -3674,6 +3676,8 @@ const settleInterviewPayment = async (req, res) => {
       previewOnly,
     } = req.body;
 
+    let companyNamePopulate = await TenantCompany.findById(companyName).lean();
+
     const isPreview = Boolean(previewOnly);
 
     if (!roundId || !interviewerContactId) {
@@ -3938,7 +3942,7 @@ const settleInterviewPayment = async (req, res) => {
         "transactions.$.type": "debited",
         "transactions.$.status": "completed",
         "transactions.$.amount": grossSettlementAmount,
-        "transactions.$.description": `Settled payment to interviewer for ${companyName || "Company"} - ${roundTitle || "Interview Round"}`,
+        "transactions.$.description": `Settled payment to interviewer for ${companyNamePopulate.name || "Company"} - ${roundTitle || "Interview Round"}`,
         "transactions.$.metadata.settledAt": new Date(),
         "transactions.$.metadata.settlementStatus": "completed",
         "transactions.$.metadata.settlementBaseAmount": baseAmount,
@@ -3981,7 +3985,7 @@ const settleInterviewPayment = async (req, res) => {
       const refundTransaction = {
         type: "refund",
         amount: refundAmount,
-        description: `Refund for ${companyName || "Company"} - ${roundTitle || "Interview Round"}`,
+        description: `Refund for ${companyNamePopulate.name || "Company"} - ${roundTitle || "Interview Round"}`,
         relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
         status: "completed",
         metadata: {
@@ -3990,7 +3994,7 @@ const settleInterviewPayment = async (req, res) => {
           originalTransactionId: transactionId,
           roundId: roundId,
           settlementType: "interview_refund",
-          companyName: companyName || "Company",
+          companyName: companyNamePopulate.name || "Company",
           roundTitle: roundTitle || "Interview Round",
           positionTitle: positionTitle || "Position",
           settlementPolicyId: appliedPolicyId,
@@ -4043,7 +4047,7 @@ const settleInterviewPayment = async (req, res) => {
         gstAmount: 0,
         serviceCharge: 0,
         totalAmount: settlementAmount,
-        description: `Payment from ${companyName || "Company"} - ${roundTitle || "Interview Round"} for ${positionTitle || "Position"}`,
+        description: `Payment from ${companyNamePopulate.name || "Company"} - ${roundTitle || "Interview Round"} for ${positionTitle || "Position"}`,
         relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
         status: "completed",
         metadata: {
@@ -4053,7 +4057,7 @@ const settleInterviewPayment = async (req, res) => {
           organizationWalletId: orgWallet._id.toString(),
           roundId: roundId,
           settlementType: "interview_payment",
-          companyName: companyName || "Company",
+          companyName: companyNamePopulate.name || "Company",
           roundTitle: roundTitle || "Interview Round",
           positionTitle: positionTitle || "Position",
           settlementPolicyId: appliedPolicyId,
@@ -4110,7 +4114,7 @@ const settleInterviewPayment = async (req, res) => {
           gstAmount: 0,
           serviceCharge: serviceCharge,
           totalAmount: serviceCharge,
-          description: `Platform fee for ${companyName || "Company"} - ${roundTitle || "Interview Round"}`,
+          description: `Platform fee for ${companyNamePopulate.name || "Company"} - ${roundTitle || "Interview Round"}`,
           relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
           status: "completed",
           reason: "PLATFORM_COMMISSION",
@@ -4145,7 +4149,7 @@ const settleInterviewPayment = async (req, res) => {
           gstAmount: serviceChargeGst,
           serviceCharge: 0,
           totalAmount: serviceChargeGst,
-          description: `GST on platform fee for ${companyName || "Company"} - ${roundTitle || "Interview Round"}`,
+          description: `GST on platform fee for ${companyNamePopulate.name || "Company"} - ${roundTitle || "Interview Round"}`,
           relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
           status: "completed",
           reason: "PLATFORM_GST",
@@ -4188,7 +4192,7 @@ const settleInterviewPayment = async (req, res) => {
         interviewerTenantId,
         {
           amount: settlementAmount,
-          companyName: companyName || "Company",
+          companyName: companyNamePopulate.name || "Company",
           roundTitle: roundTitle || "Interview Round",
           positionTitle: positionTitle || "Position",
           settlementCode: transactionId,

@@ -486,8 +486,8 @@ const getQuestions = async (req, res) => {
         finalQuestionTypes =
           questionTypeFilters.length > 0
             ? questionTypeFilters.filter((t) =>
-                allowed.some((a) => a.toLowerCase() === t.toLowerCase()),
-              )
+              allowed.some((a) => a.toLowerCase() === t.toLowerCase()),
+            )
             : allowed;
 
         if (finalQuestionTypes.length === 0) finalQuestionTypes = allowed;
@@ -500,16 +500,33 @@ const getQuestions = async (req, res) => {
       }
 
       if (search) {
-        const searchRegex = new RegExp(search, "i");
-        query.$or = [
-          { questionText: searchRegex },
-          { tags: searchRegex },
-          { technology: searchRegex },
-          { topic: searchRegex },
-          { category: searchRegex },
-          { subTopic: searchRegex },
-          { area: searchRegex },
-        ];
+        // Handle search as array or string
+        const searchTerms = Array.isArray(search) ? search : [search];
+
+        // Create AND condition for all search terms
+        // Each term must match at least one field (OR logic within the term)
+        const searchConditions = searchTerms.filter(term => term && term.trim()).map(term => {
+          // Escape special regex characters to prevent errors
+          const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const searchRegex = new RegExp(escapedTerm, "i");
+
+          return {
+            $or: [
+              { questionText: searchRegex },
+              { tags: searchRegex },
+              { technology: searchRegex },
+              { topic: searchRegex },
+              { category: searchRegex },
+              { subTopic: searchRegex },
+              { area: searchRegex },
+              { skill: searchRegex } // Added skill field
+            ]
+          };
+        });
+
+        if (searchConditions.length > 0) {
+          query.$or = searchConditions;
+        }
       }
 
       // Difficulty level filter

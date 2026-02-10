@@ -2032,6 +2032,19 @@ const AddCandidateForm = ({
 
                 {/* Current Role */}
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                  <DropdownWithSearchField
+                    value={formData.CurrentRole}
+                    options={roleOptionsRS}
+                    onChange={handleChange}
+                    error={errors.CurrentRole}
+                    containerRef={fieldRefs.CurrentRole}
+                    label="Role / Technology"
+                    name="CurrentRole"
+                    required
+                    onMenuOpen={loadCurrentRoles}
+                    loading={isCurrentRolesFetching}
+                  />
+
                   <IncreaseAndDecreaseField
                     value={formData.CurrentExperience}
                     onChange={handleChange}
@@ -2051,46 +2064,7 @@ const AddCandidateForm = ({
                     required
                   />
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-                  <DropdownWithSearchField
-                    value={formData.CurrentRole}
-                    options={roleOptionsRS}
-                    onChange={handleChange}
-                    error={errors.CurrentRole}
-                    containerRef={fieldRefs.CurrentRole}
-                    label="Role / Technology"
-                    name="CurrentRole"
-                    required
-                    onMenuOpen={loadCurrentRoles}
-                    loading={isCurrentRolesFetching}
-                  />
 
-                  {/* <DropdownWithSearchField
-                    containerRef={fieldRefs.Technology}
-                    label="Technology"
-                    name="technology"
-                    value={formData.Technology}
-                    options={currentRoles.map((t) => ({
-                      value: t.roleName,
-                      label: t.roleLabel,
-                    }))}
-                    onChange={(e) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        Technology: e.target.value,
-                      }));
-                      setErrors((prev) => ({
-                        ...prev,
-                        Technology: "",
-                      }));
-                    }}
-                    error={errors.Technology}
-                    placeholder="Select Technology"
-                    required
-                    onMenuOpen={loadCurrentRoles}
-                    loading={isCurrentRolesFetching}
-                  /> */}
-                </div>
               </div>
 
               <div>

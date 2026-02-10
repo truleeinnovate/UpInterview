@@ -24,18 +24,18 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
   const ownerId = tokenPayload?.userId || userProfile?._id;
   const tenantId = tokenPayload?.tenantId;
 
-  
+
   // Debug logging
   // console.log("UserProfile:", userProfile);
   // console.log("OwnerId:", ownerId);
   // console.log("TenantId:--------------------", tenantId);
-  
+
   // API hooks
   const { data: bankAccounts = [], isLoading: loadingAccounts, refetch } = useBankAccounts(ownerId);
   const { mutate: addBankAccount, isLoading: addingAccount } = useAddBankAccount();
   const { mutate: verifyBankAccount, isLoading: verifyingAccount } = useVerifyBankAccount();
   const { mutate: deleteBankAccount, isLoading: deletingAccount } = useDeleteBankAccount();
-  
+
   const [isAddingAccount, setIsAddingAccount] = useState(false);
   const [errors, setErrors] = useState({}); //<-----v1.0.0-----
   const [selectedAccountId, setSelectedAccountId] = useState(null);
@@ -44,7 +44,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
     accountNumber: "",
     confirmAccountNumber: "",
     routingNumber: "",
-    ifscCode:"",
+    ifscCode: "",
     bankName: "",
     accountType: "savings",
     swiftCode: "",
@@ -94,7 +94,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
       accountNumber: newAccount.accountNumber,
       // For Checking accounts, send as routingNumber; for Savings/Current, send as ifscCode
       routingNumber: newAccount.accountType.toLowerCase() === "checking" ? newAccount.routingNumber : undefined,
-      ifscCode: (newAccount.accountType.toLowerCase() === "savings" || newAccount.accountType.toLowerCase() === "current") 
+      ifscCode: (newAccount.accountType.toLowerCase() === "savings" || newAccount.accountType.toLowerCase() === "current")
         ? newAccount.routingNumber : undefined,
       swiftCode: newAccount.swiftCode,
       isDefault: newAccount.isDefault,
@@ -109,7 +109,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
           accountNumber: "",
           confirmAccountNumber: "",
           routingNumber: "",
-          ifscCode:"",
+          ifscCode: "",
           bankName: "",
           accountType: "checking",
           swiftCode: "",
@@ -162,7 +162,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
           <p className="text-sm text-red-700">{errors.general}</p>
         </div>
       )}
-      
+
       {/* Personal Information */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Account Holder Information</h3>
@@ -321,7 +321,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
         <button
           type="button"
           onClick={() => setIsAddingAccount(false)}
-          className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg hover:bg-custom-blue/80"
+          className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
         >
           Cancel
         </button>
@@ -360,11 +360,10 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
         ) : (
           <>
             {bankAccounts.map((account) => (
-              <div 
-                key={account._id} 
-                className={`bg-gray-50 p-4 rounded-lg border-2 transition-all ${
-                  selectedAccountId === account._id ? 'border-custom-blue' : 'border-transparent'
-                } ${account.canWithdraw?.() ? 'cursor-pointer hover:border-gray-300' : 'opacity-75'}`}
+              <div
+                key={account._id}
+                className={`bg-gray-50 p-4 rounded-lg border-2 transition-all ${selectedAccountId === account._id ? 'border-custom-blue' : 'border-transparent'
+                  } ${account.canWithdraw?.() ? 'cursor-pointer hover:border-gray-300' : 'opacity-75'}`}
                 onClick={() => account.canWithdraw?.() && handleSelectAccount(account)}
               >
                 <div className="flex justify-between items-start">
