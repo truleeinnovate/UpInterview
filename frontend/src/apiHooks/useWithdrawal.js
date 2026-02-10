@@ -22,12 +22,12 @@ export const useWithdrawalRequests = (ownerId, status = null) => {
     queryKey: ["withdrawalRequests", ownerId, status],
     queryFn: async () => {
       if (!ownerId) return { withdrawalRequests: [], total: 0 };
-      
+
       let url = `${API_BASE_URL}/wallet/withdrawals/${ownerId}`;
       if (status) {
         url += `?status=${status}`;
       }
-      
+
       const response = await axios.get(url, getAuthHeaders());
       return response.data;
     },
@@ -39,7 +39,7 @@ export const useWithdrawalRequests = (ownerId, status = null) => {
 // Hook to create withdrawal request
 export const useCreateWithdrawal = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (withdrawalData) => {
       const response = await axios.post(
@@ -57,10 +57,9 @@ export const useCreateWithdrawal = () => {
       if (variables?.ownerId) {
         queryClient.invalidateQueries(["withdrawalRequests", variables.ownerId]);
       }
-      
+
       notify.success(
-        `Withdrawal request created successfully! ${
-          data.withdrawalRequest?.withdrawalCode || ""
+        `Withdrawal request created successfully! ${data.withdrawalRequest?.withdrawalCode || ""
         }`
       );
     },
@@ -75,7 +74,7 @@ export const useCreateWithdrawal = () => {
 // Hook to cancel withdrawal request
 export const useCancelWithdrawal = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ withdrawalRequestId, reason }) => {
       const response = await axios.post(
@@ -104,7 +103,7 @@ export const useWithdrawalSummary = (ownerId) => {
     queryKey: ["withdrawalSummary", ownerId],
     queryFn: async () => {
       if (!ownerId) return null;
-      
+
       const response = await axios.get(
         `${API_BASE_URL}/wallet/withdrawals/${ownerId}/summary`,
         getAuthHeaders()
@@ -118,15 +117,23 @@ export const useWithdrawalSummary = (ownerId) => {
 
 // Helper function to calculate withdrawal fees
 export const calculateWithdrawalFees = (amount) => {
-  const processingFee = Math.max(amount * 0.02, 10); // 2% or minimum ₹10
-  const tax = processingFee * 0.18; // 18% GST
-  const netAmount = amount - processingFee - tax;
-  
+  // Helper to round to 2 decimal places
+  const roundToTwo = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
+
+  let processingFee = Math.max(amount * 0.02, 10); // 2% or minimum ₹10
+  processingFee = roundToTwo(processingFee); // Round fee first
+
+  let tax = amount * 0.18; // 18% GST on amount
+  tax = roundToTwo(tax); // Round tax
+
+  const totalFees = processingFee + tax;
+  const netAmount = amount - totalFees;
+
   return {
     amount,
     processingFee,
     tax,
-    totalFees: processingFee + tax,
+    totalFees,
     netAmount
   };
 };
@@ -144,7 +151,7 @@ export const getWithdrawalStatusColor = (status) => {
     reversed: "bg-orange-100 text-orange-800",
     on_hold: "bg-amber-100 text-amber-800"
   };
-  
+
   return statusColors[status] || "bg-gray-100 text-gray-800";
 };
 
@@ -158,7 +165,7 @@ export const formatWithdrawalMode = (mode) => {
     card: "Card Transfer",
     manual: "Manual Processing"
   };
-  
+
   return modeNames[mode] || mode;
 };
 

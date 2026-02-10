@@ -301,7 +301,10 @@ Ensure you are in a quiet environment to avoid distractions.`;
       });
       setQuestionsLimit(assessment.NumberOfQuestions || "");
       setSelectedDifficulty(assessment.DifficultyLevel);
-      setInstructions(assessment.Instructions || "");
+      // Strip bullet points from legacy data
+      const cleanInstructions = (assessment.Instructions || "")
+        .replace(/[•\u2022]\s*/g, "");
+      setInstructions(cleanInstructions);
       setAdditionalNotes(assessment.AdditionalNotes || "");
       setLinkExpiryDays(assessment.linkExpiryDays);
       // Preselect categoryOrTechnology
