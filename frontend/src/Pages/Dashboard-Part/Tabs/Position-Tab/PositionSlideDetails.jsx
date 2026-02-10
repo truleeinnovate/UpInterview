@@ -48,6 +48,7 @@ import { usePermissions } from "../../../../Context/PermissionsContext";
 import TableView from "../../../../Components/Shared/Table/TableView";
 import { Mail } from "lucide-react";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { useTeamsQuery } from "../../../../apiHooks/useInterviewerGroups";
 import { formatDateTime } from "../../../../utils/dateFormatter";
 import CandidateViewer from "../../../../Components/CandidateViewer";
 import Candidate from "../Candidate-Tab/Candidate";
@@ -470,6 +471,7 @@ const PositionSlideDetails = () => {
   const [allInterviewerCount, setAllInterviewerCount] = useState(0);
   const [internalInterviewerCount, setInternalInterviewerCount] = useState(0);
   const [externalInterviewerCount, setExternalInterviewerCount] = useState(0);
+  const { data: teamsData = [] } = useTeamsQuery();
 
 
 
@@ -670,18 +672,20 @@ const PositionSlideDetails = () => {
             {/* Tabs Navigation */}
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-                {["Overview", "Candidates", "Applications", "Interviews", "Feeds"].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`${activeTab === tab
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1`}
-                  >
-                    {tab}
-                  </button>
-                ))}
+                {["Overview", "Candidates", "Applications", "Interviews", "Feeds"]
+                  .filter(tab => isOrganization || (tab !== "Applications" && tab !== "Interviews"))
+                  .map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`${activeTab === tab
+                        ? "border-custom-blue text-custom-blue"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-1`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
               </nav>
             </div>
             {/* v1.0.4 ------------------------------------------------------------------------------------------> */}
@@ -864,39 +868,57 @@ const PositionSlideDetails = () => {
                       </div>
 
                       {/* Hiring Team Column */}
-                      <div className="bg-gray-50 rounded-lg p-5 shadow-sm">
-                        <h4 className="font-semibold text-gray-800 mb-4">Hiring Team</h4>
-                        {/* <div className="space-y-3"> */}
-                        {/* Static Hiring Team members */}
-                        {/* <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold">
-                          M
+                      {/* Hiring Team Column */}
+                      {isOrganization && (
+                        <div className="bg-gray-50 rounded-lg p-5 shadow-sm">
+                          <h4 className="font-semibold text-gray-800 mb-4">Hiring Team</h4>
+
+                          {(() => {
+                            const uniqueTeams = [];
+                            const seenTeams = new Set();
+
+                            rounds.forEach(round => {
+                              if (round.TeamsIds && round.TeamsIds.length > 0) {
+                                round.TeamsIds.forEach(teamId => {
+                                  // teamId could be an ID string or an object depending on backend population
+                                  const id = typeof teamId === 'object' ? teamId._id : teamId;
+
+                                  // Find team name from teamsData if available, or use object name if populated
+                                  let teamName = '';
+                                  if (typeof teamId === 'object' && teamId.name) {
+                                    teamName = teamId.name;
+                                  } else if (teamsData && teamsData.length > 0) {
+                                    const foundTeam = teamsData.find(t => t._id === id);
+                                    if (foundTeam) teamName = foundTeam.name;
+                                  }
+
+                                  if (teamName && !seenTeams.has(teamName)) {
+                                    seenTeams.add(teamName);
+                                    uniqueTeams.push(teamName);
+                                  }
+                                });
+                              }
+                            });
+
+                            return uniqueTeams.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {uniqueTeams.map((teamName, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                                  >
+                                    {teamName}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-gray-400 italic text-sm">
+                                No Hiring Team assigned
+                              </p>
+                            );
+                          })()}
                         </div>
-                        <p className="font-medium text-gray-800 text-sm">
-                          Michael Roberts <span className="text-gray-500 font-normal">(CTO)</span>
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold">
-                          J
-                        </div>
-                        <p className="font-medium text-gray-800 text-sm">
-                          Jennifer Lee <span className="text-gray-500 font-normal">(Salesforce Architect)</span>
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold">
-                          D
-                        </div>
-                        <p className="font-medium text-gray-800 text-sm">
-                          David Chen <span className="text-gray-500 font-normal">(Senior Developer)</span>
-                        </p>
-                      </div>
-                    </div> */}
-                        <p className="text-gray-400 italic text-sm">
-                          No Hiring Team assigned
-                        </p>
-                      </div>
+                      )}
                     </div>
                   </div>
 
