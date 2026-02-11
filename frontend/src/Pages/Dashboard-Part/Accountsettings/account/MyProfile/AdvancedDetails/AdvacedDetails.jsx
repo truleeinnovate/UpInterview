@@ -26,6 +26,8 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
     }
   }, [userProfile, usersId, mode]);
 
+  const experienceLabel = Number(contactData?.yearsOfExperience) === 1 ? "Year" : "Years";
+
   return (
     // v1.0.1 <----------------------------------------------------------------------------------
     <div className="mx-2">
@@ -70,11 +72,16 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
               {contactData?.currentRoleLabel || "Not Provided"}
             </p>
           </div>
-                      <div>
+            <div>
               <p className="text-sm text-gray-500">Years of Experience</p>
-              <p className="font-medium sm:text-sm">
+              {/* <p className="font-medium sm:text-sm">
                 {contactData.yearsOfExperience
                   ? `${contactData.yearsOfExperience} Years`
+                  : "Not Provided"}
+              </p> */}
+              <p className="font-medium sm:text-sm">
+                {contactData.yearsOfExperience 
+                  ? `${contactData.yearsOfExperience} ${experienceLabel}` 
                   : "Not Provided"}
               </p>
             </div>
