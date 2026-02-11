@@ -673,7 +673,7 @@ const PositionSlideDetails = () => {
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                 {["Overview", "Candidates", "Applications", "Interviews", "Feeds"]
-                  .filter(tab => isOrganization || (tab !== "Applications" && tab !== "Interviews"))
+                  .filter(tab => isOrganization || (tab !== "Applications" && tab !== "Interviews" && tab !== "Candidates"))
                   .map((tab) => (
                     <button
                       key={tab}
@@ -774,7 +774,7 @@ const PositionSlideDetails = () => {
 
                   <div className="space-y-4">
                     {/* 3-Column Layout for Position Details */}
-                    <div className="grid grid-cols-3 sm:grid-cols-1 gap-6">
+                    <div className={`grid  ${isOrganization ? "grid-cols-3" : "grid-cols-2"} sm:grid-cols-1 gap-6`}>
                       {/* Position Details Column */}
                       <div className="bg-gray-50 rounded-lg p-5 shadow-sm">
                         <h4 className="font-semibold text-gray-800 mb-4">Position Details</h4>

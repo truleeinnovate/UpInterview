@@ -3052,7 +3052,33 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
     customerName = customerName || `Customer ${ownerId.substring(0, 8)}`;
 
     // Create customer in Razorpay with the best available information
-    //  console.log(`Creating customer with name: ${customerName}, email: ${customerEmail || 'Not provided'}, phone: ${customerPhone || 'Not provided'}`);
+    // Sanitize email - Razorpay requires a valid email format
+    if (customerEmail) {
+      customerEmail = customerEmail.trim().toLowerCase();
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(customerEmail)) {
+        console.warn(`Invalid email format for Razorpay customer: ${customerEmail}, skipping email`);
+        customerEmail = "";
+      }
+    }
+
+    // Sanitize phone - Razorpay requires a valid phone number (10-digit or with country code)
+    if (customerPhone) {
+      // Remove spaces, dashes, parentheses, dots
+      let sanitizedPhone = customerPhone.replace(/[\s\-\(\)\.]/g, '');
+      // If it starts with 0, remove it (Indian local format)
+      if (sanitizedPhone.startsWith('0')) {
+        sanitizedPhone = sanitizedPhone.substring(1);
+      }
+      // Validate: must be digits only (optionally with + prefix), 10-13 digits
+      if (/^\+?\d{10,13}$/.test(sanitizedPhone)) {
+        customerPhone = sanitizedPhone;
+      } else {
+        console.warn(`Invalid phone format for Razorpay customer: ${customerPhone}, skipping contact`);
+        customerPhone = "";
+      }
+    }
 
     const customerData = {
       name: customerName,
@@ -3062,7 +3088,7 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
       },
     };
 
-    // Only add email and phone if they exist to avoid sending empty values to Razorpay
+    // Only add email and phone if they exist and are valid
     if (customerEmail) {
       customerData.email = customerEmail;
     }
@@ -3070,6 +3096,8 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
     if (customerPhone) {
       customerData.contact = customerPhone;
     }
+
+    console.log('Creating Razorpay customer with data:', JSON.stringify(customerData, null, 2));
 
     // Create the customer in Razorpay
     const customer = await razorpay.customers.create(customerData);
@@ -3202,55 +3230,62 @@ const createRecurringSubscription = async (req, res) => {
     } catch (customerError) {
       console.error("Error creating customer:", customerError);
 
-      // Check if this is a "customer already exists" error
-      if (
-        customerError.error &&
-        customerError.error.code === "BAD_REQUEST_ERROR" &&
-        customerError.error.description &&
-        customerError.error.description.includes(
-          "Customer already exists for the merchant"
-        )
-      ) {
-        // Try to fetch the existing customer by email
-        try {
-          // console.log('Customer already exists, trying to fetch by email:', userProfile.email);
+      // When customer creation fails (could be BAD_REQUEST_ERROR, SERVER_ERROR, or other),
+      // always try to find an existing customer by email or phone before giving up.
+      // Razorpay sometimes returns SERVER_ERROR instead of BAD_REQUEST_ERROR
+      // when a customer with the same email already exists.
+      const userEmail = userProfile?.email?.trim()?.toLowerCase();
+      let userPhone = userProfile?.phone?.replace(/[\s\-\(\)\.]/g, '') || "";
+      if (userPhone.startsWith('0')) userPhone = userPhone.substring(1);
 
-          // Instead of limiting to 10 customers, let's search more thoroughly
-          // First try to fetch up to 100 customers to have a better chance of finding the match
+      if (userEmail || userPhone) {
+        try {
+          console.log('Customer creation failed, trying to fetch existing customer by email:', userEmail, 'or phone:', userPhone);
+
           const customers = await razorpay.customers.all({
             count: 100,
           });
 
-          // console.log(`Searching through ${customers.items.length} customers for email: ${userProfile.email}`);
+          // First try to find by email match
+          let existingCustomer = null;
+          if (userEmail) {
+            existingCustomer = customers.items.find(
+              (c) => c.email === userEmail
+            );
+          }
 
-          // Find the customer with matching email
-          const existingCustomer = customers.items.find(
-            (c) => c.email === userProfile.email
-          );
+          // If not found by email, try by phone number
+          if (!existingCustomer && userPhone) {
+            existingCustomer = customers.items.find(
+              (c) => c.contact === userPhone || c.contact === `+91${userPhone}`
+            );
+          }
 
           if (existingCustomer && existingCustomer.id) {
-            // console.log('Found existing customer with matching email:', existingCustomer.id);
-            customerId = existingCustomer.id; // Return the customer ID with matching email
+            console.log('Found existing customer:', existingCustomer.id, 'matched by', existingCustomer.email === userEmail ? 'email' : 'phone');
+            customerId = existingCustomer.id;
           } else {
-            // console.log('Could not find existing customer with email:', userProfile.email);
-            // console.log('Will create a new customer with the correct email');
-            // Continue to create a new customer with the correct email
-            // No error returned here, we'll just create a new customer
+            console.error('Could not find existing customer with email:', userEmail, 'or phone:', userPhone);
+            return res.status(500).json({
+              status: "error",
+              message: "Failed to create or find customer in Razorpay",
+              error: customerError.message || customerError.error?.description,
+            });
           }
         } catch (fetchError) {
           console.error("Error fetching existing customer:", fetchError);
           return res.status(500).json({
             status: "error",
-            message: "Failed to fetch existing customer",
+            message: "Failed to create or find customer in Razorpay",
             error: fetchError.message,
           });
         }
       } else {
-        // For other errors, return error response
+        // No email or phone available to search for existing customer
         return res.status(500).json({
           status: "error",
-          message: "Failed to create customer in Razorpay",
-          error: customerError.message,
+          message: "Failed to create customer in Razorpay and no email/phone to search existing",
+          error: customerError.message || customerError.error?.description,
         });
       }
     }

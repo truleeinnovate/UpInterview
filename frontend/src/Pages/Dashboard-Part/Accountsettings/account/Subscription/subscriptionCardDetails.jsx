@@ -638,7 +638,7 @@ const SubscriptionCardDetails = () => {
   // v1.0.0 <---------------------------------------------------------
   return createPortal(
     // v1.0.0 --------------------------------------------------------->
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50  pt-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 p-4">
       {/* Add ToastContainer to display toast notifications */}
       <ToastContainer
         position="top-right"
@@ -651,40 +651,49 @@ const SubscriptionCardDetails = () => {
       ) : (
         // v1.0.2 <---------------------------------------------------------------------------------------------------
         <form
-          className="relative w-[70%] sm:w-[90%] sm:h-[90%] md:h-[90%] md:w-[70%] flex flex-col mb-4 sm:justify-normal md:justify-normal lg:justify-normal justify-center h-[85%] max-h-[85vh] p-5 bg-white border border-gray-300 rounded-md overflow-y-auto"
+          className="relative w-full max-w-4xl flex flex-col bg-white border border-gray-300 rounded-lg shadow-lg overflow-y-auto"
+          style={{ maxHeight: "90vh" }}
           onSubmit={handleSubmit}
         >
-          <div className="flex items-center justify-between">
-            <h2 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl font-semibold mb-2">
-              {`Upgrade to a ${planDetails.name} ${cardDetails.membershipType === "monthly" ? "Monthly" : "Annual"
-                } Membership`}
-            </h2>
-            <button
-              className="absolute sm:top-2 sm:right-2 top-4 right-6"
-              onClick={() => navigate("/account-settings/subscription")}>
-              <XCircle className="h-7 w-7" />
-            </button>
+          {/* Header */}
+          <div className="sticky top-0 bg-white z-10 px-6 pt-5 pb-3 border-b border-gray-100">
+            <div className="flex items-start justify-between">
+              <div className="pr-8">
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-800">
+                  {`Upgrade to a ${planDetails.name} ${cardDetails.membershipType === "monthly" ? "Monthly" : "Annual"
+                    } Membership`}
+                </h2>
+                <p className="text-gray-500 text-sm mt-1">
+                  Get all access and an extra 20% off when you subscribe annually
+                </p>
+              </div>
+              <button
+                type="button"
+                className="flex-shrink-0"
+                onClick={() => navigate("/account-settings/subscription")}>
+                <XCircle className="h-6 w-6 text-gray-400 hover:text-gray-600 transition-colors" />
+              </button>
+            </div>
           </div>
-          <p className="text-gray-500  text-md mb-2">
-            Get all access and an extra 20% off when you subscribe annually
-          </p>
 
-          <div className="w-full flex sm:flex-col md:flex-col gap-6">
-            <div className="w-9/12 sm:w-full md:w-full">
-              <div className="bg-blue-50 p-4 mb-4 rounded-lg border border-blue-200">
+          {/* Body Content */}
+          <div className="px-6 py-5 flex sm:flex-col flex-row gap-6">
+            {/* Left Column - Secure Payment Info */}
+            <div className="sm:w-full w-1/2">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <h3 className="text-lg font-medium text-custom-blue mb-2">
                   Secure Payment
                 </h3>
-                <p className="text-custom-blue">
+                <p className="text-sm text-custom-blue">
                   Your payment information will be securely collected by
                   Razorpay's payment form. No card details are stored on our
                   servers.
                 </p>
 
-                <div className="mt-3 flex items-center">
+                <div className="mt-3 flex items-start gap-2">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-custom-blue mr-2"
+                    className="h-5 w-5 text-custom-blue flex-shrink-0 mt-0.5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -696,54 +705,52 @@ const SubscriptionCardDetails = () => {
                       d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                     />
                   </svg>
-                  <span className="text-custom-blue">
+                  <span className="text-sm text-custom-blue">
                     Your payment is protected with industry-standard encryption
                   </span>
                 </div>
 
-                <div className="mt-3 flex justify-center">
+                <div className="mt-4 flex justify-center gap-2">
                   <img
                     alt="VisaCard"
-                    className="h-8 mx-1"
+                    className="h-8"
                     src="https://img.icons8.com/?size=100&id=13608&format=png&color=000000"
                   />
                   <img
                     alt="MasterCard"
-                    className="h-8 mx-1"
+                    className="h-8"
                     src="https://i.pinimg.com/736x/56/fd/48/56fd486a48ff235156b8773c238f8da9.jpg"
                   />
                   <img
                     alt="Razorpay"
-                    className="h-8 mx-1"
+                    className="h-8"
                     src="https://razorpay.com/assets/razorpay-logo.svg"
                   />
                 </div>
               </div>
 
-              <div className="mt-6 mb-4 flex flex-col">
-                <span className="font-semibold text-lg">
-                  {" "}
+              <div className="mt-4 flex flex-col">
+                <span className="font-semibold text-lg text-gray-800">
                   {cardDetails.membershipType === "monthly"
                     ? `₹${Math.round(pricePerMember.monthly)} / Month / User`
                     : `₹${Math.round(pricePerMember.annually)} / Annual / User`}
                 </span>
-
-                <span className="text-blue-400">Details</span>
+                <span className="text-blue-400 text-sm cursor-pointer">Details</span>
               </div>
             </div>
 
-            <div className="sm:w-full md:w-full w-1/2">
+            {/* Right Column - Membership & Payment */}
+            <div className="sm:w-full w-1/2">
               {/* Membership Type */}
-              <label className="block mb-1  text-lg font-medium text-gray-500">
+              <label className="block mb-2 text-base font-medium text-gray-500">
                 Membership Type
               </label>
 
-              <div className="flex flex-col gap-4   mb-4">
+              <div className="flex flex-col gap-3 mb-5">
                 <div
-                  className={`border p-2 flex items-center gap-2 rounded-md bg-gray-50
-                                     ${cardDetails.membershipType === "monthly"
-                      ? "border-[#217989]"
-                      : "border-gray-300"
+                  className={`border p-3 flex items-center gap-3 rounded-lg cursor-pointer transition-all ${cardDetails.membershipType === "monthly"
+                    ? "border-[#217989] bg-blue-50"
+                    : "border-gray-300 bg-gray-50 hover:border-gray-400"
                     }`}
                   onClick={() =>
                     handleMembershipChange(
@@ -755,21 +762,17 @@ const SubscriptionCardDetails = () => {
                     )
                   }
                 >
-                  <div className="flex  items-center">
-                    <input
-                      type="radio"
-                      name="membershipType"
-                      value="monthly"
-                      checked={cardDetails.membershipType === "monthly"}
-                      // onChange={(e) => setCardDetails((prevData) => ({ ...prevData, membershipType: e.target.value }))}
-                      readOnly
-                      className="mr-1 h-4 w-5 accent-custom-blue"
-                    />
-                  </div>
+                  <input
+                    type="radio"
+                    name="membershipType"
+                    value="monthly"
+                    checked={cardDetails.membershipType === "monthly"}
+                    readOnly
+                    className="h-4 w-4 accent-custom-blue flex-shrink-0"
+                  />
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold">Pay Monthly</span>
-                    <span className="text-sm font-medium">
-                      {" "}
+                    <span className="text-xs text-gray-600">
                       ₹{pricePerMember.monthly} / Month Per{" "}
                       {planDetails.user?.userType === "individual"
                         ? "Member"
@@ -779,10 +782,9 @@ const SubscriptionCardDetails = () => {
                 </div>
 
                 <div
-                  className={`border p-2 flex justify-between items-center gap-4 rounded-md bg-gray-50 
-                ${cardDetails.membershipType === "annual"
-                      ? "border-[#217989]"
-                      : "border-gray-300"
+                  className={`border p-3 flex items-center justify-between rounded-lg cursor-pointer transition-all ${cardDetails.membershipType === "annual"
+                    ? "border-[#217989] bg-blue-50"
+                    : "border-gray-300 bg-gray-50 hover:border-gray-400"
                     }`}
                   onClick={() =>
                     handleMembershipChange(
@@ -794,21 +796,20 @@ const SubscriptionCardDetails = () => {
                     )
                   }
                 >
-                  <div className="flex gap-2  items-center">
+                  <div className="flex items-center gap-3">
                     <input
                       type="radio"
                       name="membershipType"
                       value="annual"
                       checked={cardDetails.membershipType === "annual"}
                       readOnly
-                      className="mr-1 h-4 w-5 accent-custom-blue"
+                      className="h-4 w-4 accent-custom-blue flex-shrink-0"
                     />
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold">
                         Pay Annually
                       </span>
-                      <span className="text-sm font-medium">
-                        {" "}
+                      <span className="text-xs text-gray-600">
                         ₹{Math.round(pricePerMember.annually / 12)} / Month Per{" "}
                         {planDetails.user?.userType === "individual"
                           ? "Member"
@@ -817,16 +818,14 @@ const SubscriptionCardDetails = () => {
                     </div>
                   </div>
 
-                  <div>
-                    <span className="text-sm font-semibold">
-                      {planDetails.annualDiscount}%
-                    </span>
-                  </div>
+                  <span className="text-xs font-semibold text-[#217989] bg-teal-50 px-2 py-1 rounded">
+                    {planDetails.annualDiscount}% off
+                  </span>
                 </div>
               </div>
 
               {/* Payment Method Selection */}
-              <label className="block mb-2 text-lg font-medium text-gray-500">
+              <label className="block mb-2 text-base font-medium text-gray-500">
                 Payment Method
               </label>
               <div className="flex flex-col gap-2 mb-4">
@@ -834,10 +833,10 @@ const SubscriptionCardDetails = () => {
                   <div
                     key={method.id}
                     onClick={() => method.available && setPaymentMethod(method.id)}
-                    className={`border p-2 rounded-md cursor-pointer flex items-center justify-between transition-all ${paymentMethod === method.id
+                    className={`border p-3 rounded-lg cursor-pointer flex items-center justify-between transition-all ${paymentMethod === method.id
                       ? "border-[#217989] bg-blue-50"
                       : method.available
-                        ? "border-gray-300 hover:border-gray-400"
+                        ? "border-gray-300 bg-gray-50 hover:border-gray-400"
                         : "border-gray-200 bg-gray-100 cursor-not-allowed opacity-50"
                       }`}
                   >
@@ -848,7 +847,7 @@ const SubscriptionCardDetails = () => {
                         checked={paymentMethod === method.id}
                         disabled={!method.available}
                         readOnly
-                        className="accent-custom-blue h-4 w-4"
+                        className="accent-custom-blue h-4 w-4 flex-shrink-0"
                       />
                       <div className="flex-shrink-0">{method.icon}</div>
                       <div className="flex flex-col">
@@ -868,50 +867,6 @@ const SubscriptionCardDetails = () => {
                 ))}
               </div>
 
-              {/* Add-on */}
-              {/* <label className="block mb-1 text-lg font-medium text-gray-700">
-                            Add-ons
-                        </label>
-                        <div
-
-                            className={`border p-4 flex   items-center gap-2 rounded-md bg-gray-50 ${cardDetails.addOn === "AI Particle Accelerator" ? "border-[#217989]" : "border-gray-300"
-                                }`}
-                            onClick={() =>
-                                setCardDetails((prevData) => ({
-                                    ...prevData,
-                                    addOn: prevData.addOn === "AI Particle Accelerator" ? "" : "AI Particle Accelerator",
-                                }))
-                            }
-                        >
-                            <div className="flex  items-center mb-4 ">
-                                <input
-                                    type="radio"
-                                    name="addOn"
-                                    value="AI Particle Accelerator"
-                                    checked={cardDetails.addOn === "AI Particle Accelerator"}
-                                    // onChange={(e) => setCardDetails((prevData) => ({ ...prevData, addOn: e.target.value }))}
-                                    readOnly
-                                    className="mr-2"
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-semibold">AI Particle Accelerator</span>
-                                    <span>$20,000,000 / Month Per Member</span>
-                                </div>
-
-                                <div className="flex flex-col text-sm">
-                                    <span>Unlimited use of AI of Q&A,</span>
-                                    <span>Autofill, writer, and more</span>
-                                </div>
-
-
-                            </div>
-
-
-                        </div> */}
-
               {errors.membershipType && (
                 <p className="text-red-500 text-sm pt-1">
                   {errors.membershipType}
@@ -919,17 +874,16 @@ const SubscriptionCardDetails = () => {
               )}
 
               {/* Submit */}
-
-              <p className="text-xs md:text-sm text-gray-500 mt-4 m-2">
+              <p className="text-xs text-gray-500 mt-4 mb-3">
                 By continuing,{" "}
-                <span className="text-[#217989] ">
+                <span className="text-[#217989]">
                   you agree to our terms and conditions
                 </span>
                 .
               </p>
               <button
                 type="submit"
-                className="w-full p-3 bg-[#217989] text-[#C7EBF2] font-medium rounded-lg"
+                className="w-full p-3 bg-[#217989] text-[#C7EBF2] font-semibold rounded-lg hover:bg-[#1a6170] transition-colors"
                 disabled={buttonLoading || processing}
               >
                 {buttonLoading ? "Processing..." : "Pay"}

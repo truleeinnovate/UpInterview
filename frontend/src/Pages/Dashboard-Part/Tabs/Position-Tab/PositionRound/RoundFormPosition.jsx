@@ -504,7 +504,7 @@ function RoundFormPosition() {
             : "",
           interviewMode: roundEditData.interviewMode || "",
           selectedQuestions: [],
-          instructions: roundEditData.instructions || "",
+          instructions: roundEditData.instructions?.replace(/[•\u2022]\s*/g, "") || "",
           sequence: roundEditData.sequence || 1,
           interviewQuestionsList: roundEditData.questions || [],
           // selectedInterviewType: roundEditData.interviewerType || null,
@@ -959,7 +959,7 @@ function RoundFormPosition() {
           assessmentId: null,
           questions: formData.interviewQuestionsList || [],
         }),
-      instructions: formData.instructions,
+      instructions: formData.instructions?.replace(/[•\u2022]\s*/g, ""),
       interviewerType:
         formData.roundTitle === "Assessment"
           ? undefined
@@ -1062,7 +1062,7 @@ function RoundFormPosition() {
         const parsed = parseInt(rawDuration.toString().replace(/ minutes?/i, ""));
         return isNaN(parsed) ? 60 : parsed;
       })(),
-      instructions: assessment.Instructions,
+      instructions: assessment.Instructions?.replace(/[•\u2022]\s*/g, ""),
       interviewQuestionsList: [],
     }));
     setSelectedTagIds([]);
@@ -1452,8 +1452,8 @@ function RoundFormPosition() {
                                             </span>
                                             <ChevronUp
                                               className={`transform transition-transform ${expandedSections[sectionId]
-                                                  ? ""
-                                                  : "rotate-180"
+                                                ? ""
+                                                : "rotate-180"
                                                 }`}
                                             />
                                           </button>
@@ -1494,10 +1494,10 @@ function RoundFormPosition() {
                                                         </div>
                                                         <ChevronDown
                                                           className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
-                                                              question._id
-                                                            ]
-                                                              ? "transform rotate-180"
-                                                              : ""
+                                                            question._id
+                                                          ]
+                                                            ? "transform rotate-180"
+                                                            : ""
                                                             }`}
                                                         />
                                                       </div>
@@ -1546,11 +1546,11 @@ function RoundFormPosition() {
                                                                           key={optIdx}
                                                                           //  className="text-sm text-gray-700 px-3 py-1.5 bg-white rounded border"
                                                                           className={`text-sm p-2 rounded border ${option ===
-                                                                              question
-                                                                                .snapshot
-                                                                                .correctAnswer
-                                                                              ? "bg-green-50 border-green-200 text-green-800"
-                                                                              : "bg-gray-50 border-gray-200"
+                                                                            question
+                                                                              .snapshot
+                                                                              .correctAnswer
+                                                                            ? "bg-green-50 border-green-200 text-green-800"
+                                                                            : "bg-gray-50 border-gray-200"
                                                                             }`}
                                                                         >
                                                                           {option}
@@ -1755,8 +1755,8 @@ function RoundFormPosition() {
                               variant="outline"
                               size="sm"
                               className={`${isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
                                 }`}
                               disabled={isExternalSelected}
                               title={
@@ -1782,8 +1782,8 @@ function RoundFormPosition() {
                               variant="outline"
                               size="sm"
                               className={`${isExternalSelected
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
                                 }`}
                               disabled={isExternalSelected}
                               title={
@@ -1813,8 +1813,8 @@ function RoundFormPosition() {
                             variant="outline"
                             size="sm"
                             className={`${isInternalSelected
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
                               }`}
                             disabled={isInternalSelected}
                             title={
@@ -2002,7 +2002,7 @@ function RoundFormPosition() {
                                               <User className="h-4 w-4 text-blue-600 mr-2" />
                                               <span className="text-sm font-medium text-blue-900 truncate">
                                                 {`${interviewer?.contactId?.firstName || interviewer?.firstName || ""} ${interviewer?.contactId
-                                                    ?.lastName ||
+                                                  ?.lastName ||
                                                   interviewer?.lastName ||
                                                   ""
                                                   }`.trim() ||

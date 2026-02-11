@@ -340,12 +340,12 @@ const BasicDetailsTab = ({
                       value: position._id,
                       label: position.title,
                     })) || []),
-                    {
-                      value: "add_new",
-                      label: "+ Add New Position",
-                      isSticky: true,
-                      className: "text-blue-600 font-medium hover:bg-blue-50",
-                    },
+                    // {
+                    //   value: "add_new",
+                    //   label: "+ Add New Position",
+                    //   isSticky: true,
+                    //   className: "text-blue-600 font-medium hover:bg-blue-50",
+                    // },
                   ]}
                   onChange={(e) => {
                     const value = e?.target?.value || e?.value;
@@ -527,11 +527,11 @@ const BasicDetailsTab = ({
                 value={
                   selected
                     ? {
-                        value: selected,
-                        label:
-                          categories?.find((c) => c._id === selected)
-                            ?.categoryOrTechnology || "Select List",
-                      }
+                      value: selected,
+                      label:
+                        categories?.find((c) => c._id === selected)
+                          ?.categoryOrTechnology || "Select List",
+                    }
                     : null
                 }
                 options={[

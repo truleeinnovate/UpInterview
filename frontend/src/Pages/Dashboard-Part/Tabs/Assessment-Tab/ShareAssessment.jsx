@@ -503,19 +503,19 @@ const ShareAssessment = ({
 
   const assessmentsForDropdown =
     selectedAssessment &&
-    selectedAssessment._id &&
-    !(assessmentData || []).some((a) => a._id === selectedAssessment._id)
+      selectedAssessment._id &&
+      !(assessmentData || []).some((a) => a._id === selectedAssessment._id)
       ? [selectedAssessment, ...(assessmentData || [])]
       : assessmentData || [];
 
   const candidatesForDropdown =
     selectedCandidates.length > 0
       ? [
-          ...selectedCandidates.filter(
-            (sel) => !(candidateData || []).some((c) => c._id === sel._id)
-          ),
-          ...(candidateData || []),
-        ]
+        ...selectedCandidates.filter(
+          (sel) => !(candidateData || []).some((c) => c._id === sel._id)
+        ),
+        ...(candidateData || []),
+      ]
       : candidateData || [];
 
   // <-------------------------------v1.0.3 >
@@ -530,9 +530,8 @@ const ShareAssessment = ({
     >
       {/* v1.0.6 <----------------------------------------------------------------------------------- */}
       <div
-        className={`bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[100vh] ${
-          showDropdownCandidate ? "h-[466px]" : ""
-        }`}
+        className={`bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[100vh] ${showDropdownCandidate ? "h-[466px]" : ""
+          }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* v1.0.6 -----------------------------------------------------------------------------------> */}
@@ -593,9 +592,8 @@ const ShareAssessment = ({
                     options={
                       assessmentsForDropdown?.map((assessment) => ({
                         value: assessment._id,
-                        label: `${assessment.AssessmentTitle} (${
-                          assessment.type === "standard" ? "Standard" : "Custom"
-                        })`,
+                        label: `${assessment.AssessmentTitle} (${assessment.type === "standard" ? "Standard" : "Custom"
+                          })`,
                       })) || []
                     }
                     onChange={(e) => {
@@ -635,13 +633,13 @@ const ShareAssessment = ({
                   >
                     Candidate <span className="text-red-500">*</span>
                   </label>
-                  <button
+                  {/* <button
                     onClick={handleAddNewCandidateClick}
                     className="flex items-center text-sm text-custom-blue hover:text-custom-blue/90"
                   >
                     <Plus className="mr-1 w-5 h-5" />
                     Add New Candidate
-                  </button>
+                  </button> */}
                 </div>
 
                 <DropdownWithSearchField
@@ -793,7 +791,7 @@ const ShareAssessment = ({
                   selectedCandidates.length === 0 ||
                   (fromscheduleAssessment && !selectedAssessment)
                 }
-                // <---------------------- v1.0.1 >
+              // <---------------------- v1.0.1 >
               >
                 {isLoading ? (
                   <span className="flex items-center">

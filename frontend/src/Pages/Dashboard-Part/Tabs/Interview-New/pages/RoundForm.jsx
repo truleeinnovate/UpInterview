@@ -2395,10 +2395,10 @@ const RoundFormInterviews = () => {
     };
     setAssessmentTemplate(assessmentData);
     setSelectedAssessmentData(assessment);
-    const clearInstructions = assessment.Instructions.replace(/[•\u2022]\s*/g, "")
+    const clearInstructions = assessment.Instructions?.replace(/[•\u2022]\s*/g, "")
     setInstructions(clearInstructions);
 
-    setDuration(parseInt(assessment.Duration.replace(" minutes", "")));
+    setDuration(parseInt(assessment.Duration?.replace(" minutes", "")));
     // setInstructions(assessment.Instructions);
     setExpandedSections({});
     setSectionQuestions({});
