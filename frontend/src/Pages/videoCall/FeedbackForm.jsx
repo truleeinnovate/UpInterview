@@ -4,7 +4,7 @@
 // v1.0.3 - Ashok - Improved responsiveness
 // v1.0.4 - Ashok - fixed responsiveness issues
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FileText,
@@ -150,12 +150,34 @@ const FeedbackForm = ({
     return locationFeedback || feedbackDatas || {};
   }, [locationFeedback, feedbackDatas]);
 
-  // console.log("feedbackData", feedbackData);
+  console.log("feedbackData", feedbackData);
 
-  const [interviewerSectionData, setInterviewerSectionData] = useState(() => {
-    if (!feedbackData?.questionFeedback) return [];
+  const getInterviewerSectionData = useCallback(() => {
+    // 1. Try to get questions from the specific feedback object (if editing/viewing)
+    let questions = feedbackData?.questionFeedback;
 
-    return feedbackData.questionFeedback.map((q) => {
+    // 2. If not found, check if feedbackData is a wrapper with a 'feedbacks' array
+    if ((!questions || questions.length === 0) && Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0) {
+      questions = feedbackData.feedbacks[0].questionFeedback;
+    }
+
+    // 3. If still not found (e.g., new feedback), get from interviewQuestions (interviewer added)
+    if (!questions || questions.length === 0) {
+      questions = feedbackData?.interviewQuestions?.interviewerAddedQuestions || [];
+    }
+
+
+
+    if (!questions || questions.length === 0) return [];
+
+    console.log("questions questions", questions);
+
+    const allQuestions =
+      Array.isArray(questions)
+        ? questions.filter((q) => q?.addedBy === "interviewer")
+        : [];
+
+    return allQuestions.map((q) => {
       // Map backend answer types to UI values
       const mapAnswerType = (type) => {
         if (type === "correct") return "Fully Answered";
@@ -177,7 +199,13 @@ const FeedbackForm = ({
         originalData: q,
       };
     });
-  });
+  }, [feedbackData]);
+
+  const [interviewerSectionData, setInterviewerSectionData] = useState(() => getInterviewerSectionData());
+
+  useEffect(() => {
+    setInterviewerSectionData(getInterviewerSectionData());
+  }, [getInterviewerSectionData]);
 
   // const [interviewerSectionData, setInterviewerSectionData] = useState( [...selectedCandidate.interviewData?.questionFeedback]);
   // const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
@@ -329,6 +357,12 @@ const FeedbackForm = ({
   const navigate = useNavigate();
 
   const [autoSaveFeedbackId, setAutoSaveFeedbackId] = useState(feedbackId);
+
+  useEffect(() => {
+    if (feedbackId) {
+      setAutoSaveFeedbackId(feedbackId);
+    }
+  }, [feedbackId]);
   // console.log("autoSaveFeedbackId", autoSaveFeedbackId);
   // const [overallRating, setOverallRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.overallRating) || 0);
   // const [communicationRating, setCommunicationRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.communicationRating) || 0);
@@ -761,15 +795,21 @@ const FeedbackForm = ({
     feedbackCode:
       feedbackData?.rounds?.[0]?.interviewCode ||
       "" + "-" + (feedbackData?.rounds?.[0]?.sequence || ""),
+    isLoaded: !feedbackLoading && !isMockLoading && !isInterviewLoading, // Ensure we don't save before data is loaded
   });
+
+  const saveTimeoutRef = React.useRef(null);
 
   // Helper Function (Outside the component or inside FeedbackForm)
   const triggerAutoSave = () => {
     if (isAddMode || isEditMode) {
-      setAutoSaveFeedbackId((prev) => prev); // Trigger useEffect in the hook
-      setTimeout(() => autoSaveQuestions(), 500);
-      // saveNow()
-      // autoSaveQuestions();
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      saveTimeoutRef.current = setTimeout(() => {
+        autoSaveQuestions();
+      }, 500);
     }
   };
 
@@ -2340,7 +2380,7 @@ const FeedbackForm = ({
               {/* QuestionBank Content */}
               <div className="flex-1 overflow-hidden">
                 <QuestionBank
-                  interviewQuestionsLists={interviewerSectionData || []}
+                  interviewQuestionsLists={[...interviewerSectionData, ...preselectedQuestionsResponses] || []}
                   type="feedback"
                   fromScheduleLater={true}
                   onAddQuestion={handleAddQuestionToRound}

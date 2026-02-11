@@ -387,8 +387,8 @@ export function MeetingContainer({
                   <button
                     onClick={() => handleSidebarItemClick(item.id)}
                     className={`p-2.5 rounded-md flex items-center justify-center transition-colors ${sideBarMode === item.id.toUpperCase()
-                        ? "bg-blue-100 text-custom-blue border-2 border-custom-blue"
-                        : "text-custom-blue hover:bg-gray-100 border border-custom-blue hover:border-custom-blue"
+                      ? "bg-blue-100 text-custom-blue border-2 border-custom-blue"
+                      : "text-custom-blue hover:bg-gray-100 border border-custom-blue hover:border-custom-blue"
                       }`}
                     aria-label={item.label}
                   >
@@ -582,7 +582,9 @@ export function MeetingContainer({
                         positionData={positionData}
                       />
                     ) : sideBarMode === "FEEDBACK" ? (
-                      <FeedbackForm onClose={() => setSideBarMode(null)} />
+                      <FeedbackForm
+                        isAddMode={true}
+                        onClose={() => setSideBarMode(null)} />
                     ) : sideBarMode === "INTERVIEWACTIONS" ? (
                       <div className="p-4">
                         <InterviewActions
@@ -602,11 +604,10 @@ export function MeetingContainer({
                     ) : sideBarMode === "QUESTIONBANK" ? (
                       <div className="">
                         <InterviewsMiniTabComponent
+                          isAddMode={true}
                           isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
                         />
-                        {/* <QuestionBank
-                          isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
-                        /> */}
+
                       </div>
                     ) : null}
                   </div>

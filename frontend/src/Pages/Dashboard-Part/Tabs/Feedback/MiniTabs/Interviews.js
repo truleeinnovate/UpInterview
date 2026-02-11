@@ -1,7 +1,7 @@
 //<----v1.0.0---Venkatesh-----add isEditMode prop
 // v1.0.1 - Ashok - Improved responsiveness
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import SchedulerSectionComponent from "./InterviewMiniTabs/SchedulerSection";
 import InterviewerSectionComponent from "./InterviewMiniTabs/InterviewerSection";
 import { Video } from "lucide-react";
@@ -140,11 +140,40 @@ const InterviewsMiniTabComponent = ({
       ? feedbackData.feedbacks[0]?._id
       : null);
   const [autoSaveFeedbackId, setAutoSaveFeedbackId] = useState(feedbackId);
+  const saveTimeoutRef = useRef(null);
 
-  const [interviewerSectionData, setInterviewerSectionData] = useState(() => {
-    if (!feedbackData?.questionFeedback) return [];
+  useEffect(() => {
+    if (feedbackId) {
+      setAutoSaveFeedbackId(feedbackId);
+    }
+  }, [feedbackId]);
 
-    return feedbackData.questionFeedback.map((q) => {
+  const triggerDebouncedSave = () => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      autoSaveQuestions();
+    }, 500);
+  };
+
+  const getInterviewerSectionData = useCallback(() => {
+    // 1. Try to get questions from the specific feedback object (if editing/viewing)
+    let questions = feedbackData?.questionFeedback;
+
+    // 2. If not found, check if feedbackData is a wrapper with a 'feedbacks' array
+    if (!questions && Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0) {
+      questions = feedbackData.feedbacks[0].questionFeedback;
+    }
+
+    // 3. If still not found (e.g., new feedback), get from interviewQuestions (interviewer added)
+    if (!questions || questions.length === 0) {
+      questions = feedbackData?.interviewQuestions?.interviewerAddedQuestions || [];
+    }
+
+    if (!questions || questions.length === 0) return [];
+
+    return questions.map((q) => {
       // Map backend answer types to UI values
       const mapAnswerType = (type) => {
         if (type === "correct") return "Fully Answered";
@@ -166,40 +195,53 @@ const InterviewsMiniTabComponent = ({
         originalData: q,
       };
     });
-  });
+  }, [feedbackData]);
+
+  const [interviewerSectionData, setInterviewerSectionData] = useState(() => getInterviewerSectionData());
+
+  useEffect(() => {
+    setInterviewerSectionData(getInterviewerSectionData());
+  }, [getInterviewerSectionData]);
 
   // Properly initialize preselected questions with full question data and responses
-  const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] =
-    useState(() => {
-      const preselectedQuestions =
-        feedbackData?.interviewQuestions?.preselectedQuestions || [];
+  // Properly initialize preselected questions with full question data and responses
+  const getPreselectedQuestionsResponses = useCallback(() => {
+    const preselectedQuestions =
+      feedbackData?.interviewQuestions?.preselectedQuestions || [];
 
-      return preselectedQuestions.map((question) => {
-        // Find existing feedback for this question
-        const existingFeedback = feedbackData?.questionFeedback?.find(
-          (f) => f.questionId === (question.questionId || question._id),
-        );
+    return preselectedQuestions.map((question) => {
+      // Find existing feedback for this question
+      const existingFeedback = feedbackData?.questionFeedback?.find(
+        (f) => f.questionId === (question.questionId || question._id),
+      );
 
-        return {
-          // Include the full question data
-          ...question,
-          // Response data with proper defaults
-          isAnswered: existingFeedback?.candidateAnswer?.answerType
-            ? existingFeedback.candidateAnswer.answerType === "correct"
-              ? "Fully Answered"
-              : existingFeedback.candidateAnswer.answerType === "partial"
-                ? "Partially Answered"
-                : "Not Answered"
-            : "Not Answered",
-          isLiked: existingFeedback?.interviewerFeedback?.liked || "",
-          whyDislike:
-            existingFeedback?.interviewerFeedback?.dislikeReason || "",
-          note: existingFeedback?.interviewerFeedback?.note || "",
-          notesBool: !!existingFeedback?.interviewerFeedback?.note,
-          answer: existingFeedback?.candidateAnswer?.submittedAnswer || "",
-        };
-      });
+      return {
+        // Include the full question data
+        ...question,
+        // Response data with proper defaults
+        isAnswered: existingFeedback?.candidateAnswer?.answerType
+          ? existingFeedback.candidateAnswer.answerType === "correct"
+            ? "Fully Answered"
+            : existingFeedback.candidateAnswer.answerType === "partial"
+              ? "Partially Answered"
+              : "Not Answered"
+          : "Not Answered",
+        isLiked: existingFeedback?.interviewerFeedback?.liked || "",
+        whyDislike:
+          existingFeedback?.interviewerFeedback?.dislikeReason || "",
+        note: existingFeedback?.interviewerFeedback?.note || "",
+        notesBool: !!existingFeedback?.interviewerFeedback?.note,
+        answer: existingFeedback?.candidateAnswer?.submittedAnswer || "",
+      };
     });
+  }, [feedbackData]);
+
+  const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] =
+    useState(() => getPreselectedQuestionsResponses());
+
+  useEffect(() => {
+    setPreselectedQuestionsResponses(getPreselectedQuestionsResponses());
+  }, [getPreselectedQuestionsResponses]);
 
   // Clear specific error when user interacts with field
   const clearError = (fieldName) => {
@@ -280,7 +322,8 @@ const InterviewsMiniTabComponent = ({
           }
 
           // Trigger immediate save after adding question
-          setTimeout(() => autoSaveQuestions(), 500);
+          // Trigger immediate save after adding question
+          triggerDebouncedSave();
           // autoSaveQuestions();
 
           return newList;
@@ -306,7 +349,9 @@ const InterviewsMiniTabComponent = ({
 
     // Trigger auto-save
     // triggerAutoSave();
-    setTimeout(() => autoSaveQuestions(), 500);
+    // Trigger auto-save
+    // triggerAutoSave();
+    triggerDebouncedSave();
   };
 
   const handleToggleMandatory = (questionId) => {
@@ -479,7 +524,8 @@ const InterviewsMiniTabComponent = ({
             // Question Bank Props
             interviewerSectionData={interviewerSectionData || []}
             setInterviewerSectionData={setInterviewerSectionData}
-            // preselectedQuestionsResponses={preselectedQuestionsResponses}
+
+            preselectedQuestionsResponses={preselectedQuestionsResponses}
             // setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
             // handlePreselectedQuestionResponse={
             //   handlePreselectedQuestionResponse

@@ -29,6 +29,8 @@ const { MockInterview } = require("../models/Mockinterview/mockinterview.js");
 // const InterviewQuestions = require("../models/InterviewQuestions");
 // const Interview = require("../models/Interview");
 
+
+
 // create feedback api
 const createFeedback = async (req, res) => {
   res.locals.loggedByController = true;
@@ -79,31 +81,98 @@ const createFeedback = async (req, res) => {
 
     console.log("req.body qFeedback", req.body);
 
-    // Process questions
-    const processedQuestionFeedback = (questionFeedback || []).map(
-      (qFeedback) => {
+    // Process questions: Transform Bank IDs/Objects to SelectedInterviewQuestion IDs
+    const processedQuestionFeedback = [];
+
+    // Resolve interviewId from round early
+    let resolvedInterviewId = null;
+    try {
+      if (interviewRoundId) {
+        const roundDoc = await InterviewRounds.findById(interviewRoundId).select(
+          "interviewId",
+        );
+        resolvedInterviewId = roundDoc?.interviewId || null;
+      }
+    } catch (e) {
+      console.warn("Unable to resolve interviewId:", interviewRoundId, e?.message);
+    }
+
+    if (questionFeedback && Array.isArray(questionFeedback)) {
+      for (let i = 0; i < questionFeedback.length; i++) {
+        const qFeedback = questionFeedback[i];
         const rawQuestion = qFeedback?.questionId;
-        let onlyQuestionId = "";
+        console.log("rawQuestion", rawQuestion)
 
-        if (typeof rawQuestion === "string") onlyQuestionId = rawQuestion;
-        else if (rawQuestion && typeof rawQuestion === "object")
-          onlyQuestionId = rawQuestion.questionId;
+        let identifier = "";
+        let bankDetails = null;
 
-        return {
-          questionId: onlyQuestionId,
+        if (typeof rawQuestion === "string") {
+          identifier = rawQuestion;
+        } else if (rawQuestion && typeof rawQuestion === "object") {
+          identifier = rawQuestion.questionId || rawQuestion._id || rawQuestion.id;
+          bankDetails = rawQuestion;
+        }
+
+        console.log("bankDetails", bankDetails)
+
+        if (!identifier) continue;
+
+        // Verify if it's already a valid SelectedInterviewQuestion ID
+        let selectedDoc = null;
+        if (mongoose.Types.ObjectId.isValid(identifier)) {
+          selectedDoc = await InterviewQuestions.findById(identifier);
+        }
+
+        if (!selectedDoc) {
+          // Try to find by roundId + Bank ID
+          // Ensure we only find shared questions OR questions owned by this interviewer
+          const questionOwnerId = (interviewerId && interviewerId.toString()) || (ownerId && ownerId.toString()) || "";
+
+          selectedDoc = await InterviewQuestions.findOne({
+            roundId: interviewRoundId,
+            questionId: identifier,
+            $or: [
+              { addedBy: { $ne: "interviewer" } },
+              { ownerId: questionOwnerId }
+            ]
+          });
+
+          if (!selectedDoc) {
+            // Create new
+            const snapshot = selectedDoc?.snapshot || bankDetails || {};
+            const src = selectedDoc?.source || snapshot.source || "custom";
+            const mand = selectedDoc?.mandatory || snapshot.mandatory || "false";
+
+            selectedDoc = new InterviewQuestions({
+              interviewId: resolvedInterviewId,
+              roundId: interviewRoundId,
+              order: i + 1,
+              // mandatory: mand,
+              tenantId: tenantId || "",
+              ownerId: questionOwnerId,
+              questionId: identifier,
+              source: src,
+              snapshot: snapshot,
+              addedBy: "interviewer"
+            });
+            await selectedDoc.save();
+          }
+        }
+
+        processedQuestionFeedback.push({
+          questionId: selectedDoc._id, // Store _id of SelectedInterviewQuestion
           candidateAnswer: qFeedback.candidateAnswer || {
-            answerType:
-              (rawQuestion && rawQuestion.isAnswered) || "not answered",
-            submittedAnswer: "",
+            answerType: (rawQuestion && rawQuestion.isAnswered) || "not answered",
+            submittedAnswer: ""
           },
           interviewerFeedback: qFeedback.interviewerFeedback || {
             liked: (rawQuestion && rawQuestion.isLiked) || "none",
             note: (rawQuestion && rawQuestion.note) || "",
-            dislikeReason: (rawQuestion && rawQuestion.whyDislike) || "",
-          },
-        };
-      },
-    );
+            dislikeReason: (rawQuestion && rawQuestion.whyDislike) || ""
+          }
+        });
+      }
+    }
 
     // Check if feedback already exists
     let existingFeedback = await FeedbackModel.findOne({
@@ -243,69 +312,9 @@ const createFeedback = async (req, res) => {
       }
     }
 
-    // Resolve interviewId from round
-    let resolvedInterviewId = null;
-    try {
-      if (interviewRoundId) {
-        const roundDoc =
-          await InterviewRounds.findById(interviewRoundId).select(
-            "interviewId",
-          );
-        resolvedInterviewId = roundDoc?.interviewId || null;
-      }
-    } catch (e) {
-      console.warn(
-        "Unable to resolve interviewId:",
-        interviewRoundId,
-        e?.message,
-      );
-    }
 
-    // Handle InterviewQuestions logic
-    if (processedQuestionFeedback && processedQuestionFeedback.length > 0) {
-      for (let i = 0; i < processedQuestionFeedback.length; i++) {
-        const qFeedback = processedQuestionFeedback[i];
-        const original = questionFeedback[i]?.questionId;
 
-        if (original && typeof original === "object") {
-          const actual = original.snapshot || original;
-          const normalizedQuestionId = qFeedback.questionId;
-          const src = original.source || actual.source || "custom";
-          const mand = original.mandatory || actual.mandatory || "false";
 
-          // For interviewer-added questions, ownerId should align with interviewerId
-          // so that getFeedbackByRoundId (which filters by interviewerId) returns them.
-          const questionOwnerId =
-            (interviewerId && interviewerId.toString()) ||
-            (ownerId && ownerId.toString()) ||
-            "";
-
-          // Avoid duplicates in draft updates
-          const exists = await InterviewQuestions.findOne({
-            roundId: interviewRoundId,
-            // ownerId: questionOwnerId,
-            questionId: normalizedQuestionId,
-            // addedBy: "interviewer",
-          }).lean();
-
-          if (!exists) {
-            const doc = new InterviewQuestions({
-              interviewId: resolvedInterviewId,
-              roundId: interviewRoundId,
-              order: i + 1,
-              mandatory: mand,
-              tenantId: tenantId || "",
-              ownerId: questionOwnerId,
-              questionId: normalizedQuestionId,
-              source: src,
-              snapshot: actual || {},
-              addedBy: "interviewer",
-            });
-            await doc.save();
-          }
-        }
-      }
-    }
 
     // Final Response
     const responsePayload = {
@@ -356,6 +365,7 @@ const createFeedback = async (req, res) => {
     });
   }
 };
+
 
 //  update Feedback api
 const updateFeedback = async (req, res) => {
@@ -480,25 +490,91 @@ const updateFeedback = async (req, res) => {
       return JSON.stringify(obj1) === JSON.stringify(obj2);
     };
 
-    if (
-      updateData.questionFeedback &&
-      Array.isArray(updateData.questionFeedback)
-    ) {
-      normalizedQuestionFeedback = updateData.questionFeedback.map(
-        (feedback) => {
-          const raw = feedback?.questionId;
-          let normalizedId = "";
-          if (typeof raw === "string") normalizedId = raw;
-          else if (raw && typeof raw === "object")
-            normalizedId = raw.questionId || raw._id || raw.id || "";
-          return {
-            ...feedback,
-            questionId: normalizedId,
-          };
-        },
-      );
+    // Process questions: Transform Bank IDs/Objects to SelectedInterviewQuestion IDs
+    if (updateData.questionFeedback && Array.isArray(updateData.questionFeedback)) {
+
+      const processedQuestionFeedback = [];
+      const interviewRoundId = existingFeedback.interviewRoundId;
+      const tenantId = existingFeedback.tenantId;
+      const ownerId = existingFeedback.ownerId;
+      const interviewerId = existingFeedback.interviewerId;
+
+      // Resolve interviewId from round
+      let resolvedInterviewId = null;
+      try {
+        if (interviewRoundId) {
+          const roundDoc = await InterviewRounds.findById(interviewRoundId).select("interviewId");
+          resolvedInterviewId = roundDoc?.interviewId || null;
+        }
+      } catch (e) {
+        console.warn("Unable to resolve interviewId:", e?.message);
+      }
+
+      for (let i = 0; i < updateData.questionFeedback.length; i++) {
+        const qFeedback = updateData.questionFeedback[i];
+        const rawQuestion = qFeedback?.questionId;
+
+        let identifier = "";
+        let bankDetails = null;
+
+        if (typeof rawQuestion === "string") {
+          identifier = rawQuestion;
+        } else if (rawQuestion && typeof rawQuestion === "object") {
+          identifier = rawQuestion.questionId || rawQuestion._id || rawQuestion.id;
+          bankDetails = rawQuestion;
+        }
+
+        if (!identifier) continue;
+
+        let selectedDoc = null;
+        if (mongoose.Types.ObjectId.isValid(identifier)) {
+          selectedDoc = await InterviewQuestions.findById(identifier);
+        }
+        console.log("bankDetails", bankDetails)
+
+        if (!selectedDoc) {
+          const questionOwnerId = (interviewerId && interviewerId.toString()) || (ownerId && ownerId.toString()) || "";
+
+          selectedDoc = await InterviewQuestions.findOne({
+            roundId: interviewRoundId,
+            questionId: identifier
+          });
+          console.log("selectedDoc", selectedDoc)
+
+          if (!selectedDoc) {
+
+            console.log("bankDetails selectedDoc", bankDetails)
+            const snapshot = bankDetails?.snapshot || bankDetails || {};
+            const src = bankDetails?.source || snapshot.source || "custom";
+            const mand = bankDetails?.mandatory || snapshot.mandatory || "false";
+
+            selectedDoc = new InterviewQuestions({
+              interviewId: resolvedInterviewId,
+              roundId: interviewRoundId,
+              order: i + 1,
+              // mandatory: mand,
+              tenantId: tenantId || "",
+              ownerId: questionOwnerId,
+              questionId: identifier,
+              source: src,
+              snapshot: snapshot,
+              addedBy: "interviewer"
+            });
+            await selectedDoc.save();
+          }
+        }
+
+        // Push processed structure with valid _id
+        processedQuestionFeedback.push({
+          ...qFeedback,
+          questionId: selectedDoc._id
+        });
+      }
+
+      normalizedQuestionFeedback = processedQuestionFeedback;
 
       // CHANGE 4: Check if questionFeedback actually changed
+      // Simple length check + ID check or deep equal
       if (
         !isDeepEqual(
           existingFeedback.questionFeedback,
@@ -614,79 +690,7 @@ const updateFeedback = async (req, res) => {
       }
     }
 
-    // When updating, also ensure newly added interviewer questions are persisted
-    // in SelectedInterviewQuestion collection (mirrors createFeedback behavior)
-    if (originalQuestionFeedback && originalQuestionFeedback.length > 0) {
-      const interviewRoundId = updatedFeedback.interviewRoundId;
-      const tenantId = updatedFeedback.tenantId;
-      const ownerId = updatedFeedback.ownerId;
-      const interviewerId = updatedFeedback.interviewerId;
 
-      let resolvedInterviewId = null;
-      try {
-        if (interviewRoundId) {
-          const roundDoc =
-            await InterviewRounds.findById(interviewRoundId).select(
-              "interviewId",
-            );
-          resolvedInterviewId = roundDoc?.interviewId || null;
-        }
-      } catch (e) {
-        console.warn(
-          "Unable to resolve interviewId during feedback update:",
-          interviewRoundId,
-          e?.message,
-        );
-      }
-
-      if (interviewRoundId && ownerId) {
-        for (let i = 0; i < originalQuestionFeedback.length; i++) {
-          const original = originalQuestionFeedback[i]?.questionId;
-
-          // Only process interviewer-added questions sent as full objects
-          if (original && typeof original === "object") {
-            const actual = original.snapshot || original;
-            const normalizedQuestionId =
-              original.questionId || original._id || original.id || "";
-
-            if (!normalizedQuestionId) continue;
-
-            const src = original.source || actual.source || "custom";
-            const mand = original.mandatory || actual.mandatory || "false";
-
-            // Align SelectedInterviewQuestion.ownerId with interviewerId when available
-            const questionOwnerId =
-              (interviewerId && interviewerId.toString()) ||
-              (ownerId && ownerId.toString()) ||
-              "";
-
-            const exists = await InterviewQuestions.findOne({
-              roundId: interviewRoundId,
-              // ownerId: questionOwnerId,
-              questionId: normalizedQuestionId,
-              // addedBy: "interviewer",
-            }).lean();
-
-            if (!exists) {
-              const doc = new InterviewQuestions({
-                interviewId: resolvedInterviewId,
-                roundId: interviewRoundId,
-                order: i + 1,
-                mandatory: mand,
-                tenantId: tenantId || "",
-                ownerId: questionOwnerId,
-                questionId: normalizedQuestionId,
-                source: src,
-                snapshot: actual || {},
-                addedBy: "interviewer",
-              });
-
-              await doc.save();
-            }
-          }
-        }
-      }
-    }
 
     // Trigger webhook for feedback status update if status changed to submitted
     if (updatedFeedback.status === "submitted") {
@@ -1009,15 +1013,25 @@ const getFeedbackByRoundId = async (req, res) => {
     }
 
     // Fetch all Interview Questions for the round
-    const interviewQuestionsList = await InterviewQuestions.find({
-      roundId: roundId,
-    });
+    // Filter questions: Include shared questions (not added by "interviewer") 
+    // AND questions added by THIS interviewer (if interviewerId is present)
+    const questionQuery = { roundId: roundId };
+
+    if (interviewerId) {
+      questionQuery.$or = [
+        { addedBy: { $ne: "interviewer" } },
+        { addedBy: "interviewer", ownerId: interviewerId },
+      ];
+    }
+
+    const interviewQuestionsList = await InterviewQuestions.find(questionQuery);
 
     // Build question map for easy lookup
     const questionMap = interviewQuestionsList.reduce((acc, q) => {
       acc[q._id.toString()] = q.toObject();
       return acc;
     }, {});
+    console.log("questionMap", questionMap);
 
     // Merge all questions into each feedback
     const feedbacksMerged = feedbacks.map((fb) => {
@@ -1036,7 +1050,15 @@ const getFeedbackByRoundId = async (req, res) => {
       });
 
       const mergedQuestions = Object.values(questionMap).map((q) => {
-        const ans = fbAnswersMap[q.questionId.toString()];
+        // Fix: Use q._id (SelectedInterviewQuestion ID) to lookup answer, 
+        // because questionFeedback.questionId stores the SelectedInterviewQuestion ID.
+        // Fallback to q.questionId (Bank ID) for legacy data compatibility
+        const ans = fbAnswersMap[q._id.toString()] || fbAnswersMap[q.questionId.toString()];
+        // const ans = fbAnswersMap[q.questionId.toString()];
+        console.log("ansq", q);
+
+        console.log("ans ans ans", ans)
+
         return {
           _id: q._id,
           questionText: q.questionText,
@@ -1044,7 +1066,7 @@ const getFeedbackByRoundId = async (req, res) => {
           questionId: q.questionId,
           candidateAnswer: ans?.candidateAnswer || null,
           interviewerFeedback: ans?.interviewerFeedback || null,
-          snapshot: q.snapshot,
+          snapshot: q?.snapshot,
         };
       });
 
@@ -1059,17 +1081,22 @@ const getFeedbackByRoundId = async (req, res) => {
       .filter((q) => q.addedBy !== "interviewer" || !q.addedBy)
       .map((q) => q.toObject());
 
-    // console.log("preselectedQuestions", preselectedQuestions);
+    console.log("preselectedQuestions", preselectedQuestions);
+    console.log("interviewerId", interviewQuestionsList);
 
     let interviewerAddedQuestions = interviewQuestionsList
       .filter((q) => q.addedBy === "interviewer")
       .map((q) => q.toObject());
 
+    // console.log("interviewerAddedQuestions", interviewerAddedQuestions)
+
     if (interviewerId) {
       interviewerAddedQuestions = interviewerAddedQuestions.filter(
-        (q) => q.ownerId?.toString() === interviewerId,
+        (q) => q.ownerId?.toString() === interviewerId?.toString(),
       );
     }
+
+    // console.log("interviewerAddedQuestions", interviewerAddedQuestions);
 
     // Build position data
     let positionData = null;
@@ -1117,6 +1144,7 @@ const getFeedbackByRoundId = async (req, res) => {
         interviewerAddedQuestions,
       },
     };
+    // console.log("responseData", responseData)
 
     res.status(200).json({
       success: true,

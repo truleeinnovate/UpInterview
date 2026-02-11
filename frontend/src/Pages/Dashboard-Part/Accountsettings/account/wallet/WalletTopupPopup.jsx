@@ -5,7 +5,7 @@
 // v1.0.4 - Replaced toast notifications with common notify service
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import Cookies from "js-cookie";
 import { notify } from "../../../../../services/toastService";
@@ -26,6 +26,12 @@ export function WalletTopupPopup({ onClose, onTopup }) {
   const [amount, setAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
+
+  const location = useLocation()
+
+  const mode = location?.state
+  const modeState = mode?.mode
+  console.log("mode", mode)
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -134,14 +140,21 @@ export function WalletTopupPopup({ onClose, onTopup }) {
             });
 
             if (verification?.success) {
+
               // Update UI with new wallet data
-              onTopup({
-                amount: parseFloat(amount),
-                paymentMethod: "credit_card",
-                type: "credited",
-                transactionId: response.razorpay_payment_id,
-                timestamp: new Date(),
-              });
+              if (modeState) {
+                navigate(-1)
+
+              } else {
+
+                onTopup({
+                  amount: parseFloat(amount),
+                  paymentMethod: "credit_card",
+                  type: "credited",
+                  transactionId: response.razorpay_payment_id,
+                  timestamp: new Date(),
+                });
+              }
 
               notify.success("Wallet top-up successful!");
               onClose();
@@ -226,8 +239,8 @@ export function WalletTopupPopup({ onClose, onTopup }) {
                   type="button"
                   onClick={() => setAmount(presetAmount.toString())}
                   className={`p-4 text-center border rounded-lg hover:border-custom-blue ${amount === presetAmount.toString()
-                      ? "border-custom-blue bg-blue-50"
-                      : "border-gray-200"
+                    ? "border-custom-blue bg-blue-50"
+                    : "border-gray-200"
                     }`}
                 >
                   ₹{presetAmount.toLocaleString()}

@@ -2,11 +2,10 @@
 // Custom hook for auto-saving feedback with debouncing
 
 import { useEffect, useRef, useCallback } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
-import { config } from "../config.js";
+// import axios from "axios";
+// import Cookies from "js-cookie";
+// import { config } from "../config.js";
 import { useCreateFeedback, useUpdateFeedback } from "./useFeedbacks.js";
-// import { notify } from "../../services/toastService.js";
 
 const useAutoSaveFeedback = ({
   isAddMode,
@@ -26,23 +25,20 @@ const useAutoSaveFeedback = ({
   feedbackCode,
   isMockInterview,
   feedbackId, // For PATCH operations if feedback already exists
+  isLoaded = true, // New prop to prevent saving before data is loaded
 }) => {
   const timeoutRef = useRef(null);
   const lastSavedDataRef = useRef(null);
   const isSavingRef = useRef(false);
-  const { mutate: createFeedback, isLoading: isCreating } = useCreateFeedback();
-  const { mutate: updateFeedback, isLoading: isUpdating } = useUpdateFeedback();
 
-  // Helper to convert UI answer type to backend format
-  const toBackendAnswerType = (ui) => {
-    if (ui === "Fully Answered") return "correct";
-    if (ui === "Partially Answered") return "partial";
-    if (ui === "Not Answered") return "incorrect";
-    return "not answered";
-  };
+  // Keep isLoaded in a ref to access in callbacks without dependency changes
+  const isLoadedRef = useRef(isLoaded);
+  useEffect(() => {
+    isLoadedRef.current = isLoaded;
+  }, [isLoaded]);
 
-  console.log("useAutoSaveFeedback called with feedbackId:", {
-    isAddMode,
+  // Use refs to hold the latest data to avoid stale closures in setTimeout/callbacks
+  const dataRef = useRef({
     interviewRoundId,
     tenantId,
     interviewerId,
@@ -57,23 +53,75 @@ const useAutoSaveFeedback = ({
     positionId,
     ownerId,
     feedbackCode,
-    feedbackId, // For PATCH operations if feedback already exists
-    isMockInterview
+    isMockInterview,
+    feedbackId
   });
 
-  // Prepare feedback payload
+  // Update data ref whenever dependencies change
+  useEffect(() => {
+    dataRef.current = {
+      interviewRoundId,
+      tenantId,
+      interviewerId,
+      interviewerSectionData,
+      preselectedQuestionsResponses,
+      skillRatings,
+      overallRating,
+      communicationRating,
+      recommendation,
+      comments,
+      candidateId,
+      positionId,
+      ownerId,
+      feedbackCode,
+      isMockInterview,
+      feedbackId
+    };
+  }, [
+    interviewRoundId,
+    tenantId,
+    interviewerId,
+    interviewerSectionData,
+    preselectedQuestionsResponses,
+    skillRatings,
+    overallRating,
+    communicationRating,
+    recommendation,
+    comments,
+    candidateId,
+    positionId,
+    ownerId,
+    feedbackCode,
+    isMockInterview,
+    feedbackId
+  ]);
+
+  const { mutateAsync: createFeedback } = useCreateFeedback();
+  const { mutateAsync: updateFeedback } = useUpdateFeedback();
+
+  // Helper to convert UI answer type to backend format
+  const toBackendAnswerType = (ui) => {
+    if (ui === "Fully Answered") return "correct";
+    if (ui === "Partially Answered") return "partial";
+    if (ui === "Not Answered") return "incorrect";
+    return "not answered";
+  };
+
+  // Prepare feedback payload using the current data from ref
   const prepareFeedbackPayload = useCallback(() => {
+    const data = dataRef.current;
+
     return {
       type: "draft",
-      tenantId: tenantId || undefined,
-      ownerId: ownerId || undefined,
-      interviewRoundId: interviewRoundId || undefined,
-      candidateId: candidateId || undefined,
-      positionId: positionId || undefined,
-      interviewerId: interviewerId || undefined,
+      tenantId: data.tenantId || undefined,
+      ownerId: data.ownerId || undefined,
+      interviewRoundId: data.interviewRoundId || undefined,
+      candidateId: data.candidateId || undefined,
+      positionId: data.positionId || undefined,
+      interviewerId: data.interviewerId || undefined,
       skills:
-        skillRatings.length > 0
-          ? skillRatings.map((skill) => ({
+        data.skillRatings && data.skillRatings.length > 0
+          ? data.skillRatings.map((skill) => ({
             skillName: skill.skill,
             rating: skill.rating,
             note: skill.comments || "",
@@ -81,8 +129,11 @@ const useAutoSaveFeedback = ({
           : undefined,
       questionFeedback: [
         // Interviewer section questions
-        ...(interviewerSectionData || []).map((question) => ({
-          questionId: question,
+        ...(data.interviewerSectionData || []).map((question) => ({
+          // Fix: Send full question object for interviewer-added questions so backend can extract snapshot
+          questionId: question.addedBy === "interviewer"
+            ? question
+            : (question.questionId || question.id || question._id),
           candidateAnswer: {
             answerType: toBackendAnswerType(
               question.isAnswered || "Not Answered",
@@ -96,7 +147,7 @@ const useAutoSaveFeedback = ({
           },
         })),
         // Preselected questions responses
-        ...(preselectedQuestionsResponses || []).map((response) => ({
+        ...(data.preselectedQuestionsResponses || []).map((response) => ({
           questionId:
             typeof response === "string"
               ? response
@@ -114,143 +165,88 @@ const useAutoSaveFeedback = ({
           },
         })),
       ],
-      isMockInterview: isMockInterview,
-      generalComments: comments || "",
+      isMockInterview: data.isMockInterview,
+      generalComments: data.comments || "",
       overallImpression: {
-        overallRating: overallRating || 0,
-        communicationRating: communicationRating || 0,
-        recommendation: recommendation || "Maybe",
+        overallRating: data.overallRating || 0,
+        communicationRating: data.communicationRating || 0,
+        recommendation: data.recommendation || "Maybe",
         note: "",
       },
       status: "draft",
     };
-  }, [
-    tenantId,
-    ownerId,
-    interviewRoundId,
-    candidateId,
-    positionId,
-    interviewerId,
-    skillRatings,
-    interviewerSectionData,
-    preselectedQuestionsResponses,
-    comments,
-    overallRating,
-    communicationRating,
-    isMockInterview,
-    recommendation,
-    feedbackCode
-    // feedbackId,
-  ]);
+  }, []);
 
   // Check if data has changed
   const hasDataChanged = useCallback(() => {
-    const currentData = JSON.stringify(prepareFeedbackPayload());
-    const lastData = lastSavedDataRef.current;
-    return currentData !== lastData;
+    const currentPayload = prepareFeedbackPayload();
+    // We remove fields that might be indeterminate or not relevant for change detection if needed
+    // But JSON stringify is usually fine for deep comparison of simple objects
+    const currentDataString = JSON.stringify(currentPayload);
+    const lastDataString = lastSavedDataRef.current;
+
+    return currentDataString !== lastDataString ? currentPayload : null;
   }, [prepareFeedbackPayload]);
 
-  // Auto-save function
-  // const autoSave = useCallback(async () => {
-  //   if (!isAddMode || isSavingRef.current || !hasDataChanged()) {
-  //     return;
-  //   }
+  const triggerAutoSave = useCallback(() => {
+    if (!isAddMode) return;
 
-  //   try {
-  //     isSavingRef.current = true;
-  //     //   const authToken = Cookies.get("authToken");
-  //     const payload = prepareFeedbackPayload();
-
-  //     console.log("🔄 Auto-saving feedback...", feedbackId);
-  //     console.log("🔄 Auto-saving feedback...", payload);
-
-  //     let response;
-  //     if (feedbackId) {
-  //       // PATCH - Update existing feedback
-  //       response = await updateFeedback({ feedbackId, feedbackData: payload });
-  //       //  await axios.patch(
-  //       //   `${config.REACT_APP_API_URL}/feedback/${feedbackId}`,
-  //       //   payload,
-  //       //   {
-  //       //     headers: {
-  //       //       Authorization: `Bearer ${authToken}`,
-  //       //       "Content-Type": "application/json",
-  //       //     },
-  //       //   }
-  //       // );
-  //     } else {
-  //       // POST - Create new feedback
-
-  //       response = await createFeedback(payload);
-  //       // response = await axios.post(
-  //       //   `${config.REACT_APP_API_URL}/feedback`,
-  //       //   payload,
-  //       //   {
-  //       //     headers: {
-  //       //       Authorization: `Bearer ${authToken}`,
-  //       //       "Content-Type": "application/json",
-  //       //     },
-  //       //   }
-  //       // );
-  //     }
-
-  //     console.log("✅ Auto-save response:", response);
-
-  //     if (response.data.success) {
-  //       lastSavedDataRef.current = JSON.stringify(payload);
-  //       console.log("✅ Auto-save successful");
-  //       // Optional: Show subtle notification
-  //       // notify.success("Changes saved", { autoClose: 1000 });
-  //     }
-  //   } catch (error) {
-  //     console.error("❌ Auto-save failed:", error);
-  //     // Optional: Show error notification
-  //     // notify.error("Failed to auto-save changes");
-  //   } finally {
-  //     isSavingRef.current = false;
-  //   }
-  // }, [isAddMode, feedbackId, prepareFeedbackPayload, hasDataChanged]);
-
-  // useAutoSaveFeedback.js - Add this function
-  const triggerAutoSave = useCallback(async () => {
-    if (!isAddMode || isSavingRef.current) {
-      return;
+    // Clear any existing timeout to ensure we debounce
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-    console.log("🔄 Triggering immediate auto-save...", feedbackId);
-    // console.log(
-    //   "🔄 Triggering payload auto-save with data:",
-    //   prepareFeedbackPayload(),
-    // );
-    try {
-      isSavingRef.current = true;
+
+    timeoutRef.current = setTimeout(async () => {
+      if (isSavingRef.current) return;
+
+      // Block save if data is not loaded yet
+      if (!isLoadedRef.current) {
+        // console.log("Skipping auto-save: Data not loaded yet");
+        return;
+      }
+
       const payload = prepareFeedbackPayload();
 
-      console.log("🔄 Triggering immediate auto-save...", feedbackId);
-
-      let response;
-      if (feedbackId) {
-        response = await updateFeedback({ feedbackId, feedbackData: payload });
-      } else {
-        response = await createFeedback(payload);
-      }
-      // console.log("✅ Immediate auto-save response:", response);
-
-      if (response.data.success) {
+      // Initialize baseline if not set (first run after load)
+      if (!lastSavedDataRef.current) {
+        console.log("Initializing auto-save baseline (no save)");
         lastSavedDataRef.current = JSON.stringify(payload);
-        console.log("✅ Immediate auto-save successful");
+        return;
       }
-    } catch (error) {
-      console.error("❌ Immediate auto-save failed:", error);
-    } finally {
-      isSavingRef.current = false;
-    }
-  }, [
-    isAddMode,
-    feedbackId,
-    prepareFeedbackPayload,
-    updateFeedback,
-    createFeedback,
-  ]);
+
+      const changedPayload = hasDataChanged();
+
+      // If no changes, don't save. 
+      if (!changedPayload) {
+        return;
+      }
+
+      const finalPayload = changedPayload;
+      const currentFeedbackId = dataRef.current.feedbackId;
+
+      console.log(`🔄 Triggering auto-save... ID: ${currentFeedbackId || 'New'}`);
+
+      try {
+        isSavingRef.current = true;
+        let response;
+
+        if (currentFeedbackId) {
+          response = await updateFeedback({ feedbackId: currentFeedbackId, feedbackData: finalPayload });
+        } else {
+          response = await createFeedback(finalPayload);
+        }
+
+        if (response && (response.data?.success || response.success)) {
+          lastSavedDataRef.current = JSON.stringify(finalPayload);
+          console.log("✅ Auto-save successful");
+        }
+      } catch (error) {
+        console.error("❌ Auto-save failed:", error);
+      } finally {
+        isSavingRef.current = false;
+      }
+    }, 1000); // 1 second debounce
+  }, [isAddMode, prepareFeedbackPayload, hasDataChanged, createFeedback, updateFeedback]);
 
   // Debounced auto-save effect
   useEffect(() => {
@@ -274,6 +270,7 @@ const useAutoSaveFeedback = ({
     };
   }, [
     isAddMode,
+    // We still depend on props to reset the timer when user types
     interviewerSectionData,
     preselectedQuestionsResponses,
     skillRatings,
@@ -285,6 +282,7 @@ const useAutoSaveFeedback = ({
   ]);
 
   // Manual save function (can be called immediately)
+  // This is what the component calls as 'autoSaveQuestions'
   const saveNow = useCallback(async () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);

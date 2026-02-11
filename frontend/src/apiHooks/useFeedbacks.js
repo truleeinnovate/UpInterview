@@ -48,6 +48,7 @@ export const useCreateFeedback = () => {
     onSuccess: () => {
       // Ensure feedback lists are refreshed after creating new feedback
       queryClient.invalidateQueries({ queryKey: ["feedbacks"] });
+      queryClient.invalidateQueries({ queryKey: ["feedbackData"] });
     },
     onError: (error) => {
       if (error.response?.status === 409) {
@@ -75,6 +76,7 @@ export const useUpdateFeedback = () => {
     onSuccess: () => {
       // Ensure feedback lists are refreshed after updating existing feedback
       queryClient.invalidateQueries({ queryKey: ["feedbacks"] });
+      queryClient.invalidateQueries({ queryKey: ["feedbackData"] });
     },
     onError: (error) => {
       console.error("Error updating feedback:", error);
@@ -85,7 +87,7 @@ export const useUpdateFeedback = () => {
 
 export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
   return useQuery({
-    queryKey: ["feedbackData", roundId, interviewerId],
+    queryKey: ["feedbackDatas", roundId, interviewerId],
     queryFn: async () => {
       if (!roundId) {
         return null;
@@ -123,6 +125,7 @@ export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
       //     // 'Authorization': `Bearer ${Cookies.get('authToken')}`
       //   },
       // });
+      console.log("response response", response)
 
       if (response.data.success) {
         return response.data.data;

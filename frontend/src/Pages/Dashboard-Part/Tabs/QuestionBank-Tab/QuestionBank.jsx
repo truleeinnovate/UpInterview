@@ -26,7 +26,7 @@ const QuestionBank = ({
   interviewQuestionsLists,
   removedQuestionIds,
   isEmbedded = false,
-  onSelectQuestion = () => {},
+  onSelectQuestion = () => { },
   isMeetingSidePanel,
 }) => {
   const { checkPermission, isInitialized } = usePermissionCheck();
@@ -34,6 +34,8 @@ const QuestionBank = ({
   const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [interviewQuestionsList, setInterviewQuestionsList] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  console.log("interviewQuestionsLists", interviewQuestionsLists);
 
   // Permission check after all hooks
   if (!isInitialized || !checkPermission("QuestionBank")) {
@@ -55,11 +57,11 @@ const QuestionBank = ({
 
   const containerStyle = isEmbedded
     ? {
-        padding: "0.5rem",
-        height: "100%",
-        overflowY: "auto",
-        backgroundColor: "white",
-      }
+      padding: "0.5rem",
+      height: "100%",
+      overflowY: "auto",
+      backgroundColor: "white",
+    }
     : {};
   const handleQuestionClick = (question) => {
     if (isEmbedded) {
@@ -86,46 +88,41 @@ const QuestionBank = ({
     //   style={containerStyle}
     // >
     <div
-      className={`${
-        isEmbedded ? "question-bank-embedded" : "h-full bg-white rounded-lg"
-      } flex flex-col`}
+      className={`${isEmbedded ? "question-bank-embedded" : "h-full bg-white rounded-lg"
+        } flex flex-col`}
       style={containerStyle}
     >
       {/* Tab Navigation - Fixed at top for modal context */}
       <div className="flex sm:gap-6 justify-between bg-white sm:px-0 sm:pl-4 text-center px-4 py-3 flex-shrink-0">
         <div className="flex sm:gap-6">
           <button
-            className={`sm:px-0 px-6 py-3 font-medium text-sm ${
-              activeTab === "SuggesstedQuestions"
+            className={`sm:px-0 px-6 py-3 font-medium text-sm ${activeTab === "SuggesstedQuestions"
                 ? "text-custom-blue border-b-2 border-custom-blue"
                 : "text-gray-500 hover:text-gray-700 transition-colors duration-200"
-            }`}
+              }`}
             onClick={() => handleSuggestedTabClick()}
             type="button"
           >
             Suggested
             <span
-              className={`${
-                isMeetingSidePanel ? "hidden" : "sm:hidden inline ml-1"
-              }`}
+              className={`${isMeetingSidePanel ? "hidden" : "sm:hidden inline ml-1"
+                }`}
             >
               Questions
             </span>
           </button>
           <button
-            className={`sm:px-0 px-6 py-3 font-medium text-sm ${
-              activeTab === "MyQuestionsList"
+            className={`sm:px-0 px-6 py-3 font-medium text-sm ${activeTab === "MyQuestionsList"
                 ? "text-custom-blue border-b-2 border-custom-blue"
                 : "text-gray-500 hover:text-gray-700 transition-colors duration-200"
-            }`}
+              }`}
             onClick={() => handleFavoriteTabClick()}
             type="button"
           >
             My Questions
             <span
-              className={`${
-                isMeetingSidePanel ? "hidden" : "sm:hidden inline ml-1"
-              }`}
+              className={`${isMeetingSidePanel ? "hidden" : "sm:hidden inline ml-1"
+                }`}
             >
               List
             </span>
@@ -135,16 +132,14 @@ const QuestionBank = ({
         {activeTab === "MyQuestionsList" && (
           <div className="flex items-center sm:mr-4">
             <Button
-              className={`bg-custom-blue text-white rounded-md flex items-center gap-1 ${
-                isMeetingSidePanel ? "text-sm" : "text-sm"
-              } `}
+              className={`bg-custom-blue text-white rounded-md flex items-center gap-1 ${isMeetingSidePanel ? "text-sm" : "text-sm"
+                } `}
               onClick={toggleSidebar}
             >
               <Plus className="h-4 w-4" /> Add
               <span
-                className={`${
-                  isMeetingSidePanel ? "hidden" : "sm:hidden inline"
-                }`}
+                className={`${isMeetingSidePanel ? "hidden" : "sm:hidden inline"
+                  }`}
               >
                 Question
               </span>
