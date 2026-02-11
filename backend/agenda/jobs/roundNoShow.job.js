@@ -44,12 +44,12 @@ module.exports = (agenda) => {
       return;
     }
 
-    let currentAction = "Candidate_NoShow";
-    if (!interviewerJoined && candidateJoined) {
-      currentAction = "Interviewer_NoShow";
-    } else if (!candidateJoined && !interviewerJoined) {
-      currentAction = "Both_NoShow";
-    }
+    let currentAction = round.status;
+    // if (!interviewerJoined && candidateJoined) {
+    //   currentAction = round.status;
+    // } else if (!candidateJoined && !interviewerJoined) {
+    //   currentAction = round.status;
+    // }
 
     console.log("[NoShow-Job] 🚨 Marking round as NoShow | currentAction:", currentAction);
 

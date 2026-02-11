@@ -1604,20 +1604,35 @@ const updateInterviewRoundStatus = async (req, res) => {
 
     let smartUpdate = null;
 
+
+    //  when candidate and interviewer both are present in the round then create history
     if (req.body?.History_Type === "Histoy_Handling") {
       // Special handling: only create history if conditions are met
-      const participants = existingRound.participants || [];
+      const participants = updatedRound?.participants || [];
 
       console.log("participants", participants);
-      const isHistoryHandled = participants.some(
-        (p) => p.role === "Interviewer" || p.role === "Scheduler",
+      // const isHistoryHandled = participants.some(
+      //   (p) => p.role === "Interviewer" && p.role === "Candidate",
+      // );
+
+
+      const hasInterviewer = participants.some(
+        (p) => p.role === "Interviewer"
       );
+
+      const hasCandidate = participants.some(
+        (p) => p.role === "Candidate"
+      );
+
+      const isHistoryHandled = hasInterviewer && hasCandidate;
       console.log("isHistoryHandled", isHistoryHandled);
 
-      if (!isHistoryHandled && action === "InProgress") {
+      if (isHistoryHandled) {
         // ONE-TIME SPECIAL HISTORY CREATION
+        let actionStatus = "InProgress"
+
         const smartBody = {
-          status: action,
+          status: actionStatus,
           interviewerType: existingRound.interviewerType,
           selectedInterviewers: existingRound.interviewers,
           currentActionReason: reasonCode || null,

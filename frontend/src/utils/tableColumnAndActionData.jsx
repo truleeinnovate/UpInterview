@@ -1020,13 +1020,13 @@ export const getMockInterviewActions = (navigate, options = {}) => {
         //     show: (row) => !["Draft", "Completed", "Cancelled"].includes(row?.rounds?.[0]?.status),
         //     onClick: (row) => navigate(`/mock-interviews/${row._id}/edit`, { state: { from: locationState?.pathname || "/" } })
         // },
-        ...(callbacks.onCancel ? [{
-            key: "cancel",
-            label: "Cancel",
-            icon: <XCircle className="w-4 h-4 text-red-500" />,
-            show: (row) => !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(row?.rounds?.[0]?.status),
-            onClick: (row) => callbacks.onCancel(row)
-        }] : [])
+        // ...(callbacks.onCancel ? [{
+        //     key: "cancel",
+        //     label: "Cancel",
+        //     icon: <XCircle className="w-4 h-4 text-red-500" />,
+        //     show: (row) => !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(row?.rounds?.[0]?.status),
+        //     onClick: (row) => callbacks.onCancel(row)
+        // }] : [])
     ];
 };
 

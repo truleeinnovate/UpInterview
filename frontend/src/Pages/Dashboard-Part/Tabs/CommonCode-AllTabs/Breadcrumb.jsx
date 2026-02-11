@@ -3,8 +3,9 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import StatusBadge from "./StatusBadge";
+// import StatusBadge from "./StatusBadge";
 import { motion } from "framer-motion";
+import { StatusBadge } from "./StatusBadge";
 
 function Breadcrumb({ items }) {
   return (

@@ -587,16 +587,16 @@ const MockInterview = () => {
 
     //   // onClick: (row) => onRescheduleClick(row),
     // },
-    {
-      key: "cancel",
-      label: "Cancel",
-      icon: <XCircle className="w-4 h-4 text-red-500" />,
-      show: (row) =>
-        !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(
-          row?.rounds?.[0]?.status
-        ),
-      onClick: (row) => onCancelClick(row),
-    },
+    // {
+    //   key: "cancel",
+    //   label: "Cancel",
+    //   icon: <XCircle className="w-4 h-4 text-red-500" />,
+    //   show: (row) =>
+    //     !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(
+    //       row?.rounds?.[0]?.status
+    //     ),
+    //   onClick: (row) => onCancelClick(row),
+    // },
   ];
 
   // v1.0.5 ---------------------------------------------------------------------------------->

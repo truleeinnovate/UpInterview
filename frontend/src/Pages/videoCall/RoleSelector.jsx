@@ -108,7 +108,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
       const payload = {
         roundId: interviewRoundData?._id,
         interviewId: interviewRoundData?.interviewId,
-        action: "InProgress",
+        action: interviewRoundData?.status,
         role: capitalizeFirstLetter(role),
         userId: urlData?.interviewerId,
         History_Type: "Histoy_Handling",

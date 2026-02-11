@@ -24,7 +24,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 // import axios from "axios";
-import StatusBadge from "../CommonCode-AllTabs/StatusBadge.jsx";
+// import { getStatusBadgeColor } from "../CommonCode-AllTabs/StatusBadge.jsx";
 import Breadcrumb from "../CommonCode-AllTabs/Breadcrumb.jsx";
 import MoockRoundCard from "./MockInterviewRoundCard.jsx";
 import MockCandidateDetails from "./MockinterviewCandidate.jsx";
@@ -40,8 +40,10 @@ import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 import { createPortal } from "react-dom";
 import DateChangeConfirmationModal from "../Interview-New/components/DateChangeConfirmationModal";
 import RejectionModal from "../Interview-New/components/RejectionModal.jsx";
-import FeedbackModal from "../Interview-New/components/FeedbackModal";
+// import FeedbackModal from "../Interview-New/components/FeedbackModal";
 import { useRef } from "react";
+import { getStatusBadgeColor } from "../CommonCode-AllTabs/StatusBadge.jsx";
+import FeedbackFormModal from "../Feedback/FeedbackFormModel.jsx";
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
@@ -842,11 +844,28 @@ const MockInterviewDetails = () => {
                   <h3 className="flex items-center text-lg leading-6 font-medium text-gray-900 gap-3">
                     Mock Interview Details
                     {mockinterview?.rounds[0]?.status && (
-                      <span className="ml-1">
-                        <StatusBadge
-                          status={mockinterview?.rounds[0]?.status}
-                          size="md"
-                        />
+                      // <span className="ml-1">
+                      //   <StatusBadge
+                      //     status={mockinterview?.rounds[0]?.status}
+                      //     size="md"
+                      //   />
+                      // </span>
+                      <span
+                        className={`mx-2 text-xs px-2 py-0.5 rounded-full ${getStatusBadgeColor(
+                          mockinterview?.rounds[0]?.status,
+                        )}`}
+                      >
+                        {mockinterview?.rounds[0]?.status === "RequestSent"
+                          ? "Request Sent"
+                          : mockinterview?.rounds[0]?.status === "InProgress"
+                            ? "In Progress"
+                            : mockinterview?.rounds[0]?.status === "FeedbackPending"
+                              ? "Feedback Pending"
+                              : mockinterview?.rounds[0]?.status === "FeedbackSubmitted"
+                                ? "Feedback Submitted"
+                                :
+                                // : round?.status,
+                                capitalizeFirstLetter(mockinterview?.rounds[0]?.status)}
                       </span>
                     )}
                   </h3>
@@ -1243,9 +1262,10 @@ const MockInterviewDetails = () => {
           />
         )}
         {showFeedbackModal && (
-          <FeedbackModal
+          <FeedbackFormModal
             onClose={() => setShowFeedbackModal(false)}
             // interviewId={interviewData._id}
+            mode={true}
             roundId={rounds[0]}
           />
         )}
