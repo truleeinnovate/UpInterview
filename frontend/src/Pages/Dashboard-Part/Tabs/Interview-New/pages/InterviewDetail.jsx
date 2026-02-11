@@ -99,7 +99,7 @@ const InterviewDetail = () => {
   // <-------v1.0.0 - Ranjith
 
   const handleViewPosition = (position) => {
-    navigate(`/position/view-details/${position._id}`, {
+    navigate(`/positions/view-details/${position._id}`, {
       state: {
         mode: "Interview",
       },

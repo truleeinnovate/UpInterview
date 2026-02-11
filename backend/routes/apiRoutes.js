@@ -276,11 +276,12 @@ router.get(
             createdDate: mockCreatedDate = "",
           } = filters;
 
-          console.log("Extracted filters:", {
-            mockStatus,
-            mockDuration,
-            mockCreatedDate,
-          });
+          // console.log("Extracted filters:", {
+          //   mockStatus,
+          //   mockDuration,
+          //   mockCreatedDate,
+          // });
+          // console.log("querymockQuery", query)
 
           // -------------------------------
           // BASE QUERY FOR MOCKINTERVIEW
@@ -288,11 +289,24 @@ router.get(
           let mockQuery = { ...query };
 
           // Full text search
+          // if (mockSearch) {
+          //   mockQuery.$or = [
+          //     { mockInterviewCode: { $regex: mockSearch, $options: "i" } },
+          //     { currentRole: { $regex: mockSearch, $options: "i" } },
+          //     { candidateName: { $regex: mockSearch, $options: "i" } },
+          //   ];
+          // }
+
           if (mockSearch) {
-            mockQuery.$or = [
-              { mockInterviewCode: { $regex: mockSearch, $options: "i" } },
-              { currentRole: { $regex: mockSearch, $options: "i" } },
-              { candidateName: { $regex: mockSearch, $options: "i" } },
+            mockQuery.$and = [
+              { ...query },
+              {
+                $or: [
+                  { mockInterviewCode: { $regex: mockSearch, $options: "i" } },
+                  { currentRole: { $regex: mockSearch, $options: "i" } },
+                  { candidateName: { $regex: mockSearch, $options: "i" } },
+                ],
+              },
             ];
           }
 
@@ -429,7 +443,7 @@ router.get(
           const totalCount = await MockInterview.countDocuments(mockQuery);
           const totalPages =
             limitNum > 0 ? Math.ceil(totalCount / limitNum) : 1;
-
+          // console.log("mockQuery", mockQuery)
           // ---------------------------------------------------------------
           // FETCH MOCK INTERVIEWS
           // ---------------------------------------------------------------
@@ -525,6 +539,8 @@ router.get(
           };
 
           break;
+
+
         // case "mockinterview":
         //   const {
         //     search: mockSearch,
@@ -1402,7 +1418,7 @@ router.get(
 
         // assessment scheduled for candidate api
         case "scheduleassessment": {
-          console.log("req?.query?.type", req?.query);
+          // console.log("req?.query?.type", req?.query);
 
           if (req?.query?.type !== "analytics") {
             const {
@@ -1743,7 +1759,7 @@ router.get(
               itemsPerPage: limitNumber,
             };
           } else if (req?.query?.type === "scheduled") {
-            console.log("In scheduleassessment scheduled type", req?.query);
+            // console.log("In scheduleassessment scheduled type", req?.query);
             // const assessmentId = req?.query?.assessmentId;
             const { assessmentId } = req.query;
 
@@ -2021,12 +2037,19 @@ router.get(
             // Search for matching company IDs by name (since companyname is an ObjectId reference)
             const matchingCompanies = await TenantCompany.find({ name: searchRegex }).select('_id').lean();
             const matchingCompanyIds = matchingCompanies.map(c => c._id);
+            query.$and = [
+              { ...query },
+              {
 
-            query.$or = [
-              { title: searchRegex },
-              { Location: searchRegex },
-              { positionCode: searchRegex },
+                $or: [
+                  { title: searchRegex },
+                  { Location: searchRegex },
+                  { positionCode: searchRegex },
+                ]
+              }
+
             ];
+
 
             // Include company name search if any matching companies found
             if (matchingCompanyIds.length > 0) {
@@ -2126,6 +2149,8 @@ router.get(
           if (positionAggQuery.ownerId && typeof positionAggQuery.ownerId === 'string') {
             positionAggQuery.ownerId = new mongoose.Types.ObjectId(positionAggQuery.ownerId);
           }
+
+          // console.log("positionAggQuery", positionAggQuery)
 
           const positionData = await DataModel.aggregate([
             { $match: positionAggQuery },
@@ -2585,17 +2610,37 @@ router.get(
               }
             }
           ];
+          // console.log("candidatePipeline candidatePipeline", candidatePipeline)
 
           // Apply search filter
+          // if (candidateSearch) {
+          //   const searchRegex = new RegExp(candidateSearch, "i");
+          //   candidatePipeline[0].$match.$or = [
+          //     { FirstName: searchRegex },
+          //     { LastName: searchRegex },
+          //     { Email: searchRegex },
+          //     { Phone: searchRegex },
+          //   ];
+          // }
+
           if (candidateSearch) {
             const searchRegex = new RegExp(candidateSearch, "i");
-            candidatePipeline[0].$match.$or = [
-              { FirstName: searchRegex },
-              { LastName: searchRegex },
-              { Email: searchRegex },
-              { Phone: searchRegex },
-            ];
+
+            candidatePipeline[0].$match = {
+              $and: [
+                { ...query }, // ownerId and other base filters
+                {
+                  $or: [
+                    { FirstName: searchRegex },
+                    { LastName: searchRegex },
+                    { Email: searchRegex },
+                    { Phone: searchRegex },
+                  ],
+                },
+              ],
+            };
           }
+
 
           // Apply filters on Resume fields (after lookup)
           const postLookupFilters = {};
@@ -2652,16 +2697,16 @@ router.get(
           }
 
           // Debug logging
-          console.log('[Candidate API] Aggregation query:', JSON.stringify(aggregationQuery));
-          console.log('[Candidate API] Post-lookup filters:', JSON.stringify(postLookupFilters));
-          console.log('[Candidate API] Pipeline length:', candidatePipeline.length);
+          // console.log('[Candidate API] Aggregation query:', JSON.stringify(aggregationQuery));
+          // console.log('[Candidate API] Post-lookup filters:', JSON.stringify(postLookupFilters));
+          // console.log('[Candidate API] Pipeline length:', candidatePipeline.length);
 
           // Get total count before pagination
           const countPipeline = [...candidatePipeline, { $count: "total" }];
           const countResult = await Candidate.aggregate(countPipeline);
           total = countResult[0]?.total || 0;
 
-          console.log('[Candidate API] Total count:', total);
+          // console.log('[Candidate API] Total count:', total);
 
           // Add sorting and pagination
           candidatePipeline.push(
@@ -2671,6 +2716,7 @@ router.get(
           if (parsedCandidateLimit > 0) {
             candidatePipeline.push({ $limit: parsedCandidateLimit });
           }
+          // console.log("candidatePipeline", candidatePipeline)
 
           // Execute aggregation
           const candidateData = await Candidate.aggregate(candidatePipeline);

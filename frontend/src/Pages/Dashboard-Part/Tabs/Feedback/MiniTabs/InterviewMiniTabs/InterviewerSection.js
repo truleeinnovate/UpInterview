@@ -29,7 +29,7 @@ const InterviewerSectionComponent = ({
   isViewMode,
   // Question Bank Props from parent
   interviewerSectionData,
-  // preselectedQuestionsResponses,
+  preselectedQuestionsResponses,
   setInterviewerSectionData,
   removedQuestionIds,
   setRemovedQuestionIds,
@@ -45,6 +45,18 @@ const InterviewerSectionComponent = ({
   decodedData,
   triggerAutoSave,
 }) => {
+  const saveTimeoutRef = useRef(null);
+
+  const triggerDebouncedSave = () => {
+    if (isAddMode || isEditMode) {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      saveTimeoutRef.current = setTimeout(() => {
+        if (triggerAutoSave) triggerAutoSave();
+      }, 1000);
+    }
+  };
   // Get all questions from interviewData and filter for interviewer-added questions
   const location = useLocation();
   const rawFeedbackData = location.state?.feedback;
@@ -183,20 +195,17 @@ const InterviewerSectionComponent = ({
   ]);
 
   // Enhanced state initialization
-  const [interviewerSection, setInterviewerSection] = useState(() => {
-    // For initial load, use the data that's already passed in
-    if (interviewerSectionData && interviewerSectionData.length > 0) {
-      return interviewerSectionData;
+  // Enhanced state initialization with useEffect to sync with props
+  const [interviewerSection, setInterviewerSection] = useState([]);
+
+  useEffect(() => {
+    if (questionsWithFeedback && questionsWithFeedback.length > 0) {
+      setInterviewerSection(questionsWithFeedback);
+    } else if (interviewerSectionData && interviewerSectionData.length > 0) {
+      // Fallback to initial data if no feedback yet
+      setInterviewerSection(interviewerSectionData);
     }
-    if (
-      (isEditMode || isViewMode) &&
-      questionsWithFeedback &&
-      questionsWithFeedback.length > 0
-    ) {
-      return questionsWithFeedback;
-    }
-    return [];
-  });
+  }, [questionsWithFeedback, interviewerSectionData]);
 
   // const [interviewerSection, setInterviewerSection] = useState(() => {
   //   return isAddMode || isEditMode ? questionsWithFeedback : [];
@@ -295,14 +304,7 @@ const InterviewerSectionComponent = ({
         );
 
         // Debounced auto-save for notes
-        if (triggerAutoSave && (isAddMode || isEditMode)) {
-          if (noteTimeoutRef.current) {
-            clearTimeout(noteTimeoutRef.current);
-          }
-          noteTimeoutRef.current = setTimeout(() => {
-            triggerAutoSave();
-          }, 2000); // Wait 2 seconds after last keystroke
-        }
+        triggerDebouncedSave();
 
         return updated;
       } else {
@@ -324,14 +326,7 @@ const InterviewerSectionComponent = ({
           ];
 
           // Debounced auto-save for notes
-          if (triggerAutoSave && (isAddMode || isEditMode)) {
-            if (noteTimeoutRef.current) {
-              clearTimeout(noteTimeoutRef.current);
-            }
-            noteTimeoutRef.current = setTimeout(() => {
-              triggerAutoSave();
-            }, 2000);
-          }
+          triggerDebouncedSave();
 
           return newData;
         }
@@ -531,13 +526,7 @@ const InterviewerSectionComponent = ({
         );
 
         // Trigger auto-save after change
-        // if (triggerAutoSave && (isAddMode || isEditMode)) {
-        //   setTimeout(() => triggerAutoSave(), 500);
-        // }
-        // IMMEDIATE auto-save
-        if (triggerAutoSave && (isAddMode || isEditMode)) {
-          triggerAutoSave();
-        }
+        triggerDebouncedSave();
 
         return updated;
       } else {
@@ -563,13 +552,7 @@ const InterviewerSectionComponent = ({
           ];
 
           // Trigger auto-save after change
-          // if (triggerAutoSave && (isAddMode || isEditMode)) {
-          //   setTimeout(() => triggerAutoSave(), 500);
-          // }
-          // IMMEDIATE auto-save
-          if (triggerAutoSave && (isAddMode || isEditMode)) {
-            triggerAutoSave();
-          }
+          triggerDebouncedSave();
 
           return newData;
         }
@@ -630,13 +613,7 @@ const InterviewerSectionComponent = ({
         );
 
         // Trigger auto-save after change
-        // if (triggerAutoSave && (isAddMode || isEditMode)) {
-        //   setTimeout(() => triggerAutoSave(), 500);
-        // }
-        // IMMEDIATE auto-save
-        if (triggerAutoSave && (isAddMode || isEditMode)) {
-          triggerAutoSave();
-        }
+        triggerDebouncedSave();
 
         return updated;
       } else {
@@ -658,9 +635,8 @@ const InterviewerSectionComponent = ({
           ];
 
           // Trigger auto-save after change
-          if (triggerAutoSave && (isAddMode || isEditMode)) {
-            setTimeout(() => triggerAutoSave(), 500);
-          }
+          // Trigger auto-save after change
+          triggerDebouncedSave();
 
           return newData;
         }
@@ -731,13 +707,7 @@ const InterviewerSectionComponent = ({
         );
 
         // Trigger auto-save after change
-        // if (triggerAutoSave && (isAddMode || isEditMode)) {
-        //   setTimeout(() => triggerAutoSave(), 500);
-        // }
-        // IMMEDIATE auto-save
-        if (triggerAutoSave && (isAddMode || isEditMode)) {
-          triggerAutoSave();
-        }
+        triggerDebouncedSave();
 
         return updated;
       } else {
@@ -759,13 +729,7 @@ const InterviewerSectionComponent = ({
           ];
 
           // Trigger auto-save after change
-          // if (triggerAutoSave && (isAddMode || isEditMode)) {
-          //   setTimeout(() => triggerAutoSave(), 500);
-          // }
-          // IMMEDIATE auto-save
-          if (triggerAutoSave && (isAddMode || isEditMode)) {
-            triggerAutoSave();
-          }
+          triggerDebouncedSave();
 
           return newData;
         }
@@ -813,9 +777,8 @@ const InterviewerSectionComponent = ({
         }
 
         // IMMEDIATE auto-save
-        if (triggerAutoSave && (isAddMode || isEditMode)) {
-          triggerAutoSave();
-        }
+        // Trigger auto-save after change
+        triggerDebouncedSave();
 
         return prev;
       }
@@ -1375,7 +1338,7 @@ const InterviewerSectionComponent = ({
             {/* QuestionBank Content */}
             <div className="flex-1 overflow-hidden">
               <QuestionBank
-                interviewQuestionsLists={interviewerSectionData || []}
+                interviewQuestionsLists={[interviewerSectionData, ...preselectedQuestionsResponses] || []}
                 type="feedback"
                 fromScheduleLater={true}
                 onAddQuestion={handleAddQuestionToRound}

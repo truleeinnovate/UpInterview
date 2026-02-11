@@ -3,7 +3,7 @@
 // v1.0.2 - Ashok - Fixed responsiveness issues
 
 /* eslint-disable no-lone-blocks */
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import Popup from "reactjs-popup";
 import { ThumbsUp, ThumbsDown, XCircle } from "lucide-react";
@@ -30,6 +30,18 @@ const SchedulerSectionComponent = ({
   handlePreselectedQuestionResponse,
   triggerAutoSave,
 }) => {
+  const saveTimeoutRef = useRef(null);
+
+  const triggerDebouncedSave = () => {
+    if (isAddMode || isEditMode) {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      saveTimeoutRef.current = setTimeout(() => {
+        if (triggerAutoSave) triggerAutoSave();
+      }, 1000);
+    }
+  };
   const location = useLocation();
   const feedbackData = location.state?.feedback || {};
 
@@ -106,7 +118,7 @@ const SchedulerSectionComponent = ({
     return "Not Answered";
   };
 
-  const [schedulerQuestionsData, setSchedulerQuestionsData] = useState(() => {
+  const mapQuestionsToState = useCallback(() => {
     return schedulerQuestions.map((q) => {
       // Find feedback for this question
       const feedback = questionsfeedback?.find(
@@ -116,12 +128,6 @@ const SchedulerSectionComponent = ({
       const preselectedResponse = preselectedQuestionsResponses?.find(
         (r) => r.questionId === q.questionId,
       );
-
-      // Find preselected response for this question
-      // const preselectedResponse = preselectedQuestionsResponses;
-      // ?.find(
-      //   (r) => r.questionId === (q.questionId || q._id),
-      // );
 
       console.log("preselectedResponse question", preselectedResponse);
 
@@ -172,7 +178,13 @@ const SchedulerSectionComponent = ({
         };
       }
     });
-  });
+  }, [schedulerQuestions, questionsfeedback, preselectedQuestionsResponses]);
+
+  const [schedulerQuestionsData, setSchedulerQuestionsData] = useState(() => mapQuestionsToState());
+
+  useEffect(() => {
+    setSchedulerQuestionsData(mapQuestionsToState());
+  }, [mapQuestionsToState]);
 
   // Initialize questionRef
   const questionRef = useRef(); // For future use, e.g., scrolling to a specific question
@@ -193,9 +205,7 @@ const SchedulerSectionComponent = ({
     }
 
     // Trigger auto-save after change
-    if (triggerAutoSave && (isAddMode || isEditMode)) {
-      triggerAutoSave();
-    }
+    triggerDebouncedSave();
   };
 
   // Function to handle dislike radio input changes
@@ -220,9 +230,7 @@ const SchedulerSectionComponent = ({
     }
 
     // Trigger auto-save after change
-    if (triggerAutoSave && (isAddMode || isEditMode)) {
-      triggerAutoSave();
-    }
+    triggerDebouncedSave();
   };
 
   // Function to handle dislike toggle
@@ -282,9 +290,7 @@ const SchedulerSectionComponent = ({
     }
 
     // Trigger auto-save after change
-    if (triggerAutoSave && (isAddMode || isEditMode)) {
-      triggerAutoSave();
-    }
+    triggerDebouncedSave();
   };
 
   // Function to handle like toggle
@@ -341,9 +347,7 @@ const SchedulerSectionComponent = ({
     }
 
     // Trigger auto-save after change
-    if (triggerAutoSave && (isAddMode || isEditMode)) {
-      triggerAutoSave();
-    }
+    triggerDebouncedSave();
   };
 
   // Function to handle add note
@@ -362,9 +366,7 @@ const SchedulerSectionComponent = ({
       });
     }
     // Trigger auto-save after change
-    if (triggerAutoSave && (isAddMode || isEditMode)) {
-      triggerAutoSave();
-    }
+    triggerDebouncedSave();
   };
 
   // // Function to handle delete note
@@ -399,10 +401,8 @@ const SchedulerSectionComponent = ({
       });
     }
 
-    // IMMEDIATE auto-save
-    if (triggerAutoSave && (isAddMode || isEditMode)) {
-      triggerAutoSave();
-    }
+    // Trigger auto-save after change
+    triggerDebouncedSave();
   };
 
   // Function to handle interview question notes
@@ -420,19 +420,8 @@ const SchedulerSectionComponent = ({
       handlePreselectedQuestionResponse(bankQuestionId, { note: notes });
     }
 
-    // IMMEDIATE auto-save
-    if (triggerAutoSave && (isAddMode || isEditMode)) {
-      triggerAutoSave();
-    }
-    // Debounced auto-save for notes (wait for user to stop typing)
-    // if (triggerAutoSave && (isAddMode || isEditMode)) {
-    //   if (noteTimeoutRef.current) {
-    //     clearTimeout(noteTimeoutRef.current);
-    //   }
-    //   noteTimeoutRef.current = setTimeout(() => {
-    //     triggerAutoSave();
-    //   }, 2000); // Wait 2 seconds after last keystroke
-    // }
+    // Debounced auto-save for notes
+    triggerDebouncedSave();
   };
 
   // Add cleanup for timeout:

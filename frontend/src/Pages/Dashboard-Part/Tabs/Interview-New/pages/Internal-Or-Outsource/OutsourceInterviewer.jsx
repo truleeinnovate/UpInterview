@@ -1697,7 +1697,8 @@ function OutsourcedInterviewerModal({
 
               <Button
                 // onClick={() => setShowWalletModal(true)}
-                onClick={() => window.open("/wallet-topup", "_blank")}
+                // onClick={() => window.open("/wallet-topup", "_blank")}
+                onClick={() => navigate("/wallet-topup", { state: { mode: "outsource" } })}
                 size="sm"
                 variant="outline"
                 className="gap-1 text-sm"
