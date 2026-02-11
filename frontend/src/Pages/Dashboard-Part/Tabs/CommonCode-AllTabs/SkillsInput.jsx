@@ -9,7 +9,7 @@ import {
   useRef,
   forwardRef,
   useImperativeHandle,
-  useMemo,
+  useCallback,
 } from "react";
 import { ReactComponent as FaTrash } from "../../../../icons/FaTrash.svg";
 // Removed FaEdit import - not needed for always-editable rows
@@ -260,6 +260,25 @@ const SkillsField = forwardRef(
     const [showSkillsPopup, setShowSkillsPopup] = useState(false);
     const [popupSearchTerm, setPopupSearchTerm] = useState("");
     const [popupSelectedSkills, setPopupSelectedSkills] = useState([]);
+    const [filteredSkillsForPopup, setFilteredSkillsForPopup] = useState([]);
+
+    // Filter skills whenever search term or skills data changes
+    useEffect(() => {
+      if (!skills || !Array.isArray(skills)) {
+        setFilteredSkillsForPopup([]);
+        return;
+      }
+      const term = (popupSearchTerm || "").trim().toLowerCase();
+      const filtered = skills
+        .filter((skill) => {
+          const name = getSkillName(skill);
+          if (!name) return false;
+          if (!term) return true;
+          return name.toLowerCase().includes(term);
+        })
+        .map((s) => getSkillName(s));
+      setFilteredSkillsForPopup(filtered);
+    }, [skills, popupSearchTerm]);
 
     // Get already selected skills from entries
     const getAlreadySelectedSkills = () => {
@@ -328,17 +347,10 @@ const SkillsField = forwardRef(
       handleCloseSkillsPopup();
     };
 
-    // Memoized filtered skills for popup - recomputes when skills or search term changes
-    const filteredSkillsForPopup = useMemo(() => {
-      if (!skills || !Array.isArray(skills)) return [];
-      const term = (popupSearchTerm || "").toLowerCase();
-      return skills
-        .filter((skill) => {
-          const name = getSkillName(skill);
-          return name && name.toLowerCase().includes(term);
-        })
-        .map((s) => getSkillName(s));
-    }, [skills, popupSearchTerm]);
+    // Search input handler - uses useCallback so it's stable across renders
+    const handlePopupSearchChange = useCallback((e) => {
+      setPopupSearchTerm(e.target.value);
+    }, []);
 
     return (
       <div ref={containerRef}>
@@ -409,7 +421,9 @@ const SkillsField = forwardRef(
                       type="text"
                       placeholder="Search skills..."
                       value={popupSearchTerm}
-                      onChange={(e) => setPopupSearchTerm(e.target.value)}
+                      onChange={handlePopupSearchChange}
+                      autoComplete="off"
+                      spellCheck="false"
                       className="w-full px-4 py-3 pl-10 border-2 border-custom-blue/30 rounded-lg focus:border-custom-blue focus:ring-2 focus:ring-custom-blue/20 outline-none transition-all text-gray-700 placeholder-gray-400"
                       autoFocus
                     />

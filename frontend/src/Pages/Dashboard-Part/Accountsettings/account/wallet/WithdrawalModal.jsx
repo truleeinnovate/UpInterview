@@ -44,6 +44,10 @@ export function WithdrawalModal({ onClose, onSuccess }) {
   // Balance already represents available funds (holdAmount was subtracted when holds were created)
   const availableBalance = walletData?.balance || 0;
 
+  // Maximum withdrawal limit per transaction
+  const MAX_WITHDRAWAL_AMOUNT = 200000;
+  const maxWithdrawable = Math.min(availableBalance, MAX_WITHDRAWAL_AMOUNT);
+
   // Calculate fees when amount changes
   useEffect(() => {
     const amountNum = parseFloat(amount);
@@ -69,6 +73,8 @@ export function WithdrawalModal({ onClose, onSuccess }) {
       newErrors.amount = "Please enter a valid amount";
     } else if (parseFloat(amount) < 100) {
       newErrors.amount = "Minimum withdrawal amount is ₹100";
+    } else if (parseFloat(amount) > MAX_WITHDRAWAL_AMOUNT) {
+      newErrors.amount = `Maximum withdrawal amount is ₹${MAX_WITHDRAWAL_AMOUNT.toLocaleString("en-IN")} per transaction`;
     } else if (parseFloat(amount) > availableBalance) {
       newErrors.amount = `Insufficient balance. Available: ₹${availableBalance?.toFixed(2)}`;
     }
@@ -210,20 +216,20 @@ export function WithdrawalModal({ onClose, onSuccess }) {
               <input
                 type="number"
                 min="100"
-                max={availableBalance || 0}
+                max={maxWithdrawable}
                 step="0.01"
                 value={amount}
                 disabled={availableBalance < 100}
                 onChange={(e) => {
                   const value = parseFloat(e.target.value);
-                  // Prevent entering amount greater than available balance
-                  if (value > availableBalance) {
-                    setAmount(availableBalance.toString());
-                    setErrors({ ...errors, amount: `Maximum available: ₹${availableBalance.toFixed(2)}` });
+                  // Prevent entering amount greater than max withdrawable
+                  if (value > maxWithdrawable) {
+                    setAmount(maxWithdrawable.toString());
+                    setErrors({ ...errors, amount: `Maximum withdrawal amount is ₹${MAX_WITHDRAWAL_AMOUNT.toLocaleString("en-IN")} per transaction` });
                   } else {
                     setAmount(e.target.value);
                     // Clear error if amount is valid
-                    if (value >= 100 && value <= availableBalance) {
+                    if (value >= 100 && value <= maxWithdrawable) {
                       const { amount, ...restErrors } = errors;
                       setErrors(restErrors);
                     }
@@ -232,19 +238,19 @@ export function WithdrawalModal({ onClose, onSuccess }) {
                 className={`w-full pl-8 pr-3 py-2 border ${errors.amount ? 'border-red-500' : 'border-gray-300'
                   } rounded-lg focus:outline-none ${availableBalance < 100 ? 'bg-gray-100 cursor-not-allowed' : ''
                   }`}
-                placeholder={`Enter amount (Max: ₹${availableBalance?.toFixed(2) || '0.00'})`}
+                placeholder={`Enter amount (Max: ₹${maxWithdrawable?.toLocaleString("en-IN")})`}
               />
             </div>
             {errors.amount && (
               <p className="mt-1 text-sm text-red-500">{errors.amount}</p>
             )}
             <div className="flex justify-between items-center mt-1">
-              <p className="text-xs text-gray-500">Min: ₹100 | Max: ₹{availableBalance?.toFixed(2) || '0.00'}</p>
-              {availableBalance > 100 && (
+              <p className="text-xs text-gray-500">Min: ₹100 | Max: ₹{maxWithdrawable?.toLocaleString("en-IN")}</p>
+              {maxWithdrawable > 100 && (
                 <button
                   type="button"
                   onClick={() => {
-                    setAmount(availableBalance.toString());
+                    setAmount(maxWithdrawable.toString());
                     const { amount, ...restErrors } = errors;
                     setErrors(restErrors);
                   }}

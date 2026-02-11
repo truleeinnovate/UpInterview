@@ -261,7 +261,16 @@ const createTopupOrder = async (req, res) => {
       key_id: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
+    // Razorpay SDK throws errors directly as { statusCode, error: { description } }
+    // Axios errors have error.response.data structure
     const razorpayErrorData = error?.response?.data;
+    const errorDescription =
+      razorpayErrorData?.error?.description ||
+      error?.error?.description ||
+      razorpayErrorData?.error?.reason ||
+      error?.error?.reason ||
+      null;
+
     console.error(
       "Error creating topup order:",
       razorpayErrorData || error
@@ -279,10 +288,8 @@ const createTopupOrder = async (req, res) => {
       },
     };
     res.status(500).json({
-      error:
-        razorpayErrorData?.error?.description ||
-        razorpayErrorData?.error?.reason ||
-        "Failed to create topup order",
+      error: errorDescription || "Failed to create topup order",
+      maxAmount: (errorDescription && errorDescription.includes("exceeds maximum")) ? 500000 : undefined,
     });
   }
 };
