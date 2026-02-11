@@ -221,10 +221,10 @@ const InterviewUserDetails = ({
                     <div className="relative group">
                       <span
                         className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs cursor-default"
-                        title={contactData.skills
-                          .slice(3)
-                          .map((skill) => formatSkill(skill))
-                          .join(", ")}
+                        // title={contactData.skills
+                        //   .slice(3)
+                        //   .map((skill) => formatSkill(skill))
+                        //   .join(", ")}
                       >
                         +{contactData.skills.length - 3} more
                       </span>
@@ -265,9 +265,13 @@ const InterviewUserDetails = ({
                 Years of Experience Conducting Interviews
               </p>
               <p className="text-sm font-medium">
-                {contactData?.previousExperienceConductingInterviewsYears ||
+                {/* {contactData?.previousExperienceConductingInterviewsYears ||
                   "0"}{" "}
-                years
+                Years */}
+                {contactData?.previousExperienceConductingInterviewsYears || "0"}{" "}
+                {Number(contactData?.previousExperienceConductingInterviewsYears) === 1 
+                  ? "Year" 
+                  : "Years"}
               </p>
             </div>
           )}

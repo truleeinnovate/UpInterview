@@ -248,7 +248,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">LinkedIn</p>
+            <p className="text-sm text-gray-500">LinkedIn URL</p>
             {/* <p className="font-medium truncate sm:text-sm">
                             {contactData.linkedinUrl || "Not Provided"}
                         </p> */}

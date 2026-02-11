@@ -2,6 +2,7 @@
 // v1.0.1 - Ashok - Changed Maximize and Minimize icons to follow consistent design
 // v1.0.2 - Ashok - Improved responsiveness and added common code to popup
 // v1.0.3 - Ashok - Added loading view when saving the form
+// v1.0.4 - Ashok - Two error messages are displaying for skills so commented error message
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 
@@ -1291,9 +1292,9 @@ const EditInterviewDetails = ({
                   </div>
                 )}
 
-                {errors.skills && (
+                {/* {errors.skills && (
                   <p className="text-red-500 text-xs mt-1">{errors.skills}</p>
-                )}
+                )} */}
 
                 {/* <p className="text-xs text-gray-500 mt-1">
                                     {formData.skills.length} of 10 skills selected
