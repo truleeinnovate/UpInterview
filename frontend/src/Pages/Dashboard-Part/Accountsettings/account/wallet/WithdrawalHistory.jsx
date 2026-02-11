@@ -218,6 +218,12 @@ export function WithdrawalHistory({ onClose }) {
 
         {/* Footer */}
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+          <button
+            onClick={() => setSelectedWithdrawal(null)}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium"
+          >
+            Close
+          </button>
           {["pending", "queued"].includes(withdrawal.status) && (
             <LoadingButton
               onClick={() => handleCancelWithdrawal(withdrawal._id, withdrawal.withdrawalCode)}
@@ -227,12 +233,7 @@ export function WithdrawalHistory({ onClose }) {
               Cancel Withdrawal
             </LoadingButton>
           )}
-          <button
-            onClick={() => setSelectedWithdrawal(null)}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium"
-          >
-            Close
-          </button>
+
         </div>
       </div>
     </div>,
