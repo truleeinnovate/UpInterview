@@ -428,7 +428,7 @@ const EditAvailabilityDetails = ({
                     onClick={() => handleOptionClick(duration)}
                   >
                     {duration} mins
-                  </i>
+                  </li>
                 ))}
               </ul>
             </div>
