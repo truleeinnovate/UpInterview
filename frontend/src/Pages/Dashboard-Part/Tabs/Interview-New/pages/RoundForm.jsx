@@ -2095,29 +2095,43 @@ const RoundFormInterviews = () => {
       } else {
         response = await saveInterviewRound(payload);
       }
-      console.log("response generateMeetingLink", response);
+      // console.log("response generateMeetingLink", response);
 
-      console.log("selectedMeetingPlatform", selectedMeetingPlatform);
+      // console.log("selectedMeetingPlatform", selectedMeetingPlatform);
 
-      console.log("roundData", roundData);
+      // console.log("roundData", roundData);
+
+      // ✅ STRICT SUCCESS CHECK
+      const isRoundSavedSuccessfully =
+        response &&
+        response.status === "ok" &&
+        (response.savedRound || response.updatedRound);
 
       // meeting gerating google or zoom etc......
       // After successful round create/update
-      if (response.status === "ok") {
+      if (isRoundSavedSuccessfully) {
         const roundIdToUse =
           response.savedRound?._id || response.updatedRound?._id || roundId;
+
+        // Extra safety: ensure roundId exists
+        if (!roundIdToUse) {
+          console.error("Round saved but no roundId returned.");
+          notify.warn("Round saved but meeting could not be initialized.");
+        }
 
         console.log("roundIdToUse", roundIdToUse);
 
         // Only generate meeting if backend says so
         if (
-          response.generateMeetingLink &&
+          roundIdToUse &&
+          response.generateMeetingLink === true &&
           roundData.interviewMode !== "Face to Face"
         ) {
-          setIsMeetingCreationLoading(true);
-          setMeetingCreationProgress("Creating meeting link...");
-
           try {
+            setIsMeetingCreationLoading(true);
+            setMeetingCreationProgress("Creating meeting link...");
+
+
             const { createMeeting } =
               await import("../../../../../utils/meetingPlatforms.js");
 
@@ -2239,7 +2253,14 @@ const RoundFormInterviews = () => {
             }
           } catch (err) {
             console.error("Meeting creation failed:", err);
-            notify.warn("Round saved, but meeting link could not be created.");
+            // ❗ Do NOT break main flow
+            notify.warn(
+              "Round saved successfully, but meeting link creation failed."
+            );
+            // notify.warn("Round saved, but meeting link could not be created.");
+          }
+          finally {
+            setIsMeetingCreationLoading(false);
           }
         }
       }

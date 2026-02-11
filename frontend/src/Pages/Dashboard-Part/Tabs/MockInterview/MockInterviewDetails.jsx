@@ -477,7 +477,7 @@ const MockInterviewDetails = () => {
       canEdit: true,
       canDelete: true,
       canMarkScheduled: false,
-      canReschedule: false,
+      // canReschedule: false,
       canCancel: false,
       canComplete: false,
       canFeedback: false,
@@ -488,39 +488,39 @@ const MockInterviewDetails = () => {
       canEdit: true,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: false,
+      // canReschedule: false,
       canCancel: false,
       canComplete: false,
       canFeedback: false,
       canNoShow: false,
     },
     Scheduled: {
-      canEdit: true,
+      canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: true,
+      // canReschedule: true,
       canCancel: true,
       canComplete: true,
       canFeedback: false,
       canNoShow: true,
       canFeedbackPending: false,
     },
-    Rescheduled: {
-      canEdit: true,
-      canDelete: false,
-      canMarkScheduled: false,
-      canReschedule: true,
-      canCancel: true,
-      canComplete: true,
-      canFeedback: false,
-      canNoShow: true,
-      canFeedbackPending: false,
-    },
+    // Rescheduled: {
+    //   canEdit: true,
+    //   canDelete: false,
+    //   canMarkScheduled: false,
+    //   // canReschedule: true,
+    //   canCancel: true,
+    //   canComplete: true,
+    //   canFeedback: false,
+    //   canNoShow: true,
+    //   canFeedbackPending: false,
+    // },
     Completed: {
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: false,
+      // canReschedule: false,
       canCancel: false,
       canComplete: false,
       canFeedback: true,
@@ -531,7 +531,7 @@ const MockInterviewDetails = () => {
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: false,
+      // canReschedule: false,
       canCancel: false,
       canComplete: true,
       canFeedback: false,
@@ -541,7 +541,7 @@ const MockInterviewDetails = () => {
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: true,
+      // canReschedule: true,
       canCancel: false,
       canComplete: false,
       canFeedback: false,
@@ -551,7 +551,7 @@ const MockInterviewDetails = () => {
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: true,
+      // canReschedule: true,
       canCancel: false,
       canComplete: false,
       canFeedback: false,
@@ -561,7 +561,7 @@ const MockInterviewDetails = () => {
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: true,
+      // canReschedule: true,
       canCancel: false,
       canComplete: false,
       canFeedback: false,
@@ -571,13 +571,27 @@ const MockInterviewDetails = () => {
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: false,
+      // canReschedule: false,
       canCancel: false,
       canComplete: false,
       canFeedback: false,
       canNoShow: false,
-      canEvaluated: false,
+      // canEvaluated: true,
       canFeedbackPending: false,
+    },
+    FeedbackSubmitted: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      // canReschedule: false,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: true,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: false,
+      // canEvaluated: true,
     },
   };
 
@@ -593,22 +607,22 @@ const MockInterviewDetails = () => {
     const actions = [];
 
     // Reschedule
-    if (
-      permissions.canReschedule &&
-      rounds[0]?.interviewType.toLowerCase() !== "instant"
-    ) {
-      actions.push({
-        label: "Reschedule",
-        icon: Calendar,
-        onClick: () =>
-          navigate(`/mock-interviews/${mockinterview?._id}/edit`, {
-            state: { isReschedule: true },
-          }),
-        className:
-          "inline-flex items-center  text-sm text-blue-700 bg-blue-50 hover:bg-blue-100",
-        showInMore: true,
-      });
-    }
+    // if (
+    //   permissions.canReschedule &&
+    //   rounds[0]?.interviewType.toLowerCase() !== "instant"
+    // ) {
+    //   actions.push({
+    //     label: "Reschedule",
+    //     icon: Calendar,
+    //     onClick: () =>
+    //       navigate(`/mock-interviews/${mockinterview?._id}/edit`, {
+    //         state: { isReschedule: true },
+    //       }),
+    //     className:
+    //       "inline-flex items-center  text-sm text-blue-700 bg-blue-50 hover:bg-blue-100",
+    //     showInMore: true,
+    //   });
+    // }
 
     // No Show
     if (permissions.canNoShow) {
@@ -910,9 +924,9 @@ const MockInterviewDetails = () => {
                     "RequestSent",
                   ].includes(rounds[0]?.status) &&
                     mockinterview?.rounds[0]?.interviewType.toLowerCase() ===
-                      "instant" &&
+                    "instant" &&
                     mockinterview?.rounds[0]?.status.toLowerCase() ===
-                      "draft" && (
+                    "draft" && (
                       <button
                         onClick={handleAddRound}
                         // to={`/mock-interview/${id}/edit`}
@@ -1008,7 +1022,7 @@ const MockInterviewDetails = () => {
                           <div
                             key={round._id}
                             className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden"
-                            // className="bg-white rounded-lg shadow-md overflow-hidden"
+                          // className="bg-white rounded-lg shadow-md overflow-hidden"
                           >
                             <button
                               onClick={() => toggleRound(round._id)}
@@ -1131,13 +1145,12 @@ const MockInterviewDetails = () => {
                     No, Cancel
                   </Button>
                   <Button
-                    className={`${
-                      confirmAction === "Cancelled" &&
+                    className={`${confirmAction === "Cancelled" &&
                       "bg-red-600 hover:bg-red-700"
-                    }`}
+                      }`}
                     variant="success"
                     onClick={() => handleConfirmStatusChange({ change: true })}
-                    // onClick={handleConfirmStatusChange({ change: true })}
+                  // onClick={handleConfirmStatusChange({ change: true })}
                   >
                     Yes, Confirm
                   </Button>
@@ -1254,7 +1267,7 @@ const MockInterviewDetails = () => {
                   </Button>
                   <Button
                     variant="destructive"
-                    // onClick={handleDeleteRound}
+                  // onClick={handleDeleteRound}
                   >
                     Delete
                   </Button>

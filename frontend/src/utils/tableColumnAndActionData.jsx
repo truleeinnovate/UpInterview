@@ -1009,17 +1009,17 @@ export const getMockInterviewActions = (navigate, options = {}) => {
             key: "edit",
             label: "Edit",
             icon: <Pencil className="w-4 h-4 text-green-600" />,
-            show: (row) => !["Completed", "RequestSent", "Scheduled", "Cancelled"].includes(row?.rounds?.[0]?.status),
+            show: (row) => !["Completed", "Scheduled", "Cancelled"].includes(row?.rounds?.[0]?.status),
             // show: (row) => row?.rounds?.[0]?.status === "Draft",
-            onClick: (row) => navigate(`/mock-interviews/${row._id}/edit`, { state: { from: "tableMode" } })
+            onClick: (row) => navigate(`/mock-interviews/${row._id}/edit`, { state: { from: "tableMode", isEdit: true } })
         }] : []),
-        {
-            key: "reschedule",
-            label: "Reschedule",
-            icon: <Clock className="w-4 h-4 text-custom-blue" />,
-            show: (row) => !["Draft", "Completed", "Cancelled"].includes(row?.rounds?.[0]?.status),
-            onClick: (row) => navigate(`/mock-interviews/${row._id}/edit`, { state: { from: locationState?.pathname || "/" } })
-        },
+        // {
+        //     key: "reschedule",
+        //     label: "Reschedule",
+        //     icon: <Clock className="w-4 h-4 text-custom-blue" />,
+        //     show: (row) => !["Draft", "Completed", "Cancelled"].includes(row?.rounds?.[0]?.status),
+        //     onClick: (row) => navigate(`/mock-interviews/${row._id}/edit`, { state: { from: locationState?.pathname || "/" } })
+        // },
         ...(callbacks.onCancel ? [{
             key: "cancel",
             label: "Cancel",
