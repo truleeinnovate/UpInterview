@@ -383,9 +383,9 @@ const EditAvailabilityDetails = ({
               <h2 className="block text-sm font-medium text-gray-900 mb-2">
                 Availability <span className="text-red-500">*</span>
               </h2>
-              {errors.TimeSlot && (
+              {/* {errors.TimeSlot && (
                 <p className="text-red-500 text-sm mb-2">{errors.TimeSlot}</p>
-              )}
+              )} */}
               {/* {errors.TimeSlot && (
                   <p className="text-red-500 text-sm mb-2">{errors.TimeSlot}</p>
                 )} */}

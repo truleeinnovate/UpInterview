@@ -908,7 +908,7 @@ const BasicDetailsEditPage = ({
                 onChange={handleInputChange}
                 inputRef={fieldRefs.linkedinUrl}
                 error={errors.linkedinUrl}
-                label="LinkedIn"
+                label="LinkedIn URL"
                 name="linkedinUrl"
                 required
               // disabled={true}
