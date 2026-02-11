@@ -1473,7 +1473,7 @@ export const getCompanyColumns = (navigate, options = {}) => {
             key: "industry",
             header: "Industry",
             render: (value) => (
-                <span className="text-gray-600 truncate max-w-[150px]">
+                <span className="block text-gray-600 truncate max-w-[150px]">
                     {capitalizeFirstLetter(value) || "N/A"}
                 </span>
             ),
@@ -1482,7 +1482,7 @@ export const getCompanyColumns = (navigate, options = {}) => {
             key: "primaryContactName",
             header: "Primary Contact",
             render: (value) => (
-                <span className="text-gray-600 truncate max-w-[150px]">
+                <span className="block text-gray-600 truncate max-w-[150px]">
                     {capitalizeFirstLetter(value) || "-"}
                 </span>
             ),
@@ -1491,7 +1491,7 @@ export const getCompanyColumns = (navigate, options = {}) => {
             key: "primaryContactEmail",
             header: "Contact Email",
             render: (value) => (
-                <span className="text-gray-600 truncate max-w-[200px]" title={value}>
+                <span className="block text-gray-600 truncate max-w-[200px]" title={value}>
                     {value || "-"}
                 </span>
             ),
@@ -1500,7 +1500,7 @@ export const getCompanyColumns = (navigate, options = {}) => {
             key: "website",
             header: "Website",
             render: (value) => (
-                <span className="text-gray-600 truncate max-w-[200px]">
+                <span className="block text-gray-600 truncate max-w-[200px]">
                     {value || "-"}
                 </span>
             ),
