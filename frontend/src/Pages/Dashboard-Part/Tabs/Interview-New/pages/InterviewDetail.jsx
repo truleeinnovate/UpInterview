@@ -33,7 +33,6 @@ import {
 } from "lucide-react";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb.jsx";
 import InterviewProgress from "../components/InterviewProgress";
-import StatusBadge from "../../CommonCode-AllTabs/StatusBadge.jsx";
 import FinalFeedbackModal from "../components/FinalFeedbackModal";
 
 import DateChangeConfirmationModal from "../components/DateChangeConfirmationModal"; // Import the modal
@@ -62,6 +61,7 @@ import TemplateDetail from "../../../../InteviewTemplates/TemplateDetail.jsx";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 // import FeeConfirmationModal from '../components/FeeConfirmationModal.js';
 import { formatDateTime } from "../../../../../utils/dateFormatter.js";
+import { StatusBadge } from "../../CommonCode-AllTabs/StatusBadge.jsx";
 
 const InterviewDetail = () => {
   const { id } = useParams();

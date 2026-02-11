@@ -33,6 +33,7 @@ const {
   getRoundScoreFromOutcome,
 } = require("./interviewRoundsController.js");
 const InterviewRequest = require("../models/InterviewRequest.js");
+const { scheduleOrRescheduleNoShow } = require("../services/interviews/roundNoShowScheduler.js");
 // Get single mock interview with rounds by id
 // GET /mockinterview/:id
 // exports.getMockInterviewDetails = async (req, res) => {
@@ -777,6 +778,7 @@ exports.createMockInterviewRound = async (req, res) => {
     if (hasSelectedInterviewers && hasDateTime) {
       finalStatus = "RequestSent";
       generateMeetingLink = true;
+
     }
 
     // Create round
@@ -1461,17 +1463,34 @@ exports.updateInterviewRoundStatus = async (req, res) => {
 
     let smartUpdate = null;
 
+    //  when candidate and interviewer both are present in the round then create history
     if (req.body?.History_Type === "Histoy_Handling") {
       // Special handling: only create history if conditions are met
-      const participants = existingRound.participants || [];
-      const isHistoryHandled = participants.some(
-        (p) => p.role.toLowerCase() === "interviewer" || p.role === "scheduler",
+      const participants = updatedRound?.participants || [];
+      // const isHistoryHandled = participants.some(
+      //   (p) => p.role.toLowerCase() === "interviewer" && p.role === "Candidate",
+      // );
+
+
+      const hasInterviewer = participants.some(
+        (p) => p.role === "Interviewer"
       );
 
-      if (!isHistoryHandled && action === "InProgress") {
+      const hasCandidate = participants.some(
+        (p) => p.role === "Candidate"
+      );
+
+      const isHistoryHandled = hasInterviewer && hasCandidate;
+
+
+      // && action === "InProgress"
+      if (isHistoryHandled) {
         // ONE-TIME SPECIAL HISTORY CREATION
+
+        // ONE-TIME SPECIAL HISTORY CREATION
+        let actionStatus = "InProgress"
         const smartBody = {
-          status: newStatus,
+          status: actionStatus,
           interviewerType: existingRound.interviewerType,
           selectedInterviewers: existingRound.interviewers,
           currentActionReason: reasonCode || null,

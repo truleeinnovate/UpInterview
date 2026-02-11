@@ -8,6 +8,7 @@ import InterviewsMiniTabComponent from "./MiniTabs/Interviews";
 import FeedbackForm from "../../../videoCall/FeedbackForm";
 // v1.0.0 <-----------------------------------------------------------
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { useFeedbackData } from "../../../../apiHooks/useFeedbacks";
 // v1.0.0 ----------------------------------------------------------->
 
 const tabsList = [
@@ -16,12 +17,12 @@ const tabsList = [
   { id: 3, tab: "Feedback Form" },
 ];
 
-const FeedbackFormModal = () => {
+const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
   const { state } = location;
-  const { mode = "view", feedback } = state || {};
+  const { mode = "view", feedback: routeFeedback } = state || {};
 
   const [activeTab, setActiveTab] = useState(1);
   const isEditMode = mode === "edit";
@@ -31,6 +32,24 @@ const FeedbackFormModal = () => {
   const handleClose = () => {
     navigate(-1); // Go back to previous page
   };
+
+
+
+
+  // Feedback query (existing)
+  const {
+    data: feedbackDatas,
+    isLoading: feedbackLoading,
+    isError: feedbackError,
+  } = useFeedbackData({
+    roundId: roundId,
+    // interviewerId: interviewerId,
+    interviewType: interviewType,
+  });
+
+
+
+  const feedback = feedbackDatas || routeFeedback;
 
   // Question Bank State Management
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
@@ -87,9 +106,9 @@ const FeedbackFormModal = () => {
             mandatory: newMandatory,
             snapshot: q.snapshot
               ? {
-                  ...q.snapshot,
-                  mandatory: newMandatory,
-                }
+                ...q.snapshot,
+                mandatory: newMandatory,
+              }
               : undefined,
           };
         }
@@ -179,13 +198,13 @@ const FeedbackFormModal = () => {
           className="flex items-center gap-8 cursor-pointer py-1 sm:px-4 px-8 
              overflow-x-auto whitespace-nowrap scrollbar-hide"
         >
+          { }
           {tabsList.map((EachTab) => (
             <li
               key={EachTab.id}
               onClick={() => setActiveTab(EachTab.id)}
-              className={`pb-2 flex-shrink-0 ${
-                activeTab === EachTab.id ? "border-b-2 border-[#227a8a]" : ""
-              }`}
+              className={`pb-2 flex-shrink-0 ${activeTab === EachTab.id ? "border-b-2 border-[#227a8a]" : ""
+                }`}
             >
               {EachTab.tab}
             </li>

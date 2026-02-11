@@ -47,15 +47,24 @@ async function scheduleOrRescheduleNoShow(roundDoc) {
 
   const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
 
+
+
+  if (roundDoc.roundTitle === "Assessment" && roundDoc?.assessmentId) {
+    console.log("[NoShow-Job] ❌ Round title is Assessment, exiting");
+    return;
+  }
+
   // ================ CRITICAL GUARDS ================
 
   // 1. Only for Internal interviews
-  if (roundDoc.interviewerType !== "Internal") {
-    console.log("[NoShow] ❌ GUARD 1 FAILED: interviewerType is", roundDoc.interviewerType, "(not Internal) → cancelling");
-    await cancelNoShow(roundDoc);
-    return;
-  }
-  console.log("[NoShow] ✅ GUARD 1 PASSED: interviewerType is Internal");
+  // if (roundDoc.interviewerType !== "Internal") {
+  //   console.log("[NoShow] ❌ GUARD 1 FAILED: interviewerType is", roundDoc.interviewerType, "(not Internal) → cancelling");
+  //   await cancelNoShow(roundDoc);
+  //   return;
+  // }
+
+
+  // console.log("[NoShow] ✅ GUARD 1 PASSED: interviewerType is Internal");
 
   // 2. Only when status is exactly "Scheduled" or "Rescheduled"
   if (!["Scheduled", "Rescheduled"].includes(roundDoc.status)) {
@@ -148,6 +157,11 @@ async function cancelNoShow(roundDoc) {
   console.log("[NoShow] cancelNoShow called for round:", roundDoc._id, "| existing noShowJobId:", roundDoc.noShowJobId);
 
   const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
+
+  if (roundDoc.roundTitle === "Assessment" && roundDoc?.assessmentId) {
+    console.log("[NoShow-Job] ❌ Round title is Assessment, exiting");
+    return;
+  }
 
   if (roundDoc.noShowJobId) {
     try {
