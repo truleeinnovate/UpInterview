@@ -6,6 +6,7 @@ import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarP
 import { Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, Filter } from "lucide-react";
 import LoadingButton from "../../../../../Components/LoadingButton";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
+import DeleteConfirmModal from "../../../Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
 
 export function WithdrawalHistory({ onClose }) {
   useScrollLock(true);
@@ -22,6 +23,8 @@ export function WithdrawalHistory({ onClose }) {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [showStatusFilter, setShowStatusFilter] = useState(false);
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
+  const [confirmCancelId, setConfirmCancelId] = useState(null);
+  const [confirmCancelCode, setConfirmCancelCode] = useState("");
 
   // API hooks
   const { data, isLoading, refetch } = useWithdrawalRequests(ownerId, selectedStatus);
@@ -53,16 +56,24 @@ export function WithdrawalHistory({ onClose }) {
   ];
 
   const handleCancelWithdrawal = (withdrawalId, withdrawalCode) => {
-    if (window.confirm(`Are you sure you want to cancel withdrawal ${withdrawalCode}?`)) {
+    setSelectedWithdrawal(null);
+    setConfirmCancelId(withdrawalId);
+    setConfirmCancelCode(withdrawalCode);
+  };
+
+  const handleConfirmCancel = () => {
+    if (confirmCancelId) {
       cancelWithdrawal(
         {
-          withdrawalRequestId: withdrawalId,
+          withdrawalRequestId: confirmCancelId,
           reason: "User requested cancellation"
         },
         {
           onSuccess: () => {
             refetch();
             setSelectedWithdrawal(null);
+            setConfirmCancelId(null);
+            setConfirmCancelCode("");
           }
         }
       );
@@ -402,6 +413,15 @@ export function WithdrawalHistory({ onClose }) {
 
       {/* Withdrawal Details Modal */}
       {selectedWithdrawal && renderWithdrawalDetails(selectedWithdrawal)}
+
+      {/* Cancel Withdrawal Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!confirmCancelId}
+        onClose={() => { setConfirmCancelId(null); setConfirmCancelCode(""); }}
+        onConfirm={handleConfirmCancel}
+        title="Withdrawal"
+        entityName={confirmCancelCode}
+      />
     </>
   );
 }
