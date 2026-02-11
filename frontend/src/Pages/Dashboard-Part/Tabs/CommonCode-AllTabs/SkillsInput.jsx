@@ -264,6 +264,13 @@ const SkillsField = forwardRef(
 
     // Filter skills whenever search term or skills data changes
     useEffect(() => {
+      console.log("🔍 [SkillsPopup] useEffect triggered", {
+        popupSearchTerm,
+        skillsLength: skills?.length,
+        isArray: Array.isArray(skills),
+        firstSkill: skills?.[0],
+        firstSkillName: skills?.[0] ? getSkillName(skills[0]) : "N/A",
+      });
       if (!skills || !Array.isArray(skills)) {
         setFilteredSkillsForPopup([]);
         return;
@@ -277,6 +284,12 @@ const SkillsField = forwardRef(
           return name.toLowerCase().includes(term);
         })
         .map((s) => getSkillName(s));
+      console.log("🔍 [SkillsPopup] Filtered result", {
+        term,
+        totalSkills: skills.length,
+        filteredCount: filtered.length,
+        first5Filtered: filtered.slice(0, 5),
+      });
       setFilteredSkillsForPopup(filtered);
     }, [skills, popupSearchTerm]);
 
@@ -349,6 +362,11 @@ const SkillsField = forwardRef(
 
     // Search input handler - uses useCallback so it's stable across renders
     const handlePopupSearchChange = useCallback((e) => {
+      console.log("🔍 [SkillsPopup] onChange fired", {
+        value: e.target.value,
+        eventType: e.type,
+        nativeEvent: e.nativeEvent?.inputType,
+      });
       setPopupSearchTerm(e.target.value);
     }, []);
 
@@ -498,6 +516,11 @@ const SkillsField = forwardRef(
                 <div className="flex-1 overflow-y-auto px-6 py-4">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {(() => {
+                      console.log("🔍 [SkillsPopup] Rendering grid", {
+                        filteredCount: filteredSkillsForPopup.length,
+                        popupSearchTerm,
+                        first5: filteredSkillsForPopup.slice(0, 5),
+                      });
                       const filteredSkills = filteredSkillsForPopup;
 
                       if (filteredSkills.length === 0) {

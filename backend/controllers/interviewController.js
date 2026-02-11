@@ -601,6 +601,7 @@ const updateInterview = async (req, res) => {
       status,
       orgId,
       userId,
+      isOrganization,
       updatingInterviewStatus,
       completionReason,
       currentReason, // Added currentReason
