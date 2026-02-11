@@ -14,6 +14,7 @@ import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarP
 import InputField from "../../../../../Components/FormFields/InputField.jsx";
 import DropdownSelect from "../../../../../Components/Dropdowns/DropdownSelect.jsx";
 import LoadingButton from "../../../../../Components/LoadingButton.jsx";
+import DeleteConfirmModal from "../../../Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
 
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
@@ -39,6 +40,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
   const [isAddingAccount, setIsAddingAccount] = useState(false);
   const [errors, setErrors] = useState({}); //<-----v1.0.0-----
   const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [newAccount, setNewAccount] = useState({
     accountName: "",
     accountNumber: "",
@@ -127,16 +129,28 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
   };
 
   const handleRemoveAccount = (accountId) => {
-    if (window.confirm("Are you sure you want to remove this bank account?")) {
+    setConfirmDeleteId(accountId);
+  };
+
+  const handleConfirmDelete = () => {
+    if (confirmDeleteId) {
       deleteBankAccount(
-        { bankAccountId: accountId, ownerId },
+        { bankAccountId: confirmDeleteId, ownerId },
         {
           onSuccess: () => {
             refetch();
+            setConfirmDeleteId(null);
+          },
+          onError: () => {
+            setConfirmDeleteId(null);
           }
         }
       );
     }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDeleteId(null);
   };
 
   const handleVerifyAccount = (accountId) => {
@@ -459,6 +473,18 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
           isAddingAccount ? renderAccountForm() : renderAccountsList()
         )}
       </div>
+
+      {/* Delete Confirmation Popup */}
+      <DeleteConfirmModal
+        isOpen={!!confirmDeleteId}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Bank Account"
+        entityName={(() => {
+          const account = bankAccounts.find(a => a._id === confirmDeleteId);
+          return account ? `${account.accountHolderName} - ${account.bankName}` : "";
+        })()}
+      />
     </SidebarPopup>
   );
   // v1.0.2 ---------------------------------------------------------------------->

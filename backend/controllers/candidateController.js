@@ -1144,7 +1144,7 @@ const getCandidateResumes = async (req, res) => {
   try {
     const { id } = req.params;
     const resumes = await Resume.find({ candidateId: id })
-      .sort({ createdAt: -1 })
+      .sort({ _id: -1 })
       .lean();
 
     res.json(resumes);

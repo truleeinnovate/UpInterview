@@ -214,7 +214,13 @@ export function WalletTopupPopup({ onClose, onTopup }) {
       razorpay.open();
     } catch (error) {
       console.error("Top-up failed:", error);
-      setError(error.response?.data?.error || error.message || "Top-up failed");
+      const errorMsg = error.response?.data?.error || error.message || "Top-up failed";
+      const maxAmount = error.response?.data?.maxAmount;
+      if (maxAmount) {
+        setError(`${errorMsg} Maximum top-up amount is ₹${maxAmount.toLocaleString("en-IN")}.`);
+      } else {
+        setError(errorMsg);
+      }
       setIsProcessing(false);
     }
   };
