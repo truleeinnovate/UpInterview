@@ -725,7 +725,7 @@ const PositionSlideDetails = () => {
                       <Edit className="h-4 w-4 mr-1.5" />
                       Edit Position
                     </Link>
-                    <button
+                    {isOrganization && <button
                       onClick={() => {
                         if (position?.status !== "opened") {
                           notify.error("Position needs to be open to upload resumes");
@@ -738,13 +738,14 @@ const PositionSlideDetails = () => {
                       <Plus className="h-4 w-4 mr-1.5" />
                       Upload Resumes
                     </button>
-                    <button
+                    }
+                    {/* <button
                       onClick={() => setShowAddCandidateModal(true)}
                       className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
                     >
                       <Users className="h-4 w-4 mr-1.5" />
                       Add Candidate
-                    </button>
+                    </button> */}
                   </div>
                 </div>
                 {/* v1.0.8 - End Header Section */}
