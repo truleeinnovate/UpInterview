@@ -9,6 +9,7 @@ import {
   useRef,
   forwardRef,
   useImperativeHandle,
+  useMemo,
 } from "react";
 import { ReactComponent as FaTrash } from "../../../../icons/FaTrash.svg";
 // Removed FaEdit import - not needed for always-editable rows
@@ -270,6 +271,8 @@ const SkillsField = forwardRef(
       setPopupSelectedSkills(getAlreadySelectedSkills());
       setPopupSearchTerm("");
       setShowSkillsPopup(true);
+      // Ensure skills data is loaded when popup opens
+      if (onOpenSkills) onOpenSkills();
     };
 
     // Handle closing the popup
@@ -325,16 +328,17 @@ const SkillsField = forwardRef(
       handleCloseSkillsPopup();
     };
 
-    // Get all skills for popup (filtered by search)
-    const getFilteredSkillsForPopup = () => {
+    // Memoized filtered skills for popup - recomputes when skills or search term changes
+    const filteredSkillsForPopup = useMemo(() => {
+      if (!skills || !Array.isArray(skills)) return [];
+      const term = (popupSearchTerm || "").toLowerCase();
       return skills
-        .filter((skill) =>
-          getSkillName(skill)
-            .toLowerCase()
-            .includes(popupSearchTerm.toLowerCase()),
-        )
+        .filter((skill) => {
+          const name = getSkillName(skill);
+          return name && name.toLowerCase().includes(term);
+        })
         .map((s) => getSkillName(s));
-    };
+    }, [skills, popupSearchTerm]);
 
     return (
       <div ref={containerRef}>
@@ -480,7 +484,7 @@ const SkillsField = forwardRef(
                 <div className="flex-1 overflow-y-auto px-6 py-4">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {(() => {
-                      const filteredSkills = getFilteredSkillsForPopup();
+                      const filteredSkills = filteredSkillsForPopup;
 
                       if (filteredSkills.length === 0) {
                         return (
