@@ -830,11 +830,11 @@ const InterviewForm = () => {
                           label: `${candidate.FirstName || ""} ${candidate.LastName || ""
                             } (${candidate.Email || ""})`,
                         })) || []),
-                        {
-                          value: "add_new",
-                          label: "+ Add New Candidate",
-                          isSticky: true,
-                        },
+                        // {
+                        //   value: "add_new",
+                        //   label: "+ Add New Candidate",
+                        //   isSticky: true,
+                        // },
                       ]}
                       onChange={(e) => {
                         const value = e?.target?.value || e?.value;
@@ -869,13 +869,13 @@ const InterviewForm = () => {
                           value: position._id,
                           label: position.title,
                         })) || []),
-                        {
-                          value: "add_new",
-                          label: "+ Add New Position",
-                          isSticky: true,
-                          className:
-                            "text-blue-600 font-medium hover:bg-blue-50",
-                        },
+                        // {
+                        //   value: "add_new",
+                        //   label: "+ Add New Position",
+                        //   isSticky: true,
+                        //   className:
+                        //     "text-blue-600 font-medium hover:bg-blue-50",
+                        // },
                       ]}
                       onChange={(e) => {
                         const value = e?.target?.value || e?.value;
