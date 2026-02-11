@@ -418,7 +418,7 @@ const EditAvailabilityDetails = ({
             </label>
             <div className="border border-gray-500 text-sm p-3 rounded-lg w-full">
               <ul className="flex text-xs font-medium space-x-3">
-                {["30", "45", "60", "90"].map((duration) => (
+                {["30","60", "90"].map((duration) => (
                   <li
                     key={duration}
                     className={`option cursor-pointer inline-block py-2 px-3 rounded-lg border border-custom-blue ${formData.selectedOption === duration
@@ -428,7 +428,7 @@ const EditAvailabilityDetails = ({
                     onClick={() => handleOptionClick(duration)}
                   >
                     {duration} mins
-                  </li>
+                  </i>
                 ))}
               </ul>
             </div>
