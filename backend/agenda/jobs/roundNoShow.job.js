@@ -13,6 +13,11 @@ module.exports = (agenda) => {
       return;
     }
 
+    if (round.roundTitle === "Assessment" && round?.assessmentId) {
+      console.log("[NoShow-Job] ❌ Round title is Assessment, exiting");
+      return;
+    }
+
     console.log("[NoShow-Job] Round found:", round._id, "| status:", round.status, "| interviewerType:", round.interviewerType);
 
     // 🔐 Double safety — must be Scheduled or Rescheduled (matches scheduler guard)

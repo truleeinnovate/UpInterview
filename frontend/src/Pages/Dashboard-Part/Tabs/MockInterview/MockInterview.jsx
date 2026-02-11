@@ -566,27 +566,27 @@ const MockInterview = () => {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
-      show: (row) => row?.rounds?.[0]?.status === "Draft",
+      show: (row) => row?.rounds?.[0]?.status === "Draft" || row?.rounds?.[0]?.status === "RequestSent",
       onClick: (row) =>
         navigate(`/mock-interviews/${row._id}/edit`, {
           state: { from: location.pathname },
         }),
     },
-    {
-      key: "reschedule",
-      label: "Reschedule",
-      icon: <Timer className="w-4 h-4 text-custom-blue" />,
-      show: (row) =>
-        !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(
-          row?.rounds?.[0]?.status
-        ),
-      onClick: (row) =>
-        navigate(`/mock-interviews/${row._id}/edit`, {
-          state: { from: location.pathname },
-        }),
+    // {
+    //   key: "reschedule",
+    //   label: "Reschedule",
+    //   icon: <Timer className="w-4 h-4 text-custom-blue" />,
+    //   show: (row) =>
+    //     !["Draft", "Completed", "Rejected", "Selected", "Cancelled"].includes(
+    //       row?.rounds?.[0]?.status
+    //     ),
+    //   onClick: (row) =>
+    //     navigate(`/mock-interviews/${row._id}/edit`, {
+    //       state: { from: location.pathname },
+    //     }),
 
-      // onClick: (row) => onRescheduleClick(row),
-    },
+    //   // onClick: (row) => onRescheduleClick(row),
+    // },
     {
       key: "cancel",
       label: "Cancel",

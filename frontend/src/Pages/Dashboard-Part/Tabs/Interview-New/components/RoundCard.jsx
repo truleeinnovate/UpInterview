@@ -984,7 +984,7 @@ const RoundCard = ({
       canCancelAssessment: true,
       canNoShow: true,
       canSkipped: false,
-      canEvaluated: true,
+      canEvaluated: false,
     },
     Rescheduled: {
       canEdit: true,
@@ -1154,7 +1154,7 @@ const RoundCard = ({
       canShareLink: false,
       canNoShow: false,
       canSkipped: false,
-      canEvaluated: true,
+      // canEvaluated: true,
     },
   };
 
@@ -1875,8 +1875,8 @@ const RoundCard = ({
                     )}
 
                   {/* Evaluated */}
-                  {permissions.canEvaluated &&
-                    round.roundTitle !== "Assessment" && (
+                  {(permissions.canEvaluated ||
+                    (round.roundTitle === "Assessment" && round?.status === "Cancelled")) && (
                       <button
                         onClick={() => handleActionClick("Evaluated")}
                         className="inline-flex items-center px-3 py-2 border border-teal-300 text-sm rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100"
@@ -2023,6 +2023,17 @@ const RoundCard = ({
                         Resend Link
                       </button>
                     )}
+
+                  {/* Evaluated */}
+                  {/* {permissions.canEvaluated &&
+                    round.roundTitle === "Assessment" && (
+                      <button
+                        onClick={() => handleActionClick("Evaluated")}
+                        className="inline-flex items-center px-3 py-2 border border-teal-300 text-sm rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100"
+                      >
+                        <ClipboardList className="h-4 w-4 mr-1" /> Evaluated
+                      </button>
+                    )} */}
 
                   {/* Share (always for Assessment) */}
                   {permissions.canShareLink &&

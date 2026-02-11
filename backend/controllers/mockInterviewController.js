@@ -1445,6 +1445,20 @@ exports.updateInterviewRoundStatus = async (req, res) => {
       }
     }
 
+    // Interviewer IDs from round
+    const interviewerIds = (existingRound?.interviewers || []).map((id) => id);
+
+
+    const draftCount = await FeedbackModel.countDocuments({
+      interviewRoundId: existingRound?._id,
+      interviewerId: { $in: interviewerIds },
+      status: "draft",
+    });
+
+    const allInterviewersDraft = draftCount === interviewerIds.length;
+
+    console.log("interviewerIds", allInterviewersDraft);
+
     let smartUpdate = null;
 
     if (req.body?.History_Type === "Histoy_Handling") {
@@ -1484,29 +1498,48 @@ exports.updateInterviewRoundStatus = async (req, res) => {
         rescheduleReason: reasonCode || null,
       };
 
-      smartUpdate = await buildSmartRoundUpdate({
-        existingRound,
-        body: smartBody,
-        actingAsUserId,
-        statusChanged: true,
-      });
+      if (
+        action === "Completed" &&
+        allInterviewersDraft &&
+        existingRound.interviewMode === "Virtual"
+      ) {
+        smartUpdate = await buildSmartRoundUpdate({
+          existingRound,
+          body: {
+            ...smartBody,
+            status: "FeedbackPending", // Override status to FeedbackPending if feedback is still in draft
+          },
+          actingAsUserId,
+          statusChanged: true,
+        });
+      } else if (!allInterviewersDraft && action === "Completed") {
+        smartUpdate = await buildSmartRoundUpdate({
+          existingRound,
+          body: {
+            ...smartBody,
+            status: "FeedbackSubmitted", // Override status to FeedbackPending if feedback is still in draft
+          },
+          actingAsUserId,
+          statusChanged: true,
+        });
+      } else {
+
+        smartUpdate = await buildSmartRoundUpdate({
+          existingRound,
+          body: smartBody,
+          actingAsUserId,
+          statusChanged: true,
+        });
+      }
     }
 
     // Extra logic ONLY for Cancelled (outside smart update)
     let extraUpdate = { $set: {} };
     let shouldSendCancellationEmail = false;
 
-    if (
-      action === "Completed" &&
-      existingRound.interviewerType === "External"
-    ) {
-      // Check for submitted feedback
-      const feedback = await FeedbackModel.findOne({
-        interviewRoundId: existingRound._id,
-      });
-
+    if (action === "Completed") {
       // Auto-settlement for completed interviews ONLY if feedback is submitted
-      if (feedback && feedback.status === "submitted") {
+      if (existingRound.interviewerType === "External") {
         try {
           await processAutoSettlement({
             roundId: existingRound._id.toString(),
@@ -1524,12 +1557,13 @@ exports.updateInterviewRoundStatus = async (req, res) => {
           );
           // Continue with status update even if settlement fails
         }
-      } else {
-        console.log(
-          "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
-          existingRound._id,
-        );
       }
+      // //  else {
+      // //   console.log(
+      // //     "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
+      // //     existingRound._id,
+      // //   );
+      // }
     }
 
     if (action === "Cancelled") {
@@ -1576,18 +1610,18 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     }
 
     // Handle Evaluated action - save roundOutcome and evaluation reason
-    if (action === "Evaluated") {
-      if (roundOutcome) {
-        extraUpdate.$set.roundOutcome = roundOutcome;
-        extraUpdate.$set.roundScore = getRoundScoreFromOutcome(roundOutcome);
-      }
-      if (reason) {
-        extraUpdate.$set.currentActionReason = reason;
-      }
-      if (comment) {
-        extraUpdate.$set.comments = comment;
-      }
-    }
+    // if (action === "Evaluated") {
+    //   if (roundOutcome) {
+    //     extraUpdate.$set.roundOutcome = roundOutcome;
+    //     extraUpdate.$set.roundScore = getRoundScoreFromOutcome(roundOutcome);
+    //   }
+    //   if (reason) {
+    //     extraUpdate.$set.currentActionReason = reason;
+    //   }
+    //   if (comment) {
+    //     extraUpdate.$set.comments = comment;
+    //   }
+    // }
 
     // Merge smartUpdate (status + history) with extraUpdate (cancel-specific)
     // function mergeUpdates(a, b) {
