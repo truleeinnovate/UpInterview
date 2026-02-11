@@ -1430,7 +1430,7 @@ const CombinedNavbar = React.memo(() => {
                                     ? [{ to: "/companies", label: "Companies" }]
                                     : []),
                                   ...(enhancedCheckPermission("QuestionBank")
-                                    ? [{ to: "/question-bank", label: "QuestionBank" }]
+                                    ? [{ to: "/question-bank", label: "Question Bank" }]
                                     : []),
                                   ...(enhancedCheckPermission("Feedback")
                                     ? [{ to: "/feedback", label: "Feedback" }]

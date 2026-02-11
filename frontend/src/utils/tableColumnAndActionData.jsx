@@ -1509,7 +1509,7 @@ export const getCompanyColumns = (navigate, options = {}) => {
             key: "description",
             header: "Description",
             render: (value) => (
-                <span className="text-gray-600 truncate max-w-[240px]">
+                <span className="block text-gray-600 truncate max-w-[240px]">
                     {value || "-"}
                 </span>
             ),
