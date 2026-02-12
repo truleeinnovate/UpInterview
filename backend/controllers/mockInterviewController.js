@@ -814,6 +814,7 @@ exports.createMockInterviewRound = async (req, res) => {
       await handleInterviewerRequestFlow({
         interviewId: mockInterviewId,
         round: savedRound,
+        expiryDateTime: round.expiryDateTime,
         selectedInterviewers: req.body.round?.selectedInterviewers,
         isMockInterview: true,
       });
@@ -1211,6 +1212,7 @@ exports.updateMockInterviewRound = async (req, res) => {
       await handleInterviewerRequestFlow({
         interviewId: mockInterviewId,
         round: updatedRound,
+        expiryDateTime: req.body.round?.expiryDateTime,//passing directly expiryDateTime from req.body
         selectedInterviewers: req.body.round?.selectedInterviewers,
         isMockInterview: true,
       });

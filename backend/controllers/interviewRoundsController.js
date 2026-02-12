@@ -332,6 +332,7 @@ const saveInterviewRound = async (req, res) => {
       await handleInterviewerRequestFlow({
         interviewId,
         round: savedRound,
+        expiryDateTime: round.expiryDateTime,//passing directly expiryDateTime from req.body
         selectedInterviewers: req.body.round?.selectedInterviewers,
         isMockInterview: false,
       });
@@ -1203,6 +1204,7 @@ const updateInterviewRound = async (req, res) => {
     await handleInterviewerRequestFlow({
       interviewId,
       round: existingRound,
+      expiryDateTime:round.expiryDateTime,
       selectedInterviewers: req.body.round?.selectedInterviewers,
       isMockInterview: false,
     });
@@ -2206,9 +2208,11 @@ async function handleInterviewQuestions(interviewId, roundId, questions) {
 async function handleInterviewerRequestFlow({
   interviewId,
   round,
+  expiryDateTime,
   selectedInterviewers,
   // cancelOldRequests = false,
 }) {
+  console.log("handleInterviewerRequestFlow round", round)
   const { createRequest } = require("./InterviewRequestController.js");
 
   const interview = await Interview.findById(interviewId).lean();
@@ -2248,7 +2252,7 @@ async function handleInterviewerRequestFlow({
           candidateId: interview.candidateId,
           positionId: interview.positionId,
           roundId: round._id,
-          expiryDateTime: round.expiryDateTime,
+          expiryDateTime,
           isMockInterview: false,
         },
       },

@@ -12,6 +12,7 @@ const { sendOutsourceInterviewRequestEmails } = require('../../controllers/Email
 async function handleInterviewerRequestFlow({
   interviewId,
   round,
+  expiryDateTime,
   selectedInterviewers = [],
   isMockInterview = false,
   // cancelOldRequests = false, // you can add back later if needed
@@ -68,7 +69,7 @@ async function handleInterviewerRequestFlow({
           candidateId: isMockInterview ? undefined : interview.candidateId,
           positionId: isMockInterview ? undefined : interview.positionId,
           roundId: round._id,
-          expiryDateTime: round.expiryDateTime,
+          expiryDateTime,
           isMockInterview,
           requestMessage: round.interviewerType === 'Internal'
             ? 'Internal interview request'
