@@ -879,7 +879,7 @@ export const getInterviewTemplateActions = (navigate, options = {}) => {
             icon: <Pencil className="w-4 h-4 text-green-600" />,
             onClick: (row) => callbacks.onEdit?.(row)
         }] : []),
-        ...(permissions.InterviewTemplates?.Create ? [{
+        ...(permissions.InterviewTemplates?.Clone ? [{
             key: "clone",
             label: "Duplicate",
             icon: <Repeat className="w-4 h-4 text-blue-600" />,
