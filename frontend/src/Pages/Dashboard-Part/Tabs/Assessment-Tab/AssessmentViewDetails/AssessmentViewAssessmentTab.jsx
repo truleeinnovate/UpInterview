@@ -217,12 +217,12 @@ function AssessmentsTab({ assessment }) {
   return (
     <>
       {/* <---------------------- v1.0.1 */}
-      <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-88px)] p-4 pb-20">
+      <div className="space-y-6 overflow-y-auto">
         <div className="flex justify-end items-center">
           {hasSections && (
             <button
               onClick={() => setIsShareOpen(true)}
-              className="flex items-center px-4 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/90 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="flex items-center px-4 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/90 transition-colors"
             >
               <UserPlusIcon className="w-5 h-5 mr-2" />
               New Assessment

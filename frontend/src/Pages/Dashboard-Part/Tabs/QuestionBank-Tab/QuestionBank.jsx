@@ -28,6 +28,7 @@ const QuestionBank = ({
   isEmbedded = false,
   onSelectQuestion = () => { },
   isMeetingSidePanel,
+  customHeight,
 }) => {
   const { checkPermission, isInitialized } = usePermissionCheck();
   const { effectivePermissions } = usePermissions();
@@ -171,6 +172,7 @@ const QuestionBank = ({
             interviewQuestionsLists={interviewQuestionsLists}
             removedQuestionIds={removedQuestionIds}
             isMeetingSidePanel={isMeetingSidePanel}
+            customHeight={customHeight}
           />
         )}
         {activeTab === "MyQuestionsList" && (
@@ -196,6 +198,7 @@ const QuestionBank = ({
             activeTab={activeTab}
             sidebarOpen={sidebarOpen} //<---v1.0.0-----
             setSidebarOpen={setSidebarOpen} //<---v1.0.0-----
+            customHeight={customHeight}
           />
         )}
       </div>

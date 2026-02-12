@@ -63,10 +63,10 @@ function HeaderBar({
   return (
     // <div className="flex items-center sm:justify-start justify-end px-4 py-3 marker:flex-shrink-0 overflow-x-auto">
     <div
-      className={`flex items-center px-4 py-3 flex-shrink-0
+      className={`flex px-7
         ${isMeetingSidePanel
           ? "justify-start overflow-auto"
-          : "justify-end sm:justify-start md:justify-start lg:justify-start overflow-x-auto"
+          : "justify-end sm:justify-start md:justify-start lg:justify-start xl:justify-end 2xl:justify-end overflow-x-auto"
         }
       `}
     >
@@ -230,6 +230,7 @@ const SuggestedQuestionsComponent = ({
   interviewQuestionsLists,
   removedQuestionIds = [],
   isMeetingSidePanel,
+  customHeight,
 }) => {
   const navigate = useNavigate();
   const [skillInput, setSkillInput] = useState("");
@@ -1159,7 +1160,7 @@ const SuggestedQuestionsComponent = ({
           {/* Content */}
           {/* v1.0.5 <----------------------------------------------------------------- */}
           {/* v1.0.7 <----------------------------------------------------------------------------------------- */}
-          <div className="flex-1 overflow-y-auto sm:px-2 px-5 py-4">
+          <div className="flex-1 overflow-y-auto sm:px-2 py-4">
             {([
               ...selectedSkills,
               ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
@@ -1218,9 +1219,12 @@ const SuggestedQuestionsComponent = ({
             {/* v1.0.7 <----------------------------------------------------------------------- */}
             <ul
               // className="flex flex-col gap-4 pr-2 h-[calc(100vh-362px)] overflow-y-auto"
-              className="flex flex-col gap-4 pr-2 overflow-y-auto pb-20"
+              className="flex flex-col overflow-y-auto pb-8 px-4"
               style={{
-                height: `calc(100vh - ${isMeetingSidePanel ? 362 : 206}px)`,
+                // height: `calc(100vh - ${isMeetingSidePanel ? 362 : 206}px)`,
+                height: customHeight 
+                  ? customHeight 
+                  : `calc(100vh - ${isMeetingSidePanel ? 362 : 182}px)`,
               }}
             >
               {/* Render only unlocked cards first */}
@@ -1230,7 +1234,7 @@ const SuggestedQuestionsComponent = ({
                   return (
                     <div
                       key={index}
-                      className="border rounded-lg h-full shadow-sm transition-shadow text-sm border-gray-200 hover:shadow-md"
+                      className="border mb-4 rounded-lg h-full shadow-sm transition-shadow text-sm border-gray-200 hover:shadow-md"
                     >
                       <div className="flex justify-between items-center border-b border-gray-200 px-4">
                         {/* v1.0.6 <---------------------------------------------------------------------------- */}

@@ -12,11 +12,12 @@ const ConfirmationPopup = ({
   message,
   onConfirm,
   onCancel,
-  confirmText = "Yes, I'm sure",
-  cancelText = "No, cancel",
+  confirmText = "Save",
+  cancelText = "Cancel",
   singleButton = false,
   onSingleButtonClick,
   singleButtonText = "OK",
+  buttonColor = "bg-custom-blue"
 }) => {
   if (!isOpen) return null;
 
@@ -26,22 +27,22 @@ const ConfirmationPopup = ({
       className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity"
     >
       {/* Added max-w-md for responsive width, smoother UI */}
-      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all scale-100 hover:scale-[1.01]">
+      <div className="bg-white mx-4 p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all scale-100 hover:scale-[1.01]">
         <div className="text-center">
           {/* Made icon slightly larger + margin adjustments */}
-          <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
+          {/* <AlertCircle className={`mx-auto mb-4 h-16 w-16`} /> */}
 
           {/* Title: bold, darker gray */}
-          <h3 className="mb-3 text-xl font-semibold text-gray-800">{title}</h3>
+          <h3 className="mb-6 text-xl font-semibold text-gray-800">{title}</h3>
 
           {/* Message: softer gray + better readability */}
           <p className="mb-6 text-sm text-gray-600">{message}</p>
 
           {/* Buttons: spacing + styling improvements */}
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-end gap-3">
             {singleButton ? (
               <button
-                className="px-5 py-2 rounded-xl bg-custom-blue text-white font-medium  focus:outline-none focus:ring-2  transition"
+                className="px-4 h-9 rounded-md bg-custom-blue text-white font-medium  focus:outline-none focus:ring-2  transition"
                 onClick={onSingleButtonClick}
               >
                 {singleButtonText}
@@ -49,16 +50,16 @@ const ConfirmationPopup = ({
             ) : (
               <>
                 <button
-                  className="px-5 py-2 rounded-xl bg-custom-blue text-white font-medium  focus:outline-none focus:ring-2  transition"
-                  onClick={onConfirm}
-                >
-                  {confirmText}
-                </button>
-                <button
-                  className="px-5 py-2 rounded-xl bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition"
+                  className="px-4 h-9 rounded-md bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition"
                   onClick={onCancel}
                 >
                   {cancelText}
+                </button>
+                <button
+                  className={`px-4 h-9 rounded-md text-white font-medium  focus:outline-none focus:ring-2  transition ${buttonColor}`}
+                  onClick={onConfirm}
+                >
+                  {confirmText}
                 </button>
               </>
             )}

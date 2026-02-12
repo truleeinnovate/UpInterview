@@ -156,7 +156,7 @@ const AssessmentListModal = ({
         {/* Category/Technology */}
         <div className="mb-2">
           <div className="flex items-start gap-1">
-            <label className="text-sm text-gray-800">Category/Technology</label>
+            <label className="text-sm text-gray-800">Category / Technology</label>
             <label className="text-red-500">*</label>
           </div>
           <input
