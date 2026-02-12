@@ -2674,9 +2674,7 @@ const AddCandidateForm = ({
               variant="outline"
               type="button"
               onClick={handleClose}
-              disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className="text-custom-blue border border-custom-blue transition-colors"
             >
               Cancel
             </Button>
@@ -2687,8 +2685,12 @@ const AddCandidateForm = ({
                 type="button"
                 onClick={(e) => {
                   if (onSaveStart && isModal) onSaveStart();
+                  setActiveButton("skip");
                   handleSubmit(e, false);
                 }}
+                //isLoading={activeButton === "skip"}
+                loadingText="Saving..."
+                disabled={activeButton !== null && activeButton === "skip"}
                 className="text-gray-600 border border-gray-300 from-input"
               >
                 Skip & Save
@@ -2698,10 +2700,12 @@ const AddCandidateForm = ({
             <LoadingButton
               onClick={(e) => {
                 if (onSaveStart && isModal) onSaveStart();
+                setActiveButton("save");
                 handleSubmit(e, false);
               }}
-              isLoading={isMutationLoading}
+              // isLoading={activeButton === "save"}
               loadingText={id ? "Updating..." : "Saving..."}
+              disabled={activeButton !== null && activeButton === "save"}
               className="bg-custom-blue text-white"
             >
               {id ? "Update Candidate" : "Save Candidate"}

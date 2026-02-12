@@ -45,7 +45,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
   const availableBalance = walletData?.balance || 0;
 
   // Maximum withdrawal limit per transaction
-  const MAX_WITHDRAWAL_AMOUNT = 200000;
+  const MAX_WITHDRAWAL_AMOUNT = 50000;
   const maxWithdrawable = Math.min(availableBalance, MAX_WITHDRAWAL_AMOUNT);
 
   // Calculate fees when amount changes
@@ -277,10 +277,6 @@ export function WithdrawalModal({ onClose, onSuccess }) {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Processing Fee (2%):</span>
                   <span className="text-red-600">- ₹{fees.processingFee.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">GST (18%):</span>
-                  <span className="text-red-600">- ₹{fees.tax.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-1 flex justify-between font-medium">
                   <span className="text-gray-700">You'll Receive:</span>

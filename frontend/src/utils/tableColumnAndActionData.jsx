@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Eye, CircleUser, Pencil, Trash, Repeat, Calendar, ExternalLink, MessageSquare, Building2, Users, Tag, FileText, Video, User, Building, CheckCircle2, XCircle, Clock, Star, Plus, AlertTriangle, Timer } from "lucide-react";
+import { Mail, Eye, CircleUser, Pencil, Trash, Repeat, Calendar, ExternalLink, MessageSquare, Building2, Users, Tag, FileText, Video, User, Building, CheckCircle2, XCircle, Clock, Star, Plus, AlertTriangle, Timer, Files } from "lucide-react";
 import { formatDateTime } from "./dateFormatter.js";
 import { capitalizeFirstLetter } from "./CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import StatusBadge from "../Components/SuperAdminComponents/common/StatusBadge.jsx";
@@ -881,8 +881,8 @@ export const getInterviewTemplateActions = (navigate, options = {}) => {
         }] : []),
         ...(permissions.InterviewTemplates?.Clone ? [{
             key: "clone",
-            label: "Duplicate",
-            icon: <Repeat className="w-4 h-4 text-blue-600" />,
+            label: "Clone",
+            icon: <Files className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => callbacks.onClone?.(row)
         }] : []),
         ...(permissions.InterviewTemplates?.Delete ? [{
