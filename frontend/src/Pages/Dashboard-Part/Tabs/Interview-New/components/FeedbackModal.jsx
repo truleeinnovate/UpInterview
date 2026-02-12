@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 
 function FeedbackModal({ onClose, interviewId, round }) {
   const modalRef = useRef(null);
-  
+
   const [overallRating, setOverallRating] = useState(3);
   const [communicationRating, setCommunicationRating] = useState(3);
   const [skillRatings, setSkillRatings] = useState([
@@ -21,9 +21,9 @@ function FeedbackModal({ onClose, interviewId, round }) {
 
   // Get interviewers for this round
   const interviewers = round?.interviewers
-    // .map(id => getInterviewerById(id))
-    // .filter(Boolean);
-    
+  // .map(id => getInterviewerById(id))
+  // .filter(Boolean);
+
 
   // Handle click outside to close
   useEffect(() => {
@@ -76,18 +76,18 @@ function FeedbackModal({ onClose, interviewId, round }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Validate form
     if (skillRatings.some(skill => !skill.skill.trim())) {
       setError('Please provide a name for all skills');
       return;
     }
-    
+
     if (questionsAsked.some(q => !q.trim())) {
       setError('Please fill in all questions or remove empty ones');
       return;
     }
-    
+
     if (!comments.trim()) {
       setError('Please provide overall comments');
       return;
@@ -97,7 +97,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
       setError('Please select an interviewer or choose consolidated feedback');
       return;
     }
-    
+
     const feedback = {
       overallRating,
       skillRatings,
@@ -108,7 +108,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
       interviewerId: isConsolidatedFeedback ? undefined : selectedInterviewer || undefined,
       isConsolidated: isConsolidatedFeedback
     };
-    
+
     // addDetailedFeedback(interviewId, round.id, feedback);
     onClose();
   };
@@ -123,8 +123,8 @@ function FeedbackModal({ onClose, interviewId, round }) {
             onClick={() => onChange(star)}
             className="focus:outline-none"
           >
-            <Star 
-              className={`h-5 w-5 ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300 dark:text-gray-600'}`} 
+            <Star
+              className={`h-5 w-5 ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
             />
           </button>
         ))}
@@ -134,8 +134,8 @@ function FeedbackModal({ onClose, interviewId, round }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50 overflow-y-auto">
-      <motion.div 
-        ref={modalRef} 
+      <motion.div
+        ref={modalRef}
         className="bg-card h-full w-1/2 shadow-xl p-6 overflow-y-auto glass-sidebar"
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
@@ -152,21 +152,21 @@ function FeedbackModal({ onClose, interviewId, round }) {
             <X className="h-5 w-5" />
           </Button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-md">
               <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             </div>
           )}
-          
+
           {interviewers?.length > 1 && (
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md">
               <div className="flex items-center mb-3">
                 <Users className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2" />
                 <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300">Multiple Interviewers Detected</h3>
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center">
                   <input
@@ -180,7 +180,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
                     Provide consolidated feedback for all interviewers
                   </label>
                 </div>
-                
+
                 <div>
                   <div className="flex items-center">
                     <input
@@ -194,7 +194,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
                       Provide feedback for a specific interviewer
                     </label>
                   </div>
-                  
+
                   {!isConsolidatedFeedback && (
                     <div className="mt-2 ml-6">
                       <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">
@@ -206,11 +206,10 @@ function FeedbackModal({ onClose, interviewId, round }) {
                             key={interviewer.id}
                             type="button"
                             onClick={() => setSelectedInterviewer(interviewer.id)}
-                            className={`flex items-center p-2 rounded-md ${
-                              selectedInterviewer === interviewer.id 
-                                ? 'bg-blue-200 dark:bg-blue-800 border border-blue-400 dark:border-blue-600' 
+                            className={`flex items-center p-2 rounded-md ${selectedInterviewer === interviewer.id
+                                ? 'bg-blue-200 dark:bg-blue-800 border border-blue-400 dark:border-blue-600'
                                 : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/30'
-                            }`}
+                              }`}
                           >
                             <InterviewerAvatar interviewer={interviewer} size="sm" />
                             <span className="ml-2 text-sm">
@@ -226,7 +225,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
               </div>
             </div>
           )}
-          
+
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
               Overall Rating *
@@ -236,7 +235,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
               <span className="ml-2 text-sm text-muted-foreground">{overallRating}/5</span>
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
               Communication Rating *
@@ -246,7 +245,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
               <span className="ml-2 text-sm text-muted-foreground">{communicationRating}/5</span>
             </div>
           </div>
-          
+
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-medium text-foreground">
@@ -263,7 +262,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
                 Add Skill
               </Button>
             </div>
-            
+
             <div className="space-y-3">
               {skillRatings.map((skill, index) => (
                 <div key={index} className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 p-3 bg-secondary/50 rounded-md border border-border">
@@ -284,8 +283,8 @@ function FeedbackModal({ onClose, interviewId, round }) {
                             onClick={() => handleSkillChange(index, 'rating', star)}
                             className="focus:outline-none"
                           >
-                            <Star 
-                              className={`h-4 w-4 ${star <= skill.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300 dark:text-gray-600'}`} 
+                            <Star
+                              className={`h-4 w-4 ${star <= skill.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
                             />
                           </button>
                         ))}
@@ -316,7 +315,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
               ))}
             </div>
           </div>
-          
+
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-medium text-foreground">
@@ -333,7 +332,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
                 Add Question
               </Button>
             </div>
-            
+
             <div className="space-y-2">
               {questionsAsked.map((question, index) => (
                 <div key={index} className="flex items-center space-x-2">
@@ -358,7 +357,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
               ))}
             </div>
           </div>
-          
+
           <div>
             <label htmlFor="comments" className="block text-sm font-medium text-foreground mb-1">
               Overall Comments *
@@ -372,7 +371,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
               placeholder="Provide overall feedback about the candidate's performance..."
             />
           </div>
-          
+
           <div>
             <label htmlFor="recommendation" className="block text-sm font-medium text-foreground mb-1">
               Recommendation *
@@ -390,7 +389,7 @@ function FeedbackModal({ onClose, interviewId, round }) {
               <option value="Strong No">Strong No</option>
             </select>
           </div>
-          
+
           <div className="flex justify-end space-x-3">
             <Button
               type="button"

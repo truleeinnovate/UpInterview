@@ -104,14 +104,17 @@ export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
       //   // url += `?interviewType=${interviewType}`;
       // }
 
+      const params = {
+        interviewType,
+      };
+
+      if (interviewerId) {
+        params.interviewerId = interviewerId;
+      }
+
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/feedback/round/${roundId}`,
-        {
-          params: {
-            interviewerId,
-            interviewType,
-          },
-        },
+        { params }
       );
 
       // {

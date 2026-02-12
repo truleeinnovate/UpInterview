@@ -27,7 +27,7 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
   const [activeTab, setActiveTab] = useState(1);
   const isEditMode = mode === "edit";
 
-  const isViewMode = mode === "view";
+  const isViewMode = mode === "view" || Viewmode;
 
   const handleClose = () => {
     navigate(-1); // Go back to previous page
@@ -50,6 +50,10 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
 
 
   const feedback = feedbackDatas || routeFeedback;
+
+
+
+
 
   // Question Bank State Management
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
@@ -188,7 +192,9 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
     }
   };
 
-  if (!feedback) return null;
+  if (feedback && feedback.length === 0) {
+    return <div>No feedback found</div>;
+  }
 
   return (
     // v1.0.0 <-----------------------------------------------------------------------------
