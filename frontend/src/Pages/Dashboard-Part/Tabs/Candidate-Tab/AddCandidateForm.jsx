@@ -2269,8 +2269,7 @@ const AddCandidateForm = ({
       {currentFormStep === 2 && (
         <>
           <div className="bg-custom-blue/10 text-custom-blue p-3 rounded-lg mb-6 text-sm border border-blue-100 flex items-center">
-            The following details are optional but help us understand the
-            candidate better. You can skip and save or add them now.
+            The following details are optional but will help interviewers better understand the candidate. You can skip and save or add them now.
           </div>
           <div className="space-y-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2521,7 +2520,6 @@ const AddCandidateForm = ({
             </div>
 
             {/* Work Experience Heading */}
-            {/* Work Experience Heading */}
             <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
               Work Experience
             </p>
@@ -2537,12 +2535,7 @@ const AddCandidateForm = ({
                   inputRef={fieldRefs.professionalSummary}
                   error={errors.professionalSummary}
                   // placeholder="Briefly describe your professional background..."
-                  placeholder="Experienced Full-Stack Developer with over 8 years of expertise in building scalable web applications.
-                Proven track record of leading technical teams and delivering high-impact software solutions.
-                Specialized in React, Node.js, and Cloud Infrastructure with a focus on performance.
-                Committed to writing clean, maintainable code and implementing robust CI/CD pipelines.
-                Adept at collaborating with stakeholders to translate business needs into technical roadmaps.
-                Passionate about mentoring developers and staying at the forefront of emerging technologies."
+                  placeholder="Experienced software engineer with 5+ years in full-stack development&#10;Proven track record in building scalable web applications&#10;Strong problem-solving skills and team collaboration"
                   rows={6}
                   minLength={200}
                   maxLength={1500}
@@ -2656,12 +2649,7 @@ const AddCandidateForm = ({
                 inputRef={fieldRefs.keyAchievements}
                 error={errors.keyAchievements}
                 // placeholder="List your major career milestones..."
-                placeholder="Led a team to deliver a $2M digital transformation project.
-                Optimized queries, reducing page load times by 40%.
-                Implemented a new process that increased retention by 15%.
-                Mentored 5 junior developers into full-stack roles.
-                Migrated legacy architecture to cloud microservices.
-                Awarded 'Employee of the Year' for project excellence."
+                placeholder="Increased team productivity by 40% through implementation of automated testing&#10;Led successful migration of legacy system serving 10,000+ users&#10;Received 'Employee of the Year' award for exceptional performance"
                 rows={6}
                 minLength={150}
                 maxLength={1000}

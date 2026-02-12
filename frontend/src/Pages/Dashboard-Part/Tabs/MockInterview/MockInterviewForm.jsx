@@ -40,7 +40,9 @@ import { notify } from "../../../../services/toastService.js";
 // import { createMeeting } from "../../../../utils/meetingPlatforms.js";
 import { useVideoSettingsQuery } from "../../../../apiHooks/VideoDetail.js";
 import DateChangeConfirmationModal from "../Interview-New/components/DateChangeConfirmationModal.jsx";
-
+const {
+  calculateExpiryDate,
+} = require("../../../../utils/calculateExpiryDateForInterviewRequests.js");
 // v1.0.1 ---------------------------------------------------------------->
 
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
@@ -1559,6 +1561,8 @@ const MockSchedulelater = () => {
       const effectiveInterviewType = overrides.interviewType || interviewType;
       const effectiveCombinedDateTime =
         overrides.combinedDateTime || combinedDateTime;
+      const interviewDateTime = new Date(effectiveCombinedDateTime);
+      const expiryDateTime = calculateExpiryDate(interviewDateTime);
 
       // Determine update type
       let updateType = "FULL_UPDATE";
@@ -1576,6 +1580,7 @@ const MockSchedulelater = () => {
         dateTime: effectiveCombinedDateTime,
         selectedInterviewers: externalInterviewers,
         maxHourlyRate: externalMaxHourlyRate,
+        expiryDateTime,
       };
 
       let roundResponse;
