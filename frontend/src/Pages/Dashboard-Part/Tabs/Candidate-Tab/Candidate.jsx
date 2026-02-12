@@ -540,6 +540,14 @@ function Candidate({
 
   const FilteredData = () => {
     if (!Array.isArray(dataToUse)) return [];
+
+    // For main Candidates view (server-side filtering), return the data as is.
+    // The backend handles search, status, etc., and returns paginated results.
+    // Client-side filtering is only needed for client-side data (Assessment/Position views).
+    if (!isAssessmentView && !isPositionView) {
+      return dataToUse;
+    }
+
     return dataToUse.filter((user) => {
       const fieldsToSearch = [
         user.LastName,
@@ -582,6 +590,7 @@ function Candidate({
       // v1.0.2 <-----------------------------------------------------------------
       // NEW: normalize and check full name (both orders)
       const normalizedQuery = normalizeSpaces(searchQuery);
+      const queryTerms = normalizedQuery.split(" ").filter(Boolean);
 
       const fullNameNormal = normalizeSpaces(
         `${user.FirstName || ""} ${user.LastName || ""}`,
@@ -591,12 +600,18 @@ function Candidate({
         `${user.LastName || ""} ${user.FirstName || ""}`,
       );
 
-      const matchesSearchQuery =
-        fieldsToSearch.some((field) =>
-          normalizeSpaces(field).includes(normalizedQuery),
-        ) ||
-        fullNameNormal.includes(normalizedQuery) ||
-        fullNameReverse.includes(normalizedQuery);
+      // Build a comprehensive search string from all searchable fields
+      const searchableText = [
+        user.FirstName,
+        user.LastName,
+        user.Email,
+        user.Phone,
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      // Check if EVERY search term is present in the combined searchable text
+      const matchesSearchQuery = queryTerms.every((term) =>
+        searchableText.includes(term)
+      );
 
       //<-----v1.0.4--------
       // Created date filter

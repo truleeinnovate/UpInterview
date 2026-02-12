@@ -260,38 +260,9 @@ const SkillsField = forwardRef(
     const [showSkillsPopup, setShowSkillsPopup] = useState(false);
     const [popupSearchTerm, setPopupSearchTerm] = useState("");
     const [popupSelectedSkills, setPopupSelectedSkills] = useState([]);
-    const [filteredSkillsForPopup, setFilteredSkillsForPopup] = useState([]);
 
-    // Filter skills whenever search term or skills data changes
-    useEffect(() => {
-      console.log("🔍 [SkillsPopup] useEffect triggered", {
-        popupSearchTerm,
-        skillsLength: skills?.length,
-        isArray: Array.isArray(skills),
-        firstSkill: skills?.[0],
-        firstSkillName: skills?.[0] ? getSkillName(skills[0]) : "N/A",
-      });
-      if (!skills || !Array.isArray(skills)) {
-        setFilteredSkillsForPopup([]);
-        return;
-      }
-      const term = (popupSearchTerm || "").trim().toLowerCase();
-      const filtered = skills
-        .filter((skill) => {
-          const name = getSkillName(skill);
-          if (!name) return false;
-          if (!term) return true;
-          return name.toLowerCase().includes(term);
-        })
-        .map((s) => getSkillName(s));
-      console.log("🔍 [SkillsPopup] Filtered result", {
-        term,
-        totalSkills: skills.length,
-        filteredCount: filtered.length,
-        first5Filtered: filtered.slice(0, 5),
-      });
-      setFilteredSkillsForPopup(filtered);
-    }, [skills, popupSearchTerm]);
+    // Max skills to display in popup grid to prevent DOM overload
+    const MAX_POPUP_SKILLS = 100;
 
     // Get already selected skills from entries
     const getAlreadySelectedSkills = () => {
@@ -360,13 +331,8 @@ const SkillsField = forwardRef(
       handleCloseSkillsPopup();
     };
 
-    // Search input handler - uses useCallback so it's stable across renders
+    // Search input handler
     const handlePopupSearchChange = useCallback((e) => {
-      console.log("🔍 [SkillsPopup] onChange fired", {
-        value: e.target.value,
-        eventType: e.type,
-        nativeEvent: e.nativeEvent?.inputType,
-      });
       setPopupSearchTerm(e.target.value);
     }, []);
 
@@ -516,12 +482,22 @@ const SkillsField = forwardRef(
                 <div className="flex-1 overflow-y-auto px-6 py-4">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {(() => {
-                      console.log("🔍 [SkillsPopup] Rendering grid", {
-                        filteredCount: filteredSkillsForPopup.length,
-                        popupSearchTerm,
-                        first5: filteredSkillsForPopup.slice(0, 5),
-                      });
-                      const filteredSkills = filteredSkillsForPopup;
+                      // Compute filtered skills SYNCHRONOUSLY during render
+                      // (useEffect was too slow - ran AFTER render causing stale data with 2071 skills)
+                      const term = (popupSearchTerm || "").trim().toLowerCase();
+                      const allFiltered = (!skills || !Array.isArray(skills))
+                        ? []
+                        : skills
+                          .filter((skill) => {
+                            const name = getSkillName(skill);
+                            if (!name) return false;
+                            if (!term) return true;
+                            return name.toLowerCase().includes(term);
+                          })
+                          .map((s) => getSkillName(s));
+
+                      const totalMatches = allFiltered.length;
+                      const filteredSkills = allFiltered.slice(0, MAX_POPUP_SKILLS);
 
                       if (filteredSkills.length === 0) {
                         return (
@@ -538,42 +514,49 @@ const SkillsField = forwardRef(
                         );
                       }
 
-                      return filteredSkills.map((skillName) => {
-                        const isSelected =
-                          popupSelectedSkills.includes(skillName);
-                        return (
-                          <button
-                            key={skillName}
-                            type="button"
-                            onClick={() => toggleSkillInPopup(skillName)}
-                            title={skillName}
-                            className={`
-                              px-4 py-3 rounded-lg border-2 text-left text-sm font-medium transition-all duration-150
-                              ${isSelected
-                                ? "border-custom-blue bg-custom-blue/10 text-custom-blue ring-2 ring-custom-blue/20"
-                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-                              }
-                            `}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="truncate">{skillName}</span>
-                              {isSelected && (
-                                <svg
-                                  className="w-5 h-5 text-custom-blue flex-shrink-0 ml-2"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                              )}
-                            </div>
-                          </button>
-                        );
-                      });
+                      return (<>
+                        {filteredSkills.map((skillName) => {
+                          const isSelected =
+                            popupSelectedSkills.includes(skillName);
+                          return (
+                            <button
+                              key={skillName}
+                              type="button"
+                              onClick={() => toggleSkillInPopup(skillName)}
+                              title={skillName}
+                              className={`
+                                px-4 py-3 rounded-lg border-2 text-left text-sm font-medium transition-all duration-150
+                                ${isSelected
+                                  ? "border-custom-blue bg-custom-blue/10 text-custom-blue ring-2 ring-custom-blue/20"
+                                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                                }
+                              `}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="truncate">{skillName}</span>
+                                {isSelected && (
+                                  <svg
+                                    className="w-5 h-5 text-custom-blue flex-shrink-0 ml-2"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                        {totalMatches > MAX_POPUP_SKILLS && (
+                          <div className="col-span-full text-center py-3 text-sm text-gray-500">
+                            Showing {MAX_POPUP_SKILLS} of {totalMatches} skills. Type to refine your search.
+                          </div>
+                        )}
+                      </>);
                     })()}
                   </div>
                 </div>

@@ -20,7 +20,7 @@ exports.getLogs = async (req, res) => {
 
     let query = {};
     if (search) {
-      query = {
+      query.$and = {
         $or: [
           { logId: { $regex: search, $options: "i" } },
           { processName: { $regex: search, $options: "i" } },
@@ -173,8 +173,8 @@ exports.getLogsSummary = async (req, res) => {
     const selectedStatuses = Array.isArray(statusFilter?.$in)
       ? statusFilter.$in
       : typeof statusFilter === "string"
-      ? [statusFilter]
-      : null;
+        ? [statusFilter]
+        : null;
 
     const shouldCount = (s) =>
       !selectedStatuses || selectedStatuses.includes(s);
@@ -185,15 +185,15 @@ exports.getLogsSummary = async (req, res) => {
         : Promise.resolve(0),
       shouldCount("warning")
         ? InternalLog.countDocuments({
-            ...queryWithoutStatus,
-            status: "warning",
-          })
+          ...queryWithoutStatus,
+          status: "warning",
+        })
         : Promise.resolve(0),
       shouldCount("success")
         ? InternalLog.countDocuments({
-            ...queryWithoutStatus,
-            status: "success",
-          })
+          ...queryWithoutStatus,
+          status: "success",
+        })
         : Promise.resolve(0),
     ]);
 

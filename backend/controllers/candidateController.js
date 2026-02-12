@@ -623,10 +623,40 @@ const getCandidatesData = async (req, res) => {
     // Build base candidate query
     let candidateQuery = { tenantId: req.tenantId };
 
-    // Search optimization - use text index
+    // Search - split multi-word queries for AND matching across name fields
     if (search) {
-      candidateQuery.$text = { $search: search };
+      // Robustly parse search terms: handle array/string, split by space/comma, decode URI
+      let searchString = Array.isArray(search) ? search.join(" ") : String(search);
+      try {
+        searchString = decodeURIComponent(searchString);
+      } catch (e) {
+        // ignore decode error
+      }
+
+      const searchWords = searchString
+        .replace(/,/g, " ") // Treat commas as spaces
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+      if (searchWords.length > 0) {
+        // Each word must match at least one field (AND across words)
+        candidateQuery.$and = searchWords.map(word => {
+          const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const wordRegex = new RegExp(escapedWord, "i");
+          return {
+            $or: [
+              { FirstName: wordRegex },
+              { LastName: wordRegex },
+              { Email: wordRegex },
+              { Phone: wordRegex },
+            ]
+          };
+        });
+      }
+      //console.log('🔍 [Candidate Search] Terms:', searchWords, 'Query:', JSON.stringify(candidateQuery.$and, (k, v) => v instanceof RegExp ? v.toString() : v));
     }
+
 
     // Use aggregation to join with Resume collection
     const pipeline = [
