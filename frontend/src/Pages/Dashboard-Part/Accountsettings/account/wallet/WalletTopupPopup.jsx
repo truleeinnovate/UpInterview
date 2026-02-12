@@ -143,23 +143,28 @@ export function WalletTopupPopup({ onClose, onTopup }) {
 
             if (verification?.success) {
 
-              // Update UI with new wallet data
               if (modeState) {
                 navigate(-1)
 
               } else {
 
-                onTopup({
-                  amount: parseFloat(amount),
-                  paymentMethod: "credit_card",
-                  type: "credited",
-                  transactionId: response.razorpay_payment_id,
-                  timestamp: new Date(),
-                });
+                if (typeof onTopup === "function") {
+                  onTopup({
+                    amount: parseFloat(amount),
+                    paymentMethod: "credit_card",
+                    type: "credited",
+                    transactionId: response.razorpay_payment_id,
+                    timestamp: new Date(),
+                  });
+                }
               }
 
               notify.success("Wallet top-up successful!");
-              onClose();
+              if (typeof onClose === "function") {
+                onClose();
+              } else {
+                navigate("/wallet");
+              }
             } else {
               //console.error('Backend did not confirm success:', verification);//----v1.0.0----->
               setError("Payment verification failed. Please try again.");
@@ -233,7 +238,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
 
   return (
     // v1.0.3 <-----------------------------------------------------
-    <SidebarPopup title="Wallet Top-up" onClose={onClose}>
+    <SidebarPopup title="Wallet Top-up" onClose={() => navigate("/wallet")}>
       <div className="flex flex-col h-full">
         {/* Scrollable content */}
         <div className="p-4 sm:p-0 flex-1 overflow-y-auto">
