@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ViewDetailsButton } from "../../common/Buttons";
 
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import WalletBalancePopup from "./WalletBalancePopup";
 import WalletTransactionPopup from "./WalletTransactionPopup";
 import { WalletTopupPopup } from "./WalletTopupPopup";
@@ -62,6 +62,7 @@ const Wallet = () => {
   const [isWithdrawalHistoryOpen, setIsWithdrawalHistoryOpen] = useState(false);
   const [animateTopUp, setAnimateTopUp] = useState(true);
   const topUpButtonRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setAnimateTopUp(true);
@@ -556,7 +557,7 @@ const Wallet = () => {
 
       {isTopupOpen && (
         <WalletTopupPopup
-          onClose={() => setIsTopupOpen(false)}
+          onClose={() => navigate("/wallet")}
           onTopup={handleTopup}
         />
       )}
