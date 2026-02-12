@@ -65,7 +65,9 @@ const saveInterviewRound = async (req, res) => {
     const hasAssessment =
       !!round?.assessmentId
     // || !!round?.selectedAssessmentData;
-    console.log("hasAssessment hasAssessment", hasAssessment)
+    // console.log("hasAssessment hasAssessment", hasAssessment)
+    // console.log("round?.selectedInterviewers", round?.selectedInterviewers)
+    // console.log("round?.interviewers", round?.interviewers)
 
     const isAttemptingToSchedule =
       hasInterviewers || hasSelectedInterviewers || hasAssessment;
@@ -73,33 +75,33 @@ const saveInterviewRound = async (req, res) => {
 
     // ==================== ADD PARALLEL SCHEDULING VALIDATION HERE ====================
     // Only validate for new rounds (not updates - roundId would be present for updates)
-    if (!roundId) {
-      const validation = await validateRoundCreationBasedOnParallelScheduling({
-        interviewId: interviewId,
-        isNewRound: true,
-        isAttemptingToSchedule: isAttemptingToSchedule
-      });
-      //       interviewId,
-      // isNewRound = false,
-      // roundId = null,
-      // shouldValidateParallelScheduling = false,
-      console.log("validation", validation);
-      console.log("round?.interviewers.length", round?.interviewers);
-      if (
-        !validation.isValid
-        // &&
-        // (round?.interviewers.length > 0 ||
-        // round?.selectedInterviewers.length > 0)
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: validation.message,
-          code: validation.code,
-          details: validation.activeRound || validation.latestRoundOutcome,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    }
+    // if (!roundId) {
+    //   const validation = await validateRoundCreationBasedOnParallelScheduling({
+    //     interviewId: interviewId,
+    //     isNewRound: true,
+    //     isAttemptingToSchedule: isAttemptingToSchedule
+    //   });
+    //   //       interviewId,
+    //   // isNewRound = false,
+    //   // roundId = null,
+    //   // shouldValidateParallelScheduling = false,
+    //   console.log("validation", validation);
+    //   console.log("round?.interviewers.length", round?.interviewers);
+    //   if (
+    //     !validation.isValid
+    //     // &&
+    //     // (round?.interviewers.length > 0 ||
+    //     // round?.selectedInterviewers.length > 0)
+    //   ) {
+    //     return res.status(400).json({
+    //       success: false,
+    //       message: validation.message,
+    //       code: validation.code,
+    //       details: validation.activeRound || validation.latestRoundOutcome,
+    //       timestamp: new Date().toISOString(),
+    //     });
+    //   }
+    // }
     // ==================== END VALIDATION ====================
 
     // Process interviewers if present
@@ -463,31 +465,31 @@ const updateInterviewRound = async (req, res) => {
 
   // ==================== ADD PARALLEL SCHEDULING VALIDATION HERE ====================
   // Only validate for new rounds (not updates - roundId would be present for updates)
-  if (roundId) {
-    const validation = await validateRoundCreationBasedOnParallelScheduling({
-      interviewId: interviewId,
-      isNewRound: false,
-      roundId: roundId,
-    });
-    //  interviewId: interviewId,
-    // isNewRound: true,
-    // shouldValidateParallelScheduling: shouldValidateParallelScheduling
-    console.log("validation", validation);
-    console.log("round?.interviewers.length", round?.interviewers);
-    if (
-      !validation.isValid
-      // &&
-      // (round?.interviewers.length > 0 || round?.selectedInterviewers.length > 0)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: validation.message,
-        code: validation.code,
-        details: validation.activeRound || validation.latestRoundOutcome,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  }
+  // if (roundId) {
+  //   const validation = await validateRoundCreationBasedOnParallelScheduling({
+  //     interviewId: interviewId,
+  //     isNewRound: false,
+  //     roundId: roundId,
+  //   });
+  //   //  interviewId: interviewId,
+  //   // isNewRound: true,
+  //   // shouldValidateParallelScheduling: shouldValidateParallelScheduling
+  //   console.log("validation", validation);
+  //   console.log("round?.interviewers.length", round?.interviewers);
+  //   if (
+  //     !validation.isValid
+  //     // &&
+  //     // (round?.interviewers.length > 0 || round?.selectedInterviewers.length > 0)
+  //   ) {
+  //     return res.status(400).json({
+  //       success: false,
+  //       message: validation.message,
+  //       code: validation.code,
+  //       details: validation.activeRound || validation.latestRoundOutcome,
+  //       timestamp: new Date().toISOString(),
+  //     });
+  //   }
+  // }
   // ==================== END VALIDATION ====================
 
   if (round.interviewers) {
@@ -2131,8 +2133,9 @@ async function buildSmartRoundUpdate({
     (changes.dateTimeChanged &&
       ["Scheduled", "Rescheduled", "RequestSent", "Draft"].includes(
         existingRound.status,
-      )) ||
-    (changes.statusChanged && body.status)
+      ))
+    //   ||
+    // (changes.statusChanged && body.status)
   ) {
     changes.statusChanged && body.status;
     update.$set.previousAction = existingRound.currentAction || null;
@@ -2211,15 +2214,24 @@ async function handleInterviewerRequestFlow({
   const interview = await Interview.findById(interviewId).lean();
   if (!interview) return;
 
-  const resolveInterviewerId = (interviewer) =>
-    interviewer?.contact?._id || interviewer?._id;
+  const resolveInterviewerId = (interviewer) => {
+    const internlaInterviewerId = interviewer?.contactId?._id ? interviewer?.contactId?._id : interviewer?.contactId
+    const outsourceInterviewerId = interviewer?.contact ? interviewer?.contact?._id : null
+    const result = internlaInterviewerId ? internlaInterviewerId : outsourceInterviewerId
+    console.log("result result", result)
+    return result
+  }
+  // interviewer?.contactId?._id || interviewer?.contact ? interviewer?.contact?._id || interviewer?.contactId?._id : interviewer?.contactId;
 
   // 2️⃣ Create requests (Internal + External)
   for (const interviewer of selectedInterviewers) {
+
+    console.log("interviewer resolveInterviewerId", interviewer)
     const interviewerId = resolveInterviewerId(interviewer);
+    console.log("interviewerId interviewerId", interviewerId)
 
     if (!mongoose.Types.ObjectId.isValid(interviewerId)) {
-      console.error("Invalid interviewerId", interviewer);
+      console.error("Invalid interviewerId result", interviewer);
       continue;
     }
 

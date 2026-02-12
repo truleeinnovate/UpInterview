@@ -1265,8 +1265,9 @@ const MockInterviewDetails = () => {
           <FeedbackFormModal
             onClose={() => setShowFeedbackModal(false)}
             // interviewId={interviewData._id}
-            mode={true}
-            roundId={rounds[0]}
+            Viewmode={true}
+            roundId={rounds[0]?._id}
+            interviewType={"mockinterview"}
           />
         )}
 

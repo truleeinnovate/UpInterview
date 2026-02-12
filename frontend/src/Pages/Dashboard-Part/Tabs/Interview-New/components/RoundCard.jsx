@@ -1154,7 +1154,7 @@ const RoundCard = ({
       canShareLink: false,
       canNoShow: false,
       canSkipped: false,
-      // canEvaluated: true,
+      canEvaluated: true,
     },
   };
 
@@ -2283,7 +2283,7 @@ const RoundCard = ({
       {showFeedbackModal && (
         <FeedbackModal
           onClose={() => setShowFeedbackModal(false)}
-          interviewId={interviewData._id}
+          // interviewId={interviewData._id}
           roundId={round.id}
         />
       )}

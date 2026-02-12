@@ -123,11 +123,13 @@ async function scheduleOrRescheduleNoShow(roundDoc) {
   }
 
   // ================ Schedule new job ================
-  console.log("[NoShow] Scheduling new job: round-no-show at", runAt, "for roundId:", roundDoc._id.toString());
+  console.log("[NoShow] Scheduling new job: round-no-show at", runAt, "for roundId:", roundDoc._id);
 
   try {
     const job = await agenda.schedule(runAt, "round-no-show", {
-      roundId: roundDoc._id.toString(),
+      // roundId: roundDoc._id.toString(),
+      roundId: roundDoc._id,
+
     });
 
     const newJobId = job.attrs._id.toString();

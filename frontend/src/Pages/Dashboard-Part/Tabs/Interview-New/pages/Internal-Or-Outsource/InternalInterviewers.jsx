@@ -5,7 +5,7 @@
 // v1.0.4  -  Ashok   -  fixed alignment issues
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { Search, X, ChevronDown, Clock, ChevronUp, Users } from "lucide-react";
+import { Search, X, ChevronDown, Clock, ChevronUp, Users, RefreshCw } from "lucide-react";
 // import useInterviewers from "../../../../../../hooks/useInterviewers";
 // v1.0.1 <------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
@@ -57,10 +57,7 @@ const InternalInterviews = ({
 
   // CHANGED: Use props as initial state
   // Add this state with other state declarations
-  // Auto-apply filter if parent passes tags or teams
-  const [isFiltersApplied, setIsFiltersApplied] = useState(
-    () => (propSelectedTagIds?.length > 0 || propSelectedTeamIds?.length > 0)
-  );
+
 
   const [activeTagIds, setActiveTagIds] = useState(propSelectedTagIds || []);
   const [activeTeamIds, setActiveTeamIds] = useState(propSelectedTeamIds || []);
@@ -167,7 +164,7 @@ const InternalInterviews = ({
     const selectedSkillSet = new Set(
       selectedSkills.map((s) =>
         typeof s === "string"
-          ? s.toLowerCase()
+          ? s.toLowerCase() // s is already lowercased? No, usually not.
           : (s.SkillName || s.skill || s).toString().toLowerCase(),
       ),
     );
@@ -178,53 +175,44 @@ const InternalInterviews = ({
       const teamId = interviewer.team_id?._id || interviewer.team_id;
       const tags = interviewer.tag_ids || interviewer.tags || [];
 
-      // If filters are applied, check each active filter
-      if (isFiltersApplied) {
-        let matchesTeam = true;
-        let matchesTags = true;
-        let matchesSkills = true;
+      let matchesTeam = true;
+      let matchesTags = true;
+      let matchesSkills = true;
 
-        // Check team filter (if any teams are selected)
-        if (activeTeamIds.length > 0) {
-          matchesTeam = teamId && activeTeamSet.has(teamId);
-        }
-
-        // Check tags filter (if any tags are selected) - OR logic
-        if (activeTagIds.length > 0) {
-          matchesTags = tags.some((t) => {
-            const tid = t?._id || t;
-            return tid && activeTagSet.has(tid);
-          });
-        }
-
-        // Check skills filter (if any skills are selected) - OR logic
-        if (selectedSkills.length > 0) {
-          const interviewerSkills = interviewer.contactId?.skills || [];
-          matchesSkills = interviewerSkills.some((s) =>
-            selectedSkillSet.has(s.toLowerCase()),
-          );
-        }
-
-        // Must match ALL active filter types (AND between filter types)
-        // But within each filter type, it's OR (e.g., tag1 OR tag2)
-        const hasTeamFilter = activeTeamIds.length > 0;
-        const hasTagFilter = activeTagIds.length > 0;
-        const hasSkillFilter = selectedSkills.length > 0;
-
-        // If no filters are selected, show all
-        if (!hasTeamFilter && !hasTagFilter && !hasSkillFilter) {
-          return true;
-        }
-
-        // Check each active filter
-        if (hasTeamFilter && !matchesTeam) return false;
-        if (hasTagFilter && !matchesTags) return false;
-        if (hasSkillFilter && !matchesSkills) return false;
-
-        return true;
+      // Check team filter (if any teams are selected)
+      if (activeTeamIds.length > 0) {
+        matchesTeam = teamId && activeTeamSet.has(teamId);
       }
 
-      return true; // If filters not applied, show all
+      // Check tags filter (if any tags are selected) - OR logic among tags?
+      // Usually "Select Tags" implies OR within tags, AND across categories. 
+      // The previous logic was:
+      // if (activeTagIds.length > 0) {
+      //   matchesTags = tags.some((t) => ... );
+      // }
+      // Keeping OR logic within tags as per previous implementation / standard behavior unless specified otherwise.
+      if (activeTagIds.length > 0) {
+        matchesTags = tags.some((t) => {
+          const tid = t?._id || t;
+          return tid && activeTagSet.has(tid);
+        });
+      }
+
+      // Check skills filter - AND logic (Strict Match)
+      if (selectedSkills.length > 0) {
+        const interviewerSkills = (interviewer.contactId?.skills || []).map(s => s.toLowerCase());
+        // Candidate must have ALL selected skills
+        matchesSkills = Array.from(selectedSkillSet).every(skill =>
+          interviewerSkills.includes(skill)
+        );
+      }
+
+      // Check each active filter
+      if (activeTeamIds.length > 0 && !matchesTeam) return false;
+      if (activeTagIds.length > 0 && !matchesTags) return false;
+      if (selectedSkills.length > 0 && !matchesSkills) return false;
+
+      return true;
     };
 
     // Helper function to check if interviewer matches search query
@@ -259,26 +247,10 @@ const InternalInterviews = ({
       }
 
       // ── 2. Current UI filters match ──
-      if (isFiltersApplied) {
-        if (activeTeamIds.length > 0 && teamId && activeTeamSet.has(teamId)) {
-          score += 500;
-        }
-
-        if (activeTagIds.length > 0) {
-          const hasActiveTag = tags.some((t) => {
-            const tid = t?._id || t;
-            return tid && activeTagSet.has(tid);
-          });
-          if (hasActiveTag) score += 400;
-        }
-
-        if (selectedSkills.length > 0) {
-          const hasSkill = (interviewer.contactId?.skills || []).some((s) =>
-            selectedSkillSet.has(s.toLowerCase()),
-          );
-          if (hasSkill) score += 200;
-        }
-      }
+      // Since filters are always applied now, we might not need extra scoring for "matching filters" 
+      // because non-matching ones are filtered out. 
+      // But we can keep it if we want to bubble up "better" matches if we ever relax filtering.
+      // For now, satisfied with strict filtering.
 
       return score;
     };
@@ -313,7 +285,6 @@ const InternalInterviews = ({
     activeTeamIds,
     selectedSkills,
     searchQuery,
-    isFiltersApplied,
   ]);
 
   const [selectedInterviewers, setSelectedInterviewers] = useState(() => {
@@ -667,7 +638,6 @@ const InternalInterviews = ({
                     <DropdownWithSearchField
                       ref={skillsInputRef}
                       value={null}
-                      isDisabled={isFiltersApplied}
                       options={
                         skills
                           ?.filter(
@@ -682,7 +652,6 @@ const InternalInterviews = ({
                           })) || []
                       }
                       onChange={(option) => {
-                        if (isFiltersApplied) return; // Prevent changes when filters applied
                         if (!option) return;
 
                         const value = option?.value || option?.target?.value;
@@ -700,11 +669,6 @@ const InternalInterviews = ({
                             return prev;
                           return [...prev, value]; // Store as string, not object
                         });
-                        // setSelectedSkills((prev) => {
-                        //   // prevent duplicates
-                        //   if (prev.some((s) => s.SkillName === value)) return prev;
-                        //   return [...prev, { SkillName: value }];
-                        // });
                       }}
                       onMenuOpen={loadSkills}
                       loading={isSkillsFetching}
@@ -716,26 +680,19 @@ const InternalInterviews = ({
                   {/* <div className="md:col-span-3 lg:col-span-3 xl:col-span-2 2xl:col-span-3 flex items-end h-full"> */}
                   {/* <div className="md:col-span-4 lg:col-span-4 xl:col-span-5 2xl:col-span-2"> */}
                   <button
-                    className={`w-full md:col-span-2 items-center lg:col-span-2 xl:col-span-2 2xl:col-span-2 h-10 px-4 text-sm rounded-md  duration-200 flex items-center justify-center whitespace-nowrap ${isFiltersApplied
-                      ? "bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
-                      : "bg-custom-blue text-white hover:bg-custom-blue/90"
-                      }`}
+                    className="w-full md:col-span-4 lg:col-span-2 xl:col-span-2 2xl:col-span-2 h-10 px-4 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 duration-200 flex items-center justify-center whitespace-nowrap gap-2"
+
                     onClick={() => {
-                      if (isFiltersApplied) {
-                        // Clear all filters including parent data - show all interviewers
-                        setSearchQuery("");
-                        setActiveTagIds([]);
-                        setActiveTeamIds([]);
-                        setSelectedSkills([]);
-                        setFilterType("tags");
-                        setIsFiltersApplied(false);
-                      } else {
-                        // Mark filters as applied (existing states will be used)
-                        setIsFiltersApplied(true);
-                      }
+                      // Reset to parent props
+                      setSearchQuery("");
+                      setActiveTagIds(propSelectedTagIds || []);
+                      setActiveTeamIds(propSelectedTeamIds || []);
+                      setSelectedSkills([]);
+                      setFilterType("tags");
                     }}
                   >
-                    {isFiltersApplied ? "Clear Filter" : "Apply Filter"}
+                    <RefreshCw className="h-4 w-4" />
+                    Reset Filters
                   </button>
                   {/* </div> */}
                   {/* </div> */}
@@ -759,16 +716,13 @@ const InternalInterviews = ({
                             <button
                               key={tag._id}
                               type="button"
-                              disabled={isFiltersApplied}
                               onClick={() => {
-                                if (isFiltersApplied) return;
                                 toggleSelection(tag._id, setActiveTagIds);
                               }}
                               className={`
             flex items-center gap-1.5 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${isFiltersApplied ? "opacity-60 cursor-not-allowed" : ""}
             ${isSelected
                                   ? "bg-slate-300 text-white border-slate-700 border-2 ring-2 ring-offset-2 ring-slate-100 shadow-sm"
                                   : "bg-[var(--tag-color)]/10 text-[var(--tag-color)] border-[var(--tag-color)]/60 hover:bg-[var(--tag-color)]/20"
@@ -821,16 +775,13 @@ const InternalInterviews = ({
                             <button
                               key={team._id}
                               type="button"
-                              disabled={isFiltersApplied}
                               onClick={() => {
-                                if (isFiltersApplied) return;
                                 toggleSelection(team._id, setActiveTeamIds);
                               }}
                               className={`
             flex items-center gap-2 
             px-3.5 py-1.5 rounded-full text-sm font-medium
             border transition-all duration-150
-            ${isFiltersApplied ? "opacity-60 cursor-not-allowed" : ""}
             ${isSelected
                                   ? "bg-purple-100 text-black border-2 border-purple-400 shadow-sm"
                                   : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50 hover:border-purple-400"
@@ -870,14 +821,12 @@ const InternalInterviews = ({
                         >
                           {skill}
                           <button
-                            disabled={isFiltersApplied}
                             onClick={() => {
-                              if (isFiltersApplied) return;
                               setSelectedSkills((prev) =>
                                 prev.filter((s) => s !== skill),
                               );
                             }}
-                            className={`ml-1 ${isFiltersApplied ? "opacity-50 cursor-not-allowed text-gray-400" : "text-gray-500 hover:text-red-500"}`}
+                            className={`ml-1 text-gray-500 hover:text-red-500`}
                           >
                             <X className="h-3 w-3" />
                           </button>

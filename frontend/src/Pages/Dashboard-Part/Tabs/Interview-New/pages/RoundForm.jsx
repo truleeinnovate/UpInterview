@@ -1916,7 +1916,7 @@ const RoundFormInterviews = () => {
       formattedInterviewers = internalInterviewers?.map((interviewer) =>
         organization
           ? interviewer?.contactId?._id || interviewer?._id
-          : interviewer?.contactId?._id || interviewer?._id,
+          : interviewer?.contactId || interviewer?.contactId?._id || interviewer?._id,
       );
 
       // If editing and rescheduling, increment rescheduleCount
