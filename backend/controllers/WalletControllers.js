@@ -61,7 +61,7 @@ const razorpay = new Razorpay({
 
 // Helper to get or create the global platform wallet (for superadmin)
 async function getOrCreatePlatformWallet(session = null) {
-  const ownerId = PLATFORM_WALLET_OWNER_ID;
+  //const ownerId = PLATFORM_WALLET_OWNER_ID;
 
   // Locate the platform wallet by a fixed ownerId
   let query = WalletTopup.findOne({ isCompany: true });
@@ -1791,7 +1791,7 @@ const createWithdrawalRequest = async (req, res) => {
 
       // Calculate fees (example: 2% or flat ₹10)
       const processingFee = Math.max(amount * 0.02, 10);
-      const tax = amount * 0.18; // 18% GST
+      const tax = 0; // GST Removed
       const totalFees = processingFee + tax;
       const netAmount = amount - totalFees;
 
@@ -2301,6 +2301,50 @@ const processManualWithdrawal = async (req, res) => {
         },
       });
       wallet = debitResult.wallet;
+
+      // Credit Processing Fee to Platform Wallet
+      if (withdrawalRequest.processingFee > 0) {
+        try {
+          const platformWallet = await WalletTopup.findOne({ isCompany: true });
+
+          if (platformWallet) {
+            const platformPrevBalance = Number(platformWallet.balance || 0);
+            let runningBalance = platformPrevBalance;
+            const nextBalance = runningBalance + withdrawalRequest.processingFee;
+
+            platformWallet.transactions.push({
+              type: "platform_fee",
+              bucket: "AVAILABLE",
+              effect: "CREDITED",
+              amount: withdrawalRequest.processingFee,
+              description: `Processing fee for withdrawal ${withdrawalRequest.withdrawalCode}`,
+              relatedInvoiceId: withdrawalRequest._id.toString(),
+              status: "completed",
+              reason: "WITHDRAWAL_FEE",
+              metadata: {
+                withdrawalRequestId: withdrawalRequest._id,
+                withdrawalCode: withdrawalRequest.withdrawalCode,
+                sourceUser: withdrawalRequest.ownerId,
+                source: "withdrawal_processing_fee",
+              },
+              balanceBefore: runningBalance,
+              balanceAfter: nextBalance,
+              createdDate: new Date(),
+              createdAt: new Date(),
+            });
+
+            platformWallet.balance = nextBalance;
+            platformWallet.lastUpdated = new Date();
+
+            await platformWallet.save();
+            //console.log(`Processing fee of ${withdrawalRequest.processingFee} credited to platform wallet. New Balance: ${nextBalance}`);
+          }
+        } catch (feeError) {
+          console.error("Error crediting processing fee to platform wallet:", feeError);
+          // Non-blocking error - continue with withdrawal completion
+        }
+      }
+
     } catch (walletError) {
       console.error("Error completing withdrawal transaction:", walletError);
       // Continue processing even if wallet update fails - log for manual intervention

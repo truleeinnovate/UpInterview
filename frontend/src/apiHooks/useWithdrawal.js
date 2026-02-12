@@ -123,8 +123,8 @@ export const calculateWithdrawalFees = (amount) => {
   let processingFee = Math.max(amount * 0.02, 10); // 2% or minimum ₹10
   processingFee = roundToTwo(processingFee); // Round fee first
 
-  let tax = amount * 0.18; // 18% GST on amount
-  tax = roundToTwo(tax); // Round tax
+  // GST Removed as per new requirement
+  let tax = 0;
 
   const totalFees = processingFee + tax;
   const netAmount = amount - totalFees;
