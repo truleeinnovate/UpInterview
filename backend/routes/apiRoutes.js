@@ -2624,21 +2624,41 @@ router.get(
           // }
 
           if (candidateSearch) {
-            const searchRegex = new RegExp(candidateSearch, "i");
+            // Robustly parse search terms: handle array/string, split by space/comma, decode URI
+            let searchString = Array.isArray(candidateSearch) ? candidateSearch.join(" ") : String(candidateSearch);
+            try {
+              searchString = decodeURIComponent(searchString);
+            } catch (e) {
+              // ignore decode error
+            }
 
-            candidatePipeline[0].$match = {
-              $and: [
-                { ...query }, // ownerId and other base filters
-                {
+            const searchWords = searchString
+              .replace(/,/g, " ") // Treat commas as spaces
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean);
+
+            if (searchWords.length > 0) {
+              const searchConditions = searchWords.map((word) => {
+                const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // Escape regex special chars
+                const wordRegex = new RegExp(escapedWord, "i");
+                return {
                   $or: [
-                    { FirstName: searchRegex },
-                    { LastName: searchRegex },
-                    { Email: searchRegex },
-                    { Phone: searchRegex },
+                    { FirstName: wordRegex },
+                    { LastName: wordRegex },
+                    { Email: wordRegex },
+                    { Phone: wordRegex },
                   ],
-                },
-              ],
-            };
+                };
+              });
+
+              candidatePipeline[0].$match = {
+                $and: [
+                  { ...query }, // Preserve ownerId/tenantId filters
+                  ...searchConditions,
+                ],
+              };
+            }
           }
 
 

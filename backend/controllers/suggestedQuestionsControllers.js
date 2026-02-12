@@ -505,6 +505,7 @@ const getQuestions = async (req, res) => {
 
         // Create AND condition for all search terms
         // Each term must match at least one field (OR logic within the term)
+        // But ALL terms must match (AND logic across terms)
         const searchConditions = searchTerms.filter(term => term && term.trim()).map(term => {
           // Escape special regex characters to prevent errors
           const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -514,18 +515,19 @@ const getQuestions = async (req, res) => {
             $or: [
               { questionText: searchRegex },
               { tags: searchRegex },
-              { technology: searchRegex },
-              { topic: searchRegex },
-              { category: searchRegex },
-              { subTopic: searchRegex },
-              { area: searchRegex },
-              { skill: searchRegex } // Added skill field
+              // { technology: searchRegex },
+              // { topic: searchRegex },
+              // { category: searchRegex },
+              // { subTopic: searchRegex },
+              // { area: searchRegex },
+              // { skill: searchRegex } // Added skill field
             ]
           };
         });
 
         if (searchConditions.length > 0) {
-          query.$or = searchConditions;
+          // Use $and so ALL search terms must match
+          query.$and = searchConditions;
         }
       }
 
