@@ -75,33 +75,33 @@ const saveInterviewRound = async (req, res) => {
 
     // ==================== ADD PARALLEL SCHEDULING VALIDATION HERE ====================
     // Only validate for new rounds (not updates - roundId would be present for updates)
-    // if (!roundId) {
-    //   const validation = await validateRoundCreationBasedOnParallelScheduling({
-    //     interviewId: interviewId,
-    //     isNewRound: true,
-    //     isAttemptingToSchedule: isAttemptingToSchedule
-    //   });
-    //   //       interviewId,
-    //   // isNewRound = false,
-    //   // roundId = null,
-    //   // shouldValidateParallelScheduling = false,
-    //   console.log("validation", validation);
-    //   console.log("round?.interviewers.length", round?.interviewers);
-    //   if (
-    //     !validation.isValid
-    //     // &&
-    //     // (round?.interviewers.length > 0 ||
-    //     // round?.selectedInterviewers.length > 0)
-    //   ) {
-    //     return res.status(400).json({
-    //       success: false,
-    //       message: validation.message,
-    //       code: validation.code,
-    //       details: validation.activeRound || validation.latestRoundOutcome,
-    //       timestamp: new Date().toISOString(),
-    //     });
-    //   }
-    // }
+    if (!roundId) {
+      const validation = await validateRoundCreationBasedOnParallelScheduling({
+        interviewId: interviewId,
+        isNewRound: true,
+        isAttemptingToSchedule: isAttemptingToSchedule
+      });
+      //       interviewId,
+      // isNewRound = false,
+      // roundId = null,
+      // shouldValidateParallelScheduling = false,
+      console.log("validation", validation);
+      console.log("round?.interviewers.length", round?.interviewers);
+      if (
+        !validation.isValid
+        // &&
+        // (round?.interviewers.length > 0 ||
+        // round?.selectedInterviewers.length > 0)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: validation.message,
+          code: validation.code,
+          details: validation.activeRound || validation.latestRoundOutcome,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
     // ==================== END VALIDATION ====================
 
     // Process interviewers if present
@@ -465,31 +465,31 @@ const updateInterviewRound = async (req, res) => {
 
   // ==================== ADD PARALLEL SCHEDULING VALIDATION HERE ====================
   // Only validate for new rounds (not updates - roundId would be present for updates)
-  // if (roundId) {
-  //   const validation = await validateRoundCreationBasedOnParallelScheduling({
-  //     interviewId: interviewId,
-  //     isNewRound: false,
-  //     roundId: roundId,
-  //   });
-  //   //  interviewId: interviewId,
-  //   // isNewRound: true,
-  //   // shouldValidateParallelScheduling: shouldValidateParallelScheduling
-  //   console.log("validation", validation);
-  //   console.log("round?.interviewers.length", round?.interviewers);
-  //   if (
-  //     !validation.isValid
-  //     // &&
-  //     // (round?.interviewers.length > 0 || round?.selectedInterviewers.length > 0)
-  //   ) {
-  //     return res.status(400).json({
-  //       success: false,
-  //       message: validation.message,
-  //       code: validation.code,
-  //       details: validation.activeRound || validation.latestRoundOutcome,
-  //       timestamp: new Date().toISOString(),
-  //     });
-  //   }
-  // }
+  if (roundId) {
+    const validation = await validateRoundCreationBasedOnParallelScheduling({
+      interviewId: interviewId,
+      isNewRound: false,
+      roundId: roundId,
+    });
+    //  interviewId: interviewId,
+    // isNewRound: true,
+    // shouldValidateParallelScheduling: shouldValidateParallelScheduling
+    console.log("validation", validation);
+    console.log("round?.interviewers.length", round?.interviewers);
+    if (
+      !validation.isValid
+      // &&
+      // (round?.interviewers.length > 0 || round?.selectedInterviewers.length > 0)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: validation.message,
+        code: validation.code,
+        details: validation.activeRound || validation.latestRoundOutcome,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
   // ==================== END VALIDATION ====================
 
   if (round.interviewers) {
