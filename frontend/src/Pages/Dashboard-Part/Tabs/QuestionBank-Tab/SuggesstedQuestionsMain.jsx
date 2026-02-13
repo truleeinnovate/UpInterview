@@ -78,7 +78,7 @@ function HeaderBar({
           </span>
           <input
             type="search"
-            placeholder="Search by Tags,Questions..."
+            placeholder="Search by Tags, Questions..."
             className="flex-1 rounded-md focus:outline-none pr-2"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
@@ -1222,8 +1222,8 @@ const SuggestedQuestionsComponent = ({
               className="flex flex-col overflow-y-auto pb-8 px-4"
               style={{
                 // height: `calc(100vh - ${isMeetingSidePanel ? 362 : 206}px)`,
-                height: customHeight 
-                  ? customHeight 
+                height: customHeight
+                  ? customHeight
                   : `calc(100vh - ${isMeetingSidePanel ? 362 : 182}px)`,
               }}
             >

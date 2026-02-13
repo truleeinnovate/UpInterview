@@ -298,15 +298,31 @@ router.get(
           // }
 
           if (mockSearch) {
-            const sanitizedSearch = mockSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const sanitizedSearch = mockSearch.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const searchRegex = new RegExp(sanitizedSearch, "i");
+
+            // Fetch matching roles from RoleMaster
+            const matchingRoles = await RoleMaster.find({
+              roleLabel: { $regex: searchRegex }
+            }).select("roleName roleLabel").lean();
+
+            const matchingRoleNames = matchingRoles.map(r => r.roleName);
+
+            // Fetch matching rounds from MockInterviewRound
+            const matchingRounds = await MockInterviewRound.find({
+              roundTitle: { $regex: searchRegex }
+            }).select("mockInterviewId").lean();
+
+            const matchingRoundIds = matchingRounds.map(r => r.mockInterviewId);
 
             mockQuery.$and = [
               { ...query },
               {
                 $or: [
                   { mockInterviewCode: { $regex: searchRegex } },
-                  { currentRole: { $regex: searchRegex } },
+                  { _id: { $in: matchingRoundIds } }, // Search by round title (via IDs)
+                  { currentRole: { $regex: searchRegex } }, // search by code
+                  { currentRole: { $in: matchingRoleNames } }, // search by label
                   { candidateName: { $regex: searchRegex } },
                 ],
               },
@@ -1738,6 +1754,8 @@ router.get(
           break;
         }
         // ------------------------------ v1.0.4 >
+
+
         case "assessmentlist":
           query = {
             $or: [

@@ -626,7 +626,7 @@ const MockInterview = () => {
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
               dataLength={totalPages > 0 ? totalPages : 1}
-              searchPlaceholder="Search by Mock Interview Id, Title, Technology..."
+              searchPlaceholder="Search by Id, Title, Current Role..."
               filterIconRef={filterIconRef}
             />
           </div>

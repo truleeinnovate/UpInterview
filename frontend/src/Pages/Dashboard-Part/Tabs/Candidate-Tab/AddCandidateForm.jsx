@@ -2020,7 +2020,7 @@ const AddCandidateForm = ({
                     isCustomName={isCustomUniversity}
                     setIsCustomName={setIsCustomUniversity}
                     containerRef={fieldRefs.UniversityCollege}
-                    label="University/College"
+                    label="University / College"
                     name="UniversityCollege"
                     // required
                     onMenuOpen={loadColleges}
@@ -2376,7 +2376,7 @@ const AddCandidateForm = ({
               </div>
             </div>
             {/* Certifications Section */}
-            <div className="mb-4 col-span-2" id="certifications-section">
+            <div className="mb-4 col-span-2 mt-2" id="certifications-section">
               <div className="flex items-center justify-between mb-3">
                 <label className="text-sm font-medium text-gray-700">
                   Certifications ({formData?.certifications?.length || 0}/10)

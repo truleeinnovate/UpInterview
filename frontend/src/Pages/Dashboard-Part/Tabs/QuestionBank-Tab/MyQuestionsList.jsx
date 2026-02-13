@@ -83,10 +83,10 @@ function QuestionHeaderBar({
   return (
     <div
       className={`flex items-center sm:justify-start justify-between overflow-x-auto ${type === "interviewerSection" ||
-          type === "feedback" ||
-          type === "assessment"
-          ? ""
-          : ""
+        type === "feedback" ||
+        type === "assessment"
+        ? ""
+        : ""
         }`}
     >
       <div className="flex items-center gap-2">
@@ -220,7 +220,7 @@ function QuestionHeaderBar({
           </span>
           <input
             type="search"
-            placeholder="Search by Skills & Questions"
+            placeholder="Search by Tags, Questions..."
             className="w-[200px] rounded-md focus:outline-none pr-2"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
@@ -239,8 +239,8 @@ function QuestionHeaderBar({
               onClick={onClickLeftPaginationIcon}
               disabled={currentPage === 1}
               className={`border p-2 mr-2 text-xl rounded-md ${currentPage === 1
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-gray-100"
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gray-100"
                 }`}
             >
               <ChevronLeft className="w-5 h-5" />
@@ -253,8 +253,8 @@ function QuestionHeaderBar({
                 currentPage * itemsPerPage >= totalItems || totalItems === 0
               }
               className={`border p-2 text-xl rounded-md ${currentPage * itemsPerPage >= totalItems || totalItems === 0
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-gray-100"
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gray-100"
                 }`}
             >
               <ChevronRight className="w-5 h-5" />
@@ -1615,10 +1615,10 @@ const MyQuestionsList = ({
         {/* v1.0.8 <-------------------------------------------------------------------------- */}
         <div
           className={`${type === "interviewerSection" ||
-              type === "assessment" ||
-              activeTab === "MyQuestionsList"
-              ? ""
-              : ""
+            type === "assessment" ||
+            activeTab === "MyQuestionsList"
+            ? ""
+            : ""
             }`}
         >
           {isLoading ? (
@@ -1692,13 +1692,12 @@ const MyQuestionsList = ({
                               //     ? "h-[62vh]"
                               //     : "h-[calc(100vh-200px)]"
                               //   } overflow-y-auto`}
-                              className={`px-2 overflow-y-auto ${
-                                !customHeight ? (type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-200px)]") : ""
-                              }`}
+                              className={`px-2 overflow-y-auto ${!customHeight ? (type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-200px)]") : ""
+                                }`}
 
-                                style={{
-                                  height: customHeight ? customHeight : undefined,
-                                }}
+                              style={{
+                                height: customHeight ? customHeight : undefined,
+                              }}
                             >
                               {paginatedItems.map((question, index) => (
                                 <div className="flex w-full items-center">
@@ -1721,8 +1720,8 @@ const MyQuestionsList = ({
                                           className={`w-4 h-4 rounded border-2 flex items-center justify-center ${selectedQuestions.includes(
                                             question._id,
                                           )
-                                              ? "bg-custom-blue border-custom-blue"
-                                              : "bg-white border-gray-300"
+                                            ? "bg-custom-blue border-custom-blue"
+                                            : "bg-white border-gray-300"
                                             }`}
                                         >
                                           {selectedQuestions.includes(
@@ -1770,8 +1769,8 @@ const MyQuestionsList = ({
                                         <div className="flex items-center gap-2">
                                           <span
                                             className={`text-xs px-2 py-1 rounded-md ${question.isCustom
-                                                ? "bg-[#BBDEFB] text-blue-800"
-                                                : "bg-[#D1C4E9] text-blue-800"
+                                              ? "bg-[#BBDEFB] text-blue-800"
+                                              : "bg-[#D1C4E9] text-blue-800"
                                               }`}
                                             title="Question Type"
                                           >
@@ -1883,8 +1882,8 @@ const MyQuestionsList = ({
                                                       s.Questions.length,
                                                     0,
                                                   ) >= questionsLimit
-                                                      ? "opacity-50 cursor-not-allowed"
-                                                      : ""
+                                                    ? "opacity-50 cursor-not-allowed"
+                                                    : ""
                                                     }`}
                                                   onClick={() =>
                                                     onClickAddButton(
@@ -2006,8 +2005,8 @@ const MyQuestionsList = ({
                                                     <li
                                                       key={idx}
                                                       className={`${isAnyOptionLong
-                                                          ? "block w-full"
-                                                          : "inline-block w-1/2"
+                                                        ? "block w-full"
+                                                        : "inline-block w-1/2"
                                                         } mb-2`}
                                                     >
                                                       {question.isCustom && (
