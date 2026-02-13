@@ -84,6 +84,7 @@ const BasicDetailsTab = ({
   selected,
   setSelected,
   handleAssessmentListChange,
+  categoryOrTechnologyRef,
 }) => {
   // Get user token information and check organization field
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -96,7 +97,7 @@ const BasicDetailsTab = ({
   const positionRef = useRef(null);
   const difficultyRef = useRef(null);
   const durationRef = useRef(null);
-  const categoryOrTechnologyRef = useRef(null);
+  // const categoryOrTechnologyRef = useRef(null);
 
   // State for tooltip visibility
   const [showTooltip, setShowTooltip] = useState(false);
@@ -518,7 +519,7 @@ const BasicDetailsTab = ({
             </div> */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category/Technology <span className="text-red-500">*</span>
+                Category / Technology <span className="text-red-500">*</span>
               </label>
               <DropdownSelect
                 ref={categoryOrTechnologyRef}
@@ -596,6 +597,11 @@ const BasicDetailsTab = ({
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
               />
+              {errors.categoryOrTechnology && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.categoryOrTechnology}
+                </p>
+              )}
               <div></div>
             </div>
           </div>

@@ -368,6 +368,7 @@ const MyQuestionsList = ({
   activeTab,
   sidebarOpen,
   setSidebarOpen,
+  customHeight
 }) => {
   const { myQuestionsList, createdLists, isLoading } = useQuestions(); //<----v1.0.4---
   const { mutateAsync: deleteQuestions } = useQuestionDeletion();
@@ -1687,10 +1688,17 @@ const MyQuestionsList = ({
                         <div key={listName} className="mt-4">
                           {isOpen[listName] && items.length > 0 && (
                             <div
-                              className={`px-2 ${type === "interviewerSection"
-                                  ? "h-[62vh]"
-                                  : "h-[calc(100vh-200px)]"
-                                } overflow-y-auto`}
+                              // className={`px-2 ${type === "interviewerSection"
+                              //     ? "h-[62vh]"
+                              //     : "h-[calc(100vh-200px)]"
+                              //   } overflow-y-auto`}
+                              className={`px-2 overflow-y-auto ${
+                                !customHeight ? (type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-200px)]") : ""
+                              }`}
+
+                                style={{
+                                  height: customHeight ? customHeight : undefined,
+                                }}
                             >
                               {paginatedItems.map((question, index) => (
                                 <div className="flex w-full items-center">

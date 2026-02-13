@@ -9,8 +9,8 @@ export const selectBaseStyles = (hasError) => ({
     borderColor: hasError
       ? "#ef4444" // red-500
       : state.isFocused
-      ? "#217989" // custom-blue focus ring
-      : "#d1d5db", // gray-300
+        ? "#217989" // custom-blue focus ring
+        : "#d1d5db", // gray-300
     boxShadow: "none",
     "&:hover": {
       borderColor: hasError ? "#ef4444" : "#9ca3af", // gray-400
@@ -73,8 +73,8 @@ export const selectBaseStyles = (hasError) => ({
     backgroundColor: state.isSelected
       ? "#217989" // custom-blue for selected
       : state.isFocused
-      ? "rgba(33, 121, 137, 0.1)" // custom-blue/10 for hover
-      : base.backgroundColor,
+        ? "rgba(33, 121, 137, 0.1)" // custom-blue/10 for hover
+        : base.backgroundColor,
     color: state.isSelected ? "#ffffff" : base.color,
     fontWeight: state.data?.isCustomOption ? "600" : base.fontWeight,
     fontStyle: state.data?.isCustomOption ? "italic" : base.fontStyle,
@@ -85,9 +85,8 @@ export const selectBaseStyles = (hasError) => ({
     },
   }),
 
-
-   // ✅ Added styles for multi-value chips
-   multiValue: (base) => ({
+  // ✅ Added styles for multi-value chips
+  multiValue: (base) => ({
     ...base,
     backgroundColor: "transparent",
     border: "1px solid #d1d5db",
@@ -108,7 +107,6 @@ export const selectBaseStyles = (hasError) => ({
       color: "#ef4444",
     },
   }),
-
 });
 
 // Sticky footer MenuList that keeps a special option fixed at the bottom (e.g. value "__other__")
@@ -116,7 +114,7 @@ export const makeStickyOptionMenuList = (stickyValue = "__other__") => {
   const StickyMenuList = (props) => {
     const items = React.Children.toArray(props.children);
     const stickyIndex = items.findIndex(
-      (child) => child?.props?.data?.value === stickyValue
+      (child) => child?.props?.data?.value === stickyValue,
     );
 
     let stickyEl = null;
@@ -154,7 +152,8 @@ export const StickyFooterMenuList = makeStickyOptionMenuList("__other__");
 // Helper filter that never hides the sticky option (e.g. "__other__").
 // Safely handles options where label is JSX by preferring a plain-text
 // searchLabel stored on option.data.searchLabel when available.
-export const preserveStickyOptionFilter = (stickyValue = "__other__") =>
+export const preserveStickyOptionFilter =
+  (stickyValue = "__other__") =>
   (option, input) => {
     if (option?.data?.value === stickyValue) return true;
     if (!input) return true;
@@ -163,20 +162,28 @@ export const preserveStickyOptionFilter = (stickyValue = "__other__") =>
       typeof option?.data?.searchLabel === "string"
         ? option.data.searchLabel
         : typeof option?.label === "string"
-        ? option.label
-        : "";
+          ? option.label
+          : "";
 
     return rawLabel.toLowerCase().includes((input || "").toLowerCase());
   };
 
 // Reusable Select wrapper with default styles and easy error state
-const DropdownSelect = React.forwardRef(({ hasError = false, classNamePrefix = "rs", styles, ...rest }, ref) => {
-  const mergedStyles = styles || selectBaseStyles(hasError);
-  return (
-    <div ref={ref} tabIndex={-1} className="text-base sm:text-sm leading-5">
-      <Select styles={mergedStyles} classNamePrefix={classNamePrefix} {...rest} />
-    </div>
-  );
-});
+const DropdownSelect = React.forwardRef(
+  ({ hasError = false, classNamePrefix = "rs", styles, ...rest }, ref) => {
+    const mergedStyles = styles || selectBaseStyles(hasError);
+    return (
+      <div ref={ref} tabIndex={-1} className="text-base sm:text-sm leading-5">
+        <Select
+          styles={mergedStyles}
+          classNamePrefix={classNamePrefix}
+          {...rest}
+          menuPortalTarget={document.body}
+          menuPosition="fixed"
+        />
+      </div>
+    );
+  },
+);
 
 export default DropdownSelect;

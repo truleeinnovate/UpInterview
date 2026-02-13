@@ -2153,10 +2153,10 @@ function RoundFormPosition() {
                               onClick={() => setIsInterviewQuestionPopup(false)}
                             >
                               <div
-                                className="bg-white rounded-md w-[96%] max-h-[90vh] overflow-y-auto sm:px-2  px-4 py-4"
+                                className="bg-white rounded-md w-[96%] max-h-[90vh] overflow-y-auto sm:px-2"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <div className="py-3 px-4  flex items-center justify-between">
+                                <div className="py-3 px-6 flex items-center justify-between">
                                   <h2 className="text-xl text-custom-blue  font-semibold">
                                     Add Interview Question
                                   </h2>
@@ -2181,6 +2181,7 @@ function RoundFormPosition() {
                                       handleToggleMandatory
                                     }
                                     removedQuestionIds={removedQuestionIds}
+                                    customHeight="calc(100vh - 260px)"
                                   />
                                 )}
                               </div>

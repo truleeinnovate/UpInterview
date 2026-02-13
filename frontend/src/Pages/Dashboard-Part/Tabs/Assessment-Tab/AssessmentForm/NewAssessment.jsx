@@ -46,6 +46,7 @@ import { Button } from "@mui/material";
 import { ArrowLeft, Trash2, X } from "lucide-react";
 import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import AssessmentListModal from "../AssessmentListModal/AssessmentListModal.jsx";
+import { notify } from "../../../../../services/toastService.js";
 
 const NewAssessment = () => {
   const formRef = useRef(null);
@@ -179,7 +180,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
   const assessment = isEditing
     ? assessmentById
     : // assessmentData.find((assessment) => assessment._id === id)
-    null;
+      null;
 
   const selectedPositionId =
     (formData.Position && formData.Position) ||
@@ -203,8 +204,8 @@ Ensure you are in a quiet environment to avoid distractions.`;
 
   const positionsForDropdown =
     selectedPosition &&
-      selectedPosition._id &&
-      !filteredPositionData.some((p) => p._id === selectedPosition._id)
+    selectedPosition._id &&
+    !filteredPositionData.some((p) => p._id === selectedPosition._id)
       ? [selectedPosition, ...filteredPositionData]
       : filteredPositionData;
 
@@ -258,6 +259,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
     NumberOfQuestions: useRef(null),
     DifficultyLevel: useRef(null),
     externalId: useRef(null),
+    categoryOrTechnology: useRef(null),
   };
   // v1.0.3 --------------------------------------------------------->
 
@@ -302,8 +304,10 @@ Ensure you are in a quiet environment to avoid distractions.`;
       setQuestionsLimit(assessment.NumberOfQuestions || "");
       setSelectedDifficulty(assessment.DifficultyLevel);
       // Strip bullet points from legacy data
-      const cleanInstructions = (assessment.Instructions || "")
-        .replace(/[•\u2022]\s*/g, "");
+      const cleanInstructions = (assessment.Instructions || "").replace(
+        /[•\u2022]\s*/g,
+        "",
+      );
       setInstructions(cleanInstructions);
       setAdditionalNotes(assessment.AdditionalNotes || "");
       setLinkExpiryDays(assessment.linkExpiryDays);
@@ -477,23 +481,47 @@ Ensure you are in a quiet environment to avoid distractions.`;
   //   }));
   // };
 
+  // const handleAssessmentListChange = (e) => {
+  //   const value = e?.value;
+
+  //   if (value === "__other__") {
+  //     // open modal when user selects + Create List
+  //     setIsCategoryModalOpen(true);
+  //     return;
+  //   }
+
+  //   // Update selected and form data normally
+  //   setSelected(value);
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     categoryOrTechnology: value,
+  //   }));
+
+  //   // Clear related error
+  //   setErrors((prevErrors) => ({
+  //     ...prevErrors,
+  //     categoryOrTechnology: "",
+  //   }));
+  // };
+
   const handleAssessmentListChange = (e) => {
     const value = e?.value;
 
     if (value === "__other__") {
-      // open modal when user selects + Create List
       setIsCategoryModalOpen(true);
       return;
     }
 
-    // Update selected and form data normally
+    // 1. Update the UI state
     setSelected(value);
+
+    // 2. IMPORTANT: Update the formData for validation and submission
     setFormData((prevData) => ({
       ...prevData,
-      categoryOrTechnology: value,
+      categoryOrTechnology: value, // Ensure the validation logic sees this
     }));
 
-    // Clear related error
+    // 3. Clear the specific error
     setErrors((prevErrors) => ({
       ...prevErrors,
       categoryOrTechnology: "",
@@ -521,6 +549,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
         );
         if (totalQuestions !== questionsLimit) {
           newErrors.questions = `Please add exactly ${questionsLimit} questions.`;
+          notify.error(`Please add exactly ${questionsLimit} questions.`);
           setIsQuestionLimitErrorPopupOpen(true);
         } else {
           const isAnySectionPassScoreSet = Object.values(passScores).some(
@@ -853,12 +882,12 @@ Ensure you are in a quiet environment to avoid distractions.`;
         // Only include passScoreType and passScoreBy if they have values
         ...(formData.passScoreType &&
           formData.passScoreType.trim() !== "" && {
-          passScoreType: formData.passScoreType,
-        }),
+            passScoreType: formData.passScoreType,
+          }),
         ...(formData.passScoreBy &&
           formData.passScoreBy.trim() !== "" && {
-          passScoreBy: formData.passScoreBy,
-        }),
+            passScoreBy: formData.passScoreBy,
+          }),
         ...(formData.passScoreBy === "Overall" && { totalScore: totalScore }),
         ...(formData.passScoreBy === "Overall" &&
           formData.passScore && { passScore: formData.passScore }),
@@ -880,11 +909,11 @@ Ensure you are in a quiet environment to avoid distractions.`;
         ...assessmentData,
         ...(includePosition || includePhone
           ? {
-            CandidateDetails: {
-              ...(includePosition ? { includePosition } : {}),
-              ...(includePhone ? { includePhone } : {}),
-            },
-          }
+              CandidateDetails: {
+                ...(includePosition ? { includePosition } : {}),
+                ...(includePhone ? { includePhone } : {}),
+              },
+            }
           : {}),
         ...(instructions ? { Instructions: instructions } : {}),
         ...(additionalNotes ? { AdditionalNotes: additionalNotes } : {}),
@@ -1381,8 +1410,8 @@ Ensure you are in a quiet environment to avoid distractions.`;
   const toggleAction = (sectionName, questionIndex) => {
     setActionViewMore((prev) =>
       prev &&
-        prev.sectionName === sectionName &&
-        prev.questionIndex === questionIndex
+      prev.sectionName === sectionName &&
+      prev.questionIndex === questionIndex
         ? null
         : { sectionName, questionIndex },
     );
@@ -1586,7 +1615,8 @@ Ensure you are in a quiet environment to avoid distractions.`;
 
   const TabFooter = ({ currentTab }) => {
     const handleBack = () => {
-      if (currentTab === "Details") setActiveTab("Basicdetails");
+      if (currentTab === "Basicdetails") navigate("/assessment-templates");
+      else if (currentTab === "Details") setActiveTab("Basicdetails");
       else if (currentTab === "Questions") setActiveTab("Details");
       else if (currentTab === "Candidates") setActiveTab("Questions");
     };
@@ -1605,21 +1635,27 @@ Ensure you are in a quiet environment to avoid distractions.`;
       // v1.0.5 <---------------------------------------------------------------------------
       <div className="flex justify-end sm:px-0 px-6 pt-6">
         {/* v1.0.5 --------------------------------------------------------------------------> */}
-        {currentTab !== "Basicdetails" && (
+        {/* {currentTab !== "Basicdetails" && (
           <button
             onClick={handleBack}
             className="inline-flex justify-center mr-4 py-2 sm:px-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Back
           </button>
-        )}
+        )} */}
+        <button
+          onClick={handleBack}
+          className="inline-flex justify-center items-center mr-4 h-9 sm:px-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+        >
+          Back
+        </button>
 
         <div className="flex gap-3">
           {currentTab === "Candidates" ? (
             <button
               type="button"
               onClick={NavigateToAssessmentList}
-              className="inline-flex justify-center py-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              className="inline-flex justify-center items-center h-9 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90"
             >
               Close
             </button>
@@ -1684,7 +1720,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
                     }
                     setSidebarOpen(true);
                   }}
-                  className="px-4 py-2 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
+                  className="px-4 h-9 border border-transparent rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 transition-colors"
                 >
                   Add Score
                 </button>
@@ -1763,7 +1799,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
 
               {/* Content */}
               <div>
-                <div className="py-5 sm:px-6">
+                <div className="sm:px-6">
                   <div>
                     {/* basic details tab content */}
                     {activeTab === "Basicdetails" && (
@@ -1837,6 +1873,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
                           }
                           tenantId={tenantId}
                           ownerId={ownerId}
+                          categoryOrTechnologyRef={fieldRefs.categoryOrTechnology}
                         />
                         <div className="flex justify-end">
                           <TabFooter currentTab="Basicdetails" />
@@ -1961,6 +1998,8 @@ Ensure you are in a quiet environment to avoid distractions.`;
                   }
                   onConfirm={confirmDelete}
                   onCancel={cancelDelete}
+                  confirmText="Delete"
+                  buttonColor="bg-red-500"
                 />
 
                 <ConfirmationPopup
@@ -1983,6 +2022,8 @@ Ensure you are in a quiet environment to avoid distractions.`;
                   onCancel={() =>
                     setEditSectionData({ isOpen: false, index: null, name: "" })
                   }
+                  confirmText="Update"
+                  iconColor="text-custom-blue"
                 />
 
                 {isLimitReachedPopupOpen && (
@@ -2029,7 +2070,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
                   </div>
                   // v1.0.4 -------------------------------------------------------------------------->
                 )}
-                {isQuestionLimitErrorPopupOpen && (
+                {/* {isQuestionLimitErrorPopupOpen && (
                   <ConfirmationPopup
                     isOpen={isQuestionLimitErrorPopupOpen}
                     title={`Please add exactly ${questionsLimit} questions.`}
@@ -2039,7 +2080,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
                     }
                     singleButtonText="Close"
                   />
-                )}
+                )} */}
                 {isSelectCandidatePopupOpen && (
                   <ConfirmationPopup
                     isOpen={isSelectCandidatePopupOpen}
@@ -2061,7 +2102,21 @@ Ensure you are in a quiet environment to avoid distractions.`;
                     tenantId={tenantId}
                     ownerId={ownerId}
                     setOptions={setCategories}
-                    setSelected={setSelected}
+                    // setSelected={setSelected}
+                    setSelected={(newId) => {
+                      setSelected(newId); 
+                      setFormData((prev) => ({
+                        ...prev,
+                        categoryOrTechnology: newId, 
+                      }));
+
+                      setErrors((prev) => ({
+                        ...prev,
+                        categoryOrTechnology: "", 
+                      }));
+                      
+                      setIsCategoryModalOpen(false);
+                    }}
                     selectionType="id"
                     setErrors={setErrors}
                   />

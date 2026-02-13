@@ -1291,7 +1291,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                           </svg>
                           <div>
                             <p className="text-xs text-gray-500">
-                              LinkedIn Url
+                              LinkedIn URL
                             </p>
 
                             {candidate?.linkedInUrl ? (
@@ -1303,7 +1303,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
                                 }
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="font-medium text-sm text-blue-600 hover:underline break-all"
+                                className="font-medium text-sm text-custom-blue hover:underline break-all"
                               >
                                 {candidate.linkedInUrl}
                               </a>
