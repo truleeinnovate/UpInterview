@@ -59,9 +59,11 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
   // };
   const fetchCompaniesData = async () => {
     try {
-      const data = await getAllCompanies();
-      setCompaniesList(data || []);
-      return data || [];
+      const response = await getAllCompanies({ limit: 1000 });
+      // Handle both paginated response ({ data: [...] }) and direct array response
+      const data = response?.data || response || [];
+      setCompaniesList(Array.isArray(data) ? data : []);
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error("Failed to fetch companies:", error);
       return [];
@@ -227,7 +229,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
     additionalNotes: "",
     skills: [],
     template: {},
-    NoofPositions: "",
+    NoofPositions: 1,
     Location: "",
     externalId: "",
     status: "opened",
@@ -552,10 +554,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       if (!exists) {
         const selectedTitleLabel = selectedTemplate.title
           ? selectedTemplate.title.charAt(0).toUpperCase() +
-            selectedTemplate.title.slice(1)
+          selectedTemplate.title.slice(1)
           : selectedTemplate.type
             ? selectedTemplate.type.charAt(0).toUpperCase() +
-              selectedTemplate.type.slice(1)
+            selectedTemplate.type.slice(1)
             : "Unnamed Template";
 
         baseOptions.push({
@@ -580,7 +582,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
               >
                 {selectedTemplate.type
                   ? selectedTemplate.type.charAt(0).toUpperCase() +
-                    selectedTemplate.type.slice(1)
+                  selectedTemplate.type.slice(1)
                   : ""}
               </span>
             </div>
@@ -649,7 +651,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           // If either is empty, clear cross-field errors
           if (
             next.minexperience ===
-              "Min Experience cannot be greater than Max" ||
+            "Min Experience cannot be greater than Max" ||
             next.minexperience === "Min and Max Experience cannot be equal"
           )
             next.minexperience = "";
@@ -700,7 +702,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
           } else {
             if (
               next.minsalary ===
-                "Minimum Salary cannot be greater than Maximum" ||
+              "Minimum Salary cannot be greater than Maximum" ||
               next.minsalary === "Minimum and Maximum Salary cannot be equal"
             )
               next.minsalary = "";
@@ -725,10 +727,10 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry,
       );
       setEntries(updatedEntries);
@@ -966,8 +968,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save position",
+        error.message ||
+        "Failed to save position",
       );
 
       if (error.response && error.response.status === 400) {
@@ -1453,153 +1455,128 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                 </div>
 
                 <div className="px-6 pt-3">
-                  <form className="space-y-5 mb-5">
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
-                      <div>
-                        <InputField
-                          value={formData.title}
-                          onChange={handleChange}
-                          name="title"
-                          inputRef={fieldRefs.title}
-                          error={errors.title}
-                          label="Title"
-                          required
-                          placeholder="UI/UX Designer"
-                        />
-                      </div>
+                  <form className="space-y-8 mb-5">
+                    {/* SECTION 1: BASIC INFORMATION */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                        Basic Information
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
+                        {/* Row 1: Title & Company Name */}
+                        <div>
+                          <InputField
+                            value={formData.title}
+                            onChange={handleChange}
+                            name="title"
+                            inputRef={fieldRefs.title}
+                            error={errors.title}
+                            label="Title"
+                            required
+                            placeholder="UI/UX Designer"
+                          />
+                        </div>
 
-                      {/* Company Name */}
-                      <div>
-                        {/* <DropdownWithSearchField
-                          value={formData.companyName}
-                          options={companyOptionsRS}
-                          onChange={handleChange}
-                          // error={errors.companyname}
-                          containerRef={fieldRefs.companyname}
-                          label="Company Name"
-                          name="companyName"
+                        <div>
+                          <DropdownWithSearchField
+                            value={formData.companyName}
+                            options={companyOptionsRS}
+                            onChange={handleChange}
+                            containerRef={fieldRefs.companyname}
+                            label="Company Name"
+                            name="companyName"
+                            isCustomName={isCustomCompany}
+                            setIsCustomName={handleIsCustomCompany} // Custom toggle handler
+                            onMenuOpen={fetchCompaniesData}
+                            loading={isCompaniesFetchingAction}
+                            placeholder="Select Company"
+                          />
+                        </div>
+
+                        {/* Row 2: Employment Type & Location */}
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-700 mb-1">
+                            Employment Type
+                          </h3>
+                          <div>
+                            <DropdownSelect
+                              value={employmentTypeOptions.find(
+                                (opt) => opt.value === formData.employmentType,
+                              )}
+                              onChange={(selected) => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  employmentType: selected?.value || "",
+                                }));
+                              }}
+                              options={employmentTypeOptions}
+
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+
+                          <DropdownWithSearchField
+                            value={formData.Location}
+                            options={locationOptionsRS}
+                            onChange={handleChange}
+                            error={errors.Location}
+                            containerRef={fieldRefs.location}
+                            label="Location"
+                            name="Location"
+                            required
+                            isCustomName={isCustomLocation}
+                            setIsCustomName={setIsCustomLocation}
+                            onMenuOpen={loadLocations}
+                            loading={isLocationsFetching}
+                          />
+                        </div>
+
+                        {/* Row 3: No. of Positions & Status */}
+                        <div>
+                          <IncreaseAndDecreaseField
+                            value={formData.NoofPositions}
+                            onChange={handleChange}
+                            inputRef={fieldRefs.NoofPositions}
+                            // error={errors.NoofPositions}
+                            min={1}
+                            max={100}
+                            label="No. of Positions"
+                            name="NoofPositions"
                           // required
-                          isCustomName={isCustomCompany}
-                          setIsCustomName={setIsCustomCompany}
-                          onMenuOpen={loadCompanies}
-                          loading={isCompaniesFetching}
-                        /> */}
-                        {/* <DropdownWithSearchField
-                          value={formData.companyName}
-                          options={companyOptionsRS}
-                          onChange={handleChange}
-                          containerRef={fieldRefs.companyname}
-                          label="Company Name"
-                          name="companyName"
-                          onMenuOpen={fetchCompaniesData}
-                          loading={isCompaniesFetchingAction}
-                          placeholder="Select Company"
-                        /> */}
-                        <DropdownWithSearchField
-                          value={formData.companyName}
-                          options={companyOptionsRS}
-                          onChange={handleChange}
-                          containerRef={fieldRefs.companyname}
-                          label="Company Name"
-                          name="companyName"
-                          isCustomName={isCustomCompany}
-                          setIsCustomName={handleIsCustomCompany} // Custom toggle handler
-                          onMenuOpen={fetchCompaniesData}
-                          loading={isCompaniesFetchingAction}
-                          placeholder="Select Company"
-                        />
+                          />
+                        </div>
+
+                        <div>
+                          <div>
+                            <h3 className="text-sm text-gray-700 font-semibold mb-1">
+                              Status
+                            </h3>
+                            <DropdownSelect
+                              value={statusOptions.find(
+                                (opt) => opt.value === formData.status,
+                              )} // match current selection
+                              onChange={(selected) => {
+                                formData.status = selected.value;
+                                setFormData({ ...formData });
+                              }} // update state with value
+                              options={statusOptions.map((option) => ({
+                                ...option,
+                                label: capitalizeFirstLetter(option.label),
+                              }))}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                      <div>
-                        <h3 className="text-sm font-semibold mb-1">
-                          Employment Type
-                        </h3>
-                        <div>
-                          <DropdownSelect
-                            value={employmentTypeOptions.find(
-                              (opt) => opt.value === formData.employmentType,
-                            )}
-                            onChange={(selected) => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                employmentType: selected?.value || "",
-                              }));
-                            }}
-                            options={employmentTypeOptions}
-                          />
-                        </div>
-                        {/* <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={closeStatusModal}
-                            className="px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-700"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="button"
-                            onClick={confirmStatusUpdate}
-                            disabled={
-                              isMutationLoading ||
-                              (statusTargetRow &&
-                                updatingStatusId === statusTargetRow._id)
-                            }
-                            className="px-3 py-1.5 text-sm rounded bg-custom-blue text-white disabled:opacity-50"
-                          >
-                            Update
-                          </button>
-                        </div> */}
-                      </div>
-
-                      <div>
-                        <h3 className="text-sm font-semibold mb-1">
-                          Change Status
-                        </h3>
-                        <div>
-                          <DropdownSelect
-                            value={statusOptions.find(
-                              (opt) => opt.value === formData.status,
-                            )} // match current selection
-                            onChange={(selected) => {
-                              formData.status = selected.value;
-                              setFormData({ ...formData });
-                            }} // update state with value
-                            // options={statusOptions}
-                            options={statusOptions.map((option) => ({
-                              ...option,
-                              label: capitalizeFirstLetter(option.label),
-                            }))}
-                          />
-                        </div>
-                        {/* <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={closeStatusModal}
-                            className="px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-700"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="button"
-                            onClick={confirmStatusUpdate}
-                            disabled={
-                              isMutationLoading ||
-                              (statusTargetRow &&
-                                updatingStatusId === statusTargetRow._id)
-                            }
-                            className="px-3 py-1.5 text-sm rounded bg-custom-blue text-white disabled:opacity-50"
-                          >
-                            Update
-                          </button>
-                        </div> */}
-                      </div>
-                    </div>
-
-                    {/* Experience */}
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 lg:grid-cols-2">
-                      <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
+                    {/* SECTION 2: EXPERIENCE & COMPENSATION */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                        Experience & Compensation
+                      </h3>
+                      <div className="grid grid-cols-4 gap-4 lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1">
+                        {/* Row 4: Min Exp, Max Exp, Min Salary, Max Salary */}
                         <IncreaseAndDecreaseField
                           value={formData.minexperience}
                           onChange={handleChange}
@@ -1622,9 +1599,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           name="maxexperience"
                           required
                         />
-                      </div>
 
-                      <div className="grid sm:grid-cols-1 grid-cols-2 gap-4">
                         <IncreaseAndDecreaseField
                           value={formData.minSalary}
                           onChange={handleChange}
@@ -1635,7 +1610,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           label="Min Salary (Annual)"
                           name="minSalary"
                           placeholder="Min Salary (Annual)"
-                          // required={formData.maxSalary ? true : false}
+                        // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
                           value={formData.maxSalary}
@@ -1647,426 +1622,412 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           label="Max Salary (Annual)"
                           name="maxSalary"
                           placeholder="Max Salary (Annual)"
-                          // required={formData.minSalary ? true : false}
+                        // required={formData.minSalary ? true : false}
                         />
                       </div>
                     </div>
 
                     {/* location  and no of positions  */}
 
-                    <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                      <IncreaseAndDecreaseField
-                        value={formData.NoofPositions}
-                        onChange={handleChange}
-                        inputRef={fieldRefs.NoofPositions}
-                        // error={errors.NoofPositions}
-                        min={1}
-                        max={100}
-                        label="No. of Positions"
-                        name="NoofPositions"
-                        // required
-                      />
+                    {/* SECTION 3: INTERVIEW SETUP */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                        Interview Setup
+                      </h3>
+                      {/* Select Template */}
+                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
+                        {/* Row 5: Template & External ID */}
+                        <div className="relative">
+                          <DropdownWithSearchField
+                            value={formData.template?._id || ""}
+                            options={templateOptions}
+                            onInputChange={(inputValue, actionMeta) => {
+                              if (actionMeta?.action === "input-change") {
+                                setTemplateSearch(inputValue || "");
+                              }
+                            }}
+                            // Try adding this prop if it exists
+                            formatOptionLabel={(option) => {
+                              // If option.label is already JSX, return it
+                              if (option.label) {
+                                return option.label;
+                              }
 
-                      <div>
-                        <DropdownWithSearchField
-                          value={formData.Location}
-                          options={locationOptionsRS}
-                          onChange={handleChange}
-                          // error={errors.Location}
-                          containerRef={fieldRefs.location}
-                          label="Location"
-                          name="Location"
-                          // required
-                          isCustomName={isCustomLocation}
-                          setIsCustomName={setIsCustomLocation}
-                          onMenuOpen={loadLocations}
-                          loading={isLocationsFetching}
-                        />
-                      </div>
-                      {/* -----v1.0.0-----> */}
-                    </div>
-                    {/* </div> */}
+                              // Otherwise create a styled version
+                              const template = templatesData?.find(
+                                (t) => t._id === option.value,
+                              );
+                              if (!template) return option.label;
 
-                    {/* Select Template */}
-                    <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                      <div>
-                        <DropdownWithSearchField
-                          value={formData.template?._id || ""}
-                          options={templateOptions}
-                          onInputChange={(inputValue, actionMeta) => {
-                            if (actionMeta?.action === "input-change") {
-                              setTemplateSearch(inputValue || "");
-                            }
-                          }}
-                          // Try adding this prop if it exists
-                          formatOptionLabel={(option) => {
-                            // If option.label is already JSX, return it
-                            if (option.label) {
-                              return option.label;
-                            }
-
-                            // Otherwise create a styled version
-                            const template = templatesData?.find(
-                              (t) => t._id === option.value,
-                            );
-                            if (!template) return option.label;
-
-                            return (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                  width: "100%",
-                                }}
-                              >
-                                <span>{option.label}</span>
-                                <span
-                                  className={
-                                    "text-xs font-medium " +
-                                    (template.type === "custom"
-                                      ? "text-blue-600"
-                                      : "text-green-600")
-                                  }
+                              return (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    width: "100%",
+                                  }}
                                 >
-                                  {template.type === "custom"
-                                    ? "Custom"
-                                    : "Standard"}
-                                </span>
+                                  <span>{option.label}</span>
+                                  <span
+                                    className={
+                                      "text-xs font-medium " +
+                                      (template.type === "custom"
+                                        ? "text-blue-600"
+                                        : "text-green-600")
+                                    }
+                                  >
+                                    {template.type === "custom"
+                                      ? "Custom"
+                                      : "Standard"}
+                                  </span>
+                                </div>
+                              );
+                            }}
+                            onChange={(e) => {
+                              const templateId = e.target.value;
+
+                              const fromList = (templatesData || []).find(
+                                (t) => t._id === templateId,
+                              );
+
+                              const resolvedTemplate =
+                                fromList ||
+                                (selectedTemplate &&
+                                  selectedTemplate._id === templateId
+                                  ? selectedTemplate
+                                  : null);
+
+                              setFormData({
+                                ...formData,
+                                template: resolvedTemplate || {},
+                              });
+                            }}
+                            error={errors?.template}
+                            label="Interview Template"
+                            name="template"
+                            required={false}
+                            loading={isTemplatesFetching}
+                            onMenuScrollToBottom={
+                              handleTemplateMenuScrollToBottom
+                            }
+                          />
+                          {/* //v1.0.5 Ranjith <-----------------------------------> */}
+                          {formData.template?._id && (
+                            <button
+                              type="button"
+                              onClick={handleClearTemplate}
+                              className="absolute right-14 text-xl top-7 text-red-500 hover:text-red-600 z-10"
+                              title="Clear template"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+
+                        {/* External ID Field - Only show for organization users */
+                          /* {isOrganization && ( */
+                        }
+                        {true && (
+                          <div>
+                            <div className="flex items-center gap-2 mb-1 relative">
+                              <label className="text-sm font-medium text-gray-700">
+                                External ID
+                              </label>
+                              <div className="relative tooltip-container">
+                                <Info
+                                  className="w-4 h-4 text-gray-400 cursor-pointer"
+                                  onClick={() => setShowTooltip(!showTooltip)}
+                                />
+                                {showTooltip && (
+                                  <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
+                                    External System Reference Id
+                                    <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                                  </div>
+                                )}
                               </div>
-                            );
-                          }}
-                          onChange={(e) => {
-                            const templateId = e.target.value;
-
-                            const fromList = (templatesData || []).find(
-                              (t) => t._id === templateId,
-                            );
-
-                            const resolvedTemplate =
-                              fromList ||
-                              (selectedTemplate &&
-                              selectedTemplate._id === templateId
-                                ? selectedTemplate
-                                : null);
-
-                            setFormData({
-                              ...formData,
-                              template: resolvedTemplate || {},
-                            });
-                          }}
-                          error={errors?.template}
-                          label="Template"
-                          name="template"
-                          required={false}
-                          loading={isTemplatesFetching}
-                          onMenuScrollToBottom={
-                            handleTemplateMenuScrollToBottom
-                          }
-                        />
-                        {/* //v1.0.5 Ranjith <-----------------------------------> */}
-                        {formData.template?._id && (
-                          <button
-                            type="button"
-                            onClick={handleClearTemplate}
-                            className="absolute right-14 text-xl top-7 text-red-500 hover:text-red-600 z-10"
-                            title="Clear template"
-                          >
-                            ×
-                          </button>
+                            </div>
+                            <InputField
+                              value={formData.externalId}
+                              onChange={handleChange}
+                              inputRef={fieldRefs.externalId}
+                              error={errors.externalId}
+                              label=""
+                              name="externalId"
+                              placeholder="External System Reference Id"
+                            />
+                          </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Job Description */}
-                    <DescriptionField
-                      value={formData.jobDescription}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setFormData({ ...formData, jobDescription: value });
-                        if (errors.jobDescription) {
-                          setErrors((prev) => ({
-                            ...prev,
-                            jobDescription: "",
-                          }));
-                        }
-                      }}
-                      name="jobDescription"
-                      inputRef={fieldRefs.jobDescription}
-                      error={errors.jobDescription}
-                      label="Job Description"
-                      required
-                      placeholder="This position is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
-                      rows={10}
-                      minLength={50}
-                      maxLength={1000}
-                    />
+                    {/* SECTION 4: JOB DETAILS */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                        Job Details
+                      </h3>
+                      <div className="space-y-4">
+                        {/* Row 6: Job Description */}
+                        <DescriptionField
+                          value={formData.jobDescription}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFormData({ ...formData, jobDescription: value });
+                            if (errors.jobDescription) {
+                              setErrors((prev) => ({
+                                ...prev,
+                                jobDescription: "",
+                              }));
+                            }
+                          }}
+                          name="jobDescription"
+                          inputRef={fieldRefs.jobDescription}
+                          error={errors.jobDescription}
+                          label="Job Description"
+                          required
+                          placeholder="This position is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
+                          rows={10}
+                          minLength={50}
+                          maxLength={1000}
+                        />
 
-                    {/* Requirements */}
-                    <DescriptionField
-                      value={formData.requirements}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setFormData({ ...formData, requirements: value });
-                        if (errors.requirements) {
-                          setErrors((prev) => ({
-                            ...prev,
-                            requirements: "",
-                          }));
-                        }
-                      }}
-                      name="requirements"
-                      inputRef={fieldRefs.requirements}
-                      error={errors.requirements}
-                      label="Requirements (One Per Line)"
-                      required
-                      placeholder="5+ years of Salesforce development experience
+                        {/* Row 7: Requirements */}
+                        <DescriptionField
+                          value={formData.requirements}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFormData({ ...formData, requirements: value });
+                            if (errors.requirements) {
+                              setErrors((prev) => ({
+                                ...prev,
+                                requirements: "",
+                              }));
+                            }
+                          }}
+                          name="requirements"
+                          inputRef={fieldRefs.requirements}
+                          error={errors.requirements}
+                          label="Requirements (One Per Line)"
+                          required
+                          placeholder="5+ years of Salesforce development experience
 Expert knowledge of Apex, Lightning Web Components, and Visualforce
 Strong understanding of Salesforce data model and security
 Experience with Salesforce integrations (REST/SOAP APIs)"
-                      rows={6}
-                      maxLength={2000}
-                    />
+                          rows={6}
+                          maxLength={2000}
+                        />
 
-                    <div>
-                      <SkillsField
-                        ref={fieldRefs.skills}
-                        entries={entries}
-                        errors={errors}
-                        showValidation={showSkillValidation}
-                        showRequirementLevel={true}
-                        onSkillsValidChange={(hasValidSkills) => {
-                          // Clear the skills error if at least one complete row exists
-                          if (hasValidSkills && errors.skills) {
-                            setErrors((prevErrors) => {
-                              const newErrors = { ...prevErrors };
-                              delete newErrors.skills;
-                              return newErrors;
-                            });
-                          }
-                        }}
-                        onAddSkill={(setEditingIndexCallback) => {
-                          setEntries((prevEntries) => {
-                            const newEntries = [
-                              ...prevEntries,
-                              {
-                                skill: "",
-                                experience: "",
-                                expertise: "",
-                                requirement_level: "REQUIRED",
-                              },
-                            ];
-                            // Only set editing index if callback is provided
-                            if (
-                              setEditingIndexCallback &&
-                              typeof setEditingIndexCallback === "function"
-                            ) {
-                              setEditingIndexCallback(newEntries.length - 1);
-                            }
-                            return newEntries;
-                          });
-                          setSelectedSkill("");
-                          setSelectedExp("");
-                          setSelectedLevel("");
-                        }}
-                        onAddMultipleSkills={(
-                          newSkillEntries,
-                          skillsToRemove = [],
-                        ) => {
-                          setEntries((prevEntries) => {
-                            let updatedEntries = [...prevEntries];
+                        {/* Row 8: Skills Details */}
+                        <div>
+                          <SkillsField
+                            ref={fieldRefs.skills}
+                            entries={entries}
+                            errors={errors}
+                            showValidation={showSkillValidation}
+                            showRequirementLevel={true}
+                            onSkillsValidChange={(hasValidSkills) => {
+                              // Clear the skills error if at least one complete row exists
+                              if (hasValidSkills && errors.skills) {
+                                setErrors((prevErrors) => {
+                                  const newErrors = { ...prevErrors };
+                                  delete newErrors.skills;
+                                  return newErrors;
+                                });
+                              }
+                            }}
+                            onAddSkill={(setEditingIndexCallback) => {
+                              setEntries((prevEntries) => {
+                                const newEntries = [
+                                  ...prevEntries,
+                                  {
+                                    skill: "",
+                                    experience: "",
+                                    expertise: "",
+                                    requirement_level: "REQUIRED",
+                                  },
+                                ];
+                                // Only set editing index if callback is provided
+                                if (
+                                  setEditingIndexCallback &&
+                                  typeof setEditingIndexCallback === "function"
+                                ) {
+                                  setEditingIndexCallback(newEntries.length - 1);
+                                }
+                                return newEntries;
+                              });
+                              setSelectedSkill("");
+                              setSelectedExp("");
+                              setSelectedLevel("");
+                            }}
+                            onAddMultipleSkills={(
+                              newSkillEntries,
+                              skillsToRemove = [],
+                            ) => {
+                              setEntries((prevEntries) => {
+                                let updatedEntries = [...prevEntries];
 
-                            // First, handle skill removals
-                            if (skillsToRemove.length > 0) {
-                              // Count current skills with data
-                              const currentFilledSkills = updatedEntries.filter(
-                                (e) => e.skill,
-                              ).length;
-                              const remainingSkillsAfterRemoval =
-                                currentFilledSkills - skillsToRemove.length;
+                                // First, handle skill removals
+                                if (skillsToRemove.length > 0) {
+                                  // Count current skills with data
+                                  const currentFilledSkills = updatedEntries.filter(
+                                    (e) => e.skill,
+                                  ).length;
+                                  const remainingSkillsAfterRemoval =
+                                    currentFilledSkills - skillsToRemove.length;
 
-                              // If we still have 3+ skills after removal, remove rows entirely
-                              if (remainingSkillsAfterRemoval >= 3) {
-                                updatedEntries = updatedEntries.filter(
-                                  (entry) =>
-                                    !skillsToRemove.includes(entry.skill),
-                                );
-                              } else {
-                                // If we'd have less than 3, just clear the skill but keep rows
-                                updatedEntries = updatedEntries.map((entry) => {
-                                  if (skillsToRemove.includes(entry.skill)) {
-                                    return {
+                                  // If we still have 3+ skills after removal, remove rows entirely
+                                  if (remainingSkillsAfterRemoval >= 3) {
+                                    updatedEntries = updatedEntries.filter(
+                                      (entry) =>
+                                        !skillsToRemove.includes(entry.skill),
+                                    );
+                                  } else {
+                                    // If we'd have less than 3, just clear the skill but keep rows
+                                    updatedEntries = updatedEntries.map((entry) => {
+                                      if (skillsToRemove.includes(entry.skill)) {
+                                        return {
+                                          skill: "",
+                                          experience: "",
+                                          expertise: "",
+                                          requirement_level: "REQUIRED",
+                                        };
+                                      }
+                                      return entry;
+                                    });
+                                  }
+
+                                  // Ensure we always have at least 3 rows
+                                  while (updatedEntries.length < 3) {
+                                    updatedEntries.push({
                                       skill: "",
                                       experience: "",
                                       expertise: "",
                                       requirement_level: "REQUIRED",
-                                    };
+                                    });
                                   }
-                                  return entry;
-                                });
+                                }
+
+                                // Then, add new skills - fill empty rows first
+                                let skillIndex = 0;
+                                for (
+                                  let i = 0;
+                                  i < updatedEntries.length &&
+                                  skillIndex < newSkillEntries.length;
+                                  i++
+                                ) {
+                                  if (!updatedEntries[i].skill) {
+                                    updatedEntries[i] = {
+                                      ...updatedEntries[i],
+                                      skill: newSkillEntries[skillIndex].skill,
+                                      requirement_level:
+                                        newSkillEntries[skillIndex]
+                                          .requirement_level || "REQUIRED",
+                                    };
+                                    skillIndex++;
+                                  }
+                                }
+
+                                // Add remaining skills as new rows
+                                while (
+                                  skillIndex < newSkillEntries.length &&
+                                  updatedEntries.length < 10
+                                ) {
+                                  updatedEntries.push(newSkillEntries[skillIndex]);
+                                  skillIndex++;
+                                }
+
+                                return updatedEntries;
+                              });
+                              // Update allSelectedSkills
+                              setAllSelectedSkills((prev) => {
+                                let updated = prev.filter(
+                                  (s) => !skillsToRemove.includes(s),
+                                );
+                                return [
+                                  ...updated,
+                                  ...newSkillEntries.map((e) => e.skill),
+                                ];
+                              });
+                            }}
+                            onEditSkill={(index) => {
+                              const entry = entries[index];
+                              setSelectedSkill(entry.skill || "");
+                              setSelectedExp(entry.experience);
+                              setSelectedLevel(entry.expertise);
+                            }}
+                            onDeleteSkill={(index) => {
+                              const entry = entries[index];
+                              setAllSelectedSkills(
+                                allSelectedSkills.filter(
+                                  (skill) => skill !== entry.skill,
+                                ),
+                              );
+                              setEntries(entries.filter((_, i) => i !== index));
+                            }}
+                            onUpdateEntry={(index, updatedEntry) => {
+                              const newEntries = [...entries];
+                              const oldSkill = newEntries[index]?.skill;
+                              newEntries[index] = updatedEntry;
+                              setEntries(newEntries);
+
+                              // Update allSelectedSkills if skill changed
+                              if (oldSkill !== updatedEntry.skill) {
+                                const newSelectedSkills = newEntries
+                                  .map((e) => e.skill)
+                                  .filter(Boolean);
+                                setAllSelectedSkills(newSelectedSkills);
                               }
 
-                              // Ensure we always have at least 3 rows
-                              while (updatedEntries.length < 3) {
-                                updatedEntries.push({
-                                  skill: "",
-                                  experience: "",
-                                  expertise: "",
-                                  requirement_level: "REQUIRED",
-                                });
-                              }
-                            }
-
-                            // Then, add new skills - fill empty rows first
-                            let skillIndex = 0;
-                            for (
-                              let i = 0;
-                              i < updatedEntries.length &&
-                              skillIndex < newSkillEntries.length;
-                              i++
-                            ) {
-                              if (!updatedEntries[i].skill) {
-                                updatedEntries[i] = {
-                                  ...updatedEntries[i],
-                                  skill: newSkillEntries[skillIndex].skill,
-                                  requirement_level:
-                                    newSkillEntries[skillIndex]
-                                      .requirement_level || "REQUIRED",
-                                };
-                                skillIndex++;
-                              }
-                            }
-
-                            // Add remaining skills as new rows
-                            while (
-                              skillIndex < newSkillEntries.length &&
-                              updatedEntries.length < 10
-                            ) {
-                              updatedEntries.push(newSkillEntries[skillIndex]);
-                              skillIndex++;
-                            }
-
-                            return updatedEntries;
-                          });
-                          // Update allSelectedSkills
-                          setAllSelectedSkills((prev) => {
-                            let updated = prev.filter(
-                              (s) => !skillsToRemove.includes(s),
-                            );
-                            return [
-                              ...updated,
-                              ...newSkillEntries.map((e) => e.skill),
-                            ];
-                          });
-                        }}
-                        onEditSkill={(index) => {
-                          const entry = entries[index];
-                          setSelectedSkill(entry.skill || "");
-                          setSelectedExp(entry.experience);
-                          setSelectedLevel(entry.expertise);
-                        }}
-                        onDeleteSkill={(index) => {
-                          const entry = entries[index];
-                          setAllSelectedSkills(
-                            allSelectedSkills.filter(
-                              (skill) => skill !== entry.skill,
-                            ),
-                          );
-                          setEntries(entries.filter((_, i) => i !== index));
-                        }}
-                        onUpdateEntry={(index, updatedEntry) => {
-                          const newEntries = [...entries];
-                          const oldSkill = newEntries[index]?.skill;
-                          newEntries[index] = updatedEntry;
-                          setEntries(newEntries);
-
-                          // Update allSelectedSkills if skill changed
-                          if (oldSkill !== updatedEntry.skill) {
-                            const newSelectedSkills = newEntries
-                              .map((e) => e.skill)
-                              .filter(Boolean);
-                            setAllSelectedSkills(newSelectedSkills);
-                          }
-
-                          // Update formData
-                          setFormData((prev) => ({
-                            ...prev,
-                            skills: newEntries,
-                          }));
-                        }}
-                        setIsModalOpen={setIsModalOpen}
-                        setEditingIndex={setEditingIndex}
-                        isModalOpen={isModalOpen}
-                        currentStep={currentStep}
-                        setCurrentStep={setCurrentStep}
-                        searchTerm={searchTerm}
-                        setSearchTerm={setSearchTerm}
-                        selectedSkill={selectedSkill}
-                        setSelectedSkill={setSelectedSkill}
-                        allSelectedSkills={allSelectedSkills}
-                        selectedExp={selectedExp}
-                        setSelectedExp={setSelectedExp}
-                        selectedLevel={selectedLevel}
-                        setSelectedLevel={setSelectedLevel}
-                        skills={skills}
-                        isNextEnabled={isNextEnabled}
-                        handleAddEntry={handleAddEntry}
-                        skillpopupcancelbutton={skillpopupcancelbutton}
-                        editingIndex={editingIndex}
-                        onOpenSkills={loadSkills}
-                      />
-                    </div>
-
-                    {/* v1.0.2 ---------------------------------------------------> */}
-                    <DescriptionField
-                      value={formData.additionalNotes}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          additionalNotes: e.target.value,
-                        })
-                      }
-                      name="additionalNotes"
-                      error={errors?.additionalNotes}
-                      label="Additional Notes"
-                      placeholder="Type your notes here..."
-                      rows={5}
-                      maxLength={1000}
-                    />
-
-                    {/* External ID Field - Only show for organization users */}
-                    {isOrganization && (
-                      <div className="grid grid-cols-2 w-full sm:w-full md:w-full sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1 relative">
-                            <label className="text-sm font-medium text-gray-700">
-                              External ID
-                            </label>
-                            <div className="relative tooltip-container">
-                              <Info
-                                className="w-4 h-4 text-gray-400 cursor-pointer"
-                                onClick={() => setShowTooltip(!showTooltip)}
-                              />
-                              {showTooltip && (
-                                <div className="absolute left-6 -top-1 z-10 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg">
-                                  External System Reference Id
-                                  <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <InputField
-                            value={formData.externalId}
-                            onChange={handleChange}
-                            inputRef={fieldRefs.externalId}
-                            error={errors.externalId}
-                            label=""
-                            name="externalId"
-                            placeholder="External System Reference Id"
+                              // Update formData
+                              setFormData((prev) => ({
+                                ...prev,
+                                skills: newEntries,
+                              }));
+                            }}
+                            setIsModalOpen={setIsModalOpen}
+                            setEditingIndex={setEditingIndex}
+                            isModalOpen={isModalOpen}
+                            currentStep={currentStep}
+                            setCurrentStep={setCurrentStep}
+                            searchTerm={searchTerm}
+                            setSearchTerm={setSearchTerm}
+                            selectedSkill={selectedSkill}
+                            setSelectedSkill={setSelectedSkill}
+                            allSelectedSkills={allSelectedSkills}
+                            selectedExp={selectedExp}
+                            setSelectedExp={setSelectedExp}
+                            selectedLevel={selectedLevel}
+                            setSelectedLevel={setSelectedLevel}
+                            skills={skills}
+                            isNextEnabled={isNextEnabled}
+                            handleAddEntry={handleAddEntry}
+                            skillpopupcancelbutton={skillpopupcancelbutton}
+                            editingIndex={editingIndex}
+                            onOpenSkills={loadSkills}
                           />
                         </div>
+
+                        {/* Row 9: Additional Notes */}
+                        {/* v1.0.2 ---------------------------------------------------> */}
+                        <DescriptionField
+                          value={formData.additionalNotes}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              additionalNotes: e.target.value,
+                            })
+                          }
+                          name="additionalNotes"
+                          error={errors?.additionalNotes}
+                          label="Additional Notes"
+                          placeholder="Type your notes here..."
+                          rows={5}
+                          maxLength={1000}
+                        />
+
                       </div>
-                    )}
+                    </div>
+
                   </form>
                   {/* v1.0.4 <---------------------------------------------------- */}
                   <div className="flex justify-end items-center px-0 py-4 gap-2">

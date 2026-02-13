@@ -130,9 +130,9 @@ export const useCompanies = () => {
 
   // 2. GET ALL Companies - Now includes tenantId as a query param
   const getAllCompaniesMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (params = {}) => {
       const response = await axios.get(BASE_URL, {
-        params: { tenantId }, // Matches your backend req.query.tenantId
+        params: { tenantId, ...params }, // Matches your backend req.query.tenantId + pagination/filters
         headers: getHeaders(),
       });
       return response.data;

@@ -638,7 +638,7 @@ const ScheduleAssessment = () => {
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
               dataLength={Math.max(1, total || scheduleData?.length || 0)}
-              searchPlaceholder="Search Assessments..."
+              searchPlaceholder="Search by Assessment Id, Template Name, Status..."
               filterIconRef={filterIconRef}
             />
             {/* <-------------------------------v1.0.3 */}

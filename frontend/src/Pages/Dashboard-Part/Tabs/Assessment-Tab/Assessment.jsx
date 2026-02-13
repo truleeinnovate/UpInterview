@@ -621,7 +621,7 @@ const Assessment = () => {
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
               dataLength={assessmentData?.length}
-              searchPlaceholder="Search by Assessments..."
+              searchPlaceholder="Search by Template Name..."
               filterIconRef={filterIconRef}
               activeTab={activeTab}
               setActiveTab={setActiveTab}

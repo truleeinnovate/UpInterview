@@ -578,7 +578,7 @@ const Wallet = () => {
           onSuccess={(data) => {
             // If just showing history (from history button click)
             if (data?.showHistory) {
-              setIsWithdrawalOpen(false);
+              //setIsWithdrawalOpen(false);
               setIsWithdrawalHistoryOpen(true);
             } else {
               // Normal withdrawal success flow

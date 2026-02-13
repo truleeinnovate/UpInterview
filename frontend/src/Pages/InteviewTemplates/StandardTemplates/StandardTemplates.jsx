@@ -207,8 +207,8 @@ const StandardTemplates = ({ handleClone }) => {
     setSelectedFilters(filters);
     setIsFilterActive(
       selectedStatus.length > 0 ||
-        selectedFormats.length > 0 ||
-        createdDatePreset !== ""
+      selectedFormats.length > 0 ||
+      createdDatePreset !== ""
     );
     setFilterPopupOpen(false);
     setCurrentPage(0);
@@ -359,7 +359,7 @@ const StandardTemplates = ({ handleClone }) => {
           isFilterActive={isFilterActive}
           isFilterPopupOpen={isFilterPopupOpen}
           dataLength={normalizedTemplates.length}
-          searchPlaceholder="Search Interview Templates..."
+          searchPlaceholder="Search by Template, Description, Best For..."
           filterIconRef={filterIconRef}
           // v1.0.2 <------------------------------------------
           templatesData={normalizedTemplates}
@@ -367,7 +367,7 @@ const StandardTemplates = ({ handleClone }) => {
           customCount={customCount}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          // v1.0.2 ------------------------------------------>
+        // v1.0.2 ------------------------------------------>
         />
         <FilterPopup
           isOpen={isFilterPopupOpen}
