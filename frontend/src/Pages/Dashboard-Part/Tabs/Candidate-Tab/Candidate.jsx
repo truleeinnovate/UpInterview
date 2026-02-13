@@ -1206,7 +1206,7 @@ function Candidate({
                   isFilterPopupOpen={isFilterPopupOpen}
                   isFilterActive={isFilterActive}
                   dataLength={dataToUse?.length}
-                  searchPlaceholder="Search by Candidate Name, Email, Contact..."
+                  searchPlaceholder="Search by Name, Email, Contact..."
                   filterIconRef={filterIconRef}
                 />
               </div>

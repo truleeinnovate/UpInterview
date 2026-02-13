@@ -634,7 +634,7 @@ const Feedback = () => {
                 isFilterActive={isFilterActive}
                 isFilterPopupOpen={isFilterPopupOpen}
                 dataLength={filteredFeedbacks.length}
-                searchPlaceholder="Search by Id, Candidate Name, Position..."
+                searchPlaceholder="Search by Id, Name, Position..."
                 filterIconRef={filterIconRef}
               />
             </div>
