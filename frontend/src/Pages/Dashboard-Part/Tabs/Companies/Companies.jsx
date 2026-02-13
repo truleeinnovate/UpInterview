@@ -113,21 +113,10 @@ const Companies = () => {
   const { industries } = useMasterData({}, "adminPortal");
   const { getAllCompanies, deleteCompany } = useCompanies();
 
-  const fetchCompanies = async () => {
-    try {
-      const data = await getAllCompanies();
-      setCompanies(data);
-    } catch (error) {
-      console.error("Failed to fetch companies:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
-
+  // State for server-side pagination
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const ITEMS_PER_PAGE = 10;
-  const companiesData = companies;
 
   const defaultFilters = {
     status: [],
@@ -137,40 +126,39 @@ const Companies = () => {
   const [selectedFilters, setSelectedFilters] = useState(defaultFilters);
   const [tempFilters, setTempFilters] = useState(defaultFilters);
 
-  const processedData = React.useMemo(() => {
-    let result = [...(companiesData || [])];
+  const fetchCompanies = async () => {
+    try {
+      const filters = {
+        page: currentPage + 1, // API expects 1-based index
+        limit: ITEMS_PER_PAGE,
+        search: searchQuery,
+        status: selectedFilters.status.join(","),
+        industry: selectedFilters.industry.join(","),
+      };
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.name?.toLowerCase().includes(query) ||
-          c.industry?.toLowerCase().includes(query),
-      );
+      const result = await getAllCompanies(filters);
+
+      // Backend returns { data, totalCount, totalPages, currentPage }
+      setCompanies(result.data || []);
+      setTotalPages(result.totalPages || 0);
+      setTotalCount(result.totalCount || 0);
+
+      // Adjust page if current page is out of bounds (e.g., after filtering)
+      if (result.totalPages > 0 && currentPage >= result.totalPages) {
+        setCurrentPage(0);
+      }
+    } catch (error) {
+      console.error("Failed to fetch companies:", error);
+      setCompanies([]);
     }
-
-    if (selectedFilters.status.length > 0) {
-      result = result.filter((c) => selectedFilters.status.includes(c.status));
-    }
-
-    if (selectedFilters.industry.length > 0) {
-      result = result.filter((c) =>
-        selectedFilters.industry.includes(c.industry),
-      );
-    }
-
-    return result;
-  }, [companiesData, searchQuery, selectedFilters]);
+  };
 
   useEffect(() => {
-    setCurrentPage(0);
-  }, [searchQuery, selectedFilters]);
+    fetchCompanies();
+  }, [searchQuery, selectedFilters, currentPage]);
 
-  const totalPages = Math.ceil(processedData.length / ITEMS_PER_PAGE);
-  const paginatedData = processedData.slice(
-    currentPage * ITEMS_PER_PAGE,
-    (currentPage + 1) * ITEMS_PER_PAGE,
-  );
+  const paginatedData = companies; // Now getting paginated data directly from API
+
 
   const columns = getCompanyColumns(navigate);
 
@@ -234,14 +222,15 @@ const Companies = () => {
           JSON.stringify(selectedFilters) !== JSON.stringify(defaultFilters)
         }
         isFilterPopupOpen={isFilterPopupOpen}
-        dataLength={processedData.length}
+        dataLength={totalCount}
         filterIconRef={filterIconRef}
+        searchPlaceholder="Search by Company Name, Industry, Email..."
       />
 
       <div className="fixed sm:top-64 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
         {view === "table" ? (
           <TableView
-            data={paginatedData}
+            data={companies}
             columns={columns}
             actions={actions}
             emptyState="No Companies found."
@@ -250,7 +239,7 @@ const Companies = () => {
         ) : (
           <KanbanView
             loading={false}
-            data={paginatedData.map((c) => ({
+            data={companies.map((c) => ({
               ...c,
               id: c._id,
               title: c.name,
@@ -281,6 +270,32 @@ const Companies = () => {
           filterIconRef={filterIconRef}
         >
           <div className="p-4 space-y-4">
+            {/* Status Filter */}
+            <div>
+              <h4 className="font-semibold mb-2">Status</h4>
+              {["Active", "Inactive"].map((status) => (
+                <label
+                  key={status}
+                  className="flex gap-2 text-sm cursor-pointer hover:text-custom-blue"
+                >
+                  <input
+                    type="checkbox"
+                    className="accent-custom-blue"
+                    checked={tempFilters.status.includes(status.toLowerCase())}
+                    onChange={(e) => {
+                      const val = status.toLowerCase();
+                      const next = e.target.checked
+                        ? [...tempFilters.status, val]
+                        : tempFilters.status.filter((item) => item !== val);
+                      setTempFilters({ ...tempFilters, status: next });
+                    }}
+                  />
+                  {status}
+                </label>
+              ))}
+            </div>
+
+            {/* Industry Filter */}
             <div>
               <h4 className="font-semibold mb-2">Industry</h4>
               {industries.map((i) => (

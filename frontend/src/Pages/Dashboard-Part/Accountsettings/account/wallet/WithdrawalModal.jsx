@@ -160,17 +160,16 @@ export function WithdrawalModal({ onClose, onSuccess }) {
         <button
           type="button"
           onClick={() => {
-            // Navigate to withdrawal history or open a history modal
-            // For now, we'll close this modal and trigger a history view
-            onClose();
+            // For now, we'll keep this modal open and trigger a history view
+            // to allow users to return back here after viewing history.
             if (onSuccess) {
               onSuccess({ showHistory: true });
             }
           }}
+          title="Withdrawal History"
           className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm"
         >
           <History className="h-4 w-4" />
-          <span className="font-medium">Withdrawal History</span>
         </button>
       }
     >

@@ -84,9 +84,8 @@ import { useMediaQuery } from "react-responsive";
                   className="cursor-pointer"
                 >
                   <FaList
-                    className={`text-xl mr-4 ${
-                      view === "table" ? "text-custom-blue" : ""
-                    }`}
+                    className={`text-xl mr-4 ${view === "table" ? "text-custom-blue" : ""
+                      }`}
                   />
                 </span>
               </Tooltip>
@@ -96,9 +95,8 @@ import { useMediaQuery } from "react-responsive";
                   className="cursor-pointer"
                 >
                   <TbLayoutGridRemove
-                    className={`text-xl ${
-                      view === "kanban" ? "text-custom-blue" : ""
-                    }`}
+                    className={`text-xl ${view === "kanban" ? "text-custom-blue" : ""
+                      }`}
                   />
                 </span>
               </Tooltip>
@@ -114,7 +112,7 @@ import { useMediaQuery } from "react-responsive";
         {startContent && <div className="mr-3">{startContent}</div>}
         {/* Search Input */}
         <div className="sm:mt-0 flex justify-end w-full sm:w-auto">
-          <div className="max-w-lg w-full">
+          <div className="w-80 max-w-lg">
             <label htmlFor="search" className="sr-only">
               Search
             </label>

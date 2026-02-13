@@ -508,7 +508,7 @@ function SupportDesk() {
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
               dataLength={tickets?.tickets?.length}
-              searchPlaceholder="Search by ID or Contact..."
+              searchPlaceholder="Search by Ticket Id, Contact, Subject, Issue Type, Priority..."
               filterIconRef={filterIconRef}
             />
           </div>

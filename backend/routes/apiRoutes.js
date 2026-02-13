@@ -298,13 +298,16 @@ router.get(
           // }
 
           if (mockSearch) {
+            const sanitizedSearch = mockSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const searchRegex = new RegExp(sanitizedSearch, "i");
+
             mockQuery.$and = [
               { ...query },
               {
                 $or: [
-                  { mockInterviewCode: { $regex: mockSearch, $options: "i" } },
-                  { currentRole: { $regex: mockSearch, $options: "i" } },
-                  { candidateName: { $regex: mockSearch, $options: "i" } },
+                  { mockInterviewCode: { $regex: searchRegex } },
+                  { currentRole: { $regex: searchRegex } },
+                  { candidateName: { $regex: searchRegex } },
                 ],
               },
             ];
@@ -541,281 +544,6 @@ router.get(
           break;
 
 
-        // case "mockinterview":
-        //   const {
-        //     search: mockSearch,
-        //     page: mockPage = 1,
-        //     limit: mockLimit,
-        //     status: mockStatus = [],
-        //     currentRole: currentRole,
-        //     duration: mockDuration = {},
-        //     createdDate: mockCreatedDate = "",
-        //     interviewer: mockInterviewer = [],
-        //   } = req.query;
-
-        //   console.log("req.query", req.query);
-
-        //   // -------------------------------
-        //   // BASE QUERY FOR MOCKINTERVIEW
-        //   // -------------------------------
-        //   let mockQuery = { ...query };
-
-        //   // Full text search
-        //   if (mockSearch) {
-        //     mockQuery.$or = [
-        //       { mockInterviewCode: { $regex: mockSearch, $options: "i" } },
-        //       { currentRole: { $regex: mockSearch, $options: "i" } },
-        //       { candidateName: { $regex: mockSearch, $options: "i" } },
-        //       { Role: { $regex: mockSearch, $options: "i" } },
-        //     ];
-        //   }
-
-        //   // Technology filter
-        //   if (currentRole) {
-        //     mockQuery.currentRole = { $in: currentRole };
-        //   }
-
-        //   // Created Date filter
-        //   if (mockCreatedDate) {
-        //     const now = new Date();
-        //     let startDate = new Date();
-
-        //     switch (mockCreatedDate) {
-        //       case "last7":
-        //         startDate.setDate(now.getDate() - 7);
-        //         break;
-        //       case "last30":
-        //         startDate.setDate(now.getDate() - 30);
-        //         break;
-        //       case "last90":
-        //         startDate.setDate(now.getDate() - 90);
-        //         break;
-        //       default:
-        //         startDate = null;
-        //     }
-
-        //     if (startDate) {
-        //       mockQuery.createdAt = { $gte: startDate };
-        //     }
-        //   }
-
-        //   // ------------------------------------------------------------------
-        //   // ⭐ ROUND FILTERS (status + duration) – FROM MockInterviewRound
-        //   // ------------------------------------------------------------------
-        //   let roundFilteredInterviewIds = null;
-        //   const roundFilters = {};
-
-        //   // STATUS filter (from MockInterviewRound)
-        //   if (mockStatus.length > 0) {
-        //     roundFilters.status = {
-        //       $in: mockStatus.map((s) =>
-        //         s === "Requests Sent" ? "RequestSent" : s
-        //       ),
-        //     };
-        //   }
-
-        //   // DURATION filter (from MockInterviewRound)
-        //   if (mockDuration.min || mockDuration.max) {
-        //     roundFilters.duration = {};
-        //     if (mockDuration.min)
-        //       roundFilters.duration.$gte = parseInt(mockDuration.min);
-        //     if (mockDuration.max)
-        //       roundFilters.duration.$lte = parseInt(mockDuration.max);
-        //   }
-
-        //   // If any round filters exist → fetch matching mockInterviewIds
-        //   if (Object.keys(roundFilters).length > 0) {
-        //     const roundDocs = await MockInterviewRound.find(roundFilters)
-        //       .select("mockInterviewId")
-        //       .lean();
-
-        //     roundFilteredInterviewIds = roundDocs.map((r) =>
-        //       r.mockInterviewId.toString()
-        //     );
-
-        //     // No interview matches → return empty response
-        //     if (roundFilteredInterviewIds.length === 0) {
-        //       return {
-        //         data: [],
-        //         totalCount: 0,
-        //         totalPages: 0,
-        //         filteredCount: 0,
-        //         currentPage: 1,
-        //         limit: mockLimit,
-        //       };
-        //     }
-        //   }
-
-        //   // Apply ROUND FILTER to main query
-        //   if (roundFilteredInterviewIds) {
-        //     mockQuery._id = { $in: roundFilteredInterviewIds };
-        //   }
-
-        //   // ---------------------------------------------------------------
-        //   // PAGINATION VALUES
-        //   // ---------------------------------------------------------------
-        //   const pageNum = Math.max(1, parseInt(mockPage));
-        //   // const limitNum =
-        //   //   mockLimit === Infinity
-        //   //     ? Infinity
-        //   //     : Math.max(1, parseInt(mockLimit));
-        //   // const skip = (pageNum - 1) * limitNum;
-
-        //   let limitNum = mockLimit;
-
-        //   // Convert Infinity (string or number) → 0 because MongoDB uses 0 = unlimited
-        //   if (
-        //     mockLimit === "Infinity" ||
-        //     mockLimit === Infinity ||
-        //     isNaN(limitNum)
-        //   ) {
-        //     limitNum = 0;
-        //   }
-
-        //   // Count BEFORE pagination
-        //   const totalCount = await MockInterview.countDocuments(mockQuery);
-        //   const totalPages =
-        //     totalCount > 0 ? Math.ceil(totalCount / limitNum) : 0;
-
-        //   // ---------------------------------------------------------------
-        //   // FETCH MOCK INTERVIEWS
-        //   // ---------------------------------------------------------------
-        //   const mockInterviews = await MockInterview.find(mockQuery)
-        //     .sort({ _id: -1 })
-        //     // .skip(skip)
-        //     .limit(limitNum)
-        //     .lean();
-
-        //   const interviewIds = mockInterviews.map((i) => i._id);
-
-        //   const roleNames = mockInterviews
-        //     .map((i) => i.currentRole)
-        //     .filter(Boolean);
-
-        //   let roleDocs = [];
-
-        //   if (roleNames.length > 0) {
-        //     roleDocs = await RoleMaster.find({
-        //       roleName: { $in: roleNames },
-        //     }).lean();
-        //   }
-
-        //   const roleMaps = {};
-
-        //   roleDocs.forEach((r) => {
-        //     roleMaps[r.roleName] = r;
-        //   });
-
-        //   // ---------------------------------------------------------------
-        //   // FETCH ROUNDS (JOIN)
-        //   // ---------------------------------------------------------------
-        //   const mockRounds = await MockInterviewRound.find({
-        //     mockInterviewId: { $in: interviewIds },
-        //   })
-        //     .populate({
-        //       path: "interviewers",
-        //       model: "Contacts",
-        //       select: "firstName lastName email",
-        //     })
-        //     .lean();
-
-        //   // const roleLabels = mockInterviews.map((i) => i.Role).filter(Boolean);
-
-        //   // let roleDocs = [];
-        //   // if (roleLabels.length > 0) {
-        //   //   roleDocs = await RoleMaster.find({
-        //   //     roleName: { $in: roleLabels },
-        //   //   }).lean();
-        //   // }
-
-        //   // // Convert to quick lookup
-        //   // const roleMap = {};
-        //   // roleDocs.forEach((r) => {
-        //   //   roleMap[r.roleLabel] = r;
-        //   // });
-        //   // console.log("roleMap", roleMap);
-
-        //   // let combinedData = mockInterviews.map((interview) => {
-        //   //   const rounds = mockRounds.filter(
-        //   //     (r) => r.mockInterviewId.toString() === interview._id.toString()
-        //   //   );
-
-        //   //   const roleInfo = roleMap[interview.Role] || null;
-
-        //   //   return {
-        //   //     ...interview,
-
-        //   //     rounds,
-        //   //     roleDetails: roleInfo
-        //   //       ? {
-        //   //           roleName: roleInfo.roleName,
-        //   //           roleLabel: roleInfo.roleLabel,
-        //   //           roleCategory: roleInfo.roleCategory,
-        //   //         }
-        //   //       : null,
-        //   //   };
-        //   // });
-
-        //   // MERGE INTERVIEWS + ROUNDS
-        //   // let combinedData = mockInterviews.map((interview) => ({
-        //   //   ...interview,
-        //   //     roleDetails: roleInfo,
-        //   //   rounds: mockRounds.filter(
-        //   //     (r) => r.mockInterviewId.toString() === interview._id.toString()
-        //   //   ),
-        //   // }));
-
-        //   let combinedData = mockInterviews.map((interview) => {
-        //     const rounds = mockRounds.filter(
-        //       (r) => r.mockInterviewId.toString() === interview._id.toString()
-        //     );
-
-        //     const roleInfo = roleMaps[interview.currentRole] || null;
-
-        //     return {
-        //       ...interview,
-        //       rounds,
-        //       roleDetails: roleInfo
-        //         ? {
-        //             roleName: roleInfo.roleName,
-        //             roleLabel: roleInfo.roleLabel,
-        //             roleCategory: roleInfo.roleCategory,
-        //           }
-        //         : null,
-        //     };
-        //   });
-
-        //   // ---------------------------------------------------------------
-        //   // INTERVIEWER FILTER AFTER JOIN
-        //   // ---------------------------------------------------------------
-        //   if (mockInterviewer.length > 0) {
-        //     combinedData = combinedData.filter((interview) => {
-        //       const interviewers =
-        //         interview.rounds?.flatMap((r) => r.interviewers) || [];
-
-        //       return interviewers.some((int) => {
-        //         const fullName = `${int.firstName || ""} ${
-        //           int.lastName || ""
-        //         }`.trim();
-        //         return mockInterviewer.includes(fullName);
-        //       });
-        //     });
-        //   }
-
-        //   // ---------------------------------------------------------------
-        //   // FINAL RESPONSE
-        //   // ---------------------------------------------------------------
-        //   data = {
-        //     data: combinedData,
-        //     totalCount,
-        //     filteredCount: combinedData.length,
-        //     currentPage: pageNum,
-        //     totalPages,
-        //     limit: limitNum,
-        //   };
-
-        //   break;
-
         case "tenantquestions":
           //<--------v1.0.8-----
           // console.log('[21] Processing TenantQuestions model (aggregated from interview + assessment)');
@@ -968,12 +696,13 @@ router.get(
 
             // Search filter - works for both types
             if (search && search.trim()) {
-              const searchRegex = new RegExp(search.trim(), "i");
+              const sanitizedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const searchRegex = new RegExp(sanitizedSearch, "i");
               finalQuery.$and = finalQuery.$and || [];
               finalQuery.$and.push({
                 $or: [
                   { title: searchRegex },
-                  { interviewTemplateCode: searchRegex },
+                  //{ interviewTemplateCode: searchRegex },
                   { description: searchRegex },
                   { bestFor: searchRegex },
                 ],
@@ -1115,12 +844,13 @@ router.get(
             // returning the union of standard + tenant-custom templates.
             let finalQuery = { ...baseQuery };
             if (search && search.trim()) {
-              const searchRegex = new RegExp(search.trim(), "i");
+              const sanitizedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const searchRegex = new RegExp(sanitizedSearch, "i");
               finalQuery.$and = finalQuery.$and || [];
               finalQuery.$and.push({
                 $or: [
                   { title: searchRegex },
-                  { interviewTemplateCode: searchRegex },
+                  //{ interviewTemplateCode: searchRegex },
                   { description: searchRegex },
                   { bestFor: searchRegex },
                 ],
@@ -1184,52 +914,6 @@ router.get(
           break;
         }
 
-        // ------------------------------ v1.0.9 END
-        // <------------------------------- v1.0.3
-        //   case 'interviewtemplate':
-        //   const {
-        //   page = 1,
-        //   limit = 10,
-        //   search = '',
-        //   status,
-        //   format,
-        //   roundsMin,
-        //   roundsMax,
-        //   createdDate,
-        //   sortBy = 'createdAt',
-        //   sortOrder = 'desc'
-        // } = req.query;
-
-        //       // Parse page and limit
-        // const pageNum = parseInt(page);
-        // const limitNum = parseInt(limit);
-        // const skip = (pageNum - 1) * limitNum;
-
-        //   // Use the existing query (which has tenantId and ownerId filters) and add standard templates
-
-        //     query = {
-        //       $or: [
-        //         { type: 'standard' }, // Standard templates are accessible to all
-        //         {
-        //           $and: [
-        //             { type: 'custom' },
-        //             query, // Reuse the base query with tenantId and ownerId filters
-        //           ],
-        //         },
-        //       ],
-        //     };
-
-        //     data = await DataModel.find(query)
-        //       .populate({
-        //         path: 'rounds.interviewers',
-        //         model: 'Contacts',
-        //         select: 'firstName lastName email',
-        //       })
-        //       .lean();
-
-        //     break;
-        // ------------------------------ v1.0.4 >
-
         // assessment templates api
         case "assessment": //assessment templates
           try {
@@ -1251,43 +935,48 @@ router.get(
             // const ownerId = userId;
             const assessmentType = type;
 
-            let Basequery = {};
+            let typeQuery = {};
 
             // === TYPE FILTERING (CRITICAL) ===
             if (assessmentType === "standard") {
               // Explicit standard tab: show only global standard templates
-              Basequery.type = "standard";
+              typeQuery = { type: "standard" };
             } else if (assessmentType === "custom") {
               // Explicit custom tab: show only scoped custom templates
-              Basequery = {
+              typeQuery = {
                 type: "custom",
-
                 ...query,
               };
             } else {
               // No type provided: include both global standard and scoped custom templates
-              Basequery = {
+              typeQuery = {
                 $or: [
                   { type: "standard" },
                   {
                     type: "custom",
-
                     ...query,
                   },
                 ],
               };
             }
 
+            // Initialize Basequery with typeQuery in $and array to allow adding search condition safely
+            Basequery = { $and: [typeQuery] };
+
             // === SEARCH ===
             if (search && search.trim()) {
-              const regex = { $regex: search.trim(), $options: "i" };
-              Basequery.$or = [
-                { AssessmentTitle: regex },
-                { AssessmentCode: regex },
-                { Position: regex },
-                { DifficultyLevel: regex },
-                { Duration: regex },
-              ];
+              // Escape special regex characters so they are treated as literal strings
+              const sanitizedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const regex = { $regex: sanitizedSearch, $options: "i" };
+
+              // User requested to search ONLY AssessmentTitle
+              Basequery.$and.push({
+                AssessmentTitle: regex
+                // { AssessmentCode: regex },
+                // { Position: regex },
+                // { DifficultyLevel: regex },
+                // { Duration: regex },
+              });
             }
 
             // === FILTERS ===
@@ -1397,7 +1086,7 @@ router.get(
             // });
           } catch (error) {
             console.error("Assessment filter error:", error);
-            res.status(500).json({ message: "Server error" });
+            return res.status(500).json({ message: "Server error" });
           }
 
           // query = {
@@ -1441,6 +1130,19 @@ router.get(
               // isActive: true,
             };
 
+            // Helper to cast ID strings to ObjectIds for aggregation compatibility
+            ['tenantId', 'ownerId', 'createdBy'].forEach(field => {
+              if (scheduledFilter[field]) {
+                if (typeof scheduledFilter[field] === 'string' && mongoose.isValidObjectId(scheduledFilter[field])) {
+                  scheduledFilter[field] = new mongoose.Types.ObjectId(scheduledFilter[field]);
+                } else if (scheduledFilter[field].$in) {
+                  scheduledFilter[field].$in = scheduledFilter[field].$in.map(id =>
+                    (typeof id === 'string' && mongoose.isValidObjectId(id)) ? new mongoose.Types.ObjectId(id) : id
+                  );
+                }
+              }
+            });
+
             // Only add assessmentId filter if it's provided AND valid
             if (assessmentId) {
               if (!mongoose.isValidObjectId(assessmentId)) {
@@ -1449,7 +1151,7 @@ router.get(
                   message: "Invalid assessmentId format",
                 });
               }
-              scheduledFilter.assessmentId = assessmentId;
+              scheduledFilter.assessmentId = new mongoose.Types.ObjectId(assessmentId);
             }
 
             // Additional template filter (comma-separated assessmentIds)
@@ -1457,7 +1159,8 @@ router.get(
               const ids = String(assessmentIds)
                 .split(",")
                 .map((id) => id.trim())
-                .filter((id) => mongoose.isValidObjectId(id));
+                .filter((id) => mongoose.isValidObjectId(id))
+                .map(id => new mongoose.Types.ObjectId(id)); // Ensure aggregation uses ObjectIds
               if (ids.length) {
                 scheduledFilter.assessmentId = { $in: ids };
               }
@@ -1633,40 +1336,80 @@ router.get(
             const skip = (pageNumber - 1) * limitNumber;
 
             // Text search over a few key fields
+            // Text search over a few key fields
             const textSearch =
               typeof searchQuery === "string" ? searchQuery.trim() : "";
-            const searchFilter = {};
+
+            let searchMatch = {};
             if (textSearch) {
-              const searchRegex = new RegExp(
-                textSearch.replace(/\s+/g, " "),
-                "i"
-              );
-              searchFilter.$or = [
+              const sanitizedSearch = textSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const searchRegex = new RegExp(sanitizedSearch, "i");
+
+              const searchConditions = [
                 { scheduledAssessmentCode: searchRegex },
                 { status: searchRegex },
-                {
-                  order: isNaN(Number(textSearch))
-                    ? undefined
-                    : Number(textSearch),
-                },
-              ].filter((cond) => cond && Object.keys(cond).length > 0);
+                { "assessmentDetails.AssessmentTitle": searchRegex }
+              ];
+
+              searchMatch = { $or: searchConditions };
             }
 
-            const finalMatch = Object.keys(searchFilter).length
-              ? { $and: [scheduledFilter, searchFilter] }
-              : scheduledFilter;
+            const pipeline = [
+              // 1. Initial Match (Status, Date, simple filters)
+              { $match: scheduledFilter },
 
-            const [scheduledAssessments, totalItems] = await Promise.all([
-              ScheduledAssessmentSchema.find(finalMatch)
-                .select(
-                  "_id scheduledAssessmentCode order expiryAt status createdAt assessmentId"
-                )
-                .sort({ _id: -1 })
-                .skip(skip)
-                .limit(limitNumber)
-                .lean(),
-              ScheduledAssessmentSchema.countDocuments(finalMatch),
-            ]);
+              // 2. Lookup Assessment Details needed for search
+              {
+                $lookup: {
+                  from: "assessments",
+                  localField: "assessmentId",
+                  foreignField: "_id",
+                  as: "assessmentDetails"
+                }
+              },
+
+              // 3. Unwind to filtering on joined fields
+              {
+                $unwind: {
+                  path: "$assessmentDetails",
+                  preserveNullAndEmptyArrays: true
+                }
+              },
+
+              // 4. Apply Search Match
+              ...(Object.keys(searchMatch).length > 0 ? [{ $match: searchMatch }] : []),
+
+              // 5. Facet for Pagination & Count
+              {
+                $facet: {
+                  data: [
+                    { $sort: { _id: -1 } },
+                    { $skip: skip },
+                    { $limit: limitNumber },
+                    {
+                      $project: {
+                        _id: 1,
+                        scheduledAssessmentCode: 1,
+                        order: 1,
+                        expiryAt: 1,
+                        status: 1,
+                        createdAt: 1,
+                        assessmentId: 1, // Keep original ID
+                        // We don't need to project assessmentDetails further as logic below re-fetches or uses structure
+                      }
+                    }
+                  ],
+                  totalCount: [
+                    { $count: "count" }
+                  ]
+                }
+              }
+            ];
+
+            const [result] = await ScheduledAssessmentSchema.aggregate(pipeline);
+
+            const scheduledAssessments = result.data || [];
+            const totalItems = result.totalCount[0]?.count || 0;
 
             if (!scheduledAssessments.length) {
               data = {
@@ -2033,7 +1776,8 @@ router.get(
 
           // Apply search
           if (searchQuery) {
-            const searchRegex = new RegExp(searchQuery, "i");
+            const sanitizedSearch = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const searchRegex = new RegExp(sanitizedSearch, "i");
             // Search for matching company IDs by name (since companyname is an ObjectId reference)
             const matchingCompanies = await TenantCompany.find({ name: searchRegex }).select('_id').lean();
             const matchingCompanyIds = matchingCompanies.map(c => c._id);
@@ -2314,7 +2058,8 @@ router.get(
             // 4️⃣ SEARCH FILTER
             // -------------------------------------------------------
             if (search) {
-              const regex = new RegExp(search, "i");
+              const sanitizedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const regex = new RegExp(sanitizedSearch, "i");
               baseQuery.$and = baseQuery.$and || [];
               baseQuery.$and.push({
                 $or: [
@@ -2323,7 +2068,7 @@ router.get(
                   { "candidateId.LastName": regex },
                   { "candidateId.Email": regex },
                   { "positionId.title": regex },
-                  { "positionId.companyname": regex },
+                  //{ "positionId.companyname": regex },
                 ],
               });
             }

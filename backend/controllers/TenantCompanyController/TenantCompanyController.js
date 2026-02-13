@@ -1,48 +1,6 @@
 const { TenantCompany } = require("../../models/TenantCompany/TenantCompany");
 
-// Create Company
-// const createCompany = async (req, res) => {
-//   try {
-//     const { name, industry, tenantId } = req.body;
 
-//     const newCompany = new TenantCompany({
-//       name,
-//       industry,
-//       tenantId,
-//     });
-
-//     const savedCompany = await newCompany.save();
-//     res.status(201).json(savedCompany);
-//   } catch (error) {
-//     res
-//       .status(400)
-//       .json({ message: "Error creating company", error: error.message });
-//   }
-// };
-
-// const createCompany = async (req, res) => {
-//   try {
-//     const { name, industry, tenantId, status } = req.body;
-
-//     if (!tenantId) {
-//       return res.status(400).json({ message: "tenantId is required." });
-//     }
-
-//     const newCompany = new TenantCompany({
-//       name,
-//       industry,
-//       tenantId,
-//       status: status || "active",
-//     });
-
-//     const savedCompany = await newCompany.save();
-//     res.status(201).json(savedCompany);
-//   } catch (error) {
-//     res
-//       .status(400)
-//       .json({ message: "Error creating company", error: error.message });
-//   }
-// };
 
 const createCompany = async (req, res) => {
   try {
@@ -115,14 +73,82 @@ const createCompany = async (req, res) => {
 // };
 const getAllCompanies = async (req, res) => {
   try {
-    const { tenantId } = req.query;
+    const {
+      tenantId,
+      page = 1,
+      limit = 10,
+      search,
+      status,
+      industry,
+    } = req.query;
 
     if (!tenantId) {
       return res.status(400).json({ message: "tenantId is required." });
     }
 
-    const companies = await TenantCompany.find({ tenantId }).sort({ _id: -1 });
-    res.status(200).json(companies);
+    const query = { tenantId };
+
+    // Search filter (Name or Industry)
+    if (search) {
+      // Split search into words for "AND" logic across fields
+      const searchWords = search.trim().split(/\s+/).filter(Boolean);
+
+      if (searchWords.length > 0) {
+        const searchConditions = searchWords.map((word) => {
+          const sanitizedWord = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const wordRegex = new RegExp(sanitizedWord, "i");
+          return {
+            $or: [
+              { name: wordRegex },
+              { industry: wordRegex },
+              { primaryContactEmail: wordRegex },
+            ],
+          };
+        });
+
+        // Each word must match at least one field (AND logic)
+        query.$and = searchConditions;
+      }
+    }
+
+    // Status filter
+    if (status) {
+      const statuses = Array.isArray(status) ? status : status.split(",");
+      if (statuses.length > 0) {
+        query.status = { $in: statuses };
+      }
+    }
+
+    // Industry filter
+    if (industry) {
+      const industries = Array.isArray(industry) ? industry : industry.split(",");
+      if (industries.length > 0) {
+        query.industry = { $in: industries };
+      }
+    }
+
+    // Pagination
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.max(1, parseInt(limit));
+    const skip = (pageNum - 1) * limitNum;
+
+    const [companies, totalCount] = await Promise.all([
+      TenantCompany.find(query)
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      TenantCompany.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limitNum);
+
+    res.status(200).json({
+      data: companies,
+      totalCount,
+      totalPages,
+      currentPage: pageNum,
+    });
   } catch (error) {
     res
       .status(500)

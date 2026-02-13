@@ -297,10 +297,12 @@ const PositionTab = () => {
   useEffect(() => {
     const fetchTenantCompanies = async () => {
       try {
-        const companies = await getAllCompanies();
-        setTenantCompanies(companies || []);
+        const response = await getAllCompanies({ limit: 1000 });
+        const data = response?.data || response || [];
+        setTenantCompanies(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching tenant companies:", error);
+        setTenantCompanies([]);
       }
     };
     fetchTenantCompanies();
@@ -750,7 +752,7 @@ const PositionTab = () => {
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
               dataLength={positionData?.length}
-              searchPlaceholder="Search Positions..."
+              searchPlaceholder="Search by Position Id, Position Title, Location..."
               filterIconRef={filterIconRef}
             />
           </div>

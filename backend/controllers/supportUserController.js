@@ -232,16 +232,18 @@ exports.getTicket = async (req, res) => {
     /* --------------------------------------------------------------------- */
     /*  🔍 Search filter (combined, additive)                                 */
     /* --------------------------------------------------------------------- */
-    const searchConditions = [];
+    const searchConditions = { $and: [] };
     if (search && search.trim() !== "") {
-      const trimmed = search.trim();
-      searchConditions.push({
+      const sanitizedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(sanitizedSearch, "i");
+
+      searchConditions.$and.push({
         $or: [
-          { ticketCode: { $regex: trimmed, $options: "i" } },
-          { contact: { $regex: trimmed, $options: "i" } },
-          { subject: { $regex: trimmed, $options: "i" } },
-          { issueType: { $regex: trimmed, $options: "i" } },
-          { priority: { $regex: trimmed, $options: "i" } },
+          { ticketCode: { $regex: regex } },
+          { contact: { $regex: regex } },
+          { subject: { $regex: regex } },
+          { issueType: { $regex: regex } },
+          { priority: { $regex: regex } },
         ],
       });
     }

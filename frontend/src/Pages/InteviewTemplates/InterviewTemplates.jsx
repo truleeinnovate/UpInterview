@@ -348,7 +348,7 @@ const InterviewTemplates = () => {
                 isFilterActive={isFilterActive}
                 isFilterPopupOpen={isFilterPopupOpen}
                 dataLength={totalCount}
-                searchPlaceholder="Search Interview Templates..."
+                searchPlaceholder="Search by Template Name, Description, Best For..."
                 filterIconRef={filterIconRef}
                 // v1.0.6 <----------------------------------------
                 templatesData={templatesData}
