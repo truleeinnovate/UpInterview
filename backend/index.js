@@ -19,8 +19,7 @@ const app = express();
 const qs = require("qs");
 const axios = require("axios");
 const path = require("path");
-const startAgenda = require("./agenda/startAgenda");
-startAgenda();
+
 
 // ✅ Trust Azure's proxy to detect HTTPS correctly
 app.set("trust proxy", 1);
@@ -1058,6 +1057,9 @@ app.get("/rolesdata/:id", async (req, res) => {
 //     res.status(500).json({ message: 'Error fetching roles', error: error.message });
 //   }
 // });
+//start agenda
+const startAgenda = require("./agenda/startAgenda");
+startAgenda();
 
 app.get("/api/rolesdata/:organizationId", async (req, res) => {
   const { organizationId } = req.params;

@@ -1,5 +1,4 @@
-const agenda = require("../agenda");
-
+const agenda = require("./index");
 
 // load jobs
 require("./jobs/roundNoShow.job")(agenda);
