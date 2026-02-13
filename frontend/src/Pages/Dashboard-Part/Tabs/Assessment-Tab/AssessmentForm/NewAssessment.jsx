@@ -1066,7 +1066,13 @@ Ensure you are in a quiet environment to avoid distractions.`;
     setShowDropdownAssessment(!showDropdownAssessment);
   };
 
-  const durations = ["30 Minutes", "45 Minutes", "60 Minutes", "90 Minutes", "120 Minutes"];
+  const durations = [
+    "30 Minutes",
+    "45 Minutes",
+    "60 Minutes",
+    "90 Minutes",
+    "120 Minutes",
+  ];
 
   const toggleDropdownDuration = () => {
     setShowDropdownDuration(!showDropdownDuration);
@@ -1077,7 +1083,11 @@ Ensure you are in a quiet environment to avoid distractions.`;
   };
 
   const handleDurationSelect = (duration) => {
-    if (duration === "60 Minutes" || duration === "90 Minutes" || duration === "120 Minutes") {
+    if (
+      duration === "60 Minutes" ||
+      duration === "90 Minutes" ||
+      duration === "120 Minutes"
+    ) {
       setShowUpgradePopup(true);
       setShowDropdownDuration(false);
     } else {
@@ -1643,12 +1653,22 @@ Ensure you are in a quiet environment to avoid distractions.`;
             Back
           </button>
         )} */}
-        <button
-          onClick={handleBack}
-          className="inline-flex justify-center items-center mr-4 h-9 sm:px-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-        >
-          Back
-        </button>
+        {currentTab === "Basicdetails" && (
+          <button
+            onClick={handleBack}
+            className="inline-flex justify-center items-center mr-4 h-9 sm:px-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+        )}
+        {currentTab !== "Basicdetails" && (
+          <button
+            onClick={handleBack}
+            className="inline-flex justify-center items-center mr-4 h-9 sm:px-2 px-4 border border-custom-blue shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Back
+          </button>
+        )}
 
         <div className="flex gap-4">
           {currentTab === "Candidates" ? (
@@ -1715,7 +1735,9 @@ Ensure you are in a quiet environment to avoid distractions.`;
                       0,
                     );
                     if (totalQuestions !== questionsLimit) {
-                      notify.error(`Please add exactly ${questionsLimit} questions.`);
+                      notify.error(
+                        `Please add exactly ${questionsLimit} questions.`,
+                      );
                       setIsQuestionLimitErrorPopupOpen(true);
                       return;
                     }
@@ -1874,7 +1896,9 @@ Ensure you are in a quiet environment to avoid distractions.`;
                           }
                           tenantId={tenantId}
                           ownerId={ownerId}
-                          categoryOrTechnologyRef={fieldRefs.categoryOrTechnology}
+                          categoryOrTechnologyRef={
+                            fieldRefs.categoryOrTechnology
+                          }
                         />
                         <div className="flex justify-end">
                           <TabFooter currentTab="Basicdetails" />
@@ -2105,17 +2129,17 @@ Ensure you are in a quiet environment to avoid distractions.`;
                     setOptions={setCategories}
                     // setSelected={setSelected}
                     setSelected={(newId) => {
-                      setSelected(newId); 
+                      setSelected(newId);
                       setFormData((prev) => ({
                         ...prev,
-                        categoryOrTechnology: newId, 
+                        categoryOrTechnology: newId,
                       }));
 
                       setErrors((prev) => ({
                         ...prev,
-                        categoryOrTechnology: "", 
+                        categoryOrTechnology: "",
                       }));
-                      
+
                       setIsCategoryModalOpen(false);
                     }}
                     selectionType="id"
