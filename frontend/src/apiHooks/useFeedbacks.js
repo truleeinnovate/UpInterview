@@ -48,7 +48,8 @@ export const useCreateFeedback = () => {
     onSuccess: () => {
       // Ensure feedback lists are refreshed after creating new feedback
       queryClient.invalidateQueries({ queryKey: ["feedbacks"] });
-      queryClient.invalidateQueries({ queryKey: ["feedbackData"] });
+      queryClient.invalidateQueries({ queryKey: ["feedbackDatas"] });
+      // queryClient.invalidateQueries({ queryKey: ["feedbackData"] });
     },
     onError: (error) => {
       if (error.response?.status === 409) {
@@ -76,7 +77,8 @@ export const useUpdateFeedback = () => {
     onSuccess: () => {
       // Ensure feedback lists are refreshed after updating existing feedback
       queryClient.invalidateQueries({ queryKey: ["feedbacks"] });
-      queryClient.invalidateQueries({ queryKey: ["feedbackData"] });
+      queryClient.invalidateQueries({ queryKey: ["feedbackDatas"] });
+      //  queryClient.invalidateQueries({ queryKey: ["feedbackData"] });
     },
     onError: (error) => {
       console.error("Error updating feedback:", error);

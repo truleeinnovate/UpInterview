@@ -325,11 +325,72 @@ function RoundFormPosition() {
     {},
   );
 
+  const [validAssessments, setValidAssessments] = useState([]);
+  const [isValidatingAssessments, setIsValidatingAssessments] = useState(false);
+
   const editingAssessmentTitle = editingAssessment?.AssessmentTitle || "";
 
+  // Validate which assessments have sections
+  useEffect(() => {
+    const validateAssessments = async () => {
+      if (!Array.isArray(assessmentData) || assessmentData.length === 0) {
+        setValidAssessments([]);
+        return;
+      }
+
+      setIsValidatingAssessments(true);
+
+      try {
+        const validIds = [];
+
+        // Process in batches to avoid too many concurrent requests
+        const batchSize = 5;
+        for (let i = 0; i < assessmentData.length; i += batchSize) {
+          const batch = assessmentData.slice(i, i + batchSize);
+
+          const promises = batch.map(async (assessment) => {
+            try {
+              const { data } = await fetchAssessmentQuestions(assessment._id);
+              if (data?.sections && Array.isArray(data.sections) && data.sections.length > 0) {
+                // Store the sections data
+                setSectionQuestions(prev => ({
+                  ...prev,
+                  [assessment._id]: data
+                }));
+                return assessment._id;
+              }
+            } catch (error) {
+              console.error(`Error validating assessment ${assessment._id}:`, error);
+            }
+            return null;
+          });
+
+          const results = await Promise.all(promises);
+          validIds.push(...results.filter(id => id !== null));
+        }
+
+        // Filter the original assessmentData to only include valid ones
+        const validAssessmentsList = assessmentData.filter(a =>
+          validIds.includes(a._id)
+        );
+
+        setValidAssessments(validAssessmentsList);
+      } catch (error) {
+        console.error("Error validating assessments:", error);
+      } finally {
+        setIsValidatingAssessments(false);
+      }
+    };
+
+    validateAssessments();
+  }, [assessmentData]); // Re-run when assessmentData changes
+
+
+
   const assessmentOptions = React.useMemo(() => {
-    const baseOptions = Array.isArray(assessmentData)
-      ? assessmentData.map((a) => {
+    // Use validAssessments instead of assessmentData
+    const baseOptions = Array.isArray(validAssessments)
+      ? validAssessments.map((a) => {
         const titleLabel = a.AssessmentTitle || "Untitled Assessment";
         const typeLabel = a.type
           ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
@@ -366,12 +427,18 @@ function RoundFormPosition() {
       })
       : [];
 
+    // For editing assessment - check if it has sections
     if (editingAssessmentId && editingAssessment) {
+      const hasSections = editingAssessment.sections &&
+        Array.isArray(editingAssessment.sections) &&
+        editingAssessment.sections.length > 0;
+
       const exists = baseOptions.some(
         (opt) => opt.value === editingAssessmentId,
       );
 
-      if (!exists) {
+      // Only add the editing assessment if it has sections
+      if (!exists && hasSections) {
         const editingTitleLabel =
           editingAssessment.AssessmentTitle ||
           formData.assessmentTemplate?.assessmentName ||
@@ -415,11 +482,105 @@ function RoundFormPosition() {
 
     return baseOptions;
   }, [
-    assessmentData,
+    validAssessments, // Use validAssessments instead of assessmentData
     editingAssessmentId,
     editingAssessment,
     formData.assessmentTemplate?.assessmentName,
   ]);
+
+  // const assessmentOptions = React.useMemo(() => {
+  //   const baseOptions = Array.isArray(assessmentData)
+  //     ? assessmentData.map((a) => {
+  //       const titleLabel = a.AssessmentTitle || "Untitled Assessment";
+  //       const typeLabel = a.type
+  //         ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
+  //         : "";
+
+  //       return {
+  //         value: a._id,
+  //         label: (
+  //           <div
+  //             style={{
+  //               display: "flex",
+  //               justifyContent: "space-between",
+  //               alignItems: "center",
+  //               width: "98%",
+  //             }}
+  //           >
+  //             <span>{titleLabel}</span>
+  //             {typeLabel && (
+  //               <span
+  //                 className={
+  //                   "text-md " +
+  //                   (a.type === "custom"
+  //                     ? "text-custom-blue"
+  //                     : "text-green-600")
+  //                 }
+  //               >
+  //                 {typeLabel}
+  //               </span>
+  //             )}
+  //           </div>
+  //         ),
+  //         searchLabel: titleLabel,
+  //       };
+  //     })
+  //     : [];
+
+  //   if (editingAssessmentId && editingAssessment) {
+  //     const exists = baseOptions.some(
+  //       (opt) => opt.value === editingAssessmentId,
+  //     );
+
+  //     if (!exists) {
+  //       const editingTitleLabel =
+  //         editingAssessment.AssessmentTitle ||
+  //         formData.assessmentTemplate?.assessmentName ||
+  //         "Untitled Assessment";
+
+  //       const editingTypeLabel = editingAssessment.type
+  //         ? editingAssessment.type.charAt(0).toUpperCase() +
+  //         editingAssessment.type.slice(1)
+  //         : "";
+
+  //       baseOptions.push({
+  //         value: editingAssessmentId,
+  //         label: (
+  //           <div
+  //             style={{
+  //               display: "flex",
+  //               justifyContent: "space-between",
+  //               alignItems: "center",
+  //               width: "98%",
+  //             }}
+  //           >
+  //             <span>{editingTitleLabel}</span>
+  //             {editingTypeLabel && (
+  //               <span
+  //                 className={
+  //                   "text-md " +
+  //                   (editingAssessment.type === "custom"
+  //                     ? "text-custom-blue"
+  //                     : "text-green-600")
+  //                 }
+  //               >
+  //                 {editingTypeLabel}
+  //               </span>
+  //             )}
+  //           </div>
+  //         ),
+  //         searchLabel: editingTitleLabel,
+  //       });
+  //     }
+  //   }
+
+  //   return baseOptions;
+  // }, [
+  //   assessmentData,
+  //   editingAssessmentId,
+  //   editingAssessment,
+  //   formData.assessmentTemplate?.assessmentName,
+  // ]);
 
   const handleAssessmentMenuScrollToBottom = () => {
     if (isAssessmentQueryLoading) return;

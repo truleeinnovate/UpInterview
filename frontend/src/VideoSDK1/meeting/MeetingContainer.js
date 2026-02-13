@@ -583,11 +583,13 @@ export function MeetingContainer({
                       />
                     ) : sideBarMode === "FEEDBACK" ? (
                       <FeedbackForm
+                        custom={true}
                         isAddMode={true}
                         onClose={() => setSideBarMode(null)} />
                     ) : sideBarMode === "INTERVIEWACTIONS" ? (
                       <div className="p-4">
                         <InterviewActions
+                          custom={true}
                           onClose={() => setSideBarMode(null)}
                           interviewData={{
                             interviewRound: {
@@ -604,6 +606,7 @@ export function MeetingContainer({
                     ) : sideBarMode === "QUESTIONBANK" ? (
                       <div className="">
                         <InterviewsMiniTabComponent
+                          custom={true}
                           isAddMode={true}
                           isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
                         />

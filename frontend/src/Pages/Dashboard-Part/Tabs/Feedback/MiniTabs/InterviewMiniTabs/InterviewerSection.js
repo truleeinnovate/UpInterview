@@ -12,6 +12,16 @@ import Popup from "reactjs-popup";
 import { X, Plus, ThumbsUp, ThumbsDown, XCircle } from "lucide-react";
 import QuestionBank from "../../../../Tabs/QuestionBank-Tab/QuestionBank.jsx";
 
+// Helper to normalize questionFeedback from backend object {preselected, interviewerAdded}
+const flattenQuestionFeedback = (qf) => {
+  if (!qf) return [];
+  if (Array.isArray(qf)) return qf;
+  if (qf && typeof qf === "object" && (qf.preselected || qf.interviewerAdded)) {
+    return [...(qf.preselected || []), ...(qf.interviewerAdded || [])];
+  }
+  return [];
+};
+
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
   { value: "Wrong experience level", label: "Wrong experience level" },
@@ -46,6 +56,8 @@ const InterviewerSectionComponent = ({
   triggerAutoSave,
 }) => {
   const saveTimeoutRef = useRef(null);
+
+  console.log("interviewerSectionData InterviewerSectionComponent", interviewerSectionData)
 
   const triggerDebouncedSave = () => {
     if (isAddMode || isEditMode) {
@@ -128,17 +140,21 @@ const InterviewerSectionComponent = ({
 
     const allCombinedQuestions = [...existingQuestions, ...newlyAddedQuestions];
 
+    // Normalize questionFeedback using helper
+    const normalizedQF = flattenQuestionFeedback(feedbackData.questionFeedback);
+
     const shouldApplyFeedback =
       (isEditMode || isViewMode || isAddMode) &&
       feedbackData &&
-      Array.isArray(feedbackData.questionFeedback) &&
-      feedbackData.questionFeedback.length > 0;
+      normalizedQF.length > 0;
 
     if (!shouldApplyFeedback) return allCombinedQuestions;
-    const feedbackMap = feedbackData.questionFeedback.reduce((acc, f) => {
-      const k = f.questionId || f._id;
-      if (!k) return acc;
-      acc[k] = f;
+    // Build feedbackMap keyed by _id (InterviewQuestions ID) since
+    // merged feedback uses _id consistently (questionId is renamed to questionBankId)
+    const feedbackMap = normalizedQF.reduce((acc, f) => {
+      // Key by _id first, then fallback to questionBankId for lookup by either
+      if (f._id) acc[f._id] = f;
+      if (f.questionBankId) acc[f.questionBankId] = f;
       return acc;
     }, {});
     const mapAnswerType = (type) => {
@@ -157,8 +173,8 @@ const InterviewerSectionComponent = ({
       return undefined;
     };
     return allCombinedQuestions.map((item) => {
-      const id = item.questionId || item._id;
-      const f = id ? feedbackMap[id] : null;
+      // Try to find feedback by _id first (InterviewQuestions ID), then questionId (QuestionBank ID)
+      const f = feedbackMap[item._id] || feedbackMap[item.questionId] || null;
       if (!f) return item;
       const merged = { ...item };
       const submittedAns =
@@ -181,7 +197,10 @@ const InterviewerSectionComponent = ({
         merged.whyDislike = dislikeReason;
       if ((!merged.note || merged.note === "") && note) {
         merged.note = note;
-        merged.notesBool = true;
+        // Only overwrite notesBool if it's undefined (not set by UI yet)
+        if (merged.notesBool === undefined) {
+          merged.notesBool = true;
+        }
       }
       return merged;
     });
@@ -308,7 +327,7 @@ const InterviewerSectionComponent = ({
 
         return updated;
       } else {
-        const originalQuestion = feedbackData?.questionFeedback?.find(
+        const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
           (f) => (f.questionId || f._id) === questionId,
         );
 
@@ -394,7 +413,7 @@ const InterviewerSectionComponent = ({
           (q.questionId || q.id) === id ? { ...q, notesBool: !q.notesBool } : q,
         );
       } else {
-        const originalQuestion = feedbackData?.questionFeedback?.find(
+        const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
           (f) => (f.questionId || f._id) === id,
         );
 
@@ -530,7 +549,7 @@ const InterviewerSectionComponent = ({
 
         return updated;
       } else {
-        const originalQuestion = feedbackData?.questionFeedback?.find(
+        const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
           (f) => (f.questionId || f._id) === questionId,
         );
 
@@ -617,7 +636,7 @@ const InterviewerSectionComponent = ({
 
         return updated;
       } else {
-        const originalQuestion = feedbackData?.questionFeedback?.find(
+        const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
           (f) => (f.questionId || f._id) === questionId,
         );
 
@@ -711,7 +730,7 @@ const InterviewerSectionComponent = ({
 
         return updated;
       } else {
-        const originalQuestion = feedbackData?.questionFeedback?.find(
+        const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
           (f) => (f.questionId || f._id) === id,
         );
 
@@ -759,7 +778,7 @@ const InterviewerSectionComponent = ({
             : q,
         );
       } else {
-        const originalQuestion = feedbackData?.questionFeedback?.find(
+        const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
           (f) => (f.questionId || f._id) === id,
         );
 
@@ -974,19 +993,26 @@ const InterviewerSectionComponent = ({
               displayData.map((question) => {
                 // Get question data from snapshot or root level
                 const questionText =
-                  question.snapshot?.questionText || question.question || "N/A";
+                  question.snapshot?.questionText ||
+                  question.snapshot?.snapshot?.questionText ||
+                  question.question ||
+                  "N/A";
                 const expectedAnswer =
                   question.snapshot?.correctAnswer ||
+                  question.snapshot?.snapshot?.correctAnswer ||
                   question.expectedAnswer ||
                   "N/A";
                 const skill =
                   question.snapshot?.technology?.[0] ||
+                  question.snapshot?.snapshot?.technology?.[0] ||
                   question.snapshot?.category?.[0] ||
+                  question.snapshot?.snapshot?.category?.[0] ||
                   question.snapshot?.skill ||
                   question.category ||
                   "N/A";
                 const difficulty =
                   question.snapshot?.difficultyLevel ||
+                  question.snapshot?.snapshot?.difficultyLevel ||
                   question.difficulty ||
                   "N/A";
 
@@ -1161,19 +1187,23 @@ const InterviewerSectionComponent = ({
               >
                 <div className="flex items-start justify-between mb-3">
                   <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                    {question.snapshot?.technology[0] ||
-                      question.snapshot?.category[0] ||
+                    {question.snapshot?.technology?.[0] ||
+                      question.snapshot?.snapshot?.technology?.[0] ||
+                      question.snapshot?.category?.[0] ||
+                      question.snapshot?.snapshot?.category?.[0] ||
                       "N/A"}
                   </span>
                   <span className="text-sm text-gray-500">
                     {question.snapshot?.difficultyLevel ||
+                      question.snapshot?.snapshot?.difficultyLevel ||
                       question.difficulty ||
                       "N/A"}
                   </span>
                 </div>
                 <h3 className="sm:text-sm font-semibold text-gray-800 mb-2">
                   {question.snapshot?.questionText ||
-                    question?.question ||
+                    question.snapshot?.snapshot?.questionText ||
+                    question.question ||
                     "N/A"}
                 </h3>
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">
@@ -1182,6 +1212,7 @@ const InterviewerSectionComponent = ({
                   </p>
                   <p className="text-sm text-gray-700">
                     {question.snapshot?.correctAnswer ||
+                      question.snapshot?.snapshot?.correctAnswer ||
                       question.expectedAnswer ||
                       "N/A"}
                   </p>

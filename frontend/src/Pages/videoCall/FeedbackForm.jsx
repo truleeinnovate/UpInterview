@@ -4,7 +4,7 @@
 // v1.0.3 - Ashok - Improved responsiveness
 // v1.0.4 - Ashok - fixed responsiveness issues
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FileText,
@@ -53,6 +53,16 @@ const toBackendAnswerType = (ui) => {
   if (ui === "Not Answered") return "incorrect";
   return "not answered";
 };
+// Helper: normalize questionFeedback from backend object {preselected, interviewerAdded}
+// into a flat array so all existing code that iterates with .forEach/.map/.find still works.
+const flattenQuestionFeedback = (qf) => {
+  if (Array.isArray(qf)) return qf;
+  if (qf && typeof qf === "object" && (qf.preselected || qf.interviewerAdded)) {
+    return [...(qf.preselected || []), ...(qf.interviewerAdded || [])];
+  }
+  return [];
+};
+
 // Inverse mapping for when we need to merge from persisted backend values
 const fromBackendAnswerType = (backend) => {
   if (!backend) return undefined;
@@ -72,6 +82,7 @@ const fromBackendAnswerType = (backend) => {
 //---v1.0.0----->
 
 const FeedbackForm = ({
+  custom,
   // interviewerSectionData = [],
   // setInterviewerSectionData,
   interviewRoundId,
@@ -82,6 +93,8 @@ const FeedbackForm = ({
   // tenantId,
   isEditMode,
   isViewMode,
+  interviewType,
+  roundId,
   // preselectedQuestionsResponses = [],
 
   decodedData,
@@ -107,12 +120,15 @@ const FeedbackForm = ({
     isLoading: feedbackLoading,
     isError: feedbackError,
   } = useFeedbackData({
-    roundId: !urlData.isCandidate ? urlData.interviewRoundId : null,
-    interviewerId: !urlData.isCandidate ? urlData.interviewerId : null,
-    interviewType: urlData?.interviewType,
+    roundId: isViewMode ? roundId : !urlData?.isCandidate ? urlData?.interviewRoundId : null,
+    interviewerId: !urlData?.isCandidate ? urlData?.interviewerId : null,
+    interviewType: urlData?.interviewType || interviewType,
+    // roundId: !urlData.isCandidate ? urlData.interviewRoundId : null,
+    // interviewerId: !urlData.isCandidate ? urlData.interviewerId : null,
+    // interviewType: urlData?.interviewType,
   });
 
-  const isMockInterview = urlData?.interviewType === "mockinterview";
+  const isMockInterview = urlData?.interviewType === "mockinterview" || interviewType === "mockinterview";
   // console.log("isMockInterview", isMockInterview);
   // const { data, isLoading } = useInterviewDetails({
   //   roundId: urlData.interviewRoundId,
@@ -124,8 +140,11 @@ const FeedbackForm = ({
     isMockLoading,
     isError: isMockError,
   } = useMockInterviewById({
-    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId || roundId : null,
     enabled: isMockInterview, // ✅ THIS LINE
+    // mockInterviewId: null,
+    // mockInterviewRoundId: isMockInterview ? urlData?.interviewRoundId : null,
+    // enabled: isMockInterview, // ✅ THIS LINE
     // mockInterviewId: null,
   });
 
@@ -134,8 +153,10 @@ const FeedbackForm = ({
     isLoading: isInterviewLoading,
     isError: interviewError,
   } = useInterviewDetails({
-    roundId: !isMockInterview ? urlData.interviewRoundId : null,
+    roundId: !isMockInterview ? urlData.interviewRoundId || roundId : null,
     enabled: !isMockInterview,
+    // roundId: !isMockInterview ? urlData?.interviewRoundId : null,
+    // enabled: !isMockInterview,
   });
 
   const candidateData = isMockInterview
@@ -143,30 +164,47 @@ const FeedbackForm = ({
     : interviewData?.candidateId || {};
 
 
+  const interviewRoundData =
+    interviewData || mockinterview || {};
 
   const positionData = isMockInterview ? {} : interviewData?.positionId || {};
 
   const feedbackData = useMemo(() => {
-    return locationFeedback || feedbackDatas || {};
+    const raw = locationFeedback || feedbackDatas || {};
+    // If the API response has a feedbacks array, merge the first feedback's
+    // fields into the top level so code can read feedbackData.questionFeedback,
+    // feedbackData.skills, feedbackData.overallImpression, etc. directly.
+    if (Array.isArray(raw?.feedbacks) && raw.feedbacks.length > 0) {
+      const fb = raw.feedbacks[0];
+      return {
+        ...raw,
+        _id: fb._id,
+        questionFeedback: flattenQuestionFeedback(fb.questionFeedback),
+        skills: fb.skills,
+        overallImpression: fb.overallImpression,
+        generalComments: fb.generalComments,
+        status: fb.status,
+      };
+    }
+    return raw;
   }, [locationFeedback, feedbackDatas]);
 
   console.log("feedbackData", feedbackData);
 
   const getInterviewerSectionData = useCallback(() => {
     // 1. Try to get questions from the specific feedback object (if editing/viewing)
-    let questions = feedbackData?.questionFeedback;
+    //    Use flattenQuestionFeedback to handle both array and {preselected, interviewerAdded} formats
+    let questions = flattenQuestionFeedback(feedbackData?.questionFeedback);
 
     // 2. If not found, check if feedbackData is a wrapper with a 'feedbacks' array
-    if ((!questions || questions.length === 0) && Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0) {
-      questions = feedbackData.feedbacks[0].questionFeedback;
+    if (questions.length === 0 && Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0) {
+      questions = flattenQuestionFeedback(feedbackData.feedbacks[0].questionFeedback);
     }
 
     // 3. If still not found (e.g., new feedback), get from interviewQuestions (interviewer added)
-    if (!questions || questions.length === 0) {
+    if (questions.length === 0) {
       questions = feedbackData?.interviewQuestions?.interviewerAddedQuestions || [];
     }
-
-
 
     if (!questions || questions.length === 0) return [];
 
@@ -203,8 +241,23 @@ const FeedbackForm = ({
 
   const [interviewerSectionData, setInterviewerSectionData] = useState(() => getInterviewerSectionData());
 
+  console.log("interviewerSectionData", interviewerSectionData)
+
+  // Track if initial load was done — we must NOT reset interviewerSectionData
+  // on every feedbackData change because that wipes user modifications
+  // (notesBool, isLiked, whyDislike, note) made via the UI handlers.
+  const initialSectionLoadDone = useRef(false);
+
   useEffect(() => {
-    setInterviewerSectionData(getInterviewerSectionData());
+    // Only initialize once after feedbackData loads. Subsequent feedbackData
+    // changes (e.g., from auto-save refetch) must NOT overwrite user edits.
+    if (!initialSectionLoadDone.current) {
+      const data = getInterviewerSectionData();
+      if (data.length > 0) {
+        setInterviewerSectionData(data);
+        initialSectionLoadDone.current = true;
+      }
+    }
   }, [getInterviewerSectionData]);
 
   // const [interviewerSectionData, setInterviewerSectionData] = useState( [...selectedCandidate.interviewData?.questionFeedback]);
@@ -307,38 +360,63 @@ const FeedbackForm = ({
     });
   };
 
+  // Helper to get merged question feedback from the correct API response path
+  const getMergedQuestionFeedback = useCallback(() => {
+    if (feedbackData?.questionFeedback) return feedbackData.questionFeedback;
+    if (Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0) {
+      return feedbackData.feedbacks[0].questionFeedback || [];
+    }
+    return [];
+  }, [feedbackData]);
+
   // Properly initialize preselected questions with full question data and responses
-  const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] =
-    useState(() => {
-      const preselectedQuestions =
-        feedbackData?.interviewQuestions?.preselectedQuestions || [];
+  const getPreselectedQuestionsResponses = useCallback(() => {
+    const preselectedQuestions =
+      feedbackData?.interviewQuestions?.preselectedQuestions || [];
 
-      return preselectedQuestions.map((question) => {
-        // Find existing feedback for this question
-        const existingFeedback = feedbackData?.questionFeedback?.find(
-          (f) => f.questionId === (question.questionId || question._id),
-        );
+    const mergedQuestions = getMergedQuestionFeedback();
 
-        return {
-          // Include the full question data
-          ...question,
-          // Response data with proper defaults
-          isAnswered: existingFeedback?.candidateAnswer?.answerType
-            ? existingFeedback.candidateAnswer.answerType === "correct"
-              ? "Fully Answered"
-              : existingFeedback.candidateAnswer.answerType === "partial"
-                ? "Partially Answered"
-                : "Not Answered"
-            : "Not Answered",
-          isLiked: existingFeedback?.interviewerFeedback?.liked || "",
-          whyDislike:
-            existingFeedback?.interviewerFeedback?.dislikeReason || "",
-          note: existingFeedback?.interviewerFeedback?.note || "",
-          notesBool: !!existingFeedback?.interviewerFeedback?.note,
-          answer: existingFeedback?.candidateAnswer?.submittedAnswer || "",
-        };
-      });
+    return preselectedQuestions.map((question) => {
+      // Find existing feedback for this question by matching _id
+      const existingFeedback = mergedQuestions?.find(
+        (f) => String(f._id) === String(question._id),
+      );
+
+      return {
+        // Include the full question data
+        ...question,
+        // Response data with proper defaults
+        isAnswered: existingFeedback?.candidateAnswer?.answerType
+          ? existingFeedback.candidateAnswer.answerType === "correct"
+            ? "Fully Answered"
+            : existingFeedback.candidateAnswer.answerType === "partial"
+              ? "Partially Answered"
+              : "Not Answered"
+          : "Not Answered",
+        isLiked: existingFeedback?.interviewerFeedback?.liked || "",
+        whyDislike:
+          existingFeedback?.interviewerFeedback?.dislikeReason || "",
+        note: existingFeedback?.interviewerFeedback?.note || "",
+        notesBool: !!existingFeedback?.interviewerFeedback?.note,
+        answer: existingFeedback?.candidateAnswer?.submittedAnswer || "",
+      };
     });
+  }, [feedbackData, getMergedQuestionFeedback]);
+
+  const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] =
+    useState(() => getPreselectedQuestionsResponses());
+
+  // Only sync on initial data load (not on refetch during active editing)
+  const hasPreselectedLoadRef = useRef(false);
+
+  useEffect(() => {
+    if (hasPreselectedLoadRef.current) return;
+    const data = getPreselectedQuestionsResponses();
+    if (data.length > 0 || feedbackData?.interviewQuestions) {
+      setPreselectedQuestionsResponses(data);
+      hasPreselectedLoadRef.current = true;
+    }
+  }, [getPreselectedQuestionsResponses, feedbackData]);
 
   // const feedbackData = React.useMemo(() => locationFeedback || {}, [locationFeedback]);
   const feedbackId =
@@ -409,6 +487,36 @@ const FeedbackForm = ({
       : "",
   );
 
+  // Re-sync scalar feedback values on initial load only
+  const hasScalarInitRef = useRef(false);
+
+  useEffect(() => {
+    if (hasScalarInitRef.current) return; // Already synced
+    if (!feedbackData?._id) return; // Skip until data is loaded
+    hasScalarInitRef.current = true;
+
+    const impression = feedbackData?.overallImpression || {};
+    const skills = feedbackData?.skills || [];
+
+    setOverallRating((prev) => prev || impression.overallRating || 0);
+    setCommunicationRating((prev) => prev || impression.communicationRating || 0);
+    setRecommendation((prev) => (prev && prev !== "Maybe") ? prev : (impression.recommendation || "Maybe"));
+    setComments((prev) => prev || feedbackData?.generalComments || "");
+
+    if (skills.length > 0) {
+      setSkillRatings((prev) => {
+        if (prev.length === 1 && !prev[0].skill && prev[0].rating === 0) {
+          return skills.map((s) => ({
+            skill: s.skillName,
+            rating: s.rating,
+            comments: s.note,
+          }));
+        }
+        return prev;
+      });
+    }
+  }, [feedbackData]);
+
   // Merge answered and newly added
   const mergedQuestions = useMemo(() => {
     // Get existing interviewer questions from API
@@ -461,7 +569,7 @@ const FeedbackForm = ({
     // Start with interviewer-added questions from preselected/merged data
     const allQuestions = [...(filteredInterviewerQuestions || [])];
 
-    // console.log("allQuestions", allQuestions);
+    console.log("allQuestions", allQuestions);
 
     // Build a quick lookup of current UI state overlays
     const overlayMap = (interviewerSectionData || []).reduce((acc, q) => {
@@ -494,7 +602,7 @@ const FeedbackForm = ({
       (isEditMode || isViewMode || isAddMode) &&
       feedbackData?.questionFeedback
     ) {
-      feedbackData.questionFeedback.forEach((feedback) => {
+      flattenQuestionFeedback(feedbackData.questionFeedback).forEach((feedback) => {
         const id = feedback.questionId || feedback._id;
         if (id && questionsMap.has(id)) {
           const question = questionsMap.get(id);
@@ -523,7 +631,11 @@ const FeedbackForm = ({
             }
             if (!question.note) {
               question.note = feedback.interviewerFeedback.note || "";
-              question.notesBool = !!feedback.interviewerFeedback.note;
+              // Only overwrite notesBool if it's undefined (not set by UI yet)
+              // This prevents closing the input when user clicks "Add Note" (note is empty but notesBool is true)
+              if (question.notesBool === undefined) {
+                question.notesBool = !!feedback.interviewerFeedback.note;
+              }
             }
           }
         }
@@ -540,93 +652,17 @@ const FeedbackForm = ({
     isAddMode,
   ]);
 
-  // console.log("questionsWithFeedback",questionsWithFeedback);
 
-  // Build a single, de-duplicated list that prefers current UI state and only falls back to persisted feedback
-  // const questionsWithFeedback = React.useMemo(() => {
-  //   // Start with interviewer-added questions (from preselected in edit/view) as the base for text/snapshot
-  //   const mapById = new Map();
-  //   (filteredInterviewerQuestions || []).forEach((q) => {
-  //     const key = q?.questionId || q?.id || q?._id;
-  //     if (!key) return;
-  //     mapById.set(key, { ...q });
-  //   });
-  //   // Overlay current UI state coming from interviewerSectionData (notes, likes, response type)
-  //   (interviewerSectionData || []).forEach((q) => {
-  //     const key = q?.questionId || q?.id || q?._id;
-  //     // console.log("key",key);
-
-  //     if (!key) return;
-  //     const base = mapById.get(key);
-  //     // console.log("base",base);
-
-  //     if (!base) return; // only overlay onto interviewer-added base questions
-  //     const merged = { ...base };
-  //     console.log("merged",merged);
-  //     console.log("q",q);
-
-  //     if (q.answer || q.candidateAnswer?.submittedAnswer !== undefined) merged.answer = q.answer;
-  //     if (q.isAnswered || q.candidateAnswer?.isAnswered !== undefined) merged.isAnswered = q.isAnswered;
-  //     if (q.notesBool || q.candidateAnswer?.notesBool !== undefined) merged.notesBool = q.notesBool;
-  //     if (q.note || q.candidateAnswer?.note !== undefined) merged.note = q.note;
-  //     if (q.isLiked || q.candidateAnswer?.isLiked !== undefined) merged.isLiked = q.isLiked;
-  //     if (q.whyDislike || q.candidateAnswer?.whyDislike !== undefined) merged.whyDislike = q.whyDislike;
-  //     mapById.set(key, merged);
-  //   });
-  //   // Apply persisted feedback only when UI state hasn't provided a value yet
-  //   const fb = feedbackData;
-  //   const shouldApply = (isEditMode || isViewMode) && fb && Array.isArray(fb.questionFeedback) && fb.questionFeedback.length > 0;
-  //   if (shouldApply) {
-  //     const feedbackMap = fb.questionFeedback.reduce((acc, f) => {
-  //       const k = f?.questionId || f?._id;
-  //       if (!k) return acc;
-  //       acc[k] = f;
-  //       return acc;
-  //     }, {});
-  //     const mapAnswerType = (type) => {
-  //       if (!type) return undefined;
-  //       if (type === "correct" || type === "Fully Answered") return "Fully Answered";
-  //       if (type === "partial" || type === "Partially Answered") return "Partially Answered";
-  //       if (type === "incorrect" || type === "Not Answered" || type === "not answered" || type === "wrong") return "Not Answered";
-  //       return undefined;
-  //     };
-  //     console.log("mapById",mapById);
-
-  //     Array.from(mapById.keys()).forEach((key) => {
-  //       const item = mapById.get(key) || {};
-  //       // console.log("item",item);
-
-  //       const f = feedbackMap[key];
-  //       if (!f) return item;
-  //       const submittedAns = f.candidateAnswer?.submittedAnswer || item.candidateAnswer?.submittedAnswer || "";
-  //       const answerType = f.candidateAnswer?.answerType || item.candidateAnswer?.answerType || "";
-  //       const derivedIsAnswered = mapAnswerType(answerType);
-  //       if ((item.answer === undefined || item.answer === "") && submittedAns) item.answer = submittedAns;
-  //       if (!item.isAnswered || item.isAnswered === "Not Answered") {
-  //         if (derivedIsAnswered) item.isAnswered = derivedIsAnswered;
-  //       }
-  //       const liked = f.interviewerFeedback?.liked;
-  //       const dislikeReason = f.interviewerFeedback?.dislikeReason;
-  //       const note = f.interviewerFeedback?.note;
-  //       if ((!item.isLiked || item.isLiked === "") && liked) item.isLiked = liked;
-  //       if (!item.whyDislike && dislikeReason) item.whyDislike = dislikeReason;
-  //       if ((!item.note || item.note === "") && note) {
-  //         item.note = note;
-  //         item.notesBool = true;
-  //       }
-  //       mapById.set(key, item);
-  //     });
-  //   }
-  //   return Array.from(mapById.values());
-  // }, [isEditMode, isViewMode, feedbackData, interviewerSectionData, filteredInterviewerQuestions]);
-  //---v1.0.0----->
 
   // Final list of questions to render in the interviewer section
+
+  console.log("questionsWithFeedback", questionsWithFeedback)
 
   const questionsToRender = React.useMemo(() => {
     if (isEditMode || isViewMode || isAddMode) {
       return Array.isArray(questionsWithFeedback) ? questionsWithFeedback : [];
     }
+
     return Array.isArray(filteredInterviewerQuestions)
       ? filteredInterviewerQuestions
       : [];
@@ -649,9 +685,7 @@ const FeedbackForm = ({
 
     // Existing saved feedback map (edit/view modes)
     const existingMap = (
-      Array.isArray(feedbackData?.questionFeedback)
-        ? feedbackData.questionFeedback
-        : []
+      flattenQuestionFeedback(feedbackData?.questionFeedback)
     ).reduce((acc, f) => {
       const k = normId(f?.questionId || f);
       if (!k) return acc;
@@ -793,8 +827,9 @@ const FeedbackForm = ({
     feedbackId: autoSaveFeedbackId,
     isMockInterview: urlData?.interviewType === "mockinterview" || false,
     feedbackCode:
-      feedbackData?.rounds?.[0]?.interviewCode ||
-      "" + "-" + (feedbackData?.rounds?.[0]?.sequence || ""),
+      (interviewRoundData?.interviewCode
+        ? `${interviewRoundData.interviewCode}-${interviewRoundData?.rounds?.[0]?.sequence || ""}`
+        : "") || "",
     isLoaded: !feedbackLoading && !isMockLoading && !isInterviewLoading, // Ensure we don't save before data is loaded
   });
 
@@ -1700,6 +1735,13 @@ const FeedbackForm = ({
               },
             },
           );
+
+          if (isAddMode) {
+            navigate("/feedback");
+          } else {
+
+
+          }
         } else {
           notify.error("No feedback ID found, cannot save draft.");
         }
@@ -1730,8 +1772,8 @@ const FeedbackForm = ({
 
   //<---v1.0.2-----Ranjith----solved feedback issues
 
-  if (urlData?.isSchedule) {
-    return <SchedulerViewMode feedbackData={schedulerFeedbackData} />;
+  if (urlData?.isSchedule || isViewMode) {
+    return <SchedulerViewMode feedbackData={schedulerFeedbackData || feedbackDatas} />;
   }
 
   //<---v1.0.2-----Ranjith----solved feedback issues
@@ -1780,7 +1822,7 @@ const FeedbackForm = ({
   return (
     // v1.0.4 <----------------------------------------------------------------------
     <>
-      {isAddMode && (
+      {!custom && isAddMode && (
         <div className="right-4 z-40  pb-3 top-5">
           <div className="flex justify-end items-center gap-3">
             <button
@@ -1992,12 +2034,15 @@ const FeedbackForm = ({
                   >
                     <div className="flex items-start justify-between mb-3">
                       <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                        {question.snapshot?.technology[0] ||
-                          question.snapshot?.category[0] ||
+                        {question.snapshot?.technology?.[0] ||
+                          question.snapshot?.snapshot?.technology?.[0] ||
+                          question.snapshot?.category?.[0] ||
+                          question.snapshot?.snapshot?.category?.[0] ||
                           "N/A"}
                       </span>
                       <span className="text-sm text-gray-500">
                         {question.snapshot?.difficultyLevel ||
+                          question.snapshot?.snapshot?.difficultyLevel ||
                           question.difficulty ||
                           "N/A"}
                       </span>
@@ -2005,6 +2050,7 @@ const FeedbackForm = ({
 
                     <h3 className="font-semibold text-gray-800 mb-2">
                       {question.snapshot?.questionText ||
+                        question.snapshot?.snapshot?.questionText ||
                         question.question ||
                         "N/A"}
                     </h3>
@@ -2015,6 +2061,7 @@ const FeedbackForm = ({
                       </p>
                       <p className="text-sm text-gray-700">
                         {question.snapshot?.correctAnswer ||
+                          question.snapshot?.snapshot?.correctAnswer ||
                           question.expectedAnswer ||
                           "N/A"}
                       </p>
@@ -2112,20 +2159,23 @@ const FeedbackForm = ({
                     <div className="flex items-start justify-between mb-3">
                       <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
                         {
-                          // question.snapshot?.skill ||
-                          question?.snapshot?.technology[0] ||
-                          question?.snapshot?.category[0] ||
+                          question?.snapshot?.technology?.[0] ||
+                          question?.snapshot?.snapshot?.technology?.[0] ||
+                          question?.snapshot?.category?.[0] ||
+                          question?.snapshot?.snapshot?.category?.[0] ||
                           "N/A"
                         }
                       </span>
                       <span className="text-sm text-gray-500">
                         {question.snapshot?.difficultyLevel ||
+                          question.snapshot?.snapshot?.difficultyLevel ||
                           question.difficulty ||
                           "N/A"}
                       </span>
                     </div>
                     <h3 className="font-semibold text-gray-800 mb-2">
                       {question.snapshot?.questionText ||
+                        question.snapshot?.snapshot?.questionText ||
                         question.question ||
                         "N/A"}
                     </h3>
@@ -2136,6 +2186,7 @@ const FeedbackForm = ({
                       </p>
                       <p className="text-sm text-gray-700">
                         {question.snapshot?.correctAnswer ||
+                          question.snapshot?.snapshot?.correctAnswer ||
                           question.expectedAnswer ||
                           "N/A"}
                       </p>
@@ -2408,8 +2459,9 @@ const FeedbackForm = ({
   );
 };
 
+// To:
 export default FeedbackForm;
-
+export { flattenQuestionFeedback };
 // // Add CSS for animation (add to your CSS file or styled components):
 // /* Add CSS for animation (add to your CSS file or styled components): */
 

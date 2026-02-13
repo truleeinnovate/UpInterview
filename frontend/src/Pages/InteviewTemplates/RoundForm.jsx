@@ -505,7 +505,7 @@ function RoundFormTemplates() {
       // interviewerGroupId: groupId || "",
     }));
 
-    setInternalInterviews(interviewers);
+
 
     if (viewType) {
       setFormData((prev) => ({

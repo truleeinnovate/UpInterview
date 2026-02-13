@@ -2482,20 +2482,78 @@ router.get(
             // -------------------------------------------------------
             // 1️⃣4️⃣ GET INTERVIEW QUESTIONS FOR EACH FEEDBACK
             // -------------------------------------------------------
-            const feedbackWithQuestions = await Promise.all(
-              feedbacks.map(async (f) => {
-                const preSelectedQuestions = await InterviewQuestions.find({
-                  roundId: f.interviewRoundId?._id,
-                }).lean();
+            // const feedbackWithQuestions = await Promise.all(
+            //   feedbacks.map(async (f) => {
+            //     const preSelectedQuestions = await InterviewQuestions.find({
+            //       roundId: f.interviewRoundId?._id,
+            //     }).lean();
+
+            //     return {
+            //       ...f,
+            //       preSelectedQuestions,
+            //       canEdit: f.status === "draft",
+            //       canView: true,
+            //     };
+            //   })
+            // );
+
+
+            // -------------------------------------------------------
+            // 1️⃣4️⃣ MERGE QUESTIONS + ANSWERS PROPERLY
+            // -------------------------------------------------------
+
+            // 1. Get all roundIds from feedbacks
+            const roundIds = feedbacks
+              .filter((f) => f.interviewRoundId?._id)
+              .map((f) => f.interviewRoundId._id);
+
+            // 2. Fetch all questions for those rounds (single query)
+            const allRoundQuestions = await InterviewQuestions.find({
+              roundId: { $in: roundIds },
+            }).lean();
+
+            // 3. Group questions by roundId
+            const questionsByRound = {};
+            allRoundQuestions.forEach((q) => {
+              const rId = q.roundId.toString();
+              if (!questionsByRound[rId]) {
+                questionsByRound[rId] = [];
+              }
+              questionsByRound[rId].push(q);
+            });
+
+            // 4. Merge questions + answers into each feedback
+            const feedbackWithQuestions = feedbacks.map((fb) => {
+              const roundId = fb.interviewRoundId?._id?.toString();
+              const roundQuestions = questionsByRound[roundId] || [];
+
+              // Create answer lookup map
+              const answerMap = {};
+              (fb.questionFeedback || []).forEach((qf) => {
+                if (qf.questionId) {
+                  answerMap[qf.questionId.toString()] = qf;
+                }
+              });
+
+              // Merge
+              const mergedQuestions = roundQuestions.map((q) => {
+                const answer = answerMap[q._id.toString()];
 
                 return {
-                  ...f,
-                  preSelectedQuestions,
-                  canEdit: f.status === "draft",
-                  canView: true,
+                  ...q,
+                  candidateAnswer: answer?.candidateAnswer || null,
+                  interviewerFeedback: answer?.interviewerFeedback || null,
                 };
-              })
-            );
+              });
+
+              return {
+                ...fb,
+                questionFeedback: mergedQuestions,
+                canEdit: fb.status === "draft",
+                canView: true,
+              };
+            });
+
 
             // -------------------------------------------------------
             // 1️⃣5️⃣ FINAL RESPONSE

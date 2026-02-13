@@ -3,7 +3,7 @@
 // v1.0.2 - Ashok - Fixed responsiveness issues
 
 /* eslint-disable no-lone-blocks */
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import Popup from "reactjs-popup";
 import { ThumbsUp, ThumbsDown, XCircle } from "lucide-react";
@@ -25,10 +25,13 @@ const SchedulerSectionComponent = ({
   isAddMode,
   interviewdata,
   isViewMode,
+  roundId,
+  interviewType,
   preselectedQuestionsResponses,
   setPreselectedQuestionsResponses,
   handlePreselectedQuestionResponse,
   triggerAutoSave,
+
 }) => {
   const saveTimeoutRef = useRef(null);
 
@@ -43,18 +46,19 @@ const SchedulerSectionComponent = ({
     }
   };
   const location = useLocation();
-  const feedbackData = location.state?.feedback || {};
+  const feedbackData = useMemo(() => location.state?.feedback || {}, [location.state]);
 
   // console.log("SchedulerSectionComponent interviewdata", interviewdata);
 
   // Get preselected questions from the new API structure
-  const preselectedQuestionsFromAPI =
+  const preselectedQuestionsFromAPI = useMemo(() =>
     interviewdata?.interviewQuestions?.preselectedQuestions ||
     interviewdata?.questionFeedback ||
-    [];
-  const allQuestions = interviewdata?.interviewQuestions
+    [], [interviewdata]);
+
+  const allQuestions = useMemo(() => interviewdata?.interviewQuestions
     ? interviewdata?.interviewQuestions || interviewdata?.questionFeedback
-    : feedbackData.preSelectedQuestions || [];
+    : feedbackData.preSelectedQuestions || [], [interviewdata, feedbackData]);
 
   // Use preselected questions from API if available, otherwise fallback to old logic
   // const schedulerQuestions = preselectedQuestionsFromAPI.length > 0
@@ -64,7 +68,7 @@ const SchedulerSectionComponent = ({
   //       : []);
 
   // FIXED FILTERING LOGIC: Filter out questions added by interviewer
-  const schedulerQuestions =
+  const schedulerQuestions = useMemo(() =>
     preselectedQuestionsFromAPI.length > 0
       ? preselectedQuestionsFromAPI.filter((question) => {
         // console.log(
@@ -90,12 +94,19 @@ const SchedulerSectionComponent = ({
 
           return true;
         })
-        : [];
+        : [], [preselectedQuestionsFromAPI, allQuestions]);
 
-  console.log("schedulerQuestions after filtering:", schedulerQuestions);
+  // console.log("schedulerQuestions after filtering:", schedulerQuestions);
 
-  const questionsfeedback =
-    feedbackData.questionFeedback || interviewdata?.questionFeedback || [];
+  const questionsfeedback = useMemo(() => {
+    // Check direct questionFeedback first, then look inside feedbacks array (API response structure)
+    if (feedbackData.questionFeedback) return feedbackData.questionFeedback;
+    if (interviewdata?.questionFeedback) return interviewdata.questionFeedback;
+    if (Array.isArray(interviewdata?.feedbacks) && interviewdata.feedbacks.length > 0) {
+      return interviewdata.feedbacks[0].questionFeedback || [];
+    }
+    return [];
+  }, [feedbackData, interviewdata]);
 
   // Initialize state variables
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");
@@ -120,13 +131,13 @@ const SchedulerSectionComponent = ({
 
   const mapQuestionsToState = useCallback(() => {
     return schedulerQuestions.map((q) => {
-      // Find feedback for this question
+      // Find feedback for this question - match by _id (InterviewQuestions ID)
       const feedback = questionsfeedback?.find(
-        (f) => f.questionId === q.questionId,
+        (f) => String(f._id) === String(q._id),
       );
       // Find preselected response for this question
       const preselectedResponse = preselectedQuestionsResponses?.find(
-        (r) => r.questionId === q.questionId,
+        (r) => String(r._id) === String(q._id) || r.questionId === q.questionId,
       );
 
       console.log("preselectedResponse question", preselectedResponse);
@@ -182,9 +193,17 @@ const SchedulerSectionComponent = ({
 
   const [schedulerQuestionsData, setSchedulerQuestionsData] = useState(() => mapQuestionsToState());
 
+  // Only sync on initial data load (not on refetch during active editing)
+  const hasSchedulerInitRef = useRef(false);
+
   useEffect(() => {
-    setSchedulerQuestionsData(mapQuestionsToState());
-  }, [mapQuestionsToState]);
+    if (hasSchedulerInitRef.current) return;
+    const data = mapQuestionsToState();
+    if (data.length > 0 || schedulerQuestions.length > 0) {
+      setSchedulerQuestionsData(data);
+      hasSchedulerInitRef.current = true;
+    }
+  }, [mapQuestionsToState, schedulerQuestions]);
 
   // Initialize questionRef
   const questionRef = useRef(); // For future use, e.g., scrolling to a specific question

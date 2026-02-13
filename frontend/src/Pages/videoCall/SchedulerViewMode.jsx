@@ -2,13 +2,18 @@ import { useState } from "react";
 import { FileText, ThumbsUp, ThumbsDown } from "lucide-react";
 
 export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
+  const feedbacks = Array.isArray(feedbackData?.feedbacks)
+    ? feedbackData.feedbacks
+    : (feedbackData?._id ? [feedbackData] : []);
+
   const {
     candidate,
     interviewRound,
     position,
-    feedbacks = [],
     interviewQuestions = {},
   } = feedbackData || {};
+
+  console.log("schedulerFeedbackData SchedulerViewMode", feedbackData)
 
   // Track which feedback is active
   const [activeFeedbackIndex, setActiveFeedbackIndex] = useState(0);
@@ -19,8 +24,15 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
     overallImpression = {},
     skills = [],
     generalComments = "",
-    questionFeedback = [],
+    questionFeedback: rawQF = [],
   } = activeFeedback;
+
+  // Normalize questionFeedback: may be array or {preselected, interviewerAdded} object
+  const questionFeedback = Array.isArray(rawQF)
+    ? rawQF
+    : (rawQF && typeof rawQF === "object"
+      ? [...(rawQF.preselected || []), ...(rawQF.interviewerAdded || [])]
+      : []);
 
   // Combine preselected + interviewer-added questions
   const allQuestions = [
@@ -38,7 +50,8 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
   // Merge question feedback
   const questionsWithDetails = questionFeedback.map((qf) => ({
     ...qf,
-    snapshot: questionDetailsMap[qf.questionId] || {},
+    // Prefer existing snapshot, fallback to map, then empty object
+    snapshot: qf.snapshot || questionDetailsMap[qf.questionId] || {},
   }));
 
   const renderStarRating = (rating) => (
@@ -48,9 +61,8 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
           key={star}
           type="button"
           disabled={true}
-          className={`w-6 h-6 ${
-            star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
-          }`}
+          className={`w-6 h-6 ${star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
+            }`}
         >
           ★
         </button>
@@ -77,11 +89,10 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
             <button
               key={fb._id || idx}
               onClick={() => setActiveFeedbackIndex(idx)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium border ${
-                activeFeedbackIndex === idx
-                  ? "bg-[#217989] text-white border-[#217989]"
-                  : "bg-gray-100 text-gray-700 border-gray-300"
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium border ${activeFeedbackIndex === idx
+                ? "bg-[#217989] text-white border-[#217989]"
+                : "bg-gray-100 text-gray-700 border-gray-300"
+                }`}
             >
               Feedback {idx + 1}
             </button>
@@ -157,19 +168,28 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                      {question.snapshot?.skill ||
-                        question.snapshot?.category ||
+                      {(question.snapshot?.technology && question.snapshot.technology[0]) ||
+                        (question.snapshot?.snapshot?.technology && question.snapshot.snapshot.technology[0]) ||
+                        (question.snapshot?.category && question.snapshot.category[0]) ||
+                        (question.snapshot?.snapshot?.category && question.snapshot.snapshot.category[0]) ||
+                        (typeof question.snapshot?.skill === 'string' ? question.snapshot.skill : null) ||
+                        (typeof question.snapshot?.snapshot?.skill === 'string' ? question.snapshot.snapshot.skill : null) ||
+                        question.snapshot?.skill?.[0] ||
+                        question.snapshot?.snapshot?.skill?.[0] ||
                         "N/A"}
                     </span>
                     <span className="text-sm text-gray-500">
                       {question.snapshot?.difficultyLevel ||
+                        question.snapshot?.snapshot?.difficultyLevel ||
                         question.snapshot?.difficulty ||
+                        question.snapshot?.snapshot?.difficulty ||
                         "N/A"}
                     </span>
                   </div>
 
                   <h3 className="font-semibold text-gray-800 mb-2">
                     {question.snapshot?.questionText ||
+                      question.snapshot?.snapshot?.questionText ||
                       question.question ||
                       "N/A"}
                   </h3>
@@ -180,7 +200,9 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
                     </p>
                     <p className="text-sm text-gray-700">
                       {question.snapshot?.correctAnswer ||
+                        question.snapshot?.snapshot?.correctAnswer ||
                         question.snapshot?.expectedAnswer ||
+                        question.snapshot?.snapshot?.expectedAnswer ||
                         "N/A"}
                     </p>
                   </div>

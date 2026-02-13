@@ -15,6 +15,7 @@ import useAutoSaveFeedback from "../../../../../apiHooks/useAutoSaveFeedback";
 
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
+import { flattenQuestionFeedback } from "../../../../videoCall/FeedbackForm";
 
 const interviewMiniTabsList = [
   {
@@ -31,7 +32,25 @@ const interviewMiniTabsList = [
 
 //<----v1.0.0---
 
+// Question Bank Props
+// interviewerSectionData,
+// setInterviewerSectionData,
+// removedQuestionIds,
+// setRemovedQuestionIds,
+// isQuestionBankOpen,
+// setIsQuestionBankOpen,
+// handleAddQuestionToRound,
+// handleRemoveQuestion,
+// handleToggleMandatory,
+// Preselected Questions Responses Props
+// preselectedQuestionsResponses,
+// setPreselectedQuestionsResponses,
+// handlePreselectedQuestionResponse,
+// autoSaveQuestions,
+// triggerAutoSave,
+
 const InterviewsMiniTabComponent = ({
+  custom,
   // interviewData,
   isAddMode,
   roundDetails,
@@ -42,23 +61,9 @@ const InterviewsMiniTabComponent = ({
   data,
   isEditMode,
   isViewMode,
-  // Question Bank Props
-  // interviewerSectionData,
-  // setInterviewerSectionData,
-  // removedQuestionIds,
-  // setRemovedQuestionIds,
-  // isQuestionBankOpen,
-  // setIsQuestionBankOpen,
-  // handleAddQuestionToRound,
-  // handleRemoveQuestion,
-  // handleToggleMandatory,
-  // Preselected Questions Responses Props
-  // preselectedQuestionsResponses,
-  // setPreselectedQuestionsResponses,
-  // handlePreselectedQuestionResponse,
+  interviewType,
+  roundId,
   decodedData,
-  // autoSaveQuestions,
-  // triggerAutoSave,
 }) => {
   const location = useLocation();
   const locationFeedback = location.state?.feedback;
@@ -96,12 +101,14 @@ const InterviewsMiniTabComponent = ({
     isLoading: feedbackLoading,
     isError: feedbackError,
   } = useFeedbackData({
-    roundId: !urlData.isCandidate ? urlData.interviewRoundId : null,
+    roundId: isViewMode ? roundId : !urlData.isCandidate ? urlData.interviewRoundId : null,
     interviewerId: !urlData.isCandidate ? urlData.interviewerId : null,
-    interviewType: urlData?.interviewType,
+    interviewType: urlData?.interviewType || interviewType,
   });
 
-  const isMockInterview = urlData?.interviewType === "mockinterview";
+  console.log("feedbackDatas feedbackDatas", feedbackDatas)
+
+  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType;
 
   // ✅ ALWAYS call hooks
   const {
@@ -109,7 +116,7 @@ const InterviewsMiniTabComponent = ({
     isMockLoading,
     isError: isMockError,
   } = useMockInterviewById({
-    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId || roundId : null,
     enabled: isMockInterview, // ✅ THIS LINE
     // mockInterviewId: null,
   });
@@ -119,7 +126,7 @@ const InterviewsMiniTabComponent = ({
     isLoading: isInterviewLoading,
     isError: interviewError,
   } = useInterviewDetails({
-    roundId: !isMockInterview ? urlData.interviewRoundId : null,
+    roundId: !isMockInterview ? urlData.interviewRoundId || roundId : null,
     enabled: !isMockInterview,
   });
 
@@ -129,9 +136,34 @@ const InterviewsMiniTabComponent = ({
 
   const positionData = isMockInterview ? {} : interviewData?.positionId || {};
 
+  const interviewRoundData =
+    interviewData || mockinterview || {};
+
   const feedbackData = useMemo(() => {
-    return locationFeedback || feedbackDatas || {};
-  }, [locationFeedback, feedbackDatas]);
+    const raw = locationFeedback || feedbackDatas || {};
+    // If the API response has a feedbacks array, merge the first feedback's
+    // fields into the top level so code can read feedbackData.questionFeedback,
+    // feedbackData.skills, feedbackData.overallImpression, etc. directly.
+    if (Array.isArray(raw?.feedbacks) && raw.feedbacks.length > 0) {
+      const fb = raw.feedbacks[0];
+      return {
+        ...raw,
+        // Merge feedback-specific fields that code reads from top level
+        _id: fb._id,
+        // Normalize questionFeedback: backend may return {preselected, interviewerAdded} object
+        questionFeedback: Array.isArray(fb.questionFeedback)
+          ? fb.questionFeedback
+          : (fb.questionFeedback && typeof fb.questionFeedback === "object"
+            ? [...(fb.questionFeedback.preselected || []), ...(fb.questionFeedback.interviewerAdded || [])]
+            : []),
+        skills: fb.skills,
+        overallImpression: fb.overallImpression,
+        generalComments: fb.generalComments,
+        status: fb.status,
+      };
+    }
+    return raw;
+  }, [locationFeedback, feedbackDatas, isViewMode]);
 
   // const feedbackData = React.useMemo(() => locationFeedback || {}, [locationFeedback]);
   const feedbackId =
@@ -157,23 +189,75 @@ const InterviewsMiniTabComponent = ({
     }, 500);
   };
 
+  console.log("feedbackData", feedbackData)
+
+  // const getInterviewerSectionData = useCallback(() => {
+  //   // Get merged question feedback from the feedbacks array (API response structure)
+  //   let mergedQuestions = feedbackData?.questionFeedback;
+  //   if (!mergedQuestions && Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0) {
+  //     mergedQuestions = feedbackData.feedbacks[0].questionFeedback;
+  //   }
+
+  //   // Get interviewer-added questions from interviewQuestions
+  //   const interviewerQuestions = feedbackData?.interviewQuestions?.interviewerAddedQuestions || [];
+
+  //   // If no interviewer-added questions exist, return empty
+  //   if (!interviewerQuestions || interviewerQuestions.length === 0) return [];
+
+  //   // Map backend answer types to UI values
+  //   const mapAnswerType = (type) => {
+  //     if (type === "correct") return "Fully Answered";
+  //     if (type === "partial") return "Partially Answered";
+  //     if (type === "incorrect" || type === "not answered")
+  //       return "Not Answered";
+  //     return "Not Answered";
+  //   };
+
+  //   // For each interviewer-added question, find its saved feedback from the merged list
+  //   return interviewerQuestions.map((q) => {
+  //     const savedFeedback = mergedQuestions?.find(
+  //       (mq) => String(mq._id) === String(q._id)
+  //     );
+
+  //     return {
+  //       ...q,
+  //       questionId: q.questionId || q._id,
+  //       isAnswered: mapAnswerType(savedFeedback?.candidateAnswer?.answerType),
+  //       isLiked: savedFeedback?.interviewerFeedback?.liked || "",
+  //       whyDislike: savedFeedback?.interviewerFeedback?.dislikeReason || "",
+  //       note: savedFeedback?.interviewerFeedback?.note || "",
+  //       notesBool: !!savedFeedback?.interviewerFeedback?.note,
+  //       // Preserve original data for reference
+  //       originalData: q,
+  //     };
+  //   });
+  // }, [feedbackData]);
+
   const getInterviewerSectionData = useCallback(() => {
     // 1. Try to get questions from the specific feedback object (if editing/viewing)
-    let questions = feedbackData?.questionFeedback;
+    //    Use flattenQuestionFeedback to handle both array and {preselected, interviewerAdded} formats
+    let questions = flattenQuestionFeedback(feedbackData?.questionFeedback);
 
     // 2. If not found, check if feedbackData is a wrapper with a 'feedbacks' array
-    if (!questions && Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0) {
-      questions = feedbackData.feedbacks[0].questionFeedback;
+    if (questions.length === 0 && Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0) {
+      questions = flattenQuestionFeedback(feedbackData.feedbacks[0].questionFeedback);
     }
 
     // 3. If still not found (e.g., new feedback), get from interviewQuestions (interviewer added)
-    if (!questions || questions.length === 0) {
+    if (questions.length === 0) {
       questions = feedbackData?.interviewQuestions?.interviewerAddedQuestions || [];
     }
 
     if (!questions || questions.length === 0) return [];
 
-    return questions.map((q) => {
+    console.log("questions questions", questions);
+
+    const allQuestions =
+      Array.isArray(questions)
+        ? questions.filter((q) => q?.addedBy === "interviewer")
+        : [];
+
+    return allQuestions.map((q) => {
       // Map backend answer types to UI values
       const mapAnswerType = (type) => {
         if (type === "correct") return "Fully Answered";
@@ -199,9 +283,17 @@ const InterviewsMiniTabComponent = ({
 
   const [interviewerSectionData, setInterviewerSectionData] = useState(() => getInterviewerSectionData());
 
+  // Only sync on initial data load (not on refetch during active editing)
+  const hasInitialLoadRef = useRef(false);
+
   useEffect(() => {
-    setInterviewerSectionData(getInterviewerSectionData());
-  }, [getInterviewerSectionData]);
+    if (hasInitialLoadRef.current) return; // Already loaded, skip
+    const data = getInterviewerSectionData();
+    if (data.length > 0 || feedbackData?.interviewQuestions) {
+      setInterviewerSectionData(data);
+      hasInitialLoadRef.current = true;
+    }
+  }, [getInterviewerSectionData, feedbackData]);
 
   // Properly initialize preselected questions with full question data and responses
   // Properly initialize preselected questions with full question data and responses
@@ -209,10 +301,16 @@ const InterviewsMiniTabComponent = ({
     const preselectedQuestions =
       feedbackData?.interviewQuestions?.preselectedQuestions || [];
 
+    // Get merged question feedback from the correct path in the API response
+    let mergedQuestions = feedbackData?.questionFeedback;
+    if (!mergedQuestions && Array.isArray(feedbackData?.feedbacks) && feedbackData.feedbacks.length > 0) {
+      mergedQuestions = feedbackData.feedbacks[0].questionFeedback;
+    }
+
     return preselectedQuestions.map((question) => {
-      // Find existing feedback for this question
-      const existingFeedback = feedbackData?.questionFeedback?.find(
-        (f) => f.questionId === (question.questionId || question._id),
+      // Find existing feedback for this question by matching _id
+      const existingFeedback = mergedQuestions?.find(
+        (f) => String(f._id) === String(question._id)
       );
 
       return {
@@ -239,9 +337,17 @@ const InterviewsMiniTabComponent = ({
   const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] =
     useState(() => getPreselectedQuestionsResponses());
 
+  // Only sync on initial data load
+  const hasPreselectedLoadRef = useRef(false);
+
   useEffect(() => {
-    setPreselectedQuestionsResponses(getPreselectedQuestionsResponses());
-  }, [getPreselectedQuestionsResponses]);
+    if (hasPreselectedLoadRef.current) return; // Already loaded, skip
+    const data = getPreselectedQuestionsResponses();
+    if (data.length > 0 || feedbackData?.interviewQuestions) {
+      setPreselectedQuestionsResponses(data);
+      hasPreselectedLoadRef.current = true;
+    }
+  }, [getPreselectedQuestionsResponses, feedbackData]);
 
   // Clear specific error when user interacts with field
   const clearError = (fieldName) => {
@@ -251,17 +357,14 @@ const InterviewsMiniTabComponent = ({
     }));
   };
 
-  console.log("feedbackData autoSaveQuestions", feedbackData);
+  console.log("feedbackData interviewRoundData", interviewRoundData);
 
   const {
     saveNow: autoSaveQuestions,
-    // saveNow,
-    // : autoSaveQuestions,
-    // isSaving: autoSaveQuestions,
-    // triggerAutoSave,
   } = useAutoSaveFeedback({
     isAddMode,
     isEditMode,
+    isLoaded: !!feedbackData?._id || feedbackLoading === false,
     interviewRoundId:
       interviewRoundId ||
       urlData?.interviewRoundId ||
@@ -286,8 +389,9 @@ const InterviewsMiniTabComponent = ({
     isMockInterview: urlData?.interviewType === "mockinterview" || false,
 
     feedbackCode:
-      feedbackData?.rounds?.[0]?.interviewCode ||
-      "" + "-" + (feedbackData?.rounds?.[0]?.sequence || ""),
+      (interviewRoundData?.interviewCode
+        ? `${interviewRoundData.interviewCode}-${interviewRoundData?.rounds?.[0]?.sequence || ""}`
+        : "") || "",
     // feedbackCode:
     //   feedbackData?.rounds[0]?.interviewCode ||
     //   "" + "-" + feedbackData?.rounds[0]?.sequence ||
@@ -504,6 +608,8 @@ const InterviewsMiniTabComponent = ({
             isAddMode={isAddMode}
             interviewdata={feedbackData}
             isViewMode={isViewMode}
+            roundId={roundId}
+            interviewType={interviewType}
             preselectedQuestionsResponses={preselectedQuestionsResponses}
             setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
             handlePreselectedQuestionResponse={
@@ -551,7 +657,7 @@ const InterviewsMiniTabComponent = ({
   return (
     // v1.0.1 <-----------------------------------------------------------
     <div>
-      {isAddMode && (
+      {!custom && isAddMode && (
         <div className="mb-6">
           <div className="flex justify-end items-center gap-3">
             <button

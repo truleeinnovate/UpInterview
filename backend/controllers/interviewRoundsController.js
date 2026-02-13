@@ -1407,6 +1407,7 @@ const updateInterviewRoundStatus = async (req, res) => {
       }
     }
 
+    let updatedRound
     // ===== SAFE PARTICIPANT UPSERT (NO DUPLICATES, NO FAIL) =====
     // ===== SAFE PARTICIPANT UPSERT (NO DUPLICATES, NO FAIL) =====
     if (isParticipantUpdate) {
@@ -1419,7 +1420,7 @@ const updateInterviewRoundStatus = async (req, res) => {
         role === "Candidate" ? { role: "Candidate" } : { role, userId };
 
       // Update existing participant if exists
-      let updatedRound = await InterviewRounds.findOneAndUpdate(
+      updatedRound = await InterviewRounds.findOneAndUpdate(
         {
           _id: roundId,
           participants: { $elemMatch: match },
@@ -1876,7 +1877,7 @@ const updateInterviewRoundStatus = async (req, res) => {
     }
 
     // Apply update
-    const updatedRound = await InterviewRounds.findByIdAndUpdate(
+    updatedRound = await InterviewRounds.findByIdAndUpdate(
       roundId,
       finalUpdate,
       { new: true, runValidators: true },
