@@ -562,12 +562,19 @@ router.get(
 
         case "tenantquestions":
           //<--------v1.0.8-----
-          // console.log('[21] Processing TenantQuestions model (aggregated from interview + assessment)');
+          // Extract search and filter params
+          const {
+            search: tqSearch,
+            difficultyLevel: tqDifficulty,
+            technology: tqTechnology,
+            category: tqCategory,
+            questionType: tqQuestionType,
+            questionFrom: tqQuestionFrom,
+          } = req.query;
+
           const lists = await TenantQuestionsListNames.find(query).lean();
-          // console.log('[22] Found', lists.length, 'question lists');
 
           const listIds = lists.map((list) => list._id);
-          // console.log('[23] List IDs to filter questions:', listIds);
 
           // Fetch across all tenant question sources in parallel
           const [interviewQs, assessmentQs] = await Promise.all([
@@ -601,9 +608,85 @@ router.get(
               .lean(),
           ]);
 
-          const questions = [...interviewQs, ...assessmentQs];
+          let questions = [...interviewQs, ...assessmentQs];
 
-          // console.log('[24] Found', questions.length, 'questions matching lists');
+          // --- Server-side search & filter (post-filter on resolved data) ---
+          // Helper to parse comma-separated param into lowercase array
+          const tqToArray = (val) =>
+            val ? String(val).split(",").map((s) => s.trim().toLowerCase()).filter(Boolean) : [];
+
+          const tqDiffArr = tqToArray(tqDifficulty);
+          const tqTechArr = tqToArray(tqTechnology);
+          const tqCatArr = tqToArray(tqCategory);
+          const tqQTypeArr = tqToArray(tqQuestionType);
+          const tqFromArr = tqToArray(tqQuestionFrom); // "system" / "custom"
+
+          const hasFilters =
+            (tqSearch && tqSearch.trim()) ||
+            tqDiffArr.length || tqTechArr.length || tqCatArr.length || tqQTypeArr.length || tqFromArr.length;
+
+          if (hasFilters) {
+            // Support multiple comma-separated search terms
+            const tqSearchTerms = tqSearch
+              ? String(tqSearch).split(",").map((s) => s.trim()).filter(Boolean)
+              : [];
+            const searchRegexes = tqSearchTerms.map((term) => {
+              const sanitized = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+              return new RegExp(sanitized, "i");
+            });
+
+            questions = questions.filter((question) => {
+              const qData = question.isCustom ? question : question.suggestedQuestionId;
+              if (!qData) return false;
+
+              // Search: match questionText or tags (ALL search terms must match)
+              if (searchRegexes.length) {
+                const matchesAll = searchRegexes.every((regex) => {
+                  const textMatch = regex.test(qData.questionText || "");
+                  const tagsMatch = Array.isArray(qData.tags) && qData.tags.some((t) => regex.test(String(t || "")));
+                  return textMatch || tagsMatch;
+                });
+                if (!matchesAll) return false;
+              }
+
+              // Difficulty filter
+              if (tqDiffArr.length) {
+                const diff = String(qData.difficultyLevel || "").toLowerCase();
+                if (!tqDiffArr.includes(diff)) return false;
+              }
+
+              // Technology filter
+              if (tqTechArr.length) {
+                const techs = Array.isArray(qData.technology)
+                  ? qData.technology.map((t) => String(t || "").toLowerCase())
+                  : typeof qData.technology === "string"
+                    ? [qData.technology.toLowerCase()]
+                    : [];
+                if (!tqTechArr.some((f) => techs.includes(f))) return false;
+              }
+
+              // Category filter
+              if (tqCatArr.length) {
+                const cat = String(qData.category || "").toLowerCase();
+                if (!tqCatArr.includes(cat)) return false;
+              }
+
+              // Question Type filter
+              if (tqQTypeArr.length) {
+                const qt = String(qData.questionType || "").toLowerCase();
+                if (!tqQTypeArr.includes(qt)) return false;
+              }
+
+              // Question From filter (system / custom)
+              if (tqFromArr.length) {
+                const from = question.isCustom ? "custom" : "system";
+                if (!tqFromArr.includes(from)) return false;
+              }
+
+              return true;
+            });
+          }
+          // --- End server-side search & filter ---
 
           const groupedQuestions = lists.reduce((acc, list) => {
             acc[list.label] = [];
@@ -627,7 +710,6 @@ router.get(
           });
 
           data = groupedQuestions;
-          // console.log('[25] Grouped questions by', Object.keys(groupedQuestions).length, 'categories');
           break;
 
         case "interview":
