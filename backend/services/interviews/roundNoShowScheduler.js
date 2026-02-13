@@ -1,5 +1,5 @@
 const agenda = require("../../agenda");
-
+const { DateTime } = require('luxon');
 // DEV: Reduced from 20 → 2 minutes for testing. Revert to 20 for production.
 const NO_SHOW_DELAY_MINUTES = 2;
 
@@ -22,16 +22,48 @@ function extractStartDate(dateTimeStr) {
     return null;
   }
 
-  const [dd, mm, yyyy] = date.split("-");
+  const [dd, mm, yyyy] = date.split("-").map(Number);
   let [hours, minutes] = time.split(":").map(Number);
 
   console.log("[NoShow] extractStartDate: dd =", dd, "mm =", mm, "yyyy =", yyyy, "hours =", hours, "minutes =", minutes);
 
-  if (meridian === "PM" && hours !== 12) hours += 12;
-  if (meridian === "AM" && hours === 12) hours = 0;
+  // Convert 12-hour to 24-hour
+  if (meridian.toUpperCase() === "PM" && hours !== 12) {
+    hours += 12;
+  }
+  if (meridian.toUpperCase() === "AM" && hours === 12) {
+    hours = 0;
+  }
 
-  const result = new Date(Number(yyyy), Number(mm) - 1, Number(dd), hours, minutes);
-  console.log("[NoShow] extractStartDate: parsed Date =", result, "| isValid =", !isNaN(result.getTime()));
+  // Explicitly parse in Asia/Kolkata timezone
+  const interviewStartIST = DateTime.fromObject(
+    {
+      year: yyyy,
+      month: mm,
+      day: dd,
+      hour: hours,
+      minute: minutes,
+      second: 0,
+      millisecond: 0,
+    },
+    { zone: "Asia/Kolkata" }
+  );
+
+  if (!interviewStartIST.isValid) {
+    console.log("[NoShow] ❌ Invalid date constructed:", interviewStartIST.invalidReason);
+    return null;
+  }
+
+  // Convert to native JavaScript Date (which is always UTC internally)
+  const result = interviewStartIST.toJSDate();
+
+  console.log(
+    "[NoShow] extractStartDate: parsed Date (local string) =",
+    result.toISOString(),
+    "| IST string =",
+    interviewStartIST.toISO(),
+    "| isValid = true"
+  );
 
   return result;
 }

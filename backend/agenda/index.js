@@ -6,6 +6,6 @@ const agenda = new Agenda({
     collection: "agendaJobs",
   },
 });
-console.log("[DEBUG] agenda keys:", Object.keys(agenda));
-console.log("[DEBUG] typeof agenda.schedule:", typeof agenda.schedule);
+// console.log("[DEBUG] agenda keys:", Object.keys(agenda));
+// console.log("[DEBUG] typeof agenda.schedule:", typeof agenda.schedule);
 module.exports = agenda;
