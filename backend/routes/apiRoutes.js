@@ -2056,6 +2056,380 @@ router.get(
           break;
 
         // In your feedback route handler
+        // case "feedback":
+        //   const {
+        //     page: feedbackPage = 1,
+        //     limit: feedbackLimit,
+        //     search = "",
+        //     status,
+        //     positions,
+        //     modes,
+        //     interviewers,
+        //     recommendations,
+        //     ratingMin,
+        //     ratingMax,
+        //     interviewDate,
+        //     type,
+        //   } = req.query;
+
+        //   if (type === "feedback") {
+        //     const feedbackPageNum = parseInt(feedbackPage);
+        //     const feedbackLimitNum = parseInt(feedbackLimit);
+        //     // const skip = (feedbackPageNum - 1) * feedbackLimitNum;
+
+        //     // -------------------------------------------------------
+        //     // 1️⃣ GET ALL INTERVIEWS BASED ON TENANT/OWNER (NEEDED)
+        //     // -------------------------------------------------------
+        //     let feedbackInterviews = await Interview.find(query)
+        //       .populate(
+        //         "candidateId",
+        //         "FirstName LastName Email Phone"
+        //       )
+        //       .populate(
+        //         "positionId",
+        //         "title companyname jobDescription Location"
+        //       )
+        //       .lean();
+
+        //     // Fetch Resume data for candidates (skills, experience moved from Candidate)
+        //     const fbInterviewCandidateIds = feedbackInterviews
+        //       .filter((i) => i.candidateId?._id)
+        //       .map((i) => i.candidateId._id);
+
+        //     if (fbInterviewCandidateIds.length > 0) {
+        //       const fbInterviewResumes = await Resume.find({
+        //         candidateId: { $in: fbInterviewCandidateIds },
+        //         isActive: true,
+        //       }).select("candidateId skills CurrentExperience CurrentRole ImageData").lean();
+
+        //       const fbInterviewResumeMap = {};
+        //       fbInterviewResumes.forEach((r) => {
+        //         fbInterviewResumeMap[String(r.candidateId)] = r;
+        //       });
+
+        //       // Merge Resume data into interviews
+        //       feedbackInterviews = feedbackInterviews.map((i) => {
+        //         if (i.candidateId?._id) {
+        //           const resume = fbInterviewResumeMap[String(i.candidateId._id)];
+        //           if (resume) {
+        //             i.candidateId = {
+        //               ...i.candidateId,
+        //               skills: resume.skills,
+        //               CurrentExperience: resume.CurrentExperience,
+        //               CurrentRole: resume.CurrentRole,
+        //               ImageData: resume.ImageData,
+        //             };
+        //           }
+        //         }
+        //         return i;
+        //       });
+        //     }
+
+        //     const feedbackInterviewIds = feedbackInterviews.map((i) => i._id);
+
+        //     // -------------------------------------------------------
+        //     // 2️⃣ GET ALL INTERVIEW ROUNDS FOR THOSE INTERVIEWS
+        //     // -------------------------------------------------------
+        //     const feedbackInterviewRounds = await InterviewRounds.find({
+        //       interviewId: { $in: feedbackInterviewIds },
+        //     }).lean();
+
+        //     const feedbackRoundIds = feedbackInterviewRounds.map((r) => r._id);
+
+        //     // -------------------------------------------------------
+        //     // 3️⃣ BUILD PROPER BASE QUERY
+        //     // -------------------------------------------------------
+        //     let baseQuery = {
+        //       $or: [
+        //         { interviewRoundId: { $in: feedbackRoundIds } },
+        //         { ...query },
+        //       ],
+        //     };
+
+        //     // EXTRA rule for non-admin users → own feedback only
+        //     if (
+        //       roleType === "individual" ||
+        //       (roleType === "organization" && roleName !== "Admin")
+        //     ) {
+        //       baseQuery.$or.push({ ownerId: userId });
+        //     }
+
+        //     // -------------------------------------------------------
+        //     // 4️⃣ SEARCH FILTER
+        //     // -------------------------------------------------------
+        //     if (search) {
+        //       const sanitizedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        //       const regex = new RegExp(sanitizedSearch, "i");
+        //       baseQuery.$and = baseQuery.$and || [];
+        //       baseQuery.$and.push({
+        //         $or: [
+        //           { feedbackCode: regex },
+        //           { "candidateId.FirstName": regex },
+        //           { "candidateId.LastName": regex },
+        //           { "candidateId.Email": regex },
+        //           { "positionId.title": regex },
+        //           //{ "positionId.companyname": regex },
+        //         ],
+        //       });
+        //     }
+
+        //     // -------------------------------------------------------
+        //     // 5️⃣ STATUS FILTER
+        //     // -------------------------------------------------------
+        //     if (status) {
+        //       const arr = Array.isArray(status) ? status : [status];
+        //       baseQuery.status = { $in: arr };
+        //     }
+
+        //     // -------------------------------------------------------
+        //     // 6️⃣ POSITION FILTER
+        //     // -------------------------------------------------------
+        //     if (positions) {
+        //       const arr = Array.isArray(positions) ? positions : [positions];
+        //       baseQuery.positionId = { $in: arr };
+        //     }
+
+        //     // -------------------------------------------------------
+        //     // 7️⃣ MODE FILTER
+        //     // -------------------------------------------------------
+        //     if (modes) {
+        //       const arr = Array.isArray(modes) ? modes : [modes];
+        //       baseQuery["interviewRoundId.interviewMode"] = { $in: arr };
+        //     }
+
+        //     // -------------------------------------------------------
+        //     // 8️⃣ INTERVIEWER FILTER
+        //     // -------------------------------------------------------
+        //     if (interviewers) {
+        //       const arr = Array.isArray(interviewers)
+        //         ? interviewers
+        //         : [interviewers];
+        //       baseQuery.interviewerId = { $in: arr };
+        //     }
+
+        //     // -------------------------------------------------------
+        //     // 9️⃣ RECOMMENDATION FILTER
+        //     // -------------------------------------------------------
+        //     if (recommendations) {
+        //       const arr = Array.isArray(recommendations)
+        //         ? recommendations
+        //         : [recommendations];
+
+        //       baseQuery["overallImpression.recommendation"] = { $in: arr };
+        //     }
+
+        //     // -------------------------------------------------------
+        //     // 🔟 RATING RANGE FILTER
+        //     // -------------------------------------------------------
+        //     if (ratingMin || ratingMax) {
+        //       baseQuery["overallImpression.overallRating"] = {};
+        //       if (ratingMin)
+        //         baseQuery["overallImpression.overallRating"].$gte =
+        //           parseFloat(ratingMin);
+        //       if (ratingMax)
+        //         baseQuery["overallImpression.overallRating"].$lte =
+        //           parseFloat(ratingMax);
+        //     }
+
+        //     // -------------------------------------------------------
+        //     // 1️⃣1️⃣ INTERVIEW DATE FILTER
+        //     // -------------------------------------------------------
+        //     if (interviewDate) {
+        //       const now = new Date();
+        //       let start = new Date();
+
+        //       switch (interviewDate) {
+        //         case "last7":
+        //           start.setDate(now.getDate() - 7);
+        //           break;
+        //         case "last30":
+        //           start.setDate(now.getDate() - 30);
+        //           break;
+        //         case "last90":
+        //           start.setDate(now.getDate() - 90);
+        //           break;
+        //         default:
+        //           start = null;
+        //       }
+
+        //       if (start) {
+        //         baseQuery["interviewRoundId.dateTime"] = {
+        //           $gte: start,
+        //           $lte: now,
+        //         };
+        //       }
+        //     }
+
+        //     // -------------------------------------------------------
+        //     // 1️⃣2️⃣ PAGINATION TOTAL COUNT
+        //     // -------------------------------------------------------
+        //     const feedbackTotalCount = await FeedbackModel.countDocuments(
+        //       baseQuery
+        //     );
+
+        //     // -------------------------------------------------------
+        //     // 1️⃣3️⃣ FETCH FEEDBACK WITH POPULATION
+        //     // -------------------------------------------------------
+        //     let feedbacks = await FeedbackModel.find(baseQuery)
+        //       .populate(
+        //         "candidateId",
+        //         "FirstName LastName Email Phone"
+        //       )
+        //       .populate(
+        //         "positionId",
+        //         "title companyname jobDescription Location"
+        //       )
+        //       .populate(
+        //         "interviewRoundId",
+        //         "roundTitle interviewMode interviewType interviewerType duration instructions dateTime status"
+        //       )
+        //       .populate("interviewerId", "firstName lastName email")
+        //       .populate("ownerId", "firstName lastName email")
+        //       .sort({ _id: -1 })
+        //       // .skip(skip)
+        //       .limit(feedbackLimitNum)
+        //       .lean();
+
+        //     // Fetch Resume data for candidates (skills, experience, etc. moved from Candidate)
+        //     const feedbackCandidateIds = feedbacks
+        //       .filter((f) => f.candidateId?._id)
+        //       .map((f) => f.candidateId._id);
+
+        //     if (feedbackCandidateIds.length > 0) {
+        //       const feedbackResumes = await Resume.find({
+        //         candidateId: { $in: feedbackCandidateIds },
+        //         isActive: true,
+        //       }).select("candidateId skills CurrentExperience CurrentRole ImageData").lean();
+
+        //       const feedbackResumeMap = {};
+        //       feedbackResumes.forEach((r) => {
+        //         feedbackResumeMap[String(r.candidateId)] = r;
+        //       });
+
+        //       // Merge Resume data into feedbacks
+        //       feedbacks = feedbacks.map((f) => {
+        //         if (f.candidateId?._id) {
+        //           const resume = feedbackResumeMap[String(f.candidateId._id)];
+        //           if (resume) {
+        //             f.candidateId = {
+        //               ...f.candidateId,
+        //               skills: resume.skills,
+        //               CurrentExperience: resume.CurrentExperience,
+        //               CurrentRole: resume.CurrentRole,
+        //               ImageData: resume.ImageData,
+        //             };
+        //           }
+        //         }
+        //         return f;
+        //       });
+        //     }
+
+        //     // -------------------------------------------------------
+        //     // 1️⃣4️⃣ GET INTERVIEW QUESTIONS FOR EACH FEEDBACK
+        //     // -------------------------------------------------------
+        //     // const feedbackWithQuestions = await Promise.all(
+        //     //   feedbacks.map(async (f) => {
+        //     //     const preSelectedQuestions = await InterviewQuestions.find({
+        //     //       roundId: f.interviewRoundId?._id,
+        //     //     }).lean();
+
+        //     //     return {
+        //     //       ...f,
+        //     //       preSelectedQuestions,
+        //     //       canEdit: f.status === "draft",
+        //     //       canView: true,
+        //     //     };
+        //     //   })
+        //     // );
+
+
+        //     // -------------------------------------------------------
+        //     // 1️⃣4️⃣ MERGE QUESTIONS + ANSWERS PROPERLY
+        //     // -------------------------------------------------------
+
+        //     // 1. Get all roundIds from feedbacks
+        //     const roundIds = feedbacks
+        //       .filter((f) => f.interviewRoundId?._id)
+        //       .map((f) => f.interviewRoundId._id);
+
+        //     // 2. Fetch all questions for those rounds (single query)
+        //     const allRoundQuestions = await InterviewQuestions.find({
+        //       roundId: { $in: roundIds },
+        //     }).lean();
+
+        //     // 3. Group questions by roundId
+        //     const questionsByRound = {};
+        //     allRoundQuestions.forEach((q) => {
+        //       const rId = q.roundId.toString();
+        //       if (!questionsByRound[rId]) {
+        //         questionsByRound[rId] = [];
+        //       }
+        //       questionsByRound[rId].push(q);
+        //     });
+
+        //     // 4. Merge questions + answers into each feedback
+        //     const feedbackWithQuestions = feedbacks.map((fb) => {
+        //       const roundId = fb.interviewRoundId?._id?.toString();
+        //       const roundQuestions = questionsByRound[roundId] || [];
+
+        //       // Create answer lookup map
+        //       const answerMap = {};
+        //       (fb.questionFeedback || []).forEach((qf) => {
+        //         if (qf.questionId) {
+        //           answerMap[qf.questionId.toString()] = qf;
+        //         }
+        //       });
+
+        //       // Merge
+        //       const mergedQuestions = roundQuestions.map((q) => {
+        //         const answer = answerMap[q._id.toString()];
+
+        //         return {
+        //           ...q,
+        //           candidateAnswer: answer?.candidateAnswer || null,
+        //           interviewerFeedback: answer?.interviewerFeedback || null,
+        //         };
+        //       });
+
+        //       return {
+        //         ...fb,
+        //         questionFeedback: mergedQuestions,
+        //         canEdit: fb.status === "draft",
+        //         canView: true,
+        //       };
+        //     });
+
+
+        //     // -------------------------------------------------------
+        //     // 1️⃣5️⃣ FINAL RESPONSE
+        //     // -------------------------------------------------------
+        //     data = {
+        //       feedbacks: feedbackWithQuestions,
+        //       pagination: {
+        //         currentPage: feedbackPageNum,
+        //         totalPages: Math.ceil(feedbackTotalCount / feedbackLimitNum),
+        //         totalItems: feedbackTotalCount,
+        //         itemsPerPage: feedbackLimitNum,
+        //       },
+        //     };
+        //   } else {
+        //     let baseQuery = {
+        //       ...query,
+        //       status: "draft", // 👈 ONLY DRAFT STATUS
+        //     };
+
+        //     const feedbackTotalCount = await FeedbackModel.countDocuments(
+        //       baseQuery
+        //     );
+        //     data = {
+        //       data: feedbackTotalCount,
+        //     };
+        //   }
+
+        //   break;
+
+
+        // In your feedback route handler
         case "feedback":
           const {
             page: feedbackPage = 1,
@@ -2073,25 +2447,27 @@ router.get(
           } = req.query;
 
           if (type === "feedback") {
-            const feedbackPageNum = parseInt(feedbackPage);
-            const feedbackLimitNum = parseInt(feedbackLimit);
+            // const feedbackPageNum = parseInt(feedbackPage);
+            // const feedbackLimitNum = parseInt(feedbackLimit);
             // const skip = (feedbackPageNum - 1) * feedbackLimitNum;
+            // Ensure page is at least 1 and limit is positive
+            const feedbackPageNum = Math.max(1, parseInt(feedbackPage) || 1);
+            const feedbackLimitNum = Math.max(1, parseInt(feedbackLimit) || 10);
+            const skip = (feedbackPageNum - 1) * feedbackLimitNum;
+
 
             // -------------------------------------------------------
-            // 1️⃣ GET ALL INTERVIEWS BASED ON TENANT/OWNER (NEEDED)
+            // 1️⃣ GET ALL INTERVIEWS AND MOCK INTERVIEWS BASED ON TENANT/OWNER
             // -------------------------------------------------------
             let feedbackInterviews = await Interview.find(query)
-              .populate(
-                "candidateId",
-                "FirstName LastName Email Phone"
-              )
-              .populate(
-                "positionId",
-                "title companyname jobDescription Location"
-              )
+              .populate("candidateId", "FirstName LastName Email Phone")
+              .populate("positionId", "title companyname jobDescription Location")
               .lean();
 
-            // Fetch Resume data for candidates (skills, experience moved from Candidate)
+            let feedbackMockInterviews = await MockInterview.find(query)
+              .lean();
+
+            // Fetch Resume data for candidates (for regular interviews)
             const fbInterviewCandidateIds = feedbackInterviews
               .filter((i) => i.candidateId?._id)
               .map((i) => i.candidateId._id);
@@ -2126,22 +2502,29 @@ router.get(
             }
 
             const feedbackInterviewIds = feedbackInterviews.map((i) => i._id);
+            const feedbackMockInterviewIds = feedbackMockInterviews.map((i) => i._id);
 
             // -------------------------------------------------------
-            // 2️⃣ GET ALL INTERVIEW ROUNDS FOR THOSE INTERVIEWS
+            // 2️⃣ GET ALL INTERVIEW ROUNDS AND MOCK INTERVIEW ROUNDS
             // -------------------------------------------------------
             const feedbackInterviewRounds = await InterviewRounds.find({
               interviewId: { $in: feedbackInterviewIds },
             }).lean();
 
+            const feedbackMockInterviewRounds = await MockInterviewRound.find({
+              mockInterviewId: { $in: feedbackMockInterviewIds },
+            }).lean();
+
             const feedbackRoundIds = feedbackInterviewRounds.map((r) => r._id);
+            const feedbackMockRoundIds = feedbackMockInterviewRounds.map((r) => r._id);
 
             // -------------------------------------------------------
-            // 3️⃣ BUILD PROPER BASE QUERY
+            // 3️⃣ BUILD PROPER BASE QUERY WITH ALL FILTERS
             // -------------------------------------------------------
             let baseQuery = {
               $or: [
                 { interviewRoundId: { $in: feedbackRoundIds } },
+                { interviewRoundId: { $in: feedbackMockRoundIds } },
                 { ...query },
               ],
             };
@@ -2155,7 +2538,7 @@ router.get(
             }
 
             // -------------------------------------------------------
-            // 4️⃣ SEARCH FILTER
+            // 4️⃣ SEARCH FILTER (PRESERVE EXISTING FUNCTIONALITY)
             // -------------------------------------------------------
             if (search) {
               const sanitizedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -2168,13 +2551,12 @@ router.get(
                   { "candidateId.LastName": regex },
                   { "candidateId.Email": regex },
                   { "positionId.title": regex },
-                  //{ "positionId.companyname": regex },
                 ],
               });
             }
 
             // -------------------------------------------------------
-            // 5️⃣ STATUS FILTER
+            // 5️⃣ STATUS FILTER (PRESERVE EXISTING)
             // -------------------------------------------------------
             if (status) {
               const arr = Array.isArray(status) ? status : [status];
@@ -2182,7 +2564,7 @@ router.get(
             }
 
             // -------------------------------------------------------
-            // 6️⃣ POSITION FILTER
+            // 6️⃣ POSITION FILTER (PRESERVE EXISTING - only for regular interviews)
             // -------------------------------------------------------
             if (positions) {
               const arr = Array.isArray(positions) ? positions : [positions];
@@ -2190,50 +2572,42 @@ router.get(
             }
 
             // -------------------------------------------------------
-            // 7️⃣ MODE FILTER
+            // 7️⃣ MODE FILTER - We'll handle this after fetching rounds
             // -------------------------------------------------------
-            if (modes) {
-              const arr = Array.isArray(modes) ? modes : [modes];
-              baseQuery["interviewRoundId.interviewMode"] = { $in: arr };
-            }
+            // Store mode filter for later use
+            let modeFilter = modes ? (Array.isArray(modes) ? modes : [modes]) : null;
 
             // -------------------------------------------------------
-            // 8️⃣ INTERVIEWER FILTER
+            // 8️⃣ INTERVIEWER FILTER (PRESERVE EXISTING)
             // -------------------------------------------------------
             if (interviewers) {
-              const arr = Array.isArray(interviewers)
-                ? interviewers
-                : [interviewers];
+              const arr = Array.isArray(interviewers) ? interviewers : [interviewers];
               baseQuery.interviewerId = { $in: arr };
             }
 
             // -------------------------------------------------------
-            // 9️⃣ RECOMMENDATION FILTER
+            // 9️⃣ RECOMMENDATION FILTER (PRESERVE EXISTING)
             // -------------------------------------------------------
             if (recommendations) {
-              const arr = Array.isArray(recommendations)
-                ? recommendations
-                : [recommendations];
-
+              const arr = Array.isArray(recommendations) ? recommendations : [recommendations];
               baseQuery["overallImpression.recommendation"] = { $in: arr };
             }
 
             // -------------------------------------------------------
-            // 🔟 RATING RANGE FILTER
+            // 🔟 RATING RANGE FILTER (PRESERVE EXISTING)
             // -------------------------------------------------------
             if (ratingMin || ratingMax) {
               baseQuery["overallImpression.overallRating"] = {};
               if (ratingMin)
-                baseQuery["overallImpression.overallRating"].$gte =
-                  parseFloat(ratingMin);
+                baseQuery["overallImpression.overallRating"].$gte = parseFloat(ratingMin);
               if (ratingMax)
-                baseQuery["overallImpression.overallRating"].$lte =
-                  parseFloat(ratingMax);
+                baseQuery["overallImpression.overallRating"].$lte = parseFloat(ratingMax);
             }
 
             // -------------------------------------------------------
-            // 1️⃣1️⃣ INTERVIEW DATE FILTER
+            // 1️⃣1️⃣ INTERVIEW DATE FILTER - Store for later use
             // -------------------------------------------------------
+            let dateFilter = null;
             if (interviewDate) {
               const now = new Date();
               let start = new Date();
@@ -2253,44 +2627,71 @@ router.get(
               }
 
               if (start) {
-                baseQuery["interviewRoundId.dateTime"] = {
-                  $gte: start,
-                  $lte: now,
-                };
+                dateFilter = { $gte: start, $lte: now };
               }
             }
 
             // -------------------------------------------------------
-            // 1️⃣2️⃣ PAGINATION TOTAL COUNT
+            // 1️⃣2️⃣ GET TOTAL COUNT BEFORE PAGINATION
             // -------------------------------------------------------
-            const feedbackTotalCount = await FeedbackModel.countDocuments(
-              baseQuery
-            );
+            const feedbackTotalCount = await FeedbackModel.countDocuments(baseQuery);
 
             // -------------------------------------------------------
-            // 1️⃣3️⃣ FETCH FEEDBACK WITH POPULATION
+            // 1️⃣3️⃣ FETCH FEEDBACK WITH POPULATION (PRESERVE EXISTING)
             // -------------------------------------------------------
             let feedbacks = await FeedbackModel.find(baseQuery)
-              .populate(
-                "candidateId",
-                "FirstName LastName Email Phone"
-              )
-              .populate(
-                "positionId",
-                "title companyname jobDescription Location"
-              )
-              .populate(
-                "interviewRoundId",
-                "roundTitle interviewMode interviewType interviewerType duration instructions dateTime status"
-              )
+              .populate("candidateId", "FirstName LastName Email Phone")
+              .populate("positionId", "title companyname jobDescription Location")
               .populate("interviewerId", "firstName lastName email")
               .populate("ownerId", "firstName lastName email")
               .sort({ _id: -1 })
-              // .skip(skip)
+              .skip(skip)
               .limit(feedbackLimitNum)
               .lean();
 
-            // Fetch Resume data for candidates (skills, experience, etc. moved from Candidate)
+            // -------------------------------------------------------
+            // 1️⃣4️⃣ FETCH ROUND DETAILS FOR ALL FEEDBACKS
+            // -------------------------------------------------------
+
+            // Separate regular and mock feedbacks
+            const regularFeedbacks = feedbacks.filter(f => !f.isMockInterview);
+            const mockFeedbacks = feedbacks.filter(f => f.isMockInterview);
+
+            // Create maps for round data
+            const roundDataMap = new Map();
+            const mockRoundDataMap = new Map();
+
+            // Fetch regular interview rounds
+            if (regularFeedbacks.length > 0) {
+              const regularRoundIds = regularFeedbacks
+                .map(f => f.interviewRoundId)
+                .filter(id => id);
+
+              const regularRounds = await InterviewRounds.find({
+                _id: { $in: regularRoundIds }
+              }).lean();
+
+              regularRounds.forEach(round => {
+                roundDataMap.set(round._id.toString(), round);
+              });
+            }
+
+            // Fetch mock interview rounds
+            if (mockFeedbacks.length > 0) {
+              const mockRoundIds = mockFeedbacks
+                .map(f => f.interviewRoundId)
+                .filter(id => id);
+
+              const mockRounds = await MockInterviewRound.find({
+                _id: { $in: mockRoundIds }
+              }).lean();
+
+              mockRounds.forEach(round => {
+                mockRoundDataMap.set(round._id.toString(), round);
+              });
+            }
+
+            // Fetch Resume data for candidates (PRESERVE EXISTING)
             const feedbackCandidateIds = feedbacks
               .filter((f) => f.candidateId?._id)
               .map((f) => f.candidateId._id);
@@ -2325,39 +2726,20 @@ router.get(
             }
 
             // -------------------------------------------------------
-            // 1️⃣4️⃣ GET INTERVIEW QUESTIONS FOR EACH FEEDBACK
-            // -------------------------------------------------------
-            // const feedbackWithQuestions = await Promise.all(
-            //   feedbacks.map(async (f) => {
-            //     const preSelectedQuestions = await InterviewQuestions.find({
-            //       roundId: f.interviewRoundId?._id,
-            //     }).lean();
-
-            //     return {
-            //       ...f,
-            //       preSelectedQuestions,
-            //       canEdit: f.status === "draft",
-            //       canView: true,
-            //     };
-            //   })
-            // );
-
-
-            // -------------------------------------------------------
-            // 1️⃣4️⃣ MERGE QUESTIONS + ANSWERS PROPERLY
+            // 1️⃣5️⃣ GET INTERVIEW QUESTIONS FOR EACH FEEDBACK
             // -------------------------------------------------------
 
-            // 1. Get all roundIds from feedbacks
+            // Get all roundIds from feedbacks
             const roundIds = feedbacks
-              .filter((f) => f.interviewRoundId?._id)
-              .map((f) => f.interviewRoundId._id);
+              .filter((f) => f.interviewRoundId)
+              .map((f) => f.interviewRoundId.toString());
 
-            // 2. Fetch all questions for those rounds (single query)
+            // Fetch all questions for those rounds
             const allRoundQuestions = await InterviewQuestions.find({
               roundId: { $in: roundIds },
             }).lean();
 
-            // 3. Group questions by roundId
+            // Group questions by roundId
             const questionsByRound = {};
             allRoundQuestions.forEach((q) => {
               const rId = q.roundId.toString();
@@ -2367,9 +2749,26 @@ router.get(
               questionsByRound[rId].push(q);
             });
 
-            // 4. Merge questions + answers into each feedback
-            const feedbackWithQuestions = feedbacks.map((fb) => {
-              const roundId = fb.interviewRoundId?._id?.toString();
+            // -------------------------------------------------------
+            // 1️⃣6️⃣ MERGE ALL DATA AND APPLY REMAINING FILTERS
+            // -------------------------------------------------------
+
+            let feedbackWithDetails = [];
+
+            for (const fb of feedbacks) {
+              const roundId = fb.interviewRoundId?.toString();
+
+              // Get appropriate round details
+              let roundDetails = null;
+              if (fb.isMockInterview) {
+                roundDetails = mockRoundDataMap.get(roundId);
+              } else {
+                roundDetails = roundDataMap.get(roundId);
+              }
+
+              // Skip if round details not found (shouldn't happen, but just in case)
+              if (!roundDetails) continue;
+
               const roundQuestions = questionsByRound[roundId] || [];
 
               // Create answer lookup map
@@ -2380,7 +2779,7 @@ router.get(
                 }
               });
 
-              // Merge
+              // Merge questions with answers
               const mergedQuestions = roundQuestions.map((q) => {
                 const answer = answerMap[q._id.toString()];
 
@@ -2391,42 +2790,70 @@ router.get(
                 };
               });
 
-              return {
+              // Create enriched feedback object
+              const enrichedFeedback = {
                 ...fb,
                 questionFeedback: mergedQuestions,
+                roundDetails: roundDetails,
                 canEdit: fb.status === "draft",
                 canView: true,
               };
-            });
 
+              // -------------------------------------------------------
+              // APPLY MODE FILTER (if exists)
+              // -------------------------------------------------------
+              if (modeFilter && modeFilter.length > 0) {
+                if (!modeFilter.includes(roundDetails.interviewMode)) {
+                  continue; // Skip this feedback if mode doesn't match
+                }
+              }
+
+              // -------------------------------------------------------
+              // APPLY DATE FILTER (if exists)
+              // -------------------------------------------------------
+              if (dateFilter) {
+                const roundDate = new Date(roundDetails.dateTime);
+                if (roundDate < dateFilter.$gte || roundDate > dateFilter.$lte) {
+                  continue; // Skip if date doesn't match
+                }
+              }
+
+              feedbackWithDetails.push(enrichedFeedback);
+            }
 
             // -------------------------------------------------------
-            // 1️⃣5️⃣ FINAL RESPONSE
+            // 1️⃣7️⃣ APPLY PAGINATION TO FILTERED RESULTS
+            // -------------------------------------------------------
+            const totalFilteredItems = feedbackWithDetails.length;
+            const paginatedFeedbacks = feedbackWithDetails.slice(skip, skip + feedbackLimitNum);
+
+            // -------------------------------------------------------
+            // 1️⃣8️⃣ FINAL RESPONSE
             // -------------------------------------------------------
             data = {
-              feedbacks: feedbackWithQuestions,
+              feedbacks: paginatedFeedbacks,
               pagination: {
                 currentPage: feedbackPageNum,
-                totalPages: Math.ceil(feedbackTotalCount / feedbackLimitNum),
-                totalItems: feedbackTotalCount,
+                totalPages: Math.ceil(totalFilteredItems / feedbackLimitNum),
+                totalItems: totalFilteredItems,
                 itemsPerPage: feedbackLimitNum,
               },
             };
           } else {
+            // Handle draft count case (PRESERVE EXISTING)
             let baseQuery = {
               ...query,
-              status: "draft", // 👈 ONLY DRAFT STATUS
+              status: "draft",
             };
 
-            const feedbackTotalCount = await FeedbackModel.countDocuments(
-              baseQuery
-            );
+            const feedbackTotalCount = await FeedbackModel.countDocuments(baseQuery);
             data = {
               data: feedbackTotalCount,
             };
           }
 
           break;
+
 
         case "candidate":
           const {
