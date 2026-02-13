@@ -68,6 +68,7 @@ function QuestionHeaderBar({
   rangeLabel,
   searchInput,
   setSearchInput,
+  onSearchApply,
   currentPage,
   totalPages,
   itemsPerPage,
@@ -223,7 +224,15 @@ function QuestionHeaderBar({
             placeholder="Search by Tags, Questions..."
             className="w-[200px] rounded-md focus:outline-none pr-2"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={(e) => {
+              setSearchInput(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                onSearchApply && onSearchApply(searchInput);
+              }
+            }}
           />
         </div>
         <div className="flex items-center gap-3">
@@ -370,7 +379,29 @@ const MyQuestionsList = ({
   setSidebarOpen,
   customHeight
 }) => {
-  const { myQuestionsList, createdLists, isLoading } = useQuestions(); //<----v1.0.4---
+  // Server-side search/filter state
+  const [appliedSearchTags, setAppliedSearchTags] = useState([]);
+  const [appliedFilters, setAppliedFilters] = useState({
+    difficultyLevel: [],
+    technology: [],
+    category: [],
+    questionType: [],
+    questionFrom: [],
+  });
+
+  // Build filters for the hook — triggers server refetch when these change
+  const myQuestionsFilters = useMemo(() => {
+    const f = {};
+    if (appliedSearchTags.length) f.search = appliedSearchTags;
+    if (appliedFilters.difficultyLevel.length) f.difficultyLevel = appliedFilters.difficultyLevel;
+    if (appliedFilters.technology.length) f.technology = appliedFilters.technology;
+    if (appliedFilters.category.length) f.category = appliedFilters.category;
+    if (appliedFilters.questionType.length) f.questionType = appliedFilters.questionType;
+    if (appliedFilters.questionFrom.length) f.questionFrom = appliedFilters.questionFrom;
+    return f;
+  }, [appliedSearchTags, appliedFilters]);
+
+  const { myQuestionsList, createdLists, isLoading } = useQuestions(myQuestionsFilters); //<----v1.0.4---
   const { mutateAsync: deleteQuestions } = useQuestionDeletion();
 
   const myQuestionsListRef = useRef(null);
@@ -837,60 +868,8 @@ const MyQuestionsList = ({
     });
   }, [myQuestionsList, dropdownValue]);
 
-  // Derive filtered questions using useMemo
-  const filteredMyQuestionsList = useMemo(() => {
-    if (!myQuestionsList || typeof myQuestionsList !== "object") {
-      return {};
-    }
-    return Object.keys(myQuestionsList).reduce((acc, key) => {
-      acc[key] = myQuestionsList[key].filter((question) => {
-        const diffLower = String(question?.difficultyLevel || "").toLowerCase();
-        const matchesDifficulty =
-          !selectedDifficultyLevelFilterItems.length ||
-          selectedDifficultyLevelFilterItems.includes(diffLower);
-        const questionType = question.isCustom ? "custom" : "system";
-        const matchesQuestionType =
-          !selectedQuestionTypeFilterItems.length ||
-          selectedQuestionTypeFilterItems.includes(questionType);
-        const qTypeKind = (question?.questionType || "").toLowerCase();
-
-        const matchesQType =
-          !selectedQTypeFilterItems.length ||
-          selectedQTypeFilterItems.includes(qTypeKind);
-        const techs = Array.isArray(question?.technology)
-          ? question.technology
-          : typeof question?.technology === "string"
-            ? [question.technology]
-            : [];
-        const techsLower = techs.map((t) => String(t || "").toLowerCase());
-        const matchesTechnology =
-          !selectedTechnologyFilterItems.length ||
-          selectedTechnologyFilterItems.some((sel) => techsLower.includes(sel));
-        const categoryLower = question?.category
-          ? String(question.category).toLowerCase()
-          : "";
-        const matchesCategory =
-          !selectedCategoryFilterItems.length ||
-          (categoryLower &&
-            selectedCategoryFilterItems.includes(categoryLower));
-        return (
-          matchesDifficulty &&
-          matchesQuestionType &&
-          matchesQType &&
-          matchesTechnology &&
-          matchesCategory
-        );
-      });
-      return acc;
-    }, {});
-  }, [
-    myQuestionsList,
-    selectedDifficultyLevelFilterItems,
-    selectedQuestionTypeFilterItems,
-    selectedTechnologyFilterItems,
-    selectedQTypeFilterItems,
-    selectedCategoryFilterItems,
-  ]);
+  // Filtering is now done server-side. Use myQuestionsList directly.
+  const filteredMyQuestionsList = myQuestionsList;
 
   // Initialize loading and isOpen once we have data.
   // NOTE: The previous implementation updated `isOpen` on every render because
@@ -1394,6 +1373,16 @@ const MyQuestionsList = ({
     setSelectedTechnologyFilterItems(technologyItems);
     setSelectedQTypeFilterItems(qTypeItems);
     setSelectedCategoryFilterItems(categoryItems);
+
+    // Apply filters to server-side query
+    setAppliedFilters({
+      difficultyLevel: difficultyItems,
+      technology: technologyItems,
+      category: categoryItems,
+      questionType: qTypeItems,
+      questionFrom: questionTypeItems,
+    });
+    setCurrentPage(1);
     setIsPopupOpen(false);
   };
 
@@ -1412,7 +1401,77 @@ const MyQuestionsList = ({
     setSelectedTechnologyFilterItems([]);
     setSelectedQTypeFilterItems([]);
     setSelectedCategoryFilterItems([]);
+
+    // Clear server-side filters
+    setAppliedFilters({
+      difficultyLevel: [],
+      technology: [],
+      category: [],
+      questionType: [],
+      questionFrom: [],
+    });
+    setAppliedSearchTags([]);
+    setSearchInput("");
+    setCurrentPage(1);
     setIsPopupOpen(false);
+  };
+
+  // Helper to capitalize first letter
+  const capitalizeFirstLetter = (str) =>
+    str?.charAt(0)?.toUpperCase() + str?.slice(1);
+
+  // Remove individual filter chip and update server-side filters
+  const onClickRemoveSelectedFilterItem = (filterItem) => {
+    const item = filterItem.toLowerCase();
+
+    // Check in each filter list and remove
+    const newDiff = selectedDifficultyLevelFilterItems.filter((f) => f !== item);
+    const newTech = selectedTechnologyFilterItems.filter((f) => f !== item);
+    const newCat = selectedCategoryFilterItems.filter((f) => f !== item);
+    const newQType = selectedQTypeFilterItems.filter((f) => f !== item);
+    const newQFrom = selectedQuestionTypeFilterItems.filter((f) => f !== item);
+
+    setSelectedDifficultyLevelFilterItems(newDiff);
+    setSelectedTechnologyFilterItems(newTech);
+    setSelectedCategoryFilterItems(newCat);
+    setSelectedQTypeFilterItems(newQType);
+    setSelectedQuestionTypeFilterItems(newQFrom);
+
+    // Also uncheck in filtrationData
+    const updatedFiltration = filtrationData.map((filter) => ({
+      ...filter,
+      options: filter.options.map((option) => {
+        const optVal = String(option.type || option.level || option.value || "").toLowerCase();
+        if (optVal === item) return { ...option, isChecked: false };
+        return option;
+      }),
+    }));
+    setFiltrationData(updatedFiltration);
+    setTempFiltrationData(updatedFiltration);
+
+    // Update server-side filters
+    setAppliedFilters({
+      difficultyLevel: newDiff,
+      technology: newTech,
+      category: newCat,
+      questionType: newQType,
+      questionFrom: newQFrom,
+    });
+    setCurrentPage(1);
+  };
+
+  // Remove search tag from applied chips
+  const onClickRemoveSearchChip = (tag) => {
+    setAppliedSearchTags((prev) => prev.filter((t) => t !== tag));
+    setCurrentPage(1);
+  };
+
+  // Add search tag on Enter key press
+  const handleAddSearchTag = (tag) => {
+    if (tag && !appliedSearchTags.includes(tag)) {
+      setAppliedSearchTags((prev) => [...prev, tag]);
+      setCurrentPage(1);
+    }
   };
 
   const onClickLeftPaginationIcon = () => {
@@ -1474,32 +1533,8 @@ const MyQuestionsList = ({
       : [];
   }, [groupedQuestions, selectedLabel]);
 
-  const filteredSelectedItems = useMemo(() => {
-    if (!searchInput) return selectedLabelItems;
-    const s = String(searchInput || "").toLowerCase();
-    return selectedLabelItems.filter((q) => {
-      const inText = String(q?.questionText || "")
-        .toLowerCase()
-        .includes(s);
-      const inTags =
-        Array.isArray(q?.tags) &&
-        q.tags.some((t) =>
-          String(t || "")
-            .toLowerCase()
-            .includes(s),
-        );
-      const inSkill = Array.isArray(q?.skill)
-        ? q.skill.some((sk) =>
-          String(sk || "")
-            .toLowerCase()
-            .includes(s),
-        )
-        : typeof q?.skill === "string"
-          ? q.skill.toLowerCase().includes(s)
-          : false;
-      return inText || inTags || inSkill;
-    });
-  }, [selectedLabelItems, searchInput]);
+  // Search is now done server-side. Use selectedLabelItems directly.
+  const filteredSelectedItems = selectedLabelItems;
 
   const totalItems = filteredSelectedItems.length;
   const totalPages = useMemo(
@@ -1597,6 +1632,13 @@ const MyQuestionsList = ({
             rangeLabel={rangeLabel}
             searchInput={searchInput}
             setSearchInput={setSearchInput}
+            onSearchApply={(val) => {
+              const tag = (typeof val === "string" ? val : searchInput).trim();
+              if (tag) {
+                handleAddSearchTag(tag);
+                setSearchInput("");
+              }
+            }}
             currentPage={currentPage}
             totalPages={totalPages}
             itemsPerPage={itemsPerPage}
@@ -1611,6 +1653,62 @@ const MyQuestionsList = ({
           />
         </div>
         {/* v1.0.6 ----------------------------------------------------------------> */}
+
+        {/* Filters applied chips (matching Suggested Questions UI) */}
+        {([
+          ...appliedSearchTags,
+          ...selectedQuestionTypeFilterItems,
+          ...selectedDifficultyLevelFilterItems,
+          ...selectedTechnologyFilterItems,
+          ...selectedQTypeFilterItems,
+          ...selectedCategoryFilterItems,
+        ].length > 0) && (
+            <div className="flex items-center flex-wrap px-4 pt-2 mb-3 gap-3">
+              <h3 className="font-medium text-gray-700 text-sm">
+                Filters applied:
+              </h3>
+              <ul className="flex gap-2 flex-wrap">
+                {/* Search tag chips */}
+                {appliedSearchTags.map((tag, index) => (
+                  <li
+                    key={`search-${index}`}
+                    className="flex gap-2 items-center border border-custom-blue rounded-full px-3 py-1 text-custom-blue bg-blue-50 text-sm"
+                  >
+                    <span>{tag}</span>
+                    <button
+                      type="button"
+                      className="cursor-pointer hover:text-red-500 transition-colors"
+                      onClick={() => onClickRemoveSearchChip(tag)}
+                    >
+                      <X size={14} />
+                    </button>
+                  </li>
+                ))}
+                {/* Filter chips */}
+                {[
+                  ...selectedQuestionTypeFilterItems,
+                  ...selectedDifficultyLevelFilterItems,
+                  ...selectedTechnologyFilterItems,
+                  ...selectedQTypeFilterItems,
+                  ...selectedCategoryFilterItems,
+                ].map((filterItem, index) => (
+                  <li
+                    key={`filter-${index}`}
+                    className="flex items-center gap-1 rounded-full border border-custom-blue px-3 py-1 text-custom-blue font-medium bg-blue-50 text-sm"
+                  >
+                    <span>{capitalizeFirstLetter(filterItem)}</span>
+                    <button
+                      className="hover:text-red-500 transition-colors"
+                      onClick={() => onClickRemoveSelectedFilterItem(filterItem)}
+                      type="button"
+                    >
+                      <X size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
         {/* v1.0.8 <-------------------------------------------------------------------------- */}
         <div

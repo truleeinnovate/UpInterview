@@ -78,7 +78,16 @@ export const useQuestions = (filters = {}) => {
   } = useQuery({
     queryKey: ['questions', filters],
     queryFn: async () => {
-      const data = await fetchFilterData('tenantquestions');
+      // Build query params from filters for server-side search/filter
+      const params = {};
+      if (filters?.search?.length) params.search = Array.isArray(filters.search) ? filters.search.join(',') : filters.search;
+      if (filters?.difficultyLevel?.length) params.difficultyLevel = filters.difficultyLevel.join(',');
+      if (filters?.technology?.length) params.technology = filters.technology.join(',');
+      if (filters?.category?.length) params.category = filters.category.join(',');
+      if (filters?.questionType?.length) params.questionType = filters.questionType.join(',');
+      if (filters?.questionFrom?.length) params.questionFrom = filters.questionFrom.join(',');
+
+      const data = await fetchFilterData('tenantquestions', {}, params);
       return Object.keys(data).reduce((acc, key) => {
         acc[key] = Array.isArray(data[key])
           ? data[key].map(question => ({
