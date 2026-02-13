@@ -1292,7 +1292,7 @@ export const getFeedbackColumns = (navigate, options = {}) => {
         {
             key: "interviewRoundId.interviewMode",
             header: "Mode",
-            render: (value, row) => row.interviewRoundId?.interviewMode || "Not Provided",
+            render: (value, row) => row.roundDetails?.interviewMode || "Not Provided",
         },
         {
             key: "candidateName",
@@ -1359,7 +1359,7 @@ export const getFeedbackColumns = (navigate, options = {}) => {
         {
             key: "date",
             header: "Date",
-            render: (value, row) => row.interviewRoundId?.dateTime?.split(" ")[0] || "N/A",
+            render: (value, row) => row.roundDetails?.dateTime?.split(" ")[0] || "N/A",
         },
         {
             key: "rating",
