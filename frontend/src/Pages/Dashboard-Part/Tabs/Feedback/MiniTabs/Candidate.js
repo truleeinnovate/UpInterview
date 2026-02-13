@@ -28,6 +28,9 @@ const CandidateMiniTab = ({
   selectedData: propsSelecteData,
   isAddMode,
   decodedData: propsDecodedData,
+  isViewMode,
+  roundId,
+  interviewType
 }) => {
   useScrollLock(true);
   const location = useLocation();
@@ -41,7 +44,9 @@ const CandidateMiniTab = ({
     [location.search],
   );
 
-  const isMockInterview = urlData?.interviewType === "mockinterview";
+  const isMockInterview = urlData?.interviewType === "mockinterview" || interviewType === "mockinterview";
+
+  console.log("isMockInterview", isMockInterview)
 
   // ✅ ALWAYS call hooks
   const {
@@ -49,7 +54,7 @@ const CandidateMiniTab = ({
     isMockLoading,
     isError: isMockError,
   } = useMockInterviewById({
-    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+    mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId || roundId : null,
     enabled: isMockInterview, // ✅ THIS LINE
     // mockInterviewId: null,
   });
@@ -59,15 +64,18 @@ const CandidateMiniTab = ({
     isLoading: isInterviewLoading,
     isError: interviewError,
   } = useInterviewDetails({
-    roundId: !isMockInterview ? urlData.interviewRoundId : null,
+    roundId: !isMockInterview ? urlData.interviewRoundId || roundId : null,
     enabled: !isMockInterview,
   });
+  console.log("roundId", roundId)
+
+  console.log("interviewData interviewData CandidateMiniTab", interviewData);
 
   const candidateData =
     propsSelecteData?.candidate || interviewData?.candidateId || mockInterview
       ? propsSelecteData?.candidate ||
-        interviewData?.candidateId ||
-        mockInterview
+      interviewData?.candidateId ||
+      mockInterview
       : feedback.candidateId || {};
 
   const safeSkills = candidateData?.skills ?? [];
@@ -249,15 +257,14 @@ const CandidateMiniTab = ({
                   </div>
                   {!isMockInterview && (
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        skill.expertise === "Expert"
-                          ? "bg-green-100 text-green-800"
-                          : skill.expertise === "Advanced"
-                            ? "bg-blue-100 text-blue-800"
-                            : skill.expertise === "Basic"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
-                      }`}
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${skill.expertise === "Expert"
+                        ? "bg-green-100 text-green-800"
+                        : skill.expertise === "Advanced"
+                          ? "bg-blue-100 text-blue-800"
+                          : skill.expertise === "Basic"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
                     >
                       {skill.expertise}
                     </span>

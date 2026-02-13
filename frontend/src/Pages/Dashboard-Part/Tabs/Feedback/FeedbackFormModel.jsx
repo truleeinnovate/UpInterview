@@ -29,8 +29,13 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
 
   const isViewMode = mode === "view" || Viewmode;
 
+
   const handleClose = () => {
-    navigate(-1); // Go back to previous page
+    if (Viewmode) {
+      onClose();
+    } else {
+      navigate(-1); // Go back to previous page
+    }
   };
 
 
@@ -49,7 +54,11 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
 
 
 
-  const feedback = feedbackDatas || routeFeedback;
+  const feedback = routeFeedback ? routeFeedback : feedbackDatas
+  //  || routeFeedback;
+
+  // console.log("feedback  useFeedbackData", feedback)
+  // console.log("feedback  isViewMode", isViewMode)
 
 
 
@@ -141,7 +150,7 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
   const displayData = () => {
     switch (activeTab) {
       case 1:
-        return <CandidateMiniTab isViewMode={isViewMode} />;
+        return <CandidateMiniTab isViewMode={isViewMode} roundId={roundId} interviewType={interviewType} />;
       case 2:
         return (
           <InterviewsMiniTabComponent
@@ -150,6 +159,8 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
             closePopup={handleClose}
             isEditMode={isEditMode}
             isViewMode={isViewMode}
+            interviewType={interviewType}
+            roundId={roundId}
             // interviewData={selectedCandidate}
             interviewerSectionData={interviewerSectionData}
             setInterviewerSectionData={setInterviewerSectionData}
@@ -176,6 +187,9 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
             isViewMode={isViewMode}
             interviewerSectionData={interviewerSectionData}
             setInterviewerSectionData={setInterviewerSectionData}
+
+            interviewType={interviewType}
+            roundId={roundId}
             // interviewRoundId={decodedData?.interviewRoundId}
             // candidateId={selectedCandidate?.candidate?._id}
             // positionId={selectedCandidate?.position?._id}
@@ -184,6 +198,7 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
             // isEditMode={false}
             // feedbackId={null}
             preselectedQuestionsResponses={preselectedQuestionsResponses}
+            schedulerFeedbackData={feedback}
           />
         );
 

@@ -245,33 +245,66 @@ const createFeedback = async (req, res) => {
     //   });
     // }
 
-    let feedbackInstance;
+    // Check if feedback already exists (draft or submitted)
+    let feedbackInstance = await FeedbackModel.findOne({
+      interviewRoundId,
+      candidateId,
+      interviewerId,
+    });
 
-    if (type === "draft") {
-      feedbackInstance = await FeedbackModel.findOneAndUpdate(
-        { interviewRoundId, candidateId, interviewerId },
-        {
-          $set: {
-            tenantId,
-            ownerId,
-            interviewRoundId,
-            candidateId,
-            positionId,
-            interviewerId,
-            skills,
-            questionFeedback: processedQuestionFeedback,
-            generalComments: generalComments || "",
-            overallImpression: overallImpression || {},
-            status: "draft",
-            isMockInterview,
-          },
-        },
-        {
-          new: true,
-          upsert: true,
-          runValidators: true,
-        },
-      );
+    if (feedbackInstance) {
+      if (type === "submit" && feedbackInstance.status === "submitted") {
+        return res.status(409).json({
+          success: false,
+          message: "Feedback already submitted",
+          feedbackId: existingFeedback._id,
+        });
+      }
+
+      // Update existing draft
+      feedbackInstance.tenantId = tenantId;
+      feedbackInstance.ownerId = ownerId;
+      feedbackInstance.positionId = positionId;
+      feedbackInstance.skills = skills;
+      feedbackInstance.questionFeedback = processedQuestionFeedback;
+      feedbackInstance.generalComments = generalComments || "";
+      feedbackInstance.overallImpression = overallImpression || {};
+      feedbackInstance.status = type === "submit" ? "submitted" : "draft";
+      feedbackInstance.isMockInterview = isMockInterview;
+    } else {
+      // Create New Feedback
+      // Generate feedbackCode
+      let finalFeedbackCode = feedbackCode; // Default to passed code
+
+      if (interviewRoundId && feedbackCode) {
+        // Count existing feedbacks for this round to append suffix
+        const existingCount = await FeedbackModel.countDocuments({
+          interviewRoundId,
+        });
+        // If it's the first one, maybe keep original or append -1? 
+        // Logic from before: existingCount === 0 ? code : code-count+1
+        // Usually better to always append or always not. 
+        // Per commented code:
+        finalFeedbackCode = existingCount === 0
+          ? `${feedbackCode}`
+          : `${feedbackCode}-${existingCount + 1}`;
+      }
+
+      feedbackInstance = new FeedbackModel({
+        tenantId,
+        ownerId,
+        interviewRoundId,
+        candidateId,
+        positionId,
+        interviewerId,
+        skills,
+        questionFeedback: processedQuestionFeedback,
+        generalComments: generalComments || "",
+        overallImpression: overallImpression || {},
+        status: type === "submit" ? "submitted" : "draft", // Fix logic to allow submitting new feedback directly
+        feedbackCode: finalFeedbackCode,
+        isMockInterview,
+      });
     }
 
     await feedbackInstance.save();
@@ -632,6 +665,31 @@ const updateFeedback = async (req, res) => {
       hasChanges = true;
     }
 
+    // CHANGE: Ensure feedbackCode exists (if missing from creation)
+    if (!existingFeedback.feedbackCode && updateData.feedbackCode) {
+      const interviewRoundId = existingFeedback.interviewRoundId;
+      const feedbackCode = updateData.feedbackCode;
+
+      let finalFeedbackCode = feedbackCode;
+
+      // Count existing feedbacks for this round to append suffix
+      // Note: We need to be careful not to count *this* feedback if we were creating new, 
+      // but here we are updating. We want to find the next available slot if we stick to the pattern.
+      // However, if we just want to patch the missing code, we can use the count logic.
+
+      const existingCount = await FeedbackModel.countDocuments({
+        interviewRoundId,
+        _id: { $ne: existingFeedback._id } // Exclude self
+      });
+
+      finalFeedbackCode = existingCount === 0
+        ? `${feedbackCode}`
+        : `${feedbackCode}-${existingCount + 1}`;
+
+      updateObject.feedbackCode = finalFeedbackCode;
+      hasChanges = true;
+    }
+
     // CHANGE 7: If no changes, return early
     if (!hasChanges) {
       return res.status(200).json({
@@ -880,11 +938,13 @@ const getFeedbackByRoundId = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Invalid round ID" });
     }
-    if (interviewerId && !mongoose.Types.ObjectId.isValid(interviewerId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid interviewer ID" });
-    }
+
+
+    // if (interviewerId && !mongoose.Types.ObjectId.isValid(interviewerId)) {
+    //   return res
+    //     .status(400)
+    //     .json({ success: false, message: "Invalid interviewer ID" });
+    // }
 
     const RoundModel = isMockInterview ? MockInterviewRound : InterviewRounds;
 
@@ -953,6 +1013,8 @@ const getFeedbackByRoundId = async (req, res) => {
       .populate("ownerId", "firstName lastName email")
       .lean();
 
+
+
     // Fetch Resume data for candidate (skills, experience, etc. moved from Candidate)
     const candidateIds = [];
     if (interviewSection?.candidateId?._id) {
@@ -1017,76 +1079,239 @@ const getFeedbackByRoundId = async (req, res) => {
     // AND questions added by THIS interviewer (if interviewerId is present)
     const questionQuery = { roundId: roundId };
 
+    // if (interviewerId) {
+    //   questionQuery.$or = [
+    //     { addedBy: { $ne: "interviewer" } },
+    //     { addedBy: "interviewer", ownerId: interviewerId },
+    //   ];
+    // }
+
+    let interviewQuestionsList
     if (interviewerId) {
-      questionQuery.$or = [
-        { addedBy: { $ne: "interviewer" } },
-        { addedBy: "interviewer", ownerId: interviewerId },
-      ];
+      // Only include:
+      // - Preselected questions
+      // - Interviewer questions added by THIS interviewer
+      interviewQuestionsList = await InterviewQuestions.find({
+        roundId,
+        $or: [
+          { addedBy: { $ne: "interviewer" } },
+          { addedBy: "interviewer", ownerId: interviewerId },
+        ],
+      }).lean();
+    } else {
+      // If no interviewerId → return all round questions
+      interviewQuestionsList = await InterviewQuestions.find({
+        roundId,
+      }).lean();
     }
 
-    const interviewQuestionsList = await InterviewQuestions.find(questionQuery);
+
+    // const interviewQuestionsList = await InterviewQuestions.find(questionQuery);
 
     // Build question map for easy lookup
     const questionMap = interviewQuestionsList.reduce((acc, q) => {
-      acc[q._id.toString()] = q.toObject();
+      console.log("q questionMap", q)
+      acc[q?._id?.toString()] = q //?.toObject();
+      //  typeof q?.toObject === "function" ? q.toObject() : q;
       return acc;
     }, {});
     console.log("questionMap", questionMap);
 
     // Merge all questions into each feedback
-    const feedbacksMerged = feedbacks.map((fb) => {
-      const fbAnswersMap = {};
+    // const feedbacksMerged = feedbacks.map((fb) => {
+    //   const fbAnswersMap = {};
 
-      (fb.questionFeedback || []).forEach((qf) => {
-        if (
-          qf.questionId &&
-          typeof qf.questionId === "object" &&
-          qf.questionId._id
-        ) {
-          fbAnswersMap[qf.questionId._id.toString()] = qf;
-        } else if (qf.questionId) {
-          fbAnswersMap[qf.questionId.toString()] = qf;
+    //   (fb.questionFeedback || []).forEach((qf) => {
+    //     if (
+    //       qf.questionId &&
+    //       typeof qf.questionId === "object" &&
+    //       qf.questionId._id
+    //     ) {
+    //       fbAnswersMap[qf.questionId._id.toString()] = qf;
+    //     } else if (qf.questionId) {
+    //       fbAnswersMap[qf.questionId.toString()] = qf;
+    //     }
+    //   });
+
+    //   const mergedQuestions = Object.values(questionMap).map((q) => {
+    //     // Fix: Use q._id (SelectedInterviewQuestion ID) to lookup answer, 
+    //     // because questionFeedback.questionId stores the SelectedInterviewQuestion ID.
+    //     // Fallback to q.questionId (Bank ID) for legacy data compatibility
+    //     const ans = fbAnswersMap[q._id.toString()] || fbAnswersMap[q.questionId.toString()];
+    //     // const ans = fbAnswersMap[q.questionId.toString()];
+    //     console.log("ansq", q);
+
+    //     console.log("ans ans ans", ans)
+
+    //     return {
+    //       _id: q._id,
+    //       questionText: q.questionText,
+    //       addedBy: q.addedBy,
+    //       questionId: q.questionId,
+    //       candidateAnswer: ans?.candidateAnswer || null,
+    //       interviewerFeedback: ans?.interviewerFeedback || null,
+    //       snapshot: q?.snapshot,
+    //     };
+    //   });
+
+    //   return {
+    //     ...fb,
+    //     questionFeedback: mergedQuestions,
+    //   };
+    // });
+
+    // ==============================
+    // ✅ CHANGED: Proper Question ↔ Answer Mapping
+    // ==============================
+
+    // const feedbacksMerged = feedbacks.map((fb) => {
+    //   const answerMap = {};
+
+    //   // Create answer lookup map
+    //   (fb.questionFeedback || []).forEach((qf) => {
+    //     if (qf.questionId) {
+    //       answerMap[qf.questionId.toString()] = qf;
+    //     }
+    //   });
+
+    //   // Merge all round questions with answers
+    //   const mergedQuestions = interviewQuestionsList.map((q) => {
+    //     const answer = answerMap[q._id.toString()];
+
+    //     return {
+    //       _id: q._id,
+    //       questionText:
+    //         q.snapshot?.questionText ||
+    //         q.snapshot?.question ||
+    //         "",
+    //       addedBy: q.addedBy,
+    //       source: q.source,
+    //       questionBankId: q.questionId,
+    //       order: q.order,
+
+    //       candidateAnswer: answer?.candidateAnswer || null,
+    //       interviewerFeedback: answer?.interviewerFeedback || null,
+    //     };
+    //   });
+
+    //   return {
+    //     ...fb,
+    //     questionFeedback: mergedQuestions,
+    //   };
+    // });
+    // ==============================
+    // ✅ MODIFIED: Separate questions for interviewer-added vs preselected with proper answer mapping
+    // ==============================
+
+    // First, create a map of feedback answers for quick lookup
+    const feedbacksMerged = feedbacks.map((fb) => {
+      const answerMap = {};
+
+      // Create answer lookup map
+      (fb?.questionFeedback || []).forEach((qf) => {
+        if (qf.questionId) {
+          answerMap[qf.questionId.toString()] = qf;
         }
       });
 
-      const mergedQuestions = Object.values(questionMap).map((q) => {
-        // Fix: Use q._id (SelectedInterviewQuestion ID) to lookup answer, 
-        // because questionFeedback.questionId stores the SelectedInterviewQuestion ID.
-        // Fallback to q.questionId (Bank ID) for legacy data compatibility
-        const ans = fbAnswersMap[q._id.toString()] || fbAnswersMap[q.questionId.toString()];
-        // const ans = fbAnswersMap[q.questionId.toString()];
-        console.log("ansq", q);
+      console.log("answerMap", answerMap)
 
-        console.log("ans ans ans", ans)
+      // Separate questions by type for this specific feedback
+      const preselectedWithAnswers = interviewQuestionsList
+        .filter((q) => q.addedBy !== "interviewer" || !q.addedBy)
+        .map((q) => {
+          console.log("preselectedWithAnswers", q)
+          const answer = answerMap[q._id.toString()];
+          return {
+            ...q,
+            // _id: q.questionId,
+            // questionText: q.snapshot?.questionText || q.snapshot?.question || "",
+            // addedBy: q.addedBy,
+            // source: q.source,
+            // questionBankId: q.questionId,
+            // order: q.order,
+            candidateAnswer: answer?.candidateAnswer || null,
+            interviewerFeedback: answer?.interviewerFeedback || null,
+          };
+        });
 
-        return {
-          _id: q._id,
-          questionText: q.questionText,
-          addedBy: q.addedBy,
-          questionId: q.questionId,
-          candidateAnswer: ans?.candidateAnswer || null,
-          interviewerFeedback: ans?.interviewerFeedback || null,
-          snapshot: q?.snapshot,
-        };
-      });
+      let interviewerWithAnswers = interviewQuestionsList
+        .filter((q) => q.addedBy === "interviewer")
+
+        .map((q) => {
+          console.log("interviewerWithAnswers", q)
+          const answer = answerMap[q._id.toString()];
+          return {
+            ...q,
+            // _id: q._id,
+            // snapshot: q.snapshot || q.snapshot || "",
+            // addedBy: q.addedBy,
+            // source: q.source,
+            // questionBankId: q.questionId,
+            // order: q.order,
+            candidateAnswer: answer?.candidateAnswer || null,
+            interviewerFeedback: answer?.interviewerFeedback || null,
+          };
+        });
+
+      // Filter interviewer questions by owner if interviewerId is provided
+      if (interviewerId) {
+        interviewerWithAnswers = interviewerWithAnswers.filter(
+          (q) => q.ownerId?.toString() === interviewerId?.toString()
+        );
+      }
 
       return {
         ...fb,
-        questionFeedback: mergedQuestions,
+        questionFeedback: {
+          preselected: preselectedWithAnswers,
+          interviewerAdded: interviewerWithAnswers,
+        },
       };
     });
+
+    // Separate questions for the interviewQuestions section in response
+    // let preselectedQuestions = interviewQuestionsList
+    //   .filter((q) => q.addedBy !== "interviewer" || !q.addedBy)
+    //   .map((q) => ({
+    //     _id: q._id,
+    //     questionText: q.snapshot?.questionText || q.snapshot?.question || "",
+    //     addedBy: q.addedBy,
+    //     source: q.source,
+    //     questionBankId: q.questionId,
+    //     order: q.order,
+    //   }));
+
+    // let interviewerAddedQuestions = interviewQuestionsList
+    //   .filter((q) => q.addedBy === "interviewer")
+    //   .map((q) => ({
+    //     _id: q._id,
+    //     questionText: q.snapshot?.questionText || q.snapshot?.question || "",
+    //     addedBy: q.addedBy,
+    //     source: q.source,
+    //     questionBankId: q.questionId,
+    //     order: q.order,
+    //     ownerId: q.ownerId,
+    //   }));
+
+    // if (interviewerId) {
+    //   interviewerAddedQuestions = interviewerAddedQuestions.filter(
+    //     (q) => q.ownerId?.toString() === interviewerId?.toString()
+    //   );
+    // }
+
 
     // Separate questions for interviewer-added vs preselected
     let preselectedQuestions = interviewQuestionsList
       .filter((q) => q.addedBy !== "interviewer" || !q.addedBy)
-      .map((q) => q.toObject());
+      .map((q) => q);// .toObject()
 
     console.log("preselectedQuestions", preselectedQuestions);
     console.log("interviewerId", interviewQuestionsList);
 
     let interviewerAddedQuestions = interviewQuestionsList
       .filter((q) => q.addedBy === "interviewer")
-      .map((q) => q.toObject());
+      .map((q) => q); // .toObject()
 
     // console.log("interviewerAddedQuestions", interviewerAddedQuestions)
 
@@ -1138,7 +1363,7 @@ const getFeedbackByRoundId = async (req, res) => {
       candidate: interviewSection?.candidateId || null,
       position: positionData,
       interviewers: interviewRound.interviewers || [],
-      feedbacks: feedbacksMerged || [],
+      feedbacks: feedbacksMerged || [], //feedbacksMerged || [],
       interviewQuestions: {
         preselectedQuestions,
         interviewerAddedQuestions,

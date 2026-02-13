@@ -35,7 +35,7 @@ import {
 // import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
 import InterviewerAvatar from "../../CommonCode-AllTabs/InterviewerAvatar";
 // import RejectionModal from "./RejectionModal";
-import FeedbackModal from "./FeedbackModal";
+// import FeedbackModal from "./FeedbackModal";
 import RoundFeedbackTab from "./RoundFeedbackTab";
 import { Button } from "../../CommonCode-AllTabs/ui/button";
 import axios from "axios";
@@ -64,6 +64,7 @@ import {
 import RoundActivityModal from "./RoundActivityModal";
 import AssessmentActionPopup from "../../Assessment-Tab/AssessmentViewDetails/AssessmentActionPopup.jsx";
 import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
+import FeedbackFormModal from "../../Feedback/FeedbackFormModel.jsx";
 
 const RoundCard = ({
   round,
@@ -1076,7 +1077,7 @@ const RoundCard = ({
     //   canNoShow: false,
     // },
     InComplete: {
-      canEdit: false,
+      canEdit: true,
       canDelete: false,
       canMarkScheduled: false,
       canReschedule: true,
@@ -1822,85 +1823,14 @@ const RoundCard = ({
                 </div>
               )} */}
               {/* v1.0.5 <------------------------------------------------------------------ */}
+
+
+
+
+
               <div className="overflow-x-auto">
                 <div className="mt-6 pt-4 border-t border-gray-100 w-full flex gap-2 whitespace-nowrap sm:justify-start md:justify-start justify-end">
-                  {/* Activity */}
-                  {round.roundTitle !== "Assessment" && (
-                    <button
-                      onClick={() => setShowActivityModal(true)}
-                      className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
-                    >
-                      <Activity className="h-4 w-4 mr-1" /> Activity
-                    </button>
-                  )}
 
-                  {/* Reschedule */}
-                  {permissions.canReschedule &&
-                    !isInterviewCompleted &&
-                    round?.roundTitle !== "Assessment" &&
-                    (round.status === "Cancelled" ||
-                      round.interviewType !== "instant") && (
-                      <button
-                        onClick={() => onEdit(round, { isReschedule: true })}
-                        className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
-                      >
-                        <Calendar className="h-4 w-4 mr-1" /> Reschedule
-                      </button>
-                    )}
-
-                  {/* No Show */}
-                  {permissions.canNoShow &&
-                    round.roundTitle !== "Assessment" && (
-                      <button
-                        onClick={() => {
-                          setActionInProgress(true);
-                          setNoShowReasonModalOpen(true);
-                        }}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100"
-                      >
-                        <UserX className="h-4 w-4 mr-1" /> No Show
-                      </button>
-                    )}
-
-                  {/* Skipped */}
-                  {permissions.canSkipped &&
-                    // round.roundTitle !== "Assessment" && 
-                    (
-                      <button
-                        onClick={() => handleActionClick("Skipped")}
-                        className="inline-flex items-center px-3 py-2 border border-orange-300 text-sm rounded-md text-orange-700 bg-orange-50 hover:bg-orange-100"
-                      >
-                        <SkipForward className="h-4 w-4 mr-1" /> Skipped
-                      </button>
-                    )}
-
-                  {/* Evaluated */}
-                  {(permissions.canEvaluated ||
-                    (round.roundTitle === "Assessment" && round?.status === "Cancelled")) && (
-                      <button
-                        onClick={() => handleActionClick("Evaluated")}
-                        className="inline-flex items-center px-3 py-2 border border-teal-300 text-sm rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100"
-                      >
-                        <ClipboardList className="h-4 w-4 mr-1" /> Evaluated
-                      </button>
-                    )}
-
-                  {/* Cancel */}
-                  {permissions.canCancel &&
-                    round.roundTitle !== "Assessment" && (
-                      <button
-                        onClick={() => {
-                          setActionInProgress(true);
-                          setCancelReasonModalOpen(true);
-
-                          // setConfirmAction("Cancelled");
-                          // setShowConfirmModal(true);
-                        }}
-                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                      >
-                        <XCircle className="h-4 w-4 mr-1" /> Cancel
-                      </button>
-                    )}
                   {/* Edit */}
                   {permissions.canEdit &&
                     ((round?.status === "Draft" &&
@@ -1936,6 +1866,34 @@ const RoundCard = ({
                       </button>
                     )}
 
+
+                  {round?.roundTitle === "Assessment" && round?.status === "Draft" &&
+                    (
+                      <button
+                        onClick={() => onEdit(round, { isEdit: true })}
+                        className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        {round?.status === "Draft"
+                          ? "Edit & Schedule"
+                          : "Edit Round"}
+                      </button>
+                    )}
+
+
+
+                  {/* Skipped */}
+                  {permissions.canSkipped &&
+                    // round.roundTitle !== "Assessment" && 
+                    (
+                      <button
+                        onClick={() => handleActionClick("Skipped")}
+                        className="inline-flex items-center px-3 py-2 border border-orange-300 text-sm rounded-md text-orange-700 bg-orange-50 hover:bg-orange-100"
+                      >
+                        <SkipForward className="h-4 w-4 mr-1" /> Skipped
+                      </button>
+                    )}
+
                   {/* Delete */}
                   {permissions.canDelete && (
                     <button
@@ -1945,6 +1903,67 @@ const RoundCard = ({
                       <XCircle className="h-4 w-4 mr-1" /> Delete Round
                     </button>
                   )}
+
+
+                  {/* Reschedule */}
+                  {permissions.canReschedule &&
+                    !isInterviewCompleted &&
+                    round?.roundTitle !== "Assessment" &&
+                    (round.status === "Cancelled" ||
+                      round.interviewType !== "instant") && (
+                      <button
+                        onClick={() => onEdit(round, { isReschedule: true })}
+                        className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                      >
+                        <Calendar className="h-4 w-4 mr-1" /> Reschedule
+                      </button>
+                    )}
+
+                  {/* No Show */}
+                  {permissions.canNoShow &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => {
+                          setActionInProgress(true);
+                          setNoShowReasonModalOpen(true);
+                        }}
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100"
+                      >
+                        <UserX className="h-4 w-4 mr-1" /> No Show
+                      </button>
+                    )}
+
+
+
+                  {/* Evaluated */}
+                  {(permissions.canEvaluated ||
+                    (round.roundTitle === "Assessment" && round?.status === "Cancelled")) && (
+                      <button
+                        onClick={() => handleActionClick("Evaluated")}
+                        className="inline-flex items-center px-3 py-2 border border-teal-300 text-sm rounded-md text-teal-700 bg-teal-50 hover:bg-teal-100"
+                      >
+                        <ClipboardList className="h-4 w-4 mr-1" /> Evaluated
+                      </button>
+                    )}
+
+                  {/* Cancel */}
+                  {permissions.canCancel &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => {
+                          setActionInProgress(true);
+                          setCancelReasonModalOpen(true);
+
+                          // setConfirmAction("Cancelled");
+                          // setShowConfirmModal(true);
+                        }}
+                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                      >
+                        <XCircle className="h-4 w-4 mr-1" /> Cancel
+                      </button>
+                    )}
+
+
                   {/* Mark Scheduled */}
                   {permissions.canMarkScheduled &&
                     round.roundTitle !== "Assessment" && (
@@ -2009,6 +2028,29 @@ const RoundCard = ({
                     </button>
                   )}
 
+                  {/* Activity */}
+                  {round.roundTitle !== "Assessment" && (
+                    <button
+                      onClick={() => setShowActivityModal(true)}
+                      className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"
+                    >
+                      <Activity className="h-4 w-4 mr-1" /> Activity
+                    </button>
+                  )}
+
+                  {/* {round?.roundTitle === "Assessment" && round?.status === "Draft" &&
+                    (
+                      <button
+                        onClick={() => onEdit(round, { isEdit: true })}
+                        className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        {round?.status === "Draft"
+                          ? "Edit & Schedule"
+                          : "Edit Round"}
+                      </button>
+                    )} */}
+
                   {/* Share (always for Assessment) */}
                   {permissions.canResendLink &&
                     round.roundTitle === "Assessment" &&
@@ -2050,6 +2092,36 @@ const RoundCard = ({
                       </button>
                     )}
 
+                  {/* Extend / Cancel (Assessment only) */}
+                  {round.roundTitle === "Assessment" && (
+                    <>
+                      {permissions.canExtendAssessment && (
+                        <button
+                          onClick={() => openAssessmentAction(round, "extend")}
+                          className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
+                        >
+                          Extend
+                        </button>
+                      )}
+
+
+
+                      {permissions.canCancelAssessment && (
+                        <button
+                          onClick={() => openAssessmentAction(round, "cancel")}
+                          className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                        >
+                          Cancel
+                        </button>
+                      )}
+
+
+
+                    </>
+                  )}
+
+
+
                   {/* Share (always for Assessment) */}
                   {round.roundTitle === "Assessment" &&
                     round?.scheduleAssessmentId &&
@@ -2064,41 +2136,7 @@ const RoundCard = ({
                       </button>
                     )}
 
-                  {/* Extend / Cancel (Assessment only) */}
-                  {round.roundTitle === "Assessment" && (
-                    <>
-                      {permissions.canExtendAssessment && (
-                        <button
-                          onClick={() => openAssessmentAction(round, "extend")}
-                          className="inline-flex items-center px-3 py-2 border border-purple-300 text-sm rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100"
-                        >
-                          Extend
-                        </button>
-                      )}
 
-                      {round?.roundTitle === "Assessment" && round?.status === "Draft" &&
-                        (
-                          <button
-                            onClick={() => onEdit(round, { isEdit: true })}
-                            className="inline-flex items-center px-3 py-2 border border-yellow-300 text-sm rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            {round?.status === "Draft"
-                              ? "Edit & Schedule"
-                              : "Edit Round"}
-                          </button>
-                        )}
-
-                      {permissions.canCancelAssessment && (
-                        <button
-                          onClick={() => openAssessmentAction(round, "cancel")}
-                          className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </>
-                  )}
                 </div>
               </div>
               {/* v1.0.5 -----------------------------------------------------------------> */}
@@ -2281,10 +2319,12 @@ const RoundCard = ({
       */}
 
       {showFeedbackModal && (
-        <FeedbackModal
+        <FeedbackFormModal
           onClose={() => setShowFeedbackModal(false)}
           // interviewId={interviewData._id}
-          roundId={round.id}
+          roundId={round?._id}
+          Viewmode={true}
+          interviewType={"interview"}
         />
       )}
 

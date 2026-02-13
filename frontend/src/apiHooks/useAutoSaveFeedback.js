@@ -129,11 +129,12 @@ const useAutoSaveFeedback = ({
           : undefined,
       questionFeedback: [
         // Interviewer section questions
+        // For new interviewer-added questions, send full question object
+        // For existing ones, send _id (InterviewQuestions ID) for backend matching
         ...(data.interviewerSectionData || []).map((question) => ({
-          // Fix: Send full question object for interviewer-added questions so backend can extract snapshot
-          questionId: question.addedBy === "interviewer"
+          questionId: question.addedBy === "interviewer" && !question.originalData
             ? question
-            : (question.questionId || question.id || question._id),
+            : (question._id || question.questionId || question.id),
           candidateAnswer: {
             answerType: toBackendAnswerType(
               question.isAnswered || "Not Answered",
@@ -147,11 +148,14 @@ const useAutoSaveFeedback = ({
           },
         })),
         // Preselected questions responses
+        // IMPORTANT: Send _id (InterviewQuestions ID) as questionId, NOT
+        // questionId (QuestionBank ID), because the backend answerMap keys
+        // by questionId and looks up by InterviewQuestions._id
         ...(data.preselectedQuestionsResponses || []).map((response) => ({
           questionId:
             typeof response === "string"
               ? response
-              : response?.questionId || response?.id || response?._id || "",
+              : response?._id || response?.questionId || response?.id || "",
           candidateAnswer: {
             answerType: toBackendAnswerType(
               response.isAnswered || "Not Answered",
@@ -174,6 +178,7 @@ const useAutoSaveFeedback = ({
         note: "",
       },
       status: "draft",
+      feedbackCode: data.feedbackCode,
     };
   }, []);
 
@@ -239,6 +244,9 @@ const useAutoSaveFeedback = ({
         if (response && (response.data?.success || response.success)) {
           lastSavedDataRef.current = JSON.stringify(finalPayload);
           console.log("✅ Auto-save successful");
+          // Note: Don't invalidate cache here — it would trigger a refetch that
+          // resets form state (notesBool, selections etc). The initial GET on
+          // page load already populates the form with previously saved data.
         }
       } catch (error) {
         console.error("❌ Auto-save failed:", error);

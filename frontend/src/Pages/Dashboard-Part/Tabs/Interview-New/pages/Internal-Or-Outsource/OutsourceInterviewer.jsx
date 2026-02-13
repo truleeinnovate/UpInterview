@@ -19,6 +19,7 @@ import {
   Plus,
   Building,
   RefreshCw,
+  Mail,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
@@ -305,9 +306,17 @@ export const OutsourcedInterviewerCard = ({
 
         <div className="mt-3">
           {source !== "internal-interview" ? null : (
-            <p className="text-sm text-gray-500 mt-0.1">
-              {interviewerEmail}
-            </p>
+            <div className="flex mt-1 items-center space-x-[2px] text-xs text-gray-500">
+              <Mail size={14} className="text-black" />
+              <span className="truncate">
+                {interviewerEmail
+                  ? interviewerEmail
+                  : "Not specified"}
+              </span>
+            </div>
+            // <p className="text-sm text-gray-500 mt-0.1">
+            //   {interviewerEmail}
+            // </p>
           )}
           <div className="flex mt-1 items-center space-x-[2px] text-xs text-gray-500">
             <Building size={14} className="text-black" />

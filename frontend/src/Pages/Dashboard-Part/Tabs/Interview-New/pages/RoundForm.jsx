@@ -345,7 +345,7 @@ const RoundFormInterviews = () => {
     }
   }, [interviewMode, address, response]);
 
-  // console.log("Address:", address);
+  // console.log("selectedAssessmentData:", selectedAssessmentData);
 
   const handleAssessmentMenuScrollToBottom = () => {
     if (isAssessmentQueryLoading) return;
@@ -986,9 +986,167 @@ const RoundFormInterviews = () => {
     }
   }, []);
 
+  const [validAssessments, setValidAssessments] = useState([]);
+  const [isValidatingAssessments, setIsValidatingAssessments] = useState(false);
+
+  // const assessmentOptions = React.useMemo(() => {
+  //   const baseOptions = Array.isArray(assessmentData)
+  //     ? assessmentData.map((a) => {
+  //       const titleLabel = a.AssessmentTitle || "Untitled Assessment";
+  //       const typeLabel = a.type
+  //         ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
+  //         : "";
+
+  //       return {
+  //         value: a._id,
+  //         label: (
+  //           <div
+  //             style={{
+  //               display: "flex",
+  //               justifyContent: "space-between",
+  //               alignItems: "center",
+  //               width: "98%",
+  //             }}
+  //           >
+  //             <span>{titleLabel}</span>
+  //             {typeLabel && (
+  //               <span
+  //                 className={
+  //                   "text-md " +
+  //                   (a.type === "custom"
+  //                     ? "text-custom-blue"
+  //                     : "text-green-600")
+  //                 }
+  //               >
+  //                 {typeLabel}
+  //               </span>
+  //             )}
+  //           </div>
+  //         ),
+  //         searchLabel: titleLabel,
+  //       };
+  //     })
+  //     : [];
+
+  //   if (editingAssessmentId && editingAssessment) {
+  //     const exists = baseOptions.some(
+  //       (opt) => opt.value === editingAssessmentId,
+  //     );
+
+  //     if (!exists) {
+  //       const editingTitleLabel =
+  //         editingAssessment.AssessmentTitle ||
+  //         assessmentTemplate?.assessmentName ||
+  //         "Untitled Assessment";
+
+  //       const editingTypeLabel = editingAssessment.type
+  //         ? editingAssessment.type.charAt(0).toUpperCase() +
+  //         editingAssessment.type.slice(1)
+  //         : "";
+
+  //       baseOptions.push({
+  //         value: editingAssessmentId,
+  //         label: (
+  //           <div
+  //             style={{
+  //               display: "flex",
+  //               justifyContent: "space-between",
+  //               alignItems: "center",
+  //               width: "98%",
+  //             }}
+  //           >
+  //             <span>{editingTitleLabel}</span>
+  //             {editingTypeLabel && (
+  //               <span
+  //                 className={
+  //                   "text-md " +
+  //                   (editingAssessment.type === "custom"
+  //                     ? "text-custom-blue"
+  //                     : "text-green-600")
+  //                 }
+  //               >
+  //                 {editingTypeLabel}
+  //               </span>
+  //             )}
+  //           </div>
+  //         ),
+  //         searchLabel: editingTitleLabel,
+  //       });
+  //     }
+  //   }
+
+  //   return baseOptions;
+  // }, [
+  //   assessmentData,
+  //   editingAssessmentId,
+  //   editingAssessment,
+  //   assessmentTemplate?.assessmentName,
+  // ]);
+
+  // Simplified shouldDisable function with all conditions
+
+
+
+  // Validate which assessments have sections
+  useEffect(() => {
+    const validateAssessments = async () => {
+      if (!Array.isArray(assessmentData) || assessmentData.length === 0) {
+        setValidAssessments([]);
+        return;
+      }
+
+      setIsValidatingAssessments(true);
+
+      try {
+        const validIds = [];
+
+        // Process in batches to avoid too many concurrent requests
+        const batchSize = 5;
+        for (let i = 0; i < assessmentData.length; i += batchSize) {
+          const batch = assessmentData.slice(i, i + batchSize);
+
+          const promises = batch.map(async (assessment) => {
+            try {
+              const { data } = await fetchAssessmentQuestions(assessment._id);
+              if (data?.sections && Array.isArray(data.sections) && data.sections.length > 0) {
+                // Store the sections data
+                setSectionQuestions(prev => ({
+                  ...prev,
+                  [assessment._id]: data
+                }));
+                return assessment._id;
+              }
+            } catch (error) {
+              console.error(`Error validating assessment ${assessment._id}:`, error);
+            }
+            return null;
+          });
+
+          const results = await Promise.all(promises);
+          validIds.push(...results.filter(id => id !== null));
+        }
+
+        // Filter the original assessmentData to only include valid ones
+        const validAssessmentsList = assessmentData.filter(a =>
+          validIds.includes(a._id)
+        );
+
+        setValidAssessments(validAssessmentsList);
+      } catch (error) {
+        console.error("Error validating assessments:", error);
+      } finally {
+        setIsValidatingAssessments(false);
+      }
+    };
+
+    validateAssessments();
+  }, [assessmentData]); // Re-run when assessmentData changes
+
+
   const assessmentOptions = React.useMemo(() => {
-    const baseOptions = Array.isArray(assessmentData)
-      ? assessmentData.map((a) => {
+    // Use validAssessments instead of assessmentData
+    const baseOptions = Array.isArray(validAssessments)
+      ? validAssessments.map((a) => {
         const titleLabel = a.AssessmentTitle || "Untitled Assessment";
         const typeLabel = a.type
           ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
@@ -1025,12 +1183,18 @@ const RoundFormInterviews = () => {
       })
       : [];
 
+    // For editing assessment - check if it has sections
     if (editingAssessmentId && editingAssessment) {
+      const hasSections = editingAssessment.sections &&
+        Array.isArray(editingAssessment.sections) &&
+        editingAssessment.sections.length > 0;
+
       const exists = baseOptions.some(
         (opt) => opt.value === editingAssessmentId,
       );
 
-      if (!exists) {
+      // Only add the editing assessment if it has sections
+      if (!exists && hasSections) {
         const editingTitleLabel =
           editingAssessment.AssessmentTitle ||
           assessmentTemplate?.assessmentName ||
@@ -1074,13 +1238,12 @@ const RoundFormInterviews = () => {
 
     return baseOptions;
   }, [
-    assessmentData,
+    validAssessments, // Use validAssessments instead of assessmentData
     editingAssessmentId,
     editingAssessment,
     assessmentTemplate?.assessmentName,
   ]);
 
-  // Simplified shouldDisable function with all conditions
   const shouldDisable = (fieldName) => {
     // CASE 1: Draft status and no schedule/reschedule in history → ALL editable
     if (
@@ -2414,6 +2577,7 @@ const RoundFormInterviews = () => {
       linkExpiryDays: assessment?.linkExpiryDays,
       passScoreType: assessment?.passScoreType,
     };
+    console.log("assessment handleAssessmentSelect", assessment)
     setAssessmentTemplate(assessmentData);
     setSelectedAssessmentData(assessment);
     const clearInstructions = assessment.Instructions?.replace(/[•\u2022]\s*/g, "")
@@ -2458,6 +2622,9 @@ const RoundFormInterviews = () => {
     // fetchQuestionsForAssessment(assessment._id);
     setShowDropdown(false);
   };
+
+
+
 
   // validate sequence handler
   // const validateSequenceInput = (inputSequence) => {
@@ -3059,9 +3226,9 @@ const RoundFormInterviews = () => {
                         )}
 
                         {/* assessment questions */}
-                        {assessmentTemplate.assessmentName && (
+                        {assessmentTemplate?.assessmentName && (
                           <div className="col-span-2">
-                            {assessmentTemplate.assessmentName && (
+                            {assessmentTemplate?.assessmentName && (
                               <div>
                                 <label
                                   htmlFor="assessmentQuestions"
@@ -3069,9 +3236,9 @@ const RoundFormInterviews = () => {
                                 >
                                   Assessment Questions
                                 </label>
-                                {errors.assessmentQuestions && (
+                                {errors?.assessmentQuestions && (
                                   <p className="text-red-500 text-sm">
-                                    {errors.assessmentQuestions}
+                                    {errors?.assessmentQuestions}
                                   </p>
                                 )}
 
@@ -3089,8 +3256,8 @@ const RoundFormInterviews = () => {
                                         Assessment
                                       </div>
                                     ) : //  <div className="space-y-4">
-                                      Object.keys(sectionQuestions).length > 0 ? (
-                                        Object.entries(sectionQuestions).map(
+                                      Object.keys(sectionQuestions)?.length > 0 ? (
+                                        Object.entries(sectionQuestions)?.map(
                                           ([sectionId, sectionData]) => {
                                             // Find section details from assessmentData
                                             // const selectedAssessment = assessmentData.find(
@@ -3102,7 +3269,7 @@ const RoundFormInterviews = () => {
                                             if (
                                               !sectionData ||
                                               !Array.isArray(
-                                                sectionData.questions,
+                                                sectionData?.questions,
                                               )
                                             ) {
                                               return (
@@ -3154,7 +3321,7 @@ const RoundFormInterviews = () => {
                                                         (question, idx) => (
                                                           <div
                                                             key={
-                                                              question._id || idx
+                                                              question?._id || idx
                                                             }
                                                             className="border rounded-md shadow-sm overflow-hidden"
                                                           >
@@ -3163,7 +3330,7 @@ const RoundFormInterviews = () => {
                                                                 setExpandedQuestions(
                                                                   (prev) => ({
                                                                     ...prev,
-                                                                    [question._id]:
+                                                                    [question?._id]:
                                                                       !prev[
                                                                       question
                                                                         ._id
@@ -3179,14 +3346,14 @@ const RoundFormInterviews = () => {
                                                                 </span>
                                                                 <p className="text-sm text-gray-700">
                                                                   {question
-                                                                    .snapshot
+                                                                    ?.snapshot
                                                                     ?.questionText ||
                                                                     "No question text"}
                                                                 </p>
                                                               </div>
                                                               <ChevronDown
                                                                 className={`w-5 h-5 text-gray-400 transition-transform ${expandedQuestions[
-                                                                  question._id
+                                                                  question?._id
                                                                 ]
                                                                   ? "transform rotate-180"
                                                                   : ""
@@ -3195,7 +3362,7 @@ const RoundFormInterviews = () => {
                                                             </div>
 
                                                             {expandedQuestions[
-                                                              question._id
+                                                              question?._id
                                                             ] && (
                                                                 <div className="px-4 py-3">
                                                                   <div className="flex justify-between mb-2">
