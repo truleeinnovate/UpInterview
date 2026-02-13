@@ -1206,7 +1206,7 @@ function Candidate({
                   isFilterPopupOpen={isFilterPopupOpen}
                   isFilterActive={isFilterActive}
                   dataLength={dataToUse?.length}
-                  searchPlaceholder="Search by Name, Email, Phone..."
+                  searchPlaceholder="Search by Candidate Name, Email, Contact..."
                   filterIconRef={filterIconRef}
                 />
               </div>
@@ -1547,7 +1547,7 @@ function Candidate({
                         onClick={() => setIsUniversityOpen(!isUniversityOpen)}
                       >
                         <span className="font-medium text-gray-700">
-                          University/College
+                          University / College
                         </span>
                         {isUniversityOpen ? (
                           <ChevronUp className="text-xl text-gray-700" />

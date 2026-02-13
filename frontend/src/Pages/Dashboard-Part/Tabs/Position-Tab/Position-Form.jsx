@@ -1448,17 +1448,12 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
             <>
               {/* Modal Body */}
               <div className="bg-white rounded-lg shadow-md border">
-                <div className="flex justify-between items-center px-5 pt-4">
-                  <h2 className="text-lg font-semibold sm:text-md">
-                    Position Details
-                  </h2>
-                </div>
 
                 <div className="px-6 pt-3">
                   <form className="space-y-8 mb-5">
                     {/* SECTION 1: BASIC INFORMATION */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
                         Basic Information
                       </h3>
                       <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
@@ -1572,7 +1567,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
                     {/* SECTION 2: EXPERIENCE & COMPENSATION */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
                         Experience & Compensation
                       </h3>
                       <div className="grid grid-cols-4 gap-4 lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1">
@@ -1631,7 +1626,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
                     {/* SECTION 3: INTERVIEW SETUP */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
                         Interview Setup
                       </h3>
                       {/* Select Template */}
@@ -1763,7 +1758,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
 
                     {/* SECTION 4: JOB DETAILS */}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
                         Job Details
                       </h3>
                       <div className="space-y-4">

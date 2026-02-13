@@ -752,7 +752,7 @@ const PositionTab = () => {
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
               dataLength={positionData?.length}
-              searchPlaceholder="Search by Position Id, Position Title, Location..."
+              searchPlaceholder="Search by Id, Title, Location..."
               filterIconRef={filterIconRef}
             />
           </div>
@@ -988,7 +988,7 @@ const PositionTab = () => {
                       onClick={() => setIsSalaryOpen(!isSalaryOpen)}
                     >
                       <span className="font-medium text-gray-700">
-                        Min Salary (Annual)
+                        Salary
                       </span>
                       {isSalaryOpen ? (
                         <ChevronUp className="text-xl text-gray-700" />
@@ -1001,7 +1001,7 @@ const PositionTab = () => {
                         <div className="flex items-center space-x-3">
                           <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-700">
-                              Minimum Salary (Annual)
+                              Min Salary (Annual)
                             </label>
                             <input
                               type="number"
