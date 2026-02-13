@@ -50,7 +50,7 @@ const ConfirmationPopup = ({
             ) : (
               <>
                 <button
-                  className="px-4 h-9 rounded-md bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition"
+                  className="px-4 h-9 rounded-md border border-custom-blue text-custom-blue font-medium focus:outline-none transition"
                   onClick={onCancel}
                 >
                   {cancelText}

@@ -1066,7 +1066,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
     setShowDropdownAssessment(!showDropdownAssessment);
   };
 
-  const durations = ["30 Minutes", "45 Minutes", "60 Minutes", "90 Minutes"];
+  const durations = ["30 Minutes", "45 Minutes", "60 Minutes", "90 Minutes", "120 Minutes"];
 
   const toggleDropdownDuration = () => {
     setShowDropdownDuration(!showDropdownDuration);
@@ -1077,7 +1077,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
   };
 
   const handleDurationSelect = (duration) => {
-    if (duration === "60 Minutes" || duration === "90 Minutes") {
+    if (duration === "60 Minutes" || duration === "90 Minutes" || duration === "120 Minutes") {
       setShowUpgradePopup(true);
       setShowDropdownDuration(false);
     } else {
@@ -1633,7 +1633,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
     return (
       // v1.0.4 <----------------------------------------------------------------------------
       // v1.0.5 <---------------------------------------------------------------------------
-      <div className="flex justify-end sm:px-0 px-6 pt-6">
+      <div className="flex justify-end mx-12 pt-6">
         {/* v1.0.5 --------------------------------------------------------------------------> */}
         {/* {currentTab !== "Basicdetails" && (
           <button
@@ -1650,7 +1650,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
           Back
         </button>
 
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           {currentTab === "Candidates" ? (
             <button
               type="button"
@@ -1665,7 +1665,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
               {selectedCount > 0 && (
                 // v1.0.5 <---------------------------------------------------------------------------
                 <button
-                  className="flex items-center truncate sm:text-sm sm:px-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  className="flex items-center truncate sm:text-sm sm:px-2 px-4 h-9 border border-custom-blue rounded-md text-custom-blue0 bg-white hover:bg-gray-50 transition-colors"
                   onClick={() => openDeleteConfirmation("bulk", null, null)}
                 >
                   <Trash2 className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden text-red-500 mr-1" />
@@ -1715,6 +1715,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
                       0,
                     );
                     if (totalQuestions !== questionsLimit) {
+                      notify.error(`Please add exactly ${questionsLimit} questions.`);
                       setIsQuestionLimitErrorPopupOpen(true);
                       return;
                     }
@@ -1779,7 +1780,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
             </span>
           </button>
         </div>
-        <main className="mx-auto sm:px-3 px-8 mr-14 ml-14 pb-20">
+        <main className="mx-auto sm:px-3 px-8 mr-12 ml-12 pb-20">
           <div className="sm:px-0">
             <div className="mt-4 bg-white shadow overflow-hidden rounded-lg pb-16">
               <div className="flex justify-between px-12 py-6 sm:px-4">
@@ -1963,7 +1964,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
                     {activeTab === "Candidates" && (
                       <>
                         {/* v1.0.4 <------------------------------------------------------- */}
-                        <div className="sm:px-0 px-6 overflow-x-auto">
+                        <>
                           <AssessmentsTab
                             assessment={
                               isEditing
@@ -1972,7 +1973,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
                             }
                           />
                           <TabFooter currentTab="Candidates" />
-                        </div>
+                        </>
                         {/* v1.0.4 -------------------------------------------------------> */}
                       </>
                     )}

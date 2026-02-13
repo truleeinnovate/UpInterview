@@ -883,172 +883,245 @@ exports.updateScheduleStatus = async (req, res) => {
   }
 };
 
+// ----------------------------- Assessment Expiry ------------------------------------------
 // Function to automatically check and update expired candidate assessments
+// exports.checkAndUpdateExpiredAssessments = async (req, res) => {
+//   res.locals.loggedByController = true;
+//   res.locals.processName = "Check And Update Expired Assessments";
+
+//   try {
+//     const now = new Date();
+
+//     // Find all candidate assessments that have expired but status is not updated
+//     const expiredAssessments = await CandidateAssessment.find({
+//       expiryAt: { $lt: now },
+//       status: {
+//         $nin: [
+//           "completed",
+//           "cancelled",
+//           "expired",
+//           "failed",
+//           "pass",
+//           "extended",
+//         ],
+//       },
+//     }).populate("candidateId");
+
+//     const updatedAssessments = [];
+//     const failedUpdates = [];
+
+//     for (const assessment of expiredAssessments) {
+//       try {
+//         // Update status to expired
+//         const oldStatus = assessment.status;
+//         assessment.status = "expired";
+//         assessment.isActive = false;
+//         await assessment.save();
+
+//         // Create notification for expiry
+//         if (oldStatus !== "expired") {
+//           try {
+//             await createAssessmentStatusUpdateNotification(
+//               assessment,
+//               oldStatus,
+//               "expired",
+//             );
+//           } catch (notificationError) {
+//             console.error(
+//               "[ASSESSMENT] Error creating expiry notification:",
+//               notificationError,
+//             );
+//           }
+
+//           // Update assessment usage when status changes to expired
+//           try {
+//             await handleAssessmentStatusChange(
+//               assessment._id,
+//               oldStatus,
+//               "expired",
+//             );
+//           } catch (usageError) {
+//             console.error(
+//               "[ASSESSMENT] Error updating assessment usage:",
+//               usageError,
+//             );
+//             // Continue execution even if usage update fails
+//           }
+//         }
+
+//         updatedAssessments.push({
+//           id: assessment._id,
+//           candidateName: `${assessment.candidateId?.FirstName || ""} ${assessment.candidateId?.LastName || ""
+//             }`.trim(),
+//           email: assessment.candidateId?.Email || "N/A",
+//           expiredAt: assessment.expiryAt,
+//         });
+
+//         // Update schedule assessment status after candidate assessment update
+//         await exports.updateScheduleAssessmentStatus(
+//           assessment.scheduledAssessmentId,
+//         );
+//       } catch (error) {
+//         failedUpdates.push({
+//           id: assessment._id,
+//           error: error.message,
+//         });
+//       }
+//     }
+
+//     // Update all schedule assessments to ensure consistency
+//     const scheduleAssessments = await ScheduleAssessment.find({}).populate({
+//       path: "candidates",
+//       populate: { path: "candidateId" },
+//     });
+
+//     const updatedSchedules = [];
+//     const failedScheduleUpdates = [];
+
+//     for (const schedule of scheduleAssessments) {
+//       try {
+//         const updatedSchedule = await exports.updateScheduleAssessmentStatus(
+//           schedule._id,
+//         );
+//         if (updatedSchedule && updatedSchedule.status !== schedule.status) {
+//           updatedSchedules.push({
+//             id: schedule._id,
+//             order: schedule.order,
+//             oldStatus: schedule.status,
+//             newStatus: updatedSchedule.status,
+//             candidateCount: schedule.candidates?.length || 0,
+//           });
+//         }
+//       } catch (error) {
+//         failedScheduleUpdates.push({
+//           id: schedule._id,
+//           error: error.message,
+//         });
+//       }
+//     }
+
+//     const responseBody = {
+//       expiredAssessments: {
+//         updated: updatedAssessments.length,
+//         failed: failedUpdates.length,
+//         details: updatedAssessments,
+//         failures: failedUpdates,
+//       },
+//       scheduleAssessments: {
+//         updated: updatedSchedules.length,
+//         failed: failedScheduleUpdates.length,
+//         details: updatedSchedules,
+//         failures: failedScheduleUpdates,
+//       },
+//     };
+
+//     res.locals.logData = {
+//       tenantId: "",
+//       ownerId: "",
+//       processName: "Check And Update Expired Assessments",
+//       requestBody: req.body,
+//       status: "success",
+//       message: "Expiry check completed successfully",
+//       responseBody,
+//     };
+
+//     res.json({
+//       success: true,
+//       message: "Expiry check completed successfully",
+//       data: responseBody,
+//     });
+//   } catch (error) {
+//     console.error("Error checking expired assessments:", error);
+
+//     res.locals.logData = {
+//       tenantId: "",
+//       ownerId: "",
+//       processName: "Check And Update Expired Assessments",
+//       requestBody: req.body,
+//       status: "error",
+//       message: error.message,
+//     };
+
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to check expired assessments",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// 1. Create a "Service" function that does the work without needing req/res
+const performExpiryCheckInternal = async () => {
+  const now = new Date();
+  const expiredAssessments = await CandidateAssessment.find({
+    expiryAt: { $lt: now },
+    status: {
+      $nin: ["completed", "cancelled", "expired", "failed", "pass", "extended"],
+    },
+  }).populate("candidateId");
+
+  const updatedAssessments = [];
+  const failedUpdates = [];
+
+  for (const assessment of expiredAssessments) {
+    try {
+      const oldStatus = assessment.status;
+      assessment.status = "expired";
+      assessment.isActive = false;
+      await assessment.save();
+
+      if (oldStatus !== "expired") {
+        try {
+          await createAssessmentStatusUpdateNotification(assessment, oldStatus, "expired");
+        } catch (e) { console.error("Notification Error:", e); }
+
+        try {
+          await handleAssessmentStatusChange(assessment._id, oldStatus, "expired");
+        } catch (e) { console.error("Usage Error:", e); }
+      }
+
+      updatedAssessments.push({ id: assessment._id });
+      await exports.updateScheduleAssessmentStatus(assessment.scheduledAssessmentId);
+    } catch (error) {
+      failedUpdates.push({ id: assessment._id, error: error.message });
+    }
+  }
+
+  // Handle Schedule inconsistency
+  const scheduleAssessments = await ScheduleAssessment.find({});
+  for (const schedule of scheduleAssessments) {
+    await exports.updateScheduleAssessmentStatus(schedule._id);
+  }
+
+  return { updated: updatedAssessments.length, failed: failedUpdates.length };
+};
+
 exports.checkAndUpdateExpiredAssessments = async (req, res) => {
+  // Add this line to ensure res.locals exists even when called by Cron
+  res.locals = res.locals || {}; 
+
   res.locals.loggedByController = true;
   res.locals.processName = "Check And Update Expired Assessments";
 
   try {
-    const now = new Date();
+    const results = await performExpiryCheckInternal();
 
-    // Find all candidate assessments that have expired but status is not updated
-    const expiredAssessments = await CandidateAssessment.find({
-      expiryAt: { $lt: now },
-      status: {
-        $nin: [
-          "completed",
-          "cancelled",
-          "expired",
-          "failed",
-          "pass",
-          "extended",
-        ],
-      },
-    }).populate("candidateId");
+    res.locals.logData = { status: "success", responseBody: results };
 
-    const updatedAssessments = [];
-    const failedUpdates = [];
-
-    for (const assessment of expiredAssessments) {
-      try {
-        // Update status to expired
-        const oldStatus = assessment.status;
-        assessment.status = "expired";
-        assessment.isActive = false;
-        await assessment.save();
-
-        // Create notification for expiry
-        if (oldStatus !== "expired") {
-          try {
-            await createAssessmentStatusUpdateNotification(
-              assessment,
-              oldStatus,
-              "expired",
-            );
-          } catch (notificationError) {
-            console.error(
-              "[ASSESSMENT] Error creating expiry notification:",
-              notificationError,
-            );
-          }
-
-          // Update assessment usage when status changes to expired
-          try {
-            await handleAssessmentStatusChange(
-              assessment._id,
-              oldStatus,
-              "expired",
-            );
-          } catch (usageError) {
-            console.error(
-              "[ASSESSMENT] Error updating assessment usage:",
-              usageError,
-            );
-            // Continue execution even if usage update fails
-          }
-        }
-
-        updatedAssessments.push({
-          id: assessment._id,
-          candidateName: `${assessment.candidateId?.FirstName || ""} ${assessment.candidateId?.LastName || ""
-            }`.trim(),
-          email: assessment.candidateId?.Email || "N/A",
-          expiredAt: assessment.expiryAt,
-        });
-
-        // Update schedule assessment status after candidate assessment update
-        await exports.updateScheduleAssessmentStatus(
-          assessment.scheduledAssessmentId,
-        );
-      } catch (error) {
-        failedUpdates.push({
-          id: assessment._id,
-          error: error.message,
-        });
-      }
+    // Use optional chaining or a check before calling Express-specific methods
+    if (typeof res.json === "function") {
+      return res.json({ success: true, data: results });
     }
-
-    // Update all schedule assessments to ensure consistency
-    const scheduleAssessments = await ScheduleAssessment.find({}).populate({
-      path: "candidates",
-      populate: { path: "candidateId" },
-    });
-
-    const updatedSchedules = [];
-    const failedScheduleUpdates = [];
-
-    for (const schedule of scheduleAssessments) {
-      try {
-        const updatedSchedule = await exports.updateScheduleAssessmentStatus(
-          schedule._id,
-        );
-        if (updatedSchedule && updatedSchedule.status !== schedule.status) {
-          updatedSchedules.push({
-            id: schedule._id,
-            order: schedule.order,
-            oldStatus: schedule.status,
-            newStatus: updatedSchedule.status,
-            candidateCount: schedule.candidates?.length || 0,
-          });
-        }
-      } catch (error) {
-        failedScheduleUpdates.push({
-          id: schedule._id,
-          error: error.message,
-        });
-      }
-    }
-
-    const responseBody = {
-      expiredAssessments: {
-        updated: updatedAssessments.length,
-        failed: failedUpdates.length,
-        details: updatedAssessments,
-        failures: failedUpdates,
-      },
-      scheduleAssessments: {
-        updated: updatedSchedules.length,
-        failed: failedScheduleUpdates.length,
-        details: updatedSchedules,
-        failures: failedScheduleUpdates,
-      },
-    };
-
-    res.locals.logData = {
-      tenantId: "",
-      ownerId: "",
-      processName: "Check And Update Expired Assessments",
-      requestBody: req.body,
-      status: "success",
-      message: "Expiry check completed successfully",
-      responseBody,
-    };
-
-    res.json({
-      success: true,
-      message: "Expiry check completed successfully",
-      data: responseBody,
-    });
+    return results; // Return for cron if needed
   } catch (error) {
-    console.error("Error checking expired assessments:", error);
-
-    res.locals.logData = {
-      tenantId: "",
-      ownerId: "",
-      processName: "Check And Update Expired Assessments",
-      requestBody: req.body,
-      status: "error",
-      message: error.message,
-    };
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to check expired assessments",
-      error: error.message,
-    });
+    if (typeof res.status === "function") {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+    // If it's a cron job, we should log the error since there's no HTTP response
+    console.error("Cron Expiry Check Error:", error.message);
   }
 };
-
+// ----------------------------- Assessment Expiry ------------------------------------------
 // API endpoint to update all schedule assessment statuses
 exports.updateAllScheduleStatuses = async (req, res) => {
   res.locals.loggedByController = true;

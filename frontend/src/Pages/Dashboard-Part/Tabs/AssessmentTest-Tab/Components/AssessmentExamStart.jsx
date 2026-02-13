@@ -18,7 +18,6 @@ function AssessmentTest({
   duration,
   candidateAssessmentId,
 }) {
-
   const [currentSection, setCurrentSection] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -610,13 +609,282 @@ function AssessmentTest({
   //     console.error("Error submitting assessment:", error);
   //   }
   // };
+  // -------------------------------------------------------------------------------
+  // const handleConfirmSubmit = async () => {
+  //   try {
+  //     const evaluatedSections = questions.sections.map((section) => {
+  //       const sectionQuestions = section.questions.map((question) => {
+  //         const rawAnswer = answers[question._id];
+
+  //         const userAnswer =
+  //           rawAnswer !== undefined && rawAnswer !== null ? rawAnswer : "";
+
+  //         const isCorrect = verifyAnswer(question, userAnswer);
+
+  //         let displayCorrectAnswer =
+  //           question.snapshot?.correctAnswer || question.correctAnswer;
+  //         const qType =
+  //           question.snapshot?.questionType || question.questionType;
+
+  //         if (qType === "MCQ") {
+  //           const correctOpts = (
+  //             question.snapshot?.options ||
+  //             question.options ||
+  //             []
+  //           )
+  //             .filter(
+  //               (opt) => typeof opt === "object" && opt.isCorrect === true,
+  //             )
+  //             .map((opt) => opt.optionText);
+
+  //           displayCorrectAnswer =
+  //             correctOpts.length > 0 ? correctOpts.join(", ") : "";
+  //         } else if (qType === "Boolean") {
+  //           displayCorrectAnswer = Array.isArray(displayCorrectAnswer)
+  //             ? displayCorrectAnswer[0]
+  //             : displayCorrectAnswer;
+  //         }
+
+  //         const questionWeight = Number(
+  //           question.snapshot?.score || question.score || 0,
+  //         );
+
+  //         const awardedScore = isCorrect ? questionWeight : 0;
+
+  //         return {
+  //           questionId: question._id,
+  //           questionType:
+  //             question.snapshot?.questionType || question.questionType,
+  //           userAnswer,
+  //           correctAnswer: displayCorrectAnswer,
+  //           isCorrect,
+  //           score: awardedScore,
+  //           isAnswerLater: skippedQuestions.includes(question._id),
+  //           submittedAt: new Date().toISOString(),
+  //         };
+  //       });
+
+  //       const sectionTotalScore = sectionQuestions.reduce(
+  //         (sum, q) => sum + q.score,
+  //         0,
+  //       );
+
+  //       const passThreshold = Number(section.passScore || 0);
+  //       const sectionResult =
+  //         sectionTotalScore >= passThreshold ? "pass" : "fail";
+
+  //       return {
+  //         sectionId: section._id,
+  //         sectionName: section.sectionName || "Unnamed Section",
+  //         passScore: passThreshold,
+  //         questions: sectionQuestions,
+  //         totalScore: sectionTotalScore,
+  //         sectionResult,
+  //         sectionPassed: sectionResult === "pass",
+  //       };
+  //     });
+
+  //     const totalScore = evaluatedSections.reduce(
+  //       (sum, section) => sum + section.totalScore,
+  //       0,
+  //     );
+
+  //     const formattedTotalScore = Number(totalScore.toFixed(2));
+
+  //     const submissionData = {
+  //       candidateAssessmentId,
+  //       scheduledAssessmentId: assessment._id,
+  //       candidateId: candidate._id,
+  //       status: "completed",
+  //       remainingTime: timeLeft,
+
+  //       sections: evaluatedSections,
+
+  //       totalScore: formattedTotalScore,
+
+  //       submittedAt: new Date().toISOString(),
+  //     };
+
+  //     const response = await fetch(
+  //       `${config.REACT_APP_API_URL}/candidate-assessment/submit`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(submissionData),
+  //       },
+  //     );
+
+  //     console.log("Response from backend:", response);
+
+  //     const responseData = await response.json();
+
+  //     if (!response.ok) {
+  //       console.error("Error submitting assessment:", responseData.message);
+  //       throw new Error(responseData.message || "Failed to submit assessment");
+  //     }
+
+  //     console.log("Assessment submitted successfully:", responseData);
+  //     setIsSubmitted(true);
+  //     setShowConfirmSubmit(false);
+  //   } catch (error) {
+  //     console.error("Error submitting assessment:", error);
+  //   }
+  // };
+  // -------------------------------------------------------------------------------
+
+  // const handleConfirmSubmit = async () => {
+  //   try {
+  //     const passScoreBy = assessment.assessmentId?.passScoreBy || "Overall";
+
+  //     const evaluatedSections = questions.sections.map((section) => {
+  //       const sectionQuestions = section.questions.map((question) => {
+  //         const rawAnswer = answers[question._id];
+
+  //         const userAnswer =
+  //           rawAnswer !== undefined && rawAnswer !== null ? rawAnswer : "";
+
+  //         const isCorrect = verifyAnswer(question, userAnswer);
+
+  //         let displayCorrectAnswer =
+  //           question.snapshot?.correctAnswer || question.correctAnswer;
+  //         const qType =
+  //           question.snapshot?.questionType || question.questionType;
+
+  //         if (qType === "MCQ") {
+  //           const correctOpts = (
+  //             question.snapshot?.options ||
+  //             question.options ||
+  //             []
+  //           )
+  //             .filter(
+  //               (opt) => typeof opt === "object" && opt.isCorrect === true,
+  //             )
+  //             .map((opt) => opt.optionText);
+
+  //           displayCorrectAnswer =
+  //             correctOpts.length > 0 ? correctOpts.join(", ") : "";
+  //         } else if (qType === "Boolean") {
+  //           displayCorrectAnswer = Array.isArray(displayCorrectAnswer)
+  //             ? displayCorrectAnswer[0]
+  //             : displayCorrectAnswer;
+  //         }
+
+  //         const questionWeight = Number(
+  //           question.snapshot?.score || question.score || 0,
+  //         );
+
+  //         const awardedScore = isCorrect ? questionWeight : 0;
+
+  //         return {
+  //           questionId: question._id,
+  //           questionType:
+  //             question.snapshot?.questionType || question.questionType,
+  //           userAnswer,
+  //           correctAnswer: displayCorrectAnswer,
+  //           isCorrect,
+  //           score: awardedScore,
+  //           isAnswerLater: skippedQuestions.includes(question._id),
+  //           submittedAt: new Date().toISOString(),
+  //         };
+  //       });
+
+  //       const sectionTotalScore = sectionQuestions.reduce(
+  //         (sum, q) => sum + q.score,
+  //         0,
+  //       );
+
+  //       const passThreshold = Number(section.passScore || 0);
+  //       const sectionResult =
+  //         sectionTotalScore >= passThreshold ? "pass" : "fail";
+
+  //       return {
+  //         sectionId: section._id,
+  //         sectionName: section.sectionName || "Unnamed Section",
+  //         passScore: passThreshold,
+  //         questions: sectionQuestions,
+  //         totalScore: sectionTotalScore,
+  //         sectionResult,
+  //         sectionPassed: sectionResult === "pass",
+  //       };
+  //     });
+
+  //     // Determine Overall Assessment Result based on passScoreBy
+  //     let isAssessmentPassed = false;
+
+  //     if (passScoreBy === "Each Section") {
+  //       // Gatekeeper: Must pass every single section
+  //       isAssessmentPassed = evaluatedSections.every((s) => s.sectionPassed);
+  //     } else {
+  //       // Overall: Check total score against total required pass score
+  //       const totalEarned = evaluatedSections.reduce(
+  //         (sum, s) => sum + s.totalScore,
+  //         0,
+  //       );
+  //       const totalRequired = questions.sections.reduce(
+  //         (sum, s) => sum + Number(s.passScore || 0),
+  //         0,
+  //       );
+  //       isAssessmentPassed = totalEarned >= totalRequired;
+  //     }
+
+  //     const totalScore = evaluatedSections.reduce(
+  //       (sum, section) => sum + section.totalScore,
+  //       0,
+  //     );
+
+  //     const formattedTotalScore = Number(totalScore.toFixed(2));
+
+  //     const submissionData = {
+  //       candidateAssessmentId,
+  //       scheduledAssessmentId: assessment._id,
+  //       candidateId: candidate._id,
+  //       status: "completed",
+  //       remainingTime: timeLeft,
+  //       sections: evaluatedSections,
+  //       totalScore: formattedTotalScore,
+  //       assessmentResult: isAssessmentPassed ? "pass" : "fail", // The dynamic result
+  //       passScoreBy,
+  //       submittedAt: new Date().toISOString(),
+  //     };
+
+  //     const response = await fetch(
+  //       `${config.REACT_APP_API_URL}/candidate-assessment/submit`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(submissionData),
+  //       },
+  //     );
+
+  //     const responseData = await response.json();
+
+  //     if (!response.ok) {
+  //       console.error("Error submitting assessment:", responseData.message);
+  //       throw new Error(responseData.message || "Failed to submit assessment");
+  //     }
+
+  //     console.log("Assessment submitted successfully:", responseData);
+  //     setIsSubmitted(true);
+  //     setShowConfirmSubmit(false);
+  //   } catch (error) {
+  //     console.error("Error submitting assessment:", error);
+  //   }
+  // };
 
   const handleConfirmSubmit = async () => {
     try {
+      // Determine the strategy: "Each Section" or "Overall"
+      const passScoreBy = assessment.assessmentId?.passScoreBy || "Overall";
+
       const evaluatedSections = questions.sections.map((section) => {
         const sectionQuestions = section.questions.map((question) => {
           const rawAnswer = answers[question._id];
 
+          // KEEPING YOUR WORKING LOGIC: Explicitly check for null/undefined to allow boolean 'false' or number 0
           const userAnswer =
             rawAnswer !== undefined && rawAnswer !== null ? rawAnswer : "";
 
@@ -685,12 +953,28 @@ function AssessmentTest({
         };
       });
 
-      const totalScore = evaluatedSections.reduce(
-        (sum, section) => sum + section.totalScore,
+      // CALCULATE OVERALL TOTALS
+      const totalEarned = evaluatedSections.reduce(
+        (sum, s) => sum + s.totalScore,
+        0,
+      );
+      const totalRequiredToPass = questions.sections.reduce(
+        (sum, s) => sum + Number(s.passScore || 0),
         0,
       );
 
-      const formattedTotalScore = Number(totalScore.toFixed(2));
+      // Determine Overall Assessment Result based on passScoreBy
+      let isAssessmentPassed = false;
+
+      if (passScoreBy === "Each Section") {
+        // Gatekeeper: Must pass every single individual section
+        isAssessmentPassed = evaluatedSections.every((s) => s.sectionPassed);
+      } else {
+        // Overall: Calculate based on the total score of all sections combined
+        isAssessmentPassed = totalEarned >= totalRequiredToPass;
+      }
+
+      const formattedTotalScore = Number(totalEarned.toFixed(2));
 
       const submissionData = {
         candidateAssessmentId,
@@ -698,11 +982,10 @@ function AssessmentTest({
         candidateId: candidate._id,
         status: "completed",
         remainingTime: timeLeft,
-
         sections: evaluatedSections,
-
         totalScore: formattedTotalScore,
-
+        assessmentResult: isAssessmentPassed ? "pass" : "fail",
+        passScoreBy,
         submittedAt: new Date().toISOString(),
       };
 
@@ -716,8 +999,6 @@ function AssessmentTest({
           body: JSON.stringify(submissionData),
         },
       );
-
-      console.log("Response from backend:", response);
 
       const responseData = await response.json();
 

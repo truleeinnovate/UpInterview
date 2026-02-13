@@ -528,11 +528,11 @@ const BasicDetailsTab = ({
                 value={
                   selected
                     ? {
-                      value: selected,
-                      label:
-                        categories?.find((c) => c._id === selected)
-                          ?.categoryOrTechnology || "Select List",
-                    }
+                        value: selected,
+                        label:
+                          categories?.find((c) => c._id === selected)
+                            ?.categoryOrTechnology || "Select List",
+                      }
                     : null
                 }
                 options={[
@@ -550,7 +550,7 @@ const BasicDetailsTab = ({
                         <div className="flex justify-between w-[99%] items-center">
                           <span>
                             {capitalizeFirstLetter(
-                              category.categoryOrTechnology
+                              category.categoryOrTechnology,
                             )}
                           </span>
 
@@ -648,18 +648,20 @@ const BasicDetailsTab = ({
       </form>
 
       {showUpgradePopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-300 bg-opacity-75 z-50">
-          <div className="relative bg-white p-5 rounded-lg shadow-lg w-80">
-            <MdOutlineCancel
-              className="absolute top-2 right-2 text-gray-500 cursor-pointer"
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="flex items-center justify-center relative bg-white p-5 rounded-lg shadow-lg w-80">
+            <button
+              className="absolute top-3 right-3 cursor-pointer"
               onClick={closePopup}
-            />
-            <div className="text-center">
-              <p className="mb-4">
+            >
+              <MdOutlineCancel className="text-red-500" />
+            </button>
+            <div className="flex flex-col items-center justify-center text-center p-6">
+              <p className="mb-6">
                 Upgrade your plan to select a duration longer than 45 minutes.
               </p>
               <button
-                className="bg-custom-blue text-white py-2 px-4 rounded hover:bg-custom-blue/90"
+                className="flex items-center justify-center bg-custom-blue text-sm text-white h-9 px-4 rounded-md hover:bg-custom-blue/90"
                 onClick={handleUpgrade}
               >
                 Upgrade

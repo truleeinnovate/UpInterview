@@ -215,7 +215,7 @@ function AssessmentsTab({ assessment }) {
   //  console.log("scheduledAssessments ", scheduledAssessments);
 
   return (
-    <>
+    <div className="mx-12 sm:mx-0">
       {/* <---------------------- v1.0.1 */}
       <div className="space-y-6 overflow-y-auto">
         <div className="flex justify-end items-center">
@@ -382,7 +382,7 @@ function AssessmentsTab({ assessment }) {
         />
       )}
       {/* ------------------------------ v1.0.3 > */}
-    </>
+    </div>
   );
 }
 
