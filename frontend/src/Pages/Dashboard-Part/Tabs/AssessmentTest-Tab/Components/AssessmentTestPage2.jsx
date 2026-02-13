@@ -82,26 +82,30 @@ const AssessmentTestPage2 = ({
                 <div>
                   <p className="text-sm font-medium text-gray-500">Email</p>
                   <p className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
-                    {candidate?.Email}
+                    {candidate?.Email || "Not Provided"}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Phone</p>
-                  <p className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
-                    {candidate?.Phone}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Position</p>
-                  <p className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
-                    {assessment?.assessmentId?.Position && (
+                {candidate?.phone && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Phone</p>
+                    <p className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
+                      {candidate?.Phone || "Not Provided"}
+                    </p>
+                  </div>
+                )}
+                {assessment?.assessmentId?.Position && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">
+                      Position
+                    </p>
+                    <p className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
                       <>
                         {assessment?.assessmentId?.Position?.title ||
                           "Position Title Not Available"}
                       </>
-                    )}
-                  </p>
-                </div>
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
