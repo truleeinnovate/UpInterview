@@ -11,6 +11,8 @@ import {
   useImperativeHandle,
   useCallback,
 } from "react";
+import axios from "axios";
+import { config } from "../../../../config";
 import { ReactComponent as FaTrash } from "../../../../icons/FaTrash.svg";
 // Removed FaEdit import - not needed for always-editable rows
 import { ReactComponent as FaPlus } from "../../../../icons/FaPlus.svg";
@@ -265,6 +267,49 @@ const SkillsField = forwardRef(
     // Max skills to display in popup grid to prevent DOM overload
     const MAX_POPUP_SKILLS = 100;
 
+    // Server-side search state
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const searchTimerRef = useRef(null);
+
+    // ALL filtering is done server-side via API — no client-side filtering
+    useEffect(() => {
+      if (!showSkillsPopup) return;
+
+      // Clear any pending timer
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+
+      const term = (popupSearchTerm || "").trim();
+
+      // Always call the API (even for empty search to get initial skills)
+      setIsSearching(true);
+      searchTimerRef.current = setTimeout(async () => {
+        try {
+          const res = await axios.get(
+            `${config.REACT_APP_API_URL}/master-data/skills/search`,
+            { params: { search: term } }
+          );
+          const results = (res.data || [])
+            .map((s) => s.SkillName || "")
+            .filter(Boolean);
+          setSearchResults(results);
+        } catch (err) {
+          console.error("Skills search error:", err);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      }, term ? 300 : 0); // No delay for initial load, 300ms debounce for typing
+
+      return () => {
+        if (searchTimerRef.current) {
+          clearTimeout(searchTimerRef.current);
+        }
+      };
+    }, [popupSearchTerm, showSkillsPopup]);
+
     // Get already selected skills from entries
     const getAlreadySelectedSkills = () => {
       return entries.map((e) => e.skill).filter(Boolean);
@@ -489,44 +534,28 @@ const SkillsField = forwardRef(
                 </div> */}
                 <div className="flex-1 overflow-y-auto px-6 py-4">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {(() => {
-                      // Compute filtered skills SYNCHRONOUSLY during render
-                      // (useEffect was too slow - ran AFTER render causing stale data with 2071 skills)
-                      const term = (popupSearchTerm || "").trim().toLowerCase();
-                      const searchWords = term ? term.split(/\s+/).filter(Boolean) : [];
-                      const allFiltered = (!skills || !Array.isArray(skills))
-                        ? []
-                        : skills
-                          .filter((skill) => {
-                            const name = getSkillName(skill);
-                            if (!name) return false;
-                            if (searchWords.length === 0) return true;
-                            const lowerName = name.toLowerCase();
-                            // AND condition: every search word must appear in the skill name
-                            return searchWords.every((word) => lowerName.includes(word));
-                          })
-                          .map((s) => getSkillName(s));
-
-                      const totalMatches = allFiltered.length;
-                      const filteredSkills = allFiltered.slice(0, MAX_POPUP_SKILLS);
-
-                      if (filteredSkills.length === 0) {
-                        return (
-                          <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-500">
-                            <p className="text-lg font-medium text-gray-600">
-                              No Skills Found
-                            </p>
-                            <p className="text-sm">
-                              {popupSearchTerm
-                                ? `We couldn't find any matches for "${popupSearchTerm}"`
-                                : "All available skills have been added."}
-                            </p>
-                          </div>
-                        );
-                      }
-
-                      return (<>
-                        {filteredSkills.map((skillName) => {
+                    {isSearching ? (
+                      <div className="col-span-full flex items-center justify-center py-12 text-gray-500">
+                        <svg className="animate-spin h-5 w-5 mr-2 text-custom-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Searching skills...</span>
+                      </div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="col-span-full flex flex-col items-center justify-center py-12 text-gray-500">
+                        <p className="text-lg font-medium text-gray-600">
+                          No Skills Found
+                        </p>
+                        <p className="text-sm">
+                          {popupSearchTerm
+                            ? `We couldn't find any matches for "${popupSearchTerm}"`
+                            : "All available skills have been added."}
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        {searchResults.map((skillName) => {
                           const isSelected =
                             popupSelectedSkills.includes(skillName);
                           return (
@@ -562,13 +591,13 @@ const SkillsField = forwardRef(
                             </button>
                           );
                         })}
-                        {totalMatches > MAX_POPUP_SKILLS && (
+                        {searchResults.length >= MAX_POPUP_SKILLS && (
                           <div className="col-span-full text-center py-3 text-sm text-gray-500">
-                            Showing {MAX_POPUP_SKILLS} of {totalMatches} skills. Type to refine your search.
+                            Showing first {MAX_POPUP_SKILLS} results. Type to refine your search.
                           </div>
                         )}
-                      </>);
-                    })()}
+                      </>
+                    )}
                   </div>
                 </div>
 
