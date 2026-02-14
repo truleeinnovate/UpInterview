@@ -821,9 +821,12 @@ const MockInterviewDetails = () => {
   }
 
   const handleJoinMeeting = (round) => {
-
-    const url = createJoinMeetingUrl(round, mockinterview, null, "mockinterview");
-
+    const url = createJoinMeetingUrl(
+      round,
+      mockinterview,
+      null,
+      "mockinterview",
+    );
 
     if (!url) {
       console.warn("No valid join URL");
@@ -831,27 +834,27 @@ const MockInterviewDetails = () => {
     }
 
     // ONLY this line — no location.href, no useNavigate, no extra calls
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
     <>
       <div className="min-h-screen bg-gray-50">
-        <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+        <main className="px-[8%] sm:px-[5%] md:px-[5%] py-4 sm:py-6 pb-8">
           <div>
             <div className="flex items-center mb-4">
-              <Link
-                to="/mock-interviews"
-                className="text-custom-blue hover:text-custom-blue/90 flex items-center mr-4"
+              <button
+                onClick={() => navigate("/mock-interviews")}
+                type="button"
+                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
               >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back to Interviews
-              </Link>
+                <ArrowLeft className="h-5 w-5 mr-2" /> Back to Interviews
+              </button>
             </div>
 
             <Breadcrumb items={breadcrumbItems} />
 
-            <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div className="mt-4 px-4 bg-white shadow overflow-hidden rounded-lg">
               {/* v1.0.2 <------------------------------------------------------------------------- */}
               <div className="flex flex-col justify-between items-start sm:items-center px-4 py-5 sm:px-6 gap-4">
                 <div className="flex justify-between w-full">
@@ -874,13 +877,16 @@ const MockInterviewDetails = () => {
                           ? "Request Sent"
                           : mockinterview?.rounds[0]?.status === "InProgress"
                             ? "In Progress"
-                            : mockinterview?.rounds[0]?.status === "FeedbackPending"
+                            : mockinterview?.rounds[0]?.status ===
+                                "FeedbackPending"
                               ? "Feedback Pending"
-                              : mockinterview?.rounds[0]?.status === "FeedbackSubmitted"
+                              : mockinterview?.rounds[0]?.status ===
+                                  "FeedbackSubmitted"
                                 ? "Feedback Submitted"
-                                :
-                                // : round?.status,
-                                capitalizeFirstLetter(mockinterview?.rounds[0]?.status)}
+                                : // : round?.status,
+                                  capitalizeFirstLetter(
+                                    mockinterview?.rounds[0]?.status,
+                                  )}
                       </span>
                     )}
                   </h3>
@@ -958,9 +964,9 @@ const MockInterviewDetails = () => {
                     "RequestSent",
                   ].includes(rounds[0]?.status) &&
                     mockinterview?.rounds[0]?.interviewType.toLowerCase() ===
-                    "instant" &&
+                      "instant" &&
                     mockinterview?.rounds[0]?.status.toLowerCase() ===
-                    "draft" && (
+                      "draft" && (
                       <button
                         onClick={handleAddRound}
                         // to={`/mock-interview/${id}/edit`}
@@ -1056,7 +1062,7 @@ const MockInterviewDetails = () => {
                           <div
                             key={round._id}
                             className="bg-white rounded-lg border border-gray-200 shadow-md overflow-hidden"
-                          // className="bg-white rounded-lg shadow-md overflow-hidden"
+                            // className="bg-white rounded-lg shadow-md overflow-hidden"
                           >
                             <button
                               onClick={() => toggleRound(round._id)}
@@ -1095,18 +1101,18 @@ const MockInterviewDetails = () => {
                                     {(round?.status === "Scheduled" ||
                                       round?.status === "Rescheduled" ||
                                       round?.status === "InProgress") && (
-                                        <>
-                                          <span
-                                            onClick={(e) => {
-                                              e.stopPropagation(); // ⛔ stop toggle
-                                              handleJoinMeeting(round); // ✅ join only
-                                            }}
-                                            className="cursor-pointer text-custom-blue hover:underline font-medium"
-                                          >
-                                            Join Meeting
-                                          </span>
-                                        </>
-                                      )}
+                                      <>
+                                        <span
+                                          onClick={(e) => {
+                                            e.stopPropagation(); // ⛔ stop toggle
+                                            handleJoinMeeting(round); // ✅ join only
+                                          }}
+                                          className="cursor-pointer text-custom-blue hover:underline font-medium"
+                                        >
+                                          Join Meeting
+                                        </span>
+                                      </>
+                                    )}
                                   </div>
                                   {/* v1.0.0 <-------------------------------------------------------------------------- */}
                                 </div>
@@ -1195,12 +1201,13 @@ const MockInterviewDetails = () => {
                     No, Cancel
                   </Button>
                   <Button
-                    className={`${confirmAction === "Cancelled" &&
+                    className={`${
+                      confirmAction === "Cancelled" &&
                       "bg-red-600 hover:bg-red-700"
-                      }`}
+                    }`}
                     variant="success"
                     onClick={() => handleConfirmStatusChange({ change: true })}
-                  // onClick={handleConfirmStatusChange({ change: true })}
+                    // onClick={handleConfirmStatusChange({ change: true })}
                   >
                     Yes, Confirm
                   </Button>
@@ -1319,7 +1326,7 @@ const MockInterviewDetails = () => {
                   </Button>
                   <Button
                     variant="destructive"
-                  // onClick={handleDeleteRound}
+                    // onClick={handleDeleteRound}
                   >
                     Delete
                   </Button>

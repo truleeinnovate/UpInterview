@@ -417,7 +417,7 @@ const MockInterview = () => {
     },
     {
       key: "createdAt",
-      header: "Created On",
+      header: "Created At",
       render: (value) => {
         // if (!value) return "Not Provided";
         // const date = new Date(value);
@@ -608,8 +608,8 @@ const MockInterview = () => {
           <div className="sm:px-0">
             <Header
               title="Mock Interviews"
-              onAddClick={() => navigate("/mock-interviews-create")}
-              addButtonText="Add Interview"
+              onAddClick={() => navigate("/mock-interviews/new")}
+              addButtonText="Schedule Interview"
               canCreate={effectivePermissions.MockInterviews?.Create}
             />
             {/* // <---------------------- v1.0.0 */}
@@ -888,7 +888,7 @@ const MockInterview = () => {
                     onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
                   >
                     <span className="font-medium text-gray-700">
-                      Created Date
+                      Created At
                     </span>
                     {isCreatedDateOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />
