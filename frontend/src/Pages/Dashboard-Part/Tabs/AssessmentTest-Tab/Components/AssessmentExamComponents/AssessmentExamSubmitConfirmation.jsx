@@ -2,6 +2,7 @@
 // v1.0.1 - Ashok - Fixed style issue
 
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { capitalizeFirstLetter } from "../../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 function SubmitConfirmation({
   questions,
@@ -51,7 +52,7 @@ function SubmitConfirmation({
                   >
                     <div className="max-w-xs">
                       <h4 className="font-medium text-gray-900 break-words">
-                        {section.sectionName}
+                        {capitalizeFirstLetter(section.sectionName)}
                       </h4>
                       <p className="text-sm text-gray-500 break-words">
                         {answeredInSection} of {sectionQuestions} questions

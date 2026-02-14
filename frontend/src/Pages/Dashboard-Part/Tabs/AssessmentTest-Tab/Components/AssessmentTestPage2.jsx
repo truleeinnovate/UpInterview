@@ -7,6 +7,7 @@ import {
   ArrowLeftIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const AssessmentTestPage2 = ({
   assessment,
@@ -53,7 +54,7 @@ const AssessmentTestPage2 = ({
                 </h2>
               </div>
               <h2 className="sm:text-md md:text-md lg:text-xl xl:text-sl 2xl:text-xl text-xl font-bold text-white tracking-tight">
-                {assessment?.assessmentId?.AssessmentTitle}
+                {capitalizeFirstLetter(assessment?.assessmentId?.AssessmentTitle)}
               </h2>
               {/* <p className="text-white sm:text-sm md:text-sm lg:text-md xl:text-md 2xl:text-md mt-4 font-light">
                 Complete your profile to begin the assessment
@@ -76,7 +77,7 @@ const AssessmentTestPage2 = ({
                 <div>
                   <p className="text-sm font-medium text-gray-500">Full Name</p>
                   <p className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
-                    {candidate?.FirstName} {candidate?.LastName}
+                    {capitalizeFirstLetter(candidate?.FirstName)} {capitalizeFirstLetter(candidate?.LastName)}
                   </p>
                 </div>
                 <div>
@@ -100,7 +101,7 @@ const AssessmentTestPage2 = ({
                     </p>
                     <p className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
                       <>
-                        {assessment?.assessmentId?.Position?.title ||
+                        {capitalizeFirstLetter(assessment?.assessmentId?.Position?.title) ||
                           "Position Title Not Available"}
                       </>
                     </p>
@@ -127,7 +128,7 @@ const AssessmentTestPage2 = ({
                     >
                       <div className="flex items-center justify-between">
                         <h4 className="sm:text-sm md:text-sm lg:text-sm xl:text-lg 2xl:text-lg font-medium text-gray-900">
-                          {section.sectionName || `Section ${index + 1}`}
+                          {capitalizeFirstLetter(section.sectionName) || `Section ${index + 1}`}
                         </h4>
                         <span className="sm:px-2 px-4 py-2 bg-blue-100 text-custom-blue rounded-lg text-sm font-medium group-hover:bg-custom-blue group-hover:text-white transition-colors">
                           {section.questions?.length || 0}
