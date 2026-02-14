@@ -1325,18 +1325,24 @@ export const getFeedbackColumns = (navigate, options = {}) => {
             key: "position",
             header: "Position",
             render: (value, row) => {
+                console.log("rowrowrow", row)
                 const position = row.positionId;
                 const title = position?.title || "Unknown";
                 const toolTipMsg = `${title} • ${position?.companyname || "No Company"} • ${position?.Location || "No location"}`;
                 return (
                     <div className="truncate max-w-[120px]" title={toolTipMsg}>
-                        <div className="text-sm font-medium text-custom-blue truncate">
-                            {title.charAt(0).toUpperCase() + title.slice(1)}
-                        </div>
-                        <div className="text-sm text-gray-500 truncate">
-                            {position?.companyname || "No Company"} • {position?.Location || "No location"}
-                        </div>
-                    </div>
+                        {!position ? '-' : (
+                            <>
+                                <div className="text-sm font-medium text-custom-blue truncate">
+                                    {title.charAt(0).toUpperCase() + title.slice(1)}
+                                </div>
+                                <div className="text-sm text-gray-500 truncate">
+                                    {position?.companyname || "No Company"} • {position?.Location || "No location"}
+                                </div>
+                            </>
+                        )
+                        }
+                    </div >
                 );
             },
         },

@@ -2464,8 +2464,12 @@ router.get(
               .populate("positionId", "title companyname jobDescription Location")
               .lean();
 
+            console.log("query", query)
+
             let feedbackMockInterviews = await MockInterview.find(query)
               .lean();
+
+            console.log("feedbackMockInterviews", feedbackMockInterviews)
 
             // Fetch Resume data for candidates (for regular interviews)
             const fbInterviewCandidateIds = feedbackInterviews
@@ -2790,6 +2794,44 @@ router.get(
                 };
               });
 
+              let candidateDetails = fb.candidateId || null;
+
+              // console.log("roundDetails", fb)
+
+              // console.log("feedbackMockInterviews", feedbackMockInterviews)
+
+              // console.log("roundDetails?.mockInterviewId", roundDetails?.mockInterviewId)
+
+              if (fb.isMockInterview) {
+                const mockInterview = feedbackMockInterviews.find(
+                  (m) =>
+                    m?._id?.toString() ===
+                    roundDetails?.mockInterviewId?.toString()
+                );
+
+                // console.log("mockInterview", mockInterview)
+
+                if (mockInterview) {
+                  candidateDetails = {
+                    FirstName: mockInterview.candidateName || "Mock",
+                    LastName: "",
+                    Email: null,
+                    Phone: null,
+                    skills: mockInterview.skills || [],
+                    CurrentRole: mockInterview.currentRole || null,
+                    CurrentExperience: mockInterview.currentExperience || null,
+                    higherQualification: mockInterview.higherQualification || null,
+                    isMock: true,
+                  };
+                }
+              }
+
+              // console.log("candidateDetails candidateDetails", candidateDetails)
+
+
+
+
+
               // Create enriched feedback object
               const enrichedFeedback = {
                 ...fb,
@@ -2797,6 +2839,7 @@ router.get(
                 roundDetails: roundDetails,
                 canEdit: fb.status === "draft",
                 canView: true,
+                candidateId: candidateDetails,
               };
 
               // -------------------------------------------------------

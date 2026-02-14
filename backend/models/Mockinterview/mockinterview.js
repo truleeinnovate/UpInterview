@@ -25,8 +25,10 @@ const mockInterviewSchema = new mongoose.Schema(
     }, //in future we have to work on resume saving functionality
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-    ownerId: String,
-    tenantId: String,
+    // ownerId: String,
+    ownerId: mongoose.Schema.Types.ObjectId,
+    // tenantId: String,
+    tenantId: mongoose.Schema.Types.ObjectId,
   },
   { timestamps: true }
 );
