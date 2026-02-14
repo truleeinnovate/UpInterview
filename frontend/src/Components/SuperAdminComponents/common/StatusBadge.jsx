@@ -2,6 +2,8 @@
 // v1.0.1 - Ashok - updated colors
 // v1.0.2 - Ashok - added colors
 
+import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+
 /*************  ✨ Windsurf Command ⭐  *************/
 /**
  * A component that displays a status badge with a colored background and white text.
@@ -72,7 +74,7 @@
     <span className={`text-xs ${getStatusClass()}`}>
       {text === "InProgress" || status === "InProgress"
         ? "In Progress"
-        : text || status}
+        : capitalizeFirstLetter(text || status)}
     </span>
   );
 }
