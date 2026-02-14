@@ -680,7 +680,7 @@ const InternalInterviews = ({
                   {/* <div className="md:col-span-3 lg:col-span-3 xl:col-span-2 2xl:col-span-3 flex items-end h-full"> */}
                   {/* <div className="md:col-span-4 lg:col-span-4 xl:col-span-5 2xl:col-span-2"> */}
                   <button
-                    className="w-full md:col-span-4 lg:col-span-2 xl:col-span-2 2xl:col-span-2 h-10 px-4 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 duration-200 flex items-center justify-center whitespace-nowrap gap-2"
+                    className="w-full md:col-span-4 lg:col-span-2 xl:col-span-2 2xl:col-span-2 h-10 px-4 text-sm rounded-md bg-custom-blue px-4 py-2 hover:bg-custom-blue/90 text-white  flex items-center justify-center whitespace-nowrap gap-2"
 
                     onClick={() => {
                       // Reset to parent props

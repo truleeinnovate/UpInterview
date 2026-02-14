@@ -151,7 +151,9 @@ const MockSchedulelater = () => {
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
   // Add this helper function at the top with other state declarations
-  // console.log("qualifications:", qualifications);
+  const [showExternalNotification, setShowExternalNotification] = useState(false);
+
+
 
   const [isScheduleOrRescheduleInHistory, setIsScheduleOrRescheduleInHistory] =
     useState(false);
@@ -161,7 +163,8 @@ const MockSchedulelater = () => {
     isRequestSent = false,
     // mode, // optional if you switch to mode-based approach
   } = location.state || {};
-
+  console.log("qualifications:", isReschedule,
+    isRequestSent);
   const [errors, setErrors] = useState({});
   const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
 
@@ -1320,6 +1323,30 @@ const MockSchedulelater = () => {
     // }, 300);
   };
 
+
+  const handleConfirmDateChangesNew = () => {
+    // Clear all external interviewers
+    setExternalInterviewers([]);
+    setExternalMaxHourlyRate(0);
+    setSelectedInterviewType(null);
+
+    // Update the date with the pending value
+    setScheduledDate(pendingDateChange);
+
+    // Close popup and clear pending
+    setShowDateChangeConfirmation(false);
+    setPendingDateChange(null);
+
+    // Show notification
+    notify.info("Date/time changed. All interviewers have been cleared.");
+  };
+
+  const handleCancelDateChange = () => {
+    setShowDateChangeConfirmation(false);
+    setPendingDateChange(null);
+  };
+
+
   // Page 2: Save round + create meeting
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
@@ -1611,10 +1638,10 @@ const MockSchedulelater = () => {
       if (newStatus) setStatus(newStatus);
 
       const generateMeetingLink = roundResponse?.generateMeetingLink === true;
-
+      let meetingLink = null;
       // Step 2: Create & Save Meeting Link (only if backend allows)
       if (generateMeetingLink && formData.rounds.interviewMode === "Virtual") {
-        let meetingLink = null;
+
         try {
           setIsMeetingCreationLoading(true);
           setMeetingCreationProgress("Creating meeting link...");
@@ -1702,7 +1729,13 @@ const MockSchedulelater = () => {
       notify.success(
         mockEdit ? "Mock interview updated!" : "Mock interview scheduled!",
       );
-      navigate("/mock-interviews");
+
+      if (meetingLink) {
+        setShowExternalNotification(true);
+      } else {
+
+        navigate("/mock-interviews");
+      }
     } catch (error) {
       console.error("Mock Interview Submit Error:", error);
       const backendMsg = error.response?.data?.message;
@@ -2372,6 +2405,18 @@ const MockSchedulelater = () => {
   const handleScheduledDateChange = (e) => {
     const val = e.target.value;
 
+
+
+    // For new round creation (not edit mode)
+    if (!mockEdit && externalInterviewers.length > 0 && val !== scheduledDate) {
+      setPendingDateChange({
+        type: "scheduledDate",
+        value: val,
+      });
+      setShowDateChangeConfirmation(true);
+      return; // Don't update date yet - wait for confirmation
+    }
+
     // Check if external interviewers exist and date is actually changing
     if (externalInterviewers.length > 0 && val !== scheduledDate) {
       // Set pending change and show confirmation popup
@@ -2447,13 +2492,23 @@ const MockSchedulelater = () => {
     if (type === interviewType) return;
 
     // Check if external interviewers exist and we're changing type
+    // if (externalInterviewers.length > 0) {
+    //   // Set pending change and show confirmation popup
+    //   setPendingDateChange({
+    //     type: "interviewType",
+    //     value: type,
+    //   });
+    //   setTimeout(() => setShowDateChangeConfirmation(true), 100);
+    //   return; // Don't proceed until user confirms
+    // }
+
     if (externalInterviewers.length > 0) {
       // Set pending change and show confirmation popup
       setPendingDateChange({
         type: "interviewType",
         value: type,
       });
-      setTimeout(() => setShowDateChangeConfirmation(true), 100);
+      setShowDateChangeConfirmation(true);
       return; // Don't proceed until user confirms
     }
 
@@ -2501,6 +2556,7 @@ const MockSchedulelater = () => {
           interviewType: "instant",
         },
       }));
+      setShowDateChangeConfirmation(true);
       setScheduledDate(""); // clear scheduled date
       // Show instant interview info
       notify.info("Instant interview scheduled for 15 minutes from now");
@@ -2513,6 +2569,8 @@ const MockSchedulelater = () => {
           interviewType: "scheduled",
         },
       }));
+
+      setShowDateChangeConfirmation(true);
 
       // Set minimum datetime if not already set
       if (!scheduledDate) {
@@ -3661,9 +3719,10 @@ const MockSchedulelater = () => {
                 isLoading={isSubmitting || isMutationLoading}
                 loadingText={mockEdit ? "Updating..." : "Saving..."}
               >
-                {formData.rounds.interviewType === "instant"
+                {mockEdit ? `${selectedInterviewers.length > 0 ? "Update Schedule & Round" : "Update Round"} ` : `${selectedInterviewers.length > 0 ? "Create & Schedule Round" : 'Create Round'}`}
+                {/* {formData.rounds.interviewType === "instant"
                   ? "Save & Schedule"
-                  : "Save"}
+                  : "Save"} */}
               </LoadingButton>
             </div>
           )}
@@ -3718,22 +3777,90 @@ const MockSchedulelater = () => {
         />
       )}
 
-      {showDateChangeConfirmation && (
-        // shouldDisable("scheduledDate") &&
-        <div className="fixed inset-0 z-[9999]">
-          <DateChangeConfirmationModal
-            isOpen={showDateChangeConfirmation}
-            onClose={() => {
-              setShowDateChangeConfirmation(false);
-              setPendingDateChange(null);
-            }}
-            onConfirm={handleConfirmDateChange}
-            selectedInterviewType={"External"}
-            status={status}
-            combinedDateTime={combinedDateTime || scheduledDate} // your formatted date string
-          />
+      {/* Date Change Confirmation Modal for New Round Creation */}
+      {showDateChangeConfirmation && !isReschedule && !isRequestSent && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Confirm Date Change</h3>
+            <p className="text-gray-600 mb-6">
+              Changing the date/time will clear all selected interviewers for this new round.
+              Are you sure you want to continue?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCancelDateChange}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDateChangesNew}
+                className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
         </div>
       )}
+
+
+      {/* External Interviewer Notification Modal */}
+      {showExternalNotification && (
+        // className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-center mb-4 text-blue-600">
+              <Users className="h-12 w-12" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2 text-center">Request Sent to Interviewers</h3>
+            <p className="text-gray-600 mb-4 text-center">
+              Your request has been sent to the selected outsourced interviewers.
+              We will notify you once they accept the interview request.
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                <span className="font-semibold">Note:</span> The interview will only be confirmed
+                after the interviewers accept the request. You'll receive an email notification
+                when they respond.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setShowExternalNotification(false);
+                // Navigate to interview details page to properly close the round
+                navigate(`/mock-interviews`);
+              }}
+              className="w-full px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+
+      {showDateChangeConfirmation && (isReschedule ||
+        isRequestSent)
+        && (
+          // shouldDisable("scheduledDate") &&
+          <div className="fixed inset-0 z-[9999]">
+            <DateChangeConfirmationModal
+              isOpen={showDateChangeConfirmation && (isReschedule || isRequestSent)}
+              onClose={() => {
+                setShowDateChangeConfirmation(false);
+                setPendingDateChange(null);
+              }}
+              onConfirm={handleConfirmDateChange}
+              selectedInterviewType={"External"}
+              status={status}
+              combinedDateTime={combinedDateTime || scheduledDate} // your formatted date string
+            />
+          </div>
+        )}
+
+
+
 
       {/* {showOutsourcePopup && (
                 <OutsourceOption

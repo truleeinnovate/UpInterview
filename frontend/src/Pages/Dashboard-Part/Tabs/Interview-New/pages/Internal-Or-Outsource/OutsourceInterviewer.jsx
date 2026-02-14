@@ -473,7 +473,7 @@ export const OutsourcedInterviewerCard = ({
       {navigatedfrom !== "dashboard" && (
         <div className="border-t border-gray-100 mt-4 mx-4">
           <div className="py-3 flex justify-end items-center gap-2">
-            {source === "internal-interview" ? null : (
+            {/* {source === "internal-interview" ? null : (
               <Button
                 variant="outline"
                 size="sm"
@@ -482,7 +482,7 @@ export const OutsourcedInterviewerCard = ({
               >
                 <ExternalLink className="h-3 w-3 mr-1" /> View Details
               </Button>
-            )}
+            )} */}
 
             <Button
               variant={isSelected ? "destructive" : "customblue"}
@@ -2306,7 +2306,7 @@ function OutsourcedInterviewerModal({
                               // Reset initialization ref to prevent duplicate
                               hasInitializedSkillsRef.current = true;
                             }}
-                            className="w-full h-10 px-4 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 duration-200 flex items-center justify-center whitespace-nowrap gap-2"
+                            className="w-full h-10 px-4 text-sm rounded-md bg-custom-blue px-4 py-2 hover:bg-custom-blue/90 rounded-md text-white  text-white  duration-200 flex items-center justify-center whitespace-nowrap gap-2"
                           >
                             <RefreshCw className="h-4 w-4" />
                             Reset  Skills

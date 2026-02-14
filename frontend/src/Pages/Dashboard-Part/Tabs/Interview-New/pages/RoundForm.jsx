@@ -218,7 +218,7 @@ const RoundFormInterviews = () => {
     useState("platform"); // Default to Google Meet googlemeet
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent multiple submissions
   // v1.0.2 <-----------------------------------------
-
+  const [showExternalNotification, setShowExternalNotification] = useState(false);
   const { interviewId, roundId } = useParams();
 
   const { data: interviewDetails } = useInterviewDetails({
@@ -1319,26 +1319,27 @@ const RoundFormInterviews = () => {
         // console.log("Editable field in reschedule:", category);
         return false; // These are editable
       }
+      console.log("Editable field in edit mode: datetime", fieldName);
       return true; // Everything else is disabled
     }
 
     // Original logic for other cases (RequestSent, etc.)
-    const disabledInStatus = {
-      interviewMode: ["RequestSent", "Scheduled", "Rescheduled"],
-      duration: ["RequestSent", "Scheduled", "Rescheduled"],
-      interviewType: ["RequestSent", "Scheduled", "Rescheduled"],
-      scheduledDate: ["RequestSent", "Scheduled", "Rescheduled"],
-      internalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
-      externalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
-      removeInterviewerBtn: ["RequestSent", "Scheduled", "Rescheduled"],
-      clearInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
-      dateChangeConfirmation: ["RequestSent", "Scheduled", "Rescheduled"],
-    };
+    // const disabledInStatus = {
+    //   interviewMode: ["RequestSent", "Scheduled", "Rescheduled"],
+    //   duration: ["RequestSent", "Scheduled", "Rescheduled"],
+    //   interviewType: ["RequestSent", "Scheduled", "Rescheduled"],
+    //   scheduledDate: ["RequestSent", "Scheduled", "Rescheduled"],
+    //   internalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+    //   externalInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+    //   removeInterviewerBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+    //   clearInterviewersBtn: ["RequestSent", "Scheduled", "Rescheduled"],
+    //   dateChangeConfirmation: ["RequestSent", "Scheduled", "Rescheduled"],
+    // };
 
-    const statusList = disabledInStatus[fieldName] || [];
+    // const statusList = disabledInStatus[fieldName] || [];
 
     // console.log("statusList", statusList);
-    return statusList.includes(status);
+    // return statusList.includes(status);
   };
 
   // const toggleSelection = (id, setFn) => {
@@ -1359,11 +1360,12 @@ const RoundFormInterviews = () => {
         type: "scheduledDate",
         value: val,
       });
-      setTimeout(() => setShowDateChangeConfirmation(true), 1500);
+      setShowDateChangeConfirmation(true);
+      // setTimeout(() => setShowDateChangeConfirmation(true), 1500);
       // setShowDateChangeConfirmation(true);
       return; // Don't proceed until user confirms
     }
-
+    // setShowDateChangeConfirmation(true);
     const minVal = twoHoursFromNowLocal();
     // Prevent selecting past/less than 2 hours from now
     const newScheduledDate = val && val < minVal ? minVal : val;
@@ -1703,17 +1705,60 @@ const RoundFormInterviews = () => {
     // CHANGED: Pass the new calculated values directly to handleSubmit
     // Use setTimeout to ensure state updates have propagated
     // setTimeout(() => {
-    handleSubmit(new Event("submit"), "confirmClearinterviwers", {
-      interviewType: newInterviewType,
-      scheduledDate: newScheduledDate,
-      combinedDateTime: newCombinedDateTime,
-      startTime: newStartTime,
-      endTime: newEndTime,
-    });
+    // CRITICAL FIX: Only auto-submit for edit/reschedule scenarios, NOT for new rounds
+    if (isEditing && (isReschedule || isRequestSent)) {
+      handleSubmit(new Event("submit"), "confirmClearinterviwers", {
+        interviewType: newInterviewType,
+        scheduledDate: newScheduledDate,
+        combinedDateTime: newCombinedDateTime,
+        startTime: newStartTime,
+        endTime: newEndTime,
+      });
+      // Close confirmation popup and clear pending change
+      setShowDateChangeConfirmation(false);
+      setPendingDateChange(null);
+    } else {
+      // For new rounds: Just update the UI, DO NOT auto-submit
+      // The user will manually reselect interviewers and click submit
+      notify.info("Date/time updated. Please select interviewers and save the round.");
+    }
     // },
     // 100);
 
-    // Close confirmation popup and clear pending change
+
+  };
+
+
+  // CHANGE 2: Update handleConfirmDateChangesNew function (only used for new rounds)
+  const handleConfirmDateChangesNew = () => {
+    // Clear all external interviewers
+    setExternalInterviewers([]);
+    setExternalMaxHourlyRate(0);
+    setSelectedInterviewType(null);
+
+    // Update the date with the pending value
+    if (pendingDateChange) {
+      if (pendingDateChange.type === "scheduledDate") {
+        const minVal = twoHoursFromNowLocal();
+        const newScheduledDate = pendingDateChange.value < minVal ? minVal : pendingDateChange.value;
+        setScheduledDate(newScheduledDate);
+      } else if (pendingDateChange.type === "interviewType") {
+        setInterviewType(pendingDateChange.value);
+        if (pendingDateChange.value === "instant") {
+          setScheduledDate("");
+        }
+      }
+    }
+
+    // Close popup and clear pending
+    setShowDateChangeConfirmation(false);
+    setPendingDateChange(null);
+
+    // Show notification - DON'T auto-submit
+    notify.info("Date/time changed. All interviewers have been cleared. Please select new interviewers and save the round.");
+  };
+
+  const handleCancelDateChange = () => {
     setShowDateChangeConfirmation(false);
     setPendingDateChange(null);
   };
@@ -2462,18 +2507,29 @@ const RoundFormInterviews = () => {
 
       // === FINAL SUCCESS ===
       notify.success("Round saved successfully!");
+      // Check if this is an external round with pending requests
+      const isExternalWithPendingRequests =
+        selectedInterviewType === "External" &&
+        externalInterviewers.length > 0 &&
+        response?.savedRound?.status === "RequestSent" ||
+        response?.updatedRound?.status === "RequestSent";
 
-      // Handle confirmation popup
-      // Handle confirmation popup
-      if (type === "confirmClearinterviwers") {
-        setShowDateChangeConfirmation(false);
-        setPendingDateChange(null);
-
-        // DO NOT NAVIGATE — stay on form so user can reselect interviewers
-        // The round is now in Draft, interviewers cleared — perfect for re-selection
+      if (isExternalWithPendingRequests) {
+        setShowExternalNotification(true);
       } else {
-        // Normal save (user clicked "Add Round" or "Update Round")
-        navigate(`/interviews/${interviewId}`);
+
+        // Handle confirmation popup
+        // Handle confirmation popup
+        if (type === "confirmClearinterviwers") {
+          setShowDateChangeConfirmation(false);
+          setPendingDateChange(null);
+
+          // DO NOT NAVIGATE — stay on form so user can reselect interviewers
+          // The round is now in Draft, interviewers cleared — perfect for re-selection
+        } else {
+          // Normal save (user clicked "Add Round" or "Update Round")
+          navigate(`/interviews/${interviewId}`);
+        }
       }
     } catch (err) {
       console.error("=== Form Submission Error ===");
@@ -4581,6 +4637,68 @@ const RoundFormInterviews = () => {
           selectedTagIds={selectedTagIds}
           source="internal-interview"
         />
+      )}
+
+
+      {/* Date Change Confirmation Modal for New Round Creation */}
+      {showDateChangeConfirmation && !isReschedule && !isRequestSent && externalInterviewers && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Confirm Date Change</h3>
+            <p className="text-gray-600 mb-6">
+              Changing the date/time will clear all selected interviewers for this new round.
+              Are you sure you want to continue?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCancelDateChange}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDateChangesNew}
+                className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* External Interviewer Notification Modal */}
+      {showExternalNotification && (
+        // className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-center mb-4 text-blue-600">
+              <Users className="h-12 w-12" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2 text-center">Request Sent to Interviewers</h3>
+            <p className="text-gray-600 mb-4 text-center">
+              Your request has been sent to the selected outsourced interviewers.
+              We will notify you once they accept the interview request.
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                <span className="font-semibold">Note:</span> The interview will only be confirmed
+                after the interviewers accept the request. You'll receive an email notification
+                when they respond.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setShowExternalNotification(false);
+                // Navigate to interview details page to properly close the round
+                navigate(`/interviews/${interviewId}`);
+              }}
+              className="w-full px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
       )}
 
       {showDateChangeConfirmation && (isReschedule || isRequestSent) && (
