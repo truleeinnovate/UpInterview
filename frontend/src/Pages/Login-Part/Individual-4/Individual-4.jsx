@@ -648,8 +648,8 @@ const MultiStepForm = () => {
 
         const validSkills =
           interviewDetailsData.skills?.filter((skill) => skill !== null) || [];
-        if (validSkills.length === 0)
-          currentErrors.skills = "Skills are required";
+        if (validSkills.length < 3)
+          currentErrors.skills = "At least three skills are required";
         if (!interviewDetailsData.currentRole)
           currentErrors.currentRole = "Current role is required";
 
