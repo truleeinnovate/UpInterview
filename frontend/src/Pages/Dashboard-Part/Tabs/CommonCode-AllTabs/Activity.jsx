@@ -999,7 +999,7 @@ function Activity({ parentId, parentId2, mode }) {
 
         <div className="space-y-8">
           {loading ? (
-            <div className="pl-12 py-10 text-slate-400 italic animate-pulse">
+            <div className="pl-12 py-10 text-slate-400 italic">
               Synchronizing feed history...
             </div>
           ) : (
