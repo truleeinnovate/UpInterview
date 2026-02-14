@@ -13,7 +13,15 @@ import {
   validatePage1,
 } from "../../../../utils/mockinterviewValidation.js";
 import { useSingleContact } from "../../../../apiHooks/useUsers";
-import { X, Users, User, Trash2, Clock, Calendar } from "lucide-react";
+import {
+  X,
+  Users,
+  User,
+  Trash2,
+  Clock,
+  Calendar,
+  ArrowLeft,
+} from "lucide-react";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
 import { Button } from "../CommonCode-AllTabs/ui/button.jsx";
 import OutsourcedInterviewerModal from "../Interview-New/pages/Internal-Or-Outsource/OutsourceInterviewer.jsx";
@@ -151,9 +159,8 @@ const MockSchedulelater = () => {
   const [selectedInterviewType, setSelectedInterviewType] = useState(null);
   const [externalInterviewers, setExternalInterviewers] = useState([]);
   // Add this helper function at the top with other state declarations
-  const [showExternalNotification, setShowExternalNotification] = useState(false);
-
-
+  const [showExternalNotification, setShowExternalNotification] =
+    useState(false);
 
   const [isScheduleOrRescheduleInHistory, setIsScheduleOrRescheduleInHistory] =
     useState(false);
@@ -163,8 +170,7 @@ const MockSchedulelater = () => {
     isRequestSent = false,
     // mode, // optional if you switch to mode-based approach
   } = location.state || {};
-  console.log("qualifications:", isReschedule,
-    isRequestSent);
+  console.log("qualifications:", isReschedule, isRequestSent);
   const [errors, setErrors] = useState({});
   const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
 
@@ -340,8 +346,9 @@ const MockSchedulelater = () => {
       const contact = singleContact;
       setFormData((prev) => ({
         ...prev,
-        candidateName: `${contact.firstName || ""} ${contact.lastName || ""
-          }`.trim(),
+        candidateName: `${contact.firstName || ""} ${
+          contact.lastName || ""
+        }`.trim(),
         higherQualification: contact.HigherQualification || "",
         currentExperience: contact.yearsOfExperience || "",
         // technology: contact.technologies?.[0] || "",
@@ -375,9 +382,7 @@ const MockSchedulelater = () => {
       const skillObjects =
         data.skills?.map((s) => ({
           _id:
-            typeof s === "object"
-              ? s._id
-              : Math.random().toString(36).slice(2),
+            typeof s === "object" ? s._id : Math.random().toString(36).slice(2),
           SkillName: typeof s === "object" ? s.skill || s.SkillName || s : s,
         })) || [];
 
@@ -1323,7 +1328,6 @@ const MockSchedulelater = () => {
     // }, 300);
   };
 
-
   const handleConfirmDateChangesNew = () => {
     // Clear all external interviewers
     setExternalInterviewers([]);
@@ -1345,7 +1349,6 @@ const MockSchedulelater = () => {
     setShowDateChangeConfirmation(false);
     setPendingDateChange(null);
   };
-
 
   // Page 2: Save round + create meeting
   // const handleSubmit = async (e) => {
@@ -1641,7 +1644,6 @@ const MockSchedulelater = () => {
       let meetingLink = null;
       // Step 2: Create & Save Meeting Link (only if backend allows)
       if (generateMeetingLink && formData.rounds.interviewMode === "Virtual") {
-
         try {
           setIsMeetingCreationLoading(true);
           setMeetingCreationProgress("Creating meeting link...");
@@ -1733,7 +1735,6 @@ const MockSchedulelater = () => {
       if (meetingLink) {
         setShowExternalNotification(true);
       } else {
-
         navigate("/mock-interviews");
       }
     } catch (error) {
@@ -2156,8 +2157,9 @@ const MockSchedulelater = () => {
     const end = new Date(start.getTime() + Number(durationMinutes) * 60 * 1000);
 
     return {
-      display: `${formatToCustomDateTime(start)} - ${formatToCustomDateTime(end).split(" ")[1] || "??:??"
-        }`,
+      display: `${formatToCustomDateTime(start)} - ${
+        formatToCustomDateTime(end).split(" ")[1] || "??:??"
+      }`,
       startISO: start.toISOString(),
     };
   }, []);
@@ -2405,8 +2407,6 @@ const MockSchedulelater = () => {
   const handleScheduledDateChange = (e) => {
     const val = e.target.value;
 
-
-
     // For new round creation (not edit mode)
     if (!mockEdit && externalInterviewers.length > 0 && val !== scheduledDate) {
       setPendingDateChange({
@@ -2615,11 +2615,18 @@ const MockSchedulelater = () => {
     <div className="flex items-center justify-center">
       <div className="bg-white rounded-lg w-full flex flex-col">
         <div className="mt-4 mb-4">
-          {/* v1.0.3 <---------------------------------------------------------------------------------------------------------------------- */}
-          <h2 className="sm:text-lg md:tex-lg lg:text-xl xl:text-2xl 2xl:text-2xl font-semibold px-[8%] sm:mt-2 sm:mb-2 sm:px-[5%] md:mt-2 md:mb-2 md:px-[5%]">
+          <div className="w-full px-[8%] sm:px-[5%] md:px-[5%] mb-4">
+            <button
+              onClick={() => navigate(-1)}
+              type="button"
+              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+            >
+              <ArrowLeft className="h-5 w-5 mr-2" /> Back to Interviews
+            </button>
+          </div>
+          <h2 className="text-xl font-semibold px-[8%] sm:mb-2 sm:px-[5%] md:mb-2 md:px-[5%]">
             Schedule Mock Interview
           </h2>
-          {/* v1.0.3 ----------------------------------------------------------------------------------------------------------------------> */}
         </div>
         {/* v1.0.3 <----------------------------------------------------------------- */}
         <div className="px-[8%] sm:px-[5%] md:px-[5%]">
@@ -2627,10 +2634,8 @@ const MockSchedulelater = () => {
           <div className="bg-white rounded-lg shadow-md border">
             {/* v1.0.3 <------------------------------------------------------------------------- */}
             <div className="flex justify-between items-center sm:px-4 px-5 pt-4">
-              <h2 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-semibold">
-                {currentPage === 1
-                  ? "Candidate Details:"
-                  : "Interview Details:"}
+              <h2 className="text-lg font-semibold">
+                {currentPage === 1 ? "Candidate Details" : "Interview Details"}
               </h2>
             </div>
             {/* v1.0.3 -------------------------------------------------------------------------> */}
@@ -2837,12 +2842,6 @@ const MockSchedulelater = () => {
                             })}
                           </div>
                         )}
-
-                        {errors.skills && (
-                          <p className="text-red-500 text-xs mt-1">
-                            {errors.skills}
-                          </p>
-                        )}
                       </div>
                     </div>
                     <DescriptionField
@@ -2853,13 +2852,15 @@ const MockSchedulelater = () => {
                       name="jobDescription"
                       label="Job Description"
                       rows={6}
+                      minLength={200}
                       maxLength={2000}
                       placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
                       error={errors.jobDescription}
+                      required={true}
                     />
-                    <div className="text-center text-sm p-2">(OR)</div>
+                    {/* <div className="text-center text-sm p-2">(OR)</div> */}
                     {/* v1.0.3 <---------------------------------------------------------------- */}
-                    <div className="w-full mb-10">
+                    {/* <div className="w-full mb-10">
                       <div className="flex flex-col items-start">
                         <label
                           htmlFor="fileUpload"
@@ -2886,23 +2887,6 @@ const MockSchedulelater = () => {
                               style={{ display: "none" }}
                               onChange={handleFileChange}
                             />
-                            {/* <div className="flex items-center">
-                              {fileName && (
-                                <span className="text-custom-blue">
-                                  {fileName}asdfasdfasdfasdfasdfasdfasdf
-                                </span>
-                              )}
-                              {fileName && (
-                                <button
-                                  type="button"
-                                  title="Remove Resume"
-                                  onClick={handleRemoveFile}
-                                  className="text-red-500 text-sm ml-3"
-                                >
-                                  <X />
-                                </button>
-                              )}
-                            </div> */}
                             {fileName && (
                               <div
                                 className="border mt-2 flex items-center justify-between gap-2 px-2 rounded-md
@@ -2923,17 +2907,12 @@ const MockSchedulelater = () => {
                               </div>
                             )}
                           </div>
-                          {/* {errors.Resume && (
-                            <p className="text-red-500 text-sm">
-                              {errors.Resume}
-                            </p>
-                          )} */}
                           <p className="text-red-500 text-sm font-semibold mt-2">
                             {resumeError}
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </div> */}
                     {/* v1.0.3 ----------------------------------------------------------------> */}
                   </>
                 )}
@@ -3305,22 +3284,25 @@ const MockSchedulelater = () => {
                             // }}
 
                             onClick={() => handleInterviewTypeChange("instant")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "instant"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${interviewType === "instant"
-                                ? "text-custom-blue"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "instant"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "instant"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Instant Interview
                             </span>
@@ -3363,22 +3345,25 @@ const MockSchedulelater = () => {
                             // Interview Type buttons - disabled in CASE 2, enabled in CASE 3
                             disabled={shouldDisable("interviewType")}
                             key="scheduled-btn"
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
-                              ? "border-custom-blue bg-blue-50"
-                              : "border-gray-300 hover:border-gray-400"
-                              }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
+                              interviewType === "scheduled"
+                                ? "border-custom-blue bg-blue-50"
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${interviewType === "scheduled"
-                                ? "text-custom-blue"
-                                : "text-gray-400"
-                                }`}
+                              className={`h-6 w-6 ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue"
+                                  : "text-gray-400"
+                              }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${interviewType === "scheduled"
-                                ? "text-custom-blue"
-                                : "text-gray-900"
-                                }`}
+                              className={`mt-2 font-medium ${
+                                interviewType === "scheduled"
+                                  ? "text-custom-blue"
+                                  : "text-gray-900"
+                              }`}
                             >
                               Schedule for Later
                             </span>
@@ -3719,7 +3704,9 @@ const MockSchedulelater = () => {
                 isLoading={isSubmitting || isMutationLoading}
                 loadingText={mockEdit ? "Updating..." : "Saving..."}
               >
-                {mockEdit ? `${selectedInterviewers.length > 0 ? "Update Schedule & Round" : "Update Round"} ` : `${selectedInterviewers.length > 0 ? "Create & Schedule Round" : 'Create Round'}`}
+                {mockEdit
+                  ? `${selectedInterviewers.length > 0 ? "Update Schedule & Round" : "Update Round"} `
+                  : `${selectedInterviewers.length > 0 ? "Create & Schedule Round" : "Create Round"}`}
                 {/* {formData.rounds.interviewType === "instant"
                   ? "Save & Schedule"
                   : "Save"} */}
@@ -3773,7 +3760,7 @@ const MockSchedulelater = () => {
           candidateExperience={formData?.currentExperience}
           previousSelectedInterviewers={externalInterviewers}
 
-        // isMockInterview={true} // Correctly passes true for mock interviews
+          // isMockInterview={true} // Correctly passes true for mock interviews
         />
       )}
 
@@ -3783,8 +3770,8 @@ const MockSchedulelater = () => {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">Confirm Date Change</h3>
             <p className="text-gray-600 mb-6">
-              Changing the date/time will clear all selected interviewers for this new round.
-              Are you sure you want to continue?
+              Changing the date/time will clear all selected interviewers for
+              this new round. Are you sure you want to continue?
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -3804,7 +3791,6 @@ const MockSchedulelater = () => {
         </div>
       )}
 
-
       {/* External Interviewer Notification Modal */}
       {showExternalNotification && (
         // className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
@@ -3813,16 +3799,19 @@ const MockSchedulelater = () => {
             <div className="flex items-center justify-center mb-4 text-blue-600">
               <Users className="h-12 w-12" />
             </div>
-            <h3 className="text-lg font-semibold mb-2 text-center">Request Sent to Interviewers</h3>
+            <h3 className="text-lg font-semibold mb-2 text-center">
+              Request Sent to Interviewers
+            </h3>
             <p className="text-gray-600 mb-4 text-center">
-              Your request has been sent to the selected outsourced interviewers.
-              We will notify you once they accept the interview request.
+              Your request has been sent to the selected outsourced
+              interviewers. We will notify you once they accept the interview
+              request.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
               <p className="text-sm text-blue-800">
-                <span className="font-semibold">Note:</span> The interview will only be confirmed
-                after the interviewers accept the request. You'll receive an email notification
-                when they respond.
+                <span className="font-semibold">Note:</span> The interview will
+                only be confirmed after the interviewers accept the request.
+                You'll receive an email notification when they respond.
               </p>
             </div>
             <button
@@ -3839,28 +3828,24 @@ const MockSchedulelater = () => {
         </div>
       )}
 
-
-      {showDateChangeConfirmation && (isReschedule ||
-        isRequestSent)
-        && (
-          // shouldDisable("scheduledDate") &&
-          <div className="fixed inset-0 z-[9999]">
-            <DateChangeConfirmationModal
-              isOpen={showDateChangeConfirmation && (isReschedule || isRequestSent)}
-              onClose={() => {
-                setShowDateChangeConfirmation(false);
-                setPendingDateChange(null);
-              }}
-              onConfirm={handleConfirmDateChange}
-              selectedInterviewType={"External"}
-              status={status}
-              combinedDateTime={combinedDateTime || scheduledDate} // your formatted date string
-            />
-          </div>
-        )}
-
-
-
+      {showDateChangeConfirmation && (isReschedule || isRequestSent) && (
+        // shouldDisable("scheduledDate") &&
+        <div className="fixed inset-0 z-[9999]">
+          <DateChangeConfirmationModal
+            isOpen={
+              showDateChangeConfirmation && (isReschedule || isRequestSent)
+            }
+            onClose={() => {
+              setShowDateChangeConfirmation(false);
+              setPendingDateChange(null);
+            }}
+            onConfirm={handleConfirmDateChange}
+            selectedInterviewType={"External"}
+            status={status}
+            combinedDateTime={combinedDateTime || scheduledDate} // your formatted date string
+          />
+        </div>
+      )}
 
       {/* {showOutsourcePopup && (
                 <OutsourceOption

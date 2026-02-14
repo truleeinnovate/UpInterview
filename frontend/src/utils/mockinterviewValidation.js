@@ -10,6 +10,7 @@ const getErrorMessage = (field, value) => {
     "rounds.interviewMode": "Interview Mode is required",
 
     skills: "At least one skill is required",
+    jobDescription: "Job Description is required",
   };
 
   if (!value || value === "") {
@@ -23,6 +24,10 @@ const getErrorMessage = (field, value) => {
       return "Experience must be a number between 1 and 15 years";
     }
   }
+
+  if (field === "jobDescription" && value.trim().length < 200) {
+    return "Job Description should be at least 200 characters";
+  }
   return "";
 };
 
@@ -34,6 +39,7 @@ const validatePage1 = (formData, entries) => {
     // technology: formData.technology,
     currentExperience: formData.currentExperience,
     currentRole: formData.currentRole,
+    jobDescription: formData.jobDescription,
   };
   let formIsValid = true;
   const newErrors = {};
@@ -86,6 +92,7 @@ const validatemockForm = (formData, entries, errors) => {
     currentExperience: formData.currentExperience,
     // technology: formData.technology,
     currentRole: formData.currentRole,
+    jobDescription: formData.jobDescription,
     "rounds.roundTitle": formData.rounds.roundTitle,
     "rounds.interviewMode": formData.rounds.interviewMode,
   };
