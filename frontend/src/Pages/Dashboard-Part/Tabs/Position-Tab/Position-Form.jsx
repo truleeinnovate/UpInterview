@@ -1605,6 +1605,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           label="Min Salary (Annual)"
                           name="minSalary"
                           placeholder="Min Salary (Annual)"
+                          showCurrencyIcon={true}
                         // required={formData.maxSalary ? true : false}
                         />
                         <IncreaseAndDecreaseField
@@ -1617,6 +1618,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           label="Max Salary (Annual)"
                           name="maxSalary"
                           placeholder="Max Salary (Annual)"
+                          showCurrencyIcon={true}
                         // required={formData.minSalary ? true : false}
                         />
                       </div>

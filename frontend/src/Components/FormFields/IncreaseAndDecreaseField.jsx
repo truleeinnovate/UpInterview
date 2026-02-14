@@ -98,6 +98,7 @@ const IncreaseAndDecreaseField = ({
   min = 1,
   max = 15,
   disabled = false,
+  showCurrencyIcon = false,
 }) => {
   // const handleInputChange = (e) => {
   //   const inputValue = e.target.value;
@@ -178,7 +179,12 @@ const IncreaseAndDecreaseField = ({
       </label>
       <div className="relative mt-1">
         {/* Note: Fixed the extra space in " (Annual)" to match your props */}
-        {(label.includes("Max Salary") || label.includes("Min Salary")) && (
+        {/* {(label.includes("Max Salary") || label.includes("Min Salary")) && (
+          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+            ₹
+          </span>
+        )} */}
+        {showCurrencyIcon && (
           <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
             ₹
           </span>
@@ -192,13 +198,21 @@ const IncreaseAndDecreaseField = ({
           value={value || ""}
           onChange={handleInputChange}
           onBlur={handleBlur}
+          // className={`block w-full rounded-md shadow-sm py-2 ${
+          //   label.includes("Salary") ? "pr-3 pl-9" : "px-3"
+          // } sm:text-sm border ${
+          //   error
+          //     ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+          //     : "border-gray-300 focus:ring-red-300"
+          // } focus:outline-gray-300`}
           className={`block w-full rounded-md shadow-sm py-2 ${
-            label.includes("Salary") ? "pr-3 pl-9" : "px-3"
+            showCurrencyIcon ? "pr-3 pl-9" : "px-3"
           } sm:text-sm border ${
             error
               ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
               : "border-gray-300 focus:ring-red-300"
           } focus:outline-gray-300`}
+
           placeholder={placeholder ? placeholder : `Enter ${label}`}
         />
       </div>
