@@ -138,6 +138,8 @@ const MultiStepForm = () => {
     coverLetterFile: null,
     isResumeRemoved: false,
     isCoverLetterRemoved: false,
+    HigherQualification: "",
+    UniversityCollege: "",
   });
   // Interview Details
   const [interviewDetails, setInterviewDetails] = useState({
@@ -305,6 +307,8 @@ const MultiStepForm = () => {
     company: "",
     resume: null,
     coverLetter: null,
+    HigherQualification: "",
+    UniversityCollege: "",
   });
   console.log("additionalDetailsData", additionalDetailsData);
   const [interviewDetailsData, setInterviewDetailsData] = useState({
@@ -352,6 +356,8 @@ const MultiStepForm = () => {
         company: matchedContact.company || "",
         resume: matchedContact.resume || null,
         coverLetter: matchedContact.coverLetter || null,
+        HigherQualification: matchedContact.HigherQualification || "",
+        UniversityCollege: matchedContact.UniversityCollege || "",
       });
       setInterviewDetailsData({
         skills: matchedContact.skills || [],
@@ -597,12 +603,12 @@ const MultiStepForm = () => {
       } else if (currentStep === 1) {
         if (!additionalDetailsData.currentRole)
           currentErrors.currentRole = "Current role is required";
-        if (!additionalDetailsData.industry)
-          currentErrors.industry = "Industry is required";
+        // if (!additionalDetailsData.industry)
+        //   currentErrors.industry = "Industry is required";
         if (!additionalDetailsData.yearsOfExperience)
           currentErrors.yearsOfExperience = "Years of experience is required";
-        if (!additionalDetailsData.location)
-          currentErrors.location = "Location is required";
+        // if (!additionalDetailsData.location)
+        //   currentErrors.location = "Location is required";
         if (!additionalDetailsData.company)
           currentErrors.company = "Company name is required";
         // v1.0.0 <----------------------------------------------------------------------------------------------
@@ -969,6 +975,8 @@ const MultiStepForm = () => {
           company: additionalDetailsData.company,
           resume: additionalDetailsData.resume,
           coverLetter: additionalDetailsData.coverLetter,
+          HigherQualification: additionalDetailsData.HigherQualification,
+          UniversityCollege: additionalDetailsData.UniversityCollege,
         }),
         ...(currentStep >= 2 && {
           skills: interviewDetailsData.skills,

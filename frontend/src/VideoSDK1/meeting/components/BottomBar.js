@@ -665,7 +665,7 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
         <div className="flex items-center">
           {/* First group */}
           <div className="flex items-center space-x-4">
-            <ControlButton><RecordingBTN {...buttonProps} /></ControlButton>
+            {/* <ControlButton><RecordingBTN {...buttonProps} /></ControlButton> */}
             <ControlButton><RaiseHandBTN isMobile={false} isTab={false} {...buttonProps} /></ControlButton>
           </div>
           

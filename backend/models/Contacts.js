@@ -81,6 +81,8 @@ const ContactsSchema = new mongoose.Schema(
     language: String,
     // contactType: String,
     dateOfBirth: String,
+    HigherQualification: String,
+    UniversityCollege: String,
     // interviewerType: String,
     // isAddedTeam: String,
     // interviewType: String,

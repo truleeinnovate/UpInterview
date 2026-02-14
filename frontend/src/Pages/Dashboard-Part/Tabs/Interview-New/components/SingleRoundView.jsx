@@ -60,7 +60,7 @@ const SingleRoundView = ({
   }
   const handleJoinMeeting = (round) => {
 
-    const url = createJoinMeetingUrl(round, interviewData, singleContact.contactId
+    const url = createJoinMeetingUrl(round, interviewData, singleContact.contactId,"interview"
     );
 
 

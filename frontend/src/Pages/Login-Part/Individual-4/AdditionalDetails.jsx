@@ -5,7 +5,7 @@
 // v1.0.4 - Ashok   - fixed opening input popup clicking on right side
 // v1.0.5 - Ashok   - fixed resume and cover letter issue
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import InfoBox from "./InfoBox.jsx";
 import { useMasterData } from "../../../apiHooks/useMasterData.js";
 import { validateFile } from "../../../utils/FileValidation/FileValidation.js";
@@ -30,14 +30,21 @@ const AdditionalDetails = ({
   const pageType = "adminPortal";
   const {
     locations,
+    colleges,
+    qualifications,
     loadLocations,
     isLocationsFetching,
     industries,
     loadIndustries,
+    loadColleges,
+    loadQualifications,
     isIndustriesFetching,
     currentRoles,
     loadCurrentRoles,
     isCurrentRolesFetching,
+    isQualificationsFetching,
+    isCollegesFetching,
+
   } = useMasterData({}, pageType);
   const resumeInputRef = useRef(null);
   const coverLetterInputRef = useRef(null);
@@ -50,6 +57,7 @@ const AdditionalDetails = ({
 
   const [resumeError, setResumeError] = useState("");
   const [coverLetterError, setCoverLetterError] = useState("");
+  const [isCustomUniversity, setIsCustomUniversity] = useState(false);
 
   // Load all dropdown data when component mounts
   useEffect(() => {
@@ -57,6 +65,44 @@ const AdditionalDetails = ({
     loadIndustries();
     loadLocations();
   }, [loadCurrentRoles, loadIndustries, loadLocations]);
+
+  const qualificationOptionsRS = useMemo(
+    () =>
+      qualifications?.map((q) => ({
+        value: q?.QualificationName,
+        label: q?.QualificationName,
+      })) || [],
+    [qualifications],
+  );
+
+  const collegeOptionsRS = useMemo(
+    () =>
+      (
+        colleges?.map((c) => ({
+          value: c?.University_CollegeName,
+          label: c?.University_CollegeName,
+        })) || []
+      ).concat([{ value: "__other__", label: "+ Others" }]),
+    [colleges],
+  );
+
+  useEffect(() => {
+    const saved = (additionalDetailsData.UniversityCollege || "").trim();
+    // When nothing saved, keep dropdown mode
+    if (!saved) {
+      setIsCustomUniversity(false);
+      return;
+    }
+    // Avoid forcing custom mode if colleges are not loaded yet
+    if (!Array.isArray(colleges) || colleges.length === 0) {
+      return;
+    }
+    const list = (colleges || []).map((c) =>
+      (c?.University_CollegeName || "").trim().toLowerCase(),
+    );
+    const existsInList = list.includes(saved.toLowerCase());
+    setIsCustomUniversity(!existsInList);
+  }, [colleges, additionalDetailsData.UniversityCollege]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -200,7 +246,7 @@ const AdditionalDetails = ({
       <div className="mb-8">
         <InfoBox
           title="Professional Background"
-          description="Tell us more about your education, experience, and skills."
+          description="Tell us more about your education, experience."
           icon={
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -219,6 +265,51 @@ const AdditionalDetails = ({
         />
       </div>
       <div className="grid grid-cols-2 gap-x-6 gap-y-8">
+
+        <div className="sm:col-span-2 col-span-1">
+          <DropdownWithSearchField
+            value={additionalDetailsData.HigherQualification}
+            options={qualificationOptionsRS}
+            onChange={handleChange}
+            error={errors.HigherQualification}
+            // containerRef={fieldRefs.HigherQualification}
+            label="Higher Qualification"
+            name="HigherQualification"
+            required
+            onMenuOpen={loadQualifications}
+            loading={isQualificationsFetching}
+          />
+
+        </div>
+        <div className="sm:col-span-2 col-span-1">
+
+          <DropdownWithSearchField
+            value={additionalDetailsData.UniversityCollege}
+            options={collegeOptionsRS}
+            onChange={(e) => {
+              const { value } = e.target;
+              setAdditionalDetailsData((prev) => ({
+                ...prev,
+                UniversityCollege: value,
+              }));
+              if (errors.UniversityCollege) {
+                setErrors((prevErrors) => ({
+                  ...prevErrors,
+                  UniversityCollege: "",
+                }));
+              }
+            }}
+            // error={errors.UniversityCollege}
+            isCustomName={isCustomUniversity}
+            setIsCustomName={setIsCustomUniversity}
+            // containerRef={fieldRefs.UniversityCollege}
+            label="University / College"
+            name="UniversityCollege"
+            onMenuOpen={loadColleges}
+            loading={isCollegesFetching}
+            required
+          />
+        </div>
         {/* Current Role */}
         <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
