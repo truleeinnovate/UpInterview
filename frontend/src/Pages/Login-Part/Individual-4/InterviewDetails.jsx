@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import axios from "axios";
 import { Trash2, X, Tag as SkillsIcon } from "lucide-react";
+import SkillsField from "../../Dashboard-Part/Tabs/CommonCode-AllTabs/SkillsInput";
 import InfoBox from "./InfoBox.jsx";
 import { useMasterData } from "../../../apiHooks/useMasterData.js";
 import InputField from "../../../Components/FormFields/InputField";
@@ -825,6 +826,31 @@ const InterviewDetails = ({
     }
   };
 
+  // Handler for SkillsField onAddMultipleSkills in simpleMode
+  const handleAddMultipleSkills = (newEntries, skillsToRemove) => {
+    // Remove skills that were deselected
+    let updatedSkills = selectedSkills.filter(
+      (s) => !skillsToRemove.includes(typeof s === 'object' ? s.SkillName : s)
+    );
+
+    // Add newly selected skills
+    const newSkillObjects = newEntries.map((entry) => ({
+      _id: Math.random().toString(36).substr(2, 9),
+      SkillName: entry.skill,
+    }));
+    updatedSkills = [...updatedSkills, ...newSkillObjects];
+
+    setSelectedSkills(updatedSkills);
+    setInterviewDetailsData((prev) => ({
+      ...prev,
+      skills: updatedSkills.map((s) => s?.SkillName || s).filter(Boolean),
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      skills: updatedSkills.length === 0 ? "At least one skill is required" : "",
+    }));
+  };
+
   return (
     <React.Fragment>
       <div className="mb-6">
@@ -867,103 +893,27 @@ const InterviewDetails = ({
 
         {/* Skills Section */}
         <div className="col-span-2 sm:col-span-6 space-y-4 w-full mb-3">
-          <div className="w-1/2" ref={skillsMenuRef}>
-            <DropdownWithSearchField
-              ref={skillsInputRef}
-              value={null}
-              allowCreateOnEnter={true}
-              options={
-                skills
-                  ?.filter(
-                    (skill) =>
-                      !selectedSkills.some(
-                        (s) => s.SkillName === skill.SkillName
-                      )
-                  )
-                  .map((skill) => ({
-                    value: skill.SkillName,
-                    label: skill.SkillName,
-                  })) || []
-              }
-              onChange={(option) => {
-                if (!option) return;
-                // Handle both direct selection and custom creation
-                const selectedOption = option?.target?.value
-                  ? { value: option.target.value }
-                  : option;
-                // Only handle direct selections here (not create actions)
-                if (
-                  selectedOption?.value &&
-                  selectedOption.action !== "create"
-                ) {
-                  addSkill(selectedOption.value);
-                  // Clear the input field
-                  if (skillsInputRef.current) {
-                    const selectContainer =
-                      skillsInputRef.current.closest(".rs__control");
-                    if (selectContainer) {
-                      const inputElement =
-                        selectContainer.querySelector("input");
-                      if (inputElement) {
-                        inputElement.value = "";
-                        const event = new Event("input", { bubbles: true });
-                        inputElement.dispatchEvent(event);
-                      }
-                    }
-                  }
-                }
-              }}
-              onKeyDown={(e) => {
-                // Handle the create action from the dropdown
-                if (e.key === "Enter" && e.target?.action === "create") {
-                  const newSkill = e.target.value?.trim();
-                  if (newSkill) {
-                    addSkill(newSkill);
-
-                    // Clear the input field and close the dropdown
-                    setTimeout(() => {
-                      // Blur any active element to close dropdowns
-                      if (document.activeElement) {
-                        document.activeElement.blur();
-                      }
-
-                      // Clear the input field
-                      if (skillsInputRef.current) {
-                        // Clear react-select value
-                        if (skillsInputRef.current.select) {
-                          skillsInputRef.current.select.clearValue();
-                        }
-
-                        // Find and clear the input
-                        const selectInput =
-                          skillsInputRef.current.querySelector("input");
-                        if (selectInput) {
-                          selectInput.value = "";
-                          const inputEvent = new Event("input", {
-                            bubbles: true,
-                          });
-                          selectInput.dispatchEvent(inputEvent);
-                        }
-                      }
-                    }, 0);
-                  }
-                }
-              }}
-              error={errors.skills}
-              label="Select Skills"
-              name="skills"
-              required={selectedSkills.length === 0}
-              onMenuOpen={loadSkills}
-              loading={isSkillsFetching}
-              isMulti={false}
-              placeholder="Type To Search Or Press Enter To Add New Skill"
-              creatable={true}
-            />
-          </div>
+          <SkillsField
+            simpleMode={true}
+            entries={selectedSkills.map((s) => ({
+              skill: typeof s === 'object' ? s.SkillName : s,
+              experience: '',
+              expertise: '',
+            }))}
+            errors={errors}
+            skills={skills}
+            onOpenSkills={loadSkills}
+            onAddMultipleSkills={handleAddMultipleSkills}
+            onAddSkill={() => { }}
+            onDeleteSkill={() => { }}
+            onUpdateEntry={() => { }}
+          />
+          {errors.skills && (
+            <p className="text-red-500 text-sm">{errors.skills}</p>
+          )}
 
           {/* Selected Skills Display - Full width */}
           <div className="w-full mt-4">
-            {/* {console.log('Rendering selectedSkills:', selectedSkills)} */}
             {selectedSkills && selectedSkills.length > 0 ? (
               <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
@@ -1020,7 +970,7 @@ const InterviewDetails = ({
             ) : (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
                 <p className="text-sm text-gray-500">
-                  No Skills Selected Yet. Start Typing To Search And Add Skills.
+                  No Skills Selected Yet. Click "Add Skills" To Search And Add Skills.
                 </p>
               </div>
             )}
