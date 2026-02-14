@@ -8,9 +8,13 @@ const {
   updateMaster,
   deleteMaster,
   getAllMasters,
+  searchSkills,
 } = require("../../controllers/MasterControllers/masterControllers");
 
 const loggingService = require("../../middleware/loggingService.js");
+
+// Skills search endpoint - must be before /:type to avoid conflict
+router.get("/skills/search", searchSkills);
 
 router.post(
   "/:type",

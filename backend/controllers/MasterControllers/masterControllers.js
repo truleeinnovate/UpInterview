@@ -294,20 +294,20 @@ const getAllMasters = async (req, res) => {
       // Build dynamic search across relevant fields
       const searchQuery = search
         ? {
-            $or: [
-              { name: { $regex: search, $options: "i" } },
-              { IndustryName: { $regex: search, $options: "i" } },
-              { TechnologyMasterName: { $regex: search, $options: "i" } },
-              { SkillName: { $regex: search, $options: "i" } },
-              { LocationName: { $regex: search, $options: "i" } },
-              { roleName: { $regex: search, $options: "i" } },
-              { QualificationName: { $regex: search, $options: "i" } },
-              { University_CollegeName: { $regex: search, $options: "i" } },
-              { CompanyName: { $regex: search, $options: "i" } },
-              { CategoryName: { $regex: search, $options: "i" } },
-              { Category: { $regex: search, $options: "i" } }, // for technology
-            ].filter(Boolean),
-          }
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { IndustryName: { $regex: search, $options: "i" } },
+            { TechnologyMasterName: { $regex: search, $options: "i" } },
+            { SkillName: { $regex: search, $options: "i" } },
+            { LocationName: { $regex: search, $options: "i" } },
+            { roleName: { $regex: search, $options: "i" } },
+            { QualificationName: { $regex: search, $options: "i" } },
+            { University_CollegeName: { $regex: search, $options: "i" } },
+            { CompanyName: { $regex: search, $options: "i" } },
+            { CategoryName: { $regex: search, $options: "i" } },
+            { Category: { $regex: search, $options: "i" } }, // for technology
+          ].filter(Boolean),
+        }
         : {};
 
       // Handle status filter (especially for category → isActive)
@@ -420,10 +420,48 @@ const deleteMaster = async (req, res) => {
   }
 };
 
+// ✅ SEARCH SKILLS - Dedicated endpoint for skills popup search
+// GET /master-data/skills/search?search=react
+// CosmosDB-compatible: no .sort(), no .select()
+const searchSkills = async (req, res) => {
+  try {
+    const { search = "" } = req.query;
+    const trimmed = (search || "").trim();
+
+    let query = {};
+    if (trimmed) {
+      // Split into words and require ALL words to match (AND logic)
+      const words = trimmed.split(/\s+/).filter(Boolean);
+      query = {
+        $and: words.map((word) => ({
+          SkillName: { $regex: word, $options: "i" },
+        })),
+      };
+    }
+
+    // CosmosDB-safe: no .sort(), no .select(), just find + limit + lean
+    const skills = await Skills.find(query)
+      .limit(100)
+      .lean();
+
+    // Return only SkillName for lightweight response
+    const result = skills.map((s) => ({
+      _id: s._id,
+      SkillName: s.SkillName || "",
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error searching skills:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   createMaster,
   getMasterById,
   getAllMasters,
   updateMaster,
   deleteMaster,
+  searchSkills,
 };
