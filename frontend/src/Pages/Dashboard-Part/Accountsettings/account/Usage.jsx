@@ -20,7 +20,7 @@ const Usage = () => {
   const tenantId = tokenPayload?.tenantId;
   const navigate = useNavigate();
 
-  // Helper function to format date as dd-mm-yy
+  // Helper function to format date as dd-mm-yyyy
   const formatDate = (dateStr) => {
     if (!dateStr) return "N/A";
     const date = new Date(dateStr);
@@ -28,9 +28,9 @@ const Usage = () => {
 
     const dd = String(date.getDate()).padStart(2, "0");
     const mm = String(date.getMonth() + 1).padStart(2, "0");
-    const yy = String(date.getFullYear()).slice(-2);
+    const yyyy = date.getFullYear();
 
-    return `${dd}-${mm}-${yy}`;
+    return `${dd}-${mm}-${yyyy}`;
   };
 
   const { checkPermission, isInitialized } = usePermissionCheck();
@@ -40,7 +40,7 @@ const Usage = () => {
   const [usage, setUsage] = useState({});
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-   const [noActiveUsage, setNoActiveUsage] = useState(false);
+  const [noActiveUsage, setNoActiveUsage] = useState(false);
 
   // Fetch usage when permissions are ready
   useEffect(() => {
@@ -236,8 +236,8 @@ const Usage = () => {
         <p className="text-gray-600 mt-2">
           {usage?.period?.fromDate || usage?.period?.toDate
             ? `${formatDate(usage?.period?.fromDate)} to ${formatDate(
-                usage?.period?.toDate
-              )}`
+              usage?.period?.toDate
+            )}`
             : error || "—"}
         </p>
       </div>
@@ -261,14 +261,13 @@ const Usage = () => {
                 <div
                   className="h-full bg-custom-blue rounded-full"
                   style={{
-                    width: `${
-                      interviewerEntitled > 0
+                    width: `${interviewerEntitled > 0
                         ? Math.min(
-                            (interviewerUtilized / interviewerEntitled) * 100,
-                            100
-                          )
+                          (interviewerUtilized / interviewerEntitled) * 100,
+                          100
+                        )
                         : 0
-                    }%`,
+                      }%`,
                   }}
                 />
               </div>
@@ -292,14 +291,13 @@ const Usage = () => {
                 <div
                   className="h-full bg-green-600 rounded-full"
                   style={{
-                    width: `${
-                      assessmentsEntitled > 0
+                    width: `${assessmentsEntitled > 0
                         ? Math.min(
-                            (assessmentsUtilized / assessmentsEntitled) * 100,
-                            100
-                          )
+                          (assessmentsUtilized / assessmentsEntitled) * 100,
+                          100
+                        )
                         : 0
-                    }%`,
+                      }%`,
                   }}
                 />
               </div>
@@ -342,14 +340,13 @@ const Usage = () => {
                 <div
                   className="h-full bg-orange-600 rounded-full"
                   style={{
-                    width: `${
-                      bandwidthEntitled > 0
+                    width: `${bandwidthEntitled > 0
                         ? Math.min(
-                            (bandwidthUtilized / bandwidthEntitled) * 100,
-                            100
-                          )
+                          (bandwidthUtilized / bandwidthEntitled) * 100,
+                          100
+                        )
                         : 0
-                    }%`,
+                      }%`,
                   }}
                 />
               </div>
@@ -377,16 +374,15 @@ const Usage = () => {
                 className="h-full bg-custom-blue rounded-full"
                 // v1.0.0 <------------------------------------------------------------------------------------------
                 style={{
-                  width: `${
-                    usage?.totalUsers
+                  width: `${usage?.totalUsers
                       ? Math.min(
-                          (usage?.currentUsers / usage?.totalUsers) * 100,
-                          100
-                        )
+                        (usage?.currentUsers / usage?.totalUsers) * 100,
+                        100
+                      )
                       : 0
-                  }%`,
+                    }%`,
                 }}
-                // v1.0.0 ------------------------------------------------------------------------------------------>
+              // v1.0.0 ------------------------------------------------------------------------------------------>
               />
             </div>
           )}

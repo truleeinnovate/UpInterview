@@ -43,6 +43,7 @@ const SkillsField = forwardRef(
       onOpenSkills,
       showValidation = false, // New prop to control when validation errors are shown
       showRequirementLevel = false, // New prop to show/hide Requirement Level dropdown (only for Position)
+      simpleMode = false, // When true, only shows Add Skills button + popup (no three-row grid)
     },
     ref,
   ) => {
@@ -210,9 +211,9 @@ const SkillsField = forwardRef(
       }
     }, [entries, onSkillsValidChange, showValidation, showRequirementLevel]);
 
-    // Auto-add three empty rows on first mount (no click needed)
+    // Auto-add three empty rows on first mount (no click needed) - skip in simpleMode
     useEffect(() => {
-      if (!initializedRef.current && entries.length === 0 && onAddSkill) {
+      if (!simpleMode && !initializedRef.current && entries.length === 0 && onAddSkill) {
         // Add three blank rows without setting editing index
         for (let i = 0; i < 3; i++) {
           onAddSkill(null); // Pass null to avoid setting editing index
@@ -344,13 +345,20 @@ const SkillsField = forwardRef(
               htmlFor="Skills"
               className="text-sm font-medium text-gray-900"
             >
-              Skills Details <span className="text-red-500">*</span>
+              {simpleMode ? "Skills" : "Skills Details"} <span className="text-red-500">*</span>
             </label>
-            <span className="text-xs text-gray-500 mt-0.5">
-              First 3 skills are mandatory
-            </span>
+            {!simpleMode && (
+              <span className="text-xs text-gray-500 mt-0.5">
+                First 3 skills are mandatory
+              </span>
+            )}
+            {simpleMode && (
+              <span className="text-xs text-gray-500 mt-0.5">
+                Add your technical skills
+              </span>
+            )}
           </div>
-          {entries.length < 10 && (
+          {(simpleMode || entries.length < 10) && (
             <button
               type="button"
               onClick={handleOpenSkillsPopup}
@@ -586,179 +594,181 @@ const SkillsField = forwardRef(
             document.body,
           )}
 
-        {/* Skills entries below */}
-        <div className="space-y-2 mb-4 mt-5">
-          {entries.map((entry, index) => (
-            <div key={index}>
-              <div className={`border p-2 rounded-lg bg-gray-100 w-full flex`}>
-                <>
-                  <div
-                    className={`grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 bg-white rounded w-full p-2 mr-3 gap-2`}
-                  >
-                    <div className="px-1">
-                      <DropdownWithSearchField
-                        // options={getAvailableSkillsForRow(index).map((s) => ({
-                        //   value:
-                        //     s.SkillName === "__other__"
-                        //       ? "__other__"
-                        //       : s.SkillName,
-                        //   label:
-                        //     s.SkillName === "__other__" ? "Other" : s.SkillName,
-                        //   }))}
-                        options={getAvailableSkillsForRow(index)
-                          .filter((s) => s.SkillName !== "__other__")
-                          .map((s) => ({
-                            value: s.SkillName,
-                            label: s.SkillName,
-                          }))}
-                        isSearchable
-                        value={entry.skill}
-                        onChange={(e) => {
-                          if (onUpdateEntry && e?.target?.value !== undefined) {
-                            onUpdateEntry(index, {
-                              ...entry,
-                              skill: e.target.value,
+        {/* Skills entries below - hidden in simpleMode */}
+        {!simpleMode && (
+          <div className="space-y-2 mb-4 mt-5">
+            {entries.map((entry, index) => (
+              <div key={index}>
+                <div className={`border p-2 rounded-lg bg-gray-100 w-full flex`}>
+                  <>
+                    <div
+                      className={`grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 bg-white rounded w-full p-2 mr-3 gap-2`}
+                    >
+                      <div className="px-1">
+                        <DropdownWithSearchField
+                          // options={getAvailableSkillsForRow(index).map((s) => ({
+                          //   value:
+                          //     s.SkillName === "__other__"
+                          //       ? "__other__"
+                          //       : s.SkillName,
+                          //   label:
+                          //     s.SkillName === "__other__" ? "Other" : s.SkillName,
+                          //   }))}
+                          options={getAvailableSkillsForRow(index)
+                            .filter((s) => s.SkillName !== "__other__")
+                            .map((s) => ({
+                              value: s.SkillName,
+                              label: s.SkillName,
+                            }))}
+                          isSearchable
+                          value={entry.skill}
+                          onChange={(e) => {
+                            if (onUpdateEntry && e?.target?.value !== undefined) {
+                              onUpdateEntry(index, {
+                                ...entry,
+                                skill: e.target.value,
+                              });
+                            }
+                          }}
+                          placeholder="Select Skill"
+                          name={`skill-${index}`}
+                          onMenuOpen={onOpenSkills}
+                          error={rowErrors[index]?.skill ? "Skill required" : ""}
+                          isCustomName={isCustomSkill[index] || false}
+                          setIsCustomName={(value) => {
+                            setIsCustomSkill({
+                              ...isCustomSkill,
+                              [index]: value,
                             });
-                          }
-                        }}
-                        placeholder="Select Skill"
-                        name={`skill-${index}`}
-                        onMenuOpen={onOpenSkills}
-                        error={rowErrors[index]?.skill ? "Skill required" : ""}
-                        isCustomName={isCustomSkill[index] || false}
-                        setIsCustomName={(value) => {
-                          setIsCustomSkill({
-                            ...isCustomSkill,
-                            [index]: value,
-                          });
-                        }}
-                      />
-                      {/* {rowErrors[index]?.skill && (
-                        <span className="text-red-500 text-xs mt-1">Skill required</span>
-                      )} */}
-                    </div>
-                    <div className="px-1">
-                      <DropdownSelect
-                        options={
-                          showRequirementLevel
-                            ? positionExperienceOptions
-                            : experienceOptionsRS
-                        }
-                        isSearchable={false}
-                        value={
-                          showRequirementLevel
-                            ? positionExperienceOptions.find(
-                              (o) => o.value === entry.experience,
-                            ) || null
-                            : experienceOptionsRS.find(
-                              (o) => o.value === entry.experience,
-                            ) || null
-                        }
-                        onChange={(opt) => {
-                          if (onUpdateEntry) {
-                            onUpdateEntry(index, {
-                              ...entry,
-                              experience: opt?.value || "",
-                            });
-                          }
-                        }}
-                        placeholder="Select Experience"
-                        classNamePrefix="rs"
-                        hasError={rowErrors[index]?.experience}
-                      />
-                      {rowErrors[index]?.experience && (
-                        <span className="text-red-500 text-xs mt-1">
-                          Experience required
-                        </span>
-                      )}
-                    </div>
-                    {!showRequirementLevel && (
+                          }}
+                        />
+                        {/* {rowErrors[index]?.skill && (
+                          <span className="text-red-500 text-xs mt-1">Skill required</span>
+                        )} */}
+                      </div>
                       <div className="px-1">
                         <DropdownSelect
-                          options={expertiseOptionsRS}
+                          options={
+                            showRequirementLevel
+                              ? positionExperienceOptions
+                              : experienceOptionsRS
+                          }
                           isSearchable={false}
                           value={
-                            expertiseOptionsRS.find(
-                              (o) => o.value === entry.expertise,
-                            ) || null
+                            showRequirementLevel
+                              ? positionExperienceOptions.find(
+                                (o) => o.value === entry.experience,
+                              ) || null
+                              : experienceOptionsRS.find(
+                                (o) => o.value === entry.experience,
+                              ) || null
                           }
                           onChange={(opt) => {
                             if (onUpdateEntry) {
                               onUpdateEntry(index, {
                                 ...entry,
-                                expertise: opt?.value || "",
+                                experience: opt?.value || "",
                               });
                             }
                           }}
-                          placeholder="Select Expertise"
+                          placeholder="Select Experience"
                           classNamePrefix="rs"
-                          hasError={rowErrors[index]?.expertise}
+                          hasError={rowErrors[index]?.experience}
                         />
-                        {rowErrors[index]?.expertise && (
+                        {rowErrors[index]?.experience && (
                           <span className="text-red-500 text-xs mt-1">
-                            Expertise required
+                            Experience required
                           </span>
                         )}
                       </div>
-                    )}
-                    {showRequirementLevel && (
-                      <div className="px-1">
-                        <DropdownSelect
-                          options={requirementLevelOptions}
-                          isSearchable={false}
-                          value={
-                            requirementLevelOptions.find(
-                              (o) => o.value === entry.requirement_level,
-                            ) || requirementLevelOptions[0]
-                          }
-                          onChange={(opt) => {
-                            if (onUpdateEntry) {
-                              onUpdateEntry(index, {
-                                ...entry,
-                                requirement_level: opt?.value || "REQUIRED",
-                              });
+                      {!showRequirementLevel && (
+                        <div className="px-1">
+                          <DropdownSelect
+                            options={expertiseOptionsRS}
+                            isSearchable={false}
+                            value={
+                              expertiseOptionsRS.find(
+                                (o) => o.value === entry.expertise,
+                              ) || null
+                            }
+                            onChange={(opt) => {
+                              if (onUpdateEntry) {
+                                onUpdateEntry(index, {
+                                  ...entry,
+                                  expertise: opt?.value || "",
+                                });
+                              }
+                            }}
+                            placeholder="Select Expertise"
+                            classNamePrefix="rs"
+                            hasError={rowErrors[index]?.expertise}
+                          />
+                          {rowErrors[index]?.expertise && (
+                            <span className="text-red-500 text-xs mt-1">
+                              Expertise required
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {showRequirementLevel && (
+                        <div className="px-1">
+                          <DropdownSelect
+                            options={requirementLevelOptions}
+                            isSearchable={false}
+                            value={
+                              requirementLevelOptions.find(
+                                (o) => o.value === entry.requirement_level,
+                              ) || requirementLevelOptions[0]
+                            }
+                            onChange={(opt) => {
+                              if (onUpdateEntry) {
+                                onUpdateEntry(index, {
+                                  ...entry,
+                                  requirement_level: opt?.value || "REQUIRED",
+                                });
+                              }
+                            }}
+                            placeholder="Requirement Level"
+                            classNamePrefix="rs"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    {/* Only show delete button for rows beyond the 3rd row */}
+                    {entries.length > 3 && (
+                      <div className="flex space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onDeleteSkill) {
+                              onDeleteSkill(index); // Delete only this specific row
                             }
                           }}
-                          placeholder="Requirement Level"
-                          classNamePrefix="rs"
-                        />
+                          className="text-red-600 hover:text-red-800 p-1"
+                          title="Delete Row"
+                        >
+                          <FaTrash className="w-5 h-5" />
+                        </button>
                       </div>
                     )}
-                  </div>
-                  {/* Only show delete button for rows beyond the 3rd row */}
-                  {entries.length > 3 && (
-                    <div className="flex space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (onDeleteSkill) {
-                            onDeleteSkill(index); // Delete only this specific row
-                          }
-                        }}
-                        className="text-red-600 hover:text-red-800 p-1"
-                        title="Delete Row"
-                      >
-                        <FaTrash className="w-5 h-5" />
-                      </button>
-                    </div>
-                  )}
-                </>
+                  </>
+                </div>
+                {/* Show individual row error summary if there are errors */}
+                {/* {errors.skills && (
+                <p className="text-red-500 text-sm">{errors.skills}</p>
+                )} */}
+                {rowErrors[index] && (
+                  <p className="text-red-500 text-xs mt-1 ml-2">
+                    Row {index + 1}: Please fill in all required fields
+                  </p>
+                )}
               </div>
-              {/* Show individual row error summary if there are errors */}
-              {/* {errors.skills && (
-              <p className="text-red-500 text-sm">{errors.skills}</p>
-              )} */}
-              {rowErrors[index] && (
-                <p className="text-red-500 text-xs mt-1 ml-2">
-                  Row {index + 1}: Please fill in all required fields
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-        {/* v1.0.2 -----------------------------------------------------------------> */}
+            ))}
+          </div>
+        )}
+        {/* v1.0.2 ------------------------------------------------------------------> */}
 
-        {deleteIndex !== null && (
+        {!simpleMode && deleteIndex !== null && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-5 rounded shadow-lg">
               <p>Are you sure you want to delete this Skill?</p>
