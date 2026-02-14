@@ -23,12 +23,17 @@ const InputField = React.forwardRef(
       step,
       autoComplete,
       className = "",
+      showCounter = false,
     },
     ref,
   ) => {
     const computedPlaceholder = placeholder ?? `Enter ${label}`;
     const computedId = id || name;
     const resolvedRef = inputRef || ref;
+
+    const currentLength = (value || "").length;
+    const showMinHint =
+      !error && currentLength > 0 && min > 0 && currentLength < min;
 
     return (
       <div>
@@ -63,7 +68,25 @@ const InputField = React.forwardRef(
         focus:outline-none focus:ring-0 ${error ? "" : "focus:ring-custom-blue focus:border-custom-blue/70"} ${className}`}
           placeholder={computedPlaceholder}
         />
-        {error && <p className="text-red-500 text-xs pt-1">{error}</p>}
+        <div className="">
+          {/* {error && <p className="text-red-500 text-xs pt-1">{error}</p>} */}
+          <div className="flex justify-between items-start mt-1">
+            <div className="flex-1">
+              <p className="text-red-500 text-xs">{error}</p>
+            </div>
+
+            {showCounter && (
+              <p
+                className={`text-xs ml-2 whitespace-nowrap transition-colors ${
+                  showMinHint ? "text-red-500 font-medium" : "text-gray-400"
+                }`}
+              >
+                {currentLength}
+                {max ? `/${max}` : ""}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     );
   },

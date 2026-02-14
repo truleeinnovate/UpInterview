@@ -1,6 +1,5 @@
 // v1.0.0 - Ashok - fixed brand color (custom-blue) for radio and checkbox elements
 
-
 import React, {
   useRef,
   useState,
@@ -118,9 +117,9 @@ const InterviewDetails = ({
       try {
         setIsRateLoading(true);
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/exchange/rate/current`
+          `${process.env.REACT_APP_API_URL}/exchange/rate/current`,
         );
-        console.log('exchange rates:-', response.data)
+        console.log("exchange rates:-", response.data);
         if (response.data && response.data.rate) {
           setExchangeRate(response.data.rate);
           // setLastRateUpdate(new Date().toISOString());
@@ -141,7 +140,7 @@ const InterviewDetails = ({
     if (interviewDetailsData.skills && interviewDetailsData.skills.length > 0) {
       const skillsToSet = interviewDetailsData.skills
         .filter((skill) =>
-          skill && typeof skill === "object" ? skill.SkillName : skill
+          skill && typeof skill === "object" ? skill.SkillName : skill,
         )
         .map((skill) => ({
           _id: skill._id || Math.random().toString(36).substr(2, 9),
@@ -170,7 +169,7 @@ const InterviewDetails = ({
 
     if (interviewDetailsData.previousInterviewExperience) {
       setPreviousInterviewExperience(
-        interviewDetailsData.previousInterviewExperience
+        interviewDetailsData.previousInterviewExperience,
       );
     }
 
@@ -229,7 +228,7 @@ const InterviewDetails = ({
       // This allows us to filter client-side for roleName array matching
       const apiUrl = `${baseUrl}/rate-cards`;
 
-      console.log('Fetching all rate cards from:', apiUrl);
+      console.log("Fetching all rate cards from:", apiUrl);
 
       const response = await axios.get(apiUrl, {
         withCredentials: true,
@@ -244,38 +243,52 @@ const InterviewDetails = ({
           ? response.data
           : [response.data];
 
-        console.log('Total rate cards fetched:', rateCardsData.length);
+        console.log("Total rate cards fetched:", rateCardsData.length);
 
         // Filter rate cards to match the selected technology/role
         // Only use the new structure (roleName array)
-        const filteredRateCards = rateCardsData.filter(card => {
+        const filteredRateCards = rateCardsData.filter((card) => {
           const normalizeString = (str) => {
-            return str.toLowerCase()
-              .replace(/\s+/g, '') // Remove all spaces
-              .replace(/[^a-zA-Z0-9]/g, ''); // Remove special characters
+            return str
+              .toLowerCase()
+              .replace(/\s+/g, "") // Remove all spaces
+              .replace(/[^a-zA-Z0-9]/g, ""); // Remove special characters
           };
 
           const normalizedSelectedValue = normalizeString(techName);
 
           // Debug logging
-          console.log('Matching techName:', techName, 'normalized:', normalizedSelectedValue);
-          console.log('Card data:', {
+          console.log(
+            "Matching techName:",
+            techName,
+            "normalized:",
+            normalizedSelectedValue,
+          );
+          console.log("Card data:", {
             roleName: card.roleName,
-            category: card.category
+            category: card.category,
           });
 
           // Check new structure (roleName array)
           if (card.roleName && Array.isArray(card.roleName)) {
-            const match = card.roleName.some(role => {
+            const match = card.roleName.some((role) => {
               const normalizedRole = normalizeString(role);
-              const isMatch = normalizedRole === normalizedSelectedValue ||
+              const isMatch =
+                normalizedRole === normalizedSelectedValue ||
                 normalizedRole.includes(normalizedSelectedValue) ||
                 normalizedSelectedValue.includes(normalizedRole);
-              console.log('Checking role:', role, 'normalized:', normalizedRole, 'match:', isMatch);
+              console.log(
+                "Checking role:",
+                role,
+                "normalized:",
+                normalizedRole,
+                "match:",
+                isMatch,
+              );
               return isMatch;
             });
             if (match) {
-              console.log('Found match in roleName array for:', techName);
+              console.log("Found match in roleName array for:", techName);
               return true;
             }
           }
@@ -283,8 +296,13 @@ const InterviewDetails = ({
           return false;
         });
 
-        console.log('Filtered rate cards:', filteredRateCards);
-        console.log('Total rate cards before filtering:', rateCardsData.length, 'after filtering:', filteredRateCards.length);
+        console.log("Filtered rate cards:", filteredRateCards);
+        console.log(
+          "Total rate cards before filtering:",
+          rateCardsData.length,
+          "after filtering:",
+          filteredRateCards.length,
+        );
 
         setRateCards(filteredRateCards);
       }
@@ -302,50 +320,60 @@ const InterviewDetails = ({
     (technologyName) => {
       return fetchRateCardsMemoized(technologyName);
     },
-    [fetchRateCardsMemoized]
+    [fetchRateCardsMemoized],
   );
 
   const getRateRanges = (level) => {
     if (!rateCards.length) return null;
 
-    console.log('Getting rate ranges for level:', level, 'from', rateCards.length, 'rate cards');
+    console.log(
+      "Getting rate ranges for level:",
+      level,
+      "from",
+      rateCards.length,
+      "rate cards",
+    );
 
     const rateCard = rateCards.find((card) =>
-      card.levels.some((lvl) => lvl.level === level)
+      card.levels.some((lvl) => lvl.level === level),
     );
 
     if (!rateCard) {
-      console.log('No rate card found for level:', level);
+      console.log("No rate card found for level:", level);
       return null;
     }
 
-    console.log('Found rate card:', rateCard);
+    console.log("Found rate card:", rateCard);
 
     const levelData = rateCard.levels.find((lvl) => lvl.level === level);
     if (!levelData) {
-      console.log('No level data found for level:', level);
+      console.log("No level data found for level:", level);
       return null;
     }
 
-    console.log('Level data found:', levelData);
+    console.log("Level data found:", levelData);
 
     // Handle new data structure (direct properties) or fallback to old structure (nested rateRange)
-    if (levelData.inrMin !== undefined && levelData.inrMax !== undefined &&
-      levelData.usdMin !== undefined && levelData.usdMax !== undefined) {
+    if (
+      levelData.inrMin !== undefined &&
+      levelData.inrMax !== undefined &&
+      levelData.usdMin !== undefined &&
+      levelData.usdMax !== undefined
+    ) {
       // New data structure
       const rates = {
         inr: { min: levelData.inrMin, max: levelData.inrMax },
-        usd: { min: levelData.usdMin, max: levelData.usdMax }
+        usd: { min: levelData.usdMin, max: levelData.usdMax },
       };
-      console.log('Using new data structure, rates:', rates);
+      console.log("Using new data structure, rates:", rates);
       return rates;
     } else if (levelData.rateRange) {
       // Old data structure (fallback)
-      console.log('Using old data structure (rateRange):', levelData.rateRange);
+      console.log("Using old data structure (rateRange):", levelData.rateRange);
       return levelData.rateRange;
     }
 
-    console.log('No valid rate structure found in level data');
+    console.log("No valid rate structure found in level data");
     return null;
   };
 
@@ -353,8 +381,8 @@ const InterviewDetails = ({
     const selectedValue = event.target.value;
 
     // Console log the selected technology
-    console.log('=== TECHNOLOGY SELECTION ===');
-    console.log('Selected Technology/Role:', selectedValue);
+    console.log("=== TECHNOLOGY SELECTION ===");
+    console.log("Selected Technology/Role:", selectedValue);
 
     if (selectedValue) {
       setInterviewDetailsData((prev) => ({
@@ -368,7 +396,7 @@ const InterviewDetails = ({
 
       try {
         // Fetch rate cards for the selected technology/role
-        console.log('Fetching rate cards for:', selectedValue);
+        console.log("Fetching rate cards for:", selectedValue);
         await fetchRateCards(selectedValue);
 
         // The rate cards state will be updated, and the rates will be applied in the next render cycle
@@ -384,7 +412,7 @@ const InterviewDetails = ({
           // We'll apply the rates after fetchRateCards completes and rateCards state is updated
           // This is handled by the useEffect that watches for rateCards changes
 
-          console.log('Initial rates set to:', ratesUpdate);
+          console.log("Initial rates set to:", ratesUpdate);
 
           return {
             ...prev,
@@ -416,7 +444,7 @@ const InterviewDetails = ({
         senior_inr: "",
       }));
     } else {
-      console.log('Technology selection cleared');
+      console.log("Technology selection cleared");
       setInterviewDetailsData((prev) => ({
         ...prev,
         currentRole: "",
@@ -517,7 +545,7 @@ const InterviewDetails = ({
     // console.log('Current selectedSkills before removal:', selectedSkills);
 
     const updatedSkills = selectedSkills.filter(
-      (skill) => skill._id !== skillId && skill.SkillName !== skillId
+      (skill) => skill._id !== skillId && skill.SkillName !== skillId,
     );
 
     // console.log('Updated skills after removal:', updatedSkills);
@@ -747,13 +775,13 @@ const InterviewDetails = ({
               selectedSkill.SkillName &&
               typeof selectedSkill.SkillName === "string" &&
               selectedSkill.SkillName.trim().toLowerCase() ===
-              skill.SkillName.trim().toLowerCase()
+                skill.SkillName.trim().toLowerCase(),
           ) &&
           (searchSkillValue
             ? skill.SkillName.toLowerCase().includes(
-              searchSkillValue.toLowerCase()
-            )
-            : true)
+                searchSkillValue.toLowerCase(),
+              )
+            : true),
       )
       .map((skill) => ({
         value: skill.SkillName,
@@ -800,7 +828,7 @@ const InterviewDetails = ({
     const skillExists = selectedSkills.some(
       (s) =>
         (typeof s === "object" ? s.SkillName : s).toLowerCase() ===
-        trimmedSkill.toLowerCase()
+        trimmedSkill.toLowerCase(),
     );
     // console.log('Skill exists check:', skillExists, 'Current skills:', selectedSkills);
 
@@ -830,7 +858,7 @@ const InterviewDetails = ({
   const handleAddMultipleSkills = (newEntries, skillsToRemove) => {
     // Remove skills that were deselected
     let updatedSkills = selectedSkills.filter(
-      (s) => !skillsToRemove.includes(typeof s === 'object' ? s.SkillName : s)
+      (s) => !skillsToRemove.includes(typeof s === "object" ? s.SkillName : s),
     );
 
     // Add newly selected skills
@@ -847,7 +875,8 @@ const InterviewDetails = ({
     }));
     setErrors((prev) => ({
       ...prev,
-      skills: updatedSkills.length === 0 ? "At least one skill is required" : "",
+      skills:
+        updatedSkills.length === 0 ? "At least one skill is required" : "",
     }));
   };
 
@@ -896,17 +925,17 @@ const InterviewDetails = ({
           <SkillsField
             simpleMode={true}
             entries={selectedSkills.map((s) => ({
-              skill: typeof s === 'object' ? s.SkillName : s,
-              experience: '',
-              expertise: '',
+              skill: typeof s === "object" ? s.SkillName : s,
+              experience: "",
+              expertise: "",
             }))}
             errors={errors}
             skills={skills}
             onOpenSkills={loadSkills}
             onAddMultipleSkills={handleAddMultipleSkills}
-            onAddSkill={() => { }}
-            onDeleteSkill={() => { }}
-            onUpdateEntry={() => { }}
+            onAddSkill={() => {}}
+            onDeleteSkill={() => {}}
+            onUpdateEntry={() => {}}
           />
           {errors.skills && (
             <p className="text-red-500 text-sm">{errors.skills}</p>
@@ -955,7 +984,7 @@ const InterviewDetails = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             handleRemoveSkill(
-                              skill._id || skill.SkillName || skill
+                              skill._id || skill.SkillName || skill,
                             );
                           }}
                           className="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-custom-blue hover:bg-custom-blue/10 hover:text-custom-blue/80 focus:outline-none"
@@ -970,7 +999,8 @@ const InterviewDetails = ({
             ) : (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
                 <p className="text-sm text-gray-500">
-                  No Skills Selected Yet. Click "Add Skills" To Search And Add Skills.
+                  No Skills Selected Yet. Click "Add Skills" To Search And Add
+                  Skills.
                 </p>
               </div>
             )}
@@ -1297,8 +1327,9 @@ const InterviewDetails = ({
                             <span>
                               Range: ${getRateRanges(level.rangeKey).usd.min}-$
                               {getRateRanges(level.rangeKey).usd.max} (
-                              {`₹${getRateRanges(level.rangeKey).inr.min}–${getRateRanges(level.rangeKey).inr.max
-                                }`}
+                              {`₹${getRateRanges(level.rangeKey).inr.min}–${
+                                getRateRanges(level.rangeKey).inr.max
+                              }`}
                               )
                             </span>
                           )}
@@ -1359,7 +1390,7 @@ const InterviewDetails = ({
                       </div>
                     </div>
                   </div>
-                )
+                ),
             )}
           </div>
 
@@ -1386,7 +1417,7 @@ const InterviewDetails = ({
                   type="checkbox"
                   value="technical"
                   checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
-                    "technical"
+                    "technical",
                   )}
                   onChange={handleInterviewFormatChange}
                   className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
@@ -1411,7 +1442,7 @@ const InterviewDetails = ({
                   type="checkbox"
                   value="system_design"
                   checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
-                    "system_design"
+                    "system_design",
                   )}
                   onChange={handleInterviewFormatChange}
                   className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
@@ -1436,7 +1467,7 @@ const InterviewDetails = ({
                   type="checkbox"
                   value="behavioral"
                   checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
-                    "behavioral"
+                    "behavioral",
                   )}
                   onChange={handleInterviewFormatChange}
                   className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
@@ -1461,7 +1492,7 @@ const InterviewDetails = ({
                   type="checkbox"
                   value="mock"
                   checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
-                    "mock"
+                    "mock",
                   )}
                   onChange={handleInterviewFormatChange}
                   className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
@@ -1602,9 +1633,9 @@ const InterviewDetails = ({
                     value={
                       interviewDetailsData.mock_interview_discount
                         ? {
-                          value: interviewDetailsData.mock_interview_discount,
-                          label: `${interviewDetailsData.mock_interview_discount}% discount`,
-                        }
+                            value: interviewDetailsData.mock_interview_discount,
+                            label: `${interviewDetailsData.mock_interview_discount}% discount`,
+                          }
                         : null
                     }
                     onChange={(selected) => {
@@ -1647,8 +1678,11 @@ const InterviewDetails = ({
               )}
             </div>
             <p
-              className={`mt-1.5 text-xs text-custom-blue ${showCustomDiscount && errors.mock_interview_discount ? "mt-7" : "mt-1.5"
-                }`}
+              className={`mt-1.5 text-xs text-custom-blue ${
+                showCustomDiscount && errors.mock_interview_discount
+                  ? "mt-7"
+                  : "mt-1.5"
+              }`}
             >
               Offer a discount for mock interviews to attract more candidates
             </p>
@@ -1665,7 +1699,7 @@ const InterviewDetails = ({
                   ...prev,
                   professionalTitle: newValue,
                 }));
-                if (newValue.length >= 50) {
+                if (newValue.length >= 30) {
                   setErrors((prev) => ({ ...prev, professionalTitle: "" }));
                 }
               }
@@ -1697,29 +1731,31 @@ const InterviewDetails = ({
             error={errors.professionalTitle}
             label="Professional Title"
             required
-            minLength={30}
-            maxLength={100}
+            min={30}
+            max={100}
+            showCounter={true}
             placeholder="Senior Software Engineer With 5+ Years Of Experience In FullStack Development"
           />
-          <div className="flex justify-between mt-1">
-            <p className="text-xs text-gray-500">
+          <div className="flex justify-end mt-1">
+            {/* <p className="text-xs text-gray-500">
               {errors.professionalTitle ? (
                 <span className="text-red-500">Min 30 characters</span>
               ) : (
                 "Min 30 characters"
               )}
-            </p>
-            {interviewDetailsData.professionalTitle?.length > 0 && (
+            </p> */}
+            {/* {interviewDetailsData.professionalTitle?.length > 0 && (
               <p
-                className={`text-xs ${interviewDetailsData.professionalTitle.length < 30 ||
+                className={`text-xs ${
+                  interviewDetailsData.professionalTitle.length < 30 ||
                   errors.professionalTitle
-                  ? "text-red-500"
-                  : "text-gray-500"
-                  }`}
+                    ? "text-red-500"
+                    : "text-gray-500"
+                }`}
               >
                 {interviewDetailsData.professionalTitle.length}/100
               </p>
-            )}
+            )} */}
           </div>
         </div>
 
@@ -1768,12 +1804,11 @@ const InterviewDetails = ({
             </p>
             {interviewDetailsData.bio?.length > 0 && (
               <p
-                className={`text-xs ${interviewDetailsData.bio.length < 150 || errors.bio
-                  ? "text-red-500"
-                  : interviewDetailsData.bio.length > 450
-                    ? "text-yellow-500"
+                className={`text-xs ${
+                  interviewDetailsData.bio.length < 150 || errors.bio
+                    ? "text-red-500"
                     : "text-gray-500"
-                  }`}
+                }`}
               >
                 {interviewDetailsData.bio.length}/500
               </p>
