@@ -27,7 +27,8 @@ const MyQuestionsList1 = forwardRef(
       fromcreate,
       closeDropdown,
       fromform,
-      onSelectList = () => {},
+      onSelectList = () => { },
+      onListCreated,
       error,
       onErrorClear,
       defaultTenantList,
@@ -211,6 +212,11 @@ const MyQuestionsList1 = forwardRef(
           setShowNewListPopup(false);
         } else {
           // console.log("New list created:", result);
+          // Auto-select the newly created list in the parent dropdown
+          const newId = result?._id || result?.data?._id;
+          if (newId && typeof onListCreated === "function") {
+            onListCreated(newId);
+          }
           setNewListName("");
           setNewListNameForName("");
           setShowNewListPopup(false);
@@ -439,7 +445,7 @@ const MyQuestionsList1 = forwardRef(
                       />
                       {list.label
                         ? list.label.charAt(0).toUpperCase() +
-                          list.label.slice(1)
+                        list.label.slice(1)
                         : ""}
                     </label>
                   ))
@@ -479,11 +485,10 @@ const MyQuestionsList1 = forwardRef(
                   // className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 cursor-pointer ${
                   //   error ? 'border-red-500' : 'border-gray-300 focus:border-black'
                   // }`}
-                  className={`w-full px-3 py-2 border sm:text-sm rounded-md cursor-pointer ${
-                    error
-                      ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                      : "border-gray-300 focus:border-black"
-                  }`}
+                  className={`w-full px-3 py-2 border sm:text-sm rounded-md cursor-pointer ${error
+                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                    : "border-gray-300 focus:border-black"
+                    }`}
                   onClick={togglePopup}
                   readOnly
                 />
@@ -550,7 +555,7 @@ const MyQuestionsList1 = forwardRef(
                         onClick={handleCreateNewList}
                       >
                         <IoIosAddCircle className="text-2xl" />
-                        <span>Create New List</span>
+                        <span>+ Create New List</span>
                       </li>
                     </ul>
                   </div>
@@ -621,7 +626,7 @@ const MyQuestionsList1 = forwardRef(
         )}
 
         {showNewListPopup && (
-          <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="fixed inset-0 z-[10000] bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white rounded-xl shadow-2xl w-[400px] max-w-full mx-4">
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 bg-white rounded-t-xl">

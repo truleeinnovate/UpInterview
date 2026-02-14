@@ -485,14 +485,17 @@ const SkillsField = forwardRef(
                       // Compute filtered skills SYNCHRONOUSLY during render
                       // (useEffect was too slow - ran AFTER render causing stale data with 2071 skills)
                       const term = (popupSearchTerm || "").trim().toLowerCase();
+                      const searchWords = term ? term.split(/\s+/).filter(Boolean) : [];
                       const allFiltered = (!skills || !Array.isArray(skills))
                         ? []
                         : skills
                           .filter((skill) => {
                             const name = getSkillName(skill);
                             if (!name) return false;
-                            if (!term) return true;
-                            return name.toLowerCase().includes(term);
+                            if (searchWords.length === 0) return true;
+                            const lowerName = name.toLowerCase();
+                            // AND condition: every search word must appear in the skill name
+                            return searchWords.every((word) => lowerName.includes(word));
                           })
                           .map((s) => getSkillName(s));
 
@@ -594,14 +597,20 @@ const SkillsField = forwardRef(
                   >
                     <div className="px-1">
                       <DropdownWithSearchField
-                        options={getAvailableSkillsForRow(index).map((s) => ({
-                          value:
-                            s.SkillName === "__other__"
-                              ? "__other__"
-                              : s.SkillName,
-                          label:
-                            s.SkillName === "__other__" ? "Other" : s.SkillName,
-                        }))}
+                        // options={getAvailableSkillsForRow(index).map((s) => ({
+                        //   value:
+                        //     s.SkillName === "__other__"
+                        //       ? "__other__"
+                        //       : s.SkillName,
+                        //   label:
+                        //     s.SkillName === "__other__" ? "Other" : s.SkillName,
+                        //   }))}
+                        options={getAvailableSkillsForRow(index)
+                          .filter((s) => s.SkillName !== "__other__")
+                          .map((s) => ({
+                            value: s.SkillName,
+                            label: s.SkillName,
+                          }))}
                         isSearchable
                         value={entry.skill}
                         onChange={(e) => {
