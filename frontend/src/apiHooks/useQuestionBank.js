@@ -345,8 +345,9 @@ export const useQuestions = (filters = {}) => {
               : list
           );
         } else {
-          // Add new list
-          return [data, ...oldData];
+          // Add new list – data is { status, message, data: newListObj }
+          const newList = data?.data || data;
+          return [newList, ...oldData];
         }
       });
 

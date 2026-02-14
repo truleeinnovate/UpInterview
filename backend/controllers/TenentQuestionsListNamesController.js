@@ -14,20 +14,20 @@ const getList = async (req, res) => {
   const { tenantId, organization } = req.query; // Get these from query parameters
 
   res.locals.loggedByController = true;
-        //console.log("effectivePermissions",res.locals?.effectivePermissions)
-        //<-----v1.0.1---
-        // Permission: Tasks.Create (or super admin override)
-        // const canCreate =
-        // await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'View')
-        // //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'View')
-        // if (!canCreate) {
-        //   return res.status(403).json({ message: 'Forbidden: missing QuestionBank.View permission' });
-        // }
-        //-----v1.0.1--->
+  //console.log("effectivePermissions",res.locals?.effectivePermissions)
+  //<-----v1.0.1---
+  // Permission: Tasks.Create (or super admin override)
+  // const canCreate =
+  // await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'View')
+  // //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'View')
+  // if (!canCreate) {
+  //   return res.status(403).json({ message: 'Forbidden: missing QuestionBank.View permission' });
+  // }
+  //-----v1.0.1--->
 
   try {
     let query = {};
-    
+
     if (organization === 'true') {
       // If organization is true, filter by tenantId
       query = { tenantId: tenantId };
@@ -35,7 +35,7 @@ const getList = async (req, res) => {
       // If organization is false, filter by ownerId (userId)
       query = { ownerId: userId };
     }
-    
+
     const lists = await QuestionbankFavList.find(query);
     res.status(200).json(lists);
   } catch (error) {
@@ -56,7 +56,7 @@ const createList = async (req, res) => {
     if (!isValid) {
       return res.status(400).json({ message: 'Validation failed', errors });
     }
-   
+
     const newList = await QuestionbankFavList.create({
       label,
       ownerId,
@@ -95,6 +95,7 @@ const createList = async (req, res) => {
     res.status(201).json({
       status: 'success',
       message: 'New list created successfully',
+      data: newList,
     });
   } catch (error) {
     // Handle errors
@@ -136,16 +137,16 @@ const updateList = async (req, res) => {
     // res.locals.loggedByController = true;
     //----v1.0.1---->
 
-        //console.log("effectivePermissions",res.locals?.effectivePermissions)
-        //<-----v1.0.1---
-        // Permission: Tasks.Create (or super admin override)
-        // const canCreate =
-        // await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit')
-        // //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Edit')
-        // if (!canCreate) {
-        //   return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Edit permission' });
-        // }
-        //-----v1.0.1--->
+    //console.log("effectivePermissions",res.locals?.effectivePermissions)
+    //<-----v1.0.1---
+    // Permission: Tasks.Create (or super admin override)
+    // const canCreate =
+    // await hasPermission(res.locals?.effectivePermissions?.QuestionBank, 'Edit')
+    // //await hasPermission(res.locals?.superAdminPermissions?.QuestionBank, 'Edit')
+    // if (!canCreate) {
+    //   return res.status(403).json({ message: 'Forbidden: missing QuestionBank.Edit permission' });
+    // }
+    //-----v1.0.1--->
     // feeds related data
     const currentlist = await QuestionbankFavList.findById(listId).lean();
     if (!currentlist) {

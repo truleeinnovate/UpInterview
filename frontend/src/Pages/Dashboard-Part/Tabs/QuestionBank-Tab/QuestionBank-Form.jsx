@@ -111,6 +111,8 @@ const QuestionBankForm = ({
   fieldRefs.tenantListId = fieldRefs.questionListRef;
   // Separate ref for controlling the MyQuestionList popup (open/close, etc.)
   const listRef = useRef(null);
+  // Ref to hold a newly created list ID until createdLists cache refreshes
+  const pendingNewListIdRef = useRef(null);
 
   const { saveOrUpdateQuestion, saveOrUpdateQuestionLoading, createdLists } =
     useQuestions();
@@ -170,6 +172,21 @@ const QuestionBankForm = ({
     selectedListId.length,
     dropdownValue,
   ]); //<--v1.0.8----->
+
+  // Once createdLists updates with the pending new list, auto-select it
+  useEffect(() => {
+    const pendingId = pendingNewListIdRef.current;
+    if (!pendingId) return;
+    const found = (createdLists || []).some((l) => l._id === pendingId);
+    if (found) {
+      setSelectedListId((prev) => {
+        if (prev.includes(pendingId)) return prev;
+        return [...prev, pendingId];
+      });
+      setIgnoreDefaultSelectedLabel(true);
+      pendingNewListIdRef.current = null;
+    }
+  }, [createdLists]);
 
   const questionTypeOptions = [
     ...(isInterviewType && dropdownValue !== "Assessment Questions"
@@ -285,31 +302,31 @@ const QuestionBankForm = ({
   //     setErrors((prev) => ({ ...prev, correctAnswer: "" }));
   //   }
   // };
-const handleCorrectAnswerChange = (index) => {
-  setMcqOptions((prevOptions) => {
-    const newOptions = [...prevOptions];
-    newOptions[index] = { 
-      ...newOptions[index], 
-      isCorrect: !newOptions[index].isCorrect 
-    };
+  const handleCorrectAnswerChange = (index) => {
+    setMcqOptions((prevOptions) => {
+      const newOptions = [...prevOptions];
+      newOptions[index] = {
+        ...newOptions[index],
+        isCorrect: !newOptions[index].isCorrect
+      };
 
-    // Update the string version in formData for the validator
-    const selectedTexts = newOptions
-      .filter((opt) => opt.isCorrect && opt.option.trim() !== "")
-      .map((opt) => opt.option.trim());
+      // Update the string version in formData for the validator
+      const selectedTexts = newOptions
+        .filter((opt) => opt.isCorrect && opt.option.trim() !== "")
+        .map((opt) => opt.option.trim());
 
-    setFormData((prev) => ({
-      ...prev,
-      correctAnswer: selectedTexts.join(", "),
-    }));
+      setFormData((prev) => ({
+        ...prev,
+        correctAnswer: selectedTexts.join(", "),
+      }));
 
-    return newOptions;
-  });
+      return newOptions;
+    });
 
-  if (errors.correctAnswer) {
-    setErrors((prev) => ({ ...prev, correctAnswer: "" }));
-  }
-};
+    if (errors.correctAnswer) {
+      setErrors((prev) => ({ ...prev, correctAnswer: "" }));
+    }
+  };
   // ---------------------------- NEW MCQ IMPLEMENTATION ---------------------------------
 
   const handleChange = (e) => {
@@ -431,7 +448,7 @@ const handleCorrectAnswerChange = (index) => {
       if (question.questionType === "MCQ") {
         const initializedOptions = (question.options || []).map((opt) => ({
           // Map 'optionText' from DB back to 'option' for component state
-          option: typeof opt === 'object' ? opt.optionText : opt, 
+          option: typeof opt === 'object' ? opt.optionText : opt,
           isSaved: true,
           isEditing: false,
           isCorrect: typeof opt === 'object' ? !!opt.isCorrect : false,
@@ -439,7 +456,7 @@ const handleCorrectAnswerChange = (index) => {
 
         setMcqOptions(initializedOptions);
         setShowMcqFields(true);
-    } else {
+      } else {
         setShowMcqFields(false);
       }
 
@@ -637,8 +654,8 @@ const handleCorrectAnswerChange = (index) => {
         typeof typeVal === "boolean"
           ? typeVal
           : String(typeVal ?? "")
-              .toLowerCase()
-              .includes("interview");
+            .toLowerCase()
+            .includes("interview");
       const currentIsInterview = dropdownValue === "Interview Questions";
       if (matchedLabel && isInterviewList === currentIsInterview) {
         effectiveListIds = [selectedLabelId, ...selectedListId];
@@ -822,12 +839,12 @@ const handleCorrectAnswerChange = (index) => {
         .filter(o => o.isCorrect === true)
         .map(o => o.optionText);
 
-      questionData.correctAnswer = correctOnes.join(", "); 
+      questionData.correctAnswer = correctOnes.join(", ");
     }
     else if (selectedQuestionType === "Boolean") {
-      questionData.correctAnswer = selectedBooleanAnswer; 
-      questionData.options = []; 
-    } 
+      questionData.correctAnswer = selectedBooleanAnswer;
+      questionData.options = [];
+    }
     else {
       questionData.correctAnswer = String(formData.correctAnswer).trim();
     }
@@ -1011,9 +1028,8 @@ const handleCorrectAnswerChange = (index) => {
         (detailedMessages || []).length -
         Math.min((detailedMessages || []).length, maxDetails);
       const composed = detailsPreview
-        ? `${message}\n- ${detailsPreview}${
-            extraCount > 0 ? `\n(+${extraCount} more)` : ""
-          }`
+        ? `${message}\n- ${detailsPreview}${extraCount > 0 ? `\n(+${extraCount} more)` : ""
+        }`
         : message || "Failed to save or update question";
 
       toast.error(composed, { duration: 6000 });
@@ -1231,7 +1247,7 @@ const handleCorrectAnswerChange = (index) => {
   //   }
   // };
   const handleOptionChange = (index, e) => {
-  const newValue = e.target.value;
+    const newValue = e.target.value;
 
     setMcqOptions((prevOptions) => {
       const newOptions = [...prevOptions];
@@ -1650,26 +1666,26 @@ const handleCorrectAnswerChange = (index) => {
                       options={[
                         ...(Array.isArray(createdLists)
                           ? createdLists
-                              .filter((l) => {
-                                if (!l || typeof l !== "object") return false;
-                                const t = l.type;
-                                const normalized =
-                                  typeof t === "boolean"
-                                    ? t
-                                    : String(t).toLowerCase() === "true" ||
-                                      String(t)
-                                        .toLowerCase()
-                                        .includes("interview");
-                                const wantInterview =
-                                  dropdownValue === "Interview Questions";
-                                return normalized === wantInterview;
-                              })
-                              .map((l) => ({
-                                value: l._id,
-                                label: l.label ?? "",
-                              }))
+                            .filter((l) => {
+                              if (!l || typeof l !== "object") return false;
+                              const t = l.type;
+                              const normalized =
+                                typeof t === "boolean"
+                                  ? t
+                                  : String(t).toLowerCase() === "true" ||
+                                  String(t)
+                                    .toLowerCase()
+                                    .includes("interview");
+                              const wantInterview =
+                                dropdownValue === "Interview Questions";
+                              return normalized === wantInterview;
+                            })
+                            .map((l) => ({
+                              value: l._id,
+                              label: l.label ?? "",
+                            }))
                           : []),
-                        { value: "__other__", label: "Create New List" },
+                        { value: "__other__", label: "+ Create New List" },
                       ]}
                       value={(Array.isArray(selectedListId)
                         ? selectedListId
@@ -1690,6 +1706,8 @@ const handleCorrectAnswerChange = (index) => {
                           arr.some((o) => o?.value === "__other__") ||
                           actionMeta?.option?.value === "__other__";
                         if (hasCreate) {
+                          // Close the dropdown menu before opening the popup
+                          document.activeElement?.blur();
                           if (
                             listRef.current &&
                             typeof listRef.current.openPopup === "function"
@@ -1726,6 +1744,11 @@ const handleCorrectAnswerChange = (index) => {
                       // v1.0.6 ----------------------------------------->
                       //fromform={true}
                       onSelectList={handleListSelection}
+                      onListCreated={(newId) => {
+                        // Store the new list ID; the useEffect watching createdLists
+                        // will auto-select it once the cache updates
+                        pendingNewListIdRef.current = newId;
+                      }}
                       // ref={listRef}
                       error={errors.tenantListId}
                       defaultTenantList={selectedLabels}
@@ -2009,10 +2032,9 @@ const handleCorrectAnswerChange = (index) => {
                                 autoComplete="off"
                                 maxLength={250}
                                 className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 pl-7 sm:text-sm
-                                  border ${
-                                    errors.options
-                                      ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                      : "border-gray-300 focus:ring-red-300"
+                                  border ${errors.options
+                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                    : "border-gray-300 focus:ring-red-300"
                                   }
                                   focus:outline-gray-300
                                 `}
@@ -2039,11 +2061,10 @@ const handleCorrectAnswerChange = (index) => {
                                 </button> */}
                                 <button
                                   type="button"
-                                  className={`p-1 bg-white ${
-                                    mcqOptions.length <= 2
-                                      ? "cursor-not-allowed opacity-50"
-                                      : ""
-                                  }`}
+                                  className={`p-1 bg-white ${mcqOptions.length <= 2
+                                    ? "cursor-not-allowed opacity-50"
+                                    : ""
+                                    }`}
                                   disabled={mcqOptions.length <= 2}
                                   onClick={() => handleCancelOption(index)}
                                   title={
@@ -2067,11 +2088,10 @@ const handleCorrectAnswerChange = (index) => {
                                 </button> */}
                                 <button
                                   type="button"
-                                  className={`p-1 bg-white ${
-                                    mcqOptions.length <= 2
-                                      ? "cursor-not-allowed opacity-50"
-                                      : ""
-                                  }`}
+                                  className={`p-1 bg-white ${mcqOptions.length <= 2
+                                    ? "cursor-not-allowed opacity-50"
+                                    : ""
+                                    }`}
                                   onClick={() => handleDeleteOption(index)}
                                   disabled={mcqOptions.length <= 2}
                                   title={
@@ -2214,7 +2234,7 @@ const handleCorrectAnswerChange = (index) => {
                         rows={5}
                         maxLength={
                           selectedQuestionType === "Short" ||
-                          selectedQuestionType === "Long"
+                            selectedQuestionType === "Long"
                             ? charLimits.max
                             : 1000
                         }
@@ -2226,70 +2246,67 @@ const handleCorrectAnswerChange = (index) => {
                 {/* Character Limits */}
                 {(selectedQuestionType === "Short" ||
                   selectedQuestionType === "Long") && (
-                  <div className="flex gap-5 mb-4">
-                    <div className="mb-4">
-                      <label
-                        htmlFor="CharactersLimit"
-                        className={`block mb-2 text-sm font-medium w-36 ${
-                          selectedQuestionType === "Short"
+                    <div className="flex gap-5 mb-4">
+                      <div className="mb-4">
+                        <label
+                          htmlFor="CharactersLimit"
+                          className={`block mb-2 text-sm font-medium w-36 ${selectedQuestionType === "Short"
                             ? "text-gray-400"
                             : ""
-                        }`}
-                      >
-                        Characters Limit
-                      </label>
+                            }`}
+                        >
+                          Characters Limit
+                        </label>
+                      </div>
+                      <div className="flex-grow flex items-center">
+                        <span
+                          className={`-mt-5 ${selectedQuestionType === "Short" ||
+                            selectedQuestionType === "Long"
+                            ? "text-gray-400"
+                            : ""
+                            }`}
+                        >
+                          Min
+                        </span>
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="Min"
+                          value={charLimits.min}
+                          readOnly
+                          className={`border-b focus:outline-none mb-4 w-1/2 ml-4 mr-2 text-gray-400`}
+                        />
+                        <span
+                          className={`-mt-5 ${selectedQuestionType === "Short"
+                            ? "text-gray-400"
+                            : ""
+                            }`}
+                        >
+                          Max
+                        </span>
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="Max"
+                          max={selectedQuestionType === "Short" ? "500" : "2000"}
+                          step="1"
+                          value={charLimits.max}
+                          onChange={(e) => {
+                            const maxLimit =
+                              selectedQuestionType === "Short" ? 500 : 2000;
+                            setCharLimits((prev) => ({
+                              ...prev,
+                              max: Math.min(
+                                maxLimit,
+                                Math.max(1, e.target.value),
+                              ),
+                            }));
+                          }}
+                          className={`border-b focus:outline-none mb-4 w-1/2 ml-4 mr-2`}
+                        />
+                      </div>
                     </div>
-                    <div className="flex-grow flex items-center">
-                      <span
-                        className={`-mt-5 ${
-                          selectedQuestionType === "Short" ||
-                          selectedQuestionType === "Long"
-                            ? "text-gray-400"
-                            : ""
-                        }`}
-                      >
-                        Min
-                      </span>
-                      <input
-                        type="number"
-                        min="1"
-                        placeholder="Min"
-                        value={charLimits.min}
-                        readOnly
-                        className={`border-b focus:outline-none mb-4 w-1/2 ml-4 mr-2 text-gray-400`}
-                      />
-                      <span
-                        className={`-mt-5 ${
-                          selectedQuestionType === "Short"
-                            ? "text-gray-400"
-                            : ""
-                        }`}
-                      >
-                        Max
-                      </span>
-                      <input
-                        type="number"
-                        min="1"
-                        placeholder="Max"
-                        max={selectedQuestionType === "Short" ? "500" : "2000"}
-                        step="1"
-                        value={charLimits.max}
-                        onChange={(e) => {
-                          const maxLimit =
-                            selectedQuestionType === "Short" ? 500 : 2000;
-                          setCharLimits((prev) => ({
-                            ...prev,
-                            max: Math.min(
-                              maxLimit,
-                              Math.max(1, e.target.value),
-                            ),
-                          }));
-                        }}
-                        className={`border-b focus:outline-none mb-4 w-1/2 ml-4 mr-2`}
-                      />
-                    </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Hint */}
                 <div className="flex flex-col gap-1 mb-4">
@@ -2398,11 +2415,10 @@ const handleCorrectAnswerChange = (index) => {
                         min="1"
                         max="20"
                         autoComplete="given-name"
-                        className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 ${
-                          errors.score
-                            ? "border-red-500"
-                            : "border-gray-300 focus:border-black"
-                        }`}
+                        className={`w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300 ${errors.score
+                          ? "border-red-500"
+                          : "border-gray-300 focus:border-black"
+                          }`}
                       />
                       {errors.score && (
                         <p className="text-red-500 text-sm mt-1">
@@ -2416,63 +2432,63 @@ const handleCorrectAnswerChange = (index) => {
               {/* Automation Options */}
               {(selectedQuestionType === "Short" ||
                 selectedQuestionType === "Long") && (
-                <div>
-                  <p className="font-semibold text-lg mb-5">
-                    Automation Options:
-                  </p>
-                  <div className="flex items-center mb-4">
-                    <label
-                      htmlFor="autoAssessment"
-                      className="text-sm font-medium text-gray-900"
-                    >
-                      Auto Assessment
-                    </label>
-                    <input
-                      type="checkbox"
-                      id="autoAssessment"
-                      checked={autoAssessment}
-                      onChange={() => setAutoAssessment(!autoAssessment)}
-                      className="ml-14 w-4 h-4 accent-custom-blue"
-                    />
-                  </div>
-                  {autoAssessment && (
-                    <div className="flex items-center mb-10">
-                      <label className="text-sm font-medium text-gray-900 mr-4">
-                        Answer Matching <span className="text-red-500">*</span>
+                  <div>
+                    <p className="font-semibold text-lg mb-5">
+                      Automation Options:
+                    </p>
+                    <div className="flex items-center mb-4">
+                      <label
+                        htmlFor="autoAssessment"
+                        className="text-sm font-medium text-gray-900"
+                      >
+                        Auto Assessment
                       </label>
-
-                      <div className="flex items-center ml-10">
-                        <input
-                          type="radio"
-                          id="exact"
-                          name="answerMatching"
-                          value="Exact"
-                          checked={answerMatching === "Exact"}
-                          onChange={() => setAnswerMatching("Exact")}
-                          className="mr-1 accent-custom-blue"
-                        />
-                        <label htmlFor="exact" className="text-sm">
-                          Exact
-                        </label>
-                      </div>
-                      <div className="flex items-center ml-10">
-                        <input
-                          type="radio"
-                          id="contains"
-                          name="answerMatching"
-                          value="Contains"
-                          checked={answerMatching === "Contains"}
-                          onChange={() => setAnswerMatching("Contains")}
-                          className="mr-1"
-                        />
-                        <label htmlFor="contains" className="text-sm">
-                          Contains
-                        </label>
-                      </div>
+                      <input
+                        type="checkbox"
+                        id="autoAssessment"
+                        checked={autoAssessment}
+                        onChange={() => setAutoAssessment(!autoAssessment)}
+                        className="ml-14 w-4 h-4 accent-custom-blue"
+                      />
                     </div>
-                  )}
-                </div>
-              )}
+                    {autoAssessment && (
+                      <div className="flex items-center mb-10">
+                        <label className="text-sm font-medium text-gray-900 mr-4">
+                          Answer Matching <span className="text-red-500">*</span>
+                        </label>
+
+                        <div className="flex items-center ml-10">
+                          <input
+                            type="radio"
+                            id="exact"
+                            name="answerMatching"
+                            value="Exact"
+                            checked={answerMatching === "Exact"}
+                            onChange={() => setAnswerMatching("Exact")}
+                            className="mr-1 accent-custom-blue"
+                          />
+                          <label htmlFor="exact" className="text-sm">
+                            Exact
+                          </label>
+                        </div>
+                        <div className="flex items-center ml-10">
+                          <input
+                            type="radio"
+                            id="contains"
+                            name="answerMatching"
+                            value="Contains"
+                            checked={answerMatching === "Contains"}
+                            onChange={() => setAnswerMatching("Contains")}
+                            className="mr-1"
+                          />
+                          <label htmlFor="contains" className="text-sm">
+                            Contains
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
               {/* </div> */}
               {/* Footer */}

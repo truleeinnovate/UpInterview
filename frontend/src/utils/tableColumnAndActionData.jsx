@@ -281,24 +281,18 @@ export const getPositionColumns = (navigate) => [
     },
     {
         key: "title",
-        header: "Position Title",
+        header: "Title",
         render: (value, row) => (
-            <div className="flex items-center">
-                <div className="h-8 w-8 flex-shrink-0">
-                    <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                        {row?.title ? row.title.charAt(0).toUpperCase() : "?"}
-                    </div>
-                </div>
-                <div className="ml-3">
-                    <div
-                        className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
-                        onClick={() => navigate(`/positions/view-details/${row._id}`)}
-                        title={capitalizeFirstLetter(row?.title)}
-                    >
-                        {capitalizeFirstLetter(row?.title) || "N/A"}
-                    </div>
+            <div>
+                <div
+                    className="text-sm font-medium text-custom-blue cursor-pointer truncate max-w-[140px]"
+                    onClick={() => navigate(`/positions/view-details/${row._id}`)}
+                    title={capitalizeFirstLetter(row?.title)}
+                >
+                    {capitalizeFirstLetter(row?.title) || "N/A"}
                 </div>
             </div>
+
         ),
     },
     {
