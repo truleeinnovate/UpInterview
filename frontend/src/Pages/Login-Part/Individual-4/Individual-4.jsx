@@ -138,8 +138,8 @@ const MultiStepForm = () => {
     coverLetterFile: null,
     isResumeRemoved: false,
     isCoverLetterRemoved: false,
-    HigherQualification: "",
-    UniversityCollege: "",
+    higherQualification: "",
+    universityCollege: "",
   });
   // Interview Details
   const [interviewDetails, setInterviewDetails] = useState({
@@ -307,8 +307,8 @@ const MultiStepForm = () => {
     company: "",
     resume: null,
     coverLetter: null,
-    HigherQualification: "",
-    UniversityCollege: "",
+    higherQualification: "",
+    universityCollege: "",
   });
   console.log("additionalDetailsData", additionalDetailsData);
   const [interviewDetailsData, setInterviewDetailsData] = useState({
@@ -356,8 +356,8 @@ const MultiStepForm = () => {
         company: matchedContact.company || "",
         resume: matchedContact.resume || null,
         coverLetter: matchedContact.coverLetter || null,
-        HigherQualification: matchedContact.HigherQualification || "",
-        UniversityCollege: matchedContact.UniversityCollege || "",
+        higherQualification: matchedContact.higherQualification || "",
+        universityCollege: matchedContact.universityCollege || "",
       });
       setInterviewDetailsData({
         skills: matchedContact.skills || [],
@@ -975,8 +975,8 @@ const MultiStepForm = () => {
           company: additionalDetailsData.company,
           resume: additionalDetailsData.resume,
           coverLetter: additionalDetailsData.coverLetter,
-          HigherQualification: additionalDetailsData.HigherQualification,
-          UniversityCollege: additionalDetailsData.UniversityCollege,
+          higherQualification: additionalDetailsData.higherQualification,
+          universityCollege: additionalDetailsData.universityCollege,
         }),
         ...(currentStep >= 2 && {
           skills: interviewDetailsData.skills,

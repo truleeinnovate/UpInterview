@@ -73,9 +73,9 @@ export const validateAdvancedForm = (formData) => {
   }
 
   // Industry validation
-  if (!formData.industry?.trim()) {
-    errors.industry = "Industry is required";
-  }
+  // if (!formData.industry?.trim()) {
+  //   errors.industry = "Industry is required";
+  // }
 
   // Experience validation
   if (!formData.yearsOfExperience?.toString().trim()) {
@@ -85,9 +85,9 @@ export const validateAdvancedForm = (formData) => {
   }
 
   // Location validation
-  if (!formData.location?.trim()) {
-    errors.location = "Location is required";
-  }
+  // if (!formData.location?.trim()) {
+  //   errors.location = "Location is required";
+  // }
 
   return errors;
 };
