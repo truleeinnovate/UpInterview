@@ -19,7 +19,9 @@ const basicDetailsSchema = Joi.object({
     "string.empty": "LinkedIn URL is required",
     "string.uri": "Invalid LinkedIn URL",
   }),
-  firstName: Joi.string().allow("", null),
+  firstName: Joi.string().required().messages({
+    "string.empty": "First name is required",
+  }),
   profileId: Joi.string().allow("", null),
   countryCode: Joi.string().allow("", null),
   portfolioUrl: Joi.string().allow("", null),
@@ -32,19 +34,17 @@ const additionalDetailsSchema = Joi.object({
   currentRole: Joi.string().required().messages({
     "string.empty": "Current role is required",
   }),
-  industry: Joi.string().required().messages({
-    "string.empty": "Industry is required",
-  }),
+  industry:Joi.string().allow("", null),
   company: Joi.string().required().messages({
     "string.empty": "Company Name is required",
   }),
   yearsOfExperience: Joi.string().required().messages({
     "any.required": "Years of experience is required",
   }),
-  location: Joi.string().required().messages({
-    "string.empty": "Location is required",
-  }),
+  location:Joi.string().allow("", null),
   resume: Joi.string().allow("", null),
+  HigherQualification: Joi.string().allow("", null),
+  UniversityCollege: Joi.string().allow("", null),
   // coverLetter: Joi.string().allow("", null),
 });
 
@@ -132,6 +132,8 @@ function validateIndividualSignup(step, data) {
       yearsOfExperience: data.yearsOfExperience,
       location: data.location,
       resume: data.resume?.filename,
+      HigherQualification: data.HigherQualification,
+      UniversityCollege: data.UniversityCollege,
       // coverLetter: data.coverLetter.filename,
     };
   } else if (step === 2) {

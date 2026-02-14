@@ -18,7 +18,7 @@ export const encryptData = (data) => {
     }
 };
 
-export const createJoinMeetingUrl = (round, interviewData,contactId) => {
+export const createJoinMeetingUrl = (round, interviewData, contactId = null, type) => {
     if (!round?._id || !interviewData?._id || !interviewData?.ownerId || !contactId) return null;
 
     let base = config.REACT_APP_API_URL_FRONTEND;
@@ -31,14 +31,20 @@ export const createJoinMeetingUrl = (round, interviewData,contactId) => {
     // Remove trailing slash if present
     base = base.replace(/\/+$/, '');
 
-    const type = "interview";
+    // const type = "interview";
     const baseUrl = `${base}/join-meeting`;
 
     const encryptedRoundId = encryptData(round._id);
     const encryptedSchedulerId = encryptData(contactId);
     const encryptedOwnerId = encryptData(interviewData.ownerId);
 
-    if (!encryptedRoundId || !encryptedSchedulerId || !encryptedOwnerId) return null;
+    if (!encryptedRoundId || !encryptedOwnerId) return null;
+    if (type === "interview" && !encryptedSchedulerId) return null;
 
-    return `${baseUrl}?scheduler=true&round=${encodeURIComponent(encryptedRoundId)}&schedulertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedOwnerId)}${type ? `&type=${type}` : ''}`;
+    if (type === "mockinterview") {
+        return `${baseUrl}?candidate=true&round=${encodeURIComponent(encryptedRoundId)}${type ? `&type=${type}` : ';'}`;
+    }
+    if (type === "interview") {
+        return `${baseUrl}?scheduler=true&round=${encodeURIComponent(encryptedRoundId)}&schedulertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedOwnerId)}${type ? `&type=${type}` : ''}`;
+    }
 };

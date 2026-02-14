@@ -44,6 +44,7 @@ import RejectionModal from "../Interview-New/components/RejectionModal.jsx";
 import { useRef } from "react";
 import { getStatusBadgeColor } from "../CommonCode-AllTabs/StatusBadge.jsx";
 import FeedbackFormModal from "../Feedback/FeedbackFormModel.jsx";
+import { createJoinMeetingUrl } from "../Interview-New/components/joinMeeting";
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
@@ -819,6 +820,20 @@ const MockInterviewDetails = () => {
     );
   }
 
+  const handleJoinMeeting = (round) => {
+
+    const url = createJoinMeetingUrl(round, mockinterview, null, "mockinterview");
+
+
+    if (!url) {
+      console.warn("No valid join URL");
+      return;
+    }
+
+    // ONLY this line — no location.href, no useNavigate, no extra calls
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <>
       <div className="min-h-screen bg-gray-50">
@@ -1076,6 +1091,22 @@ const MockInterviewDetails = () => {
                                     <MeetPlatformBadge
                                       platform={round?.meetPlatform}
                                     />
+
+                                    {(round?.status === "Scheduled" ||
+                                      round?.status === "Rescheduled" ||
+                                      round?.status === "InProgress") && (
+                                        <>
+                                          <span
+                                            onClick={(e) => {
+                                              e.stopPropagation(); // ⛔ stop toggle
+                                              handleJoinMeeting(round); // ✅ join only
+                                            }}
+                                            className="cursor-pointer text-custom-blue hover:underline font-medium"
+                                          >
+                                            Join Meeting
+                                          </span>
+                                        </>
+                                      )}
                                   </div>
                                   {/* v1.0.0 <-------------------------------------------------------------------------- */}
                                 </div>

@@ -365,6 +365,7 @@ const BasicDetails = ({
                         placeholder="John"
                         error={errors.firstName}
                         autoComplete="given-name"
+                        required
                     />
                 </div>
 
