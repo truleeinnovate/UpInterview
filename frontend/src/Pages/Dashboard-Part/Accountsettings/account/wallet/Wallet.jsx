@@ -557,7 +557,7 @@ const Wallet = () => {
 
       {isTopupOpen && (
         <WalletTopupPopup
-          onClose={() => navigate("/wallet")}
+          onClose={() => setIsTopupOpen(false)}
           onTopup={handleTopup}
         />
       )}

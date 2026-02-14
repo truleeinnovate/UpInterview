@@ -307,13 +307,12 @@ const KanbanView = ({
                     </div>
                   </div>
                   <span
-                    className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded text-sm font-medium ${
-                      template?.status === "active"
+                    className={`shrink-0 inline-flex items-center px-3 py-1.5 rounded text-sm font-medium ${template?.status === "active"
                         ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
                         : template?.status === "draft"
-                        ? "bg-amber-50 text-amber-700 border border-amber-200/60"
-                        : "bg-slate-50 text-slate-700 border border-slate-200/60"
-                    }`}
+                          ? "bg-amber-50 text-amber-700 border border-amber-200/60"
+                          : "bg-slate-50 text-slate-700 border border-slate-200/60"
+                      }`}
                   >
                     {template?.status?.charAt(0).toUpperCase() +
                       template?.status?.slice(1) || "Active"}

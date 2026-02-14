@@ -174,7 +174,7 @@ const KanbanView = ({
             // v1.0.1 <--------------------------------------------------------------------
             <div
               key={format}
-              className="bg-gray-200/40 flex flex-col p-4 rounded-lg"
+              className="bg-gray-50 flex flex-col p-4 rounded-lg"
             >
               {/* v1.0.1 <-------------------------------------------------------------------- */}
               <h4 className="text-lg font-semibold text-gray-700 mb-4">

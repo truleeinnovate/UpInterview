@@ -277,13 +277,13 @@ const StandardTemplateTableView = ({ templatesData, emptyState }) => {
                                 className="px-3 py-2 text-sm text-gray-700"
                                 onClick={() => handleView(template)}
                               >
-                                <span className="px-3 py-2 text-sm text-gray-600 truncate max-w-[160px]">
+                                <span className="text-sm font-medium text-custom-blue cursor-pointer hover:underline truncate max-w-[160px]">
                                   {template.title}
                                 </span>
                               </td>
 
                               {/* Description */}
-                              <td className="px-3 py-2 text-sm text-gray-600 truncate max-w-[140px]">
+                              <td className="px-3 py-2 text-sm text-gray-600 truncate">
                                 {template.description}
                               </td>
 
@@ -305,11 +305,10 @@ const StandardTemplateTableView = ({ templatesData, emptyState }) => {
                               {/* Status */}
                               <td className="px-3 py-2">
                                 <span
-                                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                    template.status === "active"
-                                      ? "bg-green-100 text-green-600"
-                                      : "bg-gray-200 text-gray-600"
-                                  }`}
+                                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${template.status === "active"
+                                    ? "bg-green-100 text-green-600"
+                                    : "bg-gray-200 text-gray-600"
+                                    }`}
                                 >
                                   {capitalizeFirstLetter(template.status)}
                                 </span>
@@ -326,35 +325,34 @@ const StandardTemplateTableView = ({ templatesData, emptyState }) => {
 
                                 {menuOpen === template._id && (
                                   <div
-                                    className={`absolute right-10 w-40 bg-white rounded-md shadow-lg border z-20 ${
-                                      menuDirection === "up"
-                                        ? "bottom-full mb-2"
-                                        : "mt-2"
-                                    }`}
+                                    className={`absolute right-10 w-40 bg-white rounded-md shadow-lg border z-20 ${menuDirection === "up"
+                                      ? "bottom-full mb-2"
+                                      : "mt-2"
+                                      }`}
                                   >
                                     <ul className="py-1 text-sm text-gray-700">
                                       {effectivePermissions.InterviewTemplates
                                         ?.View && (
-                                        <li
-                                          onClick={() => handleView(template)}
-                                          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                        >
-                                          <Eye className="w-4 h-4 text-custom-blue mr-1" />
-                                          View Details
-                                        </li>
-                                      )}
+                                          <li
+                                            onClick={() => handleView(template)}
+                                            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                          >
+                                            <Eye className="w-4 h-4 text-custom-blue mr-1" />
+                                            View Details
+                                          </li>
+                                        )}
                                       {effectivePermissions.InterviewTemplates
                                         ?.Clone && (
-                                        <li
-                                          onClick={() =>
-                                            handleCloneClick(template)
-                                          }
-                                          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                        >
-                                          <Files className="w-4 h-4 text-custom-blue mr-1" />
-                                          Clone
-                                        </li>
-                                      )}
+                                          <li
+                                            onClick={() =>
+                                              handleCloneClick(template)
+                                            }
+                                            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                          >
+                                            <Files className="w-4 h-4 text-custom-blue mr-1" />
+                                            Clone
+                                          </li>
+                                        )}
                                     </ul>
                                   </div>
                                 )}

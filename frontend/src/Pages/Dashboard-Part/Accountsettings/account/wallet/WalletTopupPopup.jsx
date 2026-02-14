@@ -238,7 +238,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
 
   return (
     // v1.0.3 <-----------------------------------------------------
-    <SidebarPopup title="Wallet Top-up" onClose={() => navigate("/wallet")}>
+    <SidebarPopup title="Wallet Top-up" onClose={onClose}>
       <div className="flex flex-col h-full">
         {/* Scrollable content */}
         <div className="p-4 sm:p-0 flex-1 overflow-y-auto">
