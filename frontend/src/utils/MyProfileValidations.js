@@ -102,9 +102,9 @@ export const validateInterviewForm = (formData, isReady) => {
 
 
   // Skills validation - checks if at least one skill is selected
-  if (!formData.skills || formData.skills.length === 0) {
-    errors.skills = "At least one skill is required";
-  }
+if (!Array.isArray(formData.skills) || formData.skills.length < 3) {
+  errors.skills = "At least three skills are required";
+}
 
   // Previous Experience validation - checks if option is selected
   if (!formData.PreviousExperienceConductingInterviews) {

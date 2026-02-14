@@ -61,8 +61,9 @@ const contactPatchSchema = Joi.object({
       otherwise: Joi.forbidden(),
     }
   ),
-  skills: Joi.array().min(1).messages({
-    "array.min": "At least one skill is required",
+  skills: Joi.array().min(3).items(Joi.string()).messages({
+    "array.min": "At least three skills are required",
+    "array.base": "Skills must be an array",
   }),
   // technologies: Joi.array().min(1).messages({
   //   "array.min": "At least one technology is required",

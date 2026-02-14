@@ -441,7 +441,7 @@ const InterviewDetails = ({
     }));
     setErrors((prev) => ({
       ...prev,
-      skills: "At least one skill is required",
+      skills: "At least three skills are required",
     }));
   };
 
@@ -531,7 +531,7 @@ const InterviewDetails = ({
     setErrors((prev) => ({
       ...prev,
       skills:
-        updatedSkills.length === 0 ? "At least one skill is required" : "",
+        updatedSkills?.length < 3 ? "At least three skills are required" : "",
     }));
   };
 
@@ -847,7 +847,7 @@ const InterviewDetails = ({
     }));
     setErrors((prev) => ({
       ...prev,
-      skills: updatedSkills.length === 0 ? "At least one skill is required" : "",
+      skills: updatedSkills.length < 3 ? "At least three skills are required" : "",
     }));
   };
 

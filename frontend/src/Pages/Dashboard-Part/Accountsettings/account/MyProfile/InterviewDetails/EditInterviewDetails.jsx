@@ -6,7 +6,8 @@
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 
-import { X } from "lucide-react";
+import { Trash2, X, Tag as SkillsIcon } from "lucide-react";
+
 import axios from "axios";
 import {
   isEmptyObject,
@@ -30,7 +31,9 @@ import {
   InputField,
 } from "../../../../../../Components/FormFields";
 import LoadingButton from "../../../../../../Components/LoadingButton";
+import SkillsField from "../../../../Tabs/CommonCode-AllTabs/SkillsInput";
 // v1.0.2 ----------------------------------------------------------------------------------->
+
 
 const EditInterviewDetails = ({
   from,
@@ -753,39 +756,42 @@ const EditInterviewDetails = ({
     }
   };
 
-  const addSkill = (skillName) => {
-    const trimmedSkill = skillName.trim();
-
-    if (!trimmedSkill) {
-      return;
-    }
-
-    // Check if skill already exists in the list (case-insensitive)
-    const skillExists = selectedSkills.some(
-      (s) =>
-        (typeof s === "object" ? s.SkillName : s).toLowerCase() ===
-        trimmedSkill.toLowerCase(),
+  // Handler for SkillsField onAddMultipleSkills in simpleMode
+  const handleAddMultipleSkills = (newEntries, skillsToRemove) => {
+    // Remove skills that were deselected
+    let updatedSkills = selectedSkills.filter(
+      (s) => !skillsToRemove.includes(typeof s === 'object' ? s.SkillName : s)
     );
 
-    if (!skillExists) {
-      const newSkill = {
-        _id: Math.random().toString(36).substr(2, 9),
-        SkillName: trimmedSkill,
-      };
+    // Add newly selected skills
+    const newSkillObjects = newEntries.map((entry) => ({
+      _id: Math.random().toString(36).substr(2, 9),
+      SkillName: entry.skill,
+    }));
+    updatedSkills = [...updatedSkills, ...newSkillObjects];
 
-      const updatedSkills = [...selectedSkills, newSkill];
-
-      setSelectedSkills(updatedSkills);
-      setFormData((prev) => ({
-        ...prev,
-        skills: updatedSkills.map((s) => s?.SkillName || s).filter(Boolean),
-      }));
-      setErrors((prev) => ({ ...prev, skills: "" }));
-    } else {
-      notify.error("Skill already exists");
-    }
+    setSelectedSkills(updatedSkills);
+    setFormData((prev) => ({
+      ...prev,
+      skills: updatedSkills.map((s) => s?.SkillName || s).filter(Boolean),
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      skills: updatedSkills?.length < 3 ? "At least three skills are required" : "",
+    }));
   };
 
+    const clearSkills = () => {
+    setSelectedSkills([]);
+    setFormData((prev) => ({
+      ...prev,
+      skills: [],
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      skills: "At least three skills are required",
+    }));
+  };
   const handleInterviewFormatChange = (event) => {
     const { value, checked } = event.target;
 
@@ -1183,122 +1189,89 @@ const EditInterviewDetails = ({
               />
             </div>
 
-            {/* Skills Selection */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="relative" ref={skillsPopupRef}>
-                  <DropdownWithSearchField
-                    ref={skillsInputRef}
-                    value={null}
-                    allowCreateOnEnter={true}
-                    options={
-                      skills
-                        ?.filter(
-                          (skill) =>
-                            !selectedSkills.some(
-                              (s) => s.SkillName === skill.SkillName,
-                            ),
-                        )
-                        .map((skill) => ({
-                          value: skill.SkillName,
-                          label: skill.SkillName,
-                        })) || []
-                    }
-                    onChange={(option) => {
-                      if (!option) return;
-                      const selectedOption = option?.target?.value
-                        ? { value: option.target.value }
-                        : option;
-                      if (selectedOption?.value) {
-                        addSkill(selectedOption.value);
-                        if (skillsInputRef.current) {
-                          skillsInputRef.current.value = "";
-                        }
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      // Handle the create action from the dropdown
-                      if (e.key === "Enter" && e.target?.action === "create") {
-                        const newSkill = e.target.value?.trim();
-                        if (newSkill) {
-                          addSkill(newSkill);
+            {/* Skills Section */}
+            <div className="col-span-2 sm:col-span-6 space-y-4 w-full mb-3">
+              <SkillsField
+                simpleMode={true}
+                entries={selectedSkills.map((s) => ({
+                  skill: typeof s === 'object' ? s.SkillName : s,
+                  experience: '',
+                  expertise: '',
+                }))}
+                errors={errors}
+                skills={skills}
+                onOpenSkills={loadSkills}
+                onAddMultipleSkills={handleAddMultipleSkills}
+                onAddSkill={() => { }}
+                onDeleteSkill={() => { }}
+                onUpdateEntry={() => { }}
+              />
+              {errors.skills && (
+                <p className="text-red-500 text-sm">{errors.skills}</p>
+              )}
 
-                          // Clear the input field and close the dropdown
-                          setTimeout(() => {
-                            // Blur any active element to close dropdowns
-                            if (document.activeElement) {
-                              document.activeElement.blur();
-                            }
-
-                            // Clear the input field
-                            if (skillsInputRef.current) {
-                              // Clear react-select value
-                              if (skillsInputRef.current.select) {
-                                skillsInputRef.current.select.clearValue();
-                              }
-
-                              // Find and clear the input
-                              const selectInput =
-                                skillsInputRef.current.querySelector("input");
-                              if (selectInput) {
-                                selectInput.value = "";
-                                const inputEvent = new Event("input", {
-                                  bubbles: true,
-                                });
-                                selectInput.dispatchEvent(inputEvent);
-                              }
-                            }
-                          }, 0);
-                        }
-                      }
-                    }}
-                    error={errors.skills}
-                    label="Select Skills"
-                    name="skills"
-                    required={selectedSkills.length === 0}
-                    onMenuOpen={loadSkills}
-                    loading={isSkillsFetching}
-                    isMulti={false}
-                    placeholder="Type to search or press Enter to add new skill"
-                    creatable={true}
-                  />
-                </div>
-
-                {/* Selected Skills */}
-                {formData.skills.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {formData.skills.map((skill, index) => (
-                      <div
-                        key={index}
-                        className="bg-custom-blue/10 border border-custom-blue/40 rounded-full px-3 py-1 text-sm text-custom-blue flex items-center"
-                      >
-                        {/* <SkillIcon className="h-3.5 w-3.5 mr-1.5 text-custom-blue" /> */}
-                        <span className="mr-1.5">{skill}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveSkill(index)}
-                          className="ml-1 text-custom-blue hover:text-custom-blue/80"
-                          aria-label={`Remove ${skill}`}
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
+              {/* Selected Skills Display - Full width */}
+              <div className="w-full mt-4">
+                {selectedSkills && selectedSkills.length > 0 ? (
+                  <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center">
+                        <SkillsIcon className="h-4 w-4 text-purple-500 mr-2" />
+                        <span className="text-sm font-medium text-gray-700">
+                          {selectedSkills.length} skill
+                          {selectedSkills.length !== 1 ? "s" : ""} selected
+                        </span>
                       </div>
-                    ))}
-                    {/* {formData.skills.length >= 10 && (
-                                            <p className="text-xs text-amber-600 mt-1">
-                                                Maximum of 10 skills reached
-                                            </p>
-                                        )} */}
+                      <button
+                        type="button"
+                        onClick={clearSkills}
+                        className="text-sm text-red-600 hover:text-red-800 flex items-center transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Clear All
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSkills.map((skill, index) => {
+                        const skillName =
+                          typeof skill === "object" ? skill.SkillName : skill;
+                        const skillId = skill._id || `skill-${index}`;
+
+                        if (!skillName) {
+                          return null;
+                        }
+
+                        return (
+                          <span
+                            key={skillId}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-custom-blue/10 text-custom-blue border border-custom-blue/50"
+                          >
+                            {skillName}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSkill(
+                                  skill._id || skill.SkillName || skill
+                                );
+                              }}
+                              className="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full text-custom-blue hover:bg-custom-blue/10 hover:text-custom-blue/80 focus:outline-none"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                    <p className="text-sm text-gray-500">
+                      No Skills Selected Yet. Click "Add Skills" To Search And Add Skills.
+                    </p>
                   </div>
                 )}
-
-                {/* {errors.skills && (
-                  <p className="text-red-500 text-xs mt-1">{errors.skills}</p>
-                )} */}
-
-                {/* <p className="text-xs text-gray-500 mt-1">
-                                    {formData.skills.length} of 10 skills selected
-                                </p> */}
               </div>
             </div>
 
@@ -2026,9 +1999,9 @@ const EditInterviewDetails = ({
                   {formData.professionalTitle?.length > 0 && (
                     <p
                       className={`text-xs ${formData.professionalTitle.length < 30 ||
-                          errors.professionalTitle
-                          ? "text-red-500"
-                          : "text-gray-500"
+                        errors.professionalTitle
+                        ? "text-red-500"
+                        : "text-gray-500"
                         }`}
                     >
                       {formData.professionalTitle.length}/100
