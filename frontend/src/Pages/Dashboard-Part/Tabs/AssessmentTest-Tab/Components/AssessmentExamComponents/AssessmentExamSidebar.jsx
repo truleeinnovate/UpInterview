@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Improved responsiveness and fixed minor UI issues
 
 import { ClockIcon } from "@heroicons/react/24/outline";
+import { capitalizeFirstLetter } from "../../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 function AssessmentSidebar({
   questions,
@@ -45,7 +46,7 @@ function AssessmentSidebar({
               >
                 {/* v1.0.0 <----------------------------------------------------------- */}
                 <span className="sm:text-sm md:text-sm lg:text-md xl:text-md 2xl:text-md font-medium">
-                  {section.sectionName}
+                  {capitalizeFirstLetter(section.sectionName)}
                 </span>
                 {/* v1.0.0 -----------------------------------------------------------> */}
                 <span
