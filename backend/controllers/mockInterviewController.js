@@ -1468,7 +1468,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     //  when candidate and interviewer both are present in the round then create history
     if (req.body?.History_Type === "Histoy_Handling") {
       // Special handling: only create history if conditions are met
-      const participants = updatedRound?.participants || [];
+      const participants = existingRound?.participants || [];
       // const isHistoryHandled = participants.some(
       //   (p) => p.role.toLowerCase() === "interviewer" && p.role === "Candidate",
       // );
