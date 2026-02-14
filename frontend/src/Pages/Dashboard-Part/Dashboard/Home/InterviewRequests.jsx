@@ -234,7 +234,7 @@ const InterviewRequests = () => {
           {requests?.slice(0, 3)?.map((request) => (
             <div
               key={request._id || request.id}
-              className="bg-white/80 backdrop-blur-lg p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-300"
+              className="flex flex-col min-h-[180px] bg-white/80 backdrop-blur-lg p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-300"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -297,41 +297,7 @@ const InterviewRequests = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end pt-2 border-t border-gray-100">
-                {/* <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleDetails(request)}
-                    className="px-2.5 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-300"
-                  >
-                    Details
-                  </button>
-                  {request.status === "accepted" ? (
-                    <button
-                      className="px-2.5 py-1 text-xs font-medium text-white bg-green-600/60 rounded-lg cursor-default"
-                      disabled
-                    >
-                      Accepted
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() =>
-                        handleAccept(
-                          request.id,
-                          request.interviewerId,
-                          request.roundId
-                        )
-                      }
-                      disabled={acceptingId === request.id}
-                      className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${
-                        acceptingId === request.id
-                          ? "opacity-60 cursor-wait"
-                          : "cursor-pointer"
-                      }`}
-                    >
-                      {acceptingId === request.id ? "Accepting..." : "Accept"}
-                    </button>
-                  )}
-                </div> */}
+              <div className="flex items-center justify-end mt-auto">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleDetails(request)}

@@ -59,21 +59,18 @@ const candidateValidationSchema = Joi.object({
   }),
 
   // ── NEW FIELDS ───────────────────────────────────────────────────────
-  location: Joi.string()
-    .trim()
-    .max(200)
-    .optional()
-    .allow("", null),
+  location: Joi.string().trim().max(200).optional().allow("", null),
 
-  minSalary: Joi.number()
-    .min(0)
-    .optional()
-    .allow(null, ""),
+  // minSalary: Joi.number()
+  //   .min(0)
+  //   .optional()
+  //   .allow(null, ""),
 
-  maxSalary: Joi.number()
-    .min(Joi.ref("minSalary")) // optional: enforce max >= min
-    .optional()
-    .allow(null, ""),
+  // maxSalary: Joi.number()
+  //   .min(Joi.ref("minSalary")) // optional: enforce max >= min
+  //   .optional()
+  //   .allow(null, ""),
+  annualSalary: Joi.number().min(50000).optional().allow(null, ""),
 
   languages: Joi.array()
     .items(Joi.string().trim().max(100))
@@ -87,7 +84,7 @@ const candidateValidationSchema = Joi.object({
         name: Joi.string().trim().optional().allow(""),
         issuingFrom: Joi.string().trim().optional().allow(""),
         issuingYear: Joi.number().optional().allow("", null),
-      })
+      }),
     )
     .optional()
     .allow(null),
@@ -102,7 +99,7 @@ const candidateValidationSchema = Joi.object({
       "60days",
       "90days",
       "Morethan90days",
-      "Negotiable"
+      "Negotiable",
     )
     .optional()
     .allow("", null)
@@ -185,7 +182,7 @@ const candidateValidationSchema = Joi.object({
             "string.min": "Responsibilities must be at least 150 characters",
             "string.max": "Responsibilities cannot exceed 1000 characters",
           }),
-      })
+      }),
     )
     .optional(),
 
@@ -202,7 +199,7 @@ const candidateValidationSchema = Joi.object({
   summary: Joi.string().optional().allow(null, ""),
   matchedSkills: Joi.array().items(Joi.string()).optional(),
   missingSkills: Joi.array().items(Joi.string()).optional(),
-}).unknown(true);  // ← optional: allows any other extra fields in future
+}).unknown(true); // ← optional: allows any other extra fields in future
 
 // 🔹 Add custom validation for RelevantExperience <= CurrentExperience
 const validateCandidateData = (data) => {

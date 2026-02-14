@@ -11,8 +11,9 @@ const candidateSchema = new mongoose.Schema(
     Gender: String,
     linkedInUrl: String,
     location: String,
-    maxSalary: Number,
-    minSalary: Number,
+    // maxSalary: Number,
+    // minSalary: Number,
+    annualSalary: Number,
     languages: [String],
     certifications: [{
       name: String,

@@ -26,6 +26,7 @@ import {
   FileText,
   ExternalLink,
   IndianRupee,
+  Hash,
 
 } from "lucide-react";
 import Modal from "react-modal";
@@ -806,7 +807,7 @@ const PositionSlideDetails = () => {
                             </div>
                           </div>
                           <div className="flex items-start gap-3">
-                            <span className="text-custom-blue font-bold text-sm">#</span>
+                            <Hash className="w-4 h-4 text-custom-blue mt-0.5" />
                             <div>
                               <p className="text-sm text-gray-500">No. of Positions</p>
                               <p className="font-medium text-gray-800">{position?.NoofPositions || 1}</p>
@@ -858,10 +859,10 @@ const PositionSlideDetails = () => {
                           </div>
                           {/* {position?.externalId && ( */}
                           <div className="flex items-start gap-3">
-                            <span className="text-custom-blue font-bold text-sm">#</span>
+                            <Hash className="w-4 h-4 text-custom-blue mt-0.5" />
                             <div>
                               <p className="text-sm text-gray-500">External ID</p>
-                              <p className="font-medium text-gray-800">{position.externalId || "N/A"} </p>
+                              <p className="font-medium text-sm text-gray-800">{position.externalId || "N/A"} </p>
                             </div>
                           </div>
                           {/* )} */}
