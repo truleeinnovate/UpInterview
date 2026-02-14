@@ -268,14 +268,14 @@ const AdditionalDetails = ({
 
         <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
-            value={additionalDetailsData.HigherQualification}
+            value={additionalDetailsData.higherQualification}
             options={qualificationOptionsRS}
             onChange={handleChange}
-            error={errors.HigherQualification}
+            // error={errors.higherQualification}
             // containerRef={fieldRefs.HigherQualification}
             label="Higher Qualification"
-            name="HigherQualification"
-            required
+            name="higherQualification"
+            // required
             onMenuOpen={loadQualifications}
             loading={isQualificationsFetching}
           />
@@ -284,18 +284,18 @@ const AdditionalDetails = ({
         <div className="sm:col-span-2 col-span-1">
 
           <DropdownWithSearchField
-            value={additionalDetailsData.UniversityCollege}
+            value={additionalDetailsData.universityCollege}
             options={collegeOptionsRS}
             onChange={(e) => {
               const { value } = e.target;
               setAdditionalDetailsData((prev) => ({
                 ...prev,
-                UniversityCollege: value,
+                universityCollege: value,
               }));
-              if (errors.UniversityCollege) {
+              if (errors.universityCollege) {
                 setErrors((prevErrors) => ({
                   ...prevErrors,
-                  UniversityCollege: "",
+                  universityCollege: "",
                 }));
               }
             }}
@@ -304,10 +304,10 @@ const AdditionalDetails = ({
             setIsCustomName={setIsCustomUniversity}
             // containerRef={fieldRefs.UniversityCollege}
             label="University / College"
-            name="UniversityCollege"
+            name="universityCollege"
             onMenuOpen={loadColleges}
             loading={isCollegesFetching}
-            required
+            // required
           />
         </div>
         {/* Current Role */}
@@ -380,7 +380,7 @@ const AdditionalDetails = ({
           />
         </div>
         {/* Industry */}
-        <div className="sm:col-span-2 col-span-1">
+        {/* <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
             value={additionalDetailsData.industry || ""}
             options={[
@@ -412,7 +412,7 @@ const AdditionalDetails = ({
             onMenuOpen={loadIndustries}
             loading={isIndustriesFetching}
           />
-        </div>
+        </div> */}
 
         {/* Location */}
         <div className="sm:col-span-2 col-span-1">
@@ -441,9 +441,9 @@ const AdditionalDetails = ({
             name="location"
             onChange={handleChange}
             error={errors.location}
-            label="Location"
-            placeholder="Select Location"
-            required={true}
+            label="Current Location"
+            placeholder="Select Your Current Location"
+            // required={true}
             onMenuOpen={loadLocations}
             loading={isLocationsFetching}
           />

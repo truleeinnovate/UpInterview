@@ -150,10 +150,10 @@ const AccountSettingsSidebar = () => {
           }
 
           const hasPermission = checkPermission(permissionKey);
-          console.log(`🎯 Non-super admin ${item.id}:`, {
-            permissionKey,
-            hasPermission,
-          });
+          // console.log(`🎯 Non-super admin ${item.id}:`, {
+          //   permissionKey,
+          //   hasPermission,
+          // });
 
           if (
             [

@@ -35,18 +35,16 @@ const contactPatchSchema = Joi.object({
   currentRole: Joi.string().messages({
     "string.empty": "Current Role is required",
   }),
-  industry: Joi.string().messages({
-    "string.empty": "Industry is required",
-  }),
+  industry: Joi.string().allow("", null),
   yearsOfExperience: Joi.number().integer().min(0).max(50).messages({
     "number.base": "Years of Experience must be a number",
     "number.integer": "Years of Experience must be a whole number",
     "number.min": "Years of Experience cannot be negative",
     "number.max": "Years of Experience cannot be more than 50",
   }),
-  location: Joi.string().messages({
-    "string.empty": "Location is required",
-  }),
+  location: Joi.string().allow("", null),
+  higherQualification: Joi.string().allow("", null),
+  UniversityCollege: Joi.string().allow("", null),
 
   // Interview
   PreviousExperienceConductingInterviews: Joi.string().messages({

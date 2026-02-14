@@ -67,24 +67,36 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
         {/* v1.0.1 <--------------------------------------------------------------------------------------------- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-4">
           <div>
+            <p className="text-sm text-gray-500">Higher Qualification</p>
+            <p className="font-medium sm:text-sm">
+              {contactData?.higherQualification || "Not Provided"}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">University / College</p>
+            <p className="font-medium sm:text-sm">
+              {contactData?.universityCollege || "Not Provided"}
+            </p>
+          </div>
+          <div>
             <p className="text-sm text-gray-500">Current Role / Technology</p>
             <p className="font-medium sm:text-sm">
               {contactData?.currentRoleLabel || "Not Provided"}
             </p>
           </div>
-            <div>
-              <p className="text-sm text-gray-500">Years of Experience</p>
-              {/* <p className="font-medium sm:text-sm">
+          <div>
+            <p className="text-sm text-gray-500">Years of Experience</p>
+            {/* <p className="font-medium sm:text-sm">
                 {contactData.yearsOfExperience
                   ? `${contactData.yearsOfExperience} Years`
                   : "Not Provided"}
               </p> */}
-              <p className="font-medium sm:text-sm">
-                {contactData.yearsOfExperience 
-                  ? `${contactData.yearsOfExperience} ${experienceLabel}` 
-                  : "Not Provided"}
-              </p>
-            </div>
+            <p className="font-medium sm:text-sm">
+              {contactData.yearsOfExperience
+                ? `${contactData.yearsOfExperience} ${experienceLabel}`
+                : "Not Provided"}
+            </p>
+          </div>
           <div>
             <p className="text-sm text-gray-500">Current Company</p>
             <p className="font-medium sm:text-sm">
@@ -93,21 +105,21 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
           </div>
 
 
-   <div>
-              <p className="text-sm text-gray-500">Industry</p>
-              <p className="font-medium sm:text-sm">
-                {contactData?.industry || "Not Provided"}
-              </p>
+          <div>
+            <p className="text-sm text-gray-500">Industry</p>
+            <p className="font-medium sm:text-sm">
+              {contactData?.industry || "Not Provided"}
+            </p>
           </div>
 
-            <div>
-              <p className="text-sm text-gray-500">Location</p>
-              <p className="font-medium sm:text-sm">
-                {contactData.location || "Not Provided"}
-              </p>
-            </div>
+          <div>
+            <p className="text-sm text-gray-500">Location</p>
+            <p className="font-medium sm:text-sm">
+              {contactData.location || "Not Provided"}
+            </p>
+          </div>
 
-         
+
         </div>
         {/* v1.0.1 <--------------------------------------------------------------------------------------------- */}
 

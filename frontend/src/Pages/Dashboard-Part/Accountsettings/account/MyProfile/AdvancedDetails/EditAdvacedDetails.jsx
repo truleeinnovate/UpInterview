@@ -46,16 +46,22 @@ const EditAdvacedDetails = ({
 }) => {
   const pageType = "adminPortal";
   const {
-    // skills,
     locations,
-    isLocationsFetching,
+    colleges,
+    qualifications,
     loadLocations,
-    isIndustriesFetching,
-    loadIndustries,
+    isLocationsFetching,
     industries,
+    loadIndustries,
+    loadColleges,
+    loadQualifications,
+    isIndustriesFetching,
     currentRoles,
     loadCurrentRoles,
     isCurrentRolesFetching,
+    isQualificationsFetching,
+    isCollegesFetching,
+
   } = useMasterData({}, pageType);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -103,9 +109,57 @@ const EditAdvacedDetails = ({
     yearsOfExperience: "",
     location: "",
     company: "",
+    higherQualification: "",
+    universityCollege: "",
   });
 
   const [loading, setLoading] = useState(false);
+  const [isCustomUniversity, setIsCustomUniversity] = useState(false);
+
+  // Load all dropdown data when component mounts
+  useEffect(() => {
+    loadCurrentRoles();
+    loadIndustries();
+    loadLocations();
+  }, [loadCurrentRoles, loadIndustries, loadLocations]);
+
+  const qualificationOptionsRS = useMemo(
+    () =>
+      qualifications?.map((q) => ({
+        value: q?.QualificationName,
+        label: q?.QualificationName,
+      })) || [],
+    [qualifications],
+  );
+
+  const collegeOptionsRS = useMemo(
+    () =>
+      (
+        colleges?.map((c) => ({
+          value: c?.University_CollegeName,
+          label: c?.University_CollegeName,
+        })) || []
+      ).concat([{ value: "__other__", label: "+ Others" }]),
+    [colleges],
+  );
+
+  useEffect(() => {
+    const saved = (formData.universityCollege || "").trim();
+    // When nothing saved, keep dropdown mode
+    if (!saved) {
+      setIsCustomUniversity(false);
+      return;
+    }
+    // Avoid forcing custom mode if colleges are not loaded yet
+    if (!Array.isArray(colleges) || colleges.length === 0) {
+      return;
+    }
+    const list = (colleges || []).map((c) =>
+      (c?.University_CollegeName || "").trim().toLowerCase(),
+    );
+    const existsInList = list.includes(saved.toLowerCase());
+    setIsCustomUniversity(!existsInList);
+  }, [colleges, formData.universityCollege]);
 
   useEffect(() => {
     // Use profileData which works for both contexts
@@ -119,6 +173,8 @@ const EditAdvacedDetails = ({
         location: profileData.location || "",
         company: profileData.company || "",
         id: profileData._id,
+        higherQualification: profileData.higherQualification || "",
+        universityCollege: profileData.universityCollege || "",
       });
       // setResumeName(profileData?.resume?.filename);
       // setCoverLetterName(profileData?.coverLetter?.filename);
@@ -176,8 +232,10 @@ const EditAdvacedDetails = ({
       company: formData.company?.trim() || "",
       // skills: formData.skills
       id: formData.id,
+      higherQualification: formData.higherQualification?.trim() || "",
+      universityCollege: formData.universityCollege?.trim() || "",
     };
-
+    console.log("cleanFormData", cleanFormData);
     try {
       setLoading(true);
 
@@ -270,9 +328,9 @@ const EditAdvacedDetails = ({
     () =>
       Array.isArray(industries)
         ? industries.map((i) => ({
-            value: i.IndustryName,
-            label: i.IndustryName,
-          }))
+          value: i.IndustryName,
+          label: i.IndustryName,
+        }))
         : [],
     [industries],
   );
@@ -281,9 +339,9 @@ const EditAdvacedDetails = ({
     () =>
       Array.isArray(locations)
         ? locations.map((l) => ({
-            value: l.LocationName,
-            label: l.LocationName,
-          }))
+          value: l.LocationName,
+          label: l.LocationName,
+        }))
         : [],
     [locations],
   );
@@ -346,6 +404,51 @@ const EditAdvacedDetails = ({
           <div className="grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6">
             <div className="flex flex-col">
               <DropdownWithSearchField
+                value={formData.higherQualification}
+                options={qualificationOptionsRS}
+                onChange={handleInputChange}
+                error={errors.higherQualification}
+                // containerRef={fieldRefs.HigherQualification}
+                label="Higher Qualification"
+                name="higherQualification"
+                // required
+                onMenuOpen={loadQualifications}
+                loading={isQualificationsFetching}
+              />
+  
+            </div>
+            <div className="flex flex-col">
+
+              <DropdownWithSearchField
+                value={formData.universityCollege}
+                options={collegeOptionsRS}
+                onChange={(e) => {
+                  const { value } = e.target;
+                  setFormData((prev) => ({
+                    ...prev,
+                    universityCollege: value,
+                  }));
+                  if (errors.universityCollege) {
+                    setErrors((prevErrors) => ({
+                      ...prevErrors,
+                      universityCollege: "",
+                    }));
+                  }
+                }}
+                // error={errors.UniversityCollege}
+                isCustomName={isCustomUniversity}
+                setIsCustomName={setIsCustomUniversity}
+                // containerRef={fieldRefs.UniversityCollege}
+                label="University / College"
+                name="universityCollege"
+                onMenuOpen={loadColleges}
+                loading={isCollegesFetching}
+              />
+
+            </div>
+
+            <div className="flex flex-col">
+              <DropdownWithSearchField
                 value={formData.currentRole}
                 options={currentRoleOptionsWithCurrent}
                 // disabled={
@@ -367,7 +470,8 @@ const EditAdvacedDetails = ({
               />
             </div>
 
-              <div className="flex flex-col">
+
+            <div className="flex flex-col">
               <IncreaseAndDecreaseField
                 value={formData.yearsOfExperience}
                 onChange={handleInputChange}
@@ -401,13 +505,13 @@ const EditAdvacedDetails = ({
                 error={errors.industry}
                 containerRef={fieldRefs.industry}
                 label="Industry"
-                required
+                // required
                 onMenuOpen={loadIndustries}
                 loading={isIndustriesFetching}
               />
             </div>
 
-          
+
 
             <div className="flex flex-col">
               <DropdownWithSearchField
@@ -417,8 +521,8 @@ const EditAdvacedDetails = ({
                 onChange={handleInputChange}
                 error={errors.location}
                 containerRef={fieldRefs.location}
-                label="Location"
-                required
+                label="Current Location"
+                // required
                 onMenuOpen={loadLocations}
                 loading={isLocationsFetching}
               />

@@ -43,8 +43,8 @@ const additionalDetailsSchema = Joi.object({
   }),
   location:Joi.string().allow("", null),
   resume: Joi.string().allow("", null),
-  HigherQualification: Joi.string().allow("", null),
-  UniversityCollege: Joi.string().allow("", null),
+  higherQualification: Joi.string().allow("", null),
+  universityCollege: Joi.string().allow("", null),
   // coverLetter: Joi.string().allow("", null),
 });
 
