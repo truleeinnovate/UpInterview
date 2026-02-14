@@ -22,7 +22,7 @@ import { validateWorkEmail } from "../../../../../utils/workEmailValidation";
 import { config } from "../../../../../config";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 
-// Helper function to format date as dd-mm-yy
+// Helper function to format date as dd-mm-yyyy
 const formatDate = (dateStr) => {
   if (!dateStr) return "N/A";
   const date = new Date(dateStr);
@@ -30,9 +30,9 @@ const formatDate = (dateStr) => {
 
   const dd = String(date.getDate()).padStart(2, "0");
   const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const yy = String(date.getFullYear()).slice(-2);
+  const yyyy = date.getFullYear();
 
-  return `${dd}-${mm}-${yy}`;
+  return `${dd}-${mm}-${yyyy}`;
 };
 
 // Loading Skeleton for Current Plan Section
@@ -538,11 +538,10 @@ const Subscription = () => {
                       ? setShowRenewalModal(true)
                       : setShowCancelModal(true)
                   }
-                  className={`${
-                    isSubscriptionExpired
+                  className={`${isSubscriptionExpired
                       ? "bg-green-600 hover:bg-green-700 animate-pulse"
                       : "bg-custom-blue hover:bg-custom-blue/80"
-                  } py-2 px-4 rounded-lg text-white transition-all duration-300 font-semibold`}
+                    } py-2 px-4 rounded-lg text-white transition-all duration-300 font-semibold`}
                 >
                   {isSubscriptionExpired
                     ? "🔄 Renew Subscription"
@@ -561,21 +560,19 @@ const Subscription = () => {
             <div className="flex justify-between items-start p-4">
               <div>
                 {/* v1.0.2 <------------------------------------------------------- */}
-                <h3 className="text-base sm:text-sm md:text-xl font-medium">{`Current Plan: ${
-                  subscriptionData?.planName
+                <h3 className="text-base sm:text-sm md:text-xl font-medium">{`Current Plan: ${subscriptionData?.planName
                     ? subscriptionData?.planName
                     : "Plan Name Not Available"
-                } (${
-                  subscriptionData?.selectedBillingCycle
+                  } (${subscriptionData?.selectedBillingCycle
                     ? capitalizeFirstLetter(
-                        subscriptionData?.selectedBillingCycle
-                      )
+                      subscriptionData?.selectedBillingCycle
+                    )
                     : // subscriptionData?.selectedBillingCycle
-                      //   .charAt(0)
-                      //   .toUpperCase() +
-                      // subscriptionData?.selectedBillingCycle.slice(1)
-                      "Billing Cycle Not Available"
-                })`}</h3>
+                    //   .charAt(0)
+                    //   .toUpperCase() +
+                    // subscriptionData?.selectedBillingCycle.slice(1)
+                    "Billing Cycle Not Available"
+                  })`}</h3>
                 <p className="text-gray-600 mt-1 sm:text-sm md:text-base lg:text-base xl:text-base 2xl:text-base">
                   {/* v1.0.2 <------------------------------------------------------- */}
                   {isSubscriptionExpired ? (
@@ -599,19 +596,18 @@ const Subscription = () => {
                 </p>
               </div>
               <span
-                className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${
-                  subscriptionData.status === "active"
+                className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${subscriptionData.status === "active"
                     ? "bg-green-100 text-green-800"
                     : subscriptionData.status === "expired"
-                    ? "bg-red-100 text-red-800 animate-pulse"
-                    : subscriptionData.status === "cancelled"
-                    ? "bg-gray-100 text-gray-800"
-                    : "bg-yellow-100 text-yellow-800"
-                }`}
+                      ? "bg-red-100 text-red-800 animate-pulse"
+                      : subscriptionData.status === "cancelled"
+                        ? "bg-gray-100 text-gray-800"
+                        : "bg-yellow-100 text-yellow-800"
+                  }`}
               >
                 {subscriptionData.status
                   ? subscriptionData.status.charAt(0).toUpperCase() +
-                    subscriptionData.status.slice(1)
+                  subscriptionData.status.slice(1)
                   : "inactive"}
               </span>
             </div>
@@ -624,32 +620,28 @@ const Subscription = () => {
         ) : (
           <div className="flex justify-center items-center space-x-2 mb-16">
             <p
-              className={`text-custom-blue ${
-                !isAnnual
+              className={`text-custom-blue ${!isAnnual
                   ? "font-semibold text-base sm:text-lg md:text-xl"
                   : "font-medium text-sm sm:text-base md:text-lg"
-              }`}
+                }`}
             >
               Bill Monthly
             </p>
             <div
               onClick={toggleBilling}
-              className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
-                isAnnual ? "bg-[#217989]" : "bg-[#217989]"
-              }`}
+              className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${isAnnual ? "bg-[#217989]" : "bg-[#217989]"
+                }`}
             >
               <div
-                className={`w-4 h-4 rounded-full shadow-md transform transition-all ${
-                  isAnnual ? "translate-x-6 bg-white" : "translate-x-0 bg-white"
-                }`}
+                className={`w-4 h-4 rounded-full shadow-md transform transition-all ${isAnnual ? "translate-x-6 bg-white" : "translate-x-0 bg-white"
+                  }`}
               ></div>
             </div>
             <p
-              className={`text-[#217989] ${
-                isAnnual
+              className={`text-[#217989] ${isAnnual
                   ? "font-semibold text-base sm:text-lg md:text-xl"
                   : "font-medium text-sm sm:text-base md:text-lg"
-              }`}
+                }`}
             >
               Bill Annually
             </p>
@@ -718,11 +710,10 @@ const Subscription = () => {
                 return (
                   <div
                     key={plan.name}
-                    className={`shadow-lg rounded-2xl relative transition-all duration-300 flex flex-col h-full ${
-                      isHighlighted(plan)
+                    className={`shadow-lg rounded-2xl relative transition-all duration-300 flex flex-col h-full ${isHighlighted(plan)
                         ? "-translate-y-2 md:-translate-y-3 z-10 bg-[#217989] text-white transform scale-[1.02]"
                         : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
-                    }`}
+                      }`}
                     onMouseEnter={() => setHoveredPlan(plan.name)}
                     onMouseLeave={() => setHoveredPlan(null)}
                     style={{ minHeight: "500px" }}
@@ -733,21 +724,20 @@ const Subscription = () => {
                         (plan.name === "Professional" ||
                           plan.name === "Pro")) ||
                         (!organization && plan.name === "Premium")) && (
-                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                          <span className="bg-[#217989] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
-                            Most Popular
-                          </span>
-                        </div>
-                      )}
+                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                            <span className="bg-[#217989] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
+                              Most Popular
+                            </span>
+                          </div>
+                        )}
 
                       {/* Plan Name - Centered */}
                       <div className="text-start mb-4">
                         <h5
-                          className={`text-xl md:text-2xl font-bold ${
-                            isHighlighted(plan)
+                          className={`text-xl md:text-2xl font-bold ${isHighlighted(plan)
                               ? "text-white"
                               : "text-[#217989]"
-                          }`}
+                            }`}
                         >
                           {plan?.name ? plan?.name : "Plan Name Not Available"}
                         </h5>
@@ -763,11 +753,10 @@ const Subscription = () => {
                             plan.features.map((feature, idx) => (
                               <li key={idx} className="flex items-center">
                                 <span
-                                  className={`mr-2 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
-                                    isHighlighted(plan)
+                                  className={`mr-2 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${isHighlighted(plan)
                                       ? "bg-white/20 text-white"
                                       : "bg-green-100 text-green-600"
-                                  }`}
+                                    }`}
                                 >
                                   <svg
                                     className="w-3 h-3"
@@ -793,11 +782,10 @@ const Subscription = () => {
                           // Monthly plans for organizations - Show strikethrough and Limited-Time Offer
                           <div>
                             <p
-                              className={`text-xl sm:text-2xl md:text-3xl font-bold line-through ${
-                                isHighlighted(plan)
+                              className={`text-xl sm:text-2xl md:text-3xl font-bold line-through ${isHighlighted(plan)
                                   ? "text-white/70"
                                   : "text-gray-400"
-                              }`}
+                                }`}
                             >
                               <span className="text-base sm:text-lg md:text-xl">
                                 ₹
@@ -805,21 +793,19 @@ const Subscription = () => {
                               {staticHigherPrice.toLocaleString("en-IN")}
                             </p>
                             <p
-                              className={`text-xs font-medium mt-1 ${
-                                isHighlighted(plan)
+                              className={`text-xs font-medium mt-1 ${isHighlighted(plan)
                                   ? "text-white/80"
                                   : "text-gray-500"
-                              }`}
+                                }`}
                             >
                               per month
                             </p>
                             <div className="mt-1">
                               <span
-                                className={`inline-block px-3 py-1.5 rounded-md text-xs font-semibold ${
-                                  isHighlighted(plan)
+                                className={`inline-block px-3 py-1.5 rounded-md text-xs font-semibold ${isHighlighted(plan)
                                     ? "bg-white/20 text-white"
                                     : "bg-yellow-100 text-yellow-800"
-                                }`}
+                                  }`}
                               >
                                 Limited-Time Offer: ₹
                                 {actualPrice.toLocaleString("en-IN")} / month
@@ -830,11 +816,10 @@ const Subscription = () => {
                           // Annual plans for organizations - Show actual price and savings
                           <div>
                             <p
-                              className={`text-xl sm:text-2xl md:text-3xl font-bold ${
-                                isHighlighted(plan)
+                              className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
                                   ? "text-white"
                                   : "text-[#217989]"
-                              }`}
+                                }`}
                             >
                               <span className="text-base sm:text-lg md:text-xl">
                                 ₹
@@ -842,21 +827,19 @@ const Subscription = () => {
                               {actualPrice.toLocaleString("en-IN")}
                             </p>
                             <p
-                              className={`text-xs font-medium mt-1 ${
-                                isHighlighted(plan)
+                              className={`text-xs font-medium mt-1 ${isHighlighted(plan)
                                   ? "text-white/80"
                                   : "text-gray-600"
-                              }`}
+                                }`}
                             >
                               per year
                             </p>
                             <div className="mt-1">
                               <span
-                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                                  isHighlighted(plan)
+                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${isHighlighted(plan)
                                     ? "bg-green-100/20 text-white border border-white/30"
                                     : "bg-green-50 text-green-700 border border-green-200"
-                                }`}
+                                  }`}
                               >
                                 <span className="text-sm">🔥</span>
                                 Save ₹{savingsAmount.toLocaleString("en-IN")}
@@ -868,20 +851,18 @@ const Subscription = () => {
                           // Enterprise plan - Show custom pricing
                           <div>
                             <p
-                              className={`text-xl sm:text-2xl md:text-3xl font-bold ${
-                                isHighlighted(plan)
+                              className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
                                   ? "text-white"
                                   : "text-[#217989]"
-                              }`}
+                                }`}
                             >
                               Custom
                             </p>
                             <p
-                              className={`text-xs font-medium mt-1 ${
-                                isHighlighted(plan)
+                              className={`text-xs font-medium mt-1 ${isHighlighted(plan)
                                   ? "text-white/80"
                                   : "text-gray-600"
-                              }`}
+                                }`}
                             >
                               pricing
                             </p>
@@ -890,11 +871,10 @@ const Subscription = () => {
                           // Free plan - Show ₹0 forever
                           <div>
                             <p
-                              className={`text-xl sm:text-2xl md:text-3xl font-bold ${
-                                isHighlighted(plan)
+                              className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
                                   ? "text-white"
                                   : "text-[#217989]"
-                              }`}
+                                }`}
                             >
                               <span className="text-base sm:text-lg md:text-xl">
                                 ₹
@@ -902,11 +882,10 @@ const Subscription = () => {
                               0
                             </p>
                             <p
-                              className={`text-xs font-medium mt-1 ${
-                                isHighlighted(plan)
+                              className={`text-xs font-medium mt-1 ${isHighlighted(plan)
                                   ? "text-white/80"
                                   : "text-gray-600"
-                              }`}
+                                }`}
                             >
                               forever
                             </p>
@@ -915,11 +894,10 @@ const Subscription = () => {
                           // Individual annual plans - Show price with savings
                           <div>
                             <p
-                              className={`text-xl sm:text-2xl md:text-3xl font-bold ${
-                                isHighlighted(plan)
+                              className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
                                   ? "text-white"
                                   : "text-[#217989]"
-                              }`}
+                                }`}
                             >
                               <span className="text-base sm:text-lg md:text-xl">
                                 ₹
@@ -927,21 +905,19 @@ const Subscription = () => {
                               {actualPrice.toLocaleString("en-IN")}
                             </p>
                             <p
-                              className={`text-xs font-medium mt-1 ${
-                                isHighlighted(plan)
+                              className={`text-xs font-medium mt-1 ${isHighlighted(plan)
                                   ? "text-white/80"
                                   : "text-gray-600"
-                              }`}
+                                }`}
                             >
                               per year
                             </p>
                             <div className="mt-1">
                               <span
-                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                                  isHighlighted(plan)
+                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${isHighlighted(plan)
                                     ? "bg-green-100/20 text-white border border-white/30"
                                     : "bg-green-50 text-green-700 border border-green-200"
-                                }`}
+                                  }`}
                               >
                                 Save ₹{savingsAmount.toLocaleString("en-IN")}
                                 /year
@@ -952,11 +928,10 @@ const Subscription = () => {
                           // Regular pricing for individuals or other cases
                           <div>
                             <p
-                              className={`text-xl sm:text-2xl md:text-3xl font-bold ${
-                                isHighlighted(plan)
+                              className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
                                   ? "text-white"
                                   : "text-[#217989]"
-                              }`}
+                                }`}
                             >
                               <span className="text-base sm:text-lg md:text-xl">
                                 ₹
@@ -977,75 +952,73 @@ const Subscription = () => {
                           isEnterprise
                             ? handleContactSales
                             : () =>
-                                isSubscriptionExpired
-                                  ? handleRenewalPlanSelection(plan)
-                                  : submitPlans(plan)
+                              isSubscriptionExpired
+                                ? handleRenewalPlanSelection(plan)
+                                : submitPlans(plan)
                         }
                         className={`w-full font-semibold py-2.5 mt-auto rounded-lg text-sm
-                ${
-                  isHighlighted(plan)
-                    ? "bg-white text-custom-blue"
-                    : isSubscriptionExpired
-                    ? "text-white bg-green-600 hover:bg-green-700 animate-pulse"
-                    : "text-white bg-custom-blue"
-                }
-                ${
-                  subscriptionData.subscriptionPlanId === plan.planId &&
-                  subscriptionData.selectedBillingCycle ===
-                    (isAnnual ? "annual" : "monthly") &&
-                  subscriptionData.status === "active"
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }
+                ${isHighlighted(plan)
+                            ? "bg-white text-custom-blue"
+                            : isSubscriptionExpired
+                              ? "text-white bg-green-600 hover:bg-green-700 animate-pulse"
+                              : "text-white bg-custom-blue"
+                          }
+                ${subscriptionData.subscriptionPlanId === plan.planId &&
+                            subscriptionData.selectedBillingCycle ===
+                            (isAnnual ? "annual" : "monthly") &&
+                            subscriptionData.status === "active"
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                          }
                 ${(() => {
-                  // Check if this is an upgrade button - No animation for Enterprise or cancelled subscriptions
-                  if (isEnterprise || subscriptionData.status === "cancelled")
-                    return "";
-                  if (subscriptionData.subscriptionPlanId) {
-                    const viewingCycle = isAnnual ? "annual" : "monthly";
-                    const isSamePlan =
-                      subscriptionData.subscriptionPlanId === plan.planId;
-                    // Monthly -> Annual on the same plan should show upgrade animation
-                    if (
-                      (isSamePlan || !isSamePlan) &&
-                      subscriptionData.selectedBillingCycle === "monthly" &&
-                      viewingCycle === "annual"
-                    ) {
-                      return "upgrade-button-animation";
-                    }
-                    const currentPlanIndex = plans.findIndex(
-                      (p) => p.planId === subscriptionData.subscriptionPlanId
-                    );
-                    const thisPlanIndex = plans.findIndex(
-                      (p) => p.planId === plan.planId
-                    );
-                    if (
-                      subscriptionData.selectedBillingCycle === viewingCycle &&
-                      currentPlanIndex !== -1 &&
-                      thisPlanIndex !== -1
-                    ) {
-                      const currentPlan = plans[currentPlanIndex];
-                      const currentPrice = getPlanPrice(
-                        currentPlan,
-                        viewingCycle
-                      );
-                      const thisPrice = getPlanPrice(plan, viewingCycle);
-                      if (currentPrice != null && thisPrice != null) {
-                        if (thisPrice > currentPrice) {
-                          return "upgrade-button-animation";
-                        }
-                      }
-                      if (thisPlanIndex > currentPlanIndex) {
-                        return "upgrade-button-animation";
-                      }
-                    }
-                  }
-                  return "";
-                })()}`}
+                            // Check if this is an upgrade button - No animation for Enterprise or cancelled subscriptions
+                            if (isEnterprise || subscriptionData.status === "cancelled")
+                              return "";
+                            if (subscriptionData.subscriptionPlanId) {
+                              const viewingCycle = isAnnual ? "annual" : "monthly";
+                              const isSamePlan =
+                                subscriptionData.subscriptionPlanId === plan.planId;
+                              // Monthly -> Annual on the same plan should show upgrade animation
+                              if (
+                                (isSamePlan || !isSamePlan) &&
+                                subscriptionData.selectedBillingCycle === "monthly" &&
+                                viewingCycle === "annual"
+                              ) {
+                                return "upgrade-button-animation";
+                              }
+                              const currentPlanIndex = plans.findIndex(
+                                (p) => p.planId === subscriptionData.subscriptionPlanId
+                              );
+                              const thisPlanIndex = plans.findIndex(
+                                (p) => p.planId === plan.planId
+                              );
+                              if (
+                                subscriptionData.selectedBillingCycle === viewingCycle &&
+                                currentPlanIndex !== -1 &&
+                                thisPlanIndex !== -1
+                              ) {
+                                const currentPlan = plans[currentPlanIndex];
+                                const currentPrice = getPlanPrice(
+                                  currentPlan,
+                                  viewingCycle
+                                );
+                                const thisPrice = getPlanPrice(plan, viewingCycle);
+                                if (currentPrice != null && thisPrice != null) {
+                                  if (thisPrice > currentPrice) {
+                                    return "upgrade-button-animation";
+                                  }
+                                }
+                                if (thisPlanIndex > currentPlanIndex) {
+                                  return "upgrade-button-animation";
+                                }
+                              }
+                            }
+                            return "";
+                          })()}`}
                         disabled={
                           subscriptionData.subscriptionPlanId === plan.planId &&
                           subscriptionData.selectedBillingCycle ===
-                            (isAnnual ? "annual" : "monthly") &&
+                          (isAnnual ? "annual" : "monthly") &&
                           subscriptionData.status === "active"
                         }
                       >
@@ -1079,15 +1052,15 @@ const Subscription = () => {
                         ) : subscriptionData.status === "cancelled" ? (
                           "Choose"
                         ) : subscriptionData.subscriptionPlanId ===
-                            plan.planId &&
+                          plan.planId &&
                           subscriptionData.selectedBillingCycle ===
-                            (isAnnual ? "annual" : "monthly") &&
+                          (isAnnual ? "annual" : "monthly") &&
                           subscriptionData.status === "active" ? (
                           "Subscribed"
                         ) : subscriptionData.subscriptionPlanId ===
-                            plan.planId &&
+                          plan.planId &&
                           subscriptionData.selectedBillingCycle ===
-                            (isAnnual ? "annual" : "monthly") &&
+                          (isAnnual ? "annual" : "monthly") &&
                           subscriptionData.status === "created" ? (
                           "Continue to Payment"
                         ) : (
@@ -1338,11 +1311,11 @@ const Subscription = () => {
                       {isAnnual ? "Annual" : "Monthly"} billing - ₹
                       {isAnnual
                         ? selectedPlanForRenewal.annualPrice?.toLocaleString(
-                            "en-IN"
-                          )
+                          "en-IN"
+                        )
                         : selectedPlanForRenewal.monthlyPrice?.toLocaleString(
-                            "en-IN"
-                          )}
+                          "en-IN"
+                        )}
                       /{isAnnual ? "year" : "month"}
                     </p>
                   </div>
