@@ -349,7 +349,7 @@ const MockSchedulelater = () => {
         candidateName: `${contact.firstName || ""} ${
           contact.lastName || ""
         }`.trim(),
-        higherQualification: contact.HigherQualification || "",
+        higherQualification: contact.higherQualification || "",
         currentExperience: contact.yearsOfExperience || "",
         // technology: contact.technologies?.[0] || "",
         currentRole: contact.currentRole || "",
@@ -2615,7 +2615,7 @@ const MockSchedulelater = () => {
     <div className="flex items-center justify-center">
       <div className="bg-white rounded-lg w-full flex flex-col">
         <div className="mt-4 mb-4">
-          <div className="w-full px-[8%] sm:px-[5%] md:px-[5%] mb-4">
+          <div className="w-full px-[8%] sm:px-[5%] md:px-[5%] mb-3">
             <button
               onClick={() => navigate(-1)}
               type="button"
@@ -2624,9 +2624,9 @@ const MockSchedulelater = () => {
               <ArrowLeft className="h-5 w-5 mr-2" /> Back to Interviews
             </button>
           </div>
-          <h2 className="text-xl font-semibold px-[8%] sm:mb-2 sm:px-[5%] md:mb-2 md:px-[5%]">
+          {/* <h2 className="text-xl font-semibold px-[8%] sm:mb-2 sm:px-[5%] md:mb-2 md:px-[5%]">
             Schedule Mock Interview
-          </h2>
+          </h2> */}
         </div>
         {/* v1.0.3 <----------------------------------------------------------------- */}
         <div className="px-[8%] sm:px-[5%] md:px-[5%]">
