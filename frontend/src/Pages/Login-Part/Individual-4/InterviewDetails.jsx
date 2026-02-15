@@ -920,7 +920,7 @@ const InterviewDetails = ({
         </div>
 
         {/* Skills Section */}
-        <div className="col-span-2 sm:col-span-6 space-y-4 w-full mb-3">
+        <div className="col-span-2 sm:col-span-6 space-y-4 w-full mb-6">
           <SkillsField
             simpleMode={true}
             entries={selectedSkills.map((s) => ({
