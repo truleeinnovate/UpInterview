@@ -60,8 +60,8 @@ class ExchangeRateService {
     const existingRate = await ExchangeRate.findOne({
       baseCurrency: "USD",
       targetCurrency: "INR",
-      date: { $gte: today },
-    }).sort({ date: -1 });
+      date: { $gte: today }, // keep date filter if you want
+    }).sort({ createdAt: -1 }); // ← this works reliably after indexing
 
     if (existingRate) {
       return existingRate.rate;
