@@ -88,8 +88,8 @@ const CandidateMiniTab = ({
       : feedback.positionId || {}
     : null;
 
-  // console.log("candidateData candidateData CandidateMiniTab", candidateData);
-  // console.log("positionData in candidate details ", positionData);
+  console.log("candidateData candidateData CandidateMiniTab", candidateData);
+  console.log("positionData in candidate details ", positionData);
   const [expandedSections, setExpandedSections] = useState({
     skills: true,
     certificates: false,

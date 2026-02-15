@@ -96,9 +96,12 @@ const Dashboard = () => {
   const interviewRoundData =
     interviewData?.rounds?.[0] || mockinterview?.rounds?.[0] || {};
 
-  const NameCandidate = urlData?.isCandidate
-    &&
-    (candidateData?.FirstName || "") + " " + (candidateData?.LastName || "")
+  const NameCandidate = urlData?.isCandidate &&
+    candidateData?.FirstName || candidateData?.LastName
+    ? candidateData?.FirstName + " " + candidateData?.LastName
+    : candidateData?.candidateName
+  // &&
+  // (candidateData?.FirstName || "") + " " + (candidateData?.LastName || "")
   // : (interviewRoundData?.interviewers?.[0]?.FirstName || interviewRoundData?.interviewers?.[0]?.firstName || "") +
   // " " +
   // (interviewRoundData?.interviewers?.[0]?.LastName || interviewRoundData?.interviewers?.[0]?.lastName || "");
@@ -110,7 +113,7 @@ const Dashboard = () => {
 
   const FinalName = urlData?.isCandidate ? NameCandidate : interviwerName
 
-  console.log("interviewRoundData1", interviewRoundData);
+  // console.log("interviewRoundData1", interviewRoundData);
 
   // const interviewRoundData = interviewData?.rounds[0] || {};
 

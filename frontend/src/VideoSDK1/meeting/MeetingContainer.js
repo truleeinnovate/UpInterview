@@ -19,7 +19,7 @@ import ConfirmBox from "../components/ConfirmBox";
 import useIsMobile from "../hooks/useIsMobile";
 import useIsTab from "../hooks/useIsTab";
 import { useMediaQuery } from "react-responsive";
-import CandidateDetails from "../../Pages/videoCall/CandidateDetails";
+// import CandidateDetails from "../../Pages/videoCall/CandidateDetails";
 import FeedbackForm from "../../Pages/videoCall/FeedbackForm";
 import InterviewActions from "../../Pages/videoCall/InterviewActions";
 import { useMeetingAppContext } from "../MeetingAppContextDef";
@@ -35,6 +35,7 @@ import {
 import { openPanelInNewTab } from "../utils/openInNewTab";
 import QuestionBank from "../../Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank";
 import InterviewsMiniTabComponent from "../../Pages/Dashboard-Part/Tabs/Feedback/MiniTabs/Interviews";
+import CandidateMiniTab from "../../Pages/Dashboard-Part/Tabs/Feedback/MiniTabs/Candidate";
 
 export function MeetingContainer({
   onMeetingLeave,
@@ -577,9 +578,10 @@ export function MeetingContainer({
                   {/* Sidebar Content */}
                   <div className="flex-1 overflow-y-auto">
                     {sideBarMode === "CANDIDATE" ? (
-                      <CandidateDetails
-                        candidateData={candidateData}
-                        positionData={positionData}
+                      <CandidateMiniTab
+                      // roundId={roundId} interviewType={interviewType}
+                      // candidateData={candidateData}
+                      // positionData={positionData}
                       />
                     ) : sideBarMode === "FEEDBACK" ? (
                       <FeedbackForm

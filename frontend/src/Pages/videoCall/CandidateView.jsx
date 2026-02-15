@@ -104,6 +104,10 @@ const CandidateView = () =>
     ? mockinterview?.rounds[0]
     : interviewData?.rounds[0] || {};
 
+
+  console.log("candidateData candidateData CandidateMiniTab", candidateData);
+  console.log("positionData in candidate details ", positionData);
+
   // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
   const parseCustomDateTime = (dateTimeStr) => {
     if (!dateTimeStr) return { start: null, end: null };
@@ -394,8 +398,8 @@ const CandidateView = () =>
                         <button
                           onClick={toggleMic}
                           className={`p-3 rounded-full ${micOn
-                              ? "bg-white text-gray-800"
-                              : "bg-red-600 text-white"
+                            ? "bg-white text-gray-800"
+                            : "bg-red-600 text-white"
                             }`}
                           aria-label={
                             micOn ? "Mute microphone" : "Unmute microphone"
@@ -411,8 +415,8 @@ const CandidateView = () =>
                         <button
                           onClick={toggleWebcam}
                           className={`p-3 rounded-full ${webcamOn
-                              ? "bg-white text-gray-800"
-                              : "bg-red-600 text-white"
+                            ? "bg-white text-gray-800"
+                            : "bg-red-600 text-white"
                             }`}
                           aria-label={
                             webcamOn ? "Turn off camera" : "Turn on camera"
@@ -612,8 +616,8 @@ const CandidateView = () =>
                 }}
                 // disabled={!isButtonEnabled}
                 className={`w-full md:text-sm ${isButtonEnabled
-                    ? "bg-[#217989] hover:bg-[#1a616e] hover:scale-105"
-                    : "bg-gray-400 cursor-not-allowed sm:text-sm"
+                  ? "bg-[#217989] hover:bg-[#1a616e] hover:scale-105"
+                  : "bg-gray-400 cursor-not-allowed sm:text-sm"
                   } text-white font-bold sm:py-3 md:py-3 py-4 sm:px-4 md:px-4 lg:px-4 xl:px-8 2xl:px-8 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg mb-4`}
               >
                 <Video className="w-6 h-6" />
