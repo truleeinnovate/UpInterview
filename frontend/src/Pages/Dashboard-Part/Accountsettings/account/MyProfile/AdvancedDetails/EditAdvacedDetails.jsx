@@ -129,10 +129,12 @@ const EditAdvacedDetails = ({
 
   const qualificationOptionsRS = useMemo(
     () =>
-      qualifications?.map((q) => ({
-        value: q?.QualificationName,
-        label: q?.QualificationName,
-      })) || [],
+      (
+        qualifications?.map((q) => ({
+          value: q?.QualificationName,
+          label: q?.QualificationName,
+        })) || []
+      ).concat([{ value: "__other__", label: "+ Others" }]),
     [qualifications],
   );
 
