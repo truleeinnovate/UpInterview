@@ -8,7 +8,7 @@ import React, {
   useMemo,
 } from "react";
 import axios from "axios";
-import { Trash2, X, Tag as SkillsIcon } from "lucide-react";
+import { Trash2, X, Tag as SkillsIcon, CheckCircle } from "lucide-react";
 import SkillsField from "../../Dashboard-Part/Tabs/CommonCode-AllTabs/SkillsInput";
 import InfoBox from "./InfoBox.jsx";
 import { useMasterData } from "../../../apiHooks/useMasterData.js";
@@ -778,12 +778,12 @@ const InterviewDetails = ({
               selectedSkill.SkillName &&
               typeof selectedSkill.SkillName === "string" &&
               selectedSkill.SkillName.trim().toLowerCase() ===
-                skill.SkillName.trim().toLowerCase(),
+              skill.SkillName.trim().toLowerCase(),
           ) &&
           (searchSkillValue
             ? skill.SkillName.toLowerCase().includes(
-                searchSkillValue.toLowerCase(),
-              )
+              searchSkillValue.toLowerCase(),
+            )
             : true),
       )
       .map((skill) => ({
@@ -921,6 +921,10 @@ const InterviewDetails = ({
             loading={isCurrentRolesFetching}
             placeholder="Selected Role or Technology"
           />
+          <div className="mt-2 flex items-center gap-1.5 text-xs">
+            <CheckCircle className="h-4 w-4 text-green-700" />
+            Selected Role / Technology auto-populated from previous step.
+          </div>
         </div>
 
         {/* Skills Section */}
@@ -936,13 +940,11 @@ const InterviewDetails = ({
             skills={skills}
             onOpenSkills={loadSkills}
             onAddMultipleSkills={handleAddMultipleSkills}
-            onAddSkill={() => {}}
-            onDeleteSkill={() => {}}
-            onUpdateEntry={() => {}}
+            onAddSkill={() => { }}
+            onDeleteSkill={() => { }}
+            onUpdateEntry={() => { }}
           />
-          {errors.skills && (
-            <p className="text-red-500 text-xs">{errors.skills}</p>
-          )}
+       
 
           {/* Selected Skills Display - Full width */}
           <div className="w-full mt-4">
@@ -1008,6 +1010,9 @@ const InterviewDetails = ({
               </div>
             )}
           </div>
+             {errors.skills && (
+            <p className="text-red-500 text-xs">{errors.skills}</p>
+          )}
         </div>
       </div>
 
@@ -1330,9 +1335,8 @@ const InterviewDetails = ({
                             <span>
                               Range: ${getRateRanges(level.rangeKey).usd.min}-$
                               {getRateRanges(level.rangeKey).usd.max} (
-                              {`₹${getRateRanges(level.rangeKey).inr.min}–${
-                                getRateRanges(level.rangeKey).inr.max
-                              }`}
+                              {`₹${getRateRanges(level.rangeKey).inr.min}–${getRateRanges(level.rangeKey).inr.max
+                                }`}
                               )
                             </span>
                           )}
@@ -1636,9 +1640,9 @@ const InterviewDetails = ({
                     value={
                       interviewDetailsData.mock_interview_discount
                         ? {
-                            value: interviewDetailsData.mock_interview_discount,
-                            label: `${interviewDetailsData.mock_interview_discount}% discount`,
-                          }
+                          value: interviewDetailsData.mock_interview_discount,
+                          label: `${interviewDetailsData.mock_interview_discount}% discount`,
+                        }
                         : null
                     }
                     onChange={(selected) => {
@@ -1681,11 +1685,10 @@ const InterviewDetails = ({
               )}
             </div>
             <p
-              className={`mt-1.5 text-xs text-custom-blue ${
-                showCustomDiscount && errors.mock_interview_discount
+              className={`mt-1.5 text-xs text-custom-blue ${showCustomDiscount && errors.mock_interview_discount
                   ? "mt-7"
                   : "mt-1.5"
-              }`}
+                }`}
             >
               Offer a discount for mock interviews to attract more candidates
             </p>
@@ -1767,11 +1770,10 @@ const InterviewDetails = ({
             </p>
             {interviewDetailsData.bio?.length > 0 && (
               <p
-                className={`text-xs ${
-                  interviewDetailsData.bio.length < 150 || errors.bio
+                className={`text-xs ${interviewDetailsData.bio.length < 150 || errors.bio
                     ? "text-red-500"
                     : "text-gray-500"
-                }`}
+                  }`}
               >
                 {interviewDetailsData.bio.length}/500
               </p>

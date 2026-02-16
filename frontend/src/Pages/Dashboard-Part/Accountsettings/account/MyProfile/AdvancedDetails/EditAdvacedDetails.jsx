@@ -536,6 +536,7 @@ const EditAdvacedDetails = ({
                 onChange={handleInputChange}
                 error={errors.company}
                 placeholder="Enter Company Name"
+                required
               />
             </div>
 

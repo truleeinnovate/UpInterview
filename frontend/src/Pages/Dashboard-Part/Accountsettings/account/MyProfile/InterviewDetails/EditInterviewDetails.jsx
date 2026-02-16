@@ -215,6 +215,7 @@ const EditInterviewDetails = ({
       mid: { usd: 0, inr: 0, isVisible: false },
       senior: { usd: 0, inr: 0, isVisible: false },
     },
+    isMockInterviewSelected: false,
   });
   const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -670,6 +671,7 @@ const EditInterviewDetails = ({
 
         skills: Array.isArray(formData.skills) ? formData.skills : [],
         InterviewFormatWeOffer: formData.interviewFormatWeOffer || [],
+        isMockInterviewSelected: formData.isMockInterviewSelected,
         mock_interview_discount: formData.interviewFormatWeOffer.includes(
           "mock",
         )
@@ -796,33 +798,43 @@ const EditInterviewDetails = ({
     const { value, checked } = event.target;
 
     setFormData((prevData) => {
-      let updatedFormats = [...(prevData.interviewFormatWeOffer || [])];
+      let updatedFormats = Array.isArray(prevData.interviewFormatWeOffer)
+        ? [...prevData.interviewFormatWeOffer]
+        : [];
 
       if (checked) {
         if (!updatedFormats.includes(value)) {
-          updatedFormats.push(value);
+          updatedFormats = [...updatedFormats, value];
         }
       } else {
         updatedFormats = updatedFormats.filter((format) => format !== value);
       }
 
+      if (value === "mock") {
+        setIsMockInterviewSelected(checked);
+        if (!checked) {
+          setCustomDiscountValue("");
+          return {
+            ...prevData,
+            interviewFormatWeOffer: updatedFormats,
+            mock_interview_discount: "0",
+            isMockInterviewSelected: false,
+          };
+        }
+      }
+
       return {
         ...prevData,
         interviewFormatWeOffer: updatedFormats,
+        isMockInterviewSelected:
+          value === "mock" ? checked : prevData.isMockInterviewSelected,
       };
     });
 
-    // Clear error when user selects an option
-    if (errors.interviewFormatWeOffer) {
-      setErrors((prev) => ({
-        ...prev,
-        interviewFormatWeOffer: "",
-      }));
-    }
-
-    if (value === "mock") {
-      setIsMockInterviewSelected(checked);
-    }
+    setErrors((prev) => ({
+      ...prev,
+      interviewFormatWeOffer: "",
+    }));
   };
 
   const handleYearsOfExperienceChange = (e) => {
@@ -1206,9 +1218,7 @@ const EditInterviewDetails = ({
                 onDeleteSkill={() => { }}
                 onUpdateEntry={() => { }}
               />
-              {errors.skills && (
-                <p className="text-red-500 text-sm">{errors.skills}</p>
-              )}
+
 
               {/* Selected Skills Display - Full width */}
               <div className="w-full mt-4">
@@ -1273,6 +1283,9 @@ const EditInterviewDetails = ({
                   </div>
                 )}
               </div>
+              {errors.skills && (
+                <p className="text-red-500 text-sm">{errors.skills}</p>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -1342,284 +1355,6 @@ const EditInterviewDetails = ({
                 </div>
               )}
 
-              {/* Hourly Rates by Experience Level */}
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hourly Rates by Experience Level{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="text-xs text-gray-600 mb-4">
-                  {isRateLoading ? (
-                    <span>Loading exchange rate...</span>
-                  ) : (
-                    <span>1 USD = {Number(exchangeRate).toFixed(2)} INR</span>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">
-                    Changing USD will automatically update INR, and vice versa
-                  </p>
-                </div>
-                <div className="space-y-4">
-                  {showJuniorLevel && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <label
-                          htmlFor="junior_rate"
-                          className="text-sm font-medium text-gray-700"
-                        >
-                          Junior Level (0-3 years)
-                        </label>
-                        {showJuniorLevel && (
-                          <span className="text-xs text-gray-500">
-                            {getRateRanges("Junior")?.usd &&
-                              getRateRanges("Junior")?.inr && (
-                                <span>
-                                  Range: ${getRateRanges("Junior").usd.min}-$
-                                  {getRateRanges("Junior").usd.max} (
-                                  {`₹${getRateRanges("Junior").inr.min}–${getRateRanges("Junior").inr.max
-                                    }`}
-                                  )
-                                </span>
-                              )}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex sm:flex-col w-full">
-                        <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            USD
-                          </label>
-                          <div className="relative">
-                            <IncreaseAndDecreaseField
-                              name="junior_usd"
-
-                              disabled={from !== "outsource-interviewer"}
-                              value={formData.rates?.junior?.usd || ""}
-                              onChange={handleRateChange("junior", "usd")}
-                              label=""
-                              min={getRateRanges("Junior")?.usd?.min || 0}
-                              max={getRateRanges("Junior")?.usd?.max || 1000}
-                              inputProps={{
-                                className: "pl-7",
-                                placeholder: "Enter USD rate",
-                              }}
-                              prefix="$"
-                            />
-                          </div>
-                          {errors.rates?.junior?.usd && (
-                            <p className="mt-1 text-xs text-red-600">
-                              {errors.rates.junior.usd}
-                            </p>
-                          )}
-                        </div>
-                        <div className="w-1/2 sm:w-full pl-2 sm:pl-0 sm:mt-2">
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            INR
-                          </label>
-                          <div className="relative">
-                            <IncreaseAndDecreaseField
-                              name="junior_inr"
-                              value={formData.rates?.junior?.inr || ""}
-                              onChange={handleRateChange("junior", "inr")}
-                              label=""
-                              disabled={from !== "outsource-interviewer"}
-                              min={getRateRanges("Junior")?.inr?.min || 0}
-                              max={getRateRanges("Junior")?.inr?.max || 100000}
-                              inputProps={{
-                                className: "pl-7",
-                                placeholder: "Enter INR rate",
-                              }}
-                              prefix="₹"
-                            />
-                          </div>
-                          {errors.rates?.junior?.inr && (
-                            <p className="mt-1 text-xs text-red-600">
-                              {errors.rates.junior.inr}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {showMidLevel && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <label
-                          htmlFor="mid_rate"
-                          className="text-sm font-medium text-gray-700"
-                        >
-                          Mid-Level (3-6 years)
-                        </label>
-                        {showMidLevel && (
-                          <span className="text-xs text-gray-500">
-                            {getRateRanges("Mid-Level")?.usd &&
-                              getRateRanges("Mid-Level")?.inr && (
-                                <span>
-                                  Range: ${getRateRanges("Mid-Level").usd.min}-$
-                                  {getRateRanges("Mid-Level").usd.max} (
-                                  {`₹${getRateRanges("Mid-Level").inr.min}–${getRateRanges("Mid-Level").inr.max
-                                    }`}
-                                  )
-                                </span>
-                              )}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex sm:flex-col w-full">
-                        <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            USD
-                          </label>
-                          <div className="relative">
-                            <IncreaseAndDecreaseField
-                              name="mid_usd"
-                              value={formData.rates?.mid?.usd || ""}
-                              onChange={handleRateChange("mid", "usd")}
-                              label=""
-                              disabled={from !== "outsource-interviewer"}
-                              min={getRateRanges("Mid-Level")?.usd?.min || 0}
-                              max={getRateRanges("Mid-Level")?.usd?.max || 1000}
-                              inputProps={{
-                                className: "pl-7",
-                                placeholder: "Enter USD rate",
-                              }}
-                              prefix="$"
-                            />
-                          </div>
-                          {errors.rates?.mid?.usd && (
-                            <p className="mt-1 text-xs text-red-600">
-                              {errors.rates.mid.usd}
-                            </p>
-                          )}
-                        </div>
-                        <div className="w-1/2 sm:w-full pl-2 sm:pl-0 sm:mt-2">
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            INR
-                          </label>
-                          <div className="relative">
-                            <IncreaseAndDecreaseField
-                              name="mid_inr"
-                              value={formData.rates?.mid?.inr || ""}
-                              onChange={handleRateChange("mid", "inr")}
-                              label=""
-                              disabled={from !== "outsource-interviewer"}
-                              min={getRateRanges("Mid-Level")?.inr?.min || 0}
-                              max={
-                                getRateRanges("Mid-Level")?.inr?.max || 100000
-                              }
-                              inputProps={{
-                                className: "pl-7",
-                                placeholder: "Enter INR rate",
-                              }}
-                              prefix="₹"
-                            />
-                          </div>
-                          {errors.rates?.mid?.inr && (
-                            <p className="mt-1 text-xs text-red-600">
-                              {errors.rates.mid.inr}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {showSeniorLevel && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <label
-                          htmlFor="senior_rate"
-                          className="text-sm font-medium text-gray-700"
-                        >
-                          Senior Level (6+ years)
-                        </label>
-                        {showSeniorLevel && (
-                          <span className="text-xs text-gray-500">
-                            {getRateRanges("Senior")?.usd &&
-                              getRateRanges("Senior")?.inr && (
-                                <span>
-                                  Range: ${getRateRanges("Senior").usd.min}-$
-                                  {getRateRanges("Senior").usd.max} (
-                                  {`₹${getRateRanges("Senior").inr.min}–${getRateRanges("Senior").inr.max
-                                    }`}
-                                  )
-                                </span>
-                              )}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex sm:flex-col w-full">
-                        <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            USD
-                          </label>
-                          <div className="relative">
-                            <IncreaseAndDecreaseField
-                              name="senior_usd"
-                              value={formData.rates?.senior?.usd || ""}
-                              onChange={handleRateChange("senior", "usd")}
-                              label=""
-                              disabled={from !== "outsource-interviewer"}
-                              min={getRateRanges("Senior")?.usd?.min || 0}
-                              max={getRateRanges("Senior")?.usd?.max || 1000}
-                              inputProps={{
-                                className: "pl-7",
-                                placeholder: "Enter USD rate",
-                              }}
-                              prefix="$"
-                            />
-                          </div>
-                          {errors.rates?.senior?.usd && (
-                            <p className="mt-1 text-xs text-red-600">
-                              {errors.rates.senior.usd}
-                            </p>
-                          )}
-                        </div>
-                        <div className="w-1/2 sm:w-full pl-2 sm:pl-0 sm:mt-2">
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            INR
-                          </label>
-                          <div className="relative">
-                            <IncreaseAndDecreaseField
-                              name="senior_inr"
-                              value={formData.rates?.senior?.inr || ""}
-                              onChange={handleRateChange("senior", "inr")}
-                              label=""
-                              disabled={from !== "outsource-interviewer"}
-                              min={getRateRanges("Senior")?.inr?.min || 0}
-                              max={getRateRanges("Senior")?.inr?.max || 100000}
-                              inputProps={{
-                                className: "pl-7",
-                                placeholder: "Enter INR rate",
-                              }}
-                              prefix="₹"
-                            />
-                          </div>
-                          {errors.rates?.senior?.inr && (
-                            <p className="mt-1 text-xs text-red-600">
-                              {errors.rates.senior.inr}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <p className="mt-2 text-xs text-gray-500">
-                  {showJuniorLevel
-                    ? `Based on your ${expYears} year${expYears === 1 ? "" : "s"
-                    } of experience, we're showing the most relevant experience levels.`
-                    : "Set competitive rates based on candidate experience levels."}
-                  {!showSeniorLevel && (
-                    <span className="block mt-1">
-                      {!showMidLevel
-                        ? "To see Mid and Senior level options, please update your years of experience to 4 or more."
-                        : "To see Senior level options, please update your years of experience to 7 or more."}
-                    </span>
-                  )}
-                </p>
-              </div> */}
-              {/* </div> */}
 
               <div>
                 <div className="flex items-center justify-between">

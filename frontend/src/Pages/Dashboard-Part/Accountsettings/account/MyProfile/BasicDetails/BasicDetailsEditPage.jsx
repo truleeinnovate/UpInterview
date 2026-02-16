@@ -402,7 +402,7 @@ const BasicDetailsEditPage = ({
     image: useRef(null),
   };
 
-  const handleSubmit = async (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     // v1.0.1 <--------------------------
 
@@ -445,15 +445,19 @@ const BasicDetailsEditPage = ({
       }
     }
 
-    const validationErrors = validateFormMyProfile(formData);
-    setErrors(validationErrors);
+// Step 2: Run full form validation
+  const validationErrors = validateFormMyProfile(formData);
 
-    // console.log("validationErrors", validationErrors);
+  // Debug: always log to confirm
+  console.log("Validation Errors:", validationErrors);
 
-    if (!isEmptyObject(validationErrors)) {
-      scrollToFirstError(validationErrors, fieldRefs);
-      return;
-    }
+  setErrors(validationErrors);
+
+  // If there are ANY errors → stop submission
+  if (!isEmptyObject(validationErrors)) {
+    scrollToFirstError(validationErrors, fieldRefs);
+    return;
+  }
 
     const cleanFormData = {
       email: formData.email.trim() || "",
@@ -657,115 +661,7 @@ const BasicDetailsEditPage = ({
     }
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   // Validate form using validateFormMyProfile
-  //   const validationErrors = validateFormMyProfile(formData);
-  //   setErrors(validationErrors);
-
-  //   if (!isEmptyObject(validationErrors)) {
-  //     return;
-  //   }
-
-  //   // Additional email validation if changed
-  //   if (formData.email !== originalEmail) {
-  //     // const emailFormatError = validateWorkEmail(formData.email);
-  //     // if (emailFormatError) {
-  //     //   setErrors(prev => ({ ...prev, email: emailFormatError }));
-  //     //   return;
-  //     // }
-
-  //     const exists = await checkEmailExists(formData.email);
-  //     if (exists) {
-  //       setErrors(prev => ({ ...prev, email: 'Email already registered' }));
-  //       return;
-  //     }
-
-  //     // Trigger email change request
-  //     try {
-  //       const response = await axios.post(
-  //         `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
-  //         {
-  //           oldEmail: originalEmail,
-  //           newEmail: formData.email,
-  //           userId: formData.id
-  //         }
-  //       );
-
-  //       if (response.data.success) {
-  //         alert('Verification email sent to your new email address');
-  //         const cleanFormData = {
-  //           // email: originalEmail, // Keep original email until verified
-  //           // email: formData.email !== originalEmail ? '': originalEmail,// Keep original email empty until verified
-  //           newEmail: formData.email.trim(), // Store new email in newEmail field
-  //           firstName: formData.firstName.trim() || '',
-  //           lastName: formData.lastName.trim() || '',
-  //           countryCode: formData.countryCode || '',
-  //           phone: formData.phone.trim() || '',
-  //           profileId: formData.profileId.trim() || '',
-  //           dateOfBirth: formData.dateOfBirth || '',
-  //           gender: formData.gender || '',
-  //           linkedinUrl: formData.linkedinUrl.trim() || '',
-  //           portfolioUrl: formData.portfolioUrl.trim() || '',
-  //           id: formData.id
-  //         };
-
-  //         console.log("cleanFormData",cleanFormData);
-
-  //         await axios.patch(
-  //           `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
-  //           cleanFormData
-  //         );
-
-  //         // onSuccess();
-  //          if (usersId){
-  //         onSuccess();
-  //         }
-  //         handleCloseModal();
-  //       } else {
-  //         setErrors(prev => ({ ...prev, email: response.data.message }));
-  //       }
-  //     } catch (error) {
-  //       console.error('Error requesting email change:', error);
-  //       setErrors(prev => ({ ...prev, email: 'Failed to send verification email' }));
-  //     }
-  //   } else {
-  //     // Proceed with normal update if email is unchanged
-  //     const cleanFormData = {
-  //       email: formData.email.trim() || '',
-  //       firstName: formData.firstName.trim() || '',
-  //       lastName: formData.lastName.trim() || '',
-  //       countryCode: formData.countryCode || '',
-  //       phone: formData.phone.trim() || '',
-  //       profileId: formData.profileId.trim() || '',
-  //       dateOfBirth: formData.dateOfBirth || '',
-  //       gender: formData.gender || '',
-  //       linkedinUrl: formData.linkedinUrl.trim() || '',
-  //       portfolioUrl: formData.portfolioUrl.trim() || '',
-  //       id: formData.id
-  //     };
-
-  //     try {
-  //       const response = await axios.patch(
-  //         `${config.REACT_APP_API_URL}/contact-detail/${resolvedId}`,
-  //         cleanFormData
-  //       );
-
-  //       if (response.status === 200) {
-  //         if (usersId){
-  //         onSuccess();
-  //         }
-  //         handleCloseModal();
-  //       } else {
-  //         setErrors(prev => ({ ...prev, form: 'Failed to save changes' }));
-  //       }
-  //     } catch (error) {
-  //       console.error('Error saving changes:', error);
-  //       setErrors(prev => ({ ...prev, form: 'Error saving changes' }));
-  //     }
-  //   }
-  // };
+  
 
   // v1.0.1 <------------------------------------------------------------------------------
   // v1.0.2 <------------------------------------------------------------------------------------
@@ -779,13 +675,8 @@ const BasicDetailsEditPage = ({
     // v1.0.3 <---------------------------------------------------------
     <SidebarPopup title="Edit Basic Details" onClose={handleCloseModal}>
       {/* v1.0.3 --------------------------------------------------------> */}
-      {/* {loading && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
-        </div>
-      )} */}
       <div className="sm:p-0 p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form className="space-y-6">
           {errors.form && (
             <p className="text-red-500 text-sm mb-4">{errors.form}</p>
           )}
@@ -937,6 +828,7 @@ const BasicDetailsEditPage = ({
 
             <LoadingButton
               type="submit"
+            onClick={handleSave}
               isLoading={loading}
               loadingText="Updating..."
             >
