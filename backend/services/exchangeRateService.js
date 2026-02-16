@@ -61,7 +61,7 @@ class ExchangeRateService {
       baseCurrency: "USD",
       targetCurrency: "INR",
       date: { $gte: today }, // keep date filter if you want
-    }).sort({ createdAt: -1 }); // ← this works reliably after indexing
+    });
 
     if (existingRate) {
       return existingRate.rate;
@@ -84,7 +84,7 @@ class ExchangeRateService {
       baseCurrency: "USD",
       targetCurrency: "INR",
       date: { $gte: startOfDay, $lte: endOfDay },
-    }).sort({ date: -1 });
+    });
 
     return rate ? rate.rate : null;
   }

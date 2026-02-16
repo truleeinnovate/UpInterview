@@ -612,7 +612,7 @@ const MultiStepForm = () => {
         // if (!additionalDetailsData.location)
         //   currentErrors.location = "Location is required";
         if (!additionalDetailsData.company)
-          currentErrors.company = "Company Name is required";
+          currentErrors.company = "Current Company is required";
         // v1.0.0 <----------------------------------------------------------------------------------------------
         // v1.0.1 <----------------------------------------------------------------------------------------------
         // if (!additionalDetailsData.resume && !resumeFile) {

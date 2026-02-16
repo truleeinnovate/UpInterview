@@ -2,66 +2,51 @@
 export const validateFormMyProfile = (formData) => {
   const errors = {};
 
-  // First Name validation
+  // First Name
   if (!formData.firstName?.trim()) {
     errors.firstName = "First Name is required";
-  } else if (formData.firstName.length < 2) {
+  } else if (formData.firstName.trim().length < 2) {
     errors.firstName = "First Name must be at least 2 characters";
   }
 
-  // errors.firstName = !formData?.firstName ? 'First Name is required' : '';
-
-  // errors.firstName = !formData?.firstName ? 'First Name is required' : '';
-
-
-  // Last Name validation
+  // Last Name
   if (!formData.lastName?.trim()) {
     errors.lastName = "Last Name is required";
-  } else if (formData.lastName.length < 2) {
+  } else if (formData.lastName.trim().length < 2) {
     errors.lastName = "Last Name must be at least 2 characters";
   }
 
-  // errors.lastName = !formData?.lastName ? 'Last Name is required' : '';
-
-  // Email validation
+  // Email
   if (!formData.email?.trim()) {
     errors.email = "Email is required";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
     errors.email = "Please enter a valid email address";
   }
-  // errors.email = !formData?.email ? 'Email is required' : '';
 
-
+  // Profile ID
   if (!formData.profileId?.trim()) {
-    errors.name = "profile Id is required";
-  } else if (formData.profileId.length < 2) {
-    errors.name = "Last profileId must be at least 2 characters";
+    errors.profileId = "Profile ID is required";
+  } else if (formData.profileId.trim().length < 2) {
+    errors.profileId = "Profile ID must be at least 2 characters";
   }
-  // errors.profileId = !formData?.profileId ? 'Profile ID is required' : '';
 
-  // Phone validation
-  // Phone
-  const phoneOnlyDigits = formData?.phone?.replace(/\D/g, '');
+  // Phone (only digits check)
+  const phoneOnlyDigits = formData?.phone?.replace(/\D/g, '') || '';
   if (!phoneOnlyDigits) {
-    errors.phone = 'Phone Number is required';
+    errors.phone = "Phone Number is required";
   } else if (!/^\d{10}$/.test(phoneOnlyDigits)) {
-    errors.phone = 'Phone Number must be a valid 10-digit number';
+    errors.phone = "Phone Number must be a valid 10-digit number";
   }
 
-
-  // LinkedIn URL validation
-  // errors.linkedinUrl = !formData?.linkedinUrl ? 'LinkedIn URL is required' : '';
-
-  // LinkedIn URL validation
+  // LinkedIn URL
   if (!formData.linkedinUrl?.trim()) {
     errors.linkedinUrl = "LinkedIn URL is required";
-  } else if (!/^https?:\/\/(www\.)?linkedin\.com\/.*$/.test(formData.linkedinUrl)) {
+  } else if (!/^https?:\/\/(www\.)?linkedin\.com\/.+$/.test(formData.linkedinUrl.trim())) {
     errors.linkedinUrl = "Please enter a valid LinkedIn URL";
   }
 
   return errors;
 };
-
 
 // validations.js
 export const validateAdvancedForm = (formData) => {
@@ -82,6 +67,10 @@ export const validateAdvancedForm = (formData) => {
     errors.yearsOfExperience = "Years of Experience is required";
   } else if (!/^\d+$/.test(formData.yearsOfExperience.toString().trim())) {
     errors.yearsOfExperience = "Please enter a valid number";
+  }
+
+  if (!formData.company?.trim()) {
+    errors.company = "Current Company is required";
   }
 
   // Location validation

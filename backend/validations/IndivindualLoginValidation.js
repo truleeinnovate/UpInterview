@@ -37,7 +37,7 @@ const additionalDetailsSchema = Joi.object({
   }),
   industry:Joi.string().allow("", null),
   company: Joi.string().required().messages({
-    "string.empty": "Company Name is required",
+    "string.empty": "Current Company is required",
   }),
   yearsOfExperience: Joi.string().required().messages({
     "any.required": "Years of Experience is required",
