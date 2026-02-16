@@ -35,6 +35,8 @@ import { extractUrlData } from "../../apiHooks/useVideoCall.js";
 import useAutoSaveFeedback from "../../apiHooks/useAutoSaveFeedback.js";
 import { useInterviews } from "../../apiHooks/useInterviews.js";
 import { useMockInterviewById } from "../../apiHooks/useMockInterviews.js";
+import QuestionCard, { EmptyState } from "../../Components/QuestionCard.jsx";
+// import { useMeeting } from "@videosdk.live/react-sdk";
 
 const dislikeOptions = [
   { value: "Not Skill-related", label: "Not Skill-related" },
@@ -121,14 +123,18 @@ const FeedbackForm = ({
     isError: feedbackError,
   } = useFeedbackData({
     roundId: isViewMode ? roundId : !urlData?.isCandidate ? urlData?.interviewRoundId : null,
-    interviewerId: !urlData?.isCandidate ? urlData?.interviewerId : null,
+    interviewerId: !urlData?.isCandidate && !urlData?.isSchedule ? urlData?.interviewerId : null,
     interviewType: urlData?.interviewType || interviewType,
     // roundId: !urlData.isCandidate ? urlData.interviewRoundId : null,
     // interviewerId: !urlData.isCandidate ? urlData.interviewerId : null,
     // interviewType: urlData?.interviewType,
   });
 
-  const isMockInterview = urlData?.interviewType === "mockinterview" || interviewType === "mockinterview";
+  console.log("feedbackDatas", feedbackDatas)
+
+  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType || locationFeedback?.isMockInterview;
+
+  // const isMockInterview = urlData?.interviewType === "mockinterview" || interviewType === "mockinterview";
   // console.log("isMockInterview", isMockInterview);
   // const { data, isLoading } = useInterviewDetails({
   //   roundId: urlData.interviewRoundId,
@@ -168,6 +174,10 @@ const FeedbackForm = ({
     interviewData || mockinterview || {};
 
   const positionData = isMockInterview ? {} : interviewData?.positionId || {};
+
+  console.log("positionData", positionData)
+
+  console.log("positioncandidateDataData", candidateData)
 
   const feedbackData = useMemo(() => {
     const raw = locationFeedback || feedbackDatas || {};
@@ -462,16 +472,66 @@ const FeedbackForm = ({
   // console.log("skillsData", overallImpressionTabData);
 
   // Fixed: Proper initialization for skill ratings with proper conditional checks
-  const initialSkillRatings =
-    (isEditMode || isViewMode || isAddMode) && skillsData.length > 0
-      ? skillsData.map((skill) => ({
-        skill: skill.skillName,
-        rating: skill.rating,
-        comments: skill.note,
-      }))
-      : [{ skill: "", rating: 0, comments: "" }];
+  const initialSkillRatings = useMemo(() => {
+    // 1. If we have a persisted feedback record (via ID), trust its data exclusively.
+    // This handles Edit/View modes AND Add mode after auto-save has created the record.
+    if (feedbackData?._id) {
+      if (skillsData && skillsData.length > 0) {
+        return skillsData.map((skill) => ({
+          skill: skill.skillName,
+          rating: skill.rating,
+          comments: skill.note,
+        }));
+      }
+      // Feedback exists but has no skills (or they were deleted) -> show empty row
+      return [{ skill: "", rating: 0, comments: "" }];
+    }
+
+    // 2. If no feedback record exists (Fresh Add Mode, no ID yet), auto-populate
+    // This runs only until auto-save creates the feedback and we get an ID.
+    let autoSkills = [];
+
+    // Mock Interview: Skills often in candidateData.skills (array of strings)
+    if (isMockInterview && candidateData?.skills) {
+      autoSkills = candidateData.skills;
+    }
+    // Regular Interview: Skills in positionData.skills (array of objects)
+    else if (!isMockInterview && positionData?.skills) {
+      // Map from position skill objects to string names
+      autoSkills = positionData.skills.map(s => s.skill);
+    }
+
+    if (autoSkills.length > 0) {
+      return autoSkills.map(skillName => ({
+        skill: skillName,
+        rating: 0,
+        comments: ""
+      }));
+    }
+
+    // Default fallback
+    return [{ skill: "", rating: 0, comments: "" }];
+  }, [feedbackData?._id, skillsData, isMockInterview, candidateData, positionData]);
 
   const [skillRatings, setSkillRatings] = useState(initialSkillRatings);
+
+  // Track if user has interacted with skills to prevents overwriting user work with async loaded data
+  const hasUserInteractedWithSkills = useRef(false);
+  // Track if we have already synced with the persistence layer once
+  const hasLoadedSavedSkills = useRef(false);
+
+  // Sync state if initialSkillRatings changes (mainly for async data loading)
+  useEffect(() => {
+    // If we have saved data (via ID) and we haven't synced yet, AND user hasn't touched the form manually
+    if (feedbackData?._id && !hasLoadedSavedSkills.current && !hasUserInteractedWithSkills.current) {
+      setSkillRatings(initialSkillRatings);
+      hasLoadedSavedSkills.current = true;
+    }
+    // Fallback: If current state is empty/default, always accept incoming data
+    else if ((!skillRatings || (skillRatings.length === 1 && !skillRatings[0].skill)) && initialSkillRatings.length > 0 && initialSkillRatings[0].skill) {
+      setSkillRatings(initialSkillRatings);
+    }
+  }, [initialSkillRatings, feedbackData?._id]);
 
   // Fixed: Proper initialization for recommendation with proper fallbacks
   const [recommendation, setRecommendation] = useState(
@@ -827,9 +887,10 @@ const FeedbackForm = ({
     feedbackId: autoSaveFeedbackId,
     isMockInterview: urlData?.interviewType === "mockinterview" || false,
     feedbackCode:
-      (interviewRoundData?.interviewCode
-        ? `${interviewRoundData.interviewCode}-${interviewRoundData?.rounds?.[0]?.sequence || ""}`
-        : "") || "",
+      urlData?.interviewType === "mockinterview" ? interviewRoundData?.mockInterviewCode + "-001" :
+        (interviewRoundData?.interviewCode
+          ? `${interviewRoundData.interviewCode}-00${interviewRoundData?.rounds?.[0]?.sequence || ""}`
+          : "") || "",
     isLoaded: !feedbackLoading && !isMockLoading && !isInterviewLoading, // Ensure we don't save before data is loaded
   });
 
@@ -1256,14 +1317,29 @@ const FeedbackForm = ({
   };
 
   const handleAddSkill = () => {
-    setSkillRatings([...skillRatings, { skill: "", rating: 0, comments: "" }]);
+    hasUserInteractedWithSkills.current = true;
+    setSkillRatings([
+      ...skillRatings,
+      { skill: "", rating: 0, comments: "" },
+    ]);
     triggerAutoSave();
   };
 
   const handleRemoveSkill = (index) => {
-    if (skillRatings.length > 1) {
-      setSkillRatings(skillRatings.filter((_, i) => i !== index));
+    hasUserInteractedWithSkills.current = true;
+    const updatedSkills = [...skillRatings];
+    updatedSkills.splice(index, 1);
+    setSkillRatings(updatedSkills);
+
+    // Also clear error if valid... (retaining existing logic)
+    const validSkills = updatedSkills.filter(s => s.skill.trim() !== "");
+    if (
+      validSkills.length > 0 &&
+      validSkills.every((skill) => skill.rating > 0)
+    ) {
+      clearError("skills");
     }
+    triggerAutoSave();
   };
 
   const { mutate: createFeedback, isLoading: isCreating } = useCreateFeedback();
@@ -1289,12 +1365,14 @@ const FeedbackForm = ({
       newErrors.communicationRating = "Please provide a communication rating";
     }
 
-    // Validate skills
+    // Validate skills - filter out empty names first
+    const validSkills = skillRatings.filter(s => s.skill && s.skill.trim() !== "");
     if (
-      skillRatings.some((skill) => !skill.skill.trim() || skill.rating === 0)
+      validSkills.length === 0 ||
+      validSkills.some((skill) => skill.rating === 0)
     ) {
       newErrors.skills =
-        "Please provide skill names and ratings for all skills";
+        "Please provide ratings for all listed skills";
     }
 
     // Validate comments
@@ -1362,13 +1440,16 @@ const FeedbackForm = ({
 
   // Handle skill change with validation
   const handleSkillChange = (index, field, value) => {
+    hasUserInteractedWithSkills.current = true;
     const updatedSkills = [...skillRatings];
-    updatedSkills[index] = { ...updatedSkills[index], [field]: value };
+    updatedSkills[index][field] = value;
     setSkillRatings(updatedSkills);
 
     // Clear skills error if all skills are valid
+    const validSkills = updatedSkills.filter(s => s.skill.trim() !== "");
     if (
-      updatedSkills.every((skill) => skill.skill.trim() && skill.rating > 0)
+      validSkills.length > 0 &&
+      validSkills.every((skill) => skill.rating > 0)
     ) {
       clearError("skills");
     }
@@ -1418,11 +1499,13 @@ const FeedbackForm = ({
           decodedData?.interviewerId ||
           urlData?.interviewerId ||
           "",
-        skills: skillRatings.map((skill) => ({
-          skillName: skill.skill,
-          rating: skill.rating,
-          note: skill.comments || "",
-        })),
+        skills: skillRatings
+          .filter(skill => skill.skill && skill.skill.trim() !== "") // Filter empty skills
+          .map((skill) => ({
+            skillName: skill.skill,
+            rating: skill.rating,
+            note: skill.comments || "",
+          })),
         questionFeedback: [
           // Interviewer section questions
           ...interviewerSectionData.map((question) => ({
@@ -1516,11 +1599,13 @@ const FeedbackForm = ({
 
       const updatedFeedbackData = {
         overallRating,
-        skills: skillRatings.map((skill) => ({
-          skillName: skill.skill,
-          rating: skill.rating,
-          note: skill.comments,
-        })),
+        skills: skillRatings
+          .filter(skill => skill.skill && skill.skill.trim() !== "")
+          .map((skill) => ({
+            skillName: skill.skill,
+            rating: skill.rating,
+            note: skill.comments,
+          })),
         questionFeedback: finalQuestionFeedback,
         generalComments: comments,
         overallImpression: {
@@ -1571,6 +1656,10 @@ const FeedbackForm = ({
           },
         });
       }
+      if (interviewRoundData?.meetPlatform === "platform") {
+        // const { leave } = useMeeting();
+        // leave();
+      }
 
       navigate("/feedback");
     } catch (error) {
@@ -1607,11 +1696,13 @@ const FeedbackForm = ({
           "" ||
           urlData?.interviewerId ||
           "",
-        skills: skillRatings.map((skill) => ({
-          skillName: skill.skill,
-          rating: skill.rating,
-          note: skill.comments || "",
-        })),
+        skills: skillRatings
+          .filter(skill => skill.skill && skill.skill.trim() !== "")
+          .map((skill) => ({
+            skillName: skill.skill,
+            rating: skill.rating,
+            note: skill.comments || "",
+          })),
         feedbackCode:
           feedbackDatas?.interviewRound?.interviewCode ||
           "" + "-" + feedbackDatas?.interviewRound?.sequence ||
@@ -1698,11 +1789,13 @@ const FeedbackForm = ({
 
       const updatedFeedbackData = {
         overallRating,
-        skills: skillRatings.map((skill) => ({
-          skillName: skill.skill,
-          rating: skill.rating,
-          note: skill.comments,
-        })),
+        skills: skillRatings
+          .filter(skill => skill.skill && skill.skill.trim() !== "")
+          .map((skill) => ({
+            skillName: skill.skill,
+            rating: skill.rating,
+            note: skill.comments,
+          })),
         questionFeedback: finalQuestionFeedback,
         generalComments: comments,
         overallImpression: {
@@ -1736,12 +1829,12 @@ const FeedbackForm = ({
             },
           );
 
-          if (isAddMode) {
-            navigate("/feedback");
-          } else {
+          // if (isAddMode) {
+          //   navigate("/feedback");
+          // } else {
 
 
-          }
+          // }
         } else {
           notify.error("No feedback ID found, cannot save draft.");
         }
@@ -1754,7 +1847,7 @@ const FeedbackForm = ({
                 setAutoSaveFeedbackId(data.data._id);
               }
               notify.success("Feedback saved as draft!");
-              navigate("/feedback");
+              // navigate("/feedback");
             } else {
               notify.error("Failed to save feedback as draft: " + data.message);
             }
@@ -1769,6 +1862,8 @@ const FeedbackForm = ({
       alert("Failed to save draft. Please try again.");
     }
   };
+
+  console.log("feedbackDatas", feedbackDatas)
 
   //<---v1.0.2-----Ranjith----solved feedback issues
 
@@ -1843,7 +1938,10 @@ const FeedbackForm = ({
       )}
 
       {/* v1.0.3 <--------------------------------------------------------- */}
-      <div className="bg-white rounded-lg sm:px-3 px-6 py-6 shadow-sm pb-20 mb-8">
+      <div
+        className="bg-white rounded-lg px-4 sm:px-6 py-6 shadow-sm pb-20 mb-8"
+      // className="bg-white rounded-lg sm:px-3 px-6 py-6 shadow-sm pb-20 mb-8"
+      >
         {/* v1.0.3 ---------------------------------------------------------> */}
         {/* <div className="flex items-center mb-6">
           <FileText
@@ -1855,14 +1953,14 @@ const FeedbackForm = ({
           </h3>
         </div> */}
 
-        <div className="space-y-6">
-          <div className="flex space-x-10 gap-6">
+        <div className="grid grid-cols-1 gap-6 mb-8">
+          <div className="bg-gray-50 p-4  sm:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 rounded-lg">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 Overall Rating{" "}
                 {!isViewMode && <span className="text-red-500">*</span>}
               </label>
-              <div className="flex items-center">
+              <div className="flex items-center flex-wrap gap-2">
                 {renderStarRating(overallRating, handleOverallRatingChange)}
                 <span className="ml-2 text-sm text-gray-600">
                   {overallRating}/5
@@ -1875,12 +1973,12 @@ const FeedbackForm = ({
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 Communication Rating{" "}
                 {!isViewMode && <span className="text-red-500">*</span>}
               </label>
-              <div className="flex items-center">
+              <div className="flex items-center flex-wrap gap-2">
                 {renderStarRating(
                   communicationRating,
                   handleCommunicationRatingChange,
@@ -1897,46 +1995,54 @@ const FeedbackForm = ({
             </div>
           </div>
 
-          <div>
-            <div className="flex justify-between items-center mb-3">
-              <label className="block text-sm font-medium text-gray-700">
-                Skill Ratings{" "}
+          <div className="mb-8 ">
+            <div className="flex w-full items-center justify-between mb-4">
+              <p className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                Skill Ratings
                 {!isViewMode && <span className="text-red-500">*</span>}
-              </label>
-              {isViewMode ? (
-                <div></div>
-              ) : // {!isViewMode &&
-                urlData?.isSchedule ? null : (
-                  <Button
-                    type="button"
-                    onClick={handleAddSkill}
-                    variant="outline"
-                    size="sm"
-                    style={{
-                      borderColor: "rgb(33, 121, 137)",
-                      color: "rgb(33, 121, 137)",
-                    }}
-                    className="bg-custom-blue text-sm border-custom-blue"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add Skill
-                  </Button>
-                )}
+              </p>
+
+              {!isViewMode && !urlData?.isSchedule && (
+                <Button
+                  type="button"
+                  onClick={handleAddSkill}
+                  variant="outline"
+                  size="sm"
+                  style={{
+                    borderColor: "rgb(33, 121, 137)",
+                    color: "rgb(33, 121, 137)",
+                  }}
+                  className="flex items-center px-3 py-1.5 text-sm bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Skill
+                </Button>
+              )}
             </div>
+
             {isViewMode ? (
               <div className="space-y-3">
                 {skillRatings.map((skill, index) => (
-                  <div key={index} className="p-3 bg-gray-50 rounded-md">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div className="text-sm text-gray-800">{skill.skill}</div>
-                      <div className="flex items-center">
-                        {renderStarRating(skill.rating)}
-                        <span className="ml-2 text-sm text-gray-600">
-                          {skill.rating}/5
-                        </span>
+                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <span className="text-xs text-gray-500 block mb-1">Skill</span>
+                        <div className="text-sm font-medium text-gray-800">{skill.skill}</div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {skill.comments || "No comments"}
+                      <div>
+                        <span className="text-xs text-gray-500 block mb-1">Rating</span>
+                        <div className="flex items-center">
+                          {renderStarRating(skill.rating)}
+                          <span className="ml-2 text-sm text-gray-600">
+                            {skill.rating}/5
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-500 block mb-1">Comments</span>
+                        <div className="text-sm text-gray-600">
+                          {skill.comments || "No comments"}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1945,26 +2051,42 @@ const FeedbackForm = ({
             ) : (
               <div className="space-y-3">
                 {skillRatings.map((skill, index) => (
-                  <div key={index} className="p-3 bg-gray-50 rounded-md">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <input
-                        type="text"
-                        value={skill.skill}
-                        onChange={(e) =>
-                          handleSkillChange(index, "skill", e.target.value)
-                        }
-                        placeholder="Skill name"
-                        className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <div className="flex items-center">
-                        {renderStarRating(skill.rating, (rating) =>
-                          handleSkillChange(index, "rating", rating),
-                        )}
-                        <span className="ml-2 text-sm text-gray-600">
-                          {skill.rating}/5
-                        </span>
+                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 items-start">
+                      {/* Skill Name */}
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1 lg:hidden">
+                          Skill Name
+                        </label>
+                        <input
+                          type="text"
+                          value={skill.skill}
+                          onChange={(e) =>
+                            handleSkillChange(index, "skill", e.target.value)
+                          }
+                          placeholder="Skill name"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-transparent"
+                        // className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
                       </div>
-                      <div className="flex items-center">
+                      <div>
+                        <span className="block text-xs text-gray-500 mb-1 lg:hidden">
+                          Rating
+                        </span >
+                        <div className="flex items-center">
+                          {renderStarRating(skill.rating, (rating) =>
+                            handleSkillChange(index, "rating", rating),
+                          )}
+                          <span className="ml-2 text-sm text-gray-600">
+                            {skill.rating}/5
+                          </span>
+                        </div>
+                      </div>
+                      {/* Comments Input */}
+                      <div className="relative">
+                        <span className="block text-xs text-gray-500 mb-1 lg:hidden">
+                          Comments (optional)
+                        </span >
                         <input
                           type="text"
                           value={skill.comments || ""}
@@ -1972,7 +2094,8 @@ const FeedbackForm = ({
                             handleSkillChange(index, "comments", e.target.value)
                           }
                           placeholder="Comments (optional)"
-                          className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-transparent"
+                        // className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         {/* <Button
                           type="button"
@@ -1995,21 +2118,19 @@ const FeedbackForm = ({
             )}
           </div>
 
-          <div>
-            <div className="flex justify-between items-center mb-3">
+          <div className="mb-8">
+            <div className="flex  sm:flex-row sm:items-center justify-between mb-1">
               {/* v1.0.3 <-------------------------------------------------------- */}
-              <div className="flex sm:flex-col sm:items-start items-center gap-4">
-                <label className="block text-sm font-medium text-gray-700">
+              <div>
+                <label className=" text-sm font-medium text-gray-700">
                   Questions Asked
                 </label>
-                <span className="text-sm text-gray-500">
+                <span className="text-xs text-gray-500 mt-1 block">
                   {questionsWithFeedback.length} question(s) from question bank
                 </span>
               </div>
               {/* v1.0.3 --------------------------------------------------------> */}
-              {isViewMode ? (
-                <div></div>
-              ) : (
+              {!isViewMode && (
                 <button
                   className="text-sm flex items-center gap-2 sm:px-3 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 font-medium"
                   onClick={openQuestionBank}
@@ -2024,7 +2145,7 @@ const FeedbackForm = ({
             </div>
           </div>
 
-          {isViewMode ? (
+          {/* {isViewMode ? (
             <>
               {questionsWithFeedback?.length > 0
                 ? questionsWithFeedback.map((question) => (
@@ -2111,13 +2232,7 @@ const FeedbackForm = ({
                       </span>
                     </div>
                     <div>
-                      {/* {(dislikeQuestionId ===
-                          (question.questionId ||
-                            question.id ||
-                            question._id) ||
-                          !!question.whyDislike) && (
-                          <DisLikeSection each={question} />
-                        )} */}
+                     
                       {(dislikeQuestionId ===
                         (question.questionId ||
                           question.id ||
@@ -2128,7 +2243,7 @@ const FeedbackForm = ({
                         )}
                     </div>
 
-                    {/* Note display if available */}
+                 
                     {question.notesBool && question.note && (
                       <div className="mt-4">
                         <p className="text-sm font-medium text-gray-600 mb-1">
@@ -2217,7 +2332,7 @@ const FeedbackForm = ({
                           }
                         >
                           {question.notesBool ? "Delete Note" : "Add a Note"}
-                          {/* Add a Note */}
+                         
                         </button>
                         <SharePopupSection />
                         <span
@@ -2274,19 +2389,12 @@ const FeedbackForm = ({
                                 }
                                 placeholder="Add your note here"
                               />
-                              {/* <span className="absolute right-[1rem] bottom-[0.2rem] text-gray-500">
-                                  {question.note?.length || 0}/250
-                                </span> */}
+                             
                             </div>
                             <span className="w-full text-sm text-right text-gray-500">
                               {question.note?.length || 0}/250
                             </span>
-                            {/* <button
-                                onClick={() => onClickDeleteNote(question.questionId || question.id)}
-                                className="text-red-500 text-lg mt-2"
-                              >
-                                <FaTrash size={20} />
-                              </button> */}
+                            
                           </div>
                         </div>
                       </div>
@@ -2314,15 +2422,71 @@ const FeedbackForm = ({
                 </div>
               )}
             </div>
+          )} */}
+
+          {isViewMode ? (
+            // VIEW MODE - Read-only display
+            <div className="space-y-4">
+              {questionsWithFeedback?.length > 0 ? (
+                questionsWithFeedback.map((question) => (
+                  <QuestionCard
+                    key={question.questionId || question.id}
+                    question={question}
+                    mode="view"
+                    onLikeToggle={handleLikeToggle}
+                    onDislikeToggle={handleDislikeToggle}
+                    DisLikeSection={DisLikeSection}
+                    dislikeQuestionId={dislikeQuestionId}
+                  />
+                ))
+              ) : (
+                <EmptyState
+                  message="No questions available"
+                  subMessage="Questions with feedback will appear here"
+                />
+              )}
+            </div>
+          ) : (
+            // EDIT/ADD MODE - Interactive display
+            <div className="space-y-4">
+              {questionsToRender?.length > 0 ? (
+                questionsToRender.map((question) => (
+                  <QuestionCard
+                    key={question.questionId || question.id}
+                    question={question}
+                    mode="edit"
+                    onNoteAdd={onClickAddNote}
+                    onNoteChange={onChangeInterviewQuestionNotes}
+                    onLikeToggle={handleLikeToggle}
+                    onDislikeToggle={handleDislikeToggle}
+                    DisLikeSection={DisLikeSection}
+                    dislikeQuestionId={dislikeQuestionId}
+                    RadioGroupInput={RadioGroupInput}
+                    SharePopupSection={SharePopupSection}
+                  />
+                ))
+              ) : (
+                <EmptyState
+                  message="No questions selected from question bank"
+                  subMessage="Go to 'Interview Questions' tab to add questions from the question bank"
+                  icon="FileText"
+                />
+              )}
+            </div>
           )}
 
-          <div className="mt-2">
+
+          {/* </div> */}
+
+
+          {/* Comments Section */}
+          <div className="mb-8">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Overall Comments{" "}
               {!isViewMode && <span className="text-red-500">*</span>}
             </label>
             {isViewMode ? (
-              <div className="text-sm text-gray-800">
+              <div className="text-sm text-gray-800 bg-gray-50 p-4 rounded-md">
                 {comments || "Not Provided"}
               </div>
             ) : (
@@ -2337,13 +2501,15 @@ const FeedbackForm = ({
             )}
           </div>
 
-          <div>
+
+          {/* Recommendation Section */}
+          <div className="mb-8">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Recommendation{" "}
               {!isViewMode && <span className="text-red-500">*</span>}
             </label>
             {isViewMode ? (
-              <div className="text-sm text-gray-800">
+              <div className="text-sm text-gray-800 bg-gray-50 p-4 rounded-md">
                 {recommendation || "Not Provided"}
               </div>
             ) : (
@@ -2374,12 +2540,12 @@ const FeedbackForm = ({
               />
             )}
           </div>
-          {isViewMode ? (
-            <div></div>
-          ) : (
-            <div className="flex justify-end gap-3 mt-4">
+
+          {/* Action Buttons */}
+          {!isViewMode && !urlData?.isSchedule && (
+            <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg mt-6 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 z-40">
               {!urlData?.isSchedule && (
-                <>
+                <div className="flex justify-end items-center gap-3 max-w-7xl mx-auto">
                   <Button
                     onClick={saveFeedback}
                     variant="outline"
@@ -2399,7 +2565,7 @@ const FeedbackForm = ({
                   >
                     Submit Feedback
                   </Button>
-                </>
+                </div>
               )}
             </div>
           )}
@@ -2444,16 +2610,16 @@ const FeedbackForm = ({
             </div>
           </div>
         )}
-      </div>
+      </div >
 
-      {isAddMode && autoSaveQuestions && (
+      {/* {isAddMode && autoSaveQuestions && (
         <div className="fixed bottom-4 right-4 z-50">
           <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             <span className="text-sm">Auto-saving...</span>
           </div>
         </div>
-      )}
+      )} */}
     </>
     // v1.0.4 ---------------------------------------------------------------------->
   );

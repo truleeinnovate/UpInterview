@@ -72,7 +72,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm">
-      <div className="flex items-center mb-6">
+      {/* <div className="flex items-center mb-6">
         <FileText
           className="h-5 w-5 mr-2"
           style={{ color: "rgb(33, 121, 137)" }}
@@ -80,7 +80,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
         <h3 className="text-lg font-medium text-gray-900">
           Interview Feedback - Scheduler View
         </h3>
-      </div>
+      </div> */}
 
       {/* Feedback Tabs */}
       {feedbacks.length > 1 && (

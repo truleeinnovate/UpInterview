@@ -230,11 +230,10 @@ const InterviewerView = ({
             className={`
             absolute inset-y-0 left-0 sm:w-62 md:w-62 lg:w-70 xl:w-70 2xl:w-70 bg-white transform transition-transform duration-300 ease-in-out
             z-30 lg:relative xl:relative 2xl:relative lg:translate-x-0 xl:translate-x-0 2xl:translate-x-0 lg:z-10 shadow-lg
-            ${
-              isSidebarOpen
+            ${isSidebarOpen
                 ? "translate-x-0 w-60"
                 : "-translate-x-full lg:translate-x-0 xl:translate-x-0 2xl:translate-x-0"
-            }
+              }
           `}
           >
             <div className="flex-grow overflow-y-auto">
@@ -246,19 +245,17 @@ const InterviewerView = ({
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={`outline-none w-[230px] flex items-center px-6 py-3 text-sm font-medium transition-colors
-                      ${
-                        urlData?.schedule && tab.id === "questions"
+                      ${urlData?.schedule && tab.id === "questions"
                           ? "hidden"
                           : ""
-                      }
-                      ${
-                        activeTab === tab.id
+                        }
+                      ${activeTab === tab.id
                           ? "bg-blue-50 text-custom-blue border-r-4 border-custom-blue"
                           : "text-gray-600 hover:bg-gray-50"
                         // activeTab === tab.id
                         //   ? 'bg-[#217989] text-white'
                         //   : 'text-gray-600 hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       <Icon className="w-5 h-5 mr-3" />
                       {tab.label}
@@ -291,13 +288,13 @@ const InterviewerView = ({
           {/* </div> */}
 
           {/* Scrollable Main Content */}
-          <div className="flex-1 bg-gray-50 max-h-[calc(100vh-58px)] overflow-y-auto">
-            <div className="py-6 sm:px-3 px-6">
+          <div className="flex-1 bg-gray-50 h-screen overflow-y-auto pb-24">
+            <div className="py-2 sm:px-3 px-6">
               {activeTab === "candidate" && (
                 <CandidateMiniTab
                   // selectedData={selectedCandidate}
                   isAddMode={true}
-                  // decodedData={decodedData}
+                // decodedData={decodedData}
                 />
               )}
               {!decodedData?.schedule && activeTab === "questions" && (
@@ -322,15 +319,15 @@ const InterviewerView = ({
                   //   handlePreselectedQuestionResponse
                   // }
                   decodedData={decodedData}
-                  // autoSaveQuestions={autoSaveQuestions}
-                  // triggerAutoSave={triggerAutoSave}
+                // autoSaveQuestions={autoSaveQuestions}
+                // triggerAutoSave={triggerAutoSave}
                 />
               )}
               {activeTab === "interviewActions" && (
                 <InterviewActions
                   // interviewData={selectedCandidate}
                   isAddMode={true}
-                  // decodedData={decodedData}
+                // decodedData={decodedData}
                 />
               )}
               {activeTab === "feedback" && (
@@ -350,7 +347,7 @@ const InterviewerView = ({
                   isAddMode={true}
                   // isScheduler={isScheduler}
                   schedulerFeedbackData={schedulerFeedbackData}
-                  // triggerAutoSave={triggerAutoSave}
+                // triggerAutoSave={triggerAutoSave}
                 />
               )}
               {/* {activeTab === 'management' && <FeedbackManagement />} */}

@@ -74,12 +74,15 @@ const createFeedback = async (req, res) => {
       questionFeedback,
       generalComments,
       overallImpression,
+
       isMockInterview,
       status,
       feedbackCode,
     } = req.body; //validatedData;
 
     console.log("req.body qFeedback", req.body);
+
+    // const filteredSkills = (skills || []).filter(s => s.skillName && s.skillName.trim() !== "");
 
     // Process questions: Transform Bank IDs/Objects to SelectedInterviewQuestion IDs
     const processedQuestionFeedback = [];
@@ -310,9 +313,9 @@ const createFeedback = async (req, res) => {
     await feedbackInstance.save();
 
     //  Update interview round status
-    if (feedbackInstance.status === "submitted") {
-      await updateInterviewRoundFeedbackStatus(interviewRoundId);
-    }
+    // if (feedbackInstance.status === "submitted") {
+    //   await updateInterviewRoundFeedbackStatus(interviewRoundId);
+    // }
 
     // Trigger webhook for feedback submission only (not for drafts)
     // webhooks creation part of feed back this is used in account settings hrms sidebar tab in webhooks tab
@@ -753,9 +756,9 @@ const updateFeedback = async (req, res) => {
     // Trigger webhook for feedback status update if status changed to submitted
     if (updatedFeedback.status === "submitted") {
       //  Update interview round status
-      await updateInterviewRoundFeedbackStatus(
-        updatedFeedback.interviewRoundId,
-      );
+      // await updateInterviewRoundFeedbackStatus(
+      //   updatedFeedback.interviewRoundId,
+      // );
 
       //if (updateData.status && updatedFeedback) {
       try {
@@ -927,9 +930,11 @@ const getFeedbackByRoundId = async (req, res) => {
     const { roundId } = req.params;
     const { interviewerId, interviewType } = req.query;
     const isMockInterview = interviewType === "mockinterview";
-    console.log("roundId", roundId);
+    console.log("req.query", req.query);
 
-    console.log("interviewerId", interviewerId);
+    console.log("roundId", roundId)
+
+    console.log("interviewerIdroundId", interviewerId);
     console.log("interviewType", interviewType);
 
     // Validate roundId
@@ -1003,6 +1008,8 @@ const getFeedbackByRoundId = async (req, res) => {
       feedbackQuery.interviewerId = interviewerId;
     }
 
+    console.log("feedbackQuery interviewerId", feedbackQuery)
+
     let feedbacks = await FeedbackModel.find(feedbackQuery)
       .populate("candidateId", "FirstName LastName Email Phone ownerId")
       .populate(
@@ -1012,6 +1019,8 @@ const getFeedbackByRoundId = async (req, res) => {
       .populate("interviewerId", "FirstName LastName Email Phone")
       .populate("ownerId", "firstName lastName email")
       .lean();
+
+    console.log("feedbacks feedbacks", feedbacks)
 
 
 
@@ -1104,6 +1113,7 @@ const getFeedbackByRoundId = async (req, res) => {
         roundId,
       }).lean();
     }
+
 
 
     // const interviewQuestionsList = await InterviewQuestions.find(questionQuery);
@@ -1269,6 +1279,7 @@ const getFeedbackByRoundId = async (req, res) => {
         },
       };
     });
+
 
     // Separate questions for the interviewQuestions section in response
     // let preselectedQuestions = interviewQuestionsList

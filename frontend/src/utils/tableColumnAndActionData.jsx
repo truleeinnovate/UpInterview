@@ -1293,6 +1293,7 @@ export const getFeedbackColumns = (navigate, options = {}) => {
             header: "Candidate Name",
             render: (value, row) => {
                 const candidate = row.candidateId;
+                console.log("candidate candidate", candidate)
                 const name = candidate ? `${candidate.FirstName || ""} ${candidate.LastName || ""}` : "Not Provided";
                 return (
                     <div className="flex items-center" title={name}>
@@ -1305,7 +1306,7 @@ export const getFeedbackColumns = (navigate, options = {}) => {
                                 />
                             ) : (
                                 <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
-                                    {candidate?.LastName ? candidate.LastName.charAt(0).toUpperCase() : "?"}
+                                    {candidate?.FirstName ? candidate.FirstName.charAt(0).toUpperCase() : "?"}
                                 </div>
                             )}
                         </div>
@@ -1337,7 +1338,8 @@ export const getFeedbackColumns = (navigate, options = {}) => {
                                     {title.charAt(0).toUpperCase() + title.slice(1)}
                                 </div>
                                 <div className="text-sm text-gray-500 truncate">
-                                    {position?.companyname || "No Company"} • {position?.Location || "No location"}
+                                    {position?.companyname?.name || "No Company"}
+                                    {/* • {position?.Location || "No location"} */}
                                 </div>
                             </>
                         )

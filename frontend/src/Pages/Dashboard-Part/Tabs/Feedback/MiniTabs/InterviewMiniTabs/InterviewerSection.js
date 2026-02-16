@@ -11,6 +11,7 @@ import { useLocation } from "react-router-dom";
 import Popup from "reactjs-popup";
 import { X, Plus, ThumbsUp, ThumbsDown, XCircle } from "lucide-react";
 import QuestionBank from "../../../../Tabs/QuestionBank-Tab/QuestionBank.jsx";
+import QuestionCard, { EmptyState } from "../../../../../../Components/QuestionCard";
 
 // Helper to normalize questionFeedback from backend object {preselected, interviewerAdded}
 const flattenQuestionFeedback = (qf) => {
@@ -307,12 +308,12 @@ const InterviewerSectionComponent = ({
   const onChangeInterviewQuestionNotes = (questionId, notes) => {
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some(
-        (q) => (q.questionId || q.id) === questionId,
+        (q) => (q.questionId || q.id || q._id) === questionId,
       );
 
       if (questionExists) {
         const updated = prev.map((q) =>
-          (q.questionId || q.id) === questionId
+          (q.questionId || q.id || q._id) === questionId
             ? {
               ...q,
               note: notes,
@@ -328,7 +329,7 @@ const InterviewerSectionComponent = ({
         return updated;
       } else {
         const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
-          (f) => (f.questionId || f._id) === questionId,
+          (f) => (f.questionId || f._id || f.id) === questionId,
         );
 
         if (originalQuestion) {
@@ -406,15 +407,15 @@ const InterviewerSectionComponent = ({
 
   const onClickAddNote = (id) => {
     setInterviewerSectionData((prev) => {
-      const questionExists = prev.some((q) => (q.questionId || q.id) === id);
+      const questionExists = prev.some((q) => (q.questionId || q.id || q._id) === id);
 
       if (questionExists) {
         return prev.map((q) =>
-          (q.questionId || q.id) === id ? { ...q, notesBool: !q.notesBool } : q,
+          (q.questionId || q.id || q._id) === id ? { ...q, notesBool: !q.notesBool } : q,
         );
       } else {
         const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
-          (f) => (f.questionId || f._id) === id,
+          (f) => (f.questionId || f._id || f.id) === id,
         );
 
         if (originalQuestion) {
@@ -436,11 +437,11 @@ const InterviewerSectionComponent = ({
 
   const onClickDeleteNote = (id) => {
     setInterviewerSectionData((prev) => {
-      const questionExists = prev.some((q) => (q.questionId || q.id) === id);
+      const questionExists = prev.some((q) => (q.questionId || q.id || q._id) === id);
 
       if (questionExists) {
         return prev.map((q) =>
-          (q.questionId || q.id) === id
+          (q.questionId || q.id || q._id) === id
             ? { ...q, notesBool: false, note: "" }
             : q,
         );
@@ -530,12 +531,12 @@ const InterviewerSectionComponent = ({
   const onChangeRadioInput = (questionId, value) => {
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some(
-        (q) => (q.questionId || q.id) === questionId,
+        (q) => (q.questionId || q.id || q._id) === questionId,
       );
 
       if (questionExists) {
         const updated = prev.map((q) =>
-          (q.questionId || q.id) === questionId
+          (q.questionId || q.id || q._id) === questionId
             ? {
               ...q,
               isAnswered: value,
@@ -550,7 +551,7 @@ const InterviewerSectionComponent = ({
         return updated;
       } else {
         const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
-          (f) => (f.questionId || f._id) === questionId,
+          (f) => (f.questionId || f._id || f.id) === questionId,
         );
 
         if (originalQuestion) {
@@ -621,12 +622,12 @@ const InterviewerSectionComponent = ({
   const onChangeDislikeRadioInput = (questionId, value) => {
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some(
-        (q) => (q.questionId || q.id) === questionId,
+        (q) => (q.questionId || q.id || q._id) === questionId,
       );
 
       if (questionExists) {
         const updated = prev.map((q) =>
-          (q.questionId || q.id) === questionId
+          (q.questionId || q.id || q._id) === questionId
             ? { ...q, whyDislike: value, isLiked: "disliked" }
             : q,
         );
@@ -637,7 +638,7 @@ const InterviewerSectionComponent = ({
         return updated;
       } else {
         const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
-          (f) => (f.questionId || f._id) === questionId,
+          (f) => (f.questionId || f._id || f.id) === questionId,
         );
 
         if (originalQuestion) {
@@ -653,7 +654,6 @@ const InterviewerSectionComponent = ({
             },
           ];
 
-          // Trigger auto-save after change
           // Trigger auto-save after change
           triggerDebouncedSave();
 
@@ -712,11 +712,11 @@ const InterviewerSectionComponent = ({
     if (isViewMode) return;
 
     setInterviewerSectionData((prev) => {
-      const questionExists = prev.some((q) => (q.questionId || q.id) === id);
+      const questionExists = prev.some((q) => (q.questionId || q.id || q._id) === id);
 
       if (questionExists) {
         const updated = prev.map((q) =>
-          (q.questionId || q.id) === id
+          (q.questionId || q.id || q._id) === id
             ? {
               ...q,
               isLiked: q.isLiked === "liked" ? "" : "liked",
@@ -731,7 +731,7 @@ const InterviewerSectionComponent = ({
         return updated;
       } else {
         const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
-          (f) => (f.questionId || f._id) === id,
+          (f) => (f.questionId || f._id || f.id) === id,
         );
 
         if (originalQuestion) {
@@ -766,11 +766,11 @@ const InterviewerSectionComponent = ({
     if (isViewMode) return;
 
     setInterviewerSectionData((prev) => {
-      const questionExists = prev.some((q) => (q.questionId || q.id) === id);
+      const questionExists = prev.some((q) => (q.questionId || q.id || q._id) === id);
 
       if (questionExists) {
         return prev.map((q) =>
-          (q.questionId || q.id) === id
+          (q.questionId || q.id || q._id) === id
             ? {
               ...q,
               isLiked: q.isLiked === "disliked" ? "" : "disliked",
@@ -779,7 +779,7 @@ const InterviewerSectionComponent = ({
         );
       } else {
         const originalQuestion = flattenQuestionFeedback(feedbackData?.questionFeedback).find(
-          (f) => (f.questionId || f._id) === id,
+          (f) => (f.questionId || f._id || f.id) === id,
         );
 
         if (originalQuestion) {
@@ -831,7 +831,7 @@ const InterviewerSectionComponent = ({
                     className="accent-custom-blue"
                     onChange={(e) =>
                       onChangeDislikeRadioInput(
-                        each.questionId || each.id,
+                        each.questionId || each.id || each._id,
                         e.target.value,
                       )
                     }
@@ -901,7 +901,7 @@ const InterviewerSectionComponent = ({
                   id={`isAnswered-${each.questionId || each.id}-${option}`}
                   onChange={(e) =>
                     onChangeRadioInput(
-                      each.questionId || each._id,
+                      each.questionId || each._id || each.id,
                       e.target.value,
                     )
                   }
@@ -1181,166 +1181,26 @@ const InterviewerSectionComponent = ({
           {questionsWithFeedback?.length > 0 ? (
             // Render merged interviewer questions with feedback applied
             questionsWithFeedback.map((question) => (
-              <div
+              <QuestionCard
                 key={question.questionId || question._id}
-                className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                    {question.snapshot?.technology?.[0] ||
-                      question.snapshot?.snapshot?.technology?.[0] ||
-                      question.snapshot?.category?.[0] ||
-                      question.snapshot?.snapshot?.category?.[0] ||
-                      "N/A"}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    {question.snapshot?.difficultyLevel ||
-                      question.snapshot?.snapshot?.difficultyLevel ||
-                      question.difficulty ||
-                      "N/A"}
-                  </span>
-                </div>
-                <h3 className="sm:text-sm font-semibold text-gray-800 mb-2">
-                  {question.snapshot?.questionText ||
-                    question.snapshot?.snapshot?.questionText ||
-                    question.question ||
-                    "N/A"}
-                </h3>
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-600 mb-2">
-                    Expected Answer:
-                  </p>
-                  <p className="text-sm text-gray-700">
-                    {question.snapshot?.correctAnswer ||
-                      question.snapshot?.snapshot?.correctAnswer ||
-                      question.expectedAnswer ||
-                      "N/A"}
-                  </p>
-                </div>
-                {(isEditMode || isAddMode) && (
-                  <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
-                    <span>
-                      Mandatory:{" "}
-                      {question.mandatory === "true" ||
-                        question.snapshot?.mandatory === "true"
-                        ? "Yes"
-                        : "No"}
-                    </span>
-                  </div>
-                )}
-                <div className="flex sm:flex-col sm:items-start items-center justify-between gap-2 mt-2">
-                  <RadioGroupInput each={question} />
-                  <div className="flex items-center gap-4 mt-2">
-                    {(isEditMode || isAddMode) && (
-                      <button
-                        className={`text-sm py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
-                        onClick={() =>
-                          onClickAddNote(
-                            question.questionId || question.id || question._id,
-                          )
-                        }
-                      >
-                        {question.notesBool ? "Delete Note" : "Add a Note"}
-                      </button>
-                    )}
-                    <SharePopupSection />
-                    {(isEditMode || isViewMode || isAddMode) && (
-                      <>
-                        <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out  ${question.isLiked === "liked" ? "text-green-700" : ""
-                            }`}
-                          onClick={() =>
-                            handleLikeToggle(
-                              question.questionId ||
-                              question._id ||
-                              question.id,
-                            )
-                          }
-                        >
-                          <ThumbsUp className="h-4 w-4" />
-                        </span>
-                        <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked"
-                            ? "text-red-500"
-                            : ""
-                            }`}
-                          style={{ cursor: "pointer" }}
-                          onClick={() =>
-                            handleDislikeToggle(
-                              question.questionId ||
-                              question._id ||
-                              question.id,
-                            )
-                          }
-                        >
-                          <ThumbsDown className="h-4 w-4" />
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {question.notesBool && (
-                  <div>
-                    <div className="flex flex-col justify-start mt-4">
-                      <label
-                        htmlFor={` note-input-${question.questionId || question._id || question.id
-                          }`}
-                        className="w-[170px] font-bold text-gray-700"
-                      >
-                        Note
-                      </label>
-                      {isEditMode || isAddMode ? (
-                        <div className="flex flex-col items-start w-full h-[80px]">
-                          <div className="w-full relative  rounded-md ">
-                            <input
-                              className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-                              id={`note-input-${question.questionId ||
-                                question._id ||
-                                question.id
-                                }`}
-                              type="text"
-                              value={question.note}
-                              onChange={(e) =>
-                                onChangeInterviewQuestionNotes(
-                                  question.questionId ||
-                                  question._id ||
-                                  question.id,
-                                  e.target.value.slice(0, 250),
-                                )
-                              }
-                              placeholder="Add your note here"
-                            />
-                          </div>
-                          <span className="w-full text-sm text-right text-gray-500">
-                            {question.note?.length || 0}/250
-                          </span>
-                        </div>
-                      ) : (
-                        <p className="w-full flex gap-x-8 gap-y-2 text-sm text-gray-500">
-                          {question.note}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {(dislikeQuestionId ===
-                  (question.questionId || question._id || question.id) ||
-                  !!question.whyDislike) && <DisLikeSection each={question} />}
-              </div>
+                question={question}
+                mode={isEditMode || isAddMode ? "edit" : "view"}
+                onNoteAdd={onClickAddNote}
+                onNoteChange={onChangeInterviewQuestionNotes}
+                onLikeToggle={handleLikeToggle}
+                onDislikeToggle={handleDislikeToggle}
+                DisLikeSection={DisLikeSection}
+                dislikeQuestionId={dislikeQuestionId}
+                RadioGroupInput={RadioGroupInput}
+                SharePopupSection={SharePopupSection}
+              />
             ))
           ) : (
-            // Empty state when no questions are present
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-              <div className="text-gray-500 mb-4">
-                <Plus className="mx-auto h-5 w-5 mb-2" />
-                <p className="text-lg font-medium">
-                  No interviewer questions found
-                </p>
-                <p className="text-sm">
-                  No questions have been added by interviewers for this round
-                </p>
-              </div>
-            </div>
+            <EmptyState
+              message="No interviewer questions found"
+              subMessage="No questions have been added by interviewers for this round"
+              icon="Plus"
+            />
           )}
         </div>
       </div>

@@ -377,44 +377,44 @@ const MockInterview = () => {
       header: "Duration",
       render: (value, row) => row?.rounds?.[0]?.duration || "Not Provided",
     },
-    {
-      key: "interviewer",
-      header: "Interviewer",
-      render: (value, row) => {
-        const interviewers = row?.rounds?.[0]?.interviewers || [];
-        if (interviewers.length === 0) return "Not Provided";
+    // {
+    //   key: "interviewer",
+    //   header: "Interviewer",
+    //   render: (value, row) => {
+    //     const interviewers = row?.rounds?.[0]?.interviewers || [];
+    //     if (interviewers.length === 0) return "Not Provided";
 
-        // Map interviewer names, accessing contact.Name or firstName/lastName
-        const names = interviewers
-          .map((interviewer) => {
-            const contact = interviewer?.contact;
-            return (
-              contact?.Name ||
-              `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim()
-            );
-          })
-          .filter(Boolean); // Remove empty strings
+    //     // Map interviewer names, accessing contact.Name or firstName/lastName
+    //     const names = interviewers
+    //       .map((interviewer) => {
+    //         const contact = interviewer?.contact;
+    //         return (
+    //           contact?.Name ||
+    //           `${contact?.firstName || ""} ${contact?.lastName || ""}`.trim()
+    //         );
+    //       })
+    //       .filter(Boolean); // Remove empty strings
 
-        if (names.length === 0) return "Not Provided";
+    //     if (names.length === 0) return "Not Provided";
 
-        // Show first name and truncate with ... if more than one
-        const displayText = names.length > 1 ? `${names[0]}...` : names[0];
-        const additionalCount = names.length > 1 ? names.length - 1 : 0;
+    //     // Show first name and truncate with ... if more than one
+    //     const displayText = names.length > 1 ? `${names[0]}...` : names[0];
+    //     const additionalCount = names.length > 1 ? names.length - 1 : 0;
 
-        return (
-          <div className="w-48 truncate flex items-center space-x-1">
-            <span className="text-sm text-gray-900" title={names.join(", ")}>
-              {displayText}
-            </span>
-            {additionalCount > 0 && (
-              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-black bg-gray-200 rounded-full">
-                +{additionalCount}
-              </span>
-            )}
-          </div>
-        );
-      },
-    },
+    //     return (
+    //       <div className="w-48 truncate flex items-center space-x-1">
+    //         <span className="text-sm text-gray-900" title={names.join(", ")}>
+    //           {displayText}
+    //         </span>
+    //         {additionalCount > 0 && (
+    //           <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-black bg-gray-200 rounded-full">
+    //             +{additionalCount}
+    //           </span>
+    //         )}
+    //       </div>
+    //     );
+    //   },
+    // },
     {
       key: "createdAt",
       header: "Created At",
@@ -482,15 +482,15 @@ const MockInterview = () => {
         <span>{capitalizeFirstLetter(row?.technology)}</span>
       ),
     },
-    {
-      key: "interviewer",
-      header: "Interviewer",
-      render: (value, row) => (
-        <span className="text-gray-800 font-medium truncate">
-          {row?.interviewer || row?.rounds?.[0]?.interviewer || "N/A"}
-        </span>
-      ),
-    },
+    // {
+    //   key: "interviewer",
+    //   header: "Interviewer",
+    //   render: (value, row) => (
+    //     <span className="text-gray-800 font-medium truncate">
+    //       {row?.interviewer || row?.rounds?.[0]?.interviewer || "N/A"}
+    //     </span>
+    //   ),
+    // },
     {
       key: "duration",
       header: "Duration",
