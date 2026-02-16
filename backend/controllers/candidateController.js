@@ -124,7 +124,7 @@ const addCandidatePostCall = async (req, res) => {
       location,
       // minSalary: minSalary ? Number(minSalary) : null,
       // maxSalary: maxSalary ? Number(maxSalary) : null,
-      annualSalary: annualSalary ? Number(maxSalary) : null,
+      annualSalary: annualSalary ? Number(annualSalary) : null,
       languages: Array.isArray(languages) ? languages : [],
       certifications: Array.isArray(certifications) ? certifications : [],
       noticePeriod,
