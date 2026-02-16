@@ -582,7 +582,7 @@ const MultiStepForm = () => {
             const expectedLength = iso2
               ? getExampleNumber(iso2)?.nationalNumber?.length || 15
               : 15;
-            currentErrors.phone = `Invalid phone number for ${basicDetailsData.countryCode}`;
+            currentErrors.phone = `Invalid Phone Number for ${basicDetailsData.countryCode}`;
           }
         }
         if (!basicDetailsData.linkedinUrl)

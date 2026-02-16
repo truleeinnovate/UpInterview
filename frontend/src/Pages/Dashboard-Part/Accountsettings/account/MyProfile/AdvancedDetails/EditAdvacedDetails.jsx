@@ -149,6 +149,17 @@ const EditAdvacedDetails = ({
     [colleges],
   );
 
+    const locationOptionsRS = useMemo(
+      () =>
+        (locations || [])
+          .map((l) => ({
+            value: l?.LocationName,
+            label: l?.LocationName,
+          }))
+          .concat([{ value: "__other__", label: "+ Others" }]),
+      [locations],
+    );
+
   useEffect(() => {
     const saved = (formData.location || "").trim();
     if (!saved || !Array.isArray(locations) || locations.length === 0) return;
@@ -389,13 +400,13 @@ const EditAdvacedDetails = ({
       : [{ value: v, label: v }, ...industryOptions];
   }, [industryOptions, formData.industry]);
 
-  const locationOptionsWithCurrent = useMemo(() => {
-    const v = formData.location;
-    if (!v) return locationOptions;
-    return locationOptions.some((o) => o.value === v)
-      ? locationOptions
-      : [{ value: v, label: v }, ...locationOptions];
-  }, [locationOptions, formData.location]);
+  // const locationOptionsWithCurrent = useMemo(() => {
+  //   const v = formData.location;
+  //   if (!v) return locationOptions;
+  //   return locationOptions.some((o) => o.value === v)
+  //     ? locationOptions
+  //     : [{ value: v, label: v }, ...locationOptions];
+  // }, [locationOptions, formData.location]);
 
   const currentRoleOptionsWithCurrent = useMemo(() => {
     const v = formData.currentRole;
@@ -548,7 +559,7 @@ const EditAdvacedDetails = ({
             <div className="flex flex-col">
               <DropdownWithSearchField
                 value={formData.location}
-                options={locationOptionsWithCurrent}
+                options={locationOptionsRS}
                 name="location"
                 onChange={handleInputChange}
                 error={errors.location}

@@ -65,18 +65,18 @@ const PhoneField = ({
 
     // 👈 Updated: Validate using libphonenumber-js (handles length automatically)
     const validatePhone = (phoneDigits, countryCode) => {
-        if (!phoneDigits || !countryCode) return "Phone number is required";
+        if (!phoneDigits || !countryCode) return "Phone Number is required";
 
         const fullNumber = `${countryCode}${phoneDigits.replace(/\D/g, "")}`;
         const phoneNumber = parsePhoneNumberFromString(fullNumber);
 
         if (!phoneNumber) {
-            return "Invalid phone number format";
+            return "Invalid Phone Number";
         }
 
         if (!phoneNumber.isValid()) {
             const expectedLength = getExpectedDigitLength;
-            return `Invalid phone number for ${countryCode}`;
+            return `Invalid Phone Number for ${countryCode}`;
         }
 
         return ""; // Valid

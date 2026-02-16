@@ -1714,7 +1714,7 @@ const InterviewDetails = ({
                 setErrors((prev) => ({
                   ...prev,
                   professionalTitle:
-                    "Professional title must be at least 30 characters",
+                    "Professional Title must be at least 30 characters",
                 }));
               } else if (value.length > 100) {
                 setErrors((prev) => ({

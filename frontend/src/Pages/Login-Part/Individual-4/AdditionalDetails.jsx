@@ -60,6 +60,8 @@ const AdditionalDetails = ({
   const [coverLetterError, setCoverLetterError] = useState("");
   const [isCustomUniversity, setIsCustomUniversity] = useState(false);
   const [isCustomQualification, setIsCustomQualification] = useState(false);
+  const [isCustomLocation, setIsCustomLocation] = useState(false);
+  
 
   // Load all dropdown data when component mounts
   useEffect(() => {
@@ -67,13 +69,16 @@ const AdditionalDetails = ({
     loadIndustries();
     loadLocations();
   }, [loadCurrentRoles, loadIndustries, loadLocations]);
+  
 
   const qualificationOptionsRS = useMemo(
     () =>
-      qualifications?.map((q) => ({
-        value: q?.QualificationName,
-        label: q?.QualificationName,
-      })) || [],
+      (
+        qualifications?.map((q) => ({
+          value: q?.QualificationName,
+          label: q?.QualificationName,
+        })) || []
+      ).concat([{ value: "__other__", label: "+ Others" }]),
     [qualifications],
   );
 
@@ -87,6 +92,17 @@ const AdditionalDetails = ({
       ).concat([{ value: "__other__", label: "+ Others" }]),
     [colleges],
   );
+
+      const locationOptionsRS = useMemo(
+        () =>
+          (locations || [])
+            .map((l) => ({
+              value: l?.LocationName,
+              label: l?.LocationName,
+            }))
+            .concat([{ value: "__other__", label: "+ Others" }]),
+        [locations],
+      );
 
   useEffect(() => {
     if (hasDetectedCustomUniversity.current) return; // Only detect once
@@ -400,71 +416,20 @@ const AdditionalDetails = ({
             error={errors.company}
           />
         </div>
-        {/* Industry */}
-        {/* <div className="sm:col-span-2 col-span-1">
-          <DropdownWithSearchField
-            value={additionalDetailsData.industry || ""}
-            options={[
-              // Include the current value in options even if not in the database yet
-              ...(additionalDetailsData.industry &&
-                !industries?.some(
-                  (ind) => ind.IndustryName === additionalDetailsData.industry
-                )
-                ? [
-                  {
-                    value: additionalDetailsData.industry,
-                    label: additionalDetailsData.industry,
-                  },
-                ]
-                : []),
-              ...(industries
-                ?.filter((industry) => industry.IndustryName)
-                .map((industry) => ({
-                  value: industry.IndustryName,
-                  label: industry.IndustryName,
-                })) || []),
-            ]}
-            name="industry"
-            onChange={handleChange}
-            error={errors.industry}
-            label="Industry"
-            placeholder="Select Industry"
-            required={true}
-            onMenuOpen={loadIndustries}
-            loading={isIndustriesFetching}
-          />
-        </div> */}
+        
 
         {/* Location */}
         <div className="sm:col-span-2 col-span-1">
           <DropdownWithSearchField
             value={additionalDetailsData.location || ""}
-            options={[
-              // Include the current value in options even if not in the database yet
-              ...(additionalDetailsData.location &&
-                !locations?.some(
-                  (loc) => loc.LocationName === additionalDetailsData.location
-                )
-                ? [
-                  {
-                    value: additionalDetailsData.location,
-                    label: additionalDetailsData.location,
-                  },
-                ]
-                : []),
-              ...(locations
-                ?.filter((location) => location.LocationName)
-                .map((location) => ({
-                  value: location.LocationName,
-                  label: location.LocationName,
-                })) || []),
-            ]}
+            options={locationOptionsRS}
             name="location"
             onChange={handleChange}
             error={errors.location}
             label="Current Location"
+            isCustomName={isCustomLocation}
+            setIsCustomName={setIsCustomLocation}
             placeholder="Select Your Current Location"
-            // required={true}
             onMenuOpen={loadLocations}
             loading={isLocationsFetching}
           />
