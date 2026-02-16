@@ -1129,7 +1129,6 @@ const MockInterviewDetails = () => {
                                   <ChevronDown className="h-5 w-5 text-gray-400" />
                                 )}
                               </div>
-                              </div>
                             </button>
 
                             {isExpanded(round._id) && (
