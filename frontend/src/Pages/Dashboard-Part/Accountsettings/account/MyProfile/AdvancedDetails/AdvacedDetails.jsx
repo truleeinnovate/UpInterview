@@ -113,7 +113,7 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">Location</p>
+            <p className="text-sm text-gray-500">Current Location</p>
             <p className="font-medium sm:text-sm">
               {contactData.location || "Not Provided"}
             </p>

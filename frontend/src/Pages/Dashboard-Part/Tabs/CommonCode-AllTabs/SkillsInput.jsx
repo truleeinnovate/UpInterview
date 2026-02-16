@@ -399,7 +399,7 @@ const SkillsField = forwardRef(
             )}
             {simpleMode && (
               <span className="text-xs text-gray-500 mt-0.5">
-                Add your technical skills
+                Add your Skills
               </span>
             )}
           </div>
