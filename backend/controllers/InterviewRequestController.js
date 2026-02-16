@@ -772,7 +772,7 @@ exports.acceptInterviewRequest = async (req, res) => {
       });
     }
 
-    const { totalAmount, appliedDiscountPercentage } = pricingResult;
+    const { totalAmount, appliedDiscountPercentage, discountAmount, originalAmount } = pricingResult;
 
     const acceptWalletResult = await applyAcceptInterviewWalletFlow({
       request,
@@ -781,6 +781,9 @@ exports.acceptInterviewRequest = async (req, res) => {
       requestId,
       contact,
       totalAmount,
+      appliedDiscountPercentage,
+      discountAmount,
+      originalAmount,
     });
 
     if (acceptWalletResult && acceptWalletResult.error) {

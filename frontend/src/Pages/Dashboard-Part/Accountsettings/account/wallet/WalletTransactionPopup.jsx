@@ -16,7 +16,8 @@ import {
   Wallet,
   Info,
   Tag,
-  Layers
+  Layers,
+  Percent
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
@@ -226,6 +227,51 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
                   </span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Mock Interview Discount Card - only shown for mock interviews */}
+          {metadata.isMockInterview && (
+            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl p-5 border border-teal-200 shadow-sm">
+              <h3 className="text-base font-semibold text-teal-800 mb-4 flex items-center">
+                <Percent className="w-5 h-5 mr-2 text-teal-600" />
+                Mock Interview Discount
+              </h3>
+
+              <div className="space-y-3">
+                {metadata.originalAmountBeforeDiscount > 0 && (
+                  <div className="flex items-center justify-between py-2 border-b border-teal-100">
+                    <span className="text-sm text-gray-600">Original Amount</span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      ₹{Number(metadata.originalAmountBeforeDiscount).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {metadata.mockDiscountPercentage > 0 && (
+                  <div className="flex items-center justify-between py-2 border-b border-teal-100">
+                    <span className="text-sm text-gray-600">
+                      Discount ({metadata.mockDiscountPercentage}%)
+                    </span>
+                    <span className="text-sm font-medium text-red-600">
+                      - ₹{Number(metadata.mockDiscountAmount || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-sm font-semibold text-gray-800">After Discount</span>
+                  <span className="text-base font-bold text-teal-700">
+                    ₹{(transaction?.amount || 0).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {!metadata.mockDiscountPercentage && (
+                <p className="text-xs text-teal-600 mt-3 italic">
+                  No discount applied for this mock interview
+                </p>
+              )}
             </div>
           )}
 
