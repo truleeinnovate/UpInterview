@@ -1363,6 +1363,22 @@ const updateInterviewRoundStatus = async (req, res) => {
 
     let newStatus = null;
 
+
+    // ===== STRICT CHECK: ALL INTERVIEWERS FEEDBACK STATUS = DRAFT =====
+
+    // Interviewer IDs from round
+    const interviewerIds = (existingRound.interviewers || []).map((id) => id);
+
+
+    const draftCount = await FeedbackModel.countDocuments({
+      interviewRoundId: existingRound._id,
+      interviewerId: { $in: interviewerIds },
+      status: "draft",
+    });
+
+
+
+
     // ────────────────────────────────────────────────
     // validation when existing status is FeedbackPending and action is Evaluated stop when external
     // ────────────────────────────────────────────────
@@ -1374,7 +1390,7 @@ const updateInterviewRoundStatus = async (req, res) => {
 
       if (
         existingRound.interviewerType === "External" &&
-        existingRound.status === "FeedbackPending"
+        existingRound.status === "FeedbackPending" && draftCount
       ) {
         return res.status(400).json({
           success: false,
@@ -1480,10 +1496,7 @@ const updateInterviewRoundStatus = async (req, res) => {
     //   interviewRoundId: existingRound._id,
     // });
 
-    // ===== STRICT CHECK: ALL INTERVIEWERS FEEDBACK STATUS = DRAFT =====
 
-    // Interviewer IDs from round
-    const interviewerIds = (existingRound.interviewers || []).map((id) => id);
 
     // Fetch feedbacks only for these interviewers
     // const feedbacks = await FeedbackModel.find({
@@ -1514,11 +1527,6 @@ const updateInterviewRoundStatus = async (req, res) => {
     //       feedbackStatusMap.has(interviewerId) &&
     //       feedbackStatusMap.get(interviewerId) === "draft",
     //   );
-    const draftCount = await FeedbackModel.countDocuments({
-      interviewRoundId: existingRound._id,
-      interviewerId: { $in: interviewerIds },
-      status: "draft",
-    });
 
     const allInterviewersDraft = draftCount === interviewerIds.length;
 
