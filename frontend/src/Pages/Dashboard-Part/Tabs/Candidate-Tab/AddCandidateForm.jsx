@@ -137,6 +137,8 @@ const AddCandidateForm = ({
 
   const imageInputRef = useRef(null);
   const resumeInputRef = useRef(null);
+  const hasDetectedCustomUniversity = useRef(false);
+  const hasDetectedCustomQualification = useRef(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedResume, setSelectedResume] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -190,10 +192,7 @@ const AddCandidateForm = ({
   // const [filePreview, setFilePreview] = useState(null);
   // const [isImageUploaded, setIsImageUploaded] = useState(false);
 
-  //<----v1.0.1 - University dropdown state---
-  const [isCustomUniversity, setIsCustomUniversity] = useState(false);
 
-  //----v1.0.1--->
 
   // const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
   const genderOptions = ["Male", "Female"];
@@ -376,6 +375,8 @@ const AddCandidateForm = ({
 
   // Inside AddCandidateForm component
   const [isCustomLocation, setIsCustomLocation] = useState(false);
+  const [isCustomUniversity, setIsCustomUniversity] = useState(false);
+  const [isCustomQualification, setIsCustomQualification] = useState(false);
 
   // Memoize location options from master data
   const locationOptionsRS = useMemo(
@@ -400,6 +401,46 @@ const AddCandidateForm = ({
     const existsInList = list.includes(saved.toLowerCase());
     setIsCustomLocation(!existsInList);
   }, [locations, formData.location]);
+
+  // Effect to handle custom university display in Edit mode only (runs once)
+  useEffect(() => {
+    if (hasDetectedCustomUniversity.current) return; // Only detect once
+    const saved = (selectedCandidate?.UniversityCollege || "").trim();
+    if (!saved) return;
+
+    // Trigger loading colleges if not loaded yet
+    if (!Array.isArray(colleges) || colleges.length === 0) {
+      loadColleges();
+      return;
+    }
+
+    const list = colleges.map((c) =>
+      (c?.University_CollegeName || "").trim().toLowerCase(),
+    );
+    const existsInList = list.includes(saved.toLowerCase());
+    setIsCustomUniversity(!existsInList);
+    hasDetectedCustomUniversity.current = true; // Mark as done
+  }, [colleges, selectedCandidate?.UniversityCollege]);
+
+  // Effect to handle custom qualification display in Edit mode only (runs once)
+  useEffect(() => {
+    if (hasDetectedCustomQualification.current) return; // Only detect once
+    const saved = (selectedCandidate?.HigherQualification || "").trim();
+    if (!saved) return;
+
+    // Trigger loading qualifications if not loaded yet
+    if (!Array.isArray(qualifications) || qualifications.length === 0) {
+      loadQualifications();
+      return;
+    }
+
+    const list = qualifications.map((q) =>
+      (q?.QualificationName || "").trim().toLowerCase(),
+    );
+    const existsInList = list.includes(saved.toLowerCase());
+    setIsCustomQualification(!existsInList);
+    hasDetectedCustomQualification.current = true; // Mark as done
+  }, [qualifications, selectedCandidate?.HigherQualification]);
   // --------------------------------------- new fields version 2 -----------------------
 
   useEffect(() => {
@@ -440,9 +481,9 @@ const AddCandidateForm = ({
         annualSalary: selectedCandidate?.annualSalary || "",
         languages: selectedCandidate?.languages || [],
         // certifications: selectedCandidate?.certifications || [],
-        certifications: selectedCandidate?.certifications?.length > 0 
-        ? selectedCandidate.certifications 
-        : [{ name: "", issuingFrom: "", issuingYear: "" }],
+        certifications: selectedCandidate?.certifications?.length > 0
+          ? selectedCandidate.certifications
+          : [{ name: "", issuingFrom: "", issuingYear: "" }],
         noticePeriod: selectedCandidate?.noticePeriod || "",
       });
 
@@ -545,9 +586,9 @@ const AddCandidateForm = ({
       CountryCode: sd.candidate_country_code || "+91",
       Phone: sd.candidate_phone
         ? sd.candidate_phone
-            .replace(/^\+\d{1,3}/, "")
-            .replace(/^\d{1,3}/, "")
-            .trim()
+          .replace(/^\+\d{1,3}/, "")
+          .replace(/^\d{1,3}/, "")
+          .trim()
         : "",
 
       // ── Education ───────────────────────────────────
@@ -568,15 +609,15 @@ const AddCandidateForm = ({
       skills:
         parsedSkills.length > 0
           ? parsedSkills.map((name) => ({
-              skill: (name || "").trim(),
-              experience: "",
-              expertise: "",
-            }))
+            skill: (name || "").trim(),
+            experience: "",
+            expertise: "",
+          }))
           : (sd.screening_result?.extracted_skills || []).map((name) => ({
-              skill: (name || "").trim(),
-              experience: "",
-              expertise: "",
-            })),
+            skill: (name || "").trim(),
+            experience: "",
+            expertise: "",
+          })),
 
       // ── New Fields (Resume Analysis) ─────────────────
       professionalSummary:
@@ -637,25 +678,7 @@ const AddCandidateForm = ({
     );
   }, [screeningData, source]);
 
-  // Ensure University/College custom input is shown in edit mode when the saved value
-  // is not present in master list (handles the '+ Others' flow gracefully)
-  useEffect(() => {
-    const saved = (formData.UniversityCollege || "").trim();
-    // When nothing saved, keep dropdown mode
-    if (!saved) {
-      setIsCustomUniversity(false);
-      return;
-    }
-    // Avoid forcing custom mode if colleges are not loaded yet
-    if (!Array.isArray(colleges) || colleges.length === 0) {
-      return;
-    }
-    const list = (colleges || []).map((c) =>
-      (c?.University_CollegeName || "").trim().toLowerCase(),
-    );
-    const existsInList = list.includes(saved.toLowerCase());
-    setIsCustomUniversity(!existsInList);
-  }, [colleges, formData.UniversityCollege]);
+
 
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
@@ -669,10 +692,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-              skill: selectedSkill,
-              experience: selectedExp,
-              expertise: selectedLevel,
-            }
+            skill: selectedSkill,
+            experience: selectedExp,
+            expertise: selectedLevel,
+          }
           : entry,
       );
       setEntries(updatedEntries);
@@ -1261,14 +1284,14 @@ const AddCandidateForm = ({
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" &&
         mode !== "Edit" && {
-          source: "UPLOAD",
-          // Pass full screeningData so backend can store it
-          screeningData: screeningData, // ← direct pass (full object)
-          parsedJson: screeningData.metadata || screeningData.parsedJson || {},
-          parsedSkills: screeningData.parsed_skills || [],
-          parsedExperience: screeningData.parsed_experience || null,
-          parsedEducation: screeningData.parsed_education || null,
-        }),
+        source: "UPLOAD",
+        // Pass full screeningData so backend can store it
+        screeningData: screeningData, // ← direct pass (full object)
+        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+        parsedSkills: screeningData.parsed_skills || [],
+        parsedExperience: screeningData.parsed_experience || null,
+        parsedEducation: screeningData.parsed_education || null,
+      }),
     };
 
     try {
@@ -1471,8 +1494,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to save candidate",
+        error.message ||
+        "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1526,10 +1549,12 @@ const AddCandidateForm = ({
 
   const qualificationOptionsRS = useMemo(
     () =>
-      qualifications?.map((q) => ({
-        value: q?.QualificationName,
-        label: q?.QualificationName,
-      })) || [],
+      (
+        qualifications?.map((q) => ({
+          value: q?.QualificationName,
+          label: q?.QualificationName,
+        })) || []
+      ).concat([{ value: "__other__", label: "+ Others" }]),
     [qualifications],
   );
 
@@ -1950,7 +1975,7 @@ const AddCandidateForm = ({
                       // error={errors.Gender}
                       containerRef={fieldRefs.Gender}
                       label="Gender"
-                      // required
+                    // required
                     />
                   </div>
                 </div>
@@ -2032,6 +2057,8 @@ const AddCandidateForm = ({
                       label="Higher Qualification"
                       name="HigherQualification"
                       required
+                      isCustomName={isCustomQualification}
+                      setIsCustomName={setIsCustomQualification}
                       onMenuOpen={loadQualifications}
                       loading={isQualificationsFetching}
                     />
@@ -2285,9 +2312,8 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${
-                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             >
               Cancel
             </Button>
@@ -2434,11 +2460,10 @@ const AddCandidateForm = ({
                     type="button"
                     onClick={addCertificationRow}
                     disabled={formData?.certifications?.length >= 10}
-                    className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors ${
-                      formData?.certifications?.length >= 10
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-custom-blue text-white hover:bg-custom-blue/90"
-                    }`}
+                    className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors ${formData?.certifications?.length >= 10
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-custom-blue text-white hover:bg-custom-blue/90"
+                      }`}
                   >
                     <Plus className="w-4 h-4" />
                     Add
@@ -2717,7 +2742,7 @@ const AddCandidateForm = ({
                   {/* Project Cards Display */}
                   <div className="grid grid-cols-1 gap-4">
                     {formData?.workExperience &&
-                    formData.workExperience.length > 0 ? (
+                      formData.workExperience.length > 0 ? (
                       formData.workExperience.map((project, index) => (
                         <div
                           key={index}
