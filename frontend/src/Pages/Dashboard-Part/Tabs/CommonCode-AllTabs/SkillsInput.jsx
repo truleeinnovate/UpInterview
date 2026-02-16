@@ -478,10 +478,34 @@ const SkillsField = forwardRef(
                       />
                     </svg>
                   </div>
-                  <p className="mt-2 text-sm text-gray-500">
-                    {popupSelectedSkills.length} skill
-                    {popupSelectedSkills.length !== 1 ? "s" : ""} selected
-                  </p>
+                  {popupSelectedSkills.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar">
+                      {popupSelectedSkills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-custom-blue/10 text-custom-blue text-sm font-medium rounded-full border border-custom-blue/20"
+                        >
+                          {skill}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSkillInPopup(skill);
+                            }}
+                            className="hover:text-custom-blue/80 focus:outline-none p-0.5 rounded-full hover:bg-custom-blue/20 transition-colors"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm text-gray-500">
+                      No skills selected yet
+                    </p>
+                  )}
                 </div>
 
                 {/* Skills Grid */}
@@ -615,7 +639,7 @@ const SkillsField = forwardRef(
                     onClick={handleApplySkillChanges}
                     className="px-5 py-2.5 rounded-lg font-medium transition-colors bg-custom-blue text-white hover:bg-custom-blue/90 shadow-sm"
                   >
-                    Apply Changes
+                    Save
                   </button>
                 </div>
               </div>
