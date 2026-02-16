@@ -565,11 +565,13 @@ const MultiStepForm = () => {
       let isValid = true; // Initialize isValid at the start
       // Validate current step
       if (currentStep === 0) {
+        if (!basicDetailsData.firstName)
+          currentErrors.firstName = "First Name is required";
         if (!basicDetailsData.lastName)
-          currentErrors.lastName = "Last name is required";
+          currentErrors.lastName = "Last Name is required";
         if (!basicDetailsData.email) currentErrors.email = "Email is required";
         if (!basicDetailsData.phone) {
-          currentErrors.phone = "Phone number is required";
+          currentErrors.phone = "Phone Number is required";
         } else {
           const fullNumber = `${basicDetailsData.countryCode
             }${basicDetailsData.phone.replace(/\D/g, "")}`;
@@ -602,15 +604,15 @@ const MultiStepForm = () => {
         setErrors((prev) => ({ ...prev, ...currentErrors }));
       } else if (currentStep === 1) {
         if (!additionalDetailsData.currentRole)
-          currentErrors.currentRole = "Current role is required";
+          currentErrors.currentRole = "Current Role is required";
         // if (!additionalDetailsData.industry)
         //   currentErrors.industry = "Industry is required";
         if (!additionalDetailsData.yearsOfExperience)
-          currentErrors.yearsOfExperience = "Years of experience is required";
+          currentErrors.yearsOfExperience = "Years of Experience is required";
         // if (!additionalDetailsData.location)
         //   currentErrors.location = "Location is required";
         if (!additionalDetailsData.company)
-          currentErrors.company = "Company name is required";
+          currentErrors.company = "Company Name is required";
         // v1.0.0 <----------------------------------------------------------------------------------------------
         // v1.0.1 <----------------------------------------------------------------------------------------------
         // if (!additionalDetailsData.resume && !resumeFile) {
@@ -651,24 +653,24 @@ const MultiStepForm = () => {
         if (validSkills.length < 3)
           currentErrors.skills = "At least three skills are required";
         if (!interviewDetailsData.currentRole)
-          currentErrors.currentRole = "Current role is required";
+          currentErrors.currentRole = "Current Role is required";
 
         // if (!interviewDetailsData.technologies?.length)
         //   currentErrors.technologies = "Technologies are required";
         if (!interviewDetailsData.previousInterviewExperience) {
           currentErrors.previousInterviewExperience =
-            "Previous interview experience is required";
+            "Previous Interview Experience is required";
         } else if (
           interviewDetailsData.previousInterviewExperience === "yes" &&
           !interviewDetailsData.previousInterviewExperienceYears
         ) {
           currentErrors.previousInterviewExperienceYears =
-            "Please specify years of experience";
+            "Please Specify Years of Experience";
         }
 
         // Validate interview formats
         if (!interviewDetailsData.interviewFormatWeOffer?.length) {
-          currentErrors.interviewFormatWeOffer = "Interview format is required";
+          currentErrors.interviewFormatWeOffer = "Interview Format is required";
         }
 
         // Validate mock discount if mock interview is selected
@@ -693,12 +695,12 @@ const MultiStepForm = () => {
           if (!rates.junior?.usd) {
             currentErrors.rates = currentErrors.rates || {};
             currentErrors.rates.junior = currentErrors.rates.junior || {};
-            currentErrors.rates.junior.usd = "USD rate is required";
+            currentErrors.rates.junior.usd = "USD Rate is required";
           }
           if (!rates.junior?.inr) {
             currentErrors.rates = currentErrors.rates || {};
             currentErrors.rates.junior = currentErrors.rates.junior || {};
-            currentErrors.rates.junior.inr = "INR rate is required";
+            currentErrors.rates.junior.inr = "INR Rate is required";
           }
         }
 
@@ -707,12 +709,12 @@ const MultiStepForm = () => {
           if (!rates.mid?.usd) {
             currentErrors.rates = currentErrors.rates || {};
             currentErrors.rates.mid = currentErrors.rates.mid || {};
-            currentErrors.rates.mid.usd = "USD rate is required";
+            currentErrors.rates.mid.usd = "USD Rate is required";
           }
           if (!rates.mid?.inr) {
             currentErrors.rates = currentErrors.rates || {};
             currentErrors.rates.mid = currentErrors.rates.mid || {};
-            currentErrors.rates.mid.inr = "INR rate is required";
+            currentErrors.rates.mid.inr = "INR Rate is required";
           }
         }
 
@@ -721,12 +723,12 @@ const MultiStepForm = () => {
           if (!rates.senior?.usd) {
             currentErrors.rates = currentErrors.rates || {};
             currentErrors.rates.senior = currentErrors.rates.senior || {};
-            currentErrors.rates.senior.usd = "USD rate is required";
+            currentErrors.rates.senior.usd = "USD Rate is required";
           }
           if (!rates.senior?.inr) {
             currentErrors.rates = currentErrors.rates || {};
             currentErrors.rates.senior = currentErrors.rates.senior || {};
-            currentErrors.rates.senior.inr = "INR rate is required";
+            currentErrors.rates.senior.inr = "INR Rate is required";
           }
         }
 
@@ -739,19 +741,19 @@ const MultiStepForm = () => {
         }
 
         if (!interviewDetailsData.professionalTitle?.trim()) {
-          currentErrors.professionalTitle = "Professional title is required";
+          currentErrors.professionalTitle = "Professional Title is required";
         } else if (interviewDetailsData.professionalTitle.length < 30) {
           currentErrors.professionalTitle =
-            "Professional title must be at least 50 characters";
+            "Professional Title must be at least 50 characters";
         } else if (interviewDetailsData.professionalTitle.length > 100) {
           currentErrors.professionalTitle =
-            "Professional title cannot exceed 100 characters";
-        }
+            "Professional Title cannot exceed 100 characters";
+        } 
         if (!interviewDetailsData.bio?.trim()) {
-          currentErrors.bio = "Professional bio is required";
+          currentErrors.bio = "Professional Bio is required";
         } else if (interviewDetailsData.bio.length < 150) {
           currentErrors.bio =
-            "Professional bio must be at least 150 characters";
+            "Professional Bio must be at least 150 characters";
         }
 
         // Check if there are any errors in the nested rates object
@@ -773,7 +775,7 @@ const MultiStepForm = () => {
         if (!availabilityDetailsData.timeZone)
           currentErrors.timeZone = "Timezone is required";
         if (!availabilityDetailsData.preferredDuration)
-          currentErrors.preferredDuration = "Preferred duration is required";
+          currentErrors.preferredDuration = "Preferred Duration is required";
 
         // Validate that at least one availability time slot is selected
         const hasValidTimeSlot = Object.values(times).some((daySlots) =>
@@ -790,7 +792,7 @@ const MultiStepForm = () => {
           !interviewDetailsData.previousInterviewExperienceYears
         ) {
           currentErrors.previousInterviewExperienceYears =
-            "Years of experience is required";
+            "Years of Experience is required";
           isValid = false;
         }
         const hasNestedErrors =
