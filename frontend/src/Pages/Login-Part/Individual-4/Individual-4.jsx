@@ -744,7 +744,7 @@ const MultiStepForm = () => {
           currentErrors.professionalTitle = "Professional Title is required";
         } else if (interviewDetailsData.professionalTitle.length < 30) {
           currentErrors.professionalTitle =
-            "Professional Title must be at least 50 characters";
+            "Professional Title must be at least 30 characters";
         } else if (interviewDetailsData.professionalTitle.length > 100) {
           currentErrors.professionalTitle =
             "Professional Title cannot exceed 100 characters";
