@@ -19,8 +19,9 @@ export const encryptData = (data) => {
 };
 
 export const createJoinMeetingUrl = (round, interviewData, contactId = null, type) => {
-    if (!round?._id || !interviewData?._id || !interviewData?.ownerId || !contactId) return null;
+    if (!round?._id || !interviewData?._id || !interviewData?.ownerId) return null;
 
+    // console.log("type interviewData", type, interviewData)
     let base = config.REACT_APP_API_URL_FRONTEND;
 
     // Force https if missing protocol (very common mistake in env files)

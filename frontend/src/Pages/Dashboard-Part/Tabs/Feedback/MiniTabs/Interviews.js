@@ -102,13 +102,15 @@ const InterviewsMiniTabComponent = ({
     isError: feedbackError,
   } = useFeedbackData({
     roundId: isViewMode ? roundId : !urlData.isCandidate ? urlData.interviewRoundId : null,
-    interviewerId: !urlData.isCandidate ? urlData.interviewerId : null,
+    // interviewerId: !urlData.isCandidate ? urlData.interviewerId : null,
+    interviewerId: !urlData?.isCandidate && !urlData?.isSchedule ? urlData?.interviewerId : null,
+
     interviewType: urlData?.interviewType || interviewType,
   });
 
   console.log("feedbackDatas feedbackDatas", feedbackDatas)
 
-  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType;
+  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType || locationFeedback?.isMockInterview;
 
   // ✅ ALWAYS call hooks
   const {
@@ -389,9 +391,10 @@ const InterviewsMiniTabComponent = ({
     isMockInterview: urlData?.interviewType === "mockinterview" || false,
 
     feedbackCode:
-      (interviewRoundData?.interviewCode
-        ? `${interviewRoundData.interviewCode}-${interviewRoundData?.rounds?.[0]?.sequence || ""}`
-        : "") || "",
+      urlData?.interviewType === "mockinterview" ? interviewRoundData?.mockInterviewCode + "-001" :
+        (interviewRoundData?.interviewCode
+          ? `${interviewRoundData.interviewCode}-00${interviewRoundData?.rounds?.[0]?.sequence || ""}`
+          : "") || "",
     // feedbackCode:
     //   feedbackData?.rounds[0]?.interviewCode ||
     //   "" + "-" + feedbackData?.rounds[0]?.sequence ||
@@ -615,6 +618,7 @@ const InterviewsMiniTabComponent = ({
             handlePreselectedQuestionResponse={
               handlePreselectedQuestionResponse
             }
+            isSchedule={urlData?.isSchedule}
             triggerAutoSave={autoSaveQuestions}
           />
         ); //<----v1.0.0---

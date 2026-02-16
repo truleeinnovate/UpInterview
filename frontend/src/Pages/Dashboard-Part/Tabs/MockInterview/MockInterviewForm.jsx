@@ -346,9 +346,8 @@ const MockSchedulelater = () => {
       const contact = singleContact;
       setFormData((prev) => ({
         ...prev,
-        candidateName: `${contact.firstName || ""} ${
-          contact.lastName || ""
-        }`.trim(),
+        candidateName: `${contact.firstName || ""} ${contact.lastName || ""
+          }`.trim(),
         higherQualification: contact.higherQualification || "",
         currentExperience: contact.yearsOfExperience || "",
         // technology: contact.technologies?.[0] || "",
@@ -2157,9 +2156,8 @@ const MockSchedulelater = () => {
     const end = new Date(start.getTime() + Number(durationMinutes) * 60 * 1000);
 
     return {
-      display: `${formatToCustomDateTime(start)} - ${
-        formatToCustomDateTime(end).split(" ")[1] || "??:??"
-      }`,
+      display: `${formatToCustomDateTime(start)} - ${formatToCustomDateTime(end).split(" ")[1] || "??:??"
+        }`,
       startISO: start.toISOString(),
     };
   }, []);
@@ -2850,7 +2848,7 @@ const MockSchedulelater = () => {
                       onChange={handleChange}
                       disabled={shouldDisable("jobDescription")}
                       name="jobDescription"
-                      label="Job Description"
+                      label="Professional Summary"
                       rows={6}
                       minLength={200}
                       maxLength={2000}
@@ -3284,25 +3282,22 @@ const MockSchedulelater = () => {
                             // }}
 
                             onClick={() => handleInterviewTypeChange("instant")}
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
-                              interviewType === "instant"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "instant"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                           >
                             <Clock
-                              className={`h-6 w-6 ${
-                                interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-6 w-6 ${interviewType === "instant"
+                                ? "text-custom-blue"
+                                : "text-gray-400"
+                                }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${
-                                interviewType === "instant"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
-                              }`}
+                              className={`mt-2 font-medium ${interviewType === "instant"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                                }`}
                             >
                               Instant Interview
                             </span>
@@ -3345,25 +3340,22 @@ const MockSchedulelater = () => {
                             // Interview Type buttons - disabled in CASE 2, enabled in CASE 3
                             disabled={shouldDisable("interviewType")}
                             key="scheduled-btn"
-                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${
-                              interviewType === "scheduled"
-                                ? "border-custom-blue bg-blue-50"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
+                            className={`relative border rounded-lg p-4 flex flex-col items-center justify-center ${interviewType === "scheduled"
+                              ? "border-custom-blue bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                              }`}
                           >
                             <Calendar
-                              className={`h-6 w-6 ${
-                                interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-400"
-                              }`}
+                              className={`h-6 w-6 ${interviewType === "scheduled"
+                                ? "text-custom-blue"
+                                : "text-gray-400"
+                                }`}
                             />
                             <span
-                              className={`mt-2 font-medium ${
-                                interviewType === "scheduled"
-                                  ? "text-custom-blue"
-                                  : "text-gray-900"
-                              }`}
+                              className={`mt-2 font-medium ${interviewType === "scheduled"
+                                ? "text-custom-blue"
+                                : "text-gray-900"
+                                }`}
                             >
                               Schedule for Later
                             </span>
@@ -3760,12 +3752,12 @@ const MockSchedulelater = () => {
           candidateExperience={formData?.currentExperience}
           previousSelectedInterviewers={externalInterviewers}
 
-          // isMockInterview={true} // Correctly passes true for mock interviews
+        // isMockInterview={true} // Correctly passes true for mock interviews
         />
       )}
 
       {/* Date Change Confirmation Modal for New Round Creation */}
-      {showDateChangeConfirmation && !isReschedule && !isRequestSent && (
+      {showDateChangeConfirmation && !isReschedule && !isRequestSent && externalInterviewers && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">Confirm Date Change</h3>

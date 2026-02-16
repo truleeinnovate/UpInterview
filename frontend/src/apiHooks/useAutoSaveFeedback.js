@@ -121,11 +121,13 @@ const useAutoSaveFeedback = ({
       interviewerId: data.interviewerId || undefined,
       skills:
         data.skillRatings && data.skillRatings.length > 0
-          ? data.skillRatings.map((skill) => ({
-            skillName: skill.skill,
-            rating: skill.rating,
-            note: skill.comments || "",
-          }))
+          ? data.skillRatings
+            .filter((skill) => skill.skill && skill.skill.trim() !== "") // Filter empty skills
+            .map((skill) => ({
+              skillName: skill.skill,
+              rating: skill.rating,
+              note: skill.comments || "",
+            }))
           : undefined,
       questionFeedback: [
         // Interviewer section questions

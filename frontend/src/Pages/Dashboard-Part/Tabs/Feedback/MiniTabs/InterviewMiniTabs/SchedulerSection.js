@@ -8,6 +8,7 @@ import { useLocation } from "react-router-dom";
 import Popup from "reactjs-popup";
 import { ThumbsUp, ThumbsDown, XCircle } from "lucide-react";
 import { useEffect } from "react";
+import QuestionCard, { EmptyState } from "../../../../../../Components/QuestionCard";
 
 // Define dislike options
 const dislikeOptions = [
@@ -30,6 +31,7 @@ const SchedulerSectionComponent = ({
   preselectedQuestionsResponses,
   setPreselectedQuestionsResponses,
   handlePreselectedQuestionResponse,
+  isSchedule,
   triggerAutoSave,
 
 }) => {
@@ -210,17 +212,22 @@ const SchedulerSectionComponent = ({
 
   // Function to handle radio input changes if needed
   const onChangeRadioInput = (id, value) => {
-    setSchedulerQuestionsData((prev) =>
-      prev.map((question) =>
-        question._id === id ? { ...question, isAnswered: value } : question,
-      ),
-    );
+    setSchedulerQuestionsData((prev) => {
+      const questionIndex = prev.findIndex((q) => q._id === id || q.questionId === id || q.id === id);
+      if (questionIndex === -1) return prev;
+
+      const newQuestions = [...prev];
+      newQuestions[questionIndex] = { ...newQuestions[questionIndex], isAnswered: value };
+      return newQuestions;
+    });
 
     // Update preselected questions responses using the underlying bank questionId
     if (handlePreselectedQuestionResponse) {
-      const q = schedulerQuestionsData.find((qq) => qq._id === id);
-      const bankQuestionId = q?.questionId || id;
-      handlePreselectedQuestionResponse(bankQuestionId, { isAnswered: value });
+      const q = schedulerQuestionsData.find((qq) => qq._id === id || qq.questionId === id || qq.id === id);
+      if (q) {
+        const bankQuestionId = q.questionId || q._id || id;
+        handlePreselectedQuestionResponse(bankQuestionId, { isAnswered: value });
+      }
     }
 
     // Trigger auto-save after change
@@ -231,7 +238,7 @@ const SchedulerSectionComponent = ({
   const onChangeDislikeRadioInput = (questionId, value) => {
     setSchedulerQuestionsData((prev) =>
       prev.map((question) => {
-        if (question._id === questionId) {
+        if (question._id === questionId || question.questionId === questionId || question.id === questionId) {
           return { ...question, whyDislike: value, isLiked: "disliked" };
         }
         return question;
@@ -240,12 +247,14 @@ const SchedulerSectionComponent = ({
 
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
-      const q = schedulerQuestionsData.find((qq) => qq._id === questionId);
-      const bankQuestionId = q?.questionId || questionId;
-      handlePreselectedQuestionResponse(bankQuestionId, {
-        whyDislike: value,
-        isLiked: "disliked",
-      });
+      const q = schedulerQuestionsData.find((qq) => qq._id === questionId || qq.questionId === questionId || qq.id === questionId);
+      if (q) {
+        const bankQuestionId = q.questionId || q._id || questionId;
+        handlePreselectedQuestionResponse(bankQuestionId, {
+          whyDislike: value,
+          isLiked: "disliked",
+        });
+      }
     }
 
     // Trigger auto-save after change
@@ -274,11 +283,18 @@ const SchedulerSectionComponent = ({
 
   // Function to handle dislike toggle
   const handleDislikeToggle = (id) => {
-    if (isViewMode) return; //<----v1.0.0---
+    if (isViewMode || isSchedule) return;
+
+    // Find the question first to get robust ID
+    const question = schedulerQuestionsData.find((q) => q._id === id || q.questionId === id || q.id === id);
+    if (!question) return;
+
+    // Use the reliable ID from the found question, prioritizing questionId to match QuestionCard
+    const targetId = question.questionId || question.id || question._id;
 
     setSchedulerQuestionsData((prev) =>
       prev.map((q) =>
-        q._id === id
+        (q._id === targetId || q.questionId === targetId || q.id === targetId)
           ? {
             ...q,
             isLiked: q.isLiked === "disliked" ? "" : "disliked",
@@ -290,17 +306,17 @@ const SchedulerSectionComponent = ({
     );
 
     // Show/hide the "Tell us more" section
-    if (dislikeQuestionId === id) {
+    // Check against targetId derived from question, or the passed id if it matches
+    if (dislikeQuestionId === targetId || dislikeQuestionId === id) {
       setDislikeQuestionId(null);
     } else {
-      setDislikeQuestionId(id);
+      setDislikeQuestionId(targetId);
     }
 
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
-      const question = schedulerQuestionsData.find((q) => q._id === id);
-      const newIsLiked = question?.isLiked === "disliked" ? "" : "disliked";
-      const bankQuestionId = question?.questionId || id;
+      const newIsLiked = question.isLiked === "disliked" ? "" : "disliked";
+      const bankQuestionId = question.questionId || question._id || id;
       handlePreselectedQuestionResponse(bankQuestionId, {
         isLiked: newIsLiked,
         // Clear dislike reason when toggling off dislike
@@ -333,11 +349,16 @@ const SchedulerSectionComponent = ({
 
   // Function to handle like toggle
   const handleLikeToggle = (id) => {
-    if (isViewMode) return; //<----v1.0.0---
+    if (isViewMode || isSchedule) return;
+
+    const question = schedulerQuestionsData.find((q) => q._id === id || q.questionId === id || q.id === id);
+    if (!question) return;
+
+    const targetId = question.questionId || question.id || question._id;
 
     setSchedulerQuestionsData((prev) =>
       prev.map((q) =>
-        q._id === id
+        (q._id === targetId || q.questionId === targetId || q.id === targetId)
           ? {
             ...q,
             isLiked: q.isLiked === "liked" ? "" : "liked",
@@ -349,15 +370,14 @@ const SchedulerSectionComponent = ({
     );
 
     // Hide the "Tell us more" section when liking
-    if (dislikeQuestionId === id) {
+    if (dislikeQuestionId === targetId || dislikeQuestionId === id) {
       setDislikeQuestionId(null);
     }
 
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
-      const question = schedulerQuestionsData?.find((q) => q?._id === id);
-      const newIsLiked = question?.isLiked === "liked" ? "" : "liked";
-      const bankQuestionId = question?.questionId || id;
+      const newIsLiked = question.isLiked === "liked" ? "" : "liked";
+      const bankQuestionId = question.questionId || question._id || id;
       handlePreselectedQuestionResponse(bankQuestionId, {
         isLiked: newIsLiked,
         // Clear dislike reason when liking
@@ -372,17 +392,19 @@ const SchedulerSectionComponent = ({
   // Function to handle add note
   const onClickAddNote = (id) => {
     setSchedulerQuestionsData((prev) =>
-      prev.map((q) => (q._id === id ? { ...q, notesBool: !q.notesBool } : q)),
+      prev.map((q) => ((q._id === id || q.questionId === id || q.id === id) ? { ...q, notesBool: !q.notesBool } : q)),
     );
 
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
-      const question = schedulerQuestionsData.find((q) => q._id === id);
-      const newNotesBool = !question?.notesBool;
-      const bankQuestionId = question?.questionId || id;
-      handlePreselectedQuestionResponse(bankQuestionId, {
-        notesBool: newNotesBool,
-      });
+      const question = schedulerQuestionsData.find((q) => q._id === id || q.questionId === id || q.id === id);
+      if (question) {
+        const newNotesBool = !question.notesBool;
+        const bankQuestionId = question.questionId || question._id || id;
+        handlePreselectedQuestionResponse(bankQuestionId, {
+          notesBool: newNotesBool,
+        });
+      }
     }
     // Trigger auto-save after change
     triggerDebouncedSave();
@@ -406,18 +428,20 @@ const SchedulerSectionComponent = ({
   const onClickDeleteNote = (id) => {
     setSchedulerQuestionsData((prev) =>
       prev.map((q) =>
-        q._id === id ? { ...q, notesBool: false, note: "" } : q,
+        (q._id === id || q.questionId === id || q.id === id) ? { ...q, notesBool: false, note: "" } : q,
       ),
     );
 
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
-      const question = schedulerQuestionsData.find((q) => q._id === id);
-      const bankQuestionId = question?.questionId || id;
-      handlePreselectedQuestionResponse(bankQuestionId, {
-        notesBool: false,
-        note: "",
-      });
+      const question = schedulerQuestionsData.find((q) => q._id === id || q.questionId === id || q.id === id);
+      if (question) {
+        const bankQuestionId = question.questionId || question._id || id;
+        handlePreselectedQuestionResponse(bankQuestionId, {
+          notesBool: false,
+          note: "",
+        });
+      }
     }
 
     // Trigger auto-save after change
@@ -428,15 +452,17 @@ const SchedulerSectionComponent = ({
   const onChangeInterviewQuestionNotes = (questionId, notes) => {
     setSchedulerQuestionsData((prev) =>
       prev.map((question) =>
-        question._id === questionId ? { ...question, note: notes } : question,
+        (question._id === questionId || question.questionId === questionId || question.id === questionId) ? { ...question, note: notes } : question,
       ),
     );
 
     // Update preselected questions responses
     if (handlePreselectedQuestionResponse) {
-      const q = schedulerQuestionsData.find((qq) => qq._id === questionId);
-      const bankQuestionId = q?.questionId || questionId;
-      handlePreselectedQuestionResponse(bankQuestionId, { note: notes });
+      const q = schedulerQuestionsData.find((qq) => qq._id === questionId || qq.questionId === questionId || qq.id === questionId);
+      if (q) {
+        const bankQuestionId = q.questionId || q._id || questionId;
+        handlePreselectedQuestionResponse(bankQuestionId, { note: notes });
+      }
     }
 
     // Debounced auto-save for notes
@@ -463,7 +489,7 @@ const SchedulerSectionComponent = ({
           <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
             <div className="flex justify-between items-center mb-2">
               <h1>Tell us more :</h1>
-              <button onClick={() => setDislikeQuestionId(null)}>
+              <button disabled={isSchedule} onClick={() => setDislikeQuestionId(null)}>
                 <XCircle className="h-4 w-4" />
               </button>
             </div>
@@ -478,8 +504,9 @@ const SchedulerSectionComponent = ({
                     checked={each.whyDislike === option.value}
                     className="accent-custom-blue"
                     onChange={(e) =>
-                      onChangeDislikeRadioInput(each._id, e.target.value)
+                      onChangeDislikeRadioInput(each._id || each.questionId || each.id, e.target.value)
                     }
+                    disabled={isSchedule}
                   />
                   <label
                     htmlFor={`dislike-${each._id}-${option.value}`}
@@ -549,6 +576,7 @@ const SchedulerSectionComponent = ({
                     onChange={(e) =>
                       onChangeRadioInput(each._id, e.target.value)
                     }
+                    disabled={isSchedule}
                     className="accent-custom-blue whitespace-nowrap text-sm"
                   />
                   <label
@@ -577,151 +605,32 @@ const SchedulerSectionComponent = ({
     <div className="space-y-4">
       {schedulerQuestionsData.length > 0 ? (
         schedulerQuestionsData.map((question) => (
-          <div
+          <QuestionCard
             key={question._id}
-            className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <span className="px-3 py-1 bg-custom-blue/10 text-custom-blue rounded-full text-sm font-medium">
-                {question.snapshot?.technology &&
-                  question.snapshot?.technology.length > 0
-                  ? question.snapshot.technology[0]
-                  : "N/A"}
-              </span>
-              <span className="text-sm text-gray-500">
-                {question.snapshot?.difficultyLevel || "N/A"}
-              </span>
-            </div>
-            <h3 className="sm:text-sm md:text-sm font-semibold text-gray-800 mb-2">
-              {question.snapshot?.questionText || "No question text"}
-            </h3>
-            {question.snapshot?.correctAnswer && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm font-medium text-gray-600 mb-2">
-                  Expected Answer:
-                </p>
-                <p className="text-sm text-gray-700">
-                  {question.snapshot?.correctAnswer}
-                </p>
-              </div>
-            )}
-            {(isEditMode || isAddMode) && (
-              <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
-                <span>
-                  Mandatory: {question.mandatory === "true" ? "Yes" : "No"}
-                </span>
-              </div>
-            )}
-            <div className="flex sm:flex-col sm:items-start items-center justify-between gap-2 mt-2">
-              <RadioGroupInput each={question} />
-              <div className="flex items-center gap-4 mt-2">
-                {(isEditMode || isAddMode) && (
-                  <button
-                    className={`text-sm py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
-                    // className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
-                    // onClick={() => onClickAddNote(question._id)}
-                    onClick={() =>
-                      question.notesBool
-                        ? onClickDeleteNote(question._id)
-                        : onClickAddNote(question._id)
-                    }
-                  >
-                    {question.notesBool ? "Delete Note" : "Add a Note"}
-                  </button>
-                )}
-                <SharePopupSection />
-                {(isEditMode || isViewMode || isAddMode) && (
-                  <>
-                    <span
-                      className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
-                        }`}
-                      onClick={() => handleLikeToggle(question._id)}
-                    >
-                      <ThumbsUp className="h-4 w-4" />
-                    </span>
-                    <span
-                      // className={`transition-transform hover:scale-110 duration-300 ease-in-out ${
-                      //   question.isLiked === "disliked" ? "text-red-500" : ""
-                      // }`}
-                      className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked" ? "text-red-500" : ""
-                        }`}
-                      style={{ cursor: "pointer" }}
-                      onClick={() => handleDislikeToggle(question._id)}
-                    >
-                      <ThumbsDown className="h-4 w-4" />
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {question.notesBool && (
-              <div>
-                <div className="flex flex-col mt-4">
-                  <label
-                    htmlFor={`note-input-${question._id}`}
-                    className="sm:text-sm md:text-sm mb-2 w-[180px] font-bold text-gray-700"
-                  >
-                    Note
-                  </label>
-                  {isEditMode || isAddMode ? (
-                    <div className="flex flex-col items-start w-full h-[80px]">
-                      <div className="w-full relative  rounded-md ">
-                        <input
-                          className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-                          id={`note-input-${question._id}`}
-                          type="text"
-                          value={question.note}
-                          onChange={(e) =>
-                            onChangeInterviewQuestionNotes(
-                              question._id,
-                              e.target.value.slice(0, 250),
-                            )
-                          }
-                          placeholder="Add your note here"
-                        />
-                      </div>
-                      <span className="w-full text-sm text-right text-gray-500">
-                        {question.note?.length || 0}/250
-                      </span>
-                      {/* <span className=" text-md text-right text-gray-500">
-                        {question.note?.length || 0}/250
-                      </span> */}
-                      {/* <button
-                      onClick={() => onClickDeleteNote(question._id)}
-                      className="text-red-500 text- lg mt-2"
-                    >
-                      <FaTrash size={20}/>
-                    </button> */}
-                    </div>
-                  ) : (
-                    <p className="w-full flex gap-x-8 gap-y-2 text-sm text-gray-500">
-                      {question.note}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-            {(dislikeQuestionId === question._id || question.questionId) &&
-              question.isLiked === "disliked" && (
-                <DisLikeSection each={question} />
-              )}
-          </div>
+            question={question}
+            mode={isEditMode || isAddMode ? "edit" : "view"}
+            onNoteAdd={(id) => {
+              const q = schedulerQuestionsData.find((sq) => sq._id === id || sq.questionId === id || sq.id === id);
+              if (q?.notesBool) {
+                onClickDeleteNote(id);
+              } else {
+                onClickAddNote(id);
+              }
+            }}
+            onNoteChange={onChangeInterviewQuestionNotes}
+            onLikeToggle={handleLikeToggle}
+            onDislikeToggle={handleDislikeToggle}
+            DisLikeSection={DisLikeSection}
+            dislikeQuestionId={dislikeQuestionId}
+            RadioGroupInput={RadioGroupInput}
+            SharePopupSection={SharePopupSection}
+          />
         ))
       ) : (
-        // Empty state when no preselected questions are present
-        // v1.0.1 <--------------------------------------------------------------------------------
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-          <div className="text-gray-500 mb-4">
-            <p className="text-md font-medium mb-2">
-              No preselected questions found
-            </p>
-            <p className="text-sm">
-              No questions have been preselected for this round
-            </p>
-          </div>
-        </div>
-        // v1.0.1 -------------------------------------------------------------------------------->
+        <EmptyState
+          message="No preselected questions found"
+          subMessage="No questions have been preselected for this round"
+        />
       )}
     </div>
     // v1.0.2 ------------------------------------------------------------------------>

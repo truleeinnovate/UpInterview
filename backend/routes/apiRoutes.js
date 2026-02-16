@@ -2469,7 +2469,7 @@ router.get(
             let feedbackMockInterviews = await MockInterview.find(query)
               .lean();
 
-            console.log("feedbackMockInterviews", feedbackMockInterviews)
+
 
             // Fetch Resume data for candidates (for regular interviews)
             const fbInterviewCandidateIds = feedbackInterviews
@@ -2645,13 +2645,24 @@ router.get(
             // -------------------------------------------------------
             let feedbacks = await FeedbackModel.find(baseQuery)
               .populate("candidateId", "FirstName LastName Email Phone")
-              .populate("positionId", "title companyname jobDescription Location")
+              // .populate("positionId", "title companyname jobDescription Location")
+              .populate({
+                path: "positionId",
+                select: "title companyname jobDescription Location",
+                populate: {
+                  path: "companyname",
+                  model: "TenantCompany",
+                  select: "name industry"
+                }
+              })
               .populate("interviewerId", "firstName lastName email")
               .populate("ownerId", "firstName lastName email")
               .sort({ _id: -1 })
               .skip(skip)
               .limit(feedbackLimitNum)
               .lean();
+
+            console.log("feedbacks FeedbackModel", feedbacks)
 
             // -------------------------------------------------------
             // 1️⃣4️⃣ FETCH ROUND DETAILS FOR ALL FEEDBACKS
@@ -2699,6 +2710,7 @@ router.get(
             const feedbackCandidateIds = feedbacks
               .filter((f) => f.candidateId?._id)
               .map((f) => f.candidateId._id);
+
 
             if (feedbackCandidateIds.length > 0) {
               const feedbackResumes = await Resume.find({
@@ -2759,6 +2771,8 @@ router.get(
 
             let feedbackWithDetails = [];
 
+            // console.log("feedbacks feedbacks", feedbacks)
+
             for (const fb of feedbacks) {
               const roundId = fb.interviewRoundId?.toString();
 
@@ -2794,28 +2808,50 @@ router.get(
                 };
               });
 
-              let candidateDetails = fb.candidateId || null;
+              // let candidateDetails = fb.candidateId || null;
+              let candidateDetails = null;
 
-              // console.log("roundDetails", fb)
+              // 🟢 Regular Interview → use populated candidateId
+              if (!fb.isMockInterview) {
+                candidateDetails = fb.candidateId || null;
+              }
 
-              // console.log("feedbackMockInterviews", feedbackMockInterviews)
 
-              // console.log("roundDetails?.mockInterviewId", roundDetails?.mockInterviewId)
 
+              // 🔵 Mock Interview → build candidate manually
               if (fb.isMockInterview) {
-                const mockInterview = feedbackMockInterviews.find(
+
+                // First try pre-fetched array, then fall back to direct DB lookup
+                let mockInterview = feedbackMockInterviews.find(
                   (m) =>
                     m?._id?.toString() ===
                     roundDetails?.mockInterviewId?.toString()
                 );
 
-                // console.log("mockInterview", mockInterview)
+                // If not found in pre-fetched array (e.g. different owner), fetch directly
+                if (!mockInterview && roundDetails?.mockInterviewId) {
+                  mockInterview = await MockInterview.findById(roundDetails.mockInterviewId).lean();
+                }
+
+                console.log("mockInterview mockInterview", mockInterview)
 
                 if (mockInterview) {
+
+                  let ownerEmail = null;
+
+                  if (mockInterview.ownerId) {
+                    const ownerUser = await Users.findById(
+                      new mongoose.Types.ObjectId(mockInterview.ownerId)
+                    ).select('email').lean();
+
+                    if (ownerUser) {
+                      ownerEmail = ownerUser.email;
+                    }
+                  }
                   candidateDetails = {
                     FirstName: mockInterview.candidateName || "Mock",
                     LastName: "",
-                    Email: null,
+                    Email: ownerEmail,
                     Phone: null,
                     skills: mockInterview.skills || [],
                     CurrentRole: mockInterview.currentRole || null,
@@ -2825,6 +2861,7 @@ router.get(
                   };
                 }
               }
+
 
               // console.log("candidateDetails candidateDetails", candidateDetails)
 

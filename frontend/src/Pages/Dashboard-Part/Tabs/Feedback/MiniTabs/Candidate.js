@@ -44,9 +44,9 @@ const CandidateMiniTab = ({
     [location.search],
   );
 
-  const isMockInterview = urlData?.interviewType === "mockinterview" || interviewType === "mockinterview";
+  const isMockInterview = urlData?.interviewType === "mockinterview" || interviewType === "mockinterview" || feedback?.isMockInterview;
 
-  console.log("isMockInterview", isMockInterview)
+  console.log("feedback", feedback)
 
   // ✅ ALWAYS call hooks
   const {
@@ -67,9 +67,9 @@ const CandidateMiniTab = ({
     roundId: !isMockInterview ? urlData.interviewRoundId || roundId : null,
     enabled: !isMockInterview,
   });
-  console.log("roundId", roundId)
+  // console.log("roundId", roundId)
 
-  console.log("interviewData interviewData CandidateMiniTab", interviewData);
+  // console.log("interviewData interviewData CandidateMiniTab", interviewData);
 
   const candidateData =
     propsSelecteData?.candidate || interviewData?.candidateId || mockInterview
