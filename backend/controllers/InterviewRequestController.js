@@ -772,8 +772,7 @@ exports.acceptInterviewRequest = async (req, res) => {
       });
     }
 
-    const { durationInMinutes, totalAmount, appliedDiscountPercentage } =
-      pricingResult;
+    const { totalAmount, appliedDiscountPercentage } = pricingResult;
 
     const acceptWalletResult = await applyAcceptInterviewWalletFlow({
       request,
