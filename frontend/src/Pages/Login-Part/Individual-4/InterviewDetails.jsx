@@ -600,6 +600,9 @@ const InterviewDetails = ({
 
   const handleChangeExperienceYears = (e) => {
     const value = e.target.value;
+    if (value !== "" && parseInt(value, 10) < 0) {
+      return;
+    }
     setInterviewDetailsData((prev) => ({
       ...prev,
       previousInterviewExperienceYears: value,
@@ -875,7 +878,8 @@ const InterviewDetails = ({
     }));
     setErrors((prev) => ({
       ...prev,
-      skills: updatedSkills.length < 3 ? "At least three skills are required" : "",
+      skills:
+        updatedSkills.length < 3 ? "At least three skills are required" : "",
     }));
   };
 
@@ -937,7 +941,7 @@ const InterviewDetails = ({
             onUpdateEntry={() => {}}
           />
           {errors.skills && (
-            <p className="text-red-500 text-sm">{errors.skills}</p>
+            <p className="text-red-500 text-xs">{errors.skills}</p>
           )}
 
           {/* Selected Skills Display - Full width */}
@@ -1038,7 +1042,7 @@ const InterviewDetails = ({
             </label>
           </div>
           {errors.previousInterviewExperience && (
-            <p className="text-red-500 text-sm sm:text-xs">
+            <p className="text-red-500 text-xs font-normal">
               {errors.previousInterviewExperience}
             </p>
           )}
@@ -1055,7 +1059,7 @@ const InterviewDetails = ({
                 onChange={handleChangeExperienceYears}
                 min={1}
                 max={15}
-                label="How many years of experience do you have in conducting interviews ?"
+                label="How many years of experience do you have in conducting interviews?"
                 required={true}
                 error={errors.previousInterviewExperienceYears}
                 className={
@@ -1356,7 +1360,7 @@ const InterviewDetails = ({
                           />
                         </div>
                         {errors.rates?.[level.key]?.usd && (
-                          <p className="mt-1 text-xs text-red-600">
+                          <p className="mt-1 text-xs text-red-500">
                             {errors.rates[level.key].usd}
                           </p>
                         )}
@@ -1382,7 +1386,7 @@ const InterviewDetails = ({
                           />
                         </div>
                         {errors.rates?.[level.key]?.inr && (
-                          <p className="mt-1 text-xs text-red-600">
+                          <p className="mt-1 text-xs text-red-500">
                             {errors.rates[level.key].inr}
                           </p>
                         )}
@@ -1511,7 +1515,7 @@ const InterviewDetails = ({
             </div>
           </div>
           {errors.interviewFormatWeOffer && (
-            <p className="mt-2 text-sm text-red-600">
+            <p className="mt-2 text-xs text-red-500">
               {errors.interviewFormatWeOffer}
             </p>
           )}
@@ -1619,7 +1623,7 @@ const InterviewDetails = ({
                     </svg>
                   </button>
                   {errors.mock_interview_discount && (
-                    <p className="absolute -bottom-5 left-0 text-sm text-red-600 whitespace-nowrap">
+                    <p className="absolute -bottom-5 left-0 text-xs text-red-500 whitespace-nowrap">
                       {errors.mock_interview_discount}
                     </p>
                   )}
@@ -1669,7 +1673,7 @@ const InterviewDetails = ({
                     isClearable={true}
                   />
                   {errors.mock_interview_discount && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="mt-1 text-xs text-red-500">
                       {errors.mock_interview_discount}
                     </p>
                   )}
@@ -1698,32 +1702,13 @@ const InterviewDetails = ({
                   ...prev,
                   professionalTitle: newValue,
                 }));
-                if (newValue.length >= 30) {
-                  setErrors((prev) => ({ ...prev, professionalTitle: "" }));
+
+                if (errors.professionalTitle) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    professionalTitle: "",
+                  }));
                 }
-              }
-            }}
-            onBlur={(e) => {
-              const value = e.target.value.trim();
-              if (!value) {
-                setErrors((prev) => ({
-                  ...prev,
-                  professionalTitle: "Professional title is required",
-                }));
-              } else if (value.length < 30) {
-                setErrors((prev) => ({
-                  ...prev,
-                  professionalTitle:
-                    "Professional title must be at least 30 characters",
-                }));
-              } else if (value.length > 100) {
-                setErrors((prev) => ({
-                  ...prev,
-                  professionalTitle:
-                    "Professional title cannot exceed 100 characters",
-                }));
-              } else {
-                setErrors((prev) => ({ ...prev, professionalTitle: "" }));
               }
             }}
             name="professionalTitle"
@@ -1735,27 +1720,6 @@ const InterviewDetails = ({
             showCounter={true}
             placeholder="Senior Software Engineer With 5+ Years Of Experience In FullStack Development"
           />
-          <div className="flex justify-end mt-1">
-            {/* <p className="text-xs text-gray-500">
-              {errors.professionalTitle ? (
-                <span className="text-red-500">Min 30 characters</span>
-              ) : (
-                "Min 30 characters"
-              )}
-            </p> */}
-            {/* {interviewDetailsData.professionalTitle?.length > 0 && (
-              <p
-                className={`text-xs ${
-                  interviewDetailsData.professionalTitle.length < 30 ||
-                  errors.professionalTitle
-                    ? "text-red-500"
-                    : "text-gray-500"
-                }`}
-              >
-                {interviewDetailsData.professionalTitle.length}/100
-              </p>
-            )} */}
-          </div>
         </div>
 
         <div className="sm:col-span-6 col-span-2">
@@ -1773,12 +1737,12 @@ const InterviewDetails = ({
               if (!value) {
                 setErrors((prev) => ({
                   ...prev,
-                  bio: "Professional bio is required",
+                  bio: "Professional Bio is required",
                 }));
               } else if (value.length < 150) {
                 setErrors((prev) => ({
                   ...prev,
-                  bio: "Professional bio must be at least 150 characters",
+                  bio: "Professional Bio must be at least 150 characters",
                 }));
               } else {
                 setErrors((prev) => ({ ...prev, bio: "" }));

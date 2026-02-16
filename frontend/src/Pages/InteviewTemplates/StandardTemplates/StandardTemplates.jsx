@@ -444,7 +444,7 @@ const StandardTemplates = ({ handleClone }) => {
                 className="flex justify-between items-center cursor-pointer"
                 onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
               >
-                <span className="font-medium text-gray-700">Created Date</span>
+                <span className="font-medium text-gray-700">Created At</span>
                 {isCreatedDateOpen ? (
                   <ChevronUp className="text-xl text-gray-700" />
                 ) : (

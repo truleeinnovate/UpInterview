@@ -396,7 +396,7 @@ const WithdrawalRequests = () => {
     },
     {
       key: "createdAt",
-      header: "Created Date",
+      header: "Created At",
       render: (value, row) => (
         <div className="flex items-center space-x-1">
           <Calendar className="h-3 w-3 text-gray-400" />

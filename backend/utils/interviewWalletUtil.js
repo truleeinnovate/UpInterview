@@ -418,6 +418,8 @@ async function computeInterviewPricingForAccept({
     rate,
     totalAmount,
     appliedDiscountPercentage,
+    discountAmount,
+    originalAmount: totalAmount + discountAmount,
   };
 }
 
@@ -546,6 +548,9 @@ async function applyAcceptInterviewWalletFlow({
   requestId,
   contact,
   totalAmount,
+  appliedDiscountPercentage = 0,
+  discountAmount = 0,
+  originalAmount = 0,
 }) {
   // Fetch wallet and derive available balance, taking existing holds into account
   const wallet = await WalletTopup.findOne({ ownerId: request.ownerId });
@@ -702,27 +707,10 @@ async function applyAcceptInterviewWalletFlow({
         roundId: String(roundId),
         requestId: String(requestId),
         interviewerContactId: String(contact._id),
-        // rate: rate, // Store selected rate
-        // experienceLevel: experienceLevel,
-        // duration: String(duration),
-        // durationInMinutes: durationInMinutes,
-        // isMockInterview: Boolean(request.isMockInterview),
-        // mockInterviewDiscount: request.isMockInterview
-        //   ? appliedDiscountPercentage
-        //   : null,
-        // calculation: {
-        //   formula:
-        //     request.isMockInterview && appliedDiscountPercentage > 0
-        //       ? "(rate * minutes / 60) - discount"
-        //       : "rate * minutes / 60",
-        //   rate: rate,
-        //   minutes: durationInMinutes,
-        //   discountPercentage: appliedDiscountPercentage,
-        // },
-        // acceptedBaseAmount: acceptBaseAmount,
-        // acceptedGstRate: acceptGstRate,
-        // acceptedGstAmount: acceptGstAmount,
-        // acceptedGrossAmount: acceptGrossAmount,
+        isMockInterview: Boolean(request.isMockInterview),
+        mockDiscountPercentage: appliedDiscountPercentage || 0,
+        mockDiscountAmount: discountAmount || 0,
+        originalAmountBeforeDiscount: originalAmount || 0,
         source: "interview_accept_hold",
       },
     });
@@ -776,27 +764,10 @@ async function applyAcceptInterviewWalletFlow({
         roundId: String(roundId),
         requestId: String(requestId),
         interviewerContactId: String(contact._id),
-        // rate: rate, // Store selected rate
-        // experienceLevel: experienceLevel,
-        // duration: String(duration),
-        // durationInMinutes: durationInMinutes,
-        // isMockInterview: Boolean(request.isMockInterview),
-        // mockInterviewDiscount: request.isMockInterview
-        //   ? appliedDiscountPercentage
-        //   : null,
-        // calculation: {
-        //   formula:
-        //     request.isMockInterview && appliedDiscountPercentage > 0
-        //       ? "(rate * minutes / 60) - discount"
-        //       : "rate * minutes / 60",
-        //   rate: rate,
-        //   minutes: durationInMinutes,
-        //   discountPercentage: appliedDiscountPercentage,
-        // },
-        // legacyBaseAmount,
-        // legacyGstRate,
-        // legacyGstAmount,
-        // legacyGrossAmount,
+        isMockInterview: Boolean(request.isMockInterview),
+        mockDiscountPercentage: appliedDiscountPercentage || 0,
+        mockDiscountAmount: discountAmount || 0,
+        originalAmountBeforeDiscount: originalAmount || 0,
         source: "interview_accept_hold",
       },
     });
@@ -977,6 +948,13 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
 
     const baseAmount = Number(activeHoldTransaction.amount || 0);
     const transactionId = activeHoldTransaction._id.toString();
+
+    // Extract mock discount info from the hold transaction metadata
+    const holdMeta = activeHoldTransaction.metadata || {};
+    const isMockInterview = Boolean(holdMeta.isMockInterview || acceptedRequest.isMockInterview);
+    const mockDiscountPercentage = Number(holdMeta.mockDiscountPercentage || 0);
+    const mockDiscountAmount = Number(holdMeta.mockDiscountAmount || 0);
+    const originalAmountBeforeDiscount = Number(holdMeta.originalAmountBeforeDiscount || 0);
 
     // 6. Determine pay percentage based on action
     let payPercent = 0;
@@ -1196,6 +1174,10 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
         "transactions.$.metadata.originalHoldAmount": baseAmount,
         "transactions.$.metadata.originalGstAmount": gstFromHold,
         "transactions.$.metadata.originalTotalAmount": totalHoldAmount,
+        "transactions.$.metadata.isMockInterview": isMockInterview,
+        "transactions.$.metadata.mockDiscountPercentage": mockDiscountPercentage,
+        "transactions.$.metadata.mockDiscountAmount": mockDiscountAmount,
+        "transactions.$.metadata.originalAmountBeforeDiscount": originalAmountBeforeDiscount,
       },
       $inc: {
         holdAmount: -totalHoldAmount, // Release full hold amount (base + GST)
@@ -1231,9 +1213,10 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
           settlementDate: new Date(),
           originalTransactionId: transactionId,
           interviewId: interview._id?.toString(),
-          // refundBaseAmount: unusedBaseAmount,
-          // refundGstAmount: gstRefundProportion,
-          // refundTotalAmount: refundAmount,
+          isMockInterview: isMockInterview,
+          mockDiscountPercentage: mockDiscountPercentage,
+          mockDiscountAmount: mockDiscountAmount,
+          originalAmountBeforeDiscount: originalAmountBeforeDiscount,
         },
       });
     }
@@ -1321,7 +1304,11 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
           companyName: companyName,
           roundTitle: roundTitle,
           positionTitle: positionTitle,
-          serviceChargePercent: scPercent, // Service charge percentage (e.g., 10)
+          serviceChargePercent: scPercent,
+          isMockInterview: isMockInterview,
+          mockDiscountPercentage: mockDiscountPercentage,
+          mockDiscountAmount: mockDiscountAmount,
+          originalAmountBeforeDiscount: originalAmountBeforeDiscount,
         },
       });
     }

@@ -690,7 +690,7 @@ function SupportDesk() {
                     onClick={() => setIsCreatedOpen(!isCreatedOpen)}
                   >
                     <span className="font-medium text-gray-700">
-                      Created Date
+                      Created At
                     </span>
                     {isCreatedOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />

@@ -1096,6 +1096,7 @@ const MockInterviewDetails = () => {
                                       )}
                                     </span>
                                     <span className="mr-2">•</span>
+                                     <div className="flex items-center gap-2">
                                     <MeetPlatformBadge
                                       platform={round?.meetPlatform}
                                     />

@@ -940,7 +940,7 @@ const Assessment = () => {
                     onClick={() => setIsCreatedDateOpen(!isCreatedDateOpen)}
                   >
                     <span className="font-medium text-gray-700">
-                      Created Date
+                      Created At
                     </span>
                     {isCreatedDateOpen ? (
                       <MdKeyboardArrowUp className="text-xl text-gray-700" />
