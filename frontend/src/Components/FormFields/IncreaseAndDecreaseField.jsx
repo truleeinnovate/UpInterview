@@ -209,8 +209,8 @@ const IncreaseAndDecreaseField = ({
             showCurrencyIcon ? "pr-3 pl-9" : "px-3"
           } sm:text-sm border ${
             error
-              ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-              : "border-gray-300 focus:ring-red-300"
+              ? "border-red-500"
+              : "border-gray-300"
           } focus:outline-gray-300`}
 
           placeholder={placeholder ? placeholder : `Enter ${label}`}

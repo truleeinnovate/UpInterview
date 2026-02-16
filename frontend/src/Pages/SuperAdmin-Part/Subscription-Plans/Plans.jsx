@@ -542,7 +542,7 @@ export default function Plans() {
                 className="flex justify-between items-center cursor-pointer"
                 onClick={() => setIsCreatedOpen((v) => !v)}
               >
-                <span className="font-medium text-gray-700">Created Date</span>
+                <span className="font-medium text-gray-700">Created At</span>
                 {isCreatedOpen ? (
                   <ChevronUp className="text-xl text-gray-700" />
                 ) : (

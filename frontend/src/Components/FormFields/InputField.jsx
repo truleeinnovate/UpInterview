@@ -32,8 +32,7 @@ const InputField = React.forwardRef(
     const resolvedRef = inputRef || ref;
 
     const currentLength = (value || "").length;
-    const showMinHint =
-      !error && currentLength > 0 && min > 0 && currentLength < min;
+    const isCounterRed = !!error || (currentLength > 0 && currentLength < min);
 
     return (
       <div>
@@ -64,13 +63,13 @@ const InputField = React.forwardRef(
           onFocus={onFocus}
           aria-invalid={!!error}
           className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-        border ${error ? "border-red-500 focus:ring-red-500 focus:outline-red-300" : "border-gray-300"}
+        border ${error ? "border-red-500" : "border-gray-300"}
         focus:outline-none focus:ring-0 ${error ? "" : "focus:ring-custom-blue focus:border-custom-blue/70"} ${className}`}
           placeholder={computedPlaceholder}
         />
         <div className="">
           {/* {error && <p className="text-red-500 text-xs pt-1">{error}</p>} */}
-          <div className="flex justify-between items-start mt-1">
+          {/* <div className="flex justify-between items-start mt-1">
             <div className="flex-1">
               <p className="text-red-500 text-xs">{error}</p>
             </div>
@@ -78,7 +77,30 @@ const InputField = React.forwardRef(
             {showCounter && (
               <p
                 className={`text-xs ml-2 whitespace-nowrap transition-colors ${
-                  showMinHint ? "text-red-500 font-medium" : "text-gray-400"
+                  showMinHint ? "text-red-500" : "text-gray-400"
+                }`}
+              >
+                {currentLength}
+                {max ? `/${max}` : ""}
+              </p>
+            )}
+          </div> */}
+          <div className="flex justify-between items-start mt-1">
+            <div className="flex-1">
+              {error ? (
+                <p className="text-red-500 text-xs">{error}</p>
+              ) : (
+                min > 0 && (
+                  <p className="text-gray-500 text-xs">Min {min} characters</p>
+                )
+              )}
+            </div>
+
+            {/* RIGHT SIDE: Counter */}
+            {showCounter && (
+              <p
+                className={`text-xs ml-2 whitespace-nowrap transition-colors ${
+                  isCounterRed ? "text-red-500" : "text-gray-400"
                 }`}
               >
                 {currentLength}

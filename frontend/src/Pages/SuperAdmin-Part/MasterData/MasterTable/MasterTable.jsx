@@ -800,7 +800,7 @@ const MasterTable = ({ permissions = {} }) => {
     },
     {
       key: "createdAt",
-      header: "Created Date",
+      header: "Created At",
       render: (value, row) => {
         return row.createdAt ? (
           <span>{formatDateTime(row.createdAt)}</span>
@@ -824,7 +824,7 @@ const MasterTable = ({ permissions = {} }) => {
     },
     {
       key: "updatedAt",
-      header: "Updated Date",
+      header: "Updated At",
       render: (value, row) => {
         return row.updatedAt ? (
           <span>{formatDateTime(row.updatedAt)}</span>
