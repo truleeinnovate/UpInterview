@@ -54,10 +54,12 @@ const AdditionalDetails = ({
   const [resumeName, setResumeName] = useState(
     additionalDetailsData?.resume?.filename || ""
   );
-
+  const hasDetectedCustomUniversity = useRef(false);
+  const hasDetectedCustomQualification = useRef(false);
   const [resumeError, setResumeError] = useState("");
   const [coverLetterError, setCoverLetterError] = useState("");
   const [isCustomUniversity, setIsCustomUniversity] = useState(false);
+  const [isCustomQualification, setIsCustomQualification] = useState(false);
 
   // Load all dropdown data when component mounts
   useEffect(() => {
@@ -87,22 +89,43 @@ const AdditionalDetails = ({
   );
 
   useEffect(() => {
-    const saved = (additionalDetailsData.UniversityCollege || "").trim();
-    // When nothing saved, keep dropdown mode
-    if (!saved) {
-      setIsCustomUniversity(false);
-      return;
-    }
-    // Avoid forcing custom mode if colleges are not loaded yet
+    if (hasDetectedCustomUniversity.current) return; // Only detect once
+    const saved = (additionalDetailsData.universityCollege || "").trim();
+    if (!saved) return;
+
+    // Trigger loading colleges if not loaded yet
     if (!Array.isArray(colleges) || colleges.length === 0) {
+      loadColleges();
       return;
     }
-    const list = (colleges || []).map((c) =>
+
+    const list = colleges.map((c) =>
       (c?.University_CollegeName || "").trim().toLowerCase(),
     );
     const existsInList = list.includes(saved.toLowerCase());
     setIsCustomUniversity(!existsInList);
-  }, [colleges, additionalDetailsData.UniversityCollege]);
+    hasDetectedCustomUniversity.current = true; // Mark as done
+  }, [colleges, additionalDetailsData.universityCollege]);
+    // Effect to handle custom qualification display in Edit mode only (runs once)
+    useEffect(() => {
+      if (hasDetectedCustomQualification.current) return; // Only detect once
+      const saved = (additionalDetailsData?.higherQualification || "").trim();
+      if (!saved) return;
+  
+      // Trigger loading qualifications if not loaded yet
+      if (!Array.isArray(qualifications) || qualifications.length === 0) {
+        loadQualifications();
+        return;
+      }
+  
+      const list = qualifications.map((q) =>
+        (q?.QualificationName || "").trim().toLowerCase(),
+      );
+      const existsInList = list.includes(saved.toLowerCase());
+      setIsCustomQualification(!existsInList);
+      hasDetectedCustomQualification.current = true; // Mark as done
+    }, [qualifications, additionalDetailsData.higherQualification]);
+  
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -271,11 +294,10 @@ const AdditionalDetails = ({
             value={additionalDetailsData.higherQualification}
             options={qualificationOptionsRS}
             onChange={handleChange}
-            // error={errors.higherQualification}
-            // containerRef={fieldRefs.HigherQualification}
+            isCustomName={isCustomQualification}
+            setIsCustomName={setIsCustomQualification}
             label="Higher Qualification"
             name="higherQualification"
-            // required
             onMenuOpen={loadQualifications}
             loading={isQualificationsFetching}
           />
@@ -299,7 +321,6 @@ const AdditionalDetails = ({
                 }));
               }
             }}
-            // error={errors.UniversityCollege}
             isCustomName={isCustomUniversity}
             setIsCustomName={setIsCustomUniversity}
             // containerRef={fieldRefs.UniversityCollege}
@@ -307,7 +328,7 @@ const AdditionalDetails = ({
             name="universityCollege"
             onMenuOpen={loadColleges}
             loading={isCollegesFetching}
-            // required
+          // required
           />
         </div>
         {/* Current Role */}

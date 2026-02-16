@@ -112,9 +112,13 @@ const EditAdvacedDetails = ({
     higherQualification: "",
     universityCollege: "",
   });
-
+  const hasDetectedCustomUniversity = useRef(false);
+  const hasDetectedCustomQualification = useRef(false);
   const [loading, setLoading] = useState(false);
   const [isCustomUniversity, setIsCustomUniversity] = useState(false);
+  const [isCustomQualification, setIsCustomQualification] = useState(false);
+  const [isCustomLocation, setIsCustomLocation] = useState(false);
+
 
   // Load all dropdown data when component mounts
   useEffect(() => {
@@ -144,22 +148,55 @@ const EditAdvacedDetails = ({
   );
 
   useEffect(() => {
-    const saved = (formData.universityCollege || "").trim();
-    // When nothing saved, keep dropdown mode
-    if (!saved) {
-      setIsCustomUniversity(false);
-      return;
-    }
-    // Avoid forcing custom mode if colleges are not loaded yet
+    const saved = (formData.location || "").trim();
+    if (!saved || !Array.isArray(locations) || locations.length === 0) return;
+
+    const list = locations.map((l) =>
+      (l?.LocationName || "").trim().toLowerCase(),
+    );
+    const existsInList = list.includes(saved.toLowerCase());
+    setIsCustomLocation(!existsInList);
+  }, [locations, formData.location]);
+
+  // Effect to handle custom university display in Edit mode only (runs once)
+  useEffect(() => {
+    if (hasDetectedCustomUniversity.current) return; // Only detect once
+    const saved = (formData?.universityCollege || "").trim();
+    if (!saved) return;
+
+    // Trigger loading colleges if not loaded yet
     if (!Array.isArray(colleges) || colleges.length === 0) {
+      loadColleges();
       return;
     }
-    const list = (colleges || []).map((c) =>
+
+    const list = colleges.map((c) =>
       (c?.University_CollegeName || "").trim().toLowerCase(),
     );
     const existsInList = list.includes(saved.toLowerCase());
     setIsCustomUniversity(!existsInList);
-  }, [colleges, formData.universityCollege]);
+    hasDetectedCustomUniversity.current = true; // Mark as done
+  }, [colleges, formData?.universityCollege]);
+
+  // Effect to handle custom qualification display in Edit mode only (runs once)
+  useEffect(() => {
+    if (hasDetectedCustomQualification.current) return; // Only detect once
+    const saved = (formData?.higherQualification || "").trim();
+    if (!saved) return;
+
+    // Trigger loading qualifications if not loaded yet
+    if (!Array.isArray(qualifications) || qualifications.length === 0) {
+      loadQualifications();
+      return;
+    }
+
+    const list = qualifications.map((q) =>
+      (q?.QualificationName || "").trim().toLowerCase(),
+    );
+    const existsInList = list.includes(saved.toLowerCase());
+    setIsCustomQualification(!existsInList);
+    hasDetectedCustomQualification.current = true; // Mark as done
+  }, [qualifications, formData?.higherQualification]);
 
   useEffect(() => {
     // Use profileData which works for both contexts
@@ -302,19 +339,6 @@ const EditAdvacedDetails = ({
     }
   };
 
-  // v1.0.1 <-----------------------------------------------------------------
-  // const modalClass = classNames(
-  //   // "fixed bg-white shadow-2xl border-l border-gray-200 overflow-y-auto",
-  //   "fixed bg-white shadow-2xl overflow-y-auto outline-none",
-  //   // v1.0.1 ----------------------------------------------------------------->
-  //   {
-  //     "inset-0": isFullScreen,
-  //     "inset-y-0 right-0 w-full  lg:w-1/2 xl:w-1/2 2xl:w-1/2": !isFullScreen,
-  //   }
-  // );
-
-  // Refs for error scrolling
-  //const experienceRef = useRef(null);
   const fieldRefs = {
     currentRole: useRef(null),
     industry: useRef(null),
@@ -408,10 +432,11 @@ const EditAdvacedDetails = ({
                 options={qualificationOptionsRS}
                 onChange={handleInputChange}
                 error={errors.higherQualification}
+                isCustomName={isCustomQualification}
+                setIsCustomName={setIsCustomQualification}
                 // containerRef={fieldRefs.HigherQualification}
                 label="Higher Qualification"
                 name="higherQualification"
-                // required
                 onMenuOpen={loadQualifications}
                 loading={isQualificationsFetching}
               />
@@ -527,7 +552,8 @@ const EditAdvacedDetails = ({
                 error={errors.location}
                 containerRef={fieldRefs.location}
                 label="Current Location"
-                // required
+                isCustomName={isCustomLocation}
+                setIsCustomName={setIsCustomLocation}
                 onMenuOpen={loadLocations}
                 loading={isLocationsFetching}
               />
