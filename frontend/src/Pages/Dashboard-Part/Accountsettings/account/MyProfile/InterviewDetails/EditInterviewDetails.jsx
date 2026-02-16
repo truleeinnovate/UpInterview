@@ -781,7 +781,7 @@ const EditInterviewDetails = ({
     }));
   };
 
-    const clearSkills = () => {
+  const clearSkills = () => {
     setSelectedSkills([]);
     setFormData((prev) => ({
       ...prev,
@@ -1331,8 +1331,8 @@ const EditInterviewDetails = ({
                     type="number"
                     id="PreviousExperienceConductingInterviewsYears"
                     name="PreviousExperienceConductingInterviewsYears"
-                    min="0"
-                    max="50"
+                    min={1}
+                    max={15}
                     placeholder={0}
                     required
                     value={formData.PreviousExperienceConductingInterviewsYears}
@@ -1822,21 +1822,58 @@ const EditInterviewDetails = ({
                         <div className="flex items-center">
                           <input
                             type="number"
-                            min="0"
-                            max="100"
+                            min="10"
+                            max="99"
                             value={customDiscountValue}
                             onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, "");
+                              let value = e.target.value.replace(/\D/g, "");
+                              if (value.length > 2) {
+                                value = value.slice(0, 2);
+                              }
+                              const numValue = parseInt(value, 10);
+                              if (
+                                !isNaN(numValue) &&
+                                (numValue < 10 || numValue > 99)
+                              ) {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  mock_interview_discount:
+                                    "Discount must be between 10 and 99",
+                                }));
+                              } else {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  mock_interview_discount: "",
+                                }));
+                              }
                               setCustomDiscountValue(value);
                             }}
                             onBlur={() => {
+                              const numValue = parseInt(customDiscountValue, 10);
                               if (customDiscountValue) {
-                                handleChangeforExp({
-                                  target: {
-                                    name: "mock_interview_discount",
-                                    value: customDiscountValue,
-                                  },
-                                });
+                                if (numValue >= 10 && numValue <= 99) {
+                                  handleChangeforExp({
+                                    target: {
+                                      name: "mock_interview_discount",
+                                      value: customDiscountValue,
+                                    },
+                                  });
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    mock_interview_discount: "",
+                                  }));
+                                } else {
+                                  setErrors((prev) => ({
+                                    ...prev,
+                                    mock_interview_discount:
+                                      "Discount must be between 10 and 99",
+                                  }));
+                                }
+                              } else {
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  mock_interview_discount: "",
+                                }));
                               }
                               setShowCustomDiscount(false);
                             }}
@@ -1872,9 +1909,14 @@ const EditInterviewDetails = ({
                               />
                             </svg>
                           </button>
+                          {errors.mock_interview_discount && (
+                            <p className="absolute -bottom-5 left-0 text-sm text-red-600 whitespace-nowrap">
+                              {errors.mock_interview_discount}
+                            </p>
+                          )}
                         </div>
                       ) : (
-                        <>
+                        <div className="w-full">
                           <DropdownSelect
                             id="mock_interview_discount"
                             name="mock_interview_discount"
@@ -1910,27 +1952,28 @@ const EditInterviewDetails = ({
                               { value: "10", label: "10% discount" },
                               { value: "20", label: "20% discount" },
                               { value: "30", label: "30% discount" },
-                              {
-                                value: "custom",
-                                label: "Add custom percentage...",
-                              },
+                              { value: "custom", label: "Add custom percentage..." },
                             ]}
-                            placeholder="Select discount percentage"
+                            placeholder="Select Discount Percentage"
                             className="w-full"
                             classNamePrefix="select"
                             isClearable={true}
                           />
                           {errors.mock_interview_discount && (
-                            <p className="text-red-500 text-xs mt-1">
+                            <p className="mt-1 text-sm text-red-600">
                               {errors.mock_interview_discount}
                             </p>
                           )}
-                        </>
+                        </div>
                       )}
                     </div>
-                    <p className="mt-1.5 text-xs text-custom-blue">
-                      Offer a discount for mock interviews to attract more
-                      candidates
+                    <p
+                      className={`mt-1.5 text-xs text-custom-blue ${showCustomDiscount && errors.mock_interview_discount
+                          ? "mt-7"
+                          : "mt-1.5"
+                        }`}
+                    >
+                      Offer a discount for mock interviews to attract more candidates
                     </p>
                   </div>
                 </div>

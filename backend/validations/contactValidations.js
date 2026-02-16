@@ -94,8 +94,8 @@ const contactPatchSchema = Joi.object({
   timeZone: Joi.alternatives()
     .try(Joi.string(), Joi.object({ value: Joi.string().required() }))
     .messages({
-      "any.required": "Time zone is required",
-      "object.base": "Please select a valid time zone",
+      "any.required": "Time Zone is required",
+      "object.base": "Please select a valid Time Zone",
     }),
   preferredDuration: Joi.string().messages({
     "string.empty": "Please select a preferred interview duration",

@@ -415,7 +415,7 @@ const EditAdvacedDetails = ({
                 onMenuOpen={loadQualifications}
                 loading={isQualificationsFetching}
               />
-  
+
             </div>
             <div className="flex flex-col">
 
@@ -472,16 +472,21 @@ const EditAdvacedDetails = ({
 
 
             <div className="flex flex-col">
-              <IncreaseAndDecreaseField
-                value={formData.yearsOfExperience}
-                onChange={handleInputChange}
-                min={0}
-                max={30}
-                inputRef={fieldRefs.yearsOfExperience}
-                error={errors.yearsOfExperience}
+              <DropdownWithSearchField
                 label="Years of Experience"
                 name="yearsOfExperience"
-                required
+                required={true}
+                value={String(formData.yearsOfExperience || "")}
+                error={errors.yearsOfExperience}
+                onChange={handleInputChange}
+                options={[
+                  ...Array.from({ length: 15 }, (_, i) => ({
+                    value: (i + 1).toString(),
+                    label: `${i + 1} Year${i + 1 > 1 ? "s" : ""}`,
+                  })),
+                  { value: "15+", label: "15+ Years" },
+                ]}
+                placeholder="Select Years of Experience"
               />
             </div>
 

@@ -9,18 +9,19 @@ const basicDetailsSchema = Joi.object({
     "string.empty": "Email is required",
     "string.email": "Invalid email format",
   }),
+  
   lastName: Joi.string().required().messages({
-    "string.empty": "Last name is required",
+    "string.empty": "Last Name is required",
   }),
   phone: Joi.string().required().messages({
-    "string.empty": "Phone number is required",
+    "string.empty": "Phone Number is required",
   }),
   linkedinUrl: Joi.string().uri().required().messages({
     "string.empty": "LinkedIn URL is required",
     "string.uri": "Invalid LinkedIn URL",
   }),
   firstName: Joi.string().required().messages({
-    "string.empty": "First name is required",
+    "string.empty": "First Name is required",
   }),
   profileId: Joi.string().allow("", null),
   countryCode: Joi.string().allow("", null),
@@ -32,14 +33,14 @@ const basicDetailsSchema = Joi.object({
 // STEP 1: Additional professional details
 const additionalDetailsSchema = Joi.object({
   currentRole: Joi.string().required().messages({
-    "string.empty": "Current role is required",
+    "string.empty": "Current Role is required",
   }),
   industry:Joi.string().allow("", null),
   company: Joi.string().required().messages({
     "string.empty": "Company Name is required",
   }),
   yearsOfExperience: Joi.string().required().messages({
-    "any.required": "Years of experience is required",
+    "any.required": "Years of Experience is required",
   }),
   location:Joi.string().allow("", null),
   resume: Joi.string().allow("", null),
@@ -54,7 +55,7 @@ const interviewDetailsSchema = Joi.object({
     "array.min": "Skills are required",
   }),
   currentRole: Joi.string().required().messages({
-    "string.empty": "Current role is required",
+    "string.empty": "Current Role is required",
   }),
   // technologies: Joi.array().items(Joi.string()).min(1).required().messages({
   //   "array.min": "Technologies are required",
@@ -63,7 +64,7 @@ const interviewDetailsSchema = Joi.object({
     .try(Joi.boolean(), Joi.string().valid("yes", "no"))
     .required()
     .messages({
-      "any.required": "Previous interview experience is required",
+      "any.required": "Previous Interview Experience is required",
     }),
   PreviousExperienceConductingInterviewsYears: Joi.alternatives().conditional(
     "PreviousExperienceConductingInterviews",
@@ -84,12 +85,12 @@ const interviewDetailsSchema = Joi.object({
       "array.min": "At least one interview format is required",
     }),
   professionalTitle: Joi.string().trim().min(30).max(100).required().messages({
-    "string.empty": "Professional title is required",
-    "string.min": "Professional title must be at least 30 characters",
-    "string.max": "Professional title cannot exceed 100 characters",
+    "string.empty": "Professional Title is required",
+    "string.min": "Professional Title must be at least 30 characters",
+    "string.max": "Professional Title cannot exceed 100 characters",
   }),
   bio: Joi.string().trim().min(150).required().messages({
-    "string.empty": "Professional bio is required",
+    "string.empty": "Professional Bio is required",
     "string.min": "Professional bio must be at least 150 characters",
   }),
 });
@@ -100,7 +101,7 @@ const availabilitySchema = Joi.object({
     "string.empty": "Timezone is required",
   }),
   preferredDuration: Joi.string().required().messages({
-    "string.empty": "Preferred duration is required",
+    "string.empty": "Preferred Duration is required",
   }),
 });
 
