@@ -830,14 +830,28 @@ exports.createMockInterviewRound = async (req, res) => {
       isCreate: true,
     });
 
+    // if (historyUpdate) {
+    //   await MockInterviewRound.findByIdAndUpdate(
+    //     savedRound._id,
+    //     historyUpdate,
+    //     {
+    //       new: true,
+    //     },
+    //   );
+    // }
+
+    console.log("historyUpdate result:", historyUpdate);
+
     if (historyUpdate) {
-      await MockInterviewRound.findByIdAndUpdate(
-        savedRound._id,
+      console.log("Updating round with history:", historyUpdate);
+      const updatedRound = await MockInterviewRound.findByIdAndUpdate(
+        savedRound?._id,
         historyUpdate,
         {
           new: true,
         },
       );
+      console.log("Updated round with history:", updatedRound);
     }
 
     // =================== MEETING LINK (if virtual) ===================
@@ -1397,7 +1411,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
           .json({ success: false, message: "Invalid action" });
       }
     }
-
+    let updatedRoundData
     // ===== SAFE PARTICIPANT UPSERT (NO DUPLICATES, NO FAIL) =====
     if (isParticipantUpdate) {
       const { role, userId, joined } = req.body;
@@ -1410,7 +1424,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
         role === "Candidate" ? { role: "Candidate" } : { role, userId };
 
       // Update existing participant if exists
-      let updatedRound = await MockInterviewRound.findOneAndUpdate(
+      updatedRoundData = await MockInterviewRound.findOneAndUpdate(
         {
           _id: roundId,
           participants: { $elemMatch: match },
@@ -1425,11 +1439,11 @@ exports.updateInterviewRoundStatus = async (req, res) => {
       );
 
       // If participant doesn't exist, add it
-      if (!updatedRound) {
+      if (!updatedRoundData) {
         const participantData = { role, status, joinedAt };
         if (role !== "Candidate") participantData.userId = userId;
 
-        updatedRound = await MockInterviewRound.findByIdAndUpdate(
+        updatedRoundData = await MockInterviewRound.findByIdAndUpdate(
           roundId,
           { $push: { participants: participantData } },
           { new: true },
@@ -1444,7 +1458,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
         return res.status(200).json({
           success: true,
           message: "Participant updated successfully",
-          data: updatedRound,
+          data: updatedRoundData,
         });
       }
     }
@@ -1468,7 +1482,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     //  when candidate and interviewer both are present in the round then create history
     if (req.body?.History_Type === "Histoy_Handling") {
       // Special handling: only create history if conditions are met
-      const participants = existingRound?.participants || [];
+      const participants = updatedRoundData?.participants || [];
       // const isHistoryHandled = participants.some(
       //   (p) => p.role.toLowerCase() === "interviewer" && p.role === "Candidate",
       // );
@@ -1553,6 +1567,8 @@ exports.updateInterviewRoundStatus = async (req, res) => {
         });
       }
     }
+
+    console.log("smartUpdate", smartUpdate)
 
     // Extra logic ONLY for Cancelled (outside smart update)
     let extraUpdate = { $set: {} };

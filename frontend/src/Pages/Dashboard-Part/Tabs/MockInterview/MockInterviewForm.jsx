@@ -162,6 +162,9 @@ const MockSchedulelater = () => {
   const [showExternalNotification, setShowExternalNotification] =
     useState(false);
 
+  const [interviewerClear, setInterviewerClear] =
+    useState(false);
+
   const [isScheduleOrRescheduleInHistory, setIsScheduleOrRescheduleInHistory] =
     useState(false);
   const {
@@ -170,7 +173,7 @@ const MockSchedulelater = () => {
     isRequestSent = false,
     // mode, // optional if you switch to mode-based approach
   } = location.state || {};
-  console.log("qualifications:", isReschedule, isRequestSent);
+  // console.log("qualifications:", isReschedule, isRequestSent);
   const [errors, setErrors] = useState({});
   const [showSkillValidation, setShowSkillValidation] = useState(false); // Track if skills validation should show
 
@@ -1328,24 +1331,95 @@ const MockSchedulelater = () => {
   };
 
   const handleConfirmDateChangesNew = () => {
-    // Clear all external interviewers
+    if (!pendingDateChange) return;
+
+    // 1. Common cleanup: Clear external interviewers
     setExternalInterviewers([]);
     setExternalMaxHourlyRate(0);
     setSelectedInterviewType(null);
+    setHasManuallyClearedInterviewers(true);
 
-    // Update the date with the pending value
-    setScheduledDate(pendingDateChange);
+    const { type, value } = pendingDateChange;
+
+    console.log("Confirming change:", type, value);
+
+    if (type === "scheduledDate") {
+      // Update state
+      setScheduledDate(value);
+
+      // Calculate start/end times based on new date + duration
+      const start = new Date(value);
+      const duration = Number(formData.rounds.duration || 60);
+      const end = new Date(start);
+      end.setMinutes(end.getMinutes() + duration);
+
+      if (!isNaN(start.getTime())) {
+        const formattedStart = formatToCustomDateTime(start);
+        const formattedEnd = formatToCustomDateTime(end).split(" ")[1];
+        const newDateTime = `${formattedStart} - ${formattedEnd}`;
+
+        setStartTime(start.toISOString());
+        setEndTime(end.toISOString());
+        setCombinedDateTime(newDateTime);
+
+        // Update formData
+        setFormData((prev) => ({
+          ...prev,
+          rounds: {
+            ...prev.rounds,
+            dateTime: newDateTime,
+          },
+        }));
+      }
+    } else if (type === "interviewType") {
+      setInterviewType(value);
+
+      if (value === "instant") {
+        setScheduledDate(""); // Clear scheduled date
+        // Calculate instant times
+        const { display } = calculateInstantTimes(
+          Number(formData.rounds.duration || 60)
+        );
+        setCombinedDateTime(display);
+
+        setFormData((prev) => ({
+          ...prev,
+          rounds: {
+            ...prev.rounds,
+            interviewType: "instant",
+            dateTime: display,
+          },
+        }));
+      } else if (value === "scheduled") {
+        // If switching to scheduled, ensure we have a valid date or reset
+        const minVal = twoHoursFromNowLocal();
+        // If we had a previous scheduled date, we COULD keep it, but logic suggests resetting to min if invalid
+        if (!scheduledDate) {
+          setScheduledDate(minVal);
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          rounds: {
+            ...prev.rounds,
+            interviewType: "scheduled",
+          },
+        }));
+      }
+    }
 
     // Close popup and clear pending
     setShowDateChangeConfirmation(false);
     setPendingDateChange(null);
+    setInterviewerClear(false);
 
     // Show notification
-    notify.info("Date/time changed. All interviewers have been cleared.");
+    notify.info("Change confirmed. All external interviewers have been cleared.");
   };
 
   const handleCancelDateChange = () => {
     setShowDateChangeConfirmation(false);
+    setInterviewerClear(false);
     setPendingDateChange(null);
   };
 
@@ -2307,6 +2381,13 @@ const MockSchedulelater = () => {
         setHasManuallyClearedInterviewers(true);
         setSelectedInterviewType(null);
         setExternalMaxHourlyRate(0);
+
+        // CLEAR ANY PENDING DATE CHANGE / POPUP
+        if (dateChangeTimeoutRef.current) {
+          clearTimeout(dateChangeTimeoutRef.current);
+        }
+        setPendingDateChange(null);
+        setShowDateChangeConfirmation(false);
       }
 
       return updatedInterviewers;
@@ -2322,7 +2403,16 @@ const MockSchedulelater = () => {
       },
     }));
     setSelectedInterviewType("scheduled");
+
+    // CLEAR ANY PENDING DATE CHANGE / POPUP
+    if (dateChangeTimeoutRef.current) {
+      clearTimeout(dateChangeTimeoutRef.current);
+    }
+    setPendingDateChange(null);
+    setShowDateChangeConfirmation(false);
   };
+
+  // console.log("  setShowDateChangeConfirmation(true);", showDateChangeConfirmation);
 
   // onChange={(e) => {
   //   // Clear outsourced data when date/time changes
@@ -2402,34 +2492,48 @@ const MockSchedulelater = () => {
     return formatForDatetimeLocal(d);
   };
 
+  const dateChangeTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (dateChangeTimeoutRef.current) {
+        clearTimeout(dateChangeTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleScheduledDateChange = (e) => {
     const val = e.target.value;
 
-    // For new round creation (not edit mode)
-    if (!mockEdit && externalInterviewers.length > 0 && val !== scheduledDate) {
+    // Clear any existing timeout
+    if (dateChangeTimeoutRef.current) {
+      clearTimeout(dateChangeTimeoutRef.current);
+    }
+
+    // Check if we SHOULD show confirmation (Condition: Not reschedule, Not request sent, Has external interviewers, Date actually changed)
+    const shouldShowConfirmation =
+      !isReschedule &&
+      !isRequestSent &&
+      externalInterviewers.length > 0 &&
+      val !== scheduledDate;
+
+    if (shouldShowConfirmation) {
       setPendingDateChange({
         type: "scheduledDate",
         value: val,
       });
-      setShowDateChangeConfirmation(true);
-      return; // Don't update date yet - wait for confirmation
+
+      // Set new timeout
+      dateChangeTimeoutRef.current = setTimeout(() => {
+        setShowDateChangeConfirmation(true);
+      }, 1000);
+      return;
     }
 
-    // Check if external interviewers exist and date is actually changing
-    if (externalInterviewers.length > 0 && val !== scheduledDate) {
-      // Set pending change and show confirmation popup
-      setPendingDateChange({
-        type: "scheduledDate",
-        value: val,
-      });
-      setTimeout(() => setShowDateChangeConfirmation(true), 1500);
-      // setShowDateChangeConfirmation(true);
-      return; // Don't proceed until user confirms
-    }
-
-    // const minVal = twoHoursFromNowLocal();
-    // Prevent selecting past/less than 2 hours from now
-    // const newScheduledDate = val && val < minVal ? minVal : val;
+    // If conditions NOT met (e.g. Reschedule mode), proceed immediately
+    // If external interviewers exist but we are in reschedule mode, we silently clear them (per original logic implication, or maybe user wants them to stay? 
+    // The original logic was: if externalInterviewers > 0 -> clear them.
+    // So if we skip confirmation, we must still clear them if they exist.
 
     if (externalInterviewers.length > 0) {
       setExternalInterviewers([]);
@@ -2440,126 +2544,74 @@ const MockSchedulelater = () => {
           interviewers: [],
         },
       }));
+      // If we silently clear, we might want to notify
+      if (!isReschedule && !isRequestSent) {
+        // This case should theoretically be caught by shouldShowConfirmation, 
+        // but if for some reason we are here and not showing popup (maybe val === scheduledDate?), we just proceed.
+      }
     }
 
-    setScheduledDate(e.target.value);
+    setScheduledDate(val);
   };
 
-  // const handleInterviewTypeChange = (type) => {
-  //   // onClick={() => {
-  //   //   setInterviewType("instant");
-
-  //   //   // Clear outsourced data when switching to instant
-  //   //   if (externalInterviewers.length > 0) {
-  //   //     setExternalInterviewers([]);
-  //   //     setFormData((prev) => ({
-  //   //       ...prev,
-  //   //       rounds: {
-  //   //         ...prev.rounds,
-  //   //         interviewers: [],
-  //   //       },
-  //   //     }));
-  //   //     notify.warning(
-  //   //       "Interview type changed to instant. Outsourced interviewers have been cleared."
-  //   //     );
-  //   //   }
-
-  //   //   setFormData((prev) => ({
-  //   //     ...prev,
-  //   //     rounds: {
-  //   //       ...prev.rounds,
-  //   //       interviewType: "instant",
-  //   //     },
-  //   //   }));
-  //   // }}
-  //   if (externalInterviewers.length > 0) {
-  //     setExternalInterviewers([]);
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       rounds: {
-  //         ...prev.rounds,
-  //         interviewers: [],
-  //       },
-  //     }));
-  //   }
-  //   setSelectedInterviewType(type);
-  // };
-
   const handleInterviewTypeChange = (type) => {
-    // Don't do anything if clicking the same type
     if (type === interviewType) return;
 
-    // Check if external interviewers exist and we're changing type
-    // if (externalInterviewers.length > 0) {
-    //   // Set pending change and show confirmation popup
-    //   setPendingDateChange({
-    //     type: "interviewType",
-    //     value: type,
-    //   });
-    //   setTimeout(() => setShowDateChangeConfirmation(true), 100);
-    //   return; // Don't proceed until user confirms
-    // }
+    // Clear any existing timeout from date change if user switches type quickly
+    if (dateChangeTimeoutRef.current) {
+      clearTimeout(dateChangeTimeoutRef.current);
+    }
 
-    if (externalInterviewers.length > 0) {
-      // Set pending change and show confirmation popup
+    // Check confirmation condition
+    const shouldShowConfirmation =
+      !isReschedule &&
+      !isRequestSent &&
+      externalInterviewers.length > 0;
+
+    if (shouldShowConfirmation) {
       setPendingDateChange({
         type: "interviewType",
         value: type,
       });
       setShowDateChangeConfirmation(true);
-      return; // Don't proceed until user confirms
+      return;
     }
 
-    // Update interview type
+    // Proceed immediately
+    if (externalInterviewers.length > 0) {
+      setExternalInterviewers([]);
+      // We don't need to manually update formData.rounds.interviewers here as it's not always in sync with externalInterviewers state in this component structure, 
+      // but let's keep consistent with valid cleanup
+    }
+
+    // Update interview type (existing logic)
     setInterviewType(type);
 
-    // Clear scheduled date when switching to instant
     if (type === "instant") {
       setScheduledDate("");
-
-      // Calculate instant time: now + 15 minutes
       const now = new Date();
       now.setMinutes(now.getMinutes() + 15);
       now.setSeconds(0, 0);
 
-      const end = new Date(now);
-      end.setMinutes(end.getMinutes() + Number(formData.rounds.duration || 60));
-
       // Force immediate recalculation
-      const { startISO, endISO, formattedDisplay } = calculateInstantTimes(
-        formData.rounds.duration || 60,
+      const { display } = calculateInstantTimes(
+        Number(formData.rounds.duration || 60)
       );
-      // Format the datetime for display
-      // const formattedStart = formatToCustomDateTime(now);
-      // const formattedEnd = formatToCustomDateTime(end).split(" ")[1];
-      // const newDateTime = `${formattedStart} - ${formattedEnd}`;
 
-      // Update all datetime states
-      // setStartTime(now.toISOString());
-      // setEndTime(end.toISOString());
-      // setCombinedDateTime(newDateTime);
-      // setInstantEndTime(formattedEnd);
-      // setInstantStartTime(formattedStart);
+      setCombinedDateTime(display);
 
-      // setInstantStartTime(startISO);
-      // setInstantEndTime(endISO);
-      setCombinedDateTime(formattedDisplay);
-
-      // Update form data
       setFormData((prev) => ({
         ...prev,
         rounds: {
           ...prev.rounds,
-          dateTime: formattedDisplay,
+          dateTime: display,
           interviewType: "instant",
         },
       }));
-      setShowDateChangeConfirmation(true);
-      setScheduledDate(""); // clear scheduled date
-      // Show instant interview info
-      notify.info("Instant interview scheduled for 15 minutes from now");
+
+      // Only show instant info if we didn't show confirmation popup
+      //   notify.info("Instant interview scheduled for 15 minutes from now");
     } else if (type === "scheduled") {
-      // For scheduled, just update the interview type
       setFormData((prev) => ({
         ...prev,
         rounds: {
@@ -2568,9 +2620,6 @@ const MockSchedulelater = () => {
         },
       }));
 
-      setShowDateChangeConfirmation(true);
-
-      // Set minimum datetime if not already set
       if (!scheduledDate) {
         const minVal = twoHoursFromNowLocal();
         setScheduledDate(minVal);
@@ -2848,11 +2897,11 @@ const MockSchedulelater = () => {
                       onChange={handleChange}
                       disabled={shouldDisable("jobDescription")}
                       name="jobDescription"
-                      label="Professional Summary"
+                      label="Professional Summary (One Per Line)"
                       rows={6}
                       minLength={200}
                       maxLength={2000}
-                      placeholder="This interview template is designed to evaluate a candidate's technical proficiency, problem-solving abilities, and coding skills. The assessment consists of multiple choice questions, coding challenges, and scenario-based problems relevant to the job role."
+                      placeholder="Experienced software engineer with 5+ years in full-stack development&#10;Proven track record in building scalable web applications&#10;Strong problem-solving skills and team collaboration"
                       error={errors.jobDescription}
                       required={true}
                     />
@@ -3757,7 +3806,7 @@ const MockSchedulelater = () => {
       )}
 
       {/* Date Change Confirmation Modal for New Round Creation */}
-      {showDateChangeConfirmation && !isReschedule && !isRequestSent && externalInterviewers && (
+      {showDateChangeConfirmation && !isReschedule && !isRequestSent && externalInterviewers?.length > 0 && !showOutsourcePopup && pendingDateChange && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">Confirm Date Change</h3>

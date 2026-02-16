@@ -85,7 +85,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
   // console.log("interviewRoundData", interviewRoundData);
 
-  // console.log("interviewRoundData:", interviewRoundData);
+  console.log("interviewRoundData:", interviewRoundData);
 
   const currentStatus = interviewRoundData?.status;
 
@@ -116,12 +116,32 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
           (normalizedRole === "Interviewer" && true) ||
           (normalizedRole === "Scheduler" && true),
       };
+      console.log("payload", payload)
 
       let response;
 
       if (urlData?.interviewType === "mockinterview") {
+        // Fallback for mockInterviewId if mockinterview object is not fully loaded
+        const mockId =
+          mockinterview?._id ||
+          (typeof interviewRoundData?.mockInterviewId === "object"
+            ? interviewRoundData?.mockInterviewId?._id
+            : interviewRoundData?.mockInterviewId);
+
+        console.log("Resolving mockId for status update:", {
+          fromMockObj: mockinterview?._id,
+          fromRoundDate: interviewRoundData?.mockInterviewId,
+          resolved: mockId,
+        });
+
+        if (!mockId) {
+          console.error("Missing mockInterviewId for status update!");
+          // toast.error("Unable to start interview: Missing ID");
+          return;
+        }
+
         response = await updateMockRoundStatus.mutateAsync({
-          mockInterviewId: mockinterview?._id,
+          mockInterviewId: mockId,
           roundId: interviewRoundData?._id,
           payload,
         });
@@ -129,7 +149,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
         response = await updateRoundStatus(payload);
       }
 
-      // console.log("response", response);
+      console.log("response", response);
       return response;
 
       // console.log("Status update response:", response);

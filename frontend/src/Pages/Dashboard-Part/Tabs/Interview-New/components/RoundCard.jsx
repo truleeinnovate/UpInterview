@@ -313,7 +313,11 @@ const RoundCard = ({
       // Show success toast
       notify.success(`Round Status updated to ${newStatus}`, {});
     } catch (error) {
-      console.error("Error updating status:", error);
+      if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
+        notify.error(error.message);
+      }
+      setActionInProgress(false);
+      // console.error("Error updating status:", error);
     }
   };
 
@@ -372,7 +376,11 @@ const RoundCard = ({
       setEvaluatedReasonModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
+      if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
+        notify.error(error.message);
+      }
       setActionInProgress(false);
+      // setActionInProgress(false);
     }
   };
 

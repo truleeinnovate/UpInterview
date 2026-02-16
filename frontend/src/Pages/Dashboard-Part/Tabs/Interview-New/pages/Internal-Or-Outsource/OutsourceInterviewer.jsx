@@ -821,6 +821,8 @@ function OutsourcedInterviewerModal({
             );
           }
 
+          console.log("skillFilteredInterviewers", skillFilteredInterviewers)
+
           // Filter for approved interviewers
           const approvedInterviewers = skillFilteredInterviewers.filter(
             (interviewer) => interviewer.contact?.status === "approved",
@@ -1027,11 +1029,21 @@ function OutsourcedInterviewerModal({
           ...sortedSkillOnlyMatched, // with skill match only not current role
           ...nonTechMatchedInterviewers, // without skill match and not current role
         ];
-        // 7️⃣ Filter only approved
-        const approvedInterviewers = combinedInterviewers.filter(
-          (i) => i.contact?.status === "approved",
-        );
 
+        let approvedInterviewers;
+
+        if (navigatedfrom === "mock-interview") {
+          approvedInterviewers = combinedInterviewers.filter(
+            (i) => i.contact?.status === "approved" && i?.conact?.isMockInterviewSelected === true,
+          );
+
+        } else {
+
+          // 7️⃣ Filter only approved
+          approvedInterviewers = combinedInterviewers.filter(
+            (i) => i.contact?.status === "approved",
+          );
+        }
         // 8️⃣ Remove logged-in user
         const finalInterviewers = approvedInterviewers.filter(
           (i) => i.contact?._id?.toString() !== userId?.toString(),

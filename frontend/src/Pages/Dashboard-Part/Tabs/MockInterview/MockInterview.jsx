@@ -39,6 +39,7 @@ import {
   getMockInterviewColumns,
   getMockInterviewActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
+import { getStatusBadgeColor } from "../CommonCode-AllTabs/StatusBadge.jsx";
 
 // v1.0.5 <----------------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -505,15 +506,32 @@ const MockInterview = () => {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <span className="text-gray-800 font-medium truncate">
+        <span
+          className={`mx-2 text-xs px-2 py-0.5 rounded-full ${getStatusBadgeColor(
+            row?.rounds?.[0]?.status,
+          )}`}
+        >
           {row?.rounds?.[0]?.status === "RequestSent"
             ? "Request Sent"
-            : (
-              <StatusBadge
-                status={capitalizeFirstLetter(row?.rounds?.[0]?.status)}
-              />
-            ) || "N/A"}
+            : row?.rounds?.[0]?.status === "InProgress"
+              ? "In Progress"
+              : row?.rounds?.[0]?.status === "FeedbackPending"
+                ? "Feedback Pending"
+                : row?.rounds?.[0]?.status === "FeedbackSubmitted"
+                  ? "Feedback Submitted"
+                  :
+                  // : round?.status,
+                  capitalizeFirstLetter(row?.rounds?.[0]?.status)}
         </span>
+        // <span className="text-gray-800 font-medium truncate">
+        //   {row?.rounds?.[0]?.status === "RequestSent"
+        //     ? "Request Sent"
+        //     : (
+        //       <StatusBadge
+        //         status={capitalizeFirstLetter(row?.rounds?.[0]?.status)}
+        //       />
+        //     ) || "N/A"}
+        // </span>
       ),
     },
   ];
@@ -566,7 +584,8 @@ const MockInterview = () => {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
-      show: (row) => row?.rounds?.[0]?.status === "Draft" || row?.rounds?.[0]?.status === "RequestSent",
+      show: (row) => !["Completed", "Scheduled", "Cancelled"].includes(row?.rounds?.[0]?.status),
+      // show: (row) => row?.rounds?.[0]?.status === "Draft" || row?.rounds?.[0]?.status === "RequestSent",
       onClick: (row) =>
         navigate(`/mock-interviews/${row._id}/edit`, {
           state: { from: location.pathname },
