@@ -127,7 +127,7 @@ if (!Array.isArray(formData.skills) || formData.skills.length < 3) {
   if (!formData.professionalTitle) {
     errors.professionalTitle = "Professional Title is required";
   } else if (formData.professionalTitle.length < 30) {
-    errors.professionalTitle = "Professional Title must be at least 50 characters";
+    errors.professionalTitle = "Professional Title must be at least 30 characters";
   } else if (formData.professionalTitle.length > 100) {
     errors.professionalTitle = "Professional Title cannot exceed 100 characters";
     formData.professionalTitle = formData.professionalTitle.substring(0, 100);
