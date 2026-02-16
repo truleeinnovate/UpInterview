@@ -455,8 +455,8 @@ function QuestionDisplay({ question, answers, handleAnswer, isReviewing }) {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-custom-blue">
-                  <span className="font-medium">Hint:</span>{" "}
-                  {question?.snapshot?.hints?.[0]}
+                  <span className="font-medium mr-1">Hint:</span>
+                  {question?.snapshot?.hints}
                 </p>
               </div>
             </div>
