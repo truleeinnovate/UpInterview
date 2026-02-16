@@ -86,7 +86,7 @@ const AssessmentTestPage2 = ({
                     {candidate?.Email || "Not Provided"}
                   </p>
                 </div>
-                {candidate?.phone && (
+                {candidate?.Phone && (
                   <div>
                     <p className="text-sm font-medium text-gray-500">Phone</p>
                     <p className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
