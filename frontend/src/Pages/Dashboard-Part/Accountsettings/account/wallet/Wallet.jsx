@@ -367,6 +367,13 @@ const Wallet = () => {
                       : new Date(0);
                   return dateB - dateA; // Sort in descending order (newest first)
                 })
+                .filter((transaction) => {
+                  // Hide debited transactions with 0 amount (e.g., failed or zero-value settlements)
+                  if (transaction.type === "debited" && (transaction.totalAmount === 0 || transaction.amount === 0)) {
+                    return false;
+                  }
+                  return true;
+                })
                 .map((transaction) => {
                   // Extract round title from description if available
                   const getRoundTitle = (desc) => {
