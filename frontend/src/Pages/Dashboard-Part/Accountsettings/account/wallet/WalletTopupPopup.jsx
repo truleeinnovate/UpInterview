@@ -236,18 +236,108 @@ export function WalletTopupPopup({ onClose, onTopup }) {
 
 
 
-  return (
-    // v1.0.3 <-----------------------------------------------------
-    <SidebarPopup title="Wallet Top-up" onClose={onClose}>
-      <div className="flex flex-col h-full">
-        {/* Scrollable content */}
-        <div className="p-4 sm:p-0 flex-1 overflow-y-auto">
+  // Determine if this is a standalone page (no onClose = opened in new tab)
+  const isStandalonePage = !onClose;
+
+  const formContent = (
+    <div className="flex flex-col h-full">
+      {/* Scrollable content */}
+      <div className="p-4 sm:p-0 flex-1 overflow-y-auto">
+        <form id="topup-form" onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Amount
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+              {predefinedAmounts.map((presetAmount) => (
+                <button
+                  key={presetAmount}
+                  type="button"
+                  onClick={() => setAmount(presetAmount.toString())}
+                  className={`p-4 text-center border rounded-lg hover:border-custom-blue ${amount === presetAmount.toString()
+                    ? "border-custom-blue bg-blue-50"
+                    : "border-gray-200"
+                    }`}
+                >
+                  ₹{presetAmount.toLocaleString()}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4">
+              <InputField
+                label="Custom Amount (INR)"
+                type="number"
+                name="customAmount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Enter amount"
+                min="1"
+                step="0.01"
+                required
+                className="pl-2"
+              />
+
+            </div>
+          </div>
+
+          <div className="pt-4">
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                {error}
+              </div>
+            )}
+            <div className="mb-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Amount</span>
+                <span className="font-medium">
+                  ₹{parseFloat(amount || 0).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Processing Fee</span>
+                <span className="font-medium">₹0.00</span>
+              </div>
+              <div className="flex justify-between text-base font-medium mt-2 pt-2 border-t">
+                <span>Total</span>
+                <span>₹{parseFloat(amount || 0).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {/* Fixed footer button */}
+      <div className="bg-white px-2 py-3 flex justify-end">
+        <button
+          type="submit"
+          form="topup-form"
+          disabled={!amount || isProcessing}
+          className="w-32 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          {isProcessing ? "Processing..." : "Top Up Now"}
+        </button>
+      </div>
+    </div>
+  );
+
+  // When opened as standalone page (new tab), render full-width page layout
+  if (isStandalonePage) {
+    return (
+      <div className="h-screen flex flex-col bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm px-6 py-4">
+          <h2 className="text-2xl font-semibold text-custom-blue">
+            Wallet Top-up
+          </h2>
+        </div>
+        {/* Full-width content */}
+        <div className="flex-1 overflow-y-auto px-6 py-6">
           <form id="topup-form" onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Amount
               </label>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                 {predefinedAmounts.map((presetAmount) => (
                   <button
                     key={presetAmount}
@@ -275,24 +365,8 @@ export function WalletTopupPopup({ onClose, onTopup }) {
                   required
                   className="pl-2"
                 />
-
               </div>
             </div>
-
-            {/* <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Payment Method
-            </label>
-            <div className="p-4 border rounded-lg bg-gray-50">
-              <div className="flex items-center">
-                <div className="h-4 w-4 text-custom-blue bg-custom-blue rounded-full"></div>
-                <span className="ml-3">Credit Card</span>
-              </div>
-              <p className="mt-2 text-sm text-gray-500">
-                Top up your wallet securely using your credit card
-              </p>
-            </div>
-          </div> */}
 
             <div className="pt-4">
               {error && (
@@ -319,9 +393,8 @@ export function WalletTopupPopup({ onClose, onTopup }) {
             </div>
           </form>
         </div>
-
-        {/* Fixed footer button */}
-        <div className="bg-white px-2 py-3 flex justify-end">
+        {/* Fixed bottom button */}
+        <div className="bg-white border-t px-6 py-3 flex justify-end">
           <button
             type="submit"
             form="topup-form"
@@ -332,6 +405,14 @@ export function WalletTopupPopup({ onClose, onTopup }) {
           </button>
         </div>
       </div>
+    );
+  }
+
+  // When used as popup (with onClose), keep existing SidebarPopup behavior
+  return (
+    // v1.0.3 <-----------------------------------------------------
+    <SidebarPopup title="Wallet Top-up" onClose={onClose}>
+      {formContent}
     </SidebarPopup>
     // v1.0.3 ----------------------------------------------------->
   );

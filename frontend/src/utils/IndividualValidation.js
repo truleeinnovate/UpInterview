@@ -60,9 +60,9 @@ export const validateSteps = (step, params, setErrors, checkProfileIdExists, che
     errors.lastName = !formData?.lastName ? 'Last Name is required' : '';
     errors.email = !formData?.email ? 'Email is required' : '';
     errors.profileId = !formData?.profileId ? 'Profile ID is required' : '';
-    errors.phone = !formData?.phone ? 'Phone number is required' : '';
+    errors.phone = !formData?.phone ? 'Phone Number is required' : '';
     if (formData?.phone && !/^\d{10}$/.test(formData.phone)) {
-      errors.phone = 'Phone number must be a valid 10-digit number';
+      errors.phone = 'Invalid Phone Number';
     }
     errors.linkedinUrl = !formData?.linkedinUrl ? 'LinkedIn URL is required' : '';
   }

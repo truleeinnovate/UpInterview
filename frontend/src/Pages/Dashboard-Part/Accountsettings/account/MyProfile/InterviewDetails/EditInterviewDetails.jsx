@@ -2020,13 +2020,13 @@ const EditInterviewDetails = ({
                       setErrors((prev) => ({
                         ...prev,
                         professionalTitle:
-                          "Professional title must be at least 50 characters",
+                          "Professional Title must be at least 50 characters",
                       }));
                     } else if (value.length > 100) {
                       setErrors((prev) => ({
                         ...prev,
                         professionalTitle:
-                          "Professional title cannot exceed 100 characters",
+                          "Professional Title cannot exceed 100 characters",
                       }));
                     } else {
                       setErrors((prev) => ({ ...prev, professionalTitle: "" }));
