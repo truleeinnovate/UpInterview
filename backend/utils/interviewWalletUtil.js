@@ -1024,7 +1024,14 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
       console.log(`[processAutoSettlement] Time calc: Scheduled=${scheduledTime}, Now=${actionTime}, HoursBefore=${hoursBefore}`);
 
 
-      const isMockInterview = Boolean(acceptedRequest.isMockInterview);
+      // Robust detection: If request says it's NOT mock, but round has mockInterviewId, treat as mock
+      // This handles cases where InterviewRequest might be missing the flag
+      let isMockInterview = Boolean(acceptedRequest.isMockInterview);
+
+      if (!isMockInterview && roundDoc.mockInterviewId) {
+        console.log("[processAutoSettlement] Detected Mock Round via schema check (fallback)");
+        isMockInterview = true;
+      }
 
       const policy = await findPolicyForSettlement(isMockInterview, "Cancelled", hoursBefore);
       let appliedPolicyId = null;
@@ -1077,7 +1084,12 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
         if (hoursBefore < 0) hoursBefore = 0;
       }
 
-      const isMockInterview = Boolean(acceptedRequest.isMockInterview);
+      let isMockInterview = Boolean(acceptedRequest.isMockInterview);
+      // Robust detection for reschedule too
+      if (!isMockInterview && roundDoc.mockInterviewId) {
+        console.log("[processAutoSettlement] Detected Mock Round via schema check (fallback) - Reschedule");
+        isMockInterview = true;
+      }
 
       // Use "Rescheduled" status to look up RESCHEDULE type policies
       const policy = await findPolicyForSettlement(isMockInterview, "Rescheduled", hoursBefore);
