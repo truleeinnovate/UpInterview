@@ -105,8 +105,9 @@ const CandidateView = () =>
     : interviewData?.rounds[0] || {};
 
 
-  console.log("candidateData candidateData CandidateMiniTab", candidateData);
-  console.log("positionData in candidate details ", positionData);
+  // console.log("candidateData candidateData CandidateMiniTab", candidateData);
+  // console.log("positionData in candidate details ", positionData);
+  // console.log("interviewRoundData in candidate details ", interviewRoundData);
 
   // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
   const parseCustomDateTime = (dateTimeStr) => {
@@ -328,7 +329,7 @@ const CandidateView = () =>
       userId: candidateData?._id,
       joined: true,
       roundId: interviewRoundData?._id,
-      // action: interviewRoundData?.status,
+      action: interviewRoundData?.status,
       History_Type: "Histoy_Handling",
     };
 

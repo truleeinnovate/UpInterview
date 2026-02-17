@@ -3811,10 +3811,9 @@ const MockSchedulelater = () => {
       {showDateChangeConfirmation && !isReschedule && !isRequestSent && externalInterviewers?.length > 0 && !showOutsourcePopup && pendingDateChange && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Confirm Date Change</h3>
+            <h3 className="text-lg font-semibold mb-4">Confirmation</h3>
             <p className="text-gray-600 mb-6">
-              Changing the date/time will clear all selected interviewers for
-              this new round. Are you sure you want to continue?
+              Changing the date and time will remove all selected interviewers. Do you want to proceed?
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -3839,7 +3838,7 @@ const MockSchedulelater = () => {
         // className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center justify-center mb-4 text-blue-600">
+            <div className="flex items-center justify-center mb-4 text-custom-blue">
               <Users className="h-12 w-12" />
             </div>
             <h3 className="text-lg font-semibold mb-2 text-center">

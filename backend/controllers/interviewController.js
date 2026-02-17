@@ -1631,7 +1631,7 @@ const getInterviewDataforOrg = async (req, res) => {
 
     // console.log("Received interviewId:", interviewId);
     // console.log("Received roundId:", roundId  );
-
+    console.log("response rounds", interviewId, roundId)
     // ❌ Both not allowed (extra safety)
     if (interviewId && roundId) {
       return res.status(400).json({
@@ -1709,7 +1709,7 @@ const getInterviewDataforOrg = async (req, res) => {
         select: "firstName lastName email",
       })
       .lean();
-
+    console.log("response rounds", rounds)
     // const roundIds = rounds.map((r) => r._id);
 
     // added for feedback form fetch specific round

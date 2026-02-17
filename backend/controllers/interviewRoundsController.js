@@ -1403,7 +1403,7 @@ const updateInterviewRoundStatus = async (req, res) => {
       }
     }
 
-    console.log("req.body isParticipantUpdate", req.body)
+    // console.log("req.body isParticipantUpdate", req.body)
 
 
     if (!isParticipantUpdate) {
@@ -1637,21 +1637,31 @@ const updateInterviewRoundStatus = async (req, res) => {
     //  when candidate and interviewer both are present in the round then create history
     if (req.body?.History_Type === "Histoy_Handling") {
       // Special handling: only create history if conditions are met
-      const participants = updatedRound?.participants || [];
+      // const participants = updatedRound?.participants || [];
 
-      console.log("participants", participants);
+      // console.log("participants", participants);
       // const isHistoryHandled = participants.some(
       //   (p) => p.role === "Interviewer" && p.role === "Candidate",
       // );
 
+      const latestRound = await MockInterviewRound.findById(roundId);
+      const participants = latestRound?.participants || [];
 
       const hasInterviewer = participants.some(
-        (p) => p.role === "Interviewer"
+        p => p.role === "Interviewer" && p.status === "Joined"
       );
 
       const hasCandidate = participants.some(
-        (p) => p.role === "Candidate"
+        p => p.role === "Candidate" && p.status === "Joined"
       );
+      console.log("participants", participants);
+      // const hasInterviewer = participants.some(
+      //   (p) => p.role === "Interviewer"
+      // );
+
+      // const hasCandidate = participants.some(
+      //   (p) => p.role === "Candidate"
+      // );
       console.log("hasInterviewer", hasInterviewer)
       console.log("hasCandidate", hasCandidate)
       const isHistoryHandled = hasInterviewer && hasCandidate;
@@ -1975,15 +1985,15 @@ async function buildSmartRoundUpdate({
 
   const now = new Date();
 
-  console.log("existingRound", {
-    existingRound,
-    body,
-    actingAsUserId,
-    changes,
-    isCreate,
-    statusChanged,
-    OutsourceAccepted,
-  });
+  // console.log("existingRound", {
+  //   existingRound,
+  //   body,
+  //   actingAsUserId,
+  //   changes,
+  //   isCreate,
+  //   statusChanged,
+  //   OutsourceAccepted,
+  // });
 
   /* ---------------- Helpers ---------------- */
 
@@ -2014,7 +2024,7 @@ async function buildSmartRoundUpdate({
   };
 
   if (OutsourceAccepted) {
-    update.$set.previousAction = existingRound.currentAction || null;
+    update.$set.previousAction = existingRound.status || null;
     update.$set.currentAction = body.status;
     update.$set.status = body.status;
     update.$set.currentActionReason = "accepted_by_outsource" || null;
@@ -2050,14 +2060,14 @@ async function buildSmartRoundUpdate({
       });
     }
 
-    console.log("update update", update);
+    // console.log("update update", update);
 
     return update;
   }
 
   // status api history create
   if (statusChanged) {
-    update.$set.previousAction = existingRound.currentAction || null;
+    update.$set.previousAction = existingRound.status || null;
     update.$set.currentAction = body.status;
     update.$set.status = body.status;
     update.$set.currentActionReason =
@@ -2117,7 +2127,7 @@ async function buildSmartRoundUpdate({
     if (
       ["Scheduled", "Rescheduled", "Cancelled", "Draft"].includes(body.status)
     ) {
-      update.$set.previousAction = existingRound.currentAction || null;
+      update.$set.previousAction = existingRound.status || null;
       update.$set.currentAction = body.status;
       update.$set.status = body.status;
       update.$set.currentActionReason =

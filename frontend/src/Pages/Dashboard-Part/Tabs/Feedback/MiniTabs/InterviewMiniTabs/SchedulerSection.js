@@ -109,7 +109,7 @@ const SchedulerSectionComponent = ({
       return interviewdata.feedbacks[0].questionFeedback || [];
     }
     return [];
-    return [];
+
   }, [feedbackData, interviewdata]);
 
   const isSubmitted = feedbackDataResponse?.status === "submitted" || feedbackDataResponse?.status === "Submitted";

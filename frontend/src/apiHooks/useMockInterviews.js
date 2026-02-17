@@ -292,7 +292,8 @@ export const useMockInterviewById = ({
   const isEnabled =
     typeof enabledOverride === "boolean"
       ? enabledOverride
-      : !!mockInterviewId || (!!mockInterviewRoundId && !!hasViewPermission);
+      : !!mockInterviewId
+  // || (!!mockInterviewRoundId && !!hasViewPermission);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["mockinterview", mockInterviewId, mockInterviewRoundId],
@@ -300,8 +301,8 @@ export const useMockInterviewById = ({
       // if (!mockInterviewId || !mockInterviewRoundId) return null;
       // { interviewId: id }
 
-      const authToken = Cookies.get("authToken");
-      if (!authToken) throw new Error("No auth token");
+      // const authToken = Cookies.get("authToken");
+      // if (!authToken) throw new Error("No auth token");
 
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/mockinterview/mockinterview-details`,
@@ -311,12 +312,12 @@ export const useMockInterviewById = ({
             ? { mockInterviewId }
             : { mockInterviewRoundId },
         },
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-          withCredentials: true,
-        },
+        // {
+        //   headers: {
+        //     Authorization: `Bearer ${authToken}`,
+        //   },
+        //   withCredentials: true,
+        // },
       );
 
       return response.data?.data || null;

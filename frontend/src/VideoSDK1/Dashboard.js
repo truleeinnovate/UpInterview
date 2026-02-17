@@ -22,6 +22,7 @@ import { useInterviews } from "../apiHooks/useInterviews";
 import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
 import { useMockInterviewById } from "../apiHooks/useMockInterviews";
 import { useSingleContact } from "../apiHooks/useUsers";
+import Loading from "../Components/Loading";
 // import { extractUrlData } from "../apiHooks/useVideoCall";
 
 const Dashboard = () => {
@@ -118,7 +119,7 @@ const Dashboard = () => {
   // const interviewRoundData = interviewData?.rounds[0] || {};
 
   // console.log("data", interviewData);
-  console.log("candidateData1", candidateData);
+  // console.log("candidateData1", candidateData);
   // console.log("positionData1", positionData);
 
 
@@ -327,33 +328,30 @@ const Dashboard = () => {
 
   if (isAnyLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading meeting details...</p>
-        </div>
+      <div className="flex justify-center items-center h-full w-full">
+        <Loading />
       </div>
     );
   }
 
-  if (anyError) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-red-600 text-xl mb-4">⚠️</div>
-          <p className="text-gray-800 mb-4">
-            {authError || "An error occurred"}
-          </p>
-          <button
-            onClick={() => redirectToLogin(authType === "individual")}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // if (anyError) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-screen">
+  //       <div className="text-center">
+  //         <div className="text-red-600 text-xl mb-4">⚠️</div>
+  //         <p className="text-gray-800 mb-4">
+  //           {authError || "An error occurred"}
+  //         </p>
+  //         <button
+  //           onClick={() => redirectToLogin(authType === "individual")}
+  //           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+  //         >
+  //           Go to Login
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // 2. Extract URL data
   // const [decodedData, setDecodedData] = useState(null);
