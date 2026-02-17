@@ -138,7 +138,7 @@ const AssessmentQuestionsTab = ({
 
   return (
     // v1.0.2 <-----------------------------------------------------------------
-    <div className="mx-6 sm:mx-0">
+    <div className="mx-2 sm:mx-0">
       {/* Header Section */}
       <div className="sm:px-0 px-6">
         {passScoreType === "Overall" && (
@@ -309,7 +309,7 @@ const AssessmentQuestionsTab = ({
                       </h3>
 
                       <button
-                        className="flex items-center gap-1 sm:mt-3 text-sm text-blue-500 hover:text-blue-600 font-medium sm:px-0 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                        className="flex items-center gap-1 sm:mt-3 text-sm text-custom-blue hover:text-custom-blue font-medium sm:px-0 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
                         onClick={() => {
                           openEditSection(
                             sectionIndex,

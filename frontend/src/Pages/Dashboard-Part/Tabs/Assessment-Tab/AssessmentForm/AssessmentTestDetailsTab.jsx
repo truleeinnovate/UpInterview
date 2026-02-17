@@ -24,7 +24,7 @@ const AssessmentTestDetailsTab = ({
 }) => {
   return (
     // v1.0.0 <-------------------------------------------------------------------------
-    <div className="sm:px-2 px-12">
+    <div className="sm:px-2 px-8">
       <h2 className="font-semibold sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg mb-2">
         Assessment Test Page Details
       </h2>

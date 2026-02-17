@@ -179,7 +179,7 @@ function AssessmentsTab({ assessment }) {
   // <-------------------------------v1.0.3
 
   if (isLoading)
-    return <div className="p-4 text-gray-600">Loading Assessments...</div>;
+    return <div className="p-8 text-gray-600">Loading Assessments...</div>;
 
   const formattedCandidates = (candidates) =>
     (Array.isArray(candidates) ? candidates : []).map((candidate) => ({
@@ -215,7 +215,7 @@ function AssessmentsTab({ assessment }) {
   //  console.log("scheduledAssessments ", scheduledAssessments);
 
   return (
-    <div className="mx-12 sm:mx-0">
+    <div className="mx-8 sm:mx-0">
       {/* <---------------------- v1.0.1 */}
       <div className="space-y-6 overflow-y-auto">
         <div className="flex justify-end items-center">

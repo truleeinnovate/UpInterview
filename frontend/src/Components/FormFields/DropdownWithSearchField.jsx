@@ -1,4 +1,5 @@
 // v1.0.0 - Ashok - fixed style issues and added remove button for custom name
+// v1.0.1 - Ashok - fixed positioning issue when open dropdown at bottom of screen it should open at top
 
 import React, { useRef, forwardRef, useEffect } from "react";
 import DropdownSelect, {
@@ -333,6 +334,10 @@ const DropdownWithSearchField = forwardRef(
               emptyMessage={emptyMessage}
               isClearable={isClearable}
               formatOptionLabel={formatOptionLabel}
+              /* v1.0.1 ----------------------------------------- */
+              menuPlacement="auto"
+              menuShouldScrollIntoView={true}
+              /* v1.0.1 ----------------------------------------- */
             />
           </div>
         ) : (

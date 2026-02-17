@@ -176,7 +176,7 @@ const BasicDetailsTab = ({
       <form>
         {/* // <---------------------- v1.0.0 */}
 
-        <div className="space-y-6 sm:px-0 px-12">
+        <div className="space-y-6 sm:px-0 px-8">
           <div className="font-semibold sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg mb-5">
             Assessment Template Details
           </div>

@@ -1643,7 +1643,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
     return (
       // v1.0.4 <----------------------------------------------------------------------------
       // v1.0.5 <---------------------------------------------------------------------------
-      <div className="flex justify-end mx-12 pt-6">
+      <div className="flex justify-end mx-8 mt-6">
         {/* v1.0.5 --------------------------------------------------------------------------> */}
         {/* {currentTab !== "Basicdetails" && (
           <button
@@ -1805,7 +1805,7 @@ Ensure you are in a quiet environment to avoid distractions.`;
         <main className="px-[8%] sm:px-4 pb-20">
           <div className="sm:px-0">
             <div className="mt-4 bg-white shadow overflow-hidden rounded-lg pb-16">
-              <div className="flex justify-between px-12 py-6 sm:px-4">
+              <div className="flex justify-between px-8 py-6 sm:px-4">
                 <div>
                   <h3 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl leading-6 font-medium text-gray-900">
                     {isEditing

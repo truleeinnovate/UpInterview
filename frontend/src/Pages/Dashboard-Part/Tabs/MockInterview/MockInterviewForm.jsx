@@ -2664,7 +2664,7 @@ const MockSchedulelater = () => {
     <div className="flex items-center justify-center">
       <div className="bg-white rounded-lg w-full flex flex-col">
         <div className="mt-4 mb-4">
-          <div className="w-full px-[8%] sm:px-[5%] md:px-[5%] mb-3">
+          <div className="w-full px-[8%] sm:px-[5%] md:px-[5%]">
             <button
               onClick={() => navigate(-1)}
               type="button"
