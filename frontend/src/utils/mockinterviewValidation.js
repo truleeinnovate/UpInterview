@@ -10,7 +10,7 @@ const getErrorMessage = (field, value) => {
     "rounds.interviewMode": "Interview Mode is required",
 
     skills: "At least one skill is required",
-    jobDescription: "Job Description is required",
+    jobDescription: "Professional Summary is required",
   };
 
   if (!value || value === "") {

@@ -1341,7 +1341,7 @@ const updateInterviewRoundStatus = async (req, res) => {
 
     const isParticipantUpdate = req.body?.role || req.body?.joined;
 
-    console.log("req.body isParticipantUpdate", req.body);
+    // console.log("req.body isParticipantUpdate", req.body);
 
     if (!roundId || (!action && !isParticipantUpdate)) {
       return res.status(400).json({
@@ -1349,7 +1349,7 @@ const updateInterviewRoundStatus = async (req, res) => {
         message: "roundId and action are required",
       });
     }
-    console.log("isParticipantUpdate", isParticipantUpdate);
+    // console.log("isParticipantUpdate", isParticipantUpdate);
 
     const existingRound = await InterviewRounds.findById(roundId)
       .populate("interviewId", "title candidateName")
@@ -1402,6 +1402,8 @@ const updateInterviewRoundStatus = async (req, res) => {
         });
       }
     }
+
+    console.log("req.body isParticipantUpdate", req.body)
 
 
     if (!isParticipantUpdate) {
@@ -1530,7 +1532,7 @@ const updateInterviewRoundStatus = async (req, res) => {
 
     const allInterviewersDraft = draftCount === interviewerIds.length;
 
-    console.log("interviewerIds", allInterviewersDraft);
+    // console.log("interviewerIds", allInterviewersDraft);
 
     // const feedbackDraft = Array.isArray(feedback)
     //   ? feedback.some((fb) => fb.status === "Draft")
@@ -1650,7 +1652,8 @@ const updateInterviewRoundStatus = async (req, res) => {
       const hasCandidate = participants.some(
         (p) => p.role === "Candidate"
       );
-
+      console.log("hasInterviewer", hasInterviewer)
+      console.log("hasCandidate", hasCandidate)
       const isHistoryHandled = hasInterviewer && hasCandidate;
       console.log("isHistoryHandled", isHistoryHandled);
 
@@ -1750,34 +1753,34 @@ const updateInterviewRoundStatus = async (req, res) => {
     let extraUpdate = { $set: {} };
     let shouldSendCancellationEmail = false;
 
-    if (action === "Completed") {
-      // Auto-settlement for completed interviews ONLY if feedback is submitted
-      if (existingRound.interviewerType === "External") {
-        try {
-          await processAutoSettlement({
-            roundId: existingRound._id.toString(),
-            action: "Completed",
-            //reasonCode: reasonCode || comment || null,
-          });
-          console.log(
-            "[updateInterviewRoundStatus] Auto-settlement completed for round:",
-            existingRound._id,
-          );
-        } catch (settlementError) {
-          console.error(
-            "[updateInterviewRoundStatus] Auto-settlement error:",
-            settlementError,
-          );
-          // Continue with status update even if settlement fails
-        }
-      }
-      // //  else {
-      // //   console.log(
-      // //     "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
-      // //     existingRound._id,
-      // //   );
-      // }
-    }
+    // if (action === "Completed") {
+    //   // Auto-settlement for completed interviews ONLY if feedback is submitted
+    //   if (existingRound.interviewerType === "External") {
+    //     try {
+    //       await processAutoSettlement({
+    //         roundId: existingRound._id.toString(),
+    //         action: "Completed",
+    //         //reasonCode: reasonCode || comment || null,
+    //       });
+    //       console.log(
+    //         "[updateInterviewRoundStatus] Auto-settlement completed for round:",
+    //         existingRound._id,
+    //       );
+    //     } catch (settlementError) {
+    //       console.error(
+    //         "[updateInterviewRoundStatus] Auto-settlement error:",
+    //         settlementError,
+    //       );
+    //       // Continue with status update even if settlement fails
+    //     }
+    //   }
+    //   // //  else {
+    //   // //   console.log(
+    //   // //     "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
+    //   // //     existingRound._id,
+    //   // //   );
+    //   // }
+    // }
 
     if (action === "Cancelled") {
       if (existingRound.interviewerType === "External") {

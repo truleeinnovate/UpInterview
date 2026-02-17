@@ -68,7 +68,7 @@ const InterviewsMiniTabComponent = ({
   const location = useLocation();
   const locationFeedback = location.state?.feedback;
   useScrollLock(true);
-  const [interviewMiniTab, setInterviewMiniTab] = useState(1);
+
   // Question Bank State Management
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
@@ -85,6 +85,23 @@ const InterviewsMiniTabComponent = ({
     [location.search],
   );
   const { useInterviewDetails } = useInterviews();
+
+  const getDefaultTab = () => {
+    // If mock interview → default to Interviewer Questions (id: 2)
+    if (urlData?.interviewType === "mockinterview") {
+      return 2;
+    }
+
+    // If schedule mode → interviewer tab hidden → force 1
+    if (urlData?.isSchedule) {
+      return 1;
+    }
+
+    return 1;
+  };
+
+  const [interviewMiniTab, setInterviewMiniTab] = useState(getDefaultTab);
+
 
   // Validation errors state
   const [errors, setErrors] = useState({
@@ -108,7 +125,7 @@ const InterviewsMiniTabComponent = ({
     interviewType: urlData?.interviewType || interviewType,
   });
 
-  console.log("feedbackDatas feedbackDatas", feedbackDatas)
+  // console.log("feedbackDatas feedbackDatas", feedbackDatas)
 
   const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType || locationFeedback?.isMockInterview;
 
@@ -647,9 +664,10 @@ const InterviewsMiniTabComponent = ({
             handleAddQuestionToRound={handleAddQuestionToRound}
             handleRemoveQuestion={handleRemoveQuestion}
             handleToggleMandatory={handleToggleMandatory}
-            interviewData={interviewData}
+            interviewData={interviewRoundData}
             decodedData={decodedData}
             triggerAutoSave={autoSaveQuestions}
+            feedbackDataResponse={feedbackData}
           />
         ); //<----v1.0.0---
       default:
@@ -705,6 +723,8 @@ const InterviewsMiniTabComponent = ({
           .filter((each) => {
             // Hide "Interviewer - added Questions" tab when isSchedule is true
             if (urlData?.isSchedule && each.id === 2) {
+              return false;
+            } if (urlData?.interviewType === 'mockinterview' && each.id === 1) {
               return false;
             }
             return true;

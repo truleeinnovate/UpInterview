@@ -738,7 +738,7 @@ exports.createMockInterviewRound = async (req, res) => {
 
   try {
     const { round } = req.body;
-    console.log("round", round);
+    // console.log("round", round);
     if (!round) {
       return res.status(400).json({ message: "Round data is required" });
     }
@@ -840,7 +840,7 @@ exports.createMockInterviewRound = async (req, res) => {
     //   );
     // }
 
-    console.log("historyUpdate result:", historyUpdate);
+    // console.log("historyUpdate result:", historyUpdate);
 
     if (historyUpdate) {
       console.log("Updating round with history:", historyUpdate);
@@ -1415,7 +1415,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     // ===== SAFE PARTICIPANT UPSERT (NO DUPLICATES, NO FAIL) =====
     if (isParticipantUpdate) {
       const { role, userId, joined } = req.body;
-      newStatus = action;
+      // newStatus = action;
 
       const status = joined ? "Joined" : "Not_Joined";
       const joinedAt = joined ? new Date() : null;
@@ -1497,6 +1497,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
       );
 
       const isHistoryHandled = hasInterviewer && hasCandidate;
+      console.log("isHistoryHandled", isHistoryHandled)
 
 
       // && action === "InProgress"

@@ -313,6 +313,8 @@ const RoundCard = ({
       // Show success toast
       notify.success(`Round Status updated to ${newStatus}`, {});
     } catch (error) {
+
+      console.log("error", error)
       if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
         notify.error(error.message);
       }
@@ -1056,6 +1058,7 @@ const RoundCard = ({
       canResendLink: false,
       canShareLink: false,
       canNoShow: false,
+      canSkipped: true,
     },
     // Rejected: {
     //   canEdit: false,
