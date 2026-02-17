@@ -209,6 +209,192 @@ function verifyAnswer(question, selectedAnswer) {
   return isCorrect;
 }
 
+// ------------------------------------ Overall and Each Section two cases ----------------------------------------------
+// exports.submitCandidateAssessment = async (req, res) => {
+//   res.locals.loggedByController = true;
+//   res.locals.processName = "Submit Candidate Assessment";
+
+//   try {
+//     const {
+//       candidateAssessmentId,
+//       scheduledAssessmentId,
+//       candidateId,
+//       status,
+//       sections,
+//       submittedAt,
+//     } = req.body;
+
+//     // Input validation
+//     if (!candidateAssessmentId || !sections || !submittedAt) {
+//       console.error("Missing required fields in request");
+//       return res.status(400).json({
+//         success: false,
+//         message: "Missing required fields",
+//       });
+//     }
+
+//     let candidateAssessment = await CandidateAssessment.findById(
+//       new mongoose.Types.ObjectId(candidateAssessmentId),
+//     ).populate("scheduledAssessmentId");
+
+//     if (!candidateAssessment) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Candidate assessment not found",
+//       });
+//     }
+
+//     const processedSections = await Promise.all(
+//       sections.map(async (section, sectionIndex) => {
+//         console.log("section", section);
+
+//         const processedAnswers = await Promise.all(
+//           section.questions.map(async (question) => {
+//             const isCorrect = question.isCorrect;
+//             const score = question.score || 0;
+
+//             return {
+//               questionId: question.questionId,
+//               userAnswer: question.userAnswer,
+//               correctAnswer: question.correctAnswer, // Store the correct answer
+//               isCorrect,
+//               score,
+//               isAnswerLater: question.isAnswerLater || false,
+//               submittedAt: new Date(question.submittedAt || Date.now()),
+//             };
+//           }),
+//         );
+
+//         const sectionScore = processedAnswers.reduce(
+//           (sum, answer) => sum + (answer.score || 0),
+//           0,
+//         );
+//         const sectionPassScore = Number(section.passScore) || 0;
+//         const sectionResult =
+//           sectionScore >= sectionPassScore ? "pass" : "fail";
+
+//         return {
+//           sectionId: section.sectionId,
+//           sectionName: section.sectionName,
+//           totalScore: sectionScore,
+//           passScore: sectionPassScore,
+//           sectionResult,
+//           sectionPassed: sectionResult === "pass",
+//           Answers: processedAnswers, // FIX: Only Answers (removed questions)
+//         };
+//       }),
+//     );
+
+//     // Calculate overall assessment result
+//     const totalScore = processedSections.reduce(
+//       (total, section) => total + section.totalScore,
+//       0,
+//     );
+//     const allSectionsPassed = processedSections.every(
+//       (section) => section.sectionResult === "pass",
+//     );
+//     const overallResult = allSectionsPassed ? "pass" : "fail";
+//     const remainingTime = req.body.remainingTime || null;
+
+//     // Update candidate assessment
+//     const oldStatus = candidateAssessment.status;
+//     const updateData = {
+//       status: overallResult, // Set status to 'pass' or 'fail' instead of 'completed'
+//       sections: processedSections,
+//       totalScore,
+//       submittedAt: new Date(submittedAt),
+//       endedAt: new Date(),
+//       remainingTime,
+//       overallResult,
+//       updatedAt: new Date(),
+//     };
+
+//     const updatedAssessment = await CandidateAssessment.findByIdAndUpdate(
+//       candidateAssessmentId,
+//       { $set: updateData },
+//       { new: true },
+//     ).populate("scheduledAssessmentId");
+
+//     if (!updatedAssessment) {
+//       throw new Error("Failed to update candidate assessment");
+//     }
+
+//     const interviewRound = await InterviewRounds.findOne({
+//       scheduleAssessmentId: scheduledAssessmentId,
+//     });
+
+//     if (interviewRound && interviewRound.status !== updatedAssessment.status) {
+//       const newStatus = "Evaluated";
+//       await InterviewRounds.findByIdAndUpdate(
+//         interviewRound._id,
+//         {
+//           $set: {
+//             status: newStatus,
+//             currentAction: newStatus,
+//             previousAction: interviewRound.status,
+//           },
+//         },
+//         { new: true },
+//       );
+//     }
+
+//     // await reorderInterviewRounds(interviewRounds[0].interviewId);
+
+//     // Process notifications
+//     if (oldStatus !== updatedAssessment.status) {
+//       try {
+//         await createAssessmentStatusUpdateNotification(
+//           updatedAssessment,
+//           oldStatus,
+//           updatedAssessment.status,
+//         );
+
+//         await handleAssessmentStatusChange(
+//           updatedAssessment._id,
+//           oldStatus,
+//           updatedAssessment.status,
+//         );
+
+//         await createAssessmentSubmissionNotification(updatedAssessment);
+//       } catch (notificationError) {
+//         console.error("Error in notification handling:", notificationError);
+//       }
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Assessment submitted successfully",
+//       data: updatedAssessment,
+//     });
+//   } catch (error) {
+//     console.error("Error in submitCandidateAssessment:", {
+//       error: error.message,
+//       stack: error.stack,
+//       name: error.name,
+//       code: error.code,
+//     });
+
+//     // More specific error messages based on error type
+//     let errorMessage = "Failed to submit assessment";
+//     let statusCode = 500;
+
+//     if (error.name === "ValidationError") {
+//       errorMessage = `Validation error: ${error.message}`;
+//       statusCode = 400;
+//     } else if (error.name === "MongoError" && error.code === 112) {
+//       errorMessage = "Database write operation conflict. Please try again.";
+//       statusCode = 409; // Conflict
+//     }
+
+//     return res.status(statusCode).json({
+//       success: false,
+//       message: errorMessage,
+//       error: error.message,
+//     });
+//   }
+// };
+
+// Extend candidate assessment expiry date
 exports.submitCandidateAssessment = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Submit Candidate Assessment";
@@ -232,9 +418,13 @@ exports.submitCandidateAssessment = async (req, res) => {
       });
     }
 
+    // Populate scheduledAssessmentId to get the Assessment configuration (passScoreBy, passScore)
     let candidateAssessment = await CandidateAssessment.findById(
       new mongoose.Types.ObjectId(candidateAssessmentId),
-    ).populate("scheduledAssessmentId");
+    ).populate({
+      path: "scheduledAssessmentId",
+      populate: { path: "assessmentId" } // Populating to get the template rules
+    });
 
     if (!candidateAssessment) {
       return res.status(404).json({
@@ -243,10 +433,13 @@ exports.submitCandidateAssessment = async (req, res) => {
       });
     }
 
-    const processedSections = await Promise.all(
-      sections.map(async (section, sectionIndex) => {
-        console.log("section", section);
+    // Extract Strategy from the populated assessment template
+    // Defaulting to 'Overall' if not specified to prevent accidental failures
+    const passScoreBy = candidateAssessment.scheduledAssessmentId?.assessmentId?.passScoreBy || "Overall";
+    const globalPassScore = Number(candidateAssessment.scheduledAssessmentId?.assessmentId?.passScore || 0);
 
+    const processedSections = await Promise.all(
+      sections.map(async (section) => {
         const processedAnswers = await Promise.all(
           section.questions.map(async (question) => {
             const isCorrect = question.isCorrect;
@@ -255,7 +448,7 @@ exports.submitCandidateAssessment = async (req, res) => {
             return {
               questionId: question.questionId,
               userAnswer: question.userAnswer,
-              correctAnswer: question.correctAnswer, // Store the correct answer
+              correctAnswer: question.correctAnswer,
               isCorrect,
               score,
               isAnswerLater: question.isAnswerLater || false,
@@ -269,8 +462,7 @@ exports.submitCandidateAssessment = async (req, res) => {
           0,
         );
         const sectionPassScore = Number(section.passScore) || 0;
-        const sectionResult =
-          sectionScore >= sectionPassScore ? "pass" : "fail";
+        const sectionResult = sectionScore >= sectionPassScore ? "pass" : "fail";
 
         return {
           sectionId: section.sectionId,
@@ -279,26 +471,36 @@ exports.submitCandidateAssessment = async (req, res) => {
           passScore: sectionPassScore,
           sectionResult,
           sectionPassed: sectionResult === "pass",
-          Answers: processedAnswers, // FIX: Only Answers (removed questions)
+          Answers: processedAnswers, 
         };
       }),
     );
 
-    // Calculate overall assessment result
+    // Calculate overall total
     const totalScore = processedSections.reduce(
       (total, section) => total + section.totalScore,
       0,
     );
-    const allSectionsPassed = processedSections.every(
-      (section) => section.sectionResult === "pass",
-    );
-    const overallResult = allSectionsPassed ? "pass" : "fail";
+
+    // FIX: Determine overallResult based on the strategy
+    let overallResult = "fail";
+    if (passScoreBy === "Overall") {
+      // Strategy 1: Total score vs Global Threshold
+      overallResult = totalScore >= globalPassScore ? "pass" : "fail";
+    } else {
+      // Strategy 2: Must pass every single section
+      const allSectionsPassed = processedSections.every(
+        (section) => section.sectionResult === "pass",
+      );
+      overallResult = allSectionsPassed ? "pass" : "fail";
+    }
+
     const remainingTime = req.body.remainingTime || null;
 
     // Update candidate assessment
     const oldStatus = candidateAssessment.status;
     const updateData = {
-      status: overallResult, // Set status to 'pass' or 'fail' instead of 'completed'
+      status: overallResult, 
       sections: processedSections,
       totalScore,
       submittedAt: new Date(submittedAt),
@@ -337,8 +539,6 @@ exports.submitCandidateAssessment = async (req, res) => {
       );
     }
 
-    // await reorderInterviewRounds(interviewRounds[0].interviewId);
-
     // Process notifications
     if (oldStatus !== updatedAssessment.status) {
       try {
@@ -366,14 +566,8 @@ exports.submitCandidateAssessment = async (req, res) => {
       data: updatedAssessment,
     });
   } catch (error) {
-    console.error("Error in submitCandidateAssessment:", {
-      error: error.message,
-      stack: error.stack,
-      name: error.name,
-      code: error.code,
-    });
+    console.error("Error in submitCandidateAssessment:", error);
 
-    // More specific error messages based on error type
     let errorMessage = "Failed to submit assessment";
     let statusCode = 500;
 
@@ -382,7 +576,7 @@ exports.submitCandidateAssessment = async (req, res) => {
       statusCode = 400;
     } else if (error.name === "MongoError" && error.code === 112) {
       errorMessage = "Database write operation conflict. Please try again.";
-      statusCode = 409; // Conflict
+      statusCode = 409;
     }
 
     return res.status(statusCode).json({
@@ -392,8 +586,8 @@ exports.submitCandidateAssessment = async (req, res) => {
     });
   }
 };
+// ------------------------------------ Overall and Each Section two cases ----------------------------------------------
 
-// Extend candidate assessment expiry date
 exports.extendCandidateAssessment = async (req, res) => {
   res.locals.loggedByController = true;
   res.locals.processName = "Extend Candidate Assessment";

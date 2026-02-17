@@ -415,6 +415,7 @@ const ScheduleAssessment = () => {
     setTempCreatedDatePreset("");
     setIsFilterActive(false);
     setCurrentPage(0);
+    setFilterPopupOpen(false);
   };
 
   const handleFilterIconClick = () => {

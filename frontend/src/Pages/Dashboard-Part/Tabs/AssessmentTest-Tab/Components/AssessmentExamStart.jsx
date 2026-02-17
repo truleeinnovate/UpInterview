@@ -18,6 +18,8 @@ function AssessmentTest({
   duration,
   candidateAssessmentId,
 }) {
+  console.log("ASSESSMENT TEST ==========================> ", assessment);
+  console.log("ASSESSMENT QUESTIONS ==========================> ", questions);
   const [currentSection, setCurrentSection] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -497,28 +499,162 @@ function AssessmentTest({
   //     console.error("Error submitting assessment:", error);
   //   }
   // };
+  // const handleConfirmSubmit = async () => {
+  //   try {
+  //     // Determine the strategy: "Each Section" or "Overall"
+  //     const passScoreBy = assessment.assessmentId?.passScoreBy || "Overall";
 
+  //     const evaluatedSections = questions.sections.map((section) => {
+  //       const sectionQuestions = section.questions.map((question) => {
+  //         const rawAnswer = answers[question._id];
+
+  //         // KEEPING YOUR WORKING LOGIC: Explicitly check for null/undefined to allow boolean 'false' or number 0
+  //         const userAnswer =
+  //           rawAnswer !== undefined && rawAnswer !== null ? rawAnswer : "";
+
+  //         const isCorrect = verifyAnswer(question, userAnswer);
+
+  //         let displayCorrectAnswer =
+  //           question.snapshot?.correctAnswer || question.correctAnswer;
+  //         const qType =
+  //           question.snapshot?.questionType || question.questionType;
+
+  //         if (qType === "MCQ") {
+  //           const correctOpts = (
+  //             question.snapshot?.options ||
+  //             question.options ||
+  //             []
+  //           )
+  //             .filter(
+  //               (opt) => typeof opt === "object" && opt.isCorrect === true,
+  //             )
+  //             .map((opt) => opt.optionText);
+
+  //           displayCorrectAnswer =
+  //             correctOpts.length > 0 ? correctOpts.join(", ") : "";
+  //         } else if (qType === "Boolean") {
+  //           displayCorrectAnswer = Array.isArray(displayCorrectAnswer)
+  //             ? displayCorrectAnswer[0]
+  //             : displayCorrectAnswer;
+  //         }
+
+  //         const questionWeight = Number(
+  //           question.snapshot?.score || question.score || 0,
+  //         );
+
+  //         const awardedScore = isCorrect ? questionWeight : 0;
+
+  //         return {
+  //           questionId: question._id,
+  //           questionType:
+  //             question.snapshot?.questionType || question.questionType,
+  //           userAnswer,
+  //           correctAnswer: displayCorrectAnswer,
+  //           isCorrect,
+  //           score: awardedScore,
+  //           isAnswerLater: skippedQuestions.includes(question._id),
+  //           submittedAt: new Date().toISOString(),
+  //         };
+  //       });
+
+  //       const sectionTotalScore = sectionQuestions.reduce(
+  //         (sum, q) => sum + q.score,
+  //         0,
+  //       );
+
+  //       const passThreshold = Number(section.passScore || 0);
+  //       const sectionResult =
+  //         sectionTotalScore >= passThreshold ? "pass" : "fail";
+
+  //       return {
+  //         sectionId: section._id,
+  //         sectionName: section.sectionName || "Unnamed Section",
+  //         passScore: passThreshold,
+  //         questions: sectionQuestions,
+  //         totalScore: sectionTotalScore,
+  //         sectionResult,
+  //         sectionPassed: sectionResult === "pass",
+  //       };
+  //     });
+
+  //     // CALCULATE OVERALL TOTALS
+  //     const totalEarned = evaluatedSections.reduce(
+  //       (sum, s) => sum + s.totalScore,
+  //       0,
+  //     );
+  //     const totalRequiredToPass = questions.sections.reduce(
+  //       (sum, s) => sum + Number(s.passScore || 0),
+  //       0,
+  //     );
+
+  //     // Determine Overall Assessment Result based on passScoreBy
+  //     let isAssessmentPassed = false;
+
+  //     if (passScoreBy === "Each Section") {
+  //       // Gatekeeper: Must pass every single individual section
+  //       isAssessmentPassed = evaluatedSections.every((s) => s.sectionPassed);
+  //     } else {
+  //       // Overall: Calculate based on the total score of all sections combined
+  //       isAssessmentPassed = totalEarned >= totalRequiredToPass;
+  //     }
+
+  //     const formattedTotalScore = Number(totalEarned.toFixed(2));
+
+  //     const submissionData = {
+  //       candidateAssessmentId,
+  //       scheduledAssessmentId: assessment._id,
+  //       candidateId: candidate._id,
+  //       status: "completed",
+  //       remainingTime: timeLeft,
+  //       sections: evaluatedSections,
+  //       totalScore: formattedTotalScore,
+  //       assessmentResult: isAssessmentPassed ? "pass" : "fail",
+  //       passScoreBy,
+  //       submittedAt: new Date().toISOString(),
+  //     };
+
+  //     const response = await fetch(
+  //       `${config.REACT_APP_API_URL}/candidate-assessment/submit`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(submissionData),
+  //       },
+  //     );
+
+  //     const responseData = await response.json();
+
+  //     if (!response.ok) {
+  //       console.error("Error submitting assessment:", responseData.message);
+  //       throw new Error(responseData.message || "Failed to submit assessment");
+  //     }
+
+  //     console.log("Assessment submitted successfully:", responseData);
+  //     setIsSubmitted(true);
+  //     setShowConfirmSubmit(false);
+  //   } catch (error) {
+  //     console.error("Error submitting assessment:", error);
+  //   }
+  // };
   const handleConfirmSubmit = async () => {
     try {
-      // Determine the strategy: "Each Section" or "Overall"
       const passScoreBy = assessment.assessmentId?.passScoreBy || "Overall";
+      const globalPassScore = Number(assessment.assessmentId?.passScore || 0);
 
       const evaluatedSections = questions.sections.map((section) => {
         const sectionQuestions = section.questions.map((question) => {
           const rawAnswer = answers[question._id];
-
-          // KEEPING YOUR WORKING LOGIC: Explicitly check for null/undefined to allow boolean 'false' or number 0
           const userAnswer =
             rawAnswer !== undefined && rawAnswer !== null ? rawAnswer : "";
-
           const isCorrect = verifyAnswer(question, userAnswer);
 
           let displayCorrectAnswer =
             question.snapshot?.correctAnswer || question.correctAnswer;
-          const qType =
-            question.snapshot?.questionType || question.questionType;
-
-          if (qType === "MCQ") {
+          if (
+            (question.snapshot?.questionType || question.questionType) === "MCQ"
+          ) {
             const correctOpts = (
               question.snapshot?.options ||
               question.options ||
@@ -528,21 +664,13 @@ function AssessmentTest({
                 (opt) => typeof opt === "object" && opt.isCorrect === true,
               )
               .map((opt) => opt.optionText);
-
             displayCorrectAnswer =
               correctOpts.length > 0 ? correctOpts.join(", ") : "";
-          } else if (qType === "Boolean") {
-            displayCorrectAnswer = Array.isArray(displayCorrectAnswer)
-              ? displayCorrectAnswer[0]
-              : displayCorrectAnswer;
           }
 
           const questionWeight = Number(
             question.snapshot?.score || question.score || 0,
           );
-
-          const awardedScore = isCorrect ? questionWeight : 0;
-
           return {
             questionId: question._id,
             questionType:
@@ -550,54 +678,58 @@ function AssessmentTest({
             userAnswer,
             correctAnswer: displayCorrectAnswer,
             isCorrect,
-            score: awardedScore,
+            score: isCorrect ? questionWeight : 0,
             isAnswerLater: skippedQuestions.includes(question._id),
             submittedAt: new Date().toISOString(),
           };
         });
 
-        const sectionTotalScore = sectionQuestions.reduce(
+        const sectionEarnedScore = sectionQuestions.reduce(
           (sum, q) => sum + q.score,
           0,
         );
 
-        const passThreshold = Number(section.passScore || 0);
-        const sectionResult =
-          sectionTotalScore >= passThreshold ? "pass" : "fail";
-
         return {
           sectionId: section._id,
           sectionName: section.sectionName || "Unnamed Section",
-          passScore: passThreshold,
+          passScore: Number(section.passScore || 0),
           questions: sectionQuestions,
-          totalScore: sectionTotalScore,
-          sectionResult,
-          sectionPassed: sectionResult === "pass",
+          totalScore: sectionEarnedScore,
         };
       });
 
-      // CALCULATE OVERALL TOTALS
-      const totalEarned = evaluatedSections.reduce(
+      // 3. Calculate Grand Total
+      const totalEarnedOverall = evaluatedSections.reduce(
         (sum, s) => sum + s.totalScore,
         0,
       );
-      const totalRequiredToPass = questions.sections.reduce(
-        (sum, s) => sum + Number(s.passScore || 0),
-        0,
-      );
 
-      // Determine Overall Assessment Result based on passScoreBy
+      // 4. Determine Global Pass Status
       let isAssessmentPassed = false;
-
-      if (passScoreBy === "Each Section") {
-        // Gatekeeper: Must pass every single individual section
-        isAssessmentPassed = evaluatedSections.every((s) => s.sectionPassed);
+      if (passScoreBy === "Overall") {
+        isAssessmentPassed = totalEarnedOverall >= globalPassScore;
       } else {
-        // Overall: Calculate based on the total score of all sections combined
-        isAssessmentPassed = totalEarned >= totalRequiredToPass;
+        isAssessmentPassed = evaluatedSections.every(
+          (s) => s.totalScore >= s.passScore,
+        );
       }
 
-      const formattedTotalScore = Number(totalEarned.toFixed(2));
+      const finalSections = evaluatedSections.map((section) => {
+        const passed =
+          passScoreBy === "Overall"
+            ? isAssessmentPassed
+            : section.totalScore >= section.passScore;
+
+        return {
+          sectionId: section.sectionId,
+          sectionName: section.sectionName,
+          totalScore: section.totalScore,
+          passScore: section.passScore,
+          sectionResult: passed ? "pass" : "fail",
+          sectionPassed: passed,
+          questions: section.questions,
+        };
+      });
 
       const submissionData = {
         candidateAssessmentId,
@@ -605,10 +737,7 @@ function AssessmentTest({
         candidateId: candidate._id,
         status: "completed",
         remainingTime: timeLeft,
-        sections: evaluatedSections,
-        totalScore: formattedTotalScore,
-        assessmentResult: isAssessmentPassed ? "pass" : "fail",
-        passScoreBy,
+        sections: finalSections,
         submittedAt: new Date().toISOString(),
       };
 
@@ -616,27 +745,24 @@ function AssessmentTest({
         `${config.REACT_APP_API_URL}/candidate-assessment/submit`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(submissionData),
         },
       );
 
-      const responseData = await response.json();
-
       if (!response.ok) {
-        console.error("Error submitting assessment:", responseData.message);
-        throw new Error(responseData.message || "Failed to submit assessment");
+        const responseData = await response.json();
+        throw new Error(responseData.message || "Failed to submit");
       }
 
-      console.log("Assessment submitted successfully:", responseData);
+
       setIsSubmitted(true);
       setShowConfirmSubmit(false);
     } catch (error) {
-      console.error("Error submitting assessment:", error);
+      console.error("Submission Error:", error);
     }
   };
+  // ----------------------------------------------------------------------------------------------
 
   const handleStartReview = () => {
     setIsReviewing(true);
