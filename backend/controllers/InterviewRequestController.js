@@ -516,8 +516,22 @@ const formatInterviewRequest = async (request) => {
     status: request.status,
     isMockInterview: request.isMockInterview, // Added for frontend
     requestedDate: request.requestedAt
-      ? new Date(request.requestedAt).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0],
+      ? new Date(request.requestedAt).toLocaleString("en-IN", {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+      : new Date().toLocaleString("en-IN", {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
     urgency: request.expiryDateTime
       ? new Date(request.expiryDateTime) < new Date()
         ? "High"
@@ -608,6 +622,16 @@ exports.acceptInterviewRequest = async (req, res) => {
     const request = await InterviewRequest.findById(requestId);
     if (!request) {
       return res.status(404).json({ message: "Interview request not found" });
+    }
+
+    // Guard: check if request is still in-progress before allowing accept
+    if (request.status !== "inprogress") {
+      return res.status(409).json({
+        success: false,
+        alreadyAccepted: true,
+        message:
+          "This interview has already been accepted by another interviewer.",
+      });
     }
     // let round;
 

@@ -8,6 +8,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  AlertTriangle,
   IndianRupee,
   RefreshCw,
   Copy,
@@ -24,7 +25,7 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
   const [activeTab, setActiveTab] = useState("details");
   const [showProcessModal, setShowProcessModal] = useState(false);
   const [showFailModal, setShowFailModal] = useState(false);
-  
+
   // Process form state
   const [processData, setProcessData] = useState({
     transactionReference: "",
@@ -61,7 +62,7 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
   if (!isOpen || !withdrawalRequest) return null;
 
   const getStatusIcon = (status) => {
-    switch(status?.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case 'pending':
         return <Clock className="h-5 w-5 text-yellow-500" />;
       case 'processing':
@@ -69,7 +70,7 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
       case 'completed':
         return <CheckCircle className="h-5 w-5 text-green-500" />;
       case 'failed':
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <AlertTriangle className="h-5 w-5 text-red-500" />;
       case 'cancelled':
         return <AlertCircle className="h-5 w-5 text-gray-500" />;
       default:
@@ -78,7 +79,7 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
   };
 
   const getStatusColor = (status) => {
-    switch(status?.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'processing':
@@ -233,15 +234,15 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
             <div>
               <p className="text-sm text-gray-600">Account Holder</p>
               <p className="font-medium">
-                {withdrawalRequest.bankAccountId?.accountHolderName || 
-                 withdrawalRequest.metadata?.bankDetails?.accountHolderName || "N/A"}
+                {withdrawalRequest.bankAccountId?.accountHolderName ||
+                  withdrawalRequest.metadata?.bankDetails?.accountHolderName || "N/A"}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Bank Name</p>
               <p className="font-medium">
                 {withdrawalRequest.bankAccountId?.bankName ||
-                 withdrawalRequest.metadata?.bankDetails?.bankName || "N/A"}
+                  withdrawalRequest.metadata?.bankDetails?.bankName || "N/A"}
               </p>
             </div>
             <div>
@@ -249,8 +250,8 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
               <div className="flex items-center gap-2">
                 <p className="font-medium font-mono">
                   {
-                   withdrawalRequest.bankAccountId?.accountNumber ||
-                   withdrawalRequest.metadata?.bankDetails?.accountNumber || "****"}
+                    withdrawalRequest.bankAccountId?.accountNumber ||
+                    withdrawalRequest.metadata?.bankDetails?.accountNumber || "****"}
                 </p>
                 {withdrawalRequest.bankAccountId?.accountNumber && (
                   <button
@@ -270,32 +271,32 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
               <p className="text-sm text-gray-600">Account Type</p>
               <p className="font-medium capitalize">
                 {withdrawalRequest.bankAccountId?.accountType ||
-                 withdrawalRequest.metadata?.bankDetails?.accountType || "N/A"}
+                  withdrawalRequest.metadata?.bankDetails?.accountType || "N/A"}
               </p>
             </div>
-          {(withdrawalRequest.bankAccountId?.routingNumber || withdrawalRequest.bankAccountId?.ifscCode) && (
-            <div>
-              <p className="text-sm text-gray-600">{(withdrawalRequest.bankAccountId?.ifscCode) ? "IFSC Code" : "Routing Number"}</p>
-              <div className="flex items-center gap-2">
-                <p className="font-medium font-mono">
-                  {withdrawalRequest.bankAccountId?.ifscCode ||
-                   withdrawalRequest.bankAccountId?.routingNumber || "N/A"}
-                </p>
-                {(withdrawalRequest.bankAccountId?.routingNumber || withdrawalRequest.bankAccountId?.ifscCode) && (
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(withdrawalRequest.bankAccountId?.ifscCode ? withdrawalRequest.bankAccountId?.ifscCode : withdrawalRequest.bankAccountId?.routingNumber);
-                      notify.success(withdrawalRequest.bankAccountId?.ifscCode ? "IFSC code copied!" :"Routing Number copied!");
-                    }}
-                    className="p-1 hover:bg-gray-200 rounded"
-                    title={withdrawalRequest.bankAccountId?.ifscCode ? "Copy IFSC code" : "Copy Routing Number"}
-                  >
-                    <Copy className="h-3 w-3 text-gray-500" />
-                  </button>
-                )}
+            {(withdrawalRequest.bankAccountId?.routingNumber || withdrawalRequest.bankAccountId?.ifscCode) && (
+              <div>
+                <p className="text-sm text-gray-600">{(withdrawalRequest.bankAccountId?.ifscCode) ? "IFSC Code" : "Routing Number"}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium font-mono">
+                    {withdrawalRequest.bankAccountId?.ifscCode ||
+                      withdrawalRequest.bankAccountId?.routingNumber || "N/A"}
+                  </p>
+                  {(withdrawalRequest.bankAccountId?.routingNumber || withdrawalRequest.bankAccountId?.ifscCode) && (
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(withdrawalRequest.bankAccountId?.ifscCode ? withdrawalRequest.bankAccountId?.ifscCode : withdrawalRequest.bankAccountId?.routingNumber);
+                        notify.success(withdrawalRequest.bankAccountId?.ifscCode ? "IFSC code copied!" : "Routing Number copied!");
+                      }}
+                      className="p-1 hover:bg-gray-200 rounded"
+                      title={withdrawalRequest.bankAccountId?.ifscCode ? "Copy IFSC code" : "Copy Routing Number"}
+                    >
+                      <Copy className="h-3 w-3 text-gray-500" />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
             <div>
               <p className="text-sm text-gray-600">SWIFT Code</p>
               <p className="font-medium font-mono">
@@ -370,7 +371,7 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
             <div>
               <p className="text-sm text-gray-600">Created At</p>
               <p className="font-medium text-sm">
-                {withdrawalRequest.bankAccountId?.createdAt 
+                {withdrawalRequest.bankAccountId?.createdAt
                   ? new Date(withdrawalRequest.bankAccountId.createdAt).toLocaleString()
                   : "N/A"}
               </p>
@@ -378,7 +379,7 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
             <div>
               <p className="text-sm text-gray-600">Last Updated</p>
               <p className="font-medium text-sm">
-                {withdrawalRequest.bankAccountId?.updatedAt 
+                {withdrawalRequest.bankAccountId?.updatedAt
                   ? new Date(withdrawalRequest.bankAccountId.updatedAt).toLocaleString()
                   : "N/A"}
               </p>
@@ -459,18 +460,18 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
     <>
       {/* Main Modal */}
       <SidebarPopup title=" Withdrawal Request Details" onClose={onClose}>
-          {/* Status Bar */}
-          <div className="bg-white px-6 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {getStatusIcon(withdrawalRequest.status)}
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(withdrawalRequest.status)}`}>
-                  {withdrawalRequest.status?.toUpperCase()}
-                </span>
-              </div>
-              
-              {permissions?.Edit && 
-               (withdrawalRequest.status === "pending" || withdrawalRequest.status === "processing") && (
+        {/* Status Bar */}
+        <div className="bg-white px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {getStatusIcon(withdrawalRequest.status)}
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(withdrawalRequest.status)}`}>
+                {withdrawalRequest.status?.toUpperCase()}
+              </span>
+            </div>
+
+            {permissions?.Edit &&
+              (withdrawalRequest.status === "pending" || withdrawalRequest.status === "processing") && (
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowProcessModal(true)}
@@ -488,51 +489,48 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
                   </button>
                 </div>
               )}
-            </div>
           </div>
+        </div>
 
-          {/* Tabs */}
-          <div className="border-b">
-            <div className="flex">
-              <button
-                onClick={() => setActiveTab("details")}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === "details"
-                    ? "border-b-2 border-custom-blue text-custom-blue"
-                    : "text-gray-600 hover:text-gray-900"
+        {/* Tabs */}
+        <div className="border-b">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab("details")}
+              className={`px-6 py-3 font-medium transition-colors ${activeTab === "details"
+                  ? "border-b-2 border-custom-blue text-custom-blue"
+                  : "text-gray-600 hover:text-gray-900"
                 }`}
-              >
-                Details
-              </button>
-              <button
-                onClick={() => setActiveTab("bank")}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === "bank"
-                    ? "border-b-2 border-custom-blue text-custom-blue"
-                    : "text-gray-600 hover:text-gray-900"
+            >
+              Details
+            </button>
+            <button
+              onClick={() => setActiveTab("bank")}
+              className={`px-6 py-3 font-medium transition-colors ${activeTab === "bank"
+                  ? "border-b-2 border-custom-blue text-custom-blue"
+                  : "text-gray-600 hover:text-gray-900"
                 }`}
-              >
-                Bank Information
-              </button>
-              <button
-                onClick={() => setActiveTab("metadata")}
-                className={`px-6 py-3 font-medium transition-colors ${
-                  activeTab === "metadata"
-                    ? "border-b-2 border-custom-blue text-custom-blue"
-                    : "text-gray-600 hover:text-gray-900"
+            >
+              Bank Information
+            </button>
+            <button
+              onClick={() => setActiveTab("metadata")}
+              className={`px-6 py-3 font-medium transition-colors ${activeTab === "metadata"
+                  ? "border-b-2 border-custom-blue text-custom-blue"
+                  : "text-gray-600 hover:text-gray-900"
                 }`}
-              >
-                Metadata
-              </button>
-            </div>
+            >
+              Metadata
+            </button>
           </div>
+        </div>
 
-          {/* Content */}
-          <div className="p-6 overflow-y-auto">
-            {activeTab === "details" && <DetailsTab />}
-            {activeTab === "bank" && <BankTab />}
-            {activeTab === "metadata" && <MetadataTab />}
-          </div>
+        {/* Content */}
+        <div className="p-6 overflow-y-auto">
+          {activeTab === "details" && <DetailsTab />}
+          {activeTab === "bank" && <BankTab />}
+          {activeTab === "metadata" && <MetadataTab />}
+        </div>
       </SidebarPopup>
 
       {/* Process Modal */}
@@ -548,19 +546,19 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
                 <input
                   type="text"
                   value={processData.transactionReference}
-                  onChange={(e) => setProcessData({...processData, transactionReference: e.target.value})}
+                  onChange={(e) => setProcessData({ ...processData, transactionReference: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter bank transaction reference"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Transfer Mode
                 </label>
                 <DropdownSelect
                   value={transferModeOptions.find(opt => opt.value === processData.actualMode)}
-                  onChange={(selectedOption) => setProcessData({...processData, actualMode: selectedOption.value})}
+                  onChange={(selectedOption) => setProcessData({ ...processData, actualMode: selectedOption.value })}
                   options={transferModeOptions}
                   placeholder="Select Transfer Mode"
                   isClearable={false}
@@ -574,7 +572,7 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
                 </label>
                 <textarea
                   value={processData.adminNotes}
-                  onChange={(e) => setProcessData({...processData, adminNotes: e.target.value})}
+                  onChange={(e) => setProcessData({ ...processData, adminNotes: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows="3"
                   placeholder="Any additional notes..."
@@ -614,7 +612,7 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
                 </label>
                 <DropdownSelect
                   value={failureReasonOptions.find(opt => opt.value === failData.failureReason) || null}
-                  onChange={(selectedOption) => setFailData({...failData, failureReason: selectedOption ? selectedOption.value : ""})}
+                  onChange={(selectedOption) => setFailData({ ...failData, failureReason: selectedOption ? selectedOption.value : "" })}
                   options={failureReasonOptions}
                   placeholder="Select Reason"
                   isClearable={false}
@@ -629,7 +627,7 @@ const WithdrawalDetailsModal = ({ withdrawalRequest, isOpen, onClose, permission
                 </label>
                 <textarea
                   value={failData.adminNotes}
-                  onChange={(e) => setFailData({...failData, adminNotes: e.target.value})}
+                  onChange={(e) => setFailData({ ...failData, adminNotes: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   rows="3"
                   placeholder="Additional details..."

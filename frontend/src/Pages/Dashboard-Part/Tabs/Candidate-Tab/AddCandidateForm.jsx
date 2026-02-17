@@ -1132,8 +1132,7 @@ const AddCandidateForm = ({
     // 1.uniqueness
     const uniquenessFields = ["Email", "Phone", "linkedInUrl"];
 
-    // Set which button was clicked
-    setActiveButton(isAddCandidate ? "add" : "save");
+    // activeButton is already set by the onClick handler of each button
 
     // Show skills validation when submit is attempted
     setShowSkillValidation(true);
@@ -2860,9 +2859,9 @@ const AddCandidateForm = ({
                   setActiveButton("skip");
                   handleSubmit(e, false);
                 }}
-                //isLoading={activeButton === "skip"}
+                isLoading={activeButton === "skip"}
                 loadingText="Saving..."
-                disabled={activeButton !== null && activeButton === "skip"}
+                disabled={activeButton !== null}
                 className="text-gray-600 border border-gray-300 from-input"
               >
                 Skip & Save
@@ -2875,9 +2874,9 @@ const AddCandidateForm = ({
                 setActiveButton("save");
                 handleSubmit(e, false);
               }}
-              // isLoading={activeButton === "save"}
+              isLoading={activeButton === "save"}
               loadingText={id ? "Updating..." : "Saving..."}
-              disabled={activeButton !== null && activeButton === "save"}
+              disabled={activeButton !== null}
               className="bg-custom-blue text-white"
             >
               {id ? "Update Candidate" : "Save Candidate"}
