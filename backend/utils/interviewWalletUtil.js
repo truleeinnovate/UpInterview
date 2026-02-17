@@ -906,7 +906,12 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
         const position = await Position.findById(interview.positionId).lean();
         if (position) {
           positionTitle = position.title || "Position";
-          companyName = position.companyname || "Organization";
+          // position.companyname is an ObjectId ref to TenantCompany, resolve the actual name
+          if (position.companyname) {
+            const { TenantCompany } = require("../models/TenantCompany/TenantCompany");
+            const company = await TenantCompany.findById(position.companyname).lean();
+            companyName = company?.name || "Organization";
+          }
         }
       }
     }

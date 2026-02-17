@@ -26,6 +26,7 @@ import { config } from "../../../../config";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { notify } from "../../../../services/toastService";
 
 const InterviewRequests = () => {
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -125,13 +126,10 @@ const InterviewRequests = () => {
       });
     },
     onSuccess: async (data, variables) => {
-      // Refetch interview requests after success
-      // await queryClient.invalidateQueries([
-      //   "interviewRequests",
-      //   selectedContact?._id,
-      // ]);
-
       console.log("data data", data);
+
+      // Show success toast
+      notify.success("The interview has been successfully scheduled with you.");
 
       // 1. Refetch interview requests
       await queryClient.invalidateQueries([
@@ -150,12 +148,26 @@ const InterviewRequests = () => {
     },
     onError: async (err) => {
       console.error("Failed to accept interview request", err);
-      if (err.response?.status === 400) {
-        await queryClient.invalidateQueries([
-          "interviewRequests",
-          selectedContact?._id,
-        ]);
+
+      if (
+        err.response?.status === 409 ||
+        err.response?.data?.alreadyAccepted
+      ) {
+        notify.warning(
+          "You are late \u2014 the interview has already been scheduled.",
+        );
+      } else {
+        notify.error(
+          err.response?.data?.message ||
+          "Failed to accept the interview request. Please try again.",
+        );
       }
+
+      // Refetch to update card statuses
+      await queryClient.invalidateQueries([
+        "interviewRequests",
+        selectedContact?._id,
+      ]);
     },
   });
 
@@ -236,65 +248,65 @@ const InterviewRequests = () => {
               key={request._id || request.id}
               className="flex flex-col min-h-[180px] bg-white/80 backdrop-blur-lg p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-300"
             >
+              {/* Header: Title + Urgency badge */}
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="p-2 bg-custom-blue/5 rounded-lg flex-shrink-0">
                     <User className="text-custom-blue h-4 w-4" />
                   </div>
-                  <div className="flex flex-col min-w-0">
-                    <h4
-                      className="text-sm font-semibold text-gray-900 truncate max-w-[180px] sm:max-w-[240px] md:max-w-[300px] lg:max-w-[400px]"
-                      title={request.roundDetails?.roundTitle || "N/A"}
-                    >
-                      {capitalizeFirstLetter(
-                        request.roundDetails?.roundTitle,
-                      ) || "N/A"}
-                    </h4>
-                    {!request.isMockInterview && (
-                      <p
-                        className="text-xs text-gray-600 truncate max-w-[160px] sm:max-w-[220px] md:max-w-[280px] lg:max-w-[360px]"
-                        title={request.positionDetails?.title || "N/A"}
-                      >
-                        {capitalizeFirstLetter(
-                          request.positionDetails?.title,
-                        ) || "N/A"}
-                      </p>
-                    )}
-                  </div>
+                  <h4
+                    className="text-sm font-semibold text-gray-900 truncate max-w-[180px] sm:max-w-[240px] md:max-w-[300px] lg:max-w-[400px]"
+                    title={request.roundDetails?.roundTitle || "N/A"}
+                  >
+                    {capitalizeFirstLetter(
+                      request.roundDetails?.roundTitle,
+                    ) || "N/A"}
+                  </h4>
                 </div>
-                <span
-                  className={`flex-shrink-0 px-2 py-0.5 rounded-lg text-xs font-medium text-center ${
-                    request.urgency === "High"
-                      ? "bg-red-100 text-red-600"
-                      : request.urgency === "Medium"
-                        ? "bg-yellow-100 text-yellow-600"
-                        : "bg-green-100 text-green-600"
-                  }`}
+                {/* <span
+                  className={`flex-shrink-0 px-2 py-0.5 rounded-lg text-xs font-medium text-center ${request.urgency === "High"
+                    ? "bg-red-100 text-red-600"
+                    : request.urgency === "Medium"
+                      ? "bg-yellow-100 text-yellow-600"
+                      : "bg-green-100 text-green-600"
+                    }`}
                 >
                   {capitalizeFirstLetter(request.urgency)}
-                </span>
+                </span> */}
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mb-3 w-full">
-                {!request.isMockInterview && (
-                  <div className="flex items-center gap-1.5 col-span-2">
-                    <Building
-                      size={14}
-                      className="text-gray-400 flex-shrink-0"
-                    />
-                    <span className="text-xs text-gray-600 w-full truncate">
-                      {capitalizeFirstLetter(
-                        request.positionDetails?.companyname,
-                      ) || "N/A"}
+              {/* Info fields — single column */}
+              <div className="flex flex-col gap-2 mb-3">
+                {request.roundDetails?.dateTime && (
+                  <div className="flex items-center gap-1.5">
+                    <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+                    <span className="text-xs text-gray-600 truncate">
+                      Scheduled At: {request.roundDetails.dateTime.split(' - ')[0]}
                     </span>
                   </div>
                 )}
-                <div className="flex items-center gap-1.5 col-span-2">
-                  <Clock size={14} className="text-gray-400" />
-                  <span className="text-xs text-gray-600 w-full truncate">
-                    Requested Date: {request.requestedDate}
+                {request.roundDetails?.duration && (
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={14} className="text-gray-400 flex-shrink-0" />
+                    <span className="text-xs text-gray-600 truncate">
+                      Duration: {request.roundDetails.duration} Min
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1.5">
+                  <Clock size={14} className="text-gray-400 flex-shrink-0" />
+                  <span className="text-xs text-gray-600 truncate">
+                    Requested At: {request.requestedDate}
                   </span>
                 </div>
+                {!request.isMockInterview && (
+                  <div className="flex items-center gap-1.5">
+                    <Briefcase size={14} className="text-gray-400 flex-shrink-0" />
+                    <span className="text-xs text-gray-600 truncate">
+                      Position: {capitalizeFirstLetter(request.positionDetails?.title) || "N/A"}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end mt-auto">
@@ -316,30 +328,28 @@ const InterviewRequests = () => {
                         )
                       }
                       disabled={acceptingId === request.id}
-                      className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${
-                        acceptingId === request.id
-                          ? "opacity-60 cursor-wait"
-                          : "cursor-pointer"
-                      }`}
+                      className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === request.id
+                        ? "opacity-60 cursor-wait"
+                        : "cursor-pointer"
+                        }`}
                     >
                       {acceptingId === request.id ? "Accepting..." : "Accept"}
                     </button>
                   ) : (
                     <button
                       disabled
-                      className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${
-                        request.status === "accepted"
-                          ? "bg-green-600"
-                          : request.status === "declined"
-                            ? "bg-red-500"
-                            : request.status === "expired"
-                              ? "bg-gray-500"
-                              : request.status === "cancelled"
-                                ? "bg-orange-500"
-                                : request.status === "withdrawn"
-                                  ? "bg-amber-600"
-                                  : "bg-gray-400"
-                      }`}
+                      className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${request.status === "accepted"
+                        ? "bg-green-600"
+                        : request.status === "declined"
+                          ? "bg-red-500"
+                          : request.status === "expired"
+                            ? "bg-gray-500"
+                            : request.status === "cancelled"
+                              ? "bg-orange-500"
+                              : request.status === "withdrawn"
+                                ? "bg-amber-600"
+                                : "bg-gray-400"
+                        }`}
                     >
                       {capitalizeFirstLetter(request?.status)}
                     </button>
@@ -390,7 +400,7 @@ const InterviewRequests = () => {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        {/* <div className="flex items-center gap-3">
                           <div className="p-2 bg-custom-bg rounded-lg">
                             <Building className="w-5 h-5 text-gray-500" />
                           </div>
@@ -402,7 +412,7 @@ const InterviewRequests = () => {
                               ) || "N/A"}
                             </p>
                           </div>
-                        </div>
+                        </div> */}
                       </>
                     )}
                   </div>
@@ -417,32 +427,72 @@ const InterviewRequests = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-1 gap-6 text-gray-600">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
-                        <Users className="w-5 h-5 text-gray-500" />
+                        <Clipboard className="w-5 h-5 text-gray-500" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Interview Type</p>
+                        <p className="text-sm text-gray-500">Round Title</p>
                         <p className="text-gray-700">
-                          {capitalizeFirstLetter(selectedRequest.type) || "N/A"}
+                          {capitalizeFirstLetter(
+                            selectedRequest.roundDetails.roundTitle,
+                          )}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    {/* <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
                         <CheckCircle className="w-5 h-5 text-gray-500" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Status</p>
                         <p
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            selectedRequest.status === "accepted"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${selectedRequest.status === "accepted"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                            }`}
                         >
                           {selectedRequest?.status
                             ? selectedRequest.status.charAt(0).toUpperCase() +
-                              selectedRequest.status.slice(1)
+                            selectedRequest.status.slice(1)
                             : "N/A"}
+                        </p>
+                      </div>
+                    </div> */}
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-custom-bg rounded-lg">
+                        <Calendar className="w-5 h-5 text-gray-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Requested At</p>
+                        <p className="text-gray-700">
+                          {selectedRequest.requestedDate}
+                        </p>
+                      </div>
+                    </div>
+                    {/* <div className="flex items-center gap-3">
+                      <div className="p-2 bg-custom-bg rounded-lg">
+                        <AlertTriangle className="w-5 h-5 text-gray-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Urgency</p>
+                        <p
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${selectedRequest.urgency === "High"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-blue-100 text-blue-800"
+                            }`}
+                        >
+                          {capitalizeFirstLetter(selectedRequest.urgency)}
+                        </p>
+                      </div>
+                    </div> */}
+
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-custom-bg rounded-lg">
+                        <Clock className="w-5 h-5 text-gray-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Duration</p>
+                        <p className="text-gray-700">
+                          {selectedRequest.roundDetails.duration} Min
                         </p>
                       </div>
                     </div>
@@ -451,82 +501,21 @@ const InterviewRequests = () => {
                         <Calendar className="w-5 h-5 text-gray-500" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Requested Date</p>
+                        <p className="text-sm text-gray-500">Date & Time</p>
                         <p className="text-gray-700">
-                          {selectedRequest.requestedDate}
+                          {selectedRequest.roundDetails.dateTime.split(' - ')[0]}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-custom-bg rounded-lg">
-                        <AlertTriangle className="w-5 h-5 text-gray-500" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Urgency</p>
-                        <p
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            selectedRequest.urgency === "High"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
-                        >
-                          {capitalizeFirstLetter(selectedRequest.urgency)}
-                        </p>
-                      </div>
-                    </div>
+
                   </div>
                 </div>
               </div>
 
-              {selectedRequest.roundDetails && (
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
-                    Round Information
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-1 gap-6 text-gray-600">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-custom-bg rounded-lg">
-                          <Clipboard className="w-5 h-5 text-gray-500" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Round Title</p>
-                          <p className="text-gray-700">
-                            {capitalizeFirstLetter(
-                              selectedRequest.roundDetails.roundTitle,
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-custom-bg rounded-lg">
-                          <Clock className="w-5 h-5 text-gray-500" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Duration</p>
-                          <p className="text-gray-700">
-                            {selectedRequest.roundDetails.duration}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-custom-bg rounded-lg">
-                          <Calendar className="w-5 h-5 text-gray-500" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Date & Time</p>
-                          <p className="text-gray-700">
-                            {selectedRequest.roundDetails.dateTime}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
+            {(selectedRequest.status !== "accepted") && <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={closePopup}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-300"
@@ -543,11 +532,10 @@ const InterviewRequests = () => {
                     )
                   }
                   disabled={acceptingId === selectedRequest.id}
-                  className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${
-                    acceptingId === selectedRequest.id
-                      ? "opacity-60 cursor-wait"
-                      : "cursor-pointer"
-                  }`}
+                  className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === selectedRequest.id
+                    ? "opacity-60 cursor-wait"
+                    : "cursor-pointer"
+                    }`}
                 >
                   {acceptingId === selectedRequest.id
                     ? "Accepting..."
@@ -556,24 +544,23 @@ const InterviewRequests = () => {
               ) : (
                 <button
                   disabled
-                  className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${
-                    selectedRequest.status === "accepted"
-                      ? "bg-green-600"
-                      : selectedRequest.status === "declined"
-                        ? "bg-red-500"
-                        : selectedRequest.status === "expired"
-                          ? "bg-gray-500"
-                          : selectedRequest.status === "cancelled"
-                            ? "bg-orange-500"
-                            : selectedRequest.status === "withdrawn"
-                              ? "bg-amber-600"
-                              : "bg-gray-400"
-                  }`}
+                  className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${selectedRequest.status === "accepted"
+                    ? "bg-green-600"
+                    : selectedRequest.status === "declined"
+                      ? "bg-red-500"
+                      : selectedRequest.status === "expired"
+                        ? "bg-gray-500"
+                        : selectedRequest.status === "cancelled"
+                          ? "bg-orange-500"
+                          : selectedRequest.status === "withdrawn"
+                            ? "bg-amber-600"
+                            : "bg-gray-400"
+                    }`}
                 >
                   {capitalizeFirstLetter(selectedRequest?.status)}
                 </button>
               )}
-            </div>
+            </div>}
           </div>
         </SidebarPopup>
       )}
@@ -598,61 +585,68 @@ const InterviewRequests = () => {
             </div>
           ) : (
             // Render your requests
-            <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 items-center gap-4 mt-4 sm:mx-0 mx-4 pb-20">
+            <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 items-stretch gap-4 mt-4 sm:mx-0 mx-4 pb-20">
               {requests.map((req) => (
                 <div
                   key={req._id || req.id}
-                  className="flex flex-col py-6 gap-6 px-6 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
+                  className="flex flex-col justify-between py-5 gap-4 px-5 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
                 >
+                  {/* Header: Title + Urgency */}
                   <div className="flex items-start justify-between">
-                    <div className="flex flex-col gap-2 min-w-0">
-                      <h4
-                        className="font-medium text-gray-800 text-sm truncate w-full"
-                        title={
-                          capitalizeFirstLetter(req.roundDetails?.roundTitle) ||
-                          "N/A"
-                        }
-                      >
-                        {capitalizeFirstLetter(req.roundDetails?.roundTitle) ||
-                          "N/A"}
-                      </h4>
-
-                      {!req.isMockInterview && (
-                        <p
-                          className="text-xs text-gray-600 truncate w-full"
-                          title={`${
-                            capitalizeFirstLetter(req.positionDetails?.title) ||
-                            "N/A"
-                          } - ${
-                            capitalizeFirstLetter(
-                              req.positionDetails?.companyname,
-                            ) || "N/A"
-                          }`}
-                        >
-                          {capitalizeFirstLetter(req.positionDetails?.title) ||
-                            "N/A"}{" "}
-                          -{" "}
-                          {capitalizeFirstLetter(
-                            req.positionDetails?.companyname,
-                          ) || "N/A"}
-                        </p>
-                      )}
-
-                      <p className="text-xs text-gray-500 mt-1">
-                        Requested on {req.requestedDate}
-                      </p>
-                    </div>
-                    <span
-                      className={`flex-shrink-0 px-2 py-0.5 rounded-lg text-xs font-medium text-center ${
-                        req.urgency === "High"
-                          ? "bg-red-100 text-red-600"
-                          : req.urgency === "Medium"
-                            ? "bg-yellow-100 text-yellow-600"
-                            : "bg-green-100 text-green-600"
-                      }`}
+                    <h4
+                      className="font-medium text-gray-800 text-sm truncate w-full"
+                      title={
+                        capitalizeFirstLetter(req.roundDetails?.roundTitle) ||
+                        "N/A"
+                      }
+                    >
+                      {capitalizeFirstLetter(req.roundDetails?.roundTitle) ||
+                        "N/A"}
+                    </h4>
+                    {/* <span
+                      className={`flex-shrink-0 ml-2 px-2 py-0.5 rounded-lg text-xs font-medium text-center ${req.urgency === "High"
+                        ? "bg-red-100 text-red-600"
+                        : req.urgency === "Medium"
+                          ? "bg-yellow-100 text-yellow-600"
+                          : "bg-green-100 text-green-600"
+                        }`}
                     >
                       {capitalizeFirstLetter(req.urgency)}
-                    </span>
+                    </span> */}
+                  </div>
+
+                  {/* Info fields — single column */}
+                  <div className="flex flex-col gap-2">
+                    {req.roundDetails?.dateTime && (
+                      <div className="flex items-center gap-1.5">
+                        <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+                        <span className="text-xs text-gray-600 truncate">
+                          Scheduled At: {req.roundDetails.dateTime.split(' - ')[0]}
+                        </span>
+                      </div>
+                    )}
+                    {req.roundDetails?.duration && (
+                      <div className="flex items-center gap-1.5">
+                        <Clock size={14} className="text-gray-400 flex-shrink-0" />
+                        <span className="text-xs text-gray-600 truncate">
+                          Duration: {req.roundDetails.duration} Min
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={14} className="text-gray-400 flex-shrink-0" />
+                      <span className="text-xs text-gray-600 truncate">
+                        Requested At: {req.requestedDate}
+                      </span>
+                    </div>
+                    {!req.isMockInterview && (
+                      <div className="flex items-center gap-1.5">
+                        <Briefcase size={14} className="text-gray-400 flex-shrink-0" />
+                        <span className="text-xs text-gray-600 truncate">
+                          Position: {capitalizeFirstLetter(req.positionDetails?.title) || "N/A"}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 justify-end">
@@ -669,30 +663,28 @@ const InterviewRequests = () => {
                           handleAccept(req.id, req.interviewerId, req.roundId)
                         }
                         disabled={acceptingId === req.id}
-                        className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${
-                          acceptingId === req.id
-                            ? "opacity-60 cursor-wait"
-                            : "cursor-pointer"
-                        }`}
+                        className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === req.id
+                          ? "opacity-60 cursor-wait"
+                          : "cursor-pointer"
+                          }`}
                       >
                         {acceptingId === req.id ? "Accepting..." : "Accept"}
                       </button>
                     ) : (
                       <button
                         disabled
-                        className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${
-                          req.status === "accepted"
-                            ? "bg-green-600"
-                            : req.status === "declined"
-                              ? "bg-red-500"
-                              : req.status === "expired"
-                                ? "bg-gray-500"
-                                : req.status === "cancelled"
-                                  ? "bg-orange-500"
-                                  : req.status === "withdrawn"
-                                    ? "bg-amber-600"
-                                    : "bg-gray-400"
-                        }`}
+                        className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${req.status === "accepted"
+                          ? "bg-green-600"
+                          : req.status === "declined"
+                            ? "bg-red-500"
+                            : req.status === "expired"
+                              ? "bg-gray-500"
+                              : req.status === "cancelled"
+                                ? "bg-orange-500"
+                                : req.status === "withdrawn"
+                                  ? "bg-amber-600"
+                                  : "bg-gray-400"
+                          }`}
                       >
                         {capitalizeFirstLetter(req?.status)}
                       </button>

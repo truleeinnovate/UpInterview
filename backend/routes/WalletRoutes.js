@@ -1,9 +1,10 @@
 // v1.0.0 - Venkatesh - Added settle-interview route for processing interview payment settlements
 
 const express = require('express');
-const { 
-  getWalletByOwnerId, 
-  createTopupOrder, 
+const {
+  getWalletByOwnerId,
+  getWalletTransactions,
+  createTopupOrder,
   walletVerifyPayment,
   addBankAccount,
   getBankAccounts,
@@ -28,10 +29,10 @@ const WalletRouter = express.Router();
 
 // Wallet Top-up Routes
 // POST /wallet/create-order - Create Razorpay order for wallet top-up
-WalletRouter.post('/create-order', loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware,   createTopupOrder);
+WalletRouter.post('/create-order', loggingService.internalLoggingMiddleware, loggingService.FeedsMiddleware, createTopupOrder);
 
 // POST /wallet/verify-payment - Verify payment and update wallet
-WalletRouter.post('/verify-payment', loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware, walletVerifyPayment);
+WalletRouter.post('/verify-payment', loggingService.internalLoggingMiddleware, loggingService.FeedsMiddleware, walletVerifyPayment);
 
 // GET /wallet/platform - Get or create the platform (superadmin) wallet
 WalletRouter.get('/platform', getPlatformWallet);
@@ -48,7 +49,7 @@ WalletRouter.delete('/bank-accounts/:bankAccountId', loggingService.internalLogg
 
 // Withdrawal Routes
 // POST /wallet/withdrawals - Create a new withdrawal request
-WalletRouter.post('/withdrawals',loggingService.internalLoggingMiddleware,loggingService.FeedsMiddleware,  createWithdrawalRequest);
+WalletRouter.post('/withdrawals', loggingService.internalLoggingMiddleware, loggingService.FeedsMiddleware, createWithdrawalRequest);
 
 // GET /wallet/get-all-withdrawals-requests - Get all withdrawal requests (superadmin) - MOVED BEFORE parameterized routes
 WalletRouter.get('/get-all-withdrawals-requests', getAllWithdrawalRequests);
@@ -87,6 +88,9 @@ WalletRouter.post('/bank-accounts/:bankAccountId/verify', loggingService.interna
 
 // GET /wallet/withdrawals/:ownerId - Get withdrawal requests for an owner
 WalletRouter.get('/withdrawals/:ownerId', getWithdrawalRequests);
+
+// GET /wallet/:ownerId/transactions - Get paginated transactions for an owner
+WalletRouter.get('/:ownerId/transactions', getWalletTransactions);
 
 // GET /wallet/:ownerId - Get wallet by owner ID - THIS MUST BE LAST as it catches everything
 WalletRouter.get('/:ownerId', getWalletByOwnerId);

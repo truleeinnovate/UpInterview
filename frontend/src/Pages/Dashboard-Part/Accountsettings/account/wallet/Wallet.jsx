@@ -2,12 +2,14 @@
 // v1.0.1 - Ashok - Improved responsiveness
 // v1.0.2 - Ashok - fixed style issues and loading view
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { RefreshCw, Search, ChevronRight } from "lucide-react";
 import { ViewDetailsButton } from "../../common/Buttons";
 
 import { Outlet, useNavigate } from "react-router-dom";
 import WalletBalancePopup from "./WalletBalancePopup";
 import WalletTransactionPopup from "./WalletTransactionPopup";
+import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { WalletTopupPopup } from "./WalletTopupPopup";
 import { BankAccountsPopup } from "./BankAccountsPopup";
 import { WithdrawalModal } from "./WithdrawalModal";
@@ -15,6 +17,7 @@ import { WithdrawalHistory } from "./WithdrawalHistory";
 import "./topupAnimation.css";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 import { useWallet } from "../../../../../apiHooks/useWallet"; //<----v1.0.0-----
+import { useWalletTransactions } from "../../../../../apiHooks/useWalletTransactions";
 
 export const getTransactionTypeStyle = (type) => {
   const t = (type || "").toString().toLowerCase();
@@ -53,13 +56,30 @@ export const getTransactionTypeStyle = (type) => {
 const Wallet = () => {
   const { checkPermission, isInitialized } = usePermissionCheck();
   const { data: walletBalance, isLoading, refetch } = useWallet(); //<----v1.0.0-----
+  const [isRefetching, setIsRefetching] = useState(false);
   console.log(" walletBalance", walletBalance);
+
+  const handleRefetch = useCallback(async () => {
+    setIsRefetching(true);
+    try {
+      await refetch();
+    } catch (error) {
+      console.error("Error refreshing wallet data:", error);
+    } finally {
+      setIsRefetching(false);
+    }
+  }, [refetch]);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [viewingBalance, setViewingBalance] = useState(false);
   const [isTopupOpen, setIsTopupOpen] = useState(false);
   const [isBankAccountsOpen, setIsBankAccountsOpen] = useState(false);
   const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
   const [isWithdrawalHistoryOpen, setIsWithdrawalHistoryOpen] = useState(false);
+  const [isAllTransactionsOpen, setIsAllTransactionsOpen] = useState(false);
+  const [txnSearchTerm, setTxnSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [txnPage, setTxnPage] = useState(0);
+  const [allLoadedTxns, setAllLoadedTxns] = useState([]);
   const [animateTopUp, setAnimateTopUp] = useState(true);
   const topUpButtonRef = useRef(null);
   const navigate = useNavigate();
@@ -72,6 +92,40 @@ const Wallet = () => {
 
     return () => clearTimeout(animationTimer);
   }, []);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(txnSearchTerm);
+      setTxnPage(0);
+      setAllLoadedTxns([]);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [txnSearchTerm]);
+
+  // Fetch transactions from backend
+  const TXN_PAGE_SIZE = 20;
+  const {
+    data: txnData,
+    isLoading: txnLoading,
+    isFetching: txnFetching,
+  } = useWalletTransactions({
+    page: txnPage,
+    limit: TXN_PAGE_SIZE,
+    search: debouncedSearch,
+    enabled: isAllTransactionsOpen,
+  });
+
+  // Accumulate loaded transactions for "Load More"
+  useEffect(() => {
+    if (txnData?.transactions) {
+      if (txnPage === 0) {
+        setAllLoadedTxns(txnData.transactions);
+      } else {
+        setAllLoadedTxns((prev) => [...prev, ...txnData.transactions]);
+      }
+    }
+  }, [txnData, txnPage]);
 
   // Permission check after all hooks
   if (!isInitialized || !checkPermission("Wallet")) {
@@ -289,7 +343,17 @@ const Wallet = () => {
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex sm:flex-col justify-between">
             <div>
-              <h3 className="text-lg font-medium">Available Balance</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-medium">Available Balance</h3>
+                <button
+                  onClick={handleRefetch}
+                  disabled={isRefetching}
+                  title="Refresh balance"
+                  className="p-1 text-gray-400 hover:text-custom-blue hover:bg-blue-50 rounded-full transition-colors duration-200 disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
               <div className="mt-3 flex items-center">
                 <span className="sm:text-xl text-3xl font-bold mr-2">
                   ₹
@@ -346,11 +410,25 @@ const Wallet = () => {
         {/* Transactions */}
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex sm:flex-col sm:justify-start justify-between sm:items-start items-center mb-4">
-            <h3 className="text-lg font-medium">Transaction History</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-medium">Transaction History</h3>
+              <button
+                onClick={handleRefetch}
+                disabled={isRefetching}
+                title="Refresh transactions"
+                className="p-1 text-gray-400 hover:text-custom-blue hover:bg-blue-50 rounded-full transition-colors duration-200 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
             <button className="text-custom-blue hover:text-custom-blue/80">
               Export Transactions
             </button>
           </div>
+          {/* Show count info */}
+          {walletTransactions.length > 10 && (
+            <p className="text-xs text-gray-500 mb-2">Showing recent 10 of {walletTransactions.length} transactions</p>
+          )}
           <div className="space-y-4">
             {walletTransactions && walletTransactions.length > 0 ? (
               [...walletTransactions]
@@ -367,6 +445,7 @@ const Wallet = () => {
                       : new Date(0);
                   return dateB - dateA; // Sort in descending order (newest first)
                 })
+                .slice(0, 10)
                 .filter((transaction) => {
                   // Hide debited transactions with 0 amount (e.g., failed or zero-value settlements)
                   if (transaction.type === "debited" && (transaction.totalAmount === 0 || transaction.amount === 0)) {
@@ -462,7 +541,14 @@ const Wallet = () => {
                       {/* Middle Row: Description & Round Title */}
                       <div className="mb-3">
                         <p className="text-sm font-medium text-gray-800 line-clamp-1">
-                          {transaction.description || "Transaction"}
+                          {(() => {
+                            let desc = transaction.description || "Transaction";
+                            // Replace ObjectId patterns (24 hex chars) in description with actual company name from metadata
+                            if (transaction.metadata?.companyName) {
+                              desc = desc.replace(/[a-f0-9]{24}/gi, transaction.metadata.companyName);
+                            }
+                            return desc;
+                          })()}
                         </p>
                         {roundTitle && (
                           <p className="text-xs text-gray-500 mt-1">
@@ -542,6 +628,19 @@ const Wallet = () => {
                 No transaction history available
               </div>
             )}
+
+            {/* View All Transactions Button */}
+            {walletTransactions.length > 10 && (
+              <div className="flex justify-center mt-4 pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => setIsAllTransactionsOpen(true)}
+                  className="flex items-center gap-2 text-sm font-medium text-custom-blue hover:text-custom-blue/80 px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300"
+                >
+                  View All Transactions
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
         {/* v1.0.3 <-----------------------------------------------------------------------> */}
@@ -598,6 +697,160 @@ const Wallet = () => {
 
       {isWithdrawalHistoryOpen && (
         <WithdrawalHistory onClose={() => setIsWithdrawalHistoryOpen(false)} />
+      )}
+
+      {/* All Transactions Sidebar */}
+      {isAllTransactionsOpen && (
+        <SidebarPopup
+          title="All Transactions"
+          onClose={() => {
+            setIsAllTransactionsOpen(false);
+            setTxnSearchTerm("");
+            setDebouncedSearch("");
+            setTxnPage(0);
+            setAllLoadedTxns([]);
+          }}
+        >
+          {/* Search */}
+          <div className="px-4 pt-4 pb-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search transactions..."
+                value={txnSearchTerm}
+                onChange={(e) => setTxnSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-custom-blue/20 focus:border-custom-blue"
+              />
+            </div>
+            {txnData?.totalCount > 0 && (
+              <p className="text-xs text-gray-500 mt-2">
+                {txnData.totalCount} transaction{txnData.totalCount !== 1 ? 's' : ''} found
+              </p>
+            )}
+          </div>
+
+          <div className="px-4 pb-20 space-y-3">
+            {txnLoading && txnPage === 0 ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-custom-blue"></div>
+              </div>
+            ) : allLoadedTxns.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                {debouncedSearch ? "No transactions match your search" : "No transactions found"}
+              </div>
+            ) : (
+              <>
+                {allLoadedTxns.map((transaction) => {
+                  const interviewRef = transaction.relatedInvoiceId
+                    ? transaction.relatedInvoiceId.length === 24
+                      ? `TXN-${transaction.relatedInvoiceId.slice(-6).toUpperCase()}`
+                      : transaction.relatedInvoiceId
+                    : transaction.metadata?.requestId
+                      ? `REQ-${transaction.metadata.requestId.slice(-6).toUpperCase()}`
+                      : null;
+
+                  return (
+                    <div
+                      key={transaction._id}
+                      className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => setSelectedTransaction(transaction)}
+                    >
+                      {/* Type Badge & Date */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${transaction.type === "credited" || transaction.type === "credit"
+                              ? "bg-green-100 text-green-700"
+                              : transaction.type === "debited"
+                                ? "bg-red-100 text-red-700"
+                                : transaction.type === "hold" || transaction.type === "hold_adjust"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : transaction.type === "hold_release"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : transaction.type === "refund"
+                                      ? "bg-purple-100 text-purple-700"
+                                      : "bg-gray-100 text-gray-700"
+                              }`}
+                          >
+                            {transaction.type
+                              ? transaction.type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                              : "Unknown"}
+                          </span>
+                          {interviewRef && (
+                            <span className="text-xs text-gray-500 font-mono bg-gray-100 px-1.5 py-0.5 rounded">
+                              {interviewRef}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {transaction.createdAt
+                            ? new Date(transaction.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                            : transaction.createdDate
+                              ? new Date(transaction.createdDate).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                              : "N/A"}
+                        </span>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-sm font-medium text-gray-800 line-clamp-1 mb-2">
+                        {(() => {
+                          let desc = transaction.description || "Transaction";
+                          if (transaction.metadata?.companyName) {
+                            desc = desc.replace(/[a-f0-9]{24}/gi, transaction.metadata.companyName);
+                          }
+                          return desc;
+                        })()}
+                      </p>
+
+                      {/* Amount & Status */}
+                      <div className="flex items-center justify-between">
+                        <p className={`text-sm font-bold ${getTransactionTypeStyle(transaction.type)}`}>
+                          {transaction.effect === "CREDITED" || transaction.type === "credited" || transaction.type === "credit" || transaction.type === "hold_release"
+                            ? "+"
+                            : transaction.effect === "DEBITED" || transaction.type === "debited" || transaction.type === "hold"
+                              ? "-"
+                              : ""}
+                          ₹{transaction.totalAmount ? transaction.totalAmount.toFixed(2) : (transaction.amount || 0).toFixed(2)}
+                        </p>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${transaction.status === "completed"
+                            ? "bg-green-50 text-green-700 border border-green-200"
+                            : "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                            }`}
+                        >
+                          {transaction.status
+                            ? transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)
+                            : "Pending"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Load More Button */}
+                {txnData?.hasMore && (
+                  <div className="flex justify-center pt-2">
+                    <button
+                      onClick={() => setTxnPage((prev) => prev + 1)}
+                      disabled={txnFetching}
+                      className="flex items-center gap-2 text-sm font-medium text-custom-blue hover:text-custom-blue/80 px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 disabled:opacity-50"
+                    >
+                      {txnFetching ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
+                          Loading...
+                        </>
+                      ) : (
+                        "Load More"
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </SidebarPopup>
       )}
 
       <Outlet />

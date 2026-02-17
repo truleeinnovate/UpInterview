@@ -13,7 +13,7 @@ import {
   Calendar,
   CreditCard,
   CheckCircle,
-  XCircle,
+  AlertTriangle,
   Clock,
   AlertCircle,
   IndianRupee,
@@ -84,78 +84,78 @@ const WithdrawalRequests = () => {
   // Statistics cards data (prefer server stats; fallback to current page calc)
   const statistics = stats
     ? {
-        pending: stats.pending || 0,
-        processing: stats.processing || 0,
-        completed: stats.completed || 0,
-        failed: stats.failed || 0,
-        cancelled: stats.cancelled || 0,
-        totalAmount: stats.totalAmount || 0,
-        totalNetAmount: stats.totalNetAmount || 0,
-        pendingAmount: stats.pendingAmount || 0,
-        processingAmount: stats.processingAmount || 0,
-        completedAmount: stats.completedAmount || 0,
-        failedAmount: stats.failedAmount || 0,
-        cancelledAmount: stats.cancelledAmount || 0,
-        pendingNetAmount: stats.pendingNetAmount || 0,
-        processingNetAmount: stats.processingNetAmount || 0,
-        completedNetAmount: stats.completedNetAmount || 0,
-        failedNetAmount: stats.failedNetAmount || 0,
-        cancelledNetAmount: stats.cancelledNetAmount || 0,
-      }
+      pending: stats.pending || 0,
+      processing: stats.processing || 0,
+      completed: stats.completed || 0,
+      failed: stats.failed || 0,
+      cancelled: stats.cancelled || 0,
+      totalAmount: stats.totalAmount || 0,
+      totalNetAmount: stats.totalNetAmount || 0,
+      pendingAmount: stats.pendingAmount || 0,
+      processingAmount: stats.processingAmount || 0,
+      completedAmount: stats.completedAmount || 0,
+      failedAmount: stats.failedAmount || 0,
+      cancelledAmount: stats.cancelledAmount || 0,
+      pendingNetAmount: stats.pendingNetAmount || 0,
+      processingNetAmount: stats.processingNetAmount || 0,
+      completedNetAmount: stats.completedNetAmount || 0,
+      failedNetAmount: stats.failedNetAmount || 0,
+      cancelledNetAmount: stats.cancelledNetAmount || 0,
+    }
     : {
-        pending: (withdrawalRequests || []).filter(
-          (r) => r.status === "pending"
-        ).length,
-        processing: (withdrawalRequests || []).filter(
-          (r) => r.status === "processing"
-        ).length,
-        completed: (withdrawalRequests || []).filter(
-          (r) => r.status === "completed"
-        ).length,
-        failed: (withdrawalRequests || []).filter((r) => r.status === "failed")
-          .length,
-        cancelled: (withdrawalRequests || []).filter(
-          (r) => r.status === "cancelled"
-        ).length,
-        totalAmount: (withdrawalRequests || []).reduce(
-          (sum, r) => sum + (r.amount || 0),
-          0
-        ),
-        totalNetAmount: (withdrawalRequests || []).reduce(
-          (sum, r) => sum + (r.netAmount || 0),
-          0
-        ),
-        pendingAmount: (withdrawalRequests || [])
-          .filter((r) => r.status === "pending")
-          .reduce((sum, r) => sum + (r.amount || 0), 0),
-        processingAmount: (withdrawalRequests || [])
-          .filter((r) => r.status === "processing")
-          .reduce((sum, r) => sum + (r.amount || 0), 0),
-        completedAmount: (withdrawalRequests || [])
-          .filter((r) => r.status === "completed")
-          .reduce((sum, r) => sum + (r.amount || 0), 0),
-        failedAmount: (withdrawalRequests || [])
-          .filter((r) => r.status === "failed")
-          .reduce((sum, r) => sum + (r.amount || 0), 0),
-        cancelledAmount: (withdrawalRequests || [])
-          .filter((r) => r.status === "cancelled")
-          .reduce((sum, r) => sum + (r.amount || 0), 0),
-        pendingNetAmount: (withdrawalRequests || [])
-          .filter((r) => r.status === "pending")
-          .reduce((sum, r) => sum + (r.netAmount || 0), 0),
-        processingNetAmount: (withdrawalRequests || [])
-          .filter((r) => r.status === "processing")
-          .reduce((sum, r) => sum + (r.netAmount || 0), 0),
-        completedNetAmount: (withdrawalRequests || [])
-          .filter((r) => r.status === "completed")
-          .reduce((sum, r) => sum + (r.netAmount || 0), 0),
-        failedNetAmount: (withdrawalRequests || [])
-          .filter((r) => r.status === "failed")
-          .reduce((sum, r) => sum + (r.netAmount || 0), 0),
-        cancelledNetAmount: (withdrawalRequests || [])
-          .filter((r) => r.status === "cancelled")
-          .reduce((sum, r) => sum + (r.netAmount || 0), 0),
-      };
+      pending: (withdrawalRequests || []).filter(
+        (r) => r.status === "pending"
+      ).length,
+      processing: (withdrawalRequests || []).filter(
+        (r) => r.status === "processing"
+      ).length,
+      completed: (withdrawalRequests || []).filter(
+        (r) => r.status === "completed"
+      ).length,
+      failed: (withdrawalRequests || []).filter((r) => r.status === "failed")
+        .length,
+      cancelled: (withdrawalRequests || []).filter(
+        (r) => r.status === "cancelled"
+      ).length,
+      totalAmount: (withdrawalRequests || []).reduce(
+        (sum, r) => sum + (r.amount || 0),
+        0
+      ),
+      totalNetAmount: (withdrawalRequests || []).reduce(
+        (sum, r) => sum + (r.netAmount || 0),
+        0
+      ),
+      pendingAmount: (withdrawalRequests || [])
+        .filter((r) => r.status === "pending")
+        .reduce((sum, r) => sum + (r.amount || 0), 0),
+      processingAmount: (withdrawalRequests || [])
+        .filter((r) => r.status === "processing")
+        .reduce((sum, r) => sum + (r.amount || 0), 0),
+      completedAmount: (withdrawalRequests || [])
+        .filter((r) => r.status === "completed")
+        .reduce((sum, r) => sum + (r.amount || 0), 0),
+      failedAmount: (withdrawalRequests || [])
+        .filter((r) => r.status === "failed")
+        .reduce((sum, r) => sum + (r.amount || 0), 0),
+      cancelledAmount: (withdrawalRequests || [])
+        .filter((r) => r.status === "cancelled")
+        .reduce((sum, r) => sum + (r.amount || 0), 0),
+      pendingNetAmount: (withdrawalRequests || [])
+        .filter((r) => r.status === "pending")
+        .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+      processingNetAmount: (withdrawalRequests || [])
+        .filter((r) => r.status === "processing")
+        .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+      completedNetAmount: (withdrawalRequests || [])
+        .filter((r) => r.status === "completed")
+        .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+      failedNetAmount: (withdrawalRequests || [])
+        .filter((r) => r.status === "failed")
+        .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+      cancelledNetAmount: (withdrawalRequests || [])
+        .filter((r) => r.status === "cancelled")
+        .reduce((sum, r) => sum + (r.netAmount || 0), 0),
+    };
 
   // Debug logging to check what's being calculated
   // console.log("Withdrawal Statistics Debug:", {
@@ -276,7 +276,7 @@ const WithdrawalRequests = () => {
       case "completed":
         return <CheckCircle className="h-4 w-4" />;
       case "failed":
-        return <XCircle className="h-4 w-4" />;
+        return <AlertTriangle className="h-4 w-4" />;
       case "cancelled":
         return <AlertCircle className="h-4 w-4" />;
       default:
@@ -591,7 +591,7 @@ const WithdrawalRequests = () => {
             <div className="flex-1">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-sm font-medium text-gray-600">Failed</p>
-                <XCircle className="h-5 w-5 text-red-500" />
+                <AlertTriangle className="h-5 w-5 text-red-500" />
               </div>
               <p className="text-3xl font-bold text-red-600 mb-1">
                 {statistics.failed}
@@ -770,11 +770,11 @@ const WithdrawalRequests = () => {
             setFilterPopupOpen(false);
             setIsFilterActive(
               selectedStatus.length > 0 ||
-                selectedModes.length > 0 ||
-                amountRange.min ||
-                amountRange.max ||
-                dateRange.start ||
-                dateRange.end
+              selectedModes.length > 0 ||
+              amountRange.min ||
+              amountRange.max ||
+              dateRange.start ||
+              dateRange.end
             );
             setCurrentPage(0); // Reset to first page when filters are applied
           }}
@@ -792,9 +792,8 @@ const WithdrawalRequests = () => {
                     {menu.title}
                   </span>
                   <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform ${
-                      menu.isOpen ? "rotate-180" : ""
-                    }`}
+                    className={`w-4 h-4 text-gray-400 transition-transform ${menu.isOpen ? "rotate-180" : ""
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

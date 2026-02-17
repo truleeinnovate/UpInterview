@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useUserProfile } from "../../../../../apiHooks/useUsers";
 import { useWithdrawalRequests, useCancelWithdrawal, getWithdrawalStatusColor, formatWithdrawalMode } from "../../../../../apiHooks/useWithdrawal";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
-import { Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, Filter } from "lucide-react";
+import { Clock, CheckCircle, XCircle, AlertCircle, AlertTriangle, RefreshCw, Filter } from "lucide-react";
 import LoadingButton from "../../../../../Components/LoadingButton";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 import DeleteConfirmModal from "../../../Tabs/CommonCode-AllTabs/DeleteConfirmModal.jsx";
@@ -51,7 +51,7 @@ export function WithdrawalHistory({ onClose }) {
     { value: "pending", label: "Pending", icon: Clock },
     { value: "processing", label: "Processing", icon: RefreshCw },
     { value: "completed", label: "Completed", icon: CheckCircle },
-    { value: "failed", label: "Failed", icon: XCircle },
+    { value: "failed", label: "Failed", icon: AlertTriangle },
     { value: "cancelled", label: "Cancelled", icon: AlertCircle }
   ];
 
@@ -367,7 +367,7 @@ export function WithdrawalHistory({ onClose }) {
                       {withdrawal.status === "completed" ? (
                         <CheckCircle className="h-6 w-6 text-green-500" />
                       ) : withdrawal.status === "failed" ? (
-                        <XCircle className="h-6 w-6 text-red-500" />
+                        <AlertTriangle className="h-6 w-6 text-red-500" />
                       ) : withdrawal.status === "cancelled" ? (
                         <AlertCircle className="h-6 w-6 text-gray-500" />
                       ) : (

@@ -4,7 +4,7 @@ import {
   Clock,
   AlertCircle,
   CheckCircle,
-  XCircle,
+  AlertTriangle,
   IndianRupee,
   Calendar,
   CreditCard,
@@ -14,13 +14,13 @@ import {
   Eye,
 } from "lucide-react";
 
-const WithdrawalKanban = ({ 
-  withdrawalRequests = [], 
-  onCardClick, 
-  isLoading, 
+const WithdrawalKanban = ({
+  withdrawalRequests = [],
+  onCardClick,
+  isLoading,
   refetch,
   currentPage = 0,
-  itemsPerPage = 10 
+  itemsPerPage = 10
 }) => {
   const [hoveredCard, setHoveredCard] = useState(null);
 
@@ -51,7 +51,7 @@ const WithdrawalKanban = ({
       title: "Failed",
       color: "bg-red-50 border-red-200",
       headerColor: "bg-red-100 text-red-800",
-      icon: <XCircle className="h-4 w-4" />,
+      icon: <AlertTriangle className="h-4 w-4" />,
     },
     // {
     //   id: "cancelled",
@@ -66,7 +66,7 @@ const WithdrawalKanban = ({
     const allRequests = withdrawalRequests.filter(
       (request) => request.status?.toLowerCase() === status
     );
-    
+
     // When itemsPerPage <= 0, disable local pagination and return all for this page
     if (!itemsPerPage || itemsPerPage <= 0) {
       return {
@@ -133,7 +133,7 @@ const WithdrawalKanban = ({
         {totalPages > 1 && (
           <div className="bg-white px-4 py-2 rounded-lg border border-gray-200">
             <span className="text-sm text-gray-600">
-              Page {currentPage + 1} of {totalPages} 
+              Page {currentPage + 1} of {totalPages}
               <span className="ml-2 text-gray-400">
                 (Showing up to {itemsPerPage} items per status)
               </span>
@@ -230,7 +230,7 @@ const WithdrawalKanban = ({
                         {request.withdrawalCode || "N/A"}
                       </span>
                       <span className="text-xs text-gray-500">
-                        {request?.mode ? request?.mode.charAt(0).toUpperCase() + request?.mode.slice(1): "Manual"}
+                        {request?.mode ? request?.mode.charAt(0).toUpperCase() + request?.mode.slice(1) : "Manual"}
                       </span>
                     </div>
 
@@ -272,7 +272,7 @@ const WithdrawalKanban = ({
                         <span>{formatDate(request.createdAt)}</span>
                         <span>{formatTime(request.createdAt)}</span>
                       </div>
-                      
+
                       {/* Status-specific dates */}
                       {request.status === "completed" && request.completedAt && (
                         <div className="flex items-center gap-2 text-xs text-green-600 mt-1">
@@ -280,14 +280,14 @@ const WithdrawalKanban = ({
                           <span>Completed: {formatDate(request.completedAt)}</span>
                         </div>
                       )}
-                      
+
                       {request.status === "failed" && request.failedAt && (
                         <div className="flex items-center gap-2 text-xs text-red-600 mt-1">
-                          <XCircle className="h-3 w-3" />
+                          <AlertTriangle className="h-3 w-3" />
                           <span>Failed: {formatDate(request.failedAt)}</span>
                         </div>
                       )}
-                      
+
                       {request.status === "cancelled" && request.cancelledAt && (
                         <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
                           <AlertCircle className="h-3 w-3" />

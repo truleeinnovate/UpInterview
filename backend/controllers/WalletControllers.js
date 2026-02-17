@@ -166,6 +166,71 @@ const getWalletByOwnerId = async (req, res) => {
   }
 };
 
+// Get paginated wallet transactions for an owner
+const getWalletTransactions = async (req, res) => {
+  try {
+    const { ownerId } = req.params;
+    const page = Math.max(parseInt(req.query.page, 10) || 0, 0);
+    const limitRaw = parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 10;
+    const search = (req.query.search || "").trim();
+
+    if (!ownerId) {
+      return res.status(400).json({ error: "ownerId is required" });
+    }
+
+    const wallet = await WalletTopup.findOne({ ownerId });
+    if (!wallet || !wallet.transactions || wallet.transactions.length === 0) {
+      return res.status(200).json({
+        transactions: [],
+        totalCount: 0,
+        page,
+        limit,
+        hasMore: false,
+      });
+    }
+
+    // Filter and sort transactions server-side
+    let transactions = wallet.transactions
+      .filter((txn) => {
+        // Hide zero-amount debited transactions
+        if (txn.type === "debited" && (txn.totalAmount === 0 || txn.amount === 0)) {
+          return false;
+        }
+        // Search filter
+        if (search) {
+          const term = search.toLowerCase();
+          const desc = (txn.description || "").toLowerCase();
+          const type = (txn.type || "").toLowerCase();
+          const status = (txn.status || "").toLowerCase();
+          const ref = (txn.relatedInvoiceId || "").toLowerCase();
+          return desc.includes(term) || type.includes(term) || status.includes(term) || ref.includes(term);
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt) : a.createdDate ? new Date(a.createdDate) : new Date(0);
+        const dateB = b.createdAt ? new Date(b.createdAt) : b.createdDate ? new Date(b.createdDate) : new Date(0);
+        return dateB - dateA;
+      });
+
+    const totalCount = transactions.length;
+    const skip = page * limit;
+    const paginatedTransactions = transactions.slice(skip, skip + limit);
+
+    res.status(200).json({
+      transactions: paginatedTransactions,
+      totalCount,
+      page,
+      limit,
+      hasMore: skip + limit < totalCount,
+    });
+  } catch (error) {
+    console.error("Error fetching wallet transactions:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
 // Create Razorpay order for wallet top-up
 const createTopupOrder = async (req, res) => {
   // Set up logging context
@@ -2309,34 +2374,39 @@ const processManualWithdrawal = async (req, res) => {
 
           if (platformWallet) {
             const platformPrevBalance = Number(platformWallet.balance || 0);
-            let runningBalance = platformPrevBalance;
-            const nextBalance = runningBalance + withdrawalRequest.processingFee;
+            const nextBalance = platformPrevBalance + withdrawalRequest.processingFee;
 
-            platformWallet.transactions.push({
-              type: "platform_fee",
-              bucket: "AVAILABLE",
-              effect: "CREDITED",
-              amount: withdrawalRequest.processingFee,
-              description: `Processing fee for withdrawal ${withdrawalRequest.withdrawalCode}`,
-              relatedInvoiceId: withdrawalRequest._id.toString(),
-              status: "completed",
-              reason: "WITHDRAWAL_FEE",
-              metadata: {
-                withdrawalRequestId: withdrawalRequest._id,
-                withdrawalCode: withdrawalRequest.withdrawalCode,
-                sourceUser: withdrawalRequest.ownerId,
-                source: "withdrawal_processing_fee",
-              },
-              balanceBefore: runningBalance,
-              balanceAfter: nextBalance,
-              createdDate: new Date(),
-              createdAt: new Date(),
-            });
-
-            platformWallet.balance = nextBalance;
-            platformWallet.lastUpdated = new Date();
-
-            await platformWallet.save();
+            await WalletTopup.updateOne(
+              { _id: platformWallet._id },
+              {
+                $push: {
+                  transactions: {
+                    type: "platform_fee",
+                    bucket: "AVAILABLE",
+                    effect: "CREDITED",
+                    amount: withdrawalRequest.processingFee,
+                    description: `Processing fee for withdrawal ${withdrawalRequest.withdrawalCode}`,
+                    relatedInvoiceId: withdrawalRequest._id.toString(),
+                    status: "completed",
+                    reason: "WITHDRAWAL_FEE",
+                    metadata: {
+                      withdrawalRequestId: withdrawalRequest._id,
+                      withdrawalCode: withdrawalRequest.withdrawalCode,
+                      sourceUser: withdrawalRequest.ownerId,
+                      source: "withdrawal_processing_fee",
+                    },
+                    balanceBefore: platformPrevBalance,
+                    balanceAfter: nextBalance,
+                    createdDate: new Date(),
+                    createdAt: new Date(),
+                  },
+                },
+                $set: {
+                  balance: nextBalance,
+                  lastUpdated: new Date(),
+                },
+              }
+            );
             //console.log(`Processing fee of ${withdrawalRequest.processingFee} credited to platform wallet. New Balance: ${nextBalance}`);
           }
         } catch (feeError) {
@@ -4326,6 +4396,7 @@ const settleInterviewPayment = async (req, res) => {
 
 module.exports = {
   getWalletByOwnerId,
+  getWalletTransactions,
   getPlatformWallet,
   createTopupOrder,
   walletVerifyPayment,

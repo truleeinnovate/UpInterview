@@ -247,6 +247,7 @@ const QuestionBankForm = ({
   const [entries, setEntries] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false); //<---v1.0.2-----Prevent double-click
+  const [clickedButton, setClickedButton] = useState(null); // Track which button was clicked ('save' or 'saveAndNext')
   const [selectedDifficultyLevel, setSelectedDifficultyLevel] = useState("");
   const [showDropdownDifficultyLevel, setShowDropdownDifficultyLevel] =
     useState(false);
@@ -638,6 +639,7 @@ const QuestionBankForm = ({
     //<----v1.0.2-----Prevent double-click----
     if (saveOrUpdateQuestionLoading || isSubmitting) return; // Prevent multiple clicks
     setIsSubmitting(true);
+    setClickedButton(isSaveAndNext ? 'saveAndNext' : 'save'); // Track which button was clicked
 
     //<--v1.0.8-----
     // Determine effective list IDs to submit based on current Ass/Int selection and whether
@@ -680,6 +682,7 @@ const QuestionBankForm = ({
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setIsSubmitting(false);
+      setClickedButton(null); // Reset clicked button on validation error
       //----v1.0.2-----Prevent double-click---->
 
       // Scroll to first error field
@@ -1035,6 +1038,7 @@ const QuestionBankForm = ({
       toast.error(composed, { duration: 6000 });
     } finally {
       setIsSubmitting(false); //----v1.0.2-----Prevent double-click---->
+      setClickedButton(null); // Reset clicked button tracking
     }
 
     // v1.0.2 <----------------------------------------------------------------------------
@@ -2504,7 +2508,7 @@ const QuestionBankForm = ({
                 <LoadingButton
                   onClick={(e) => handleSubmit(e, false)}
                   loadingText={isEdit ? "Updating..." : "Saving..."}
-                  isLoading={saveOrUpdateQuestionLoading || isSubmitting}
+                  isLoading={clickedButton === 'save' && (saveOrUpdateQuestionLoading || isSubmitting)}
                   disabled={saveOrUpdateQuestionLoading || isSubmitting}
                 >
                   {isEdit ? "Update" : "Save"}
@@ -2521,7 +2525,7 @@ const QuestionBankForm = ({
                   <LoadingButton
                     onClick={(e) => handleSubmit(e, true)}
                     loadingText="Saving..."
-                    isLoading={saveOrUpdateQuestionLoading || isSubmitting}
+                    isLoading={clickedButton === 'saveAndNext' && (saveOrUpdateQuestionLoading || isSubmitting)}
                     disabled={saveOrUpdateQuestionLoading || isSubmitting}
                   >
                     Save & Next
