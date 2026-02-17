@@ -1898,7 +1898,7 @@ const AddCandidateForm = ({
 
   // The form content (this part is shared)
   const formContent = (
-    <div className="sm:p-0 p-4 mb-10" ref={formRef}>
+    <div className="sm:p-0 p-4" ref={formRef}>
       {currentFormStep === 1 && (
         <>
           {source !== "candidate-screening" && (
@@ -2305,7 +2305,7 @@ const AddCandidateForm = ({
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 mt-2">
+          <div className="flex justify-end gap-3 mt-6">
             <Button
               variant="outline"
               type="button"
@@ -2836,7 +2836,7 @@ const AddCandidateForm = ({
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 mt-2">
+          <div className="flex justify-end gap-3 mt-6">
             <Button
               variant="outline"
               type="button"

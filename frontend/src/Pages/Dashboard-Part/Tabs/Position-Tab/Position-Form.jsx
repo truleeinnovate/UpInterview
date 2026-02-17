@@ -1449,8 +1449,8 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
               {/* Modal Body */}
               <div className="bg-white rounded-lg shadow-md border">
 
-                <div className="px-6 pt-3">
-                  <form className="space-y-8 mb-5">
+                <div className="px-6 pt-3 pb-4">
+                  <form className="space-y-8 mb-2">
                     {/* SECTION 1: BASIC INFORMATION */}
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800 mb-4">
@@ -1807,9 +1807,9 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           label="Requirements (One Per Line)"
                           required
                           placeholder="5+ years of Salesforce development experience
-Expert knowledge of Apex, Lightning Web Components, and Visualforce
-Strong understanding of Salesforce data model and security
-Experience with Salesforce integrations (REST/SOAP APIs)"
+                          Expert knowledge of Apex, Lightning Web Components, and Visualforce
+                          Strong understanding of Salesforce data model and security
+                          Experience with Salesforce integrations (REST/SOAP APIs)"
                           rows={6}
                           maxLength={2000}
                         />
