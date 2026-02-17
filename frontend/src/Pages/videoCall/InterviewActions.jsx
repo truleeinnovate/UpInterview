@@ -244,7 +244,7 @@ const InterviewActions = ({
       } else {
         response = await updateRoundStatus(payload);
       }
-      console.log("response updateRoundStatus", response);
+      // console.log("response updateRoundStatus", response);
 
       // await updateRoundStatus({
       //   roundId: round?._id,
@@ -364,11 +364,10 @@ const InterviewActions = ({
 
     return (
       <div
-        className={`relative border-2 rounded-xl sm:px-4 p-6 transition-all duration-200 cursor-pointer ${
-          disabled
+        className={`relative border-2 rounded-xl sm:px-4 p-6 transition-all duration-200 cursor-pointer ${disabled
             ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
             : variants[variant]
-        }`}
+          }`}
         onClick={disabled ? undefined : onClick}
       >
         {ready && !disabled && (
@@ -379,25 +378,22 @@ const InterviewActions = ({
 
         <div className="flex items-start gap-4">
           <div
-            className={`p-3 rounded-lg ${
-              disabled ? "bg-gray-200 text-gray-400" : iconColors[variant]
-            }`}
+            className={`p-3 rounded-lg ${disabled ? "bg-gray-200 text-gray-400" : iconColors[variant]
+              }`}
           >
             <Icon size={24} />
           </div>
 
           <div className="flex-1">
             <h3
-              className={`font-semibold mb-2 ${
-                disabled ? "text-gray-400" : "text-gray-800"
-              }`}
+              className={`font-semibold mb-2 ${disabled ? "text-gray-400" : "text-gray-800"
+                }`}
             >
               {title}
             </h3>
             <p
-              className={`text-sm mb-3 ${
-                disabled ? "text-gray-400" : "text-gray-600"
-              }`}
+              className={`text-sm mb-3 ${disabled ? "text-gray-400" : "text-gray-600"
+                }`}
             >
               {description}
             </p>
@@ -538,7 +534,7 @@ const InterviewActions = ({
             }}
             disabled={isCompleted || !candidateActionEnabled || isFinalStatus}
             variant="danger"
-            // timeUntil={!candidateActionEnabled ? getTimeUntilEnabled(new Date(startTime.getTime() + 15 * 60000)) : null}
+          // timeUntil={!candidateActionEnabled ? getTimeUntilEnabled(new Date(startTime.getTime() + 15 * 60000)) : null}
           />
 
           {/* for scheduler Interview Completion */}
@@ -574,7 +570,7 @@ const InterviewActions = ({
             }}
             disabled={isCompleted || !completionActionEnabled || isFinalStatus}
             variant="warning"
-            // timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
+          // timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
           />
 
           {/* Technical Issues */}
@@ -596,22 +592,24 @@ const InterviewActions = ({
           />
 
           {/* Cancel Interview */}
-          <ActionCard
-            icon={Ban}
-            title="Cancel Interview"
-            description="Cancel the interview and notify all parties"
-            // onClick={() => openModal("cancel")}
-            onClick={() => {
-              setActionInProgress(true);
-              setCancelReasonModalOpen(true);
+          {urlData?.isSchedule && (
+            <ActionCard
+              icon={Ban}
+              title="Cancel Interview"
+              description="Cancel the interview and notify all parties"
+              // onClick={() => openModal("cancel")}
+              onClick={() => {
+                setActionInProgress(true);
+                setCancelReasonModalOpen(true);
 
-              // setConfirmAction("Cancelled");
-              // setShowConfirmModal(true);
-            }}
-            disabled={isCompleted || isFinalStatus}
-            variant="danger"
+                // setConfirmAction("Cancelled");
+                // setShowConfirmModal(true);
+              }}
+              disabled={isCompleted || isFinalStatus}
+              variant="danger"
             // ready={canCancel}
-          />
+            />
+          )}
         </div>
       </div>
 
@@ -663,7 +661,7 @@ const InterviewActions = ({
                   // }`}
                   variant="success"
                   onClick={() => handleConfirmStatusChange({ change: true })}
-                  // onClick={handleConfirmStatusChange({ change: true })}
+                // onClick={handleConfirmStatusChange({ change: true })}
                 >
                   Yes, Confirm
                 </Button>

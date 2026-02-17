@@ -3629,8 +3629,8 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
   };
 
   // If upcomingOnly is true, we'll only return upcoming interviews
-  // const isUpcomingRequest =
-  //   filterQuery?.upcomingOnly === true || options.type === "upcoming";
+  const isUpcomingRequest =
+    filterQuery?.upcomingOnly === true || options.type === "upcoming";
 
   const now = new Date();
 
@@ -3655,10 +3655,10 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
   // --------------------------------------------------------------------
   // TOTAL INTERVIEWS (All time count)
   // --------------------------------------------------------------------
-  const totalInterviews = await DataModel.countDocuments({
-    tenantId,
-    ...(ownerId ? { ownerId } : {}),
-  });
+  // const totalInterviews = await DataModel.countDocuments({
+  //   tenantId,
+  //   ...(ownerId ? { ownerId } : {}),
+  // });
 
   // --------------------------------------------------------------------
   // CURRENT MONTH & LAST MONTH INTERVIEWS (Based on rounds)

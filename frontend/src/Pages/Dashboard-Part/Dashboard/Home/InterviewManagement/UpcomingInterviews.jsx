@@ -36,7 +36,7 @@ const InterviewerSchedule = () => {
     type,
   );
 
-  console.log("interviewData InterviewerSchedule", responseDashBoard);
+  // console.log("interviewData InterviewerSchedule", responseDashBoard);
   // interviewData is get from useInterviews hook
   const interviewRounds = responseDashBoard?.upcomingRoundsData;
 
@@ -163,13 +163,13 @@ const InterviewerSchedule = () => {
             })}
           </p>
         </div>
-        <button
+        {/* <button
           onClick={() => navigate("/interviews")}
           className="flex items-center sm:space-x-1 space-x-2 bg-custom-blue text-white sm:text-xs px-3 py-1.5 sm:rounded-lg rounded-xl hover:bg-custom-blue/90 transition-all duration-300"
         >
           <span className="text-sm font-medium">View All</span>
           <ChevronRight className="w-[18px] h-[18px]" />
-        </button>
+        </button> */}
       </div>
       {/* v1.0.1 -------------------------------------------------------------------> */}
 
@@ -187,19 +187,17 @@ const InterviewerSchedule = () => {
             const interviewCode = round?.interviewCode || "no interview";
             const candidateName = round?.candidate
               ? // <------v1.0.0----------Venkatesh----------
-                `${
-                  round?.candidate?.FirstName &&
-                  round?.candidate?.FirstName.charAt(0).toUpperCase() +
-                    round?.candidate?.FirstName.slice(1)
-                } ${
-                  round?.candidate?.LastName &&
-                  round?.candidate?.LastName.charAt(0).toUpperCase() +
-                    round?.candidate?.LastName.slice(1)
-                }` || "Unknown Candidate"
+              `${round?.candidate?.FirstName &&
+              round?.candidate?.FirstName.charAt(0).toUpperCase() +
+              round?.candidate?.FirstName.slice(1)
+              } ${round?.candidate?.LastName &&
+              round?.candidate?.LastName.charAt(0).toUpperCase() +
+              round?.candidate?.LastName.slice(1)
+              }` || "Unknown Candidate"
               : "Unknown Candidate";
             const positionTitle = round?.position?.title
               ? round.position?.title?.charAt(0).toUpperCase() +
-                round.position?.title?.slice(1)
+              round.position?.title?.slice(1)
               : "Unknown Position";
             // ------v1.0.0----------Venkatesh---------->
             const companyName = round.position?.companyname || "";
@@ -210,12 +208,11 @@ const InterviewerSchedule = () => {
               <div
                 key={round._id}
                 className={`absolute top-0 left-0 w-full p-5 border border-gray-100 rounded-xl bg-white hover:border-purple-100 hover:shadow-md transition-all duration-500
-                  ${
-                    index === currentIndex
-                      ? "opacity-100 translate-x-0"
-                      : index < currentIndex
-                        ? "-translate-x-full opacity-0"
-                        : "translate-x-full opacity-0"
+                  ${index === currentIndex
+                    ? "opacity-100 translate-x-0"
+                    : index < currentIndex
+                      ? "-translate-x-full opacity-0"
+                      : "translate-x-full opacity-0"
                   }`}
               >
                 <div className="space-y-4 w-full">
@@ -403,9 +400,8 @@ const InterviewerSchedule = () => {
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex ? "bg-custom-blue w-4" : "bg-gray-300"
-              }`}
+              className={`w-2 h-2 rounded-full transition-all ${index === currentIndex ? "bg-custom-blue w-4" : "bg-gray-300"
+                }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}

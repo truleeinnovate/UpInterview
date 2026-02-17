@@ -288,24 +288,24 @@ function JoinMeeting() {
     );
   }
 
-  if (anyError) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-red-600 text-xl mb-4">⚠️</div>
-          <p className="text-gray-800 mb-4">
-            {authError || "An error occurred"}
-          </p>
-          <button
-            onClick={() => redirectToLogin(authType === "individual")}
-            className="bg-custom-blue text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // if (anyError) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-screen">
+  //       <div className="text-center">
+  //         <div className="text-red-600 text-xl mb-4">⚠️</div>
+  //         <p className="text-gray-800 mb-4">
+  //           {authError || "An error occurred"}
+  //         </p>
+  //         <button
+  //           onClick={() => redirectToLogin(authType === "individual")}
+  //           className="bg-custom-blue text-white px-4 py-2 rounded hover:bg-blue-700"
+  //         >
+  //           Go to Login
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // candidate view page  path
   if (urlRoleInfo?.isCandidate) {

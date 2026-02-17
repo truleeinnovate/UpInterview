@@ -1370,11 +1370,13 @@ const updateInterviewRoundStatus = async (req, res) => {
     const interviewerIds = (existingRound.interviewers || []).map((id) => id);
 
 
-    const draftCount = await FeedbackModel.countDocuments({
-      interviewRoundId: existingRound._id,
+    const submittedCount = await FeedbackModel.countDocuments({
+      interviewRoundId: existingRound?._id,
       interviewerId: { $in: interviewerIds },
-      status: "draft",
+      status: "submitted",
     });
+
+    const allInterviewerssubmittedCount = submittedCount === interviewerIds.length
 
 
 
@@ -1390,7 +1392,7 @@ const updateInterviewRoundStatus = async (req, res) => {
 
       if (
         existingRound.interviewerType === "External" &&
-        existingRound.status === "FeedbackPending" && draftCount
+        existingRound.status === "FeedbackPending" && !allInterviewerssubmittedCount
       ) {
         return res.status(400).json({
           success: false,
@@ -1505,10 +1507,10 @@ const updateInterviewRoundStatus = async (req, res) => {
     //   interviewRoundId: existingRound._id,
     //   interviewerId: { $in: interviewerIds },
     // });
-    const feedbacks = await FeedbackModel.find({
-      interviewRoundId: existingRound._id,
-      interviewerId: { $in: interviewerIds },
-    }).select("interviewerId status");
+    // const feedbacks = await FeedbackModel.find({
+    //   interviewRoundId: existingRound._id,
+    //   interviewerId: { $in: interviewerIds },
+    // }).select("interviewerId status");
 
     // Build a map: interviewerId -> status
     // const feedbackStatusMap = new Map(
@@ -1530,7 +1532,7 @@ const updateInterviewRoundStatus = async (req, res) => {
     //       feedbackStatusMap.get(interviewerId) === "draft",
     //   );
 
-    const allInterviewersDraft = draftCount === interviewerIds.length;
+    // const allInterviewersDraft = draftCount === interviewerIds.length;
 
     // console.log("interviewerIds", allInterviewersDraft);
 
@@ -1644,7 +1646,7 @@ const updateInterviewRoundStatus = async (req, res) => {
       //   (p) => p.role === "Interviewer" && p.role === "Candidate",
       // );
 
-      const latestRound = await MockInterviewRound.findById(roundId);
+      const latestRound = await InterviewRounds.findById(roundId);
       const participants = latestRound?.participants || [];
 
       const hasInterviewer = participants.some(
@@ -1701,7 +1703,7 @@ const updateInterviewRoundStatus = async (req, res) => {
 
       if (
         action === "Completed" &&
-        allInterviewersDraft &&
+        !allInterviewerssubmittedCount &&
         existingRound.interviewMode === "Virtual"
       ) {
         smartUpdate = await buildSmartRoundUpdate({
@@ -1713,7 +1715,7 @@ const updateInterviewRoundStatus = async (req, res) => {
           actingAsUserId,
           statusChanged: true,
         });
-      } else if (!allInterviewersDraft && action === "Completed") {
+      } else if (allInterviewerssubmittedCount && action === "Completed") {
         smartUpdate = await buildSmartRoundUpdate({
           existingRound,
           body: {

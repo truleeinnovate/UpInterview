@@ -2706,7 +2706,7 @@ function OutsourcedInterviewerModal({
                   disabled={selectedInterviewersLocal.length === 0}
                   className="bg-custom-blue px-4 py-2 rounded-md text-white hover:bg-custom-blue/90 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  Schedule ({selectedInterviewersLocal.length})
+                  Proceed ({selectedInterviewersLocal.length})
                 </button>
               </div>
             </div>

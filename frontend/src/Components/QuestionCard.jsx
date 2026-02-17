@@ -125,7 +125,7 @@ const QuestionCard = ({
             )}
 
             {/* Why Dislike Section */}
-            {mode === 'edit' && <DisLikeSection each={question} />}
+            {mode === 'edit' && showDislikeSection && <DisLikeSection each={question} />}
 
             {/* View Mode Notes */}
             {mode === 'view' && question.notesBool && question.note && (

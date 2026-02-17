@@ -2504,6 +2504,58 @@ const MockSchedulelater = () => {
     };
   }, []);
 
+  // const handleScheduledDateChange = (e) => {
+  //   const val = e.target.value;
+
+  //   // Clear any existing timeout
+  //   if (dateChangeTimeoutRef.current) {
+  //     clearTimeout(dateChangeTimeoutRef.current);
+  //   }
+
+  //   // Check if we SHOULD show confirmation (Condition: Not reschedule, Not request sent, Has external interviewers, Date actually changed)
+  //   const shouldShowConfirmation =
+  //     !isReschedule &&
+  //     !isRequestSent &&
+  //     externalInterviewers.length > 0 &&
+  //     val !== scheduledDate;
+
+  //   if (shouldShowConfirmation) {
+  //     setPendingDateChange({
+  //       type: "scheduledDate",
+  //       value: val,
+  //     });
+
+  //     // Set new timeout
+  //     dateChangeTimeoutRef.current = setTimeout(() => {
+  //       setShowDateChangeConfirmation(true);
+  //     }, 1000);
+  //     return;
+  //   }
+
+  //   // If conditions NOT met (e.g. Reschedule mode), proceed immediately
+  //   // If external interviewers exist but we are in reschedule mode, we silently clear them (per original logic implication, or maybe user wants them to stay? 
+  //   // The original logic was: if externalInterviewers > 0 -> clear them.
+  //   // So if we skip confirmation, we must still clear them if they exist.
+
+  //   if (externalInterviewers.length > 0) {
+  //     setExternalInterviewers([]);
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       rounds: {
+  //         ...prev.rounds,
+  //         interviewers: [],
+  //       },
+  //     }));
+  //     // If we silently clear, we might want to notify
+  //     if (!isReschedule && !isRequestSent) {
+  //       // This case should theoretically be caught by shouldShowConfirmation, 
+  //       // but if for some reason we are here and not showing popup (maybe val === scheduledDate?), we just proceed.
+  //     }
+  //   }
+
+  //   setScheduledDate(val);
+  // };
+
   const handleScheduledDateChange = (e) => {
     const val = e.target.value;
 
@@ -2512,33 +2564,39 @@ const MockSchedulelater = () => {
       clearTimeout(dateChangeTimeoutRef.current);
     }
 
-    // Check if we SHOULD show confirmation (Condition: Not reschedule, Not request sent, Has external interviewers, Date actually changed)
+    // ✅ ADD THIS — calculate minimum allowed date
+    const minVal = twoHoursFromNowLocal();
+
+    // ✅ ADD THIS — enforce 2 hour rule
+    const validatedDate = val && val < minVal ? minVal : val;
+
+    // Check if we SHOULD show confirmation
     const shouldShowConfirmation =
       !isReschedule &&
       !isRequestSent &&
       externalInterviewers.length > 0 &&
-      val !== scheduledDate;
+      validatedDate !== scheduledDate; // use validatedDate
 
     if (shouldShowConfirmation) {
       setPendingDateChange({
         type: "scheduledDate",
-        value: val,
+        value: validatedDate, // use validatedDate
       });
 
-      // Set new timeout
       dateChangeTimeoutRef.current = setTimeout(() => {
         setShowDateChangeConfirmation(true);
       }, 1000);
+
       return;
     }
 
-    // If conditions NOT met (e.g. Reschedule mode), proceed immediately
-    // If external interviewers exist but we are in reschedule mode, we silently clear them (per original logic implication, or maybe user wants them to stay? 
-    // The original logic was: if externalInterviewers > 0 -> clear them.
-    // So if we skip confirmation, we must still clear them if they exist.
-
-    if (externalInterviewers.length > 0) {
+    // Clear external interviewers if needed
+    if (
+      externalInterviewers.length > 0 &&
+      validatedDate !== scheduledDate
+    ) {
       setExternalInterviewers([]);
+
       setFormData((prev) => ({
         ...prev,
         rounds: {
@@ -2546,15 +2604,12 @@ const MockSchedulelater = () => {
           interviewers: [],
         },
       }));
-      // If we silently clear, we might want to notify
-      if (!isReschedule && !isRequestSent) {
-        // This case should theoretically be caught by shouldShowConfirmation, 
-        // but if for some reason we are here and not showing popup (maybe val === scheduledDate?), we just proceed.
-      }
     }
 
-    setScheduledDate(val);
+    // ✅ Use validatedDate instead of val
+    setScheduledDate(validatedDate);
   };
+
 
   const handleInterviewTypeChange = (type) => {
     if (type === interviewType) return;
@@ -3474,7 +3529,7 @@ const MockSchedulelater = () => {
                                     );
                                   }
                                 }}
-                                min={new Date().toISOString().slice(0, 16)}
+                                min={twoHoursFromNowLocal()}
                                 className="mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
                                 border border-gray-300 focus:ring-gray-300 focus:outline-gray-300"
                               />

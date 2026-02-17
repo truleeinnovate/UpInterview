@@ -86,22 +86,6 @@ const InterviewsMiniTabComponent = ({
   );
   const { useInterviewDetails } = useInterviews();
 
-  const getDefaultTab = () => {
-    // If mock interview → default to Interviewer Questions (id: 2)
-    if (urlData?.interviewType === "mockinterview") {
-      return 2;
-    }
-
-    // If schedule mode → interviewer tab hidden → force 1
-    if (urlData?.isSchedule) {
-      return 1;
-    }
-
-    return 1;
-  };
-
-  const [interviewMiniTab, setInterviewMiniTab] = useState(getDefaultTab);
-
 
   // Validation errors state
   const [errors, setErrors] = useState({
@@ -183,6 +167,25 @@ const InterviewsMiniTabComponent = ({
     }
     return raw;
   }, [locationFeedback, feedbackDatas, isViewMode]);
+
+  const getDefaultTab = () => {
+    // If mock interview → default to Interviewer Questions (id: 2)
+    if (urlData?.interviewType || interviewType === "mockinterview" || feedbackData?.isMockInterview === true) {
+      return 2;
+    }
+
+    // If schedule mode → interviewer tab hidden → force 1
+    if (urlData?.isSchedule) {
+      return 1;
+    }
+
+    return 1;
+  };
+
+  console.log("feedbackData?.isMockInterview", feedbackData?.isMockInterview)
+
+  const [interviewMiniTab, setInterviewMiniTab] = useState(getDefaultTab);
+
 
   // const feedbackData = React.useMemo(() => locationFeedback || {}, [locationFeedback]);
   const feedbackId =
@@ -721,12 +724,12 @@ const InterviewsMiniTabComponent = ({
       >
         {interviewMiniTabsList
           .filter((each) => {
-            // Hide "Interviewer - added Questions" tab when isSchedule is true
-            if (urlData?.isSchedule && each.id === 2) {
-              return false;
-            } if (urlData?.interviewType === 'mockinterview' && each.id === 1) {
-              return false;
-            }
+            const isMock =
+              isMockInterview;
+
+            if (urlData?.isSchedule && each.id === 2) return false;
+            if (isMock && each.id === 1) return false;
+
             return true;
           })
           .map((each) => (
