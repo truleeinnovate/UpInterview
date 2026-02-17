@@ -851,7 +851,7 @@ const InterviewerSectionComponent = ({
                         e.target.value,
                       )
                     }
-                    disabled={isReadOnly || decodedData?.schedule}
+                    disabled={isReadOnly}
                   />
                   <label
                     htmlFor={`dislike-${each.questionId || each.id}-${option.value
@@ -904,38 +904,44 @@ const InterviewerSectionComponent = ({
               <span className="text-[red]">*</span>
             )}
         </p>
-        <div
-          className={`w-full grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-x-8 gap-y-2`}
-        >
-          {["Not Answered", "Partially Answered", "Fully Answered"].map(
-            (option) => (
-              <span key={option} className="flex items-center gap-2">
-                <input
-                  checked={each.isAnswered === option}
-                  value={option}
-                  name={`isAnswered-${each.questionId || each.id}`}
-                  type="radio"
-                  id={`isAnswered-${each.questionId || each.id}-${option}`}
-                  onChange={(e) =>
-                    onChangeRadioInput(
-                      each.questionId || each._id || each.id,
-                      e.target.value,
-                    )
-                  }
-                  // className="accent-custom-blue whitespace-nowrap text-sm"
-                  className="accent-custom-blue whitespace-nowrap text-sm"
-                  disabled={isReadOnly || decodedData?.schedule}
-                />
-                <label
-                  htmlFor={`isAnswered-${each.questionId || each.id}-${option}`}
-                  className="text-sm cursor-pointer"
-                >
-                  {option}
-                </label>
-              </span>
-            ),
+        {isEditMode || isAddMode ?
+          <div
+            className={`w-full grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-x-8 gap-y-2`}
+          >
+            {["Not Answered", "Partially Answered", "Fully Answered"].map(
+              (option) => (
+                <span key={option} className="flex items-center gap-2">
+                  <input
+                    checked={each.isAnswered === option}
+                    value={option}
+                    name={`isAnswered-${each.questionId || each.id}`}
+                    type="radio"
+                    id={`isAnswered-${each.questionId || each.id}-${option}`}
+                    onChange={(e) =>
+                      onChangeRadioInput(
+                        each.questionId || each._id || each.id,
+                        e.target.value,
+                      )
+                    }
+                    // className="accent-custom-blue whitespace-nowrap text-sm"
+                    className="accent-custom-blue whitespace-nowrap text-sm"
+                    disabled={isReadOnly || decodedData?.schedule}
+                  />
+                  <label
+                    htmlFor={`isAnswered-${each.questionId || each.id}-${option}`}
+                    className="text-sm cursor-pointer"
+                  >
+                    {option}
+                  </label>
+                </span>
+              ),
+            )}
+          </div>
+          : (
+            <p className="w-full flex gap-x-8 gap-y-2 ">
+              {each.isAnswered || "Not Answered"}
+            </p>
           )}
-        </div>
       </div>
     );
   });

@@ -131,7 +131,7 @@ const FeedbackForm = ({
     // interviewType: urlData?.interviewType,
   });
 
-  console.log("feedbackDatas", feedbackDatas)
+  // console.log("feedbackDatas", feedbackDatas)
 
   const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType || locationFeedback?.isMockInterview;
 
@@ -176,9 +176,9 @@ const FeedbackForm = ({
 
   const positionData = isMockInterview ? {} : interviewData?.positionId || {};
 
-  console.log("positionData", positionData)
+  // console.log("positionData", positionData)
 
-  console.log("positioncandidateDataData", candidateData)
+  // console.log("positioncandidateDataData", candidateData)
 
   const feedbackData = useMemo(() => {
     const raw = locationFeedback || feedbackDatas || {};
@@ -205,7 +205,7 @@ const FeedbackForm = ({
   // Read-only mode applies if viewed in read-only mode OR if the feedback is already submitted
   const isReadOnly = isViewMode || isSubmitted;
 
-  console.log("feedbackData", feedbackData);
+  // console.log("feedbackData", feedbackData);
 
   const getInterviewerSectionData = useCallback(() => {
     // 1. Try to get questions from the specific feedback object (if editing/viewing)
@@ -224,7 +224,7 @@ const FeedbackForm = ({
 
     if (!questions || questions.length === 0) return [];
 
-    console.log("questions questions", questions);
+    // console.log("questions questions", questions);
 
     const allQuestions =
       Array.isArray(questions)
@@ -257,7 +257,7 @@ const FeedbackForm = ({
 
   const [interviewerSectionData, setInterviewerSectionData] = useState(() => getInterviewerSectionData());
 
-  console.log("interviewerSectionData", interviewerSectionData)
+  // console.log("interviewerSectionData", interviewerSectionData)
 
   // Track if initial load was done — we must NOT reset interviewerSectionData
   // on every feedbackData change because that wipes user modifications

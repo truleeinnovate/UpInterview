@@ -1358,7 +1358,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
 
     const isParticipantUpdate = req.body?.role || req.body?.joined;
 
-    console.log("req.body", req.body);
+    console.log("req.body isParticipantUpdate", req.body);
 
     // console.log("req.body", req.body);
 
@@ -1475,26 +1475,44 @@ exports.updateInterviewRoundStatus = async (req, res) => {
 
     const allInterviewersDraft = draftCount === interviewerIds.length;
 
-    console.log("interviewerIds", allInterviewersDraft);
+    // console.log("interviewerIds", allInterviewersDraft);
 
     let smartUpdate = null;
 
     //  when candidate and interviewer both are present in the round then create history
     if (req.body?.History_Type === "Histoy_Handling") {
       // Special handling: only create history if conditions are met
-      const participants = updatedRoundData?.participants || [];
-      // const isHistoryHandled = participants.some(
-      //   (p) => p.role.toLowerCase() === "interviewer" && p.role === "Candidate",
+      // const participants = updatedRoundData?.participants || [];
+      // // const isHistoryHandled = participants.some(
+      // //   (p) => p.role.toLowerCase() === "interviewer" && p.role === "Candidate",
+      // // );
+
+      // console.log("participants", participants);
+      // const hasInterviewer = participants.some(
+      //   (p) => p.role === "Interviewer"
+      // );
+
+      // const hasCandidate = participants.some(
+      //   (p) => p.role === "Candidate"
       // );
 
 
+
+      const latestRound = await MockInterviewRound.findById(roundId);
+      const participants = latestRound?.participants || [];
+
       const hasInterviewer = participants.some(
-        (p) => p.role === "Interviewer"
+        p => p.role === "Interviewer" && p.status === "Joined"
       );
 
       const hasCandidate = participants.some(
-        (p) => p.role === "Candidate"
+        p => p.role === "Candidate" && p.status === "Joined"
       );
+
+
+      console.log("participants", participants);
+      console.log("hasInterviewer", hasInterviewer);
+      console.log("hasCandidate", hasCandidate);
 
       const isHistoryHandled = hasInterviewer && hasCandidate;
       console.log("isHistoryHandled", isHistoryHandled)
@@ -1569,40 +1587,40 @@ exports.updateInterviewRoundStatus = async (req, res) => {
       }
     }
 
-    console.log("smartUpdate", smartUpdate)
+    // console.log("smartUpdate", smartUpdate)
 
     // Extra logic ONLY for Cancelled (outside smart update)
     let extraUpdate = { $set: {} };
     let shouldSendCancellationEmail = false;
 
-    if (action === "Completed") {
-      // Auto-settlement for completed interviews ONLY if feedback is submitted
-      if (existingRound.interviewerType === "External") {
-        try {
-          await processAutoSettlement({
-            roundId: existingRound._id.toString(),
-            action: "Completed",
-            //reasonCode: reasonCode || comment || null,
-          });
-          console.log(
-            "[updateInterviewRoundStatus] Auto-settlement completed for round:",
-            existingRound._id,
-          );
-        } catch (settlementError) {
-          console.error(
-            "[updateInterviewRoundStatus] Auto-settlement error:",
-            settlementError,
-          );
-          // Continue with status update even if settlement fails
-        }
-      }
-      // //  else {
-      // //   console.log(
-      // //     "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
-      // //     existingRound._id,
-      // //   );
-      // }
-    }
+    // if (action === "Completed") {
+    //   // Auto-settlement for completed interviews ONLY if feedback is submitted
+    //   if (existingRound.interviewerType === "External") {
+    //     try {
+    //       await processAutoSettlement({
+    //         roundId: existingRound._id.toString(),
+    //         action: "Completed",
+    //         //reasonCode: reasonCode || comment || null,
+    //       });
+    //       console.log(
+    //         "[updateInterviewRoundStatus] Auto-settlement completed for round:",
+    //         existingRound._id,
+    //       );
+    //     } catch (settlementError) {
+    //       console.error(
+    //         "[updateInterviewRoundStatus] Auto-settlement error:",
+    //         settlementError,
+    //       );
+    //       // Continue with status update even if settlement fails
+    //     }
+    //   }
+    //   // //  else {
+    //   // //   console.log(
+    //   // //     "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
+    //   // //     existingRound._id,
+    //   // //   );
+    //   // }
+    // }
 
     if (action === "Cancelled") {
       if (existingRound.interviewerType === "External") {
@@ -1695,11 +1713,11 @@ exports.updateInterviewRoundStatus = async (req, res) => {
       return out;
     }
 
-    console.log("smartUpdate", smartUpdate);
+    // console.log("smartUpdate", smartUpdate);
 
     let finalUpdate = smartUpdate;
 
-    console.log("finalUpdate", finalUpdate);
+    // console.log("finalUpdate", finalUpdate);
 
     // if (Object.keys(extraUpdate.$set).length > 0) {
     //   finalUpdate = mergeUpdates(

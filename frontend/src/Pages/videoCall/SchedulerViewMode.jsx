@@ -14,7 +14,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
   } = feedbackData || {};
 
   console.log("schedulerFeedbackData SchedulerViewMode", feedbackData)
-
+  console.log("isViewMode SchedulerViewMode", isViewMode)
   // Track which feedback is active
   const [activeFeedbackIndex, setActiveFeedbackIndex] = useState(0);
 
@@ -155,117 +155,119 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
         </div>
 
         {/* Questions */}
-        <div>
-          <h4 className="font-medium text-gray-700 mb-2">
-            Questions & Feedback
-          </h4>
-          {questionsWithDetails.length > 0 ? (
-            <div className="space-y-4">
-              {questionsWithDetails.map((question, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-xl border border-gray-200 shadow-sm p-6"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                      {(question.snapshot?.technology && question.snapshot.technology[0]) ||
-                        (question.snapshot?.snapshot?.technology && question.snapshot.snapshot.technology[0]) ||
-                        (question.snapshot?.category && question.snapshot.category[0]) ||
-                        (question.snapshot?.snapshot?.category && question.snapshot.snapshot.category[0]) ||
-                        (typeof question.snapshot?.skill === 'string' ? question.snapshot.skill : null) ||
-                        (typeof question.snapshot?.snapshot?.skill === 'string' ? question.snapshot.snapshot.skill : null) ||
-                        question.snapshot?.skill?.[0] ||
-                        question.snapshot?.snapshot?.skill?.[0] ||
-                        "N/A"}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {question.snapshot?.difficultyLevel ||
-                        question.snapshot?.snapshot?.difficultyLevel ||
-                        question.snapshot?.difficulty ||
-                        question.snapshot?.snapshot?.difficulty ||
-                        "N/A"}
-                    </span>
-                  </div>
-
-                  <h3 className="font-semibold text-gray-800 mb-2">
-                    {question.snapshot?.questionText ||
-                      question.snapshot?.snapshot?.questionText ||
-                      question.question ||
-                      "N/A"}
-                  </h3>
-
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium text-gray-600 mb-2">
-                      Expected Answer:
-                    </p>
-                    <p className="text-sm text-gray-700">
-                      {question.snapshot?.correctAnswer ||
-                        question.snapshot?.snapshot?.correctAnswer ||
-                        question.snapshot?.expectedAnswer ||
-                        question.snapshot?.snapshot?.expectedAnswer ||
-                        "N/A"}
-                    </p>
-                  </div>
-
-                  <div className="mt-4">
-                    <p className="text-sm font-medium text-gray-600 mb-1">
-                      Candidate Response:
-                    </p>
-                    <p className="text-sm text-gray-800">
-                      {question.candidateAnswer?.answerType || "Not answered"}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-2">
-                    <span
-                      className={
-                        question.interviewerFeedback?.liked === "liked"
-                          ? "text-green-700"
-                          : ""
-                      }
+        {/* {!isViewMode &&
+          (
+            < div >
+              <h4 className="font-medium text-gray-700 mb-2">
+                Questions & Feedback
+              </h4>
+              {questionsWithDetails.length > 0 ? (
+                <div className="space-y-4">
+                  {questionsWithDetails.map((question, index) => (
+                    <div
+                      key={index}
+                      className="bg-white rounded-xl border border-gray-200 shadow-sm p-6"
                     >
-                      <ThumbsUp className="h-4 w-4" />
-                    </span>
-                    <span
-                      className={
-                        question.interviewerFeedback?.liked === "disliked"
-                          ? "text-red-500"
-                          : ""
-                      }
-                    >
-                      <ThumbsDown className="h-4 w-4" />
-                    </span>
-                  </div>
+                      <div className="flex items-start justify-between mb-3">
+                        <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
+                          {(question.snapshot?.technology && question.snapshot.technology[0]) ||
+                            (question.snapshot?.snapshot?.technology && question.snapshot.snapshot.technology[0]) ||
+                            (question.snapshot?.category && question.snapshot.category[0]) ||
+                            (question.snapshot?.snapshot?.category && question.snapshot.snapshot.category[0]) ||
+                            (typeof question.snapshot?.skill === 'string' ? question.snapshot.skill : null) ||
+                            (typeof question.snapshot?.snapshot?.skill === 'string' ? question.snapshot.snapshot.skill : null) ||
+                            question.snapshot?.skill?.[0] ||
+                            question.snapshot?.snapshot?.skill?.[0] ||
+                            "N/A"}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {question.snapshot?.difficultyLevel ||
+                            question.snapshot?.snapshot?.difficultyLevel ||
+                            question.snapshot?.difficulty ||
+                            question.snapshot?.snapshot?.difficulty ||
+                            "N/A"}
+                        </span>
+                      </div>
 
-                  {question.interviewerFeedback?.dislikeReason && (
-                    <div className="mt-2">
-                      <p className="text-sm font-medium text-gray-600">
-                        Dislike Reason:
-                      </p>
-                      <p className="text-sm text-gray-800">
-                        {question.interviewerFeedback.dislikeReason}
-                      </p>
-                    </div>
-                  )}
+                      <h3 className="font-semibold text-gray-800 mb-2">
+                        {question.snapshot?.questionText ||
+                          question.snapshot?.snapshot?.questionText ||
+                          question.question ||
+                          "N/A"}
+                      </h3>
 
-                  {question.interviewerFeedback?.note && (
-                    <div className="mt-2">
-                      <p className="text-sm font-medium text-gray-600">
-                        Interviewer Note:
-                      </p>
-                      <p className="text-sm text-gray-800">
-                        {question.interviewerFeedback.note}
-                      </p>
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                        <p className="text-sm font-medium text-gray-600 mb-2">
+                          Expected Answer:
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          {question.snapshot?.correctAnswer ||
+                            question.snapshot?.snapshot?.correctAnswer ||
+                            question.snapshot?.expectedAnswer ||
+                            question.snapshot?.snapshot?.expectedAnswer ||
+                            "N/A"}
+                        </p>
+                      </div>
+
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-gray-600 mb-1">
+                          Candidate Response:
+                        </p>
+                        <p className="text-sm text-gray-800">
+                          {question.candidateAnswer?.answerType || "Not answered"}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-2">
+                        <span
+                          className={
+                            question.interviewerFeedback?.liked === "liked"
+                              ? "text-green-700"
+                              : ""
+                          }
+                        >
+                          <ThumbsUp className="h-4 w-4" />
+                        </span>
+                        <span
+                          className={
+                            question.interviewerFeedback?.liked === "disliked"
+                              ? "text-red-500"
+                              : ""
+                          }
+                        >
+                          <ThumbsDown className="h-4 w-4" />
+                        </span>
+                      </div>
+
+                      {question.interviewerFeedback?.dislikeReason && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-gray-600">
+                            Dislike Reason:
+                          </p>
+                          <p className="text-sm text-gray-800">
+                            {question.interviewerFeedback.dislikeReason}
+                          </p>
+                        </div>
+                      )}
+
+                      {question.interviewerFeedback?.note && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-gray-600">
+                            Interviewer Note:
+                          </p>
+                          <p className="text-sm text-gray-800">
+                            {question.interviewerFeedback.note}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <p className="text-gray-500 text-sm">No questions answered yet</p>
+              )}
             </div>
-          ) : (
-            <p className="text-gray-500 text-sm">No questions answered yet</p>
-          )}
-        </div>
-
+          )} */}
         {/* Overall Comments */}
         <div>
           <h4 className="font-medium text-gray-700 mb-2">Overall Comments</h4>
@@ -287,7 +289,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

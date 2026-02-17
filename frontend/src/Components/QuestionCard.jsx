@@ -19,7 +19,8 @@ const QuestionCard = ({
     DisLikeSection,
     dislikeQuestionId,
     RadioGroupInput,
-    SharePopupSection
+    SharePopupSection,
+    isViewMode
 }) => {
     const questionId = question.questionId || question.id || question._id;
     const technology = question?.snapshot?.technology?.[0] ||
@@ -27,6 +28,8 @@ const QuestionCard = ({
         question?.snapshot?.category?.[0] ||
         question?.snapshot?.snapshot?.category?.[0] ||
         "N/A";
+
+    console.log("isViewMode", isViewMode)
 
     const difficulty = question.snapshot?.difficultyLevel ||
         question.snapshot?.snapshot?.difficultyLevel ||
@@ -95,6 +98,7 @@ const QuestionCard = ({
                     onDislikeToggle={onDislikeToggle}
                     RadioGroupInput={RadioGroupInput}
                     question={question}
+                    isViewMode={isViewMode}
                 />
             ) : (
                 <EditModeActions
@@ -121,7 +125,7 @@ const QuestionCard = ({
             )}
 
             {/* Why Dislike Section */}
-            {showDislikeSection && <DisLikeSection each={question} />}
+            {mode === 'edit' && <DisLikeSection each={question} />}
 
             {/* View Mode Notes */}
             {mode === 'view' && question.notesBool && question.note && (
@@ -135,29 +139,31 @@ const QuestionCard = ({
 };
 
 // View Mode Actions
-const ViewModeActions = ({ questionId, isLiked, isDisliked, onLikeToggle, onDislikeToggle, RadioGroupInput, question }) => (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3 pt-3 border-t border-gray-100">
+const ViewModeActions = ({ questionId, isLiked, isDisliked, onLikeToggle, onDislikeToggle, RadioGroupInput, question, isViewMode }) => (
+    <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3 pt-3 border-t border-gray-100 ${isViewMode ? 'hidden' : ''}`}>
         <div className="w-full sm:w-auto">
             {RadioGroupInput && <RadioGroupInput each={question} />}
         </div>
-        <div className="flex items-center gap-3">
-            <button
-                onClick={() => onLikeToggle(questionId)}
-                className={`transition-all hover:scale-110 p-1.5 rounded-full ${isLiked ? 'text-green-600 bg-green-50' : 'text-gray-400 hover:bg-gray-50'
-                    }`}
-                aria-label="Like"
-            >
-                <ThumbsUp className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-            <button
-                onClick={() => onDislikeToggle(questionId)}
-                className={`transition-all hover:scale-110 p-1.5 rounded-full ${isDisliked ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:bg-gray-50'
-                    }`}
-                aria-label="Dislike"
-            >
-                <ThumbsDown className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-        </div>
+        {/* {!isViewMode &&
+            <div className="flex items-center gap-3">
+                <button
+                    onClick={() => onLikeToggle(questionId)}
+                    className={`transition-all hover:scale-110 p-1.5 rounded-full ${isLiked ? 'text-green-600 bg-green-50' : 'text-gray-400 hover:bg-gray-50'
+                        }`}
+                    aria-label="Like"
+                >
+                    <ThumbsUp className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+                <button
+                    onClick={() => onDislikeToggle(questionId)}
+                    className={`transition-all hover:scale-110 p-1.5 rounded-full ${isDisliked ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:bg-gray-50'
+                        }`}
+                    aria-label="Dislike"
+                >
+                    <ThumbsDown className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+            </div>
+        } */}
     </div>
 );
 

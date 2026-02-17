@@ -23,6 +23,7 @@ const {
 } = require("../models/Mockinterview/mockinterviewRound.js");
 const { MockInterview } = require("../models/Mockinterview/mockinterview.js");
 const { processAutoSettlement } = require("../utils/interviewWalletUtil.js");
+const { buildSmartRoundUpdate } = require("./interviewRoundsController.js");
 
 // const mongoose = require("mongoose");
 // const FeedbackModel = require("../models/InterviewFeedback");
@@ -81,7 +82,13 @@ const createFeedback = async (req, res) => {
       feedbackCode,
     } = req.body; //validatedData;
 
-    console.log("req.body qFeedback", req.body);
+    // Extract tenantId and ownerId from auth context (priority) or body
+    const authContext = res.locals.auth || {};
+    // const tenantId = authContext.actingAsTenantId || bodyTenantId;
+    // const ownerId = authContext.actingAsUserId || bodyOwnerId;
+
+
+    // console.log("req.body qFeedback", req.body);
 
     // const filteredSkills = (skills || []).filter(s => s.skillName && s.skillName.trim() !== "");
 
@@ -105,7 +112,7 @@ const createFeedback = async (req, res) => {
       for (let i = 0; i < questionFeedback.length; i++) {
         const qFeedback = questionFeedback[i];
         const rawQuestion = qFeedback?.questionId;
-        console.log("rawQuestion", rawQuestion)
+        // console.log("rawQuestion", rawQuestion)
 
         let identifier = "";
         let bankDetails = null;
@@ -117,7 +124,7 @@ const createFeedback = async (req, res) => {
           bankDetails = rawQuestion;
         }
 
-        console.log("bankDetails", bankDetails)
+        // console.log("bankDetails", bankDetails)
 
         if (!identifier) continue;
 
@@ -313,10 +320,21 @@ const createFeedback = async (req, res) => {
 
     await feedbackInstance.save();
 
+    const finalStatus =
+      feedbackInstance.status || feedbackInstance.status;
+
     //  Update interview round status
-    if (feedbackInstance.status === "submitted") {
-      await updateInterviewRoundFeedbackStatus(interviewRoundId);
+    if (finalStatus === "submitted") {
+      //  Update interview round status
+      let res = await updateInterviewRoundFeedbackStatus({
+        interviewRoundId: feedbackInstance.interviewRoundId,
+        isMock: feedbackInstance?.isMockInterview,
+        actingAsUserId: authContext?.ownerId
+      });
+      // console.log("finalStatus finalStatus", res)
+
     }
+
 
     // Trigger webhook for feedback submission only (not for drafts)
     // webhooks creation part of feed back this is used in account settings hrms sidebar tab in webhooks tab
@@ -389,7 +407,7 @@ const createFeedback = async (req, res) => {
 
     return res.status(201).json(responsePayload);
   } catch (error) {
-    console.error("Error creating/updating feedback:", error);
+    // console.error("Error creating/updating feedback:", error);
 
     res.locals.logData = {
       tenantId: req.body?.tenantId || "",
@@ -424,6 +442,8 @@ const updateFeedback = async (req, res) => {
       });
     }
 
+    // Extract tenantId and ownerId from auth context (priority) or body
+    const authContext = res.locals.auth || {};
     // Validate input using Joi schema
     // const {
     //   isValid,
@@ -456,7 +476,7 @@ const updateFeedback = async (req, res) => {
 
     const updateData = req.body; //validatedData;
 
-    console.log("Update Data Received:", updateData);
+    // console.log("Update Data Received:", updateData);
 
     // CHANGE 1: Get existing feedback first for comparison
     const existingFeedback = await FeedbackModel.findById(id);
@@ -549,7 +569,7 @@ const updateFeedback = async (req, res) => {
           resolvedInterviewId = roundDoc?.interviewId || null;
         }
       } catch (e) {
-        console.warn("Unable to resolve interviewId:", e?.message);
+        // console.warn("Unable to resolve interviewId:", e?.message);
       }
 
       for (let i = 0; i < updateData.questionFeedback.length; i++) {
@@ -572,7 +592,7 @@ const updateFeedback = async (req, res) => {
         if (mongoose.Types.ObjectId.isValid(identifier)) {
           selectedDoc = await InterviewQuestions.findById(identifier);
         }
-        console.log("bankDetails", bankDetails)
+        // console.log("bankDetails", bankDetails)
 
         if (!selectedDoc) {
           const questionOwnerId = (interviewerId && interviewerId.toString()) || (ownerId && ownerId.toString()) || "";
@@ -581,11 +601,11 @@ const updateFeedback = async (req, res) => {
             roundId: interviewRoundId,
             questionId: identifier
           });
-          console.log("selectedDoc", selectedDoc)
+          // console.log("selectedDoc", selectedDoc)
 
           if (!selectedDoc) {
 
-            console.log("bankDetails selectedDoc", bankDetails)
+            // console.log("bankDetails selectedDoc", bankDetails)
             const snapshot = bankDetails?.snapshot || bankDetails || {};
             const src = bankDetails?.source || snapshot.source || "custom";
             const mand = bankDetails?.mandatory || snapshot.mandatory || "false";
@@ -625,7 +645,7 @@ const updateFeedback = async (req, res) => {
       ) {
         updateObject.questionFeedback = normalizedQuestionFeedback;
         hasChanges = true;
-        console.log("Question feedback changed");
+        // console.log("Question feedback changed");
       }
     }
 
@@ -757,14 +777,31 @@ const updateFeedback = async (req, res) => {
       }
     }
 
+    const finalStatus =
+      updateObject.status || existingFeedback.status;
+
+    // console.log("finalStatus", finalStatus)
+
+
+    if (finalStatus === "submitted") {
+      //  Update interview round status
+      let res = await updateInterviewRoundFeedbackStatus({
+        interviewRoundId: updatedFeedback.interviewRoundId,
+        isMock: updatedFeedback?.isMockInterview,
+        actingAsUserId: authContext?.ownerId
+      });
+      // console.log("finalStatus finalStatus", res)
+
+    }
 
 
     // Trigger webhook for feedback status update if status changed to submitted
     if (updatedFeedback.status === "submitted") {
       //  Update interview round status
-      await updateInterviewRoundFeedbackStatus(
-        updatedFeedback.interviewRoundId,
-      );
+      // await updateInterviewRoundFeedbackStatus({
+      //   interviewRoundId: updatedFeedback.interviewRoundId,
+      //   isMock: updatedFeedback?.isMockInterview
+      // });
 
       //if (updateData.status && updatedFeedback) {
       try {
@@ -1408,7 +1445,7 @@ const getFeedbackByContactIdRoundId = async (req, res) => {
   try {
     const { contactId, roundId, interviewType } = req.query;
 
-    console.log("req.query getFeedbackByContactIdRoundId", req.query);
+    // console.log("req.query getFeedbackByContactIdRoundId", req.query);
     if (!contactId || !roundId || !interviewType) {
       return res.status(400).json({
         error: "contactId and roundId and interviewType are required",
@@ -1650,7 +1687,7 @@ const getFeedbackRoundId = async (req, res) => {
 const validateFeedback = async (req, res) => {
   try {
     const { type } = req.body;
-    console.log("req.body validateFeedback", req.body);
+    // console.log("req.body validateFeedback", req.body);
 
     // Determine which validation to use based on operation type
     const isUpdate = req.params.operation === "update";
@@ -1702,15 +1739,21 @@ const validateFeedback = async (req, res) => {
 
 // helper function to get feedback by contactId and roundId
 
-const updateInterviewRoundFeedbackStatus = async (interviewRoundId) => {
+const updateInterviewRoundFeedbackStatus = async ({ interviewRoundId, isMock, actingAsUserId }) => {
+
+
   if (!interviewRoundId) return;
 
+  const RoundModel = isMock
+    ? MockInterviewRound
+    : InterviewRounds;
+
   // 1. Get interview round
-  const round = await InterviewRounds.findById(interviewRoundId).lean();
-  if (!round) return;
+  const round = await RoundModel.findById(interviewRoundId).lean();
+  if (!round) return "Round not found";
 
   const interviewerIds = round.interviewers || [];
-  if (interviewerIds.length === 0) return;
+  if (interviewerIds.length === 0) return "No interviewers found";
 
   // 2. Count submitted feedbacks
   const submittedCount = await FeedbackModel.countDocuments({
@@ -1725,9 +1768,68 @@ const updateInterviewRoundFeedbackStatus = async (interviewRoundId) => {
       ? "FeedbackSubmitted"
       : "FeedbackPending";
 
-  let roundRes = await InterviewRounds.findByIdAndUpdate(interviewRoundId, {
+  // const RoundModel = isMock
+  //   ? MockInterviewRound
+  //   : InterviewRounds;
+  // const roundRes = await RoundModel.findById(interviewRoundId)
+  //   .select("roundTitle interviewMode interviewType")
+  //   .lean();
+
+  let smartUpdate = null;
+
+  const smartBody = {
     status: newStatus,
+    interviewerType: round.interviewerType,
+    selectedInterviewers: round.interviewers,
+    currentActionReason: newStatus
+    // comments: comment || null,
+    // rescheduleReason: reasonCode || null,
+  };
+
+  smartUpdate = await buildSmartRoundUpdate({
+    existingRound: round,
+    body: {
+      ...smartBody,
+      status: newStatus, // Override status to FeedbackPending if feedback is still in draft
+    },
+    actingAsUserId,
+    statusChanged: true,
   });
+
+
+
+  // console.log("smartUpdate", smartUpdate);
+
+  let finalUpdate = smartUpdate;
+
+  // console.log("finalUpdate", finalUpdate);
+
+  // if (Object.keys(extraUpdate.$set).length > 0) {
+  //   finalUpdate = mergeUpdates(
+  //     smartUpdate || { $set: {}, $push: { history: [] } },
+  //     extraUpdate
+  //   );
+  // }
+
+  // if (Object.keys(extraUpdate.$set).length > 0) {
+  //   finalUpdate = mergeUpdates(
+  //     smartUpdate || { $set: {}, $push: { history: [] } },
+  //     extraUpdate,
+  //   );
+  // // }
+
+
+  let roundRes = await RoundModel.findByIdAndUpdate(
+    interviewRoundId,
+    finalUpdate,
+    {
+      new: true,
+      runValidators: true,
+    },
+  )
+
+
+  // console.log("roundRes roundRes", roundRes);
 
   if (roundRes?.status === "FeedbackSubmitted") {
 
