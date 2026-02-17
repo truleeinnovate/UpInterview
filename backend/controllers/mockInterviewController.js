@@ -1327,7 +1327,7 @@ exports.validateMockInterview = async (req, res) => {
 exports.updateInterviewRoundStatus = async (req, res) => {
   try {
     const { mockInterviewId, roundId } = req.params;
-    console.log("req.params mockInterviewId", req.params);
+    // console.log("req.params mockInterviewId", req.params);
     // Check if mock interview exists
     const interview = await MockInterview.findById(mockInterviewId);
     if (!interview) {
@@ -1358,7 +1358,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
 
     const isParticipantUpdate = req.body?.role || req.body?.joined;
 
-    console.log("req.body isParticipantUpdate", req.body);
+    // console.log("req.body isParticipantUpdate", req.body);
 
     // console.log("req.body", req.body);
 
@@ -1467,15 +1467,19 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     const interviewerIds = (existingRound?.interviewers || []).map((id) => id);
 
 
-    const draftCount = await FeedbackModel.countDocuments({
+    const submittedCount = await FeedbackModel.countDocuments({
       interviewRoundId: existingRound?._id,
       interviewerId: { $in: interviewerIds },
-      status: "draft",
+      status: "submitted",
     });
 
-    const allInterviewersDraft = draftCount === interviewerIds.length;
+    const allInterviewerssubmittedCount = submittedCount === interviewerIds.length
 
-    // console.log("interviewerIds", allInterviewersDraft);
+    // console.log("draftCount", allInterviewerssubmittedCount)
+
+    // console.log("interviewerIds", allInterviewerssubmittedCount);
+    // console.log("interviewerIds", interviewerIds.length)
+    // console.log("interviewerIds", interviewerIds)
 
     let smartUpdate = null;
 
@@ -1510,9 +1514,6 @@ exports.updateInterviewRoundStatus = async (req, res) => {
       );
 
 
-      console.log("participants", participants);
-      console.log("hasInterviewer", hasInterviewer);
-      console.log("hasCandidate", hasCandidate);
 
       const isHistoryHandled = hasInterviewer && hasCandidate;
       console.log("isHistoryHandled", isHistoryHandled)
@@ -1554,7 +1555,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
 
       if (
         action === "Completed" &&
-        allInterviewersDraft &&
+        !allInterviewerssubmittedCount &&
         existingRound.interviewMode === "Virtual"
       ) {
         smartUpdate = await buildSmartRoundUpdate({
@@ -1566,7 +1567,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
           actingAsUserId,
           statusChanged: true,
         });
-      } else if (!allInterviewersDraft && action === "Completed") {
+      } else if (allInterviewerssubmittedCount && action === "Completed") {
         smartUpdate = await buildSmartRoundUpdate({
           existingRound,
           body: {

@@ -633,6 +633,7 @@ const SchedulerSectionComponent = ({
             dislikeQuestionId={dislikeQuestionId}
             RadioGroupInput={RadioGroupInput}
             SharePopupSection={SharePopupSection}
+            isViewMode={isViewMode}
           />
         ))
       ) : (

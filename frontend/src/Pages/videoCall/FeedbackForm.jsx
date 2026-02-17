@@ -1887,7 +1887,7 @@ const FeedbackForm = ({
     }
   };
 
-  console.log("feedbackDatas", feedbackDatas)
+  // console.log("feedbackDatas", feedbackDatas)
 
   //<---v1.0.2-----Ranjith----solved feedback issues
 
