@@ -1034,7 +1034,7 @@ function OutsourcedInterviewerModal({
 
         if (navigatedfrom === "mock-interview") {
           approvedInterviewers = combinedInterviewers.filter(
-            (i) => i.contact?.status === "approved" && i?.conact?.isMockInterviewSelected === true,
+            (i) => i.contact?.status === "approved" && i?.contact?.isMockInterviewSelected === true,
           );
 
         } else {
