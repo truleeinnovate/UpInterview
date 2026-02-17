@@ -1791,18 +1791,18 @@ Ensure you are in a quiet environment to avoid distractions.`;
       <div className="bg-gray-50 pt-4">
         {/* v1.0.4 <------------------------------------------------------------------ */}
         {/* Header/Back Navigation Section */}
-        <div className="flex flex-row items-center justify-between gap-4 mx-auto sm:px-3 px-8 mr-14 ml-14 mt-2">
+        <div className="flex flex-row items-center justify-between gap-4 px-[8%] sm:px-4 mt-2">
           <button
             onClick={() => navigate(-1)}
             className="flex text-base items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
-            <span className="sm:hidden inline">
+            <span className="sm:hidden inline sm:text-sm text-base">
               Back to Assessment Templates
             </span>
           </button>
         </div>
-        <main className="mx-auto sm:px-3 px-8 mr-12 ml-12 pb-20">
+        <main className="px-[8%] sm:px-4 pb-20">
           <div className="sm:px-0">
             <div className="mt-4 bg-white shadow overflow-hidden rounded-lg pb-16">
               <div className="flex justify-between px-12 py-6 sm:px-4">

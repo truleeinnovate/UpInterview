@@ -323,15 +323,15 @@ export function WalletTopupPopup({ onClose, onTopup }) {
   // When opened as standalone page (new tab), render full-width page layout
   if (isStandalonePage) {
     return (
-      <div className="h-screen flex flex-col bg-gray-50">
+      <div className="min-h-screen flex flex-col bg-white shadow px-[8%] pt-6 rounded-md pb-8">
         {/* Header */}
-        <div className="bg-white shadow-sm px-6 py-4">
+        <div className="bg-gray-50 shadow-sm px-6 py-4">
           <h2 className="text-2xl font-semibold text-custom-blue">
             Wallet Top-up
           </h2>
         </div>
         {/* Full-width content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="flex-1 bg-gray-50 overflow-y-auto px-6 py-6">
           <form id="topup-form" onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -394,7 +394,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
           </form>
         </div>
         {/* Fixed bottom button */}
-        <div className="bg-white border-t px-6 py-3 flex justify-end">
+        <div className="bg-gray-50 px-6 pt-3 pb-8 flex justify-end">
           <button
             type="submit"
             form="topup-form"

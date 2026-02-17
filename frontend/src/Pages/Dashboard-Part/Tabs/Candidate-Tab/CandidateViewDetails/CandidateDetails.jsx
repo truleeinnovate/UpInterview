@@ -1123,23 +1123,23 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
     <div className="fixed top-[62px] left-0 right-0 bottom-0 z-40 bg-gray-50 flex flex-col overflow-hidden">
       {/* Main Container - matching PositionSlideDetails max-width style */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 bg-white shadow-sm min-h-screen">
+        <div className="sm:px-[4%] pl-[8%] pr-[7%] bg-white shadow-sm min-h-screen">
           {/* Header/Back Navigation Section */}
-          <div className="flex flex-row items-center justify-between gap-4 py-6 px-8 sm:px-0">
+          <div className="flex flex-row items-center justify-between gap-4 py-6 sm:px-0">
             <button
               onClick={handleClose}
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
-              <span className="sm:hidden inline text-sm sm:text-base font-medium">
+              <span className="sm:hidden inline sm:text-sm text-base">
                 Back to {mode === "Interview" ? "Interview" : "Candidates"}
               </span>
             </button>
           </div>
 
-          <div className="px-8">{<Breadcrumb items={breadcrumbItems} />}</div>
+          <div className="">{<Breadcrumb items={breadcrumbItems} />}</div>
           {/* Tabs Navigation - Structured like PositionSlideDetails */}
-          <div className="mx-8 border-b border-gray-200 sm:px-0">
+          <div className="border-b border-gray-200 sm:px-0">
             <nav className="-mb-px flex space-x-8" aria-label="Tabs">
               {tabs.map((tab) => (
                 <button
@@ -1158,7 +1158,7 @@ const CandidateDetails = ({ mode, candidateId, onClose }) => {
           </div>
 
           {/* Tab Content Section */}
-          <div className="py-6 px-8 sm:px-0">
+          <div className="py-6 sm:px-0">
             {activeTab === "Overview" && (
               <div className="space-y-4 animate-in fade-in duration-300">
                 {/* Profile Header Card */}

@@ -193,12 +193,12 @@ const TemplateDetail = ({ templateId, onClose, mode }) => {
     // v1.0.2 <----------------------------------------------------------------------------------
     //  <----------v1.0.0
     <div
-      className="fixed inset-0 bg-white z-40 overflow-y-auto"
+      className="fixed inset-0 bg-white z-40 overflow-y-auto mt-2"
       style={{ top: "56px" }}
     >
       {/* v1.0.0 ----------------> */}
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="max-w-6xl sm:max-w-5xl md:max-w-4xl lg:max-w-5xl mx-auto py-6 sm:px-4 md:px-6 lg:px-6">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-6">
+        <div className="pl-[8%] pr-[7%] py-3 sm:px-4">
           {/* Header */}
           <div className="flex flex-row sm:items-center justify-between gap-4 sm:gap-0 mb-6 sm:mb-8">
             <button
@@ -221,7 +221,7 @@ const TemplateDetail = ({ templateId, onClose, mode }) => {
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
               <ArrowLeft className="sm:h-4 h-5 ms:w-4 w-5 mr-2" />
-              <span className="text-sm sm:text-base">Back to Templates</span>
+              <span className="sm:text-sm text-base">Back to Templates</span>
             </button>
           </div>
 

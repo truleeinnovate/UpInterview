@@ -620,9 +620,9 @@ const InterviewDetail = () => {
   const allRoundsCompleted = totalRounds > 0 && completedRounds === totalRounds;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-6">
       {/* v1.0.3 <------------------------------------------------------------ */}
-      <main className="max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-4 lg:px-8">
+      <main className="px-[8%] py-4 sm:px-4">
         {/* v1.0.3 ------------------------------------------------------------> */}
         <div>
           <div className="flex items-center mb-4">
@@ -631,7 +631,7 @@ const InterviewDetail = () => {
               className="text-gray-800 flex items-center mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Back to Interviews
+              <span className="text-base sm:text-sm">Back to Interviews</span>
             </Link>
           </div>
 
@@ -807,7 +807,7 @@ const InterviewDetail = () => {
                   {/* v1.0.4 ------------------------------------------------------------------------------------------------------> */}
                 </div>
                 <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                  Created on {formatDateTime(interview?.createdAt)}
+                  Created At {formatDateTime(interview?.createdAt)}
                 </p>
               </div>
             </div>
@@ -1023,7 +1023,7 @@ const InterviewDetail = () => {
               )}
 
               {/* Interviewers summary */}
-              <div className="mt-6 mb-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <div className="flex items-center mb-2">
                   <Users className="h-5 w-5 text-gray-500 mr-2" />
                   <h4 className="text-sm font-medium text-gray-700">
@@ -1056,8 +1056,8 @@ const InterviewDetail = () => {
 
               {/* Interview Rounds Table Header */}
               {/* v1.0.3 <---------------------------------------------- */}
-              <div className="border-gray-200 px-4 py-5 sm:px-0 mt-3">
-                <div className="flex sm:flex-col md:flex-col justify-between sm:items-start md:items-start items-center w-full mb-4">
+              <div className="border-gray-200 sm:px-0 mt-4">
+                <div className="flex sm:flex-col md:flex-col justify-between sm:items-start md:items-start items-center w-full">
                   <h3 className="text-lg leading-6 font-medium text-gray-900 sm:mb-4 md:mb-4">
                     Interview Rounds
                   </h3>
@@ -1108,16 +1108,25 @@ const InterviewDetail = () => {
                     </div>
                   </div>
                 </div>
-                <InterviewProgress
+                {/* <InterviewProgress
                   rounds={rounds}
                   interviewId={id}
                   currentRoundId={activeRound || undefined}
                   viewMode={roundsViewMode}
                   onSelectRound={handleSelectRound}
-                />
+                /> */}
+                {rounds && rounds.length > 0 && (
+                  <InterviewProgress
+                    rounds={rounds}
+                    interviewId={id}
+                    currentRoundId={activeRound || undefined}
+                    viewMode={roundsViewMode}
+                    onSelectRound={handleSelectRound}
+                  />
+                )}
 
                 {rounds.length > 0 && (
-                  <div className="mt-6">
+                  <div className="mt-2">
                     {roundsViewMode === "horizontal" ? (
                       activeRound && (
                         <>
@@ -1146,7 +1155,7 @@ const InterviewDetail = () => {
                 )}
 
                 {rounds.length === 0 && (
-                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <div className="text-center py-8 bg-gray-50 rounded-lg mt-4">
                     <p className="text-gray-500">No Rounds added yet.</p>
                     {canAddRound() && (
                       <button
