@@ -51,6 +51,73 @@ const formatStartDateTime = (dateTimeString) => {
   return startPart;
 };
 
+// ──────────────────────────────────────────────
+// Helper: Parse custom date string "DD-MM-YYYY hh:mm A - hh:mm A"
+// ──────────────────────────────────────────────
+function parseCustomDateTime(dateTimeStr) {
+  if (!dateTimeStr || typeof dateTimeStr !== 'string') return null;
+
+  // Matches: "17-02-2026 03:03 PM - 04:03 PM"
+  const regex = /^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})\s+(AM|PM)\s*-\s*(\d{2}):(\d{2})\s+(AM|PM)$/i;
+  const match = dateTimeStr.trim().match(regex);
+
+  if (!match) {
+    console.warn(`Invalid dateTime format: ${dateTimeStr}`);
+    return null;
+  }
+
+  const [, day, month, year, hourStr, min, meridiem] = match;
+
+  let hour = parseInt(hourStr, 10);
+  if (meridiem.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+  if (meridiem.toUpperCase() === 'AM' && hour === 12) hour = 0;
+
+  const date = new Date(
+    parseInt(year, 10),
+    parseInt(month, 10) - 1, // months are 0-based
+    parseInt(day, 10),
+    hour,
+    parseInt(min, 10),
+    0
+  );
+
+  return isNaN(date.getTime()) ? null : date;
+}
+
+// ──────────────────────────────────────────────
+// Helper: Format date with timezone
+// ──────────────────────────────────────────────
+function formatInterviewDateTime(dateInput, timeZone = 'UTC') {
+  let dt;
+
+  if (dateInput instanceof Date) {
+    dt = dateInput;
+  } else if (typeof dateInput === 'string') {
+    dt = parseCustomDateTime(dateInput);
+  } else {
+    dt = null;
+  }
+
+  if (!dt || isNaN(dt.getTime())) {
+    return "To be scheduled";
+  }
+
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone,
+    timeZoneName: 'short',
+  });
+
+  return formatter.format(dt);
+  // Example: "Tuesday, February 17, 2026, 3:03 PM IST"
+}
+
 //this helps us to send emails to scheduler,interviwer,candidate if round scheduled.it has different emails for face to face and virtual because face to face has physical interview.-Ashraf
 exports.sendInterviewRoundEmails = async (req, res = null) => {
   try {
@@ -129,12 +196,17 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     const candidateEmail =
       type === "mockinterview" ? candidate.email : candidate.Email;
 
-    const position = interview.positionId?.title || "Not Assigned";
+    const position = interview.positionId?.title || "";
+    let displayPosition = position?.trim() || "";
+    if (type === "mockinterview") {
+      displayPosition = "";
+    }
 
     // Fetch tenant details for company name and address
     const tenant = await Tenant.findById(interview.tenantId);
     const tenantCompanyName = tenant?.company || companyName;
     const address = tenant?.offices?.[0]?.address || "To be provided";
+    const organizerTz = 'IST';
 
     let round;
 
@@ -227,7 +299,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     const interviewMode = round.interviewMode || "Online";
     // const dateTime = round.dateTime || "To be scheduled";
     const startDateTime = round.dateTime
-      ? formatStartDateTime(round.dateTime)
+      ? formatInterviewDateTime(round.dateTime, organizerTz)
       : "To be scheduled";
     const duration = round.duration || "60 minutes";
     const instructions = round.instructions || "Please arrive on time.";
@@ -491,7 +563,15 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{instructions}}/g, instructions)
           .replace(/{{supportEmail}}/g, supportEmail)
           .replace(/{{orgCompanyName}}/g, tenantCompanyName)
-          .replace(/{{position}}/g, position);
+          .replace(/{{position}}/g, displayPosition);
+
+        // Now hide the entire line if position is empty
+        if (!displayPosition) {
+          emailBody = emailBody.replace(
+            /<!-- POSITION_LINE_START -->[\s\S]*?<!-- POSITION_LINE_END -->/g,
+            ''
+          );
+        }
 
         // if (meetingLink && meetingLink.length > 0) {
         // const candidateUrl = `${baseUrl}?candidate=true&meeting=${encodeURIComponent(
@@ -554,7 +634,15 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             .replace(/{{instructions}}/g, instructions)
             .replace(/{{supportEmail}}/g, supportEmail)
             .replace(/{{orgCompanyName}}/g, tenantCompanyName)
-            .replace(/{{position}}/g, position);
+            .replace(/{{position}}/g, displayPosition);
+
+          // Now hide the entire line if position is empty
+          if (!displayPosition) {
+            emailBody = emailBody.replace(
+              /<!-- POSITION_LINE_START -->[\s\S]*?<!-- POSITION_LINE_END -->/g,
+              ''
+            );
+          }
 
           // const meetingLink = round.meetingId;
 
@@ -629,7 +717,15 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{instructions}}/g, instructions)
           .replace(/{{supportEmail}}/g, supportEmail)
           .replace(/{{orgCompanyName}}/g, tenantCompanyName)
-          .replace(/{{position}}/g, position);
+          .replace(/{{position}}/g, displayPosition);
+
+        // Now hide the entire line if position is empty
+        if (!displayPosition) {
+          emailBody = emailBody.replace(
+            /<!-- POSITION_LINE_START -->[\s\S]*?<!-- POSITION_LINE_END -->/g,
+            ''
+          );
+        }
 
         // if (meetingLink && meetingLink.length > 0) {
         const encryptedSchedulerId = encryptData(scheduler?._id);//passing contact id
