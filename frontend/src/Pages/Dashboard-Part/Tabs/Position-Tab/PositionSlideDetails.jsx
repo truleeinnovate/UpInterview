@@ -452,10 +452,6 @@ const PositionSlideDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { position: fetchedPosition, isLoading } = usePositionById(id);
-  console.log(
-    "CURRENT POSITION ============================> ",
-    fetchedPosition
-  );
 
   const [rounds, setRounds] = useState([]);
   const [activeRound, setActiveRound] = useState(null);
@@ -639,7 +635,7 @@ const PositionSlideDetails = () => {
   const isOrganization = tokenPayload?.organization === true;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {selectedApplication ? (
         <ApplicationView
           application={selectedApplication}
@@ -648,7 +644,7 @@ const PositionSlideDetails = () => {
       ) : (
         <>
           {/* v1.0.4 <------------------------------------------------------------------------------------------ */}
-          <div className="max-w-8xl mx-auto sm:px-6 md:px-6 lg:px-8 xl:px-8 2xl:px-8 bg-white shadow overflow-hidden sm:rounded-lg mb-4">
+          <div className="sm:px-[4%] px-[8%] bg-white pb-12 overflow-hidden sm:rounded-lg">
             {/* <-------------------------v1.0.0  */}
             {/* // <----- v1.0.1 - Ranjith - */}
             {/* Header */}
@@ -661,7 +657,7 @@ const PositionSlideDetails = () => {
                 className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
               >
                 <ArrowLeft className="h-5 w-5 mr-2" />
-                <span className="text-sm sm:text-base">
+                <span className="sm:text-sm text-base">
                   Back to {mode === "Interview" ? "Interview" : "Positions"}
                 </span>
               </button>
@@ -1066,8 +1062,8 @@ const PositionSlideDetails = () => {
                 {/* Interview Rounds Table Header */}
                 {/* <div className="border-t border-gray-200 px-4 py-5 sm:px-6"> */}
                 {/* v1.0.4 <----------------------------------------------------------------------------- */}
-                <div className="py-5">
-                  <div className="flex justify-between items-center mb-4">
+                <div className="mt-4">
+                  <div className="flex justify-between items-center">
                     {/* <h3 className="text-lg leading-6 font-medium text-gray-900"> */}
                     <h3 className="sm:text-md text-lg leading-6 font-medium text-gray-900">
                       Position Rounds
@@ -1127,10 +1123,13 @@ const PositionSlideDetails = () => {
                     </div>
                   </div>
 
-                  <InterviewProgress rounds={rounds} />
+                  {/* <InterviewProgress rounds={rounds} /> */}
+                  {rounds && rounds.length > 0 && (
+                    <InterviewProgress rounds={rounds} />
+                  )}
 
                   {rounds.length > 0 && (
-                    <div className="mt-6">
+                    <div className="mt-2">
                       {roundsViewMode === "horizontal" ? (
                         activeRound && (
                           <SingleRoundViewPosition
@@ -1154,7 +1153,7 @@ const PositionSlideDetails = () => {
                   )}
 
                   {rounds.length === 0 && (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <div className="text-center py-8 bg-gray-50 rounded-lg mt-4">
                       <p className="text-gray-500">No Rounds Added yet.</p>
                       <button
                         onClick={handleAddRound}
@@ -1208,8 +1207,6 @@ const PositionSlideDetails = () => {
                 </div>
               </Modal>
             )}
-
-
           </div>
         </>
       )}

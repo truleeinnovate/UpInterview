@@ -176,15 +176,15 @@ function AssessmentView() {
     <>
       {isModalOpen && (
         <div className="fixed top-[68px] left-0 right-0 bottom-0 z-40 bg-gray-50 flex flex-col overflow-hidden">
-          <div className="flex-1 w-full overflow-y-auto">
-            <div className="max-w-7xl mx-auto px-8 bg-white shadow-sm min-h-screen">
-              <div className="pt-4">
+          <div className="flex-1 w-full overflow-y-auto pl-[8%] pr-[7%]">
+            <div className="pt-3 px-8 bg-white shadow-sm min-h-screen">
+              <div>
                 <button
                   onClick={handleCloseModal}
                   className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200 mb-6"
                 >
                   <ArrowLeft className="h-5 w-5 mr-2" />
-                  <span className="sm:hidden inline text-sm sm:text-base font-medium">
+                  <span className="sm:hidden inline sm:text-sm text-base">
                     Back to Assessment Templates
                   </span>
                 </button>
