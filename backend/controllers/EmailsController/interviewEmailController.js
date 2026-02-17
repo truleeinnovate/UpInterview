@@ -52,70 +52,19 @@ const formatStartDateTime = (dateTimeString) => {
 };
 
 // ──────────────────────────────────────────────
-// Helper: Parse custom date string "DD-MM-YYYY hh:mm A - hh:mm A"
+// Helper: Extract start time (or full range) and append IST
 // ──────────────────────────────────────────────
-function parseCustomDateTime(dateTimeStr) {
-  if (!dateTimeStr || typeof dateTimeStr !== 'string') return null;
-
-  // Matches: "17-02-2026 03:03 PM - 04:03 PM"
-  const regex = /^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})\s+(AM|PM)\s*-\s*(\d{2}):(\d{2})\s+(AM|PM)$/i;
-  const match = dateTimeStr.trim().match(regex);
-
-  if (!match) {
-    console.warn(`Invalid dateTime format: ${dateTimeStr}`);
-    return null;
-  }
-
-  const [, day, month, year, hourStr, min, meridiem] = match;
-
-  let hour = parseInt(hourStr, 10);
-  if (meridiem.toUpperCase() === 'PM' && hour !== 12) hour += 12;
-  if (meridiem.toUpperCase() === 'AM' && hour === 12) hour = 0;
-
-  const date = new Date(
-    parseInt(year, 10),
-    parseInt(month, 10) - 1, // months are 0-based
-    parseInt(day, 10),
-    hour,
-    parseInt(min, 10),
-    0
-  );
-
-  return isNaN(date.getTime()) ? null : date;
-}
-
-// ──────────────────────────────────────────────
-// Helper: Format date with timezone
-// ──────────────────────────────────────────────
-function formatInterviewDateTime(dateInput, timeZone = 'IST') {
-  let dt;
-
-  if (dateInput instanceof Date) {
-    dt = dateInput;
-  } else if (typeof dateInput === 'string') {
-    dt = parseCustomDateTime(dateInput);
-  } else {
-    dt = null;
-  }
-
-  if (!dt || isNaN(dt.getTime())) {
+function formatInterviewDateTime(dateTimeStr, timeZoneLabel = "IST") {
+  if (!dateTimeStr || typeof dateTimeStr !== 'string') {
     return "To be scheduled";
   }
 
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-    timeZone,
-    timeZoneName: 'short',
-  });
+  const str = dateTimeStr.trim();
+  
+  // Take only start part if range exists
+  const startPart = str.split(" - ")[0].trim();
 
-  return formatter.format(dt);
-  // Example: "Tuesday, February 17, 2026, 3:03 PM IST"
+  return startPart + " " + timeZoneLabel;
 }
 
 //this helps us to send emails to scheduler,interviwer,candidate if round scheduled.it has different emails for face to face and virtual because face to face has physical interview.-Ashraf
@@ -206,7 +155,6 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     const tenant = await Tenant.findById(interview.tenantId);
     const tenantCompanyName = tenant?.company || companyName;
     const address = tenant?.offices?.[0]?.address || "To be provided";
-    const organizerTz = 'IST';
 
     let round;
 
@@ -298,9 +246,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
     const roundTitle = round.roundTitle || "Interview Round";
     const interviewMode = round.interviewMode || "Online";
     // const dateTime = round.dateTime || "To be scheduled";
-    const startDateTime = round.dateTime
-      ? formatInterviewDateTime(round.dateTime, organizerTz)
-      : "To be scheduled";
+    const startDateTime = formatInterviewDateTime(round.dateTime);
     const duration = round.duration || "60 minutes";
     const instructions = round.instructions || "Please arrive on time.";
     // const position = round.positionId.title || 'No Position';
@@ -566,11 +512,15 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{position}}/g, displayPosition);
 
         // Now hide the entire line if position is empty
-        if (!displayPosition.trim()) {
+        if (!displayPosition?.trim()) {
           emailBody = emailBody.replace(
-            /<!--\s*POSITION_BLOCK_START\s*-->[\s\S]*?<!--\s*POSITION_BLOCK_END\s*-->/g,
+            /<!--\s*POSITION_BLOCK_START\s*-->[\s\S]*?<!--\s*POSITION_BLOCK_END\s*-->/gi,
             ''
           );
+
+          // Safety net: remove any leftover {{position}} placeholders
+          emailBody = emailBody.replace(/\{\{position\}\}/gi, '(Position not specified)');
+          // or just .replace(/\{\{position\}\}/gi, '') if you want it completely gone
         }
 
         // if (meetingLink && meetingLink.length > 0) {
@@ -637,11 +587,15 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             .replace(/{{position}}/g, displayPosition);
 
           // Now hide the entire line if position is empty
-          if (!displayPosition.trim()) {
+          if (!displayPosition?.trim()) {
             emailBody = emailBody.replace(
-              /<!--\s*POSITION_BLOCK_START\s*-->[\s\S]*?<!--\s*POSITION_BLOCK_END\s*-->/g,
+              /<!--\s*POSITION_BLOCK_START\s*-->[\s\S]*?<!--\s*POSITION_BLOCK_END\s*-->/gi,
               ''
             );
+
+            // Safety net: remove any leftover {{position}} placeholders
+            emailBody = emailBody.replace(/\{\{position\}\}/gi, '(Position not specified)');
+            // or just .replace(/\{\{position\}\}/gi, '') if you want it completely gone
           }
 
           // const meetingLink = round.meetingId;
@@ -720,11 +674,15 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{position}}/g, displayPosition);
 
         // Now hide the entire line if position is empty
-        if (!displayPosition.trim()) {
+        if (!displayPosition?.trim()) {
           emailBody = emailBody.replace(
-            /<!--\s*POSITION_BLOCK_START\s*-->[\s\S]*?<!--\s*POSITION_BLOCK_END\s*-->/g,
+            /<!--\s*POSITION_BLOCK_START\s*-->[\s\S]*?<!--\s*POSITION_BLOCK_END\s*-->/gi,
             ''
           );
+
+          // Safety net: remove any leftover {{position}} placeholders
+          emailBody = emailBody.replace(/\{\{position\}\}/gi, '(Position not specified)');
+          // or just .replace(/\{\{position\}\}/gi, '') if you want it completely gone
         }
         // if (meetingLink && meetingLink.length > 0) {
         const encryptedSchedulerId = encryptData(scheduler?._id);//passing contact id
