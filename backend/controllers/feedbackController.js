@@ -22,6 +22,7 @@ const {
   MockInterviewRound,
 } = require("../models/Mockinterview/mockinterviewRound.js");
 const { MockInterview } = require("../models/Mockinterview/mockinterview.js");
+const { processAutoSettlement } = require("../utils/interviewWalletUtil.js");
 
 // const mongoose = require("mongoose");
 // const FeedbackModel = require("../models/InterviewFeedback");
@@ -313,13 +314,18 @@ const createFeedback = async (req, res) => {
     await feedbackInstance.save();
 
     //  Update interview round status
-    // if (feedbackInstance.status === "submitted") {
-    //   await updateInterviewRoundFeedbackStatus(interviewRoundId);
-    // }
+    if (feedbackInstance.status === "submitted") {
+      await updateInterviewRoundFeedbackStatus(interviewRoundId);
+    }
 
     // Trigger webhook for feedback submission only (not for drafts)
     // webhooks creation part of feed back this is used in account settings hrms sidebar tab in webhooks tab
     if (feedbackInstance.status === "submitted") {
+
+
+
+
+
       try {
         const webhookPayload = {
           feedbackId: feedbackInstance._id,
@@ -756,9 +762,9 @@ const updateFeedback = async (req, res) => {
     // Trigger webhook for feedback status update if status changed to submitted
     if (updatedFeedback.status === "submitted") {
       //  Update interview round status
-      // await updateInterviewRoundFeedbackStatus(
-      //   updatedFeedback.interviewRoundId,
-      // );
+      await updateInterviewRoundFeedbackStatus(
+        updatedFeedback.interviewRoundId,
+      );
 
       //if (updateData.status && updatedFeedback) {
       try {
@@ -1719,9 +1725,53 @@ const updateInterviewRoundFeedbackStatus = async (interviewRoundId) => {
       ? "FeedbackSubmitted"
       : "FeedbackPending";
 
-  await InterviewRounds.findByIdAndUpdate(interviewRoundId, {
+  let roundRes = await InterviewRounds.findByIdAndUpdate(interviewRoundId, {
     status: newStatus,
   });
+
+  if (roundRes?.status === "FeedbackSubmitted") {
+
+
+    if (roundRes?.interviewerType === "External") {
+      try {
+        const settlementResult = await processAutoSettlement({
+          roundId: roundRes._id.toString(),
+          action: "Completed",
+          //reasonCode: reasonCode || comment || null,
+        });
+        console.log(
+          "[updateInterviewRoundStatus] Auto-settlement completed for round:",
+          roundRes._id,
+          "Result:",
+          settlementResult // Log the result
+        );
+
+        // Return the settlement result along with the round update
+        return {
+          round: roundRes,
+          settlement: settlementResult
+        };
+      } catch (settlementError) {
+        console.error(
+          "[updateInterviewRoundStatus] Auto-settlement error:",
+          settlementError,
+        );
+        // Continue with status update even if settlement fails
+        return {
+          round: roundRes,
+          settlement: null,
+          error: settlementError.message
+        };
+        // Continue with status update even if settlement fails
+      }
+      // }
+
+    }
+
+  }
+  // Return just the round update if no settlement was processed
+  return { round: roundRes };
+
 };
 
 const normalizeQuestionId = (raw) => {

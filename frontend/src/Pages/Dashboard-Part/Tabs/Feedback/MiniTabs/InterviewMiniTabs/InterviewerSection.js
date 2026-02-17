@@ -55,6 +55,7 @@ const InterviewerSectionComponent = ({
   interviewData,
   decodedData,
   triggerAutoSave,
+  feedbackDataResponse
 }) => {
   const saveTimeoutRef = useRef(null);
 
@@ -101,7 +102,17 @@ const InterviewerSectionComponent = ({
     if (feedbackData?.preSelectedQuestions)
       return feedbackData.preSelectedQuestions;
     return rawInterviewQuestions || [];
+    if (feedbackData?.preSelectedQuestions)
+      return feedbackData.preSelectedQuestions;
+    return rawInterviewQuestions || [];
   }, [feedbackData, rawInterviewQuestions]);
+
+  const isSubmitted = feedbackDataResponse?.status === "submitted" || feedbackDataResponse?.status === "Submitted";
+  const isReadOnly = isViewMode || isSubmitted;
+
+  console.log("isReadOnly", isReadOnly);
+
+  console.log("feedbackData", feedbackData)
 
   // Use interviewer-added questions from API if available, otherwise fallback to old logic
   const filteredInterviewerQuestions = React.useMemo(() => {
@@ -306,6 +317,7 @@ const InterviewerSectionComponent = ({
   // };
 
   const onChangeInterviewQuestionNotes = (questionId, notes) => {
+    if (isReadOnly || decodedData?.schedule) return;
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some(
         (q) => (q.questionId || q.id || q._id) === questionId,
@@ -406,6 +418,7 @@ const InterviewerSectionComponent = ({
   // };
 
   const onClickAddNote = (id) => {
+    if (isReadOnly || decodedData?.schedule) return;
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some((q) => (q.questionId || q.id || q._id) === id);
 
@@ -436,6 +449,7 @@ const InterviewerSectionComponent = ({
   };
 
   const onClickDeleteNote = (id) => {
+    if (isReadOnly || decodedData?.schedule) return;
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some((q) => (q.questionId || q.id || q._id) === id);
 
@@ -529,6 +543,7 @@ const InterviewerSectionComponent = ({
   // };
 
   const onChangeRadioInput = (questionId, value) => {
+    if (isReadOnly || decodedData?.schedule) return;
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some(
         (q) => (q.questionId || q.id || q._id) === questionId,
@@ -620,6 +635,7 @@ const InterviewerSectionComponent = ({
   // };
 
   const onChangeDislikeRadioInput = (questionId, value) => {
+    if (isReadOnly || decodedData?.schedule) return;
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some(
         (q) => (q.questionId || q.id || q._id) === questionId,
@@ -709,7 +725,7 @@ const InterviewerSectionComponent = ({
   // };
 
   const handleLikeToggle = (id) => {
-    if (isViewMode) return;
+    if (isReadOnly || decodedData?.schedule) return;
 
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some((q) => (q.questionId || q.id || q._id) === id);
@@ -763,7 +779,7 @@ const InterviewerSectionComponent = ({
   const noteTimeoutRef = useRef(null);
 
   const handleDislikeToggle = (id) => {
-    if (isViewMode) return;
+    if (isReadOnly || decodedData?.schedule) return;
 
     setInterviewerSectionData((prev) => {
       const questionExists = prev.some((q) => (q.questionId || q.id || q._id) === id);
@@ -811,11 +827,11 @@ const InterviewerSectionComponent = ({
   const DisLikeSection = React.memo(({ each }) => {
     return (
       <>
-        {isEditMode || isAddMode ? (
+        {!isReadOnly && (isEditMode || isAddMode) ? (
           <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
             <div className="flex justify-between items-center mb-2">
               <h1>Tell us more :</h1>
-              <button onClick={() => setDislikeQuestionId(null)}>
+              <button disabled={isReadOnly || decodedData?.schedule} onClick={() => setDislikeQuestionId(null)}>
                 <XCircle className="h-4 w-4" />
               </button>
             </div>
@@ -835,6 +851,7 @@ const InterviewerSectionComponent = ({
                         e.target.value,
                       )
                     }
+                    disabled={isReadOnly || decodedData?.schedule}
                   />
                   <label
                     htmlFor={`dislike-${each.questionId || each.id}-${option.value
@@ -905,8 +922,9 @@ const InterviewerSectionComponent = ({
                       e.target.value,
                     )
                   }
+                  // className="accent-custom-blue whitespace-nowrap text-sm"
                   className="accent-custom-blue whitespace-nowrap text-sm"
-                  disabled={isViewMode}
+                  disabled={isReadOnly || decodedData?.schedule}
                 />
                 <label
                   htmlFor={`isAnswered-${each.questionId || each.id}-${option}`}
@@ -943,7 +961,7 @@ const InterviewerSectionComponent = ({
               The questions listed below are interviewer's choice.
             </p>
           </div>
-          {isViewMode || decodedData?.schedule ? (
+          {isReadOnly || decodedData?.schedule ? (
             <div></div>
           ) : (
             <div className="flex items-center gap-2">
@@ -1184,7 +1202,7 @@ const InterviewerSectionComponent = ({
               <QuestionCard
                 key={question.questionId || question._id}
                 question={question}
-                mode={isEditMode || isAddMode ? "edit" : "view"}
+                mode={!isReadOnly && (isEditMode || isAddMode) ? "edit" : "view"}
                 onNoteAdd={onClickAddNote}
                 onNoteChange={onChangeInterviewQuestionNotes}
                 onLikeToggle={handleLikeToggle}

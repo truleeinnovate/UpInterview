@@ -14,6 +14,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   XCircle,
+  AlertCircle,
 } from "lucide-react";
 import Popup from "reactjs-popup";
 import QuestionBank from "../Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx";
@@ -198,6 +199,11 @@ const FeedbackForm = ({
     }
     return raw;
   }, [locationFeedback, feedbackDatas]);
+
+  // Derived state for submission status
+  const isSubmitted = feedbackData?.status === "submitted" || feedbackData?.status === "Submitted";
+  // Read-only mode applies if viewed in read-only mode OR if the feedback is already submitted
+  const isReadOnly = isViewMode || isSubmitted;
 
   console.log("feedbackData", feedbackData);
 
@@ -834,6 +840,7 @@ const FeedbackForm = ({
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");
+  const [showSubmitConfirmation, setShowSubmitConfirmation] = useState(false);
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -1084,6 +1091,7 @@ const FeedbackForm = ({
 
   const onChangeRadioInput = (questionId, value) => {
     //<---v1.0.0-----
+    if (isReadOnly) return;
     setInterviewerSectionData((prev) => {
       const exists = prev.some((q) => (q.questionId || q.id) === questionId);
       if (exists) {
@@ -1101,6 +1109,7 @@ const FeedbackForm = ({
   const onChangeDislikeRadioInput = (questionId, value) => {
     //<---v1.0.0-----
     // console.log("onChangeDislikeRadioInput", questionId, value);
+    if (isReadOnly) return;
     setInterviewerSectionData((prev) => {
       const exists = prev.some((q) => (q.questionId || q.id) === questionId);
       if (exists) {
@@ -1117,7 +1126,7 @@ const FeedbackForm = ({
   };
 
   const handleDislikeToggle = (id) => {
-    if (isViewMode) return;
+    if (isReadOnly) return;
 
     // Toggle dislikeQuestionId
     setDislikeQuestionId((prev) => (prev === id ? null : id));
@@ -1155,7 +1164,7 @@ const FeedbackForm = ({
   };
 
   const handleLikeToggle = (id) => {
-    if (isViewMode) return; //<---v1.0.1-----
+    if (isReadOnly) return; //<---v1.0.1-----
     //<---v1.0.0-----
     setInterviewerSectionData((prev) => {
       const exists = prev.some((q) => (q.questionId || q.id) === id);
@@ -1189,7 +1198,7 @@ const FeedbackForm = ({
   const DisLikeSection = React.memo(({ each }) => {
     return (
       <>
-        {isEditMode || isAddMode ? (
+        {!isReadOnly && (isEditMode || isAddMode) ? (
           <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
             <div className="flex justify-between items-center mb-2">
               <h1>Tell us more :</h1>
@@ -1212,6 +1221,7 @@ const FeedbackForm = ({
                         e.target.value,
                       );
                     }}
+                    disabled={isReadOnly}
                   />
                   <label
                     htmlFor={`dislike-${each.questionId || each.id}-${option.value
@@ -1278,6 +1288,7 @@ const FeedbackForm = ({
                       e.target.value,
                     )
                   }
+                  disabled={isReadOnly}
                   className="whitespace-nowrap"
                 />
                 <label
@@ -1305,7 +1316,7 @@ const FeedbackForm = ({
               setRating(star);
               triggerAutoSave();
             }}
-            disabled={isViewMode}
+            disabled={isReadOnly}
             className={`w-6 h-6 ${star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
               } hover:text-yellow-400 transition-colors`}
           >
@@ -1460,8 +1471,19 @@ const FeedbackForm = ({
     // triggerAutoSave();
   };
 
+  // Initial submit handler - triggers confirmation popup
+  const handleSubmitClick = () => {
+    // Validate form locally first
+    if (!validateForm()) {
+      console.log("❌ Form validation failed");
+      return;
+    }
+    setShowSubmitConfirmation(true);
+  };
+
   const submitFeedback = async () => {
     try {
+      setShowSubmitConfirmation(false);
       // console.log("🚀 Starting feedback submission...");
       // console.log(
       //   "📋 Preselected questions responses:",
@@ -1469,10 +1491,10 @@ const FeedbackForm = ({
       // );
 
       // Validate form locally first
-      if (!validateForm()) {
-        console.log("❌ Form validation failed");
-        return;
-      }
+      //      if (!validateForm()) {
+      //        console.log("❌ Form validation failed");
+      //        return;
+      //      }
 
       // Prepare feedback data
       const feedbackData = {
@@ -1628,40 +1650,42 @@ const FeedbackForm = ({
             {
               onSuccess: (data) => {
                 if (data.success) {
-                  alert("Feedback updated successfully!");
+                  notify.success("Feedback updated successfully!");
                 } else {
-                  alert("Failed to update feedback: " + data.message);
+                  notify.error("Failed to update feedback: " + data.message);
                 }
               },
               onError: (error) => {
-                alert("Failed to update feedback: " + error.message);
+                notify.error("Failed to update feedback: " + error.message);
               },
             },
           );
         } else {
-          alert("No feedback ID found, cannot update.");
+          notify.error("No feedback ID found, cannot update.");
         }
       } else {
         createFeedback(feedbackData, {
           onSuccess: (data) => {
             if (data.success) {
-              alert("Feedback submitted successfully!");
+              notify.success("Feedback submitted successfully!");
               // Optionally, reset form or redirect
             } else {
-              alert("Failed to submit feedback: " + data.message);
+              notify.error("Failed to submit feedback: " + data.message);
             }
           },
           onError: (error) => {
-            alert("Failed to submit feedback: " + error.message);
+            notify.error("Failed to submit feedback: " + error.message);
           },
         });
       }
+
+
       if (interviewRoundData?.meetPlatform === "platform") {
         // const { leave } = useMeeting();
         // leave();
       }
 
-      navigate("/feedback");
+      // navigate("/feedback");
     } catch (error) {
       console.error("💥 Error submitting feedback:", error);
       alert("Failed to submit feedback. Please try again.");
@@ -1958,7 +1982,7 @@ const FeedbackForm = ({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Overall Rating{" "}
-                {!isViewMode && <span className="text-red-500">*</span>}
+                {!isReadOnly && <span className="text-red-500">*</span>}
               </label>
               <div className="flex items-center flex-wrap gap-2">
                 {renderStarRating(overallRating, handleOverallRatingChange)}
@@ -1976,7 +2000,7 @@ const FeedbackForm = ({
             <div className="bg-gray-50 p-4 rounded-lg">
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Communication Rating{" "}
-                {!isViewMode && <span className="text-red-500">*</span>}
+                {!isReadOnly && <span className="text-red-500">*</span>}
               </label>
               <div className="flex items-center flex-wrap gap-2">
                 {renderStarRating(
@@ -1999,10 +2023,10 @@ const FeedbackForm = ({
             <div className="flex w-full items-center justify-between mb-4">
               <p className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 Skill Ratings
-                {!isViewMode && <span className="text-red-500">*</span>}
+                {!isReadOnly && <span className="text-red-500">*</span>}
               </p>
 
-              {!isViewMode && !urlData?.isSchedule && (
+              {!isReadOnly && !urlData?.isSchedule && (
                 <Button
                   type="button"
                   onClick={handleAddSkill}
@@ -2020,7 +2044,7 @@ const FeedbackForm = ({
               )}
             </div>
 
-            {isViewMode ? (
+            {isReadOnly ? (
               <div className="space-y-3">
                 {skillRatings.map((skill, index) => (
                   <div key={index} className="bg-gray-50 p-4 rounded-lg">
@@ -2130,7 +2154,7 @@ const FeedbackForm = ({
                 </span>
               </div>
               {/* v1.0.3 --------------------------------------------------------> */}
-              {!isViewMode && (
+              {!isReadOnly && (
                 <button
                   className="text-sm flex items-center gap-2 sm:px-3 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 font-medium"
                   onClick={openQuestionBank}
@@ -2209,7 +2233,7 @@ const FeedbackForm = ({
                             question._id,
                           )
                         }
-                        disabled={!isViewMode}
+                        disabled={isReadOnly}
                       >
                         <ThumbsUp className="h-4 w-4" />
                       </span>
@@ -2226,7 +2250,7 @@ const FeedbackForm = ({
                             question._id,
                           )
                         }
-                        disabled={!isViewMode}
+                        disabled={isReadOnly}
                       >
                         <ThumbsDown className="h-4 w-4" />
                       </span>
@@ -2252,7 +2276,7 @@ const FeedbackForm = ({
                         <p className="text-sm text-gray-800">
                           {question.note}
                         </p>
-                        {!isViewMode && (
+                        {!isReadOnly && (
                           <p className="text-xs text-gray-400 mt-1">
                             {question.note.length}/250
                           </p>
@@ -2424,7 +2448,7 @@ const FeedbackForm = ({
             </div>
           )} */}
 
-          {isViewMode ? (
+          {isReadOnly ? (
             // VIEW MODE - Read-only display
             <div className="space-y-4">
               {questionsWithFeedback?.length > 0 ? (
@@ -2483,9 +2507,9 @@ const FeedbackForm = ({
           <div className="mb-8">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Overall Comments{" "}
-              {!isViewMode && <span className="text-red-500">*</span>}
+              {!isReadOnly && <span className="text-red-500">*</span>}
             </label>
-            {isViewMode ? (
+            {isReadOnly ? (
               <div className="text-sm text-gray-800 bg-gray-50 p-4 rounded-md">
                 {comments || "Not Provided"}
               </div>
@@ -2506,9 +2530,9 @@ const FeedbackForm = ({
           <div className="mb-8">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Recommendation{" "}
-              {!isViewMode && <span className="text-red-500">*</span>}
+              {!isReadOnly && <span className="text-red-500">*</span>}
             </label>
-            {isViewMode ? (
+            {isReadOnly ? (
               <div className="text-sm text-gray-800 bg-gray-50 p-4 rounded-md">
                 {recommendation || "Not Provided"}
               </div>
@@ -2526,7 +2550,7 @@ const FeedbackForm = ({
                     { value: "No", label: "No" },
                   ].find((opt) => opt.value === recommendation) || null
                 }
-                disabled={isViewMode || urlData?.isSchedule}
+                disabled={isReadOnly || urlData?.isSchedule}
                 onChange={(opt) => {
                   setRecommendation(opt?.value || "");
                   // to auto save comments change
@@ -2542,7 +2566,7 @@ const FeedbackForm = ({
           </div>
 
           {/* Action Buttons */}
-          {!isViewMode && !urlData?.isSchedule && (
+          {!isReadOnly && !urlData?.isSchedule && (
             <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg mt-6 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 z-40">
               {!urlData?.isSchedule && (
                 <div className="flex justify-end items-center gap-3 max-w-7xl mx-auto">
@@ -2559,7 +2583,7 @@ const FeedbackForm = ({
                     Save Draft
                   </Button>
                   <Button
-                    onClick={submitFeedback}
+                    onClick={handleSubmitClick}
                     className="text-sm bg-custom-blue text-white hover:bg-custom-blue/90"
                   // disabled={decodedData.schedule}
                   >
@@ -2570,6 +2594,43 @@ const FeedbackForm = ({
             </div>
           )}
         </div>
+
+        {/* Submit Confirmation Modal */}
+        {showSubmitConfirmation && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-100 animate-in zoom-in-95 duration-200">
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                    <AlertCircle className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Conformation
+                  </h3>
+                </div>
+
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                  Are you sure you want to submit this feedback? Once submitted, you won't be able to make any further changes.
+                </p>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    onClick={() => setShowSubmitConfirmation(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={submitFeedback}
+                    className="px-4 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg focus:outline-none   shadow-sm transition-all hover:shadow-md"
+                  >
+                    Proceed
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* QuestionBank Modal */}
         {isQuestionBankOpen && (

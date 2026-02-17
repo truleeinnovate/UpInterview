@@ -33,6 +33,7 @@ const SchedulerSectionComponent = ({
   handlePreselectedQuestionResponse,
   isSchedule,
   triggerAutoSave,
+  feedbackDataResponse
 
 }) => {
   const saveTimeoutRef = useRef(null);
@@ -108,7 +109,11 @@ const SchedulerSectionComponent = ({
       return interviewdata.feedbacks[0].questionFeedback || [];
     }
     return [];
+    return [];
   }, [feedbackData, interviewdata]);
+
+  const isSubmitted = feedbackDataResponse?.status === "submitted" || feedbackDataResponse?.status === "Submitted";
+  const isReadOnly = isViewMode || isSubmitted;
 
   // Initialize state variables
   const [dislikeQuestionId, setDislikeQuestionId] = useState("");
@@ -212,6 +217,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle radio input changes if needed
   const onChangeRadioInput = (id, value) => {
+    if (isReadOnly || isSchedule) return;
     setSchedulerQuestionsData((prev) => {
       const questionIndex = prev.findIndex((q) => q._id === id || q.questionId === id || q.id === id);
       if (questionIndex === -1) return prev;
@@ -236,6 +242,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle dislike radio input changes
   const onChangeDislikeRadioInput = (questionId, value) => {
+    if (isReadOnly || isSchedule) return;
     setSchedulerQuestionsData((prev) =>
       prev.map((question) => {
         if (question._id === questionId || question.questionId === questionId || question.id === questionId) {
@@ -283,7 +290,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle dislike toggle
   const handleDislikeToggle = (id) => {
-    if (isViewMode || isSchedule) return;
+    if (isReadOnly || isSchedule) return;
 
     // Find the question first to get robust ID
     const question = schedulerQuestionsData.find((q) => q._id === id || q.questionId === id || q.id === id);
@@ -349,7 +356,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle like toggle
   const handleLikeToggle = (id) => {
-    if (isViewMode || isSchedule) return;
+    if (isReadOnly || isSchedule) return;
 
     const question = schedulerQuestionsData.find((q) => q._id === id || q.questionId === id || q.id === id);
     if (!question) return;
@@ -391,6 +398,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle add note
   const onClickAddNote = (id) => {
+    if (isReadOnly || isSchedule) return;
     setSchedulerQuestionsData((prev) =>
       prev.map((q) => ((q._id === id || q.questionId === id || q.id === id) ? { ...q, notesBool: !q.notesBool } : q)),
     );
@@ -450,6 +458,7 @@ const SchedulerSectionComponent = ({
 
   // Function to handle interview question notes
   const onChangeInterviewQuestionNotes = (questionId, notes) => {
+    if (isReadOnly || isSchedule) return;
     setSchedulerQuestionsData((prev) =>
       prev.map((question) =>
         (question._id === questionId || question.questionId === questionId || question.id === questionId) ? { ...question, note: notes } : question,
@@ -489,7 +498,7 @@ const SchedulerSectionComponent = ({
           <div className="border border-gray-500 w-full p-3 rounded-md mt-2">
             <div className="flex justify-between items-center mb-2">
               <h1>Tell us more :</h1>
-              <button disabled={isSchedule} onClick={() => setDislikeQuestionId(null)}>
+              <button disabled={isSchedule || isReadOnly} onClick={() => setDislikeQuestionId(null)}>
                 <XCircle className="h-4 w-4" />
               </button>
             </div>
@@ -506,7 +515,7 @@ const SchedulerSectionComponent = ({
                     onChange={(e) =>
                       onChangeDislikeRadioInput(each._id || each.questionId || each.id, e.target.value)
                     }
-                    disabled={isSchedule}
+                    disabled={isSchedule || isReadOnly}
                   />
                   <label
                     htmlFor={`dislike-${each._id}-${option.value}`}
@@ -576,7 +585,7 @@ const SchedulerSectionComponent = ({
                     onChange={(e) =>
                       onChangeRadioInput(each._id, e.target.value)
                     }
-                    disabled={isSchedule}
+                    disabled={isSchedule || isReadOnly}
                     className="accent-custom-blue whitespace-nowrap text-sm"
                   />
                   <label
@@ -608,7 +617,7 @@ const SchedulerSectionComponent = ({
           <QuestionCard
             key={question._id}
             question={question}
-            mode={isEditMode || isAddMode ? "edit" : "view"}
+            mode={!isReadOnly && (isEditMode || isAddMode) ? "edit" : "view"}
             onNoteAdd={(id) => {
               const q = schedulerQuestionsData.find((sq) => sq._id === id || sq.questionId === id || sq.id === id);
               if (q?.notesBool) {

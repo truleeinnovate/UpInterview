@@ -1134,7 +1134,9 @@ const MockSchedulelater = () => {
     // console.log("formData", formData);
     try {
       // Always use the existing ID if available (from edit mode or previous creation)
-      const mockIdToUse = mockEdit ? id : createdMockInterviewId;
+      // const mockIdToUse = mockEdit ? id : createdMockInterviewId;
+      // NEW (fixed):
+      const mockIdToUse = id || createdMockInterviewId;
 
       const response = await saveMockInterview({
         formData: {

@@ -6,6 +6,7 @@ import { config } from "../config";
 import Cookies from "js-cookie";
 import { fetchFilterData } from "../api";
 import { usePermissions } from "../Context/PermissionsContext";
+import { notify } from "../services/toastService";
 
 export const useInterviews = (
   filters = {},
@@ -108,8 +109,6 @@ export const useInterviews = (
       queryKey: ["interview-details", interviewId, roundId],
 
       queryFn: async () => {
-        console.log("interviewId", interviewId);
-        console.log("roundId", roundId);
 
         const response = await axios.get(
           `${config.REACT_APP_API_URL}/interview/interview-details`,
@@ -465,7 +464,14 @@ export const useInterviews = (
       );
     },
     onError: (error) => {
-      console.error("Round status update error:", error);
+      console.log("error", error)
+
+      const res = error?.response?.data?.code;
+      console.log("repsonse", res)
+      if (res === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
+        notify.error(error?.response?.data?.message);
+      }
+      // console.error("Round status update error:", error);
     },
   });
 

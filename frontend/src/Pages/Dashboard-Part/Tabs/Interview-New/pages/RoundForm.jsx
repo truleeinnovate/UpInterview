@@ -4672,7 +4672,7 @@ const RoundFormInterviews = () => {
         // className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center justify-center mb-4 text-blue-600">
+            <div className="flex items-center justify-center mb-4 text-custom-blue">
               <Users className="h-12 w-12" />
             </div>
             <h3 className="text-lg font-semibold mb-2 text-center">Request Sent to Interviewers</h3>
