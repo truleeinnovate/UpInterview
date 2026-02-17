@@ -850,6 +850,7 @@ const MoockRoundCard = ({
         actionType="Cancel"
         isLoading={isCancellingRound}
         isMockInterview={true}
+        mockInterviewId={round?.mockInterviewId}
       />
 
       {showRejectionModal && (

@@ -262,7 +262,10 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-sm font-semibold text-gray-800">After Discount</span>
                   <span className="text-base font-bold text-teal-700">
-                    ₹{(transaction?.amount || 0).toFixed(2)}
+                    ₹{(metadata.originalAmountBeforeDiscount > 0
+                      ? Number(metadata.originalAmountBeforeDiscount) - Number(metadata.mockDiscountAmount || 0)
+                      : (transaction?.amount || 0)
+                    ).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -272,6 +275,48 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
                   No discount applied for this mock interview
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Settlement Policy Card - shows which policy was applied and payout % */}
+          {metadata.settlementPayPercent != null && metadata.settlementPolicyName && (
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-5 border border-amber-200 shadow-sm">
+              <h3 className="text-base font-semibold text-amber-800 mb-4 flex items-center">
+                <Info className="w-5 h-5 mr-2 text-amber-600" />
+                Settlement Policy Applied
+              </h3>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2 border-b border-amber-100">
+                  <span className="text-sm text-gray-600">Policy</span>
+                  <span className="text-sm font-semibold text-gray-900 capitalize">
+                    {metadata.settlementPolicyName?.replace(/_/g, ' ')}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between py-2 border-b border-amber-100">
+                  <span className="text-sm text-gray-600">Interviewer Payout</span>
+                  <span className="text-sm font-semibold text-amber-700">
+                    {metadata.settlementPayPercent}%
+                  </span>
+                </div>
+
+                {metadata.settlementBaseAmount > 0 && (
+                  <div className="flex items-center justify-between py-2 border-b border-amber-100">
+                    <span className="text-sm text-gray-600">Base Amount (After Discount)</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      ₹{Number(metadata.settlementBaseAmount).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-sm font-semibold text-gray-800">Settlement Amount</span>
+                  <span className="text-base font-bold text-amber-700">
+                    ₹{(Number(metadata.settlementBaseAmount || 0) * Number(metadata.settlementPayPercent || 0) / 100).toFixed(2)}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
 

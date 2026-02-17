@@ -1097,27 +1097,27 @@ const MockInterviewDetails = () => {
                                     </span>
                                     <span className="mr-2">•</span>
                                     <div className="flex items-center gap-2">
-                                    <MeetPlatformBadge
-                                      platform={round?.meetPlatform}
-                                    />
+                                      <MeetPlatformBadge
+                                        platform={round?.meetPlatform}
+                                      />
 
-                                    {(round?.status === "Scheduled" ||
-                                      round?.status === "Rescheduled" ||
-                                      round?.status === "InProgress") && (
-                                        <>
+                                      {(round?.status === "Scheduled" ||
+                                        round?.status === "Rescheduled" ||
+                                        round?.status === "InProgress") && (
+                                          <>
 
-                                          <span
-                                            onClick={(e) => {
-                                              e.stopPropagation(); // ⛔ stop toggle
-                                              handleJoinMeeting(round); // ✅ join only
-                                            }}
-                                            className="cursor-pointer mx-2 text-custom-blue hover:underline font-medium"
-                                          >
-                                            Join Meeting
-                                          </span>
-                                        </>
-                                      )}
-                                  </div>
+                                            <span
+                                              onClick={(e) => {
+                                                e.stopPropagation(); // ⛔ stop toggle
+                                                handleJoinMeeting(round); // ✅ join only
+                                              }}
+                                              className="cursor-pointer mx-2 text-custom-blue hover:underline font-medium"
+                                            >
+                                              Join Meeting
+                                            </span>
+                                          </>
+                                        )}
+                                    </div>
                                   </div>
                                   {/* v1.0.0 <-------------------------------------------------------------------------- */}
                                 </div>
@@ -1293,6 +1293,7 @@ const MockInterviewDetails = () => {
           status={rounds[0]?.roundStatus}
           combinedDateTime={rounds[0]?.dateTime}
           actionType="Cancel"
+          isMockInterview={true}
           isLoading={isCancellingRound}
         />
 
