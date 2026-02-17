@@ -1284,7 +1284,7 @@ const EditInterviewDetails = ({
                 )}
               </div>
               {errors.skills && (
-                <p className="text-red-500 text-sm">{errors.skills}</p>
+                <p className="text-red-500 text-xs">{errors.skills}</p>
               )}
             </div>
 
@@ -1329,7 +1329,7 @@ const EditInterviewDetails = ({
                   </label>
                 </div>
                 {errors.PreviousExperienceConductingInterviews && (
-                  <p className="text-red-500 text-sm sm:text-xs">
+                  <p className="text-red-500 text-xs">
                     {errors.PreviousExperienceConductingInterviews}
                   </p>
                 )}
@@ -1537,7 +1537,7 @@ const EditInterviewDetails = ({
                 </div>
                 {/* Changed: Added error display for interviewFormatWeOffer */}
                 {errors.interviewFormatWeOffer && (
-                  <p className="text-red-500 text-sm mt-2">
+                  <p className="text-red-500 text-xs mt-2">
                     {errors.interviewFormatWeOffer}
                   </p>
                 )}
@@ -1645,7 +1645,7 @@ const EditInterviewDetails = ({
                             </svg>
                           </button>
                           {errors.mock_interview_discount && (
-                            <p className="absolute -bottom-5 left-0 text-sm text-red-600 whitespace-nowrap">
+                            <p className="absolute -bottom-5 left-0 text-xs text-red-600 whitespace-nowrap">
                               {errors.mock_interview_discount}
                             </p>
                           )}
@@ -1695,7 +1695,7 @@ const EditInterviewDetails = ({
                             isClearable={true}
                           />
                           {errors.mock_interview_discount && (
-                            <p className="mt-1 text-sm text-red-600">
+                            <p className="mt-1 text-xs text-red-600">
                               {errors.mock_interview_discount}
                             </p>
                           )}

@@ -235,19 +235,33 @@ const EditAdvacedDetails = ({
   console.log("Profile Data in Edit Advanced Details:", profileData);
 
   // Handle input changes for text fields
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const handleInputChange = (selectedOption, meta) => {
+    // Handle both select dropdown and regular input changes
+    let name, value;
+
+    if (meta && meta.name) {
+      // This is from react-select
+      name = meta.name;
+      value = selectedOption?.value || "";
+    } else if (selectedOption && selectedOption.target) {
+      // This is from a regular input
+      name = selectedOption.target.name;
+      value = selectedOption.target.value;
+    } else {
+      // Fallback
+      name = "";
+      value = selectedOption;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
 
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
   };
 
   const handleCloseModal = () => {
@@ -275,9 +289,7 @@ const EditAdvacedDetails = ({
     const cleanFormData = {
       currentRole: formData.currentRole?.trim() || "",
       industry: formData.industry?.trim() || "",
-      yearsOfExperience: formData.yearsOfExperience
-        ? Number(formData.yearsOfExperience)
-        : 0,
+      yearsOfExperience: formData.yearsOfExperience?.trim() || "",
       location: formData.location?.trim() || "",
       company: formData.company?.trim() || "",
       // skills: formData.skills

@@ -63,10 +63,8 @@ export const validateAdvancedForm = (formData) => {
   // }
 
   // Experience validation
-  if (!formData.yearsOfExperience?.toString().trim()) {
+  if (!formData.yearsOfExperience) {
     errors.yearsOfExperience = "Years of Experience is required";
-  } else if (!/^\d+$/.test(formData.yearsOfExperience.toString().trim())) {
-    errors.yearsOfExperience = "Please enter a valid number";
   }
 
   if (!formData.company?.trim()) {
@@ -125,9 +123,9 @@ if (!Array.isArray(formData.skills) || formData.skills.length < 3) {
   // Professional Bio validation - Made optional with length constraints
   if (formData.bio) {
     if (formData.bio.length < 150) {
-      errors.bio = "Bio must be at least 150 characters";
+      errors.bio = "Professional Bio must be at least 150 characters";
     } else if (formData.bio.length > 500) {
-      errors.bio = "Bio cannot exceed 500 characters";
+      errors.bio = "Professional Bio cannot exceed 500 characters";
     }
   }
 
