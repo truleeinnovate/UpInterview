@@ -87,7 +87,7 @@ function parseCustomDateTime(dateTimeStr) {
 // ──────────────────────────────────────────────
 // Helper: Format date with timezone
 // ──────────────────────────────────────────────
-function formatInterviewDateTime(dateInput, timeZone = 'UTC') {
+function formatInterviewDateTime(dateInput, timeZone = 'IST') {
   let dt;
 
   if (dateInput instanceof Date) {
@@ -566,9 +566,9 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{position}}/g, displayPosition);
 
         // Now hide the entire line if position is empty
-        if (!displayPosition) {
+        if (!displayPosition.trim()) {
           emailBody = emailBody.replace(
-            /<!-- POSITION_LINE_START -->[\s\S]*?<!-- POSITION_LINE_END -->/g,
+            /<!--\s*POSITION_BLOCK_START\s*-->[\s\S]*?<!--\s*POSITION_BLOCK_END\s*-->/g,
             ''
           );
         }
@@ -637,9 +637,9 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             .replace(/{{position}}/g, displayPosition);
 
           // Now hide the entire line if position is empty
-          if (!displayPosition) {
+          if (!displayPosition.trim()) {
             emailBody = emailBody.replace(
-              /<!-- POSITION_LINE_START -->[\s\S]*?<!-- POSITION_LINE_END -->/g,
+              /<!--\s*POSITION_BLOCK_START\s*-->[\s\S]*?<!--\s*POSITION_BLOCK_END\s*-->/g,
               ''
             );
           }
@@ -720,13 +720,12 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{position}}/g, displayPosition);
 
         // Now hide the entire line if position is empty
-        if (!displayPosition) {
+        if (!displayPosition.trim()) {
           emailBody = emailBody.replace(
-            /<!-- POSITION_LINE_START -->[\s\S]*?<!-- POSITION_LINE_END -->/g,
+            /<!--\s*POSITION_BLOCK_START\s*-->[\s\S]*?<!--\s*POSITION_BLOCK_END\s*-->/g,
             ''
           );
         }
-
         // if (meetingLink && meetingLink.length > 0) {
         const encryptedSchedulerId = encryptData(scheduler?._id);//passing contact id
         const encryptedSchedulerOwnerId = encryptData(scheduler?.ownerId);

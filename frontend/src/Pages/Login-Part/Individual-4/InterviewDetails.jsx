@@ -1741,7 +1741,7 @@ const InterviewDetails = ({
                 setErrors((prev) => ({
                   ...prev,
                   bio: "Professional Bio is required",
-                }));
+              }));
               } else if (value.length < 150) {
                 setErrors((prev) => ({
                   ...prev,
