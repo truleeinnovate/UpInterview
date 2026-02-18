@@ -60,7 +60,7 @@ function formatInterviewDateTime(dateTimeStr, timeZoneLabel = "IST") {
   }
 
   const str = dateTimeStr.trim();
-  
+
   // Take only start part if range exists
   const startPart = str.split(" - ")[0].trim();
 
@@ -1024,7 +1024,7 @@ function errorResponse(res, status, message) {
 exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
   try {
     const { interviewId, roundId, sendEmails = true, type } = req.body;
-    console.log("sendInterviewRoundCancellationEmails");
+    console.log("sendInterviewRoundCancellationEmails", req.body);
 
 
     const companyName = process.env.COMPANY_NAME || "UpInterview";
@@ -1074,9 +1074,10 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
     const tenantCompanyName = tenant?.company || companyName;
     const address = tenant?.offices?.[0]?.address || "";
 
-    const round = await InterviewRounds.findById(roundId).populate(
-      "interviewers"
-    );
+    const round = type === "mockinterview"
+      ? await MockInterviewRound.findById(roundId).populate("interviewers")
+      : await InterviewRounds.findById(roundId).populate("interviewers");
+
     if (!round) return sendError(res, 404, "Interview round not found");
 
     if (!sendEmails) {
