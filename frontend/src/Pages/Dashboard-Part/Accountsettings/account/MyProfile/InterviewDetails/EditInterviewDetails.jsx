@@ -191,6 +191,31 @@ const EditInterviewDetails = ({
     isCurrentRolesFetching,
   } = useMasterData({}, pageType);
 
+  // Define levels configuration
+  const levelsConfig = [
+    {
+      key: "junior",
+      label: "Junior Level (0-3 years)",
+      showCondition: showJuniorLevel,
+      rangeKey: "Junior",
+      yearsText: "0-3 years",
+    },
+    {
+      key: "mid",
+      label: "Mid-Level (3-6 years)",
+      showCondition: showMidLevel,
+      rangeKey: "Mid-Level",
+      yearsText: "3-6 years",
+    },
+    {
+      key: "senior",
+      label: "Senior Level (6+ years)",
+      showCondition: showSeniorLevel,
+      rangeKey: "Senior",
+      yearsText: "6+ years",
+    },
+  ];
+
   // State for form errors and loading
   const [errors, setErrors] = useState({});
   const [isReady, setIsReady] = useState(false);
@@ -639,7 +664,43 @@ const EditInterviewDetails = ({
     }
 
     const validationErrors = validateInterviewForm(formData, isReady);
-    // console.log("validationErrors:", validationErrors);
+
+    // Custom Rate Validation
+    levelsConfig.forEach((level) => {
+      if (level.showCondition) {
+        const range = getRateRanges(level.rangeKey);
+
+        ['usd', 'inr'].forEach((currency) => {
+          const value = formData.rates?.[level.key]?.[currency];
+
+          if (value === "" || value === null || value === undefined) {
+            if (!validationErrors.rates) validationErrors.rates = {};
+            if (!validationErrors.rates[level.key]) validationErrors.rates[level.key] = {};
+            validationErrors.rates[level.key][currency] = `${currency.toUpperCase()} rate is required`;
+          } else {
+            const numValue = parseFloat(value);
+            if (isNaN(numValue) || numValue < 0) {
+              if (!validationErrors.rates) validationErrors.rates = {};
+              if (!validationErrors.rates[level.key]) validationErrors.rates[level.key] = {};
+              validationErrors.rates[level.key][currency] = "Invalid rate";
+            } else if (range && range[currency]) {
+              const min = range[currency].min;
+              const max = range[currency].max;
+              if (numValue < min) {
+                if (!validationErrors.rates) validationErrors.rates = {};
+                if (!validationErrors.rates[level.key]) validationErrors.rates[level.key] = {};
+                validationErrors.rates[level.key][currency] = `${currency.toUpperCase()} rate should be at least ${min}`;
+              } else if (numValue > max) {
+                if (!validationErrors.rates) validationErrors.rates = {};
+                if (!validationErrors.rates[level.key]) validationErrors.rates[level.key] = {};
+                validationErrors.rates[level.key][currency] = `${currency.toUpperCase()} rate should not exceed ${max}`;
+              }
+            }
+          }
+        });
+      }
+    });
+
     setErrors(validationErrors);
 
     if (!isEmptyObject(validationErrors)) {
@@ -937,30 +998,7 @@ const EditInterviewDetails = ({
     }));
   };
 
-  // Define levels configuration
-  const levelsConfig = [
-    {
-      key: "junior",
-      label: "Junior Level (0-3 years)",
-      showCondition: showJuniorLevel,
-      rangeKey: "Junior",
-      yearsText: "0-3 years",
-    },
-    {
-      key: "mid",
-      label: "Mid-Level (3-6 years)",
-      showCondition: showMidLevel,
-      rangeKey: "Mid-Level",
-      yearsText: "3-6 years",
-    },
-    {
-      key: "senior",
-      label: "Senior Level (6+ years)",
-      showCondition: showSeniorLevel,
-      rangeKey: "Senior",
-      yearsText: "6+ years",
-    },
-  ];
+
 
   const handleChangeforExp = (e) => {
     const { name, value } = e.target;

@@ -578,7 +578,8 @@ const updateContactsDetails = async (req, res) => {
 
     // Handle years of experience
     if (yearsOfExperience !== undefined) {
-      contactData.yearsOfExperience = Number(yearsOfExperience) || 0;
+      // contactData.yearsOfExperience = Number(yearsOfExperience) || 0;
+      contactData.yearsOfExperience = yearsOfExperience;
     }
 
     // Normalize timeZone
