@@ -362,9 +362,23 @@ export const useUpdateRoundStatus = () => {
       ).data;
     },
 
-    onSuccess: () => {
-      queryClient.invalidateQueries(["mockinterview"]);
-      queryClient.invalidateQueries(["mockinterviews"]);
+    onSuccess: (data, variables) => {
+
+      const { mockInterviewId } = variables;
+
+      // Invalidate the list query
+      queryClient.invalidateQueries({ queryKey: ["mockinterviews"] });
+
+      // Invalidate the specific mock interview query with its ID
+      if (mockInterviewId) {
+        queryClient.invalidateQueries({
+          queryKey: ["mockinterview", mockInterviewId]
+        });
+      }
+      // Invalidate the list query
+      // queryClient.invalidateQueries({ queryKey: ["mockinterviews"] });
+      // queryClient.invalidateQueries(["mockinterview"]);
+      // queryClient.invalidateQueries(["mockinterviews"]);
     },
   });
 };

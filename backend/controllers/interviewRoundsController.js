@@ -633,7 +633,7 @@ const updateInterviewRound = async (req, res) => {
     });
   }
 
-  console.log("incomingRound", incomingRound);
+  // console.log("incomingRound", incomingRound);
 
   //after round create in post meeting id will update using this if condtion
   if (
@@ -748,7 +748,7 @@ const updateInterviewRound = async (req, res) => {
     selectedInterviewers: req?.body?.round?.selectedInterviewers || [],
   });
 
-  console.log("changesDone", changes);
+  // console.log("changesDone", changes);
 
   if (!changes.anyChange && updateType !== "FULL_UPDATE") {
     return res.status(200).json({
@@ -907,6 +907,7 @@ const updateInterviewRound = async (req, res) => {
       updatePayload.$set.status = "Draft";
       updatePayload.$set.meetingId = ""; // Clear assigned meetingId
       updatePayload.$set.meetPlatform = ""; // Clear assigned meetPlatform
+      updatePayload.$set.interviewerType = "";
     }
 
     // 3. Scheduled → Draft (cancelling after acceptance)
@@ -956,7 +957,7 @@ const updateInterviewRound = async (req, res) => {
       updatePayload.$set.interviewers = []; // Clear assigned interviewer
       updatePayload.$set.meetingId = ""; // Clear assigned meetingId
       updatePayload.$set.meetPlatform = ""; // Clear assigned meetPlatform
-
+      updatePayload.$set.interviewerType = "";
       // === SEND CANCELLATION EMAILS ===
       // Only if there was an accepted interviewer (we know who was cancelled)
       if (
@@ -1100,7 +1101,7 @@ const updateInterviewRound = async (req, res) => {
     // }
   }
 
-  console.log("updatePayload:", updatePayload);
+  // console.log("updatePayload:", updatePayload);
 
   // === DATE/TIME CHANGE (always save if sent) ===
   if (req.body.round?.dateTime) {
@@ -1669,7 +1670,7 @@ const updateInterviewRoundStatus = async (req, res) => {
       const isHistoryHandled = hasInterviewer && hasCandidate;
       console.log("isHistoryHandled", isHistoryHandled);
 
-      if (isHistoryHandled) {
+      if (isHistoryHandled && action !== "InProgress") {
         // ONE-TIME SPECIAL HISTORY CREATION
         let actionStatus = "InProgress"
 
@@ -1814,6 +1815,8 @@ const updateInterviewRoundStatus = async (req, res) => {
             settlementError,
           );
         }
+
+
         // Continue with status update even if settlement fails
       }
 
@@ -1835,6 +1838,7 @@ const updateInterviewRoundStatus = async (req, res) => {
       extraUpdate.$set.interviewers = []; // Clear interviewers
       extraUpdate.$set.meetingId = "";
       extraUpdate.$set.meetPlatform = "";
+      extraUpdate.$set.interviewerType = "";
     }
 
     // Handle Evaluated action - save roundOutcome and evaluation reason
