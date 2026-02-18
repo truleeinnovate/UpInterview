@@ -700,16 +700,16 @@ const MockInterviewDetails = () => {
     }
 
     // Delete
-    if (permissions.canDelete) {
-      actions.push({
-        label: "Delete Round",
-        icon: XCircle,
-        onClick: () => setShowDeleteConfirmModal(true),
-        className:
-          "inline-flex items-center text-sm  text-red-700 bg-red-50 hover:bg-red-100",
-        showInMore: true,
-      });
-    }
+    // if (permissions.canDelete) {
+    //   actions.push({
+    //     label: "Delete Round",
+    //     icon: XCircle,
+    //     onClick: () => setShowDeleteConfirmModal(true),
+    //     className:
+    //       "inline-flex items-center text-sm  text-red-700 bg-red-50 hover:bg-red-100",
+    //     showInMore: true,
+    //   });
+    // }
 
     // Mark Scheduled
     if (permissions.canMarkScheduled) {

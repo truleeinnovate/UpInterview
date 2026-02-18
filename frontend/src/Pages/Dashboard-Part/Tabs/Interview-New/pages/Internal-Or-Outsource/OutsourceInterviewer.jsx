@@ -318,7 +318,7 @@ export const OutsourcedInterviewerCard = ({
             //   {interviewerEmail}
             // </p>
           )}
-          <div className="flex mt-1 items-center space-x-[2px] text-xs text-gray-500">
+          <div className="flex mt-3 items-center space-x-[2px] text-xs text-gray-500">
             <Building size={14} className="text-black" />
             <span className="truncate">
               {companyName
@@ -2463,6 +2463,26 @@ function OutsourcedInterviewerModal({
                         })}
                       </div>
                     )}
+                    {
+                      currentRole &&
+                      <div className="flex mt-4 flex-wrap items-center gap-1.5">
+                        <span className="text-xs text-gray-500 mr-1">
+                          Current Role:
+                        </span>
+                        <span className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800">
+                          {currentRole}
+                          {/* <button
+                              onClick={() => {
+                                setCurrentRole(null);
+                              }}
+                              className="ml-1 text-gray-500 hover:text-red-500"
+                            >
+                              <X className="h-3 w-3" />
+                            </button> */}
+                        </span>
+                      </div>
+
+                    }
 
 
 

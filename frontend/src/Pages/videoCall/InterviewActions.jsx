@@ -67,6 +67,8 @@ const InterviewActions = ({
 
   const isMockInterview = urlData?.interviewType === "mockinterview";
 
+
+
   /* -----------------------------
        INTERVIEW DATA (IMPORTANT FIX)
     ------------------------------ */
@@ -205,7 +207,7 @@ const InterviewActions = ({
     "Cancelled",
   ].includes(currentStatus);
   const updateMockRoundStatus = useUpdateRoundStatus();
-  const isCompleted = currentStatus === "Completed"; // Keep if needed elsewhere
+  const isCompleted = currentStatus === "Completed" || currentStatus === "FeedbackSubmitted"; // Keep if needed elsewhere
 
   const handleStatusChange = async (
     newStatus,

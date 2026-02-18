@@ -1878,9 +1878,18 @@ const MockSchedulelater = () => {
         mockEdit ? "Mock interview updated!" : "Mock interview scheduled!",
       );
 
+      // Close confirmation popup and clear pending change
+      setShowDateChangeConfirmation(false);
+      setPendingDateChange(null);
+
       if (meetingLink) {
         setShowExternalNotification(true);
-      } else {
+      }
+      else if (type === "confirmClearinterviwers") {
+        setShowDateChangeConfirmation(false);
+        setPendingDateChange(null);
+      }
+      else {
         navigate("/mock-interviews");
       }
     } catch (error) {

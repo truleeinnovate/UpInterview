@@ -319,6 +319,14 @@ const InterviewsMiniTabComponent = ({
     }
   }, [getInterviewerSectionData, feedbackData]);
 
+
+  // Add this useEffect to ensure tab is correct when urlData changes
+  useEffect(() => {
+    if (urlData?.isSchedule) {
+      setInterviewMiniTab(1);
+    }
+  }, [urlData?.isSchedule]);
+
   // Properly initialize preselected questions with full question data and responses
   // Properly initialize preselected questions with full question data and responses
   const getPreselectedQuestionsResponses = useCallback(() => {
