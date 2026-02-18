@@ -3630,7 +3630,7 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
 
   // If upcomingOnly is true, we'll only return upcoming interviews
   const isUpcomingRequest =
-    filterQuery?.upcomingOnly === true || options.type === "upcoming";
+    filterQuery?.upcomingOnly === true || filterQuery?.type === "upcoming";
 
   const now = new Date();
 
