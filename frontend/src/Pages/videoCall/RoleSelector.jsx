@@ -42,7 +42,6 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // const [videoTrack, setVideoTrack] = useState(null);
   // const [audioTrack, setAudioTrack] = useState(null);
   const videoPlayerRef = useRef();
-  const audioPlayerRef = useRef();
   const videoTrackRef = useRef();
   const audioTrackRef = useRef();
   const micStreamRef = useRef();
@@ -469,12 +468,6 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                   </button>
                 </div>
               </div>
-              <audio
-                ref={audioPlayerRef}
-                autoPlay
-                playsInline
-                className="hidden"
-              />
             </div>
           ) : (
             <div className="sm:w-14 sm:h-14 md:w-14 md:h-14 w-16 h-16 bg-[#217989] rounded-full flex items-center justify-center mx-auto mb-4">

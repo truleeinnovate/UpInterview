@@ -285,6 +285,7 @@ export const useMockInterviewById = ({
   mockInterviewId,
   mockInterviewRoundId,
   enabled: enabledOverride,
+  refetchInterval,
 }) => {
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.MockInterviews?.View;
@@ -329,6 +330,7 @@ export const useMockInterviewById = ({
     gcTime: 1000 * 60 * 30, // 30 minutes cache
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
+    ...(refetchInterval && { refetchInterval }),
   });
 
   return {

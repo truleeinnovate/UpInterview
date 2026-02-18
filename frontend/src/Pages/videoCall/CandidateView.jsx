@@ -48,7 +48,6 @@ const CandidateView = () =>
   const [videoTrack, setVideoTrack] = useState(null);
   const [audioTrack, setAudioTrack] = useState(null);
   const videoPlayerRef = useRef();
-  const audioPlayerRef = useRef();
   const videoTrackRef = useRef();
   const audioTrackRef = useRef();
   const micStreamRef = useRef();
@@ -432,12 +431,6 @@ const CandidateView = () =>
                       </div>
                     </div>
 
-                    <audio
-                      ref={audioPlayerRef}
-                      autoPlay
-                      playsInline
-                      className="hidden"
-                    />
                   </div>
                 )}
 

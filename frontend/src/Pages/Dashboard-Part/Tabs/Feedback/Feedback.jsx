@@ -180,13 +180,8 @@ const Feedback = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // Update current page in filters
-  useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      page: paginationInfo.currentPage,
-    }));
-  }, [paginationInfo.currentPage]);
+  // Page is already managed by nextPage/prevPage handlers and filter/search effects
+  // (Removed useEffect that synced paginationInfo.currentPage -> filters.page as it caused infinite refetch loop)
 
   // Sync filter states when popup opens
   useEffect(() => {
@@ -431,6 +426,7 @@ const Feedback = () => {
       interviewDate: "",
       page: 0,
     }));
+    setFilterPopupOpen(false);
   };
 
   const handleFilterIconClick = () => {

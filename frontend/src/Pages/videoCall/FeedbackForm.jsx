@@ -479,22 +479,19 @@ const FeedbackForm = ({
 
   // Fixed: Proper initialization for skill ratings with proper conditional checks
   const initialSkillRatings = useMemo(() => {
-    // 1. If we have a persisted feedback record (via ID), trust its data exclusively.
-    // This handles Edit/View modes AND Add mode after auto-save has created the record.
-    if (feedbackData?._id) {
-      if (skillsData && skillsData.length > 0) {
-        return skillsData.map((skill) => ({
-          skill: skill.skillName,
-          rating: skill.rating,
-          comments: skill.note,
-        }));
-      }
-      // Feedback exists but has no skills (or they were deleted) -> show empty row
-      return [{ skill: "", rating: 0, comments: "" }];
+    // 1. If we have a persisted feedback record with saved skills, use them.
+    // This handles Edit/View modes AND Add mode after auto-save when skills have been saved.
+    if (feedbackData?._id && skillsData && skillsData.length > 0) {
+      return skillsData.map((skill) => ({
+        skill: skill.skillName,
+        rating: skill.rating,
+        comments: skill.note,
+      }));
     }
 
-    // 2. If no feedback record exists (Fresh Add Mode, no ID yet), auto-populate
-    // This runs only until auto-save creates the feedback and we get an ID.
+    // 2. Auto-populate from position/candidate data.
+    // This runs for fresh Add Mode (no ID yet) AND when feedback exists but
+    // has no saved skills yet (e.g. after auto-save created the record from adding questions).
     let autoSkills = [];
 
     // Mock Interview: Skills often in candidateData.skills (array of strings)

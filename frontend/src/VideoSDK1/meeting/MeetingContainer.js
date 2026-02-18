@@ -53,6 +53,28 @@ export function MeetingContainer({
 
   const [uniqueParticipants, setUniqueParticipants] = useState(new Set());
 
+  // Preload notification audio files so they're ready to play instantly
+  const chatNotifAudioRef = useRef(null);
+  const errNotifAudioRef = useRef(null);
+  const criticalErrNotifAudioRef = useRef(null);
+
+  useEffect(() => {
+    chatNotifAudioRef.current = new Audio(
+      "https://static.videosdk.live/prebuilt/notification.mp3"
+    );
+    chatNotifAudioRef.current.load();
+
+    errNotifAudioRef.current = new Audio(
+      "https://static.videosdk.live/prebuilt/notification_err.mp3"
+    );
+    errNotifAudioRef.current.load();
+
+    criticalErrNotifAudioRef.current = new Audio(
+      "https://static.videosdk.live/prebuilt/notification_critical_err.mp3"
+    );
+    criticalErrNotifAudioRef.current.load();
+  }, []);
+
   const ParticipantMicStream = memo(({ participantId }) => {
     // Individual hook for each participant
     const { micStream, isLocal } = useParticipant(participantId);
@@ -209,11 +231,13 @@ export function MeetingContainer({
     const isJoiningError = joiningErrCodes.findIndex((c) => c === code) !== -1;
     const isCriticalError = `${code}`.startsWith("500");
 
-    new Audio(
-      isCriticalError
-        ? "https://static.videosdk.live/prebuilt/notification_critical_err.mp3"
-        : "https://static.videosdk.live/prebuilt/notification_err.mp3",
-    ).play();
+    const audioToPlay = isCriticalError
+      ? criticalErrNotifAudioRef.current
+      : errNotifAudioRef.current;
+    if (audioToPlay) {
+      audioToPlay.currentTime = 0;
+      audioToPlay.play().catch(() => { });
+    }
 
     setMeetingErrorVisible(true);
     setMeetingError({
@@ -281,9 +305,10 @@ export function MeetingContainer({
       const isLocal = senderId === localParticipantId;
 
       if (!isLocal) {
-        new Audio(
-          "https://static.videosdk.live/prebuilt/notification.mp3",
-        ).play();
+        if (chatNotifAudioRef.current) {
+          chatNotifAudioRef.current.currentTime = 0;
+          chatNotifAudioRef.current.play().catch(() => { });
+        }
       }
     },
   });

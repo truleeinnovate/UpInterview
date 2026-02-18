@@ -93,6 +93,7 @@ export const useInterviews = (
     interviewId,
     roundId,
     enabled: enabledOverride,
+    refetchInterval,
   }) => {
     // console.log("enabledOverride", enabledOverride);
     // const isEnabled =
@@ -130,6 +131,7 @@ export const useInterviews = (
       refetchOnMount: "always",
       refetchOnReconnect: false,
       keepPreviousData: true,
+      ...(refetchInterval && { refetchInterval }),
     });
   };
 
