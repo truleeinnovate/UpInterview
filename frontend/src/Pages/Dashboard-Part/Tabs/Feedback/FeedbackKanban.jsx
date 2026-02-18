@@ -159,7 +159,7 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full h-[calc(100vh-9rem)] bg-gray-50 rounded-xl p-6 overflow-auto"
+      className="w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-xl p-6 overflow-auto"
     >
       <div className="h-full w-full pb-6">
         <motion.div
