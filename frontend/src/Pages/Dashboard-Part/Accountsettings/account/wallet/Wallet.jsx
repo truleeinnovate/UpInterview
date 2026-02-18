@@ -148,6 +148,8 @@ const Wallet = () => {
     }
   };
 
+  const containerPadding = typeFrom === "account-settings" ? "px-4" : "px-[8%]";
+
   // Skeleton Loading Component for Wallet
   // v1.0.1 <--------------------------------------------------------------------------
   const WalletSkeleton = () => {
@@ -211,7 +213,8 @@ const Wallet = () => {
       //     </div>
       //   </div>
       // </div>
-      <div className="space-y-6 px-4 py-6">
+      // <div className="space-y-6 px-4 py-6">
+      <div className={`space-y-6 ${containerPadding} sm:px-4 py-6`}>
         {/* Header skeleton */}
         {/* <div className="flex sm:flex-col sm:justify-start justify-between sm:items-start items-center">
           <div className="sm:text-xl md:tex-xl text-2xl font-bold sm:mb-4 h-8 w-32 bg-gray-200 skeleton-animation rounded"></div>
@@ -310,8 +313,6 @@ const Wallet = () => {
   if (isLoading) {
     return <WalletSkeleton />;
   }
-
-  const containerPadding = typeFrom === "account-settings" ? "px-4" : "px-[8%]";
 
   return (
     <>
