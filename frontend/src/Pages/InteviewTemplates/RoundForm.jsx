@@ -9,7 +9,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Button } from "../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
+// import { Button } from "../Dashboard-Part/Tabs/CommonCode-AllTabs/ui/button";
+import { Button } from "../../Components/Buttons/Button.jsx";
 import Breadcrumb from "../Dashboard-Part/Tabs/CommonCode-AllTabs/Breadcrumb";
 import { ChevronDown, User, X, Users, Trash2, ChevronUp } from "lucide-react";
 import InternalInterviews from "../Dashboard-Part/Tabs/Interview-New/pages/Internal-Or-Outsource/InternalInterviewers";
@@ -1032,7 +1033,7 @@ function RoundFormTemplates() {
       ref={formRef}
     >
       {/*  v1.0.4 ----------------------------------------------------------------------->  */}
-      <div className="max-w-7xl mx-auto py-6 sm:px-4 lg:px-8 md:px-8 xl:px-8 2xl:px-8">
+      <div className="py-6 px-[8%] sm:px-4">
         <Breadcrumb items={breadcrumbItems} />
 
         <div className="bg-white rounded-lg shadow mt-4">
@@ -2034,7 +2035,7 @@ function RoundFormTemplates() {
             </div>
 
             {/* v1.0.5 <------------------------------------------------------------------------- */}
-            <div className="flex justify-end gap-4 my-6  rounded-b-lg">
+            <div className="flex justify-end gap-4 mt-6">
               <Button
                 // v1.0.2 <------------------------------------------------------------------
                 className="border border-custom-blue"

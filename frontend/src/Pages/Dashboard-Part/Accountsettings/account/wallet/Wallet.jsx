@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { RefreshCw, Search, ChevronRight } from "lucide-react";
 import { ViewDetailsButton } from "../../common/Buttons";
 
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useOutletContext } from "react-router-dom";
 import WalletBalancePopup from "./WalletBalancePopup";
 import WalletTransactionPopup from "./WalletTransactionPopup";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
@@ -58,6 +58,10 @@ const Wallet = () => {
   const { data: walletBalance, isLoading, refetch } = useWallet(); //<----v1.0.0-----
   const [isRefetching, setIsRefetching] = useState(false);
   console.log(" walletBalance", walletBalance);
+  // --------------------FOR PADDING-------------------------
+  const context = useOutletContext();
+  const typeFrom = context?.typeFrom;
+  // --------------------FOR PADDING-------------------------
 
   const handleRefetch = useCallback(async () => {
     setIsRefetching(true);
@@ -307,10 +311,13 @@ const Wallet = () => {
     return <WalletSkeleton />;
   }
 
+  const containerPadding = typeFrom === "account-settings" ? "px-4" : "px-[8%]";
+
   return (
     <>
       {/* v1.0.3 <----------------------------------------------------------------------- */}
-      <div className="space-y-6 px-4 py-6">
+      {/* <div className="space-y-6 px-[8%] sm:px-4 py-6"> */}
+      <div className={`space-y-6 ${containerPadding} sm:px-4 py-6`}>
         <div className="flex sm:flex-col sm:justify-start justify-between sm:items-start items-center">
           <h2 className="sm:text-xl md:tex-xl text-2xl font-bold sm:mb-4">
             Wallet
