@@ -12,7 +12,7 @@
 //   const mMeeting = useMeeting();
 //   const presenterId = mMeeting?.presenterId;
 //   const { localScreenShareStream } = useMeetingAppContext();
-  
+
 //   const [showOverlay, setShowOverlay] = useState(false); // NEW: Control overlay visibility
 
 //   console.log('PresenterView - Presenter ID:', presenterId, 'Meeting State:', {
@@ -21,7 +21,7 @@
 //     presenterId: mMeeting?.presenterId,
 //     isLocalPresenting: mMeeting?.localParticipant?.id === mMeeting?.presenterId
 //   });
-  
+
 //   const {
 //     micOn,
 //     webcamOn,
@@ -211,7 +211,7 @@ export function PresenterView({ height }) {
   });
   const presenterId = mMeeting?.presenterId;
   const { localScreenShareStream } = useMeetingAppContext();
-  
+
   const [showOverlay, setShowOverlay] = useState(false);
 
   const {
@@ -313,7 +313,7 @@ export function PresenterView({ height }) {
 
   return (
     <div className="bg-gray-750 rounded m-2 relative overflow-hidden w-full" style={{ height }}>
-      <audio autoPlay playsInline controls={false} ref={audioPlayer} />
+      <audio playsInline controls={false} ref={audioPlayer} />
 
       <div className="video-contain absolute h-full w-full">
         {isLocal ? (
@@ -387,8 +387,8 @@ export function PresenterView({ height }) {
           </div>
         )}
 
-        <CornerDisplayName 
-          {...{ isLocal, displayName, micOn, webcamOn: false, isPresenting: true, participantId: presenterId, isActiveSpeaker }} 
+        <CornerDisplayName
+          {...{ isLocal, displayName, micOn, webcamOn: false, isPresenting: true, participantId: presenterId, isActiveSpeaker }}
         />
       </div>
     </div>

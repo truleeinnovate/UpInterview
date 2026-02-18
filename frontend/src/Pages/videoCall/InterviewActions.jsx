@@ -2,12 +2,14 @@
 // v1.0.1 - Ashok - Improved responsiveness
 
 import React, { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle,
   XCircle,
   AlertTriangle,
   Ban,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import SupportForm from "../Dashboard-Part/Tabs/SupportDesk/SupportForm";
 
@@ -28,12 +30,14 @@ import {
   useMockInterviewById,
   useUpdateRoundStatus,
 } from "../../apiHooks/useMockInterviews";
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 const InterviewActions = ({
   // interviewData,
   isAddMode,
   decodedData,
   onActionComplete,
 }) => {
+  const queryClient = useQueryClient();
   const { updateRoundStatus, useInterviewDetails } = useInterviews();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [noShowReasonModalOpen, setNoShowReasonModalOpen] = useState(false);
@@ -72,9 +76,11 @@ const InterviewActions = ({
     mockInterview,
     isMockLoading,
     isError: isMockError,
+    refetch: refetchMock,
   } = useMockInterviewById({
     mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
     enabled: isMockInterview, // ✅ THIS LINE
+    refetchInterval: 15000, // Auto-poll every 15 seconds
     // mockInterviewId: null,
   });
 
@@ -82,10 +88,33 @@ const InterviewActions = ({
     data: interview,
     isLoading: isInterviewLoading,
     isError: interviewError,
+    refetch: refetchInterview,
   } = useInterviewDetails({
     roundId: !isMockInterview ? urlData.interviewRoundId : null,
     enabled: !isMockInterview,
+    refetchInterval: 15000, // Auto-poll every 15 seconds
   });
+
+  // State for refresh animation
+  const [isRefetching, setIsRefetching] = useState(false);
+
+
+
+  // Manual refresh handler
+  const handleRefetchStatus = async () => {
+    setIsRefetching(true);
+    try {
+      if (isMockInterview && refetchMock) {
+        await refetchMock();
+      } else if (!isMockInterview && refetchInterview) {
+        await refetchInterview();
+      }
+    } catch (e) {
+      console.error("Error refreshing status:", e);
+    } finally {
+      setIsRefetching(false);
+    }
+  };
   // const { data, isLoading } = useInterviewDetails({
   //   roundId: urlData.interviewRoundId,
   // });
@@ -254,6 +283,17 @@ const InterviewActions = ({
       // });
       // Show success toast
       notify.success(`Round Status updated to ${newStatus}`, {});
+
+      // Invalidate interview-details queries to update status in real-time
+      queryClient.invalidateQueries({ queryKey: ["interview-details"] });
+      // Also invalidate mock interview queries for mock interviews
+      if (isMockInterview) {
+        queryClient.invalidateQueries({ queryKey: ["mockInterview"] });
+      }
+      // Also invalidate feedback queries for updated status
+      queryClient.invalidateQueries({ queryKey: ["feedbackDatas"] });
+      // Notify parent if callback provided
+      onActionComplete?.();
     } catch (error) {
       console.error("Error updating status:", error);
     }
@@ -365,8 +405,8 @@ const InterviewActions = ({
     return (
       <div
         className={`relative border-2 rounded-xl sm:px-4 p-6 transition-all duration-200 cursor-pointer ${disabled
-            ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
-            : variants[variant]
+          ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
+          : variants[variant]
           }`}
         onClick={disabled ? undefined : onClick}
       >
@@ -433,6 +473,17 @@ const InterviewActions = ({
           <h2 className="sm:text-lg md:text-lg lg:text-lg xl:text-xl 2xl:text-xl font-bold">
             Interview Status
           </h2>
+          <button
+            onClick={handleRefetchStatus}
+            disabled={isRefetching}
+            className="p-1.5 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-200"
+            title="Refresh status"
+          >
+            <RefreshCw
+              size={16}
+              className={isRefetching ? "animate-spin" : ""}
+            />
+          </button>
           {/* <div className="flex items-center gap-2 bg-white bg-opacity-20 rounded-lg px-3 py-1">
             <Clock size={16} />
             <span className="text-sm font-medium">
@@ -455,9 +506,19 @@ const InterviewActions = ({
           <div>
             <p className="text-white text-opacity-80">Status</p>
             <p className="font-semibold">
-              {interviewData?.status === "InProgress"
-                ? "In Progress"
-                : interviewData?.status}
+              {interviewData?.status === "RequestSent"
+                ? "Request Sent"
+                : interviewData?.status === "InProgress"
+                  ? "In Progress"
+                  : interviewData?.status === "FeedbackPending"
+                    ? "Feedback Pending"
+                    : interviewData?.status === "FeedbackSubmitted"
+                      ? "Feedback Submitted"
+                      : interviewData?.status === "NoShow"
+                        ? "No Show"
+                        : interviewData?.status === "InCompleted" ?
+                          "In Completed"
+                          : capitalizeFirstLetter(interviewData?.status)}
             </p>
           </div>
         </div>

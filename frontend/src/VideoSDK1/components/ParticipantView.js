@@ -327,10 +327,10 @@ export const CornerDisplayName = ({
                               }}
                             >
                               <p className="text-sm text-white font-semibold">{`Quality Score : ${score > 7
-                                  ? "Good"
-                                  : score > 4
-                                    ? "Average"
-                                    : "Poor"
+                                ? "Good"
+                                : score > 4
+                                  ? "Average"
+                                  : "Poor"
                                 }`}</p>
 
                               <button
@@ -462,10 +462,17 @@ export function ParticipantView({ participantId }) {
     if (webcamOn && webcamStream) {
       mediaStream = new MediaStream();
       mediaStream.addTrack(webcamStream.track);
-      
+
       if (currentVideoRef) {
         currentVideoRef.srcObject = mediaStream;
+        currentVideoRef
+          .play()
+          .catch((error) =>
+            console.error("videoRef.current.play() failed", error)
+          );
       }
+    } else if (currentVideoRef) {
+      currentVideoRef.srcObject = null;
     }
 
     return () => {
@@ -488,7 +495,7 @@ export function ParticipantView({ participantId }) {
       }}
       className={`h-full w-full  bg-gray-750 relative overflow-hidden rounded-lg video-cover`}
     >
-      <audio ref={micRef} autoPlay muted={isLocal} />
+      <audio ref={micRef} muted={isLocal} />
       {webcamOn ? (
         <video
           ref={videoRef}
@@ -496,8 +503,6 @@ export function ParticipantView({ participantId }) {
           playsInline
           muted
           className="absolute inset-0 w-full h-full object-cover"
-          classNameVideo="h-full"
-          videoStyle={{}}
         />
       ) : (
         <div className="h-full w-full flex items-center justify-center">
