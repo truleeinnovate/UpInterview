@@ -1581,40 +1581,40 @@ const FeedbackForm = ({
       };
 
       // Validate with backend before submission (optional - can be enabled)
-      try {
-        const validationResponse = await axios.post(
-          `${config.REACT_APP_API_URL}/feedback/validate`,
-          feedbackData,
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
+      // try {
+      //   const validationResponse = await axios.post(
+      //     `${config.REACT_APP_API_URL}/feedback/validate`,
+      //     feedbackData,
+      //     {
+      //       headers: {
+      //         Authorization: `Bearer ${authToken}`,
+      //         "Content-Type": "application/json",
+      //       },
+      //     },
+      //   );
 
-        if (!validationResponse.data.success) {
-          console.log(
-            "❌ Backend validation failed",
-            validationResponse.data.errors,
-          );
-          // Update error state with backend errors
-          if (validationResponse.data.errors) {
-            setErrors((prevErrors) => ({
-              ...prevErrors,
-              ...validationResponse.data.errors,
-            }));
-          }
-          alert("Validation failed. Please check the form.");
-          return;
-        }
-      } catch (validationError) {
-        // If backend validation fails, continue with frontend validation only
-        console.warn(
-          "Backend validation unavailable, proceeding with frontend validation only",
-          validationError,
-        );
-      }
+      //   if (!validationResponse.data.success) {
+      //     console.log(
+      //       "❌ Backend validation failed",
+      //       validationResponse.data.errors,
+      //     );
+      //     // Update error state with backend errors
+      //     if (validationResponse.data.errors) {
+      //       setErrors((prevErrors) => ({
+      //         ...prevErrors,
+      //         ...validationResponse.data.errors,
+      //       }));
+      //     }
+      //     alert("Validation failed. Please check the form.");
+      //     return;
+      //   }
+      // } catch (validationError) {
+      //   // If backend validation fails, continue with frontend validation only
+      //   console.warn(
+      //     "Backend validation unavailable, proceeding with frontend validation only",
+      //     validationError,
+      //   );
+      // }
 
       const updatedFeedbackData = {
         overallRating,
@@ -1849,6 +1849,10 @@ const FeedbackForm = ({
               },
             },
           );
+
+          if (isEditMode) {
+            navigate("/feedback");
+          }
 
           // if (isAddMode) {
           //   navigate("/feedback");
