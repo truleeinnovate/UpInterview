@@ -266,7 +266,7 @@ const AccountSettingsSidebar = () => {
       <div className="flex-1 flex flex-col relative">
         <div className="flex-1 overflow-y-auto">
           <div className="sm:p-2 p-6">
-            <Outlet />
+            <Outlet context={{ typeFrom: "account-settings" }} />
           </div>
         </div>
       </div>
