@@ -1520,7 +1520,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
 
 
       // && action === "InProgress"
-      if (isHistoryHandled) {
+      if (isHistoryHandled && action !== "InProgress") {
         // ONE-TIME SPECIAL HISTORY CREATION
 
         // ONE-TIME SPECIAL HISTORY CREATION
