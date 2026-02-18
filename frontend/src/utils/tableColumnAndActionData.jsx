@@ -1003,7 +1003,14 @@ export const getMockInterviewActions = (navigate, options = {}) => {
             key: "edit",
             label: "Edit",
             icon: <Pencil className="w-4 h-4 text-green-600" />,
-            show: (row) => ["Draft", "RequestSent"].includes(row?.rounds?.[0]?.status),
+            show: (row) => !["Scheduled",
+                "InProgress",
+                "Completed",
+                "InCompleted",
+                "Cancelled",
+                "NoShow",
+                "FeedbackPending",
+                "FeedbackSubmitted",].includes(row?.rounds?.[0]?.status),
 
             onClick: (row) => navigate(`/mock-interviews/${row._id}/edit`, { state: { from: "tableMode", isEdit: true } })
         }] : []),

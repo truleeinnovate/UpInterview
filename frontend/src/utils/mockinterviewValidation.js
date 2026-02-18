@@ -26,7 +26,7 @@ const getErrorMessage = (field, value) => {
   }
 
   if (field === "jobDescription" && value.trim().length < 200) {
-    return "Job Description should be at least 200 characters";
+    return "Professional Summary should be at least 200 characters";
   }
   return "";
 };
@@ -121,5 +121,9 @@ const validatemockForm = (formData, entries, errors) => {
 
   return { formIsValid, newErrors };
 };
-
-export { validatemockForm, getErrorMessage, validatePage1 };
+// At the bottom, replace the named export with:
+export default {
+  validatemockForm,
+  getErrorMessage,
+  validatePage1
+};

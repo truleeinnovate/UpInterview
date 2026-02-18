@@ -467,10 +467,14 @@ router.get(
           // FETCH MOCK INTERVIEWS
           // ---------------------------------------------------------------
           const mockInterviews = await MockInterview.find(mockQuery)
+
             .sort({ _id: -1 })
             .skip(skip)
             .limit(limitNum)
             .lean();
+
+
+
 
 
 
@@ -494,6 +498,8 @@ router.get(
             roleMaps[r.roleName] = r;
           });
 
+
+
           // ---------------------------------------------------------------
           // FETCH ROUNDS (JOIN)
           // ---------------------------------------------------------------
@@ -507,6 +513,30 @@ router.get(
             })
             .lean();
 
+          // ---------------------------------------------------------------
+          // FETCH USERS BASED ON ownerId (FROM Users COLLECTION)
+          // ---------------------------------------------------------------
+          const ownerIds = mockInterviews
+            .map(i => i.ownerId)
+            .filter(Boolean);
+
+          let userDocs = [];
+
+          if (ownerIds.length > 0) {
+            userDocs = await Users.find({
+              _id: { $in: ownerIds }
+            })
+              .select("_id  email")
+              .lean();
+          }
+
+          const userMap = {};
+
+          userDocs.forEach(user => {
+            userMap[user._id.toString()] = user;
+          });
+
+
           // Combine interviews with rounds and role details
           let combinedData = mockInterviews.map((interview) => {
             const rounds = mockRounds.filter(
@@ -514,10 +544,15 @@ router.get(
             );
 
             const roleInfo = roleMaps[interview.currentRole] || null;
+            const ownerContact =
+              userMap[interview.ownerId?.toString()] || null;
+
+
 
             return {
               ...interview,
               rounds,
+              ownerContact,
               roleDetails: roleInfo
                 ? {
                   roleName: roleInfo.roleName,
@@ -544,6 +579,7 @@ router.get(
               });
             });
           }
+
 
           // ---------------------------------------------------------------
           // FINAL RESPONSE
