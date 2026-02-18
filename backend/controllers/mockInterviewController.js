@@ -1767,6 +1767,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
             roundId: updatedRound._id,
             reasonCode,
             comment,
+            type: "mockinterview"
           },
         },
         { status: () => ({ json: () => { } }), locals: {} },

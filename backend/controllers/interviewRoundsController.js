@@ -1933,6 +1933,7 @@ const updateInterviewRoundStatus = async (req, res) => {
             roundId: updatedRound._id,
             reasonCode,
             comment,
+            type: "interview"
           },
         },
         { status: () => ({ json: () => { } }), locals: {} },
