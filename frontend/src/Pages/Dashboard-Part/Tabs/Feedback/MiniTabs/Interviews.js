@@ -113,6 +113,8 @@ const InterviewsMiniTabComponent = ({
 
   const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType || locationFeedback?.isMockInterview;
 
+  console.log("isMockInterviewisMockInterview", isMockInterview)
+
   // ✅ ALWAYS call hooks
   const {
     mockInterview: mockinterview,
@@ -725,7 +727,7 @@ const InterviewsMiniTabComponent = ({
         {interviewMiniTabsList
           .filter((each) => {
             const isMock =
-              isMockInterview;
+              urlData?.interviewType === "mockinterview" || interviewType === "mockinterview" || locationFeedback?.isMockInterview;
 
             if (urlData?.isSchedule && each.id === 2) return false;
             if (isMock && each.id === 1) return false;

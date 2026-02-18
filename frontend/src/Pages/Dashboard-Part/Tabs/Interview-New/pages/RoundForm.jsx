@@ -564,10 +564,10 @@ const RoundFormInterviews = () => {
       );
 
       const formattedStart = formatDateTime(start, true); // Your existing function
-      const formattedEnd = formatDateTime(end, false);
-
+      // const formattedEnd = formatDateTime(end, false);
+      //  - ${formattedEnd}
       return {
-        display: `${formattedStart} - ${formattedEnd}`,
+        display: `${formattedStart}`,
         startISO: start.toISOString(),
       };
     },

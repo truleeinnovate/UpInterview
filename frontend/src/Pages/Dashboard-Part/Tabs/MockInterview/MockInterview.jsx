@@ -46,7 +46,11 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
   const menuRef = useRef(null);
 
-  const actions = kanbanActions(item);
+  // const actions = kanbanActions(item);
+  const actions = kanbanActions(item).filter(
+    (action) => !action.show || action.show(item)
+  );
+
   const mainActions = actions.filter((a) => ["view", "edit"].includes(a.key));
   const overflowActions = actions.filter(
     (a) => !["view", "edit"].includes(a.key)
@@ -378,7 +382,7 @@ const MockInterview = () => {
                     capitalizeFirstLetter(row?.rounds?.[0]?.status)}
           </span>
         ) : (
-          <span className="text-gray-400 text-sm">Not Provided</span>
+          <span className="mx-2 text-xs px-2 py-0.5">Not Provided</span>
         );
       },
       // v1.0.0 -------------------------------------------------------------------->
@@ -594,7 +598,14 @@ const MockInterview = () => {
       key: "edit",
       label: "Edit",
       icon: <Pencil className="w-4 h-4 text-green-600" />,
-      show: (row) => ["Draft", "RequestSent"].includes(row?.rounds?.[0]?.status),
+      show: (row) => !["Scheduled",
+        "InProgress",
+        "Completed",
+        "InCompleted",
+        "Cancelled",
+        "NoShow",
+        "FeedbackPending",
+        "FeedbackSubmitted",].includes(row?.rounds?.[0]?.status),
 
       // show: (row) => !["Completed", "Scheduled", "Cancelled"].includes(row?.rounds?.[0]?.status),
       // show: (row) => row?.rounds?.[0]?.status === "Draft" || row?.rounds?.[0]?.status === "RequestSent",

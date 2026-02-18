@@ -8,7 +8,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ChevronRight,
   Clock,
   CheckCircle,
   XCircle,
@@ -20,82 +19,139 @@ import {
 import { parse, isValid, isAfter, isToday, startOfDay } from "date-fns";
 import { useInterviews } from "../../../../../apiHooks/useInterviews";
 import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge";
+import { useMockInterviews } from "../../../../../apiHooks/useMockInterviews";
+import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const InterviewerSchedule = () => {
   const navigate = useNavigate();
-  const type = "analytics";
-  const { interviewData, responseDashBoard } = useInterviews(
-    {
-      type: "upcoming", // Special type for upcoming interviews
-      page: 1,
-      limit: 10, // Get exactly 10 records as requested
-      upcomingOnly: true, // Flag to indicate we want upcoming interviews
-    },
-    1,
-    10,
-    type,
+
+
+  const rowsPerPage = 10;
+  const currentPage = 1
+  const {
+    interviewData,
+    total,
+    isLoading,
+  } = useInterviews(
+    {},
+    currentPage,
+    rowsPerPage,
+    "interviews"
   );
 
-  // console.log("interviewData InterviewerSchedule", responseDashBoard);
-  // interviewData is get from useInterviews hook
-  const interviewRounds = responseDashBoard?.upcomingRoundsData;
+  const { mockinterviewData, loading, totalCount, totalPages } =
+    useMockInterviews({
+      // search: searchQuery,
+      page: 1,
+      limit: rowsPerPage,
+      // filters: selectedFilters,
+    });
 
-  // useMemo(() => {
-  //   return interviewData.flatMap((interview) => {
-  //     if (!Array.isArray(interview.rounds)) return [];
-  //     return interview.rounds.map((round) => ({
-  //       ...round,
-  //       interviewCode: interview.interviewCode,
-  //       candidateId: interview.candidateId,
-  //       positionId: interview.positionId,
-  //     }));
-  //   });
-  // }, [interviewData]);
   const [upcomingRounds, setUpcomingRounds] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+
+
+
+  // interviewData is get from useInterviews hook
+  const interviewRounds = useMemo(() => {
+    const now = new Date();
+    const today = startOfDay(now);
+
+    // Combine both arrays safely
+    const allInterviews = [
+      ...(mockinterviewData || []).map((item) => ({
+        ...item,
+        isMock: true,
+      })),
+      ...(interviewData || []).map((item) => ({
+        ...item,
+        isMock: false,
+      })),
+    ];
+
+
+
+    // Flatten rounds
+    const allRounds = allInterviews.flatMap((interview) => {
+      if (!Array.isArray(interview.rounds)) return [];
+
+      // return interview.rounds.map((round) => ({
+      //   ...round,
+      //   interviewCode:
+      //     interview.mockInterviewCode || interview.interviewCode,
+      //   candidateName: interview.candidateName,
+      //   currentRole: interview.currentRole,
+      //   isMock: interview.isMock,
+      // }));
+
+      return interview.rounds.map((round) => ({
+        ...round,
+        interviewCode:
+          interview.mockInterviewCode || interview.interviewCode,
+
+        // ✅ NORMAL INTERVIEW DATA
+        candidate: interview.candidateId || null,
+        position: interview.positionId || null,
+
+        email: interview?.ownerContact?.email || null,
+
+        // ✅ MOCK INTERVIEW DATA
+        mockCandidateName: interview.candidateName || null,
+        mockCurrentRole: interview.currentRole || null,
+
+        isMock: interview.isMock,
+      }));
+
+    });
+
+    // Filter only upcoming rounds
+    const filtered = allRounds.filter((round) => {
+      if (!round.dateTime) return false;
+
+      const startTime = round.dateTime.split(" - ")[0];
+      const parsedStart = parse(
+        startTime,
+        "dd-MM-yyyy hh:mm a",
+        new Date()
+      );
+
+      return (
+        isValid(parsedStart) &&
+        (isAfter(parsedStart, today) || isToday(parsedStart))
+      );
+    });
+
+    // Sort by date ascending
+    filtered.sort((a, b) => {
+      const aStart = parse(
+        a.dateTime.split(" - ")[0],
+        "dd-MM-yyyy hh:mm a",
+        new Date()
+      );
+      const bStart = parse(
+        b.dateTime.split(" - ")[0],
+        "dd-MM-yyyy hh:mm a",
+        new Date()
+      );
+      return aStart - bStart;
+    });
+
+    // Show only next 3 upcoming rounds
+    return filtered.slice(0, 3);
+  }, [mockinterviewData, interviewData]);
+
+
+
   useEffect(() => {
-    if (interviewRounds && interviewRounds.length > 0) {
-      // const now = new Date();
-      // const today = startOfDay(now);
-
-      // const filtered = interviewRounds.filter((round) => {
-      //   if (!round.dateTime) return false;
-      //   const startTime = round.dateTime.split(" - ")[0];
-      //   const parsedStart = parse(startTime, "dd-MM-yyyy hh:mm a", new Date());
-      //   return (
-      //     isValid(parsedStart) &&
-      //     (isAfter(parsedStart, today) || isToday(parsedStart))
-      //   );
-      // });
-
-      // filtered.sort((a, b) => {
-      //   const aStart = parse(
-      //     a.dateTime.split(" - ")[0],
-      //     "dd-MM-yyyy hh:mm a",
-      //     new Date()
-      //   );
-      //   const bStart = parse(
-      //     b.dateTime.split(" - ")[0],
-      //     "dd-MM-yyyy hh:mm a",
-      //     new Date()
-      //   );
-      //   return aStart - bStart;
-      // });
-
-      setUpcomingRounds(interviewRounds);
-      setCurrentIndex(0);
-    }
-  }, [interviewRounds]);
-  console.log("interviewRounds InterviewerSchedule", upcomingRounds);
-  useEffect(() => {
-    if (upcomingRounds.length > 1) {
+    if (interviewRounds.length > 1) {
       const interval = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % upcomingRounds.length);
+        setCurrentIndex((prev) => (prev + 1) % interviewRounds.length);
       }, 3500);
       return () => clearInterval(interval);
     }
-  }, [upcomingRounds.length]);
+  }, [interviewRounds.length]);
+
 
   const displayDateTime = (dateTimeStr) => {
     if (!dateTimeStr) return "No date available";
@@ -138,6 +194,68 @@ const InterviewerSchedule = () => {
           text: "text-yellow-600",
           icon: <Clock size={16} />,
         };
+      case "Cancelled":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-600",
+          icon: <XCircle size={16} />,
+        };
+      case "Draft":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-600",
+          icon: <XCircle size={16} />,
+        };
+      case "RequestSent":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-600",
+          icon: <XCircle size={16} />,
+        };
+      case "Scheduled":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-600",
+          icon: <XCircle size={16} />,
+        };
+      case "InProgress":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-600",
+          icon: <XCircle size={16} />,
+        };
+      case "Completed":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-600",
+          icon: <XCircle size={16} />,
+        };
+      case "InCompleted":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-600",
+          icon: <XCircle size={16} />,
+        };
+      case "NoShow":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-600",
+          icon: <XCircle size={16} />,
+        };
+      case "FeedbackPending":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-600",
+          icon: <XCircle size={16} />,
+        };
+      case "FeedbackSubmitted":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-600",
+          icon: <XCircle size={16} />,
+        };
+
+
       default:
         return {
           bg: "bg-red-100",
@@ -176,33 +294,54 @@ const InterviewerSchedule = () => {
       {/* v1.0.2 <---------------------------------------------------------------- */}
       {/* <div className="relative h-[220px] overflow-hidden"> */}
       <div className="relative h-[300px] overflow-hidden">
-        {upcomingRounds.length === 0 ? (
+        {interviewRounds.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="text-gray-500">No upcoming interview rounds found.</p>
           </div>
         ) : (
-          upcomingRounds.map((round, index) => {
+          interviewRounds.map((round, index) => {
             const statusToShow = round?.status || "Pending";
             const statusDetails = getStatusDetails(statusToShow);
             const interviewCode = round?.interviewCode || "no interview";
-            const candidateName = round?.candidate
-              ? // <------v1.0.0----------Venkatesh----------
-              `${round?.candidate?.FirstName &&
-              round?.candidate?.FirstName.charAt(0).toUpperCase() +
-              round?.candidate?.FirstName.slice(1)
-              } ${round?.candidate?.LastName &&
-              round?.candidate?.LastName.charAt(0).toUpperCase() +
-              round?.candidate?.LastName.slice(1)
-              }` || "Unknown Candidate"
-              : "Unknown Candidate";
-            const positionTitle = round?.position?.title
-              ? round.position?.title?.charAt(0).toUpperCase() +
-              round.position?.title?.slice(1)
-              : "Unknown Position";
+            // const candidateName = round?.candidate
+            //   ? // <------v1.0.0----------Venkatesh----------
+            //   `${round?.candidate?.FirstName &&
+            //   round?.candidate?.FirstName.charAt(0).toUpperCase() +
+            //   round?.candidate?.FirstName.slice(1)
+            //   } ${round?.candidate?.LastName &&
+            //   round?.candidate?.LastName.charAt(0).toUpperCase() +
+            //   round?.candidate?.LastName.slice(1)
+            //   }` || "Unknown Candidate"
+            //   : "Unknown Candidate";
+
+            const candidateName = round?.isMock
+              ? round?.mockCandidateName || "Unknown Candidate"
+              : round?.candidate
+                ? `${round?.candidate?.FirstName?.charAt(0).toUpperCase() +
+                round?.candidate?.FirstName?.slice(1) || ""} 
+       ${round?.candidate?.LastName?.charAt(0).toUpperCase() +
+                round?.candidate?.LastName?.slice(1) || ""}`
+                : "Unknown Candidate";
+
+            // const positionTitle = round?.position?.title
+            //   ? round.position?.title?.charAt(0).toUpperCase() +
+            //   round.position?.title?.slice(1)
+            //   : "Unknown Position";
+            const positionTitle = round?.isMock
+              ? round?.mockCurrentRole || "Mock Interview"
+              : round?.position?.title
+                ? round.position.title.charAt(0).toUpperCase() +
+                round.position.title.slice(1)
+                : "Unknown Position";
+
             // ------v1.0.0----------Venkatesh---------->
-            const companyName = round.position?.companyname || "";
+            // const companyName = round.position?.companyname || "";
+            const companyName = round?.isMock
+              ? "Mock Interview"
+              : round?.position?.companyname?.name || "Not Specified";
+
             const candidateEmail =
-              round.candidate?.Email || "no email provided";
+              round?.candidate?.Email || round?.email || "no email provided";
 
             return (
               <div
@@ -221,9 +360,10 @@ const InterviewerSchedule = () => {
                       {/* date and time */}
                       <div className="flex items-center gap-2 w-full">
                         <Calendar size={18} className="text-gray-400" />
-                        <p className="text-sm font-medium text-gray-800">
+                        <div className="text-sm font-medium text-gray-800">
                           {displayDateTime(round.dateTime)}
-                        </p>
+                        </div>
+
                       </div>
                       {/* interview code */}
                       <div className="flex items-center gap-2">
@@ -381,7 +521,20 @@ const InterviewerSchedule = () => {
                       <span
                         className={`px-2.5 py-1 rounded-lg text-xs font-medium ${statusDetails.bg} ${statusDetails.text}`}
                       >
-                        {statusToShow}
+                        {statusToShow === "RequestSent"
+                          ? "Request Sent"
+                          : statusToShow === "InProgress"
+                            ? "In Progress"
+                            : statusToShow === "FeedbackPending"
+                              ? "Feedback Pending"
+                              : statusToShow === "FeedbackSubmitted"
+                                ? "Feedback Submitted"
+                                : statusToShow === "NoShow"
+                                  ? "No Show"
+                                  : statusToShow === "InCompleted" ?
+                                    "In Completed"
+                                    : capitalizeFirstLetter(statusToShow)}
+                        {/* {statusToShow} */}
                       </span>
                     </div>
                   </div>
