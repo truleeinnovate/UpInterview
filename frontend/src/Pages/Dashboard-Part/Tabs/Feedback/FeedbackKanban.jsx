@@ -185,7 +185,7 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
                   className="flex-1 min-w-0"
                   style={{ minWidth: "240px" }}
                 >
-                  <div className="bg-gray-100 rounded-lg p-3">
+                  <div className="bg-white border border-gray-200 rounded-lg p-3">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-medium text-gray-900">
                         {column.title}
