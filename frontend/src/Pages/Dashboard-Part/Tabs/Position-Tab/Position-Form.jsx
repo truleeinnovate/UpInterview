@@ -1806,10 +1806,7 @@ const PositionForm = ({ mode, onClose, isModal = false }) => {
                           error={errors.requirements}
                           label="Requirements (One Per Line)"
                           required
-                          placeholder="5+ years of Salesforce development experience
-                          Expert knowledge of Apex, Lightning Web Components, and Visualforce
-                          Strong understanding of Salesforce data model and security
-                          Experience with Salesforce integrations (REST/SOAP APIs)"
+placeholder="4+ years of professional experience as a Full Stack Developer&#10;Strong proficiency in modern JavaScript (ES6+) and TypeScript&#10;Expertise in React.js (or Next.js) with hooks, context, and state management (Redux / Zustand / TanStack Query)&#10;Solid experience building responsive UIs with HTML5, CSS3, Tailwind CSS / Material UI / Chakra UI&#10;Proven backend experience with Node.js + Express.js (or NestJS)"
                           rows={6}
                           maxLength={2000}
                         />

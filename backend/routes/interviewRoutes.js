@@ -17,8 +17,10 @@ const {
   checkInternalInterviewUsage,
   deleteInterview,
   getInterviewDataforOrg,
+  getUpcomingRoundsForInterviews
 } = require("../controllers/interviewController");
-
+const { permissionMiddleware } = require("../middleware/permissionMiddleware");
+const { authContextMiddleware } = require("../middleware/authContext");
 const loggingService = require("../middleware/loggingService");
 
 // post call interview create routes
@@ -69,5 +71,8 @@ router.get("/all-interviews", getInterviews); // SUPER ADMIN Added by Ashok
 router.get("/interviews", getAllInterviews);
 router.get("/interview-rounds", getAllInterviewRounds); // SUPER ADMIN - All interview rounds with details
 router.get("/interview-rounds/:id/transaction", getInterviewRoundTransaction);
+
+
+router.get('/upcoming-rounds',  permissionMiddleware, authContextMiddleware, getUpcomingRoundsForInterviews);
 
 module.exports = router;

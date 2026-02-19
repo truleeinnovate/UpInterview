@@ -735,7 +735,7 @@ const PositionTab = () => {
           <div className="sm:px-0">
             <Header
               title="Positions"
-              onAddClick={() => navigate("/positions/new-position")}
+              onAddClick={() => navigate("/positions/new")}
               addButtonText="Add Position"
               canCreate={effectivePermissions.Positions?.Create}
             />

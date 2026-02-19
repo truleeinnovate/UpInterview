@@ -1,11 +1,6 @@
-// v1.0.0----------Venkatesh----------changes in candidate name and position first letter capital
-// v1.0.1 - Ashok - Improved responsiveness
-// v1.0.2 - Ashok - Fixed responsiveness issues
-// v1.0.3 - Ashok - Added meeting platform icons and styles
-// v1.0.4 - Ashok - Changed react icons to svg for better customization
-// v1.0.5 - Ashok - Changed video platform name from Custom to Platform
+// src/components/dashboard/InterviewerSchedule.jsx
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Clock,
@@ -15,167 +10,37 @@ import {
   User,
   Briefcase,
   Hash,
+  Video
 } from "lucide-react";
-import { parse, isValid, isAfter, isToday, startOfDay } from "date-fns";
-import { useInterviews } from "../../../../../apiHooks/useInterviews";
+import { parse, isValid, addMinutes, subMinutes, isAfter } from "date-fns";
 import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge";
-import { useMockInterviews } from "../../../../../apiHooks/useMockInterviews";
+import { useUpcomingRoundsForInterviewer } from "../../../../../apiHooks/useUpcomingRoundsForInterviews";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { createJoinMeetingUrl } from "../../../Tabs/Interview-New/components/joinMeeting";
+import { useSingleContact } from "../../../../../apiHooks/useUsers";
+
+// Helper to extract only start time from "start - end" format
+const formatStartDateTime = (dateTimeString) => {
+  if (!dateTimeString) return "To be scheduled";
+  const startPart = dateTimeString.split(" - ")[0].trim();
+  return startPart;
+};
 
 const InterviewerSchedule = () => {
   const navigate = useNavigate();
 
-
-  const rowsPerPage = 10;
-  const currentPage = 1
-  const {
-    interviewData,
-    total,
-    isLoading,
-  } = useInterviews(
-    {},
-    currentPage,
-    rowsPerPage,
-    "interviews"
-  );
-
-  const { mockinterviewData, loading, totalCount, totalPages } =
-    useMockInterviews({
-      // search: searchQuery,
-      page: 1,
-      limit: rowsPerPage,
-      // filters: selectedFilters,
-    });
-
-  const [upcomingRounds, setUpcomingRounds] = useState([]);
+  const { data: upcomingRounds = [], isLoading } = useUpcomingRoundsForInterviewer();
+  const { singleContact } = useSingleContact();
   const [currentIndex, setCurrentIndex] = useState(0);
 
-
-
-
-  // interviewData is get from useInterviews hook
-  const interviewRounds = useMemo(() => {
-    const now = new Date();
-    const today = startOfDay(now);
-
-    // Combine both arrays safely
-    const allInterviews = [
-      ...(mockinterviewData || []).map((item) => ({
-        ...item,
-        isMock: true,
-      })),
-      ...(interviewData || []).map((item) => ({
-        ...item,
-        isMock: false,
-      })),
-    ];
-
-
-
-    // Flatten rounds
-    const allRounds = allInterviews.flatMap((interview) => {
-      if (!Array.isArray(interview.rounds)) return [];
-
-      // return interview.rounds.map((round) => ({
-      //   ...round,
-      //   interviewCode:
-      //     interview.mockInterviewCode || interview.interviewCode,
-      //   candidateName: interview.candidateName,
-      //   currentRole: interview.currentRole,
-      //   isMock: interview.isMock,
-      // }));
-
-      return interview.rounds.map((round) => ({
-        ...round,
-        interviewCode:
-          interview.mockInterviewCode || interview.interviewCode,
-
-        // ✅ NORMAL INTERVIEW DATA
-        candidate: interview.candidateId || null,
-        position: interview.positionId || null,
-
-        email: interview?.ownerContact?.email || null,
-
-        // ✅ MOCK INTERVIEW DATA
-        mockCandidateName: interview.candidateName || null,
-        mockCurrentRole: interview.currentRole || null,
-
-        isMock: interview.isMock,
-      }));
-
-    });
-
-    // Filter only upcoming rounds
-    const filtered = allRounds.filter((round) => {
-      if (!round.dateTime) return false;
-
-      const startTime = round.dateTime.split(" - ")[0];
-      const parsedStart = parse(
-        startTime,
-        "dd-MM-yyyy hh:mm a",
-        new Date()
-      );
-
-      return (
-        isValid(parsedStart) &&
-        (isAfter(parsedStart, today) || isToday(parsedStart))
-      );
-    });
-
-    // Sort by date ascending
-    filtered.sort((a, b) => {
-      const aStart = parse(
-        a.dateTime.split(" - ")[0],
-        "dd-MM-yyyy hh:mm a",
-        new Date()
-      );
-      const bStart = parse(
-        b.dateTime.split(" - ")[0],
-        "dd-MM-yyyy hh:mm a",
-        new Date()
-      );
-      return aStart - bStart;
-    });
-
-    // Show only next 3 upcoming rounds
-    return filtered.slice(0, 3);
-  }, [mockinterviewData, interviewData]);
-
-
-
   useEffect(() => {
-    if (interviewRounds.length > 1) {
+    if (upcomingRounds.length > 1) {
       const interval = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % interviewRounds.length);
+        setCurrentIndex((prev) => (prev + 1) % upcomingRounds.length);
       }, 3500);
       return () => clearInterval(interval);
     }
-  }, [interviewRounds.length]);
-
-
-  const displayDateTime = (dateTimeStr) => {
-    if (!dateTimeStr) return "No date available";
-    try {
-      const [startTime, endTime] = dateTimeStr.split(" - ");
-      const parsedStart = parse(startTime, "dd-MM-yyyy hh:mm a", new Date());
-      if (!isValid(parsedStart)) return "Invalid date";
-
-      const dateOptions = { day: "numeric", month: "short", year: "numeric" };
-      const timeOptions = { hour: "numeric", minute: "2-digit", hour12: true };
-
-      return (
-        <div className="flex flex-col">
-          <span>{parsedStart.toLocaleString("en-US", dateOptions)}</span>
-          <span className="text-sm text-gray-600">
-            {parsedStart.toLocaleString("en-US", timeOptions)}
-            {endTime && ` - ${endTime}`}
-          </span>
-        </div>
-      );
-    } catch {
-      return "Invalid date";
-    }
-  };
+  }, [upcomingRounds.length]);
 
   const getStatusDetails = (status) => {
     switch (status) {
@@ -200,68 +65,32 @@ const InterviewerSchedule = () => {
           text: "text-red-600",
           icon: <XCircle size={16} />,
         };
-      case "Draft":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-600",
-          icon: <XCircle size={16} />,
-        };
-      case "RequestSent":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-600",
-          icon: <XCircle size={16} />,
-        };
-      case "Scheduled":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-600",
-          icon: <XCircle size={16} />,
-        };
-      case "InProgress":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-600",
-          icon: <XCircle size={16} />,
-        };
-      case "Completed":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-600",
-          icon: <XCircle size={16} />,
-        };
-      case "InCompleted":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-600",
-          icon: <XCircle size={16} />,
-        };
-      case "NoShow":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-600",
-          icon: <XCircle size={16} />,
-        };
-      case "FeedbackPending":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-600",
-          icon: <XCircle size={16} />,
-        };
-      case "FeedbackSubmitted":
-        return {
-          bg: "bg-red-100",
-          text: "text-red-600",
-          icon: <XCircle size={16} />,
-        };
-
-
       default:
         return {
           bg: "bg-red-100",
           text: "text-red-600",
           icon: <XCircle size={16} />,
         };
+    }
+  };
+
+  const handleJoinClick = (round) => {
+    if (!round) return;
+
+    const isMock = round.type === "mockinterview";
+    const type = isMock ? "mockinterview" : "interview";
+
+    const interviewData = {
+      _id: round.interviewId || round._id,
+      ownerId: round.ownerId || null,
+    };
+
+    const joinUrl = createJoinMeetingUrl(round, interviewData, singleContact.contactId, type);
+
+    if (joinUrl) {
+      window.open(joinUrl, "_blank", "noopener,noreferrer");
+    } else {
+      alert("Unable to generate meeting link.");
     }
   };
 
@@ -281,67 +110,79 @@ const InterviewerSchedule = () => {
             })}
           </p>
         </div>
-        {/* <button
-          onClick={() => navigate("/interviews")}
-          className="flex items-center sm:space-x-1 space-x-2 bg-custom-blue text-white sm:text-xs px-3 py-1.5 sm:rounded-lg rounded-xl hover:bg-custom-blue/90 transition-all duration-300"
-        >
-          <span className="text-sm font-medium">View All</span>
-          <ChevronRight className="w-[18px] h-[18px]" />
-        </button> */}
       </div>
       {/* v1.0.1 -------------------------------------------------------------------> */}
 
       {/* v1.0.2 <---------------------------------------------------------------- */}
-      {/* <div className="relative h-[220px] overflow-hidden"> */}
       <div className="relative h-[300px] overflow-hidden">
-        {interviewRounds.length === 0 ? (
+        {isLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-gray-500">Loading upcoming rounds...</p>
+          </div>
+        ) : upcomingRounds.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="text-gray-500">No upcoming interview rounds found.</p>
           </div>
         ) : (
-          interviewRounds.map((round, index) => {
+          upcomingRounds.map((round, index) => {
             const statusToShow = round?.status || "Pending";
             const statusDetails = getStatusDetails(statusToShow);
             const interviewCode = round?.interviewCode || "no interview";
-            // const candidateName = round?.candidate
-            //   ? // <------v1.0.0----------Venkatesh----------
-            //   `${round?.candidate?.FirstName &&
-            //   round?.candidate?.FirstName.charAt(0).toUpperCase() +
-            //   round?.candidate?.FirstName.slice(1)
-            //   } ${round?.candidate?.LastName &&
-            //   round?.candidate?.LastName.charAt(0).toUpperCase() +
-            //   round?.candidate?.LastName.slice(1)
-            //   }` || "Unknown Candidate"
-            //   : "Unknown Candidate";
 
-            const candidateName = round?.isMock
+            // Correct mapping from new backend fields
+            const isMock = round.type === "mockinterview";
+
+            const candidateName = isMock
               ? round?.mockCandidateName || "Unknown Candidate"
-              : round?.candidate
-                ? `${round?.candidate?.FirstName?.charAt(0).toUpperCase() +
-                round?.candidate?.FirstName?.slice(1) || ""} 
-       ${round?.candidate?.LastName?.charAt(0).toUpperCase() +
-                round?.candidate?.LastName?.slice(1) || ""}`
-                : "Unknown Candidate";
+              : round?.candidateName || "Unknown Candidate";
 
-            // const positionTitle = round?.position?.title
-            //   ? round.position?.title?.charAt(0).toUpperCase() +
-            //   round.position?.title?.slice(1)
-            //   : "Unknown Position";
-            const positionTitle = round?.isMock
+            const positionTitle = isMock
               ? round?.mockCurrentRole || "Mock Interview"
-              : round?.position?.title
-                ? round.position.title.charAt(0).toUpperCase() +
-                round.position.title.slice(1)
-                : "Unknown Position";
+              : round?.positionTitle || "Unknown Position";
 
-            // ------v1.0.0----------Venkatesh---------->
-            // const companyName = round.position?.companyname || "";
-            const companyName = round?.isMock
+            const companyName = isMock
               ? "Mock Interview"
-              : round?.position?.companyname?.name || "Not Specified";
+              : round?.companyName || "Not Specified";
 
-            const candidateEmail =
-              round?.candidate?.Email || round?.email || "no email provided";
+            const candidateEmail = isMock
+              ? "—" // mock usually no email
+              : round?.candidateEmail || "no email provided";
+
+            // ─── Join button enable/disable logic ──────────────────────────────
+            let canJoin = false;
+            if (round?.dateTime && (round.status === "Scheduled" || round.status === "Rescheduled") && round.meetPlatform) {
+              const parts = round.dateTime.split(" - ").map(s => s.trim());
+
+              if (parts.length !== 2) return; // invalid format
+
+              const [startFull, endTimeOnly] = parts;
+
+              // startFull: "19-02-2026 05:51 PM"
+              const start = parse(startFull, 'dd-MM-yyyy hh:mm a', new Date());
+
+              if (!isValid(start)) {
+                console.warn(`[WARN] Invalid start time parse for round ${round._id}: ${startFull}`);
+                return;
+              }
+
+              // endTimeOnly: "06:51 PM"
+              // Take date from start + time from end
+              const endDateStr = startFull.split(' ')[0]; // "19-02-2026"
+              const endFull = `${endDateStr} ${endTimeOnly}`; // "19-02-2026 06:51 PM"
+
+              const end = parse(endFull, 'dd-MM-yyyy hh:mm a', new Date());
+
+              if (!isValid(end)) {
+                console.warn(`[WARN] Invalid end time parse for round ${round._id}: ${endFull}`);
+                return;
+              }
+
+              const now = new Date();
+              const startMinus15 = subMinutes(start, 15);
+              const endPlus10 = addMinutes(end, 10);
+
+              canJoin = isAfter(now, startMinus15) && isAfter(endPlus10, now);
+            }
 
             return (
               <div
@@ -355,125 +196,48 @@ const InterviewerSchedule = () => {
                   }`}
               >
                 <div className="space-y-4 w-full">
-                  <div className="flex justify-between items-start gap-2">
+                  <div className="flex justify-between items-start gap-3">
                     <div className="grid grid-cols-1 items-center gap-2">
                       {/* date and time */}
                       <div className="flex items-center gap-2 w-full">
                         <Calendar size={18} className="text-gray-400" />
                         <div className="text-sm font-medium text-gray-800">
-                          {displayDateTime(round.dateTime)}
+                          {formatStartDateTime(round.dateTime)}
                         </div>
-
                       </div>
-                      {/* interview code */}
-                      <div className="flex items-center gap-2">
-                        <Hash size={18} className="text-gray-400" />
-                        <span className="text-xs font-medium text-custom-blue">
-                          {interviewCode}
-                        </span>
+                      {/* Decreased width here */}
+                      <div className="max-w-[100px] sm:max-w-[110px] md:max-w-[120px]">
+                        <MeetPlatformBadge platform={round?.meetPlatform} />
                       </div>
                     </div>
-                    {/* <span className="inline-flex items-center gap-1.5 py-1 px-2.5 text-xs">
-                      {round?.meetPlatform === "googlemeet" ? (
-                        <div className="flex items-center gap-2 bg-green-50 text-gray-600 px-2 py-1 rounded-md">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 48 48"
-                            className="h-6 w-6"
+
+                    {/* Right side: Platform badge + Join button side-by-side */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      {(round?.status === "Scheduled" ||
+                        round?.status === "Rescheduled") && round?.meetPlatform && (
+                          <button
+                            onClick={() => canJoin && handleJoinClick(round)}
+                            disabled={!canJoin}
+                            className={`
+                              inline-flex items-center gap-1.5
+                              px-3 py-1.5
+                              ${canJoin
+                                ? "bg-custom-blue hover:bg-custom-blue/90 text-white cursor-pointer"
+                                : "bg-gray-400 text-gray-200 cursor-not-allowed opacity-50"}
+                              text-sm font-medium
+                              rounded-lg
+                              transition-all duration-200
+                              shadow-sm
+                              whitespace-nowrap
+                            `}
                           >
-                            <g fill="none" fill-rule="evenodd">
-                              <rect
-                                x="8"
-                                y="12"
-                                width="32"
-                                height="12"
-                                rx="4"
-                                ry="4"
-                                fill="#ffe70b"
-                              />
-
-                              <rect
-                                x="8"
-                                y="24"
-                                width="32"
-                                height="12"
-                                rx="4"
-                                ry="4"
-                                fill="#34A853"
-                              />
-
-                              <rect
-                                x="8"
-                                y="12"
-                                width="4"
-                                height="24"
-                                rx="2"
-                                ry="2"
-                                fill="#4285F4"
-                              />
-
-                              <rect
-                                x="36"
-                                y="12"
-                                width="4"
-                                height="24"
-                                rx="2"
-                                ry="2"
-                                fill="#34A853"
-                              />
-
-                              <rect
-                                x="12"
-                                y="16"
-                                width="24"
-                                height="16"
-                                rx="3"
-                                ry="3"
-                                fill="#ffffff"
-                              />
-
-                              <path fill="#00f829" d="M36 20l14-4v18l-14-4z" />
-                            </g>
-                          </svg>
-
-                          <strong className="text-green-600">
-                            Google Meet
-                          </strong>
-                        </div>
-                      ) : round?.meetPlatform === "zoom" ? (
-                        <div className="flex items-center gap-2 bg-blue-50 text-gray-600 py-1 px-2 rounded-md">
-                          <span className="inline-flex items-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 48 48"
-                              className="w-6 h-6"
-                            >
-                              <circle cx="24" cy="24" r="24" fill="#2D8CFF" />
-                              <path
-                                fill="#fff"
-                                d="M30.5 18.5v3.3l4-3.3v11l-4-3.3v3.3c0 1.1-.9 2-2 2h-9c-1.1 0-2-.9-2-2v-9c0-1.1.9-2 2-2h9c1.1 0 2 .9 2 2z"
-                              />
-                            </svg>
-                          </span>
-                          <strong className="text-blue-600">Zoom</strong>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 bg-gray-100 text-gray-600 px-2 py-1 rounded-md">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="#9e9e9e"
-                            className="w-6 h-6"
-                          >
-                            <path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z" />
-                          </svg>
-
-                          <strong>Platform</strong>
-                        </div>
-                      )}
-                    </span> */}
-                    <MeetPlatformBadge platform={round?.meetPlatform} />
+                            <Video size={16} />
+                            Join
+                          </button>
+                        )}
+                    </div>
                   </div>
+
                   <div className="grid grid-cols-1 items-center gap-2">
                     {/* candidate name and email */}
                     <div className="flex items-center gap-2 w-56">
@@ -487,6 +251,7 @@ const InterviewerSchedule = () => {
                         </p>
                       </div>
                     </div>
+
                     {/* position title, company name */}
                     <div className="flex items-center gap-2">
                       <Briefcase size={18} className="text-gray-400" />
@@ -494,14 +259,13 @@ const InterviewerSchedule = () => {
                         <p className="text-sm font-medium text-gray-800">
                           {positionTitle}
                         </p>
-                        {/* {companyName && ( */}
                         <p className="text-sm text-gray-600">
                           {companyName ? companyName : "Not Specified"}
                         </p>
-                        {/* )} */}
                       </div>
                     </div>
                   </div>
+
                   <div className="grid grid-cols-1 items-center gap-3">
                     {/* roundTitle, interviewMode */}
                     <div className="flex flex-wrap gap-2">
@@ -511,10 +275,8 @@ const InterviewerSchedule = () => {
                       <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
                         {round.interviewMode}
                       </span>
-                      {/* <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
-                        {round?.meetPlatform}
-                      </span> */}
                     </div>
+
                     {/* status */}
                     <div className="flex items-center gap-2">
                       {statusDetails.icon}
@@ -531,10 +293,9 @@ const InterviewerSchedule = () => {
                                 ? "Feedback Submitted"
                                 : statusToShow === "NoShow"
                                   ? "No Show"
-                                  : statusToShow === "InCompleted" ?
-                                    "In Completed"
+                                  : statusToShow === "InCompleted"
+                                    ? "In Completed"
                                     : capitalizeFirstLetter(statusToShow)}
-                        {/* {statusToShow} */}
                       </span>
                     </div>
                   </div>
@@ -544,7 +305,6 @@ const InterviewerSchedule = () => {
           })
         )}
       </div>
-      {/* v1.0.2 ----------------------------------------------------------------> */}
 
       {/* Navigation dots */}
       {upcomingRounds.length > 1 && (
@@ -553,8 +313,7 @@ const InterviewerSchedule = () => {
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${index === currentIndex ? "bg-custom-blue w-4" : "bg-gray-300"
-                }`}
+              className={`w-2 h-2 rounded-full transition-all ${index === currentIndex ? "bg-custom-blue w-4" : "bg-gray-300"}`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
