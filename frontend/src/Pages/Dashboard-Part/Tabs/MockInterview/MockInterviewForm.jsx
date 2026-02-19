@@ -360,7 +360,11 @@ const MockSchedulelater = () => {
         currentRole: contact.currentRole || "",
         skills: contact.skills || [],
       }));
-      setSelectedMeetingPlatform(data?.data?.defaultProvider);
+      // Make sure platform is set from video settings
+      if (data?.data?.defaultProvider) {
+        setSelectedMeetingPlatform(data.data.defaultProvider);
+      }
+      // setSelectedMeetingPlatform(data?.data?.defaultProvider);
     }
   }, [singleContact, id, data]);
 
@@ -373,7 +377,7 @@ const MockSchedulelater = () => {
       }
 
       const data = mockInterview;
-      console.log("Mock Edit Data:", data);
+      // console.log("Mock Edit Data:", data);
 
       // Always set mockEdit to true when editing an existing mock interview
       setMockEdit(true);
@@ -443,16 +447,29 @@ const MockSchedulelater = () => {
           setIsScheduleOrRescheduleInHistory(hasScheduleOrReschedule);
         }
 
+        if (round?.meetPlatform) {
+          setSelectedMeetingPlatform(round?.meetPlatform || "");
+        } else if (data?.data?.defaultProvider) {
+          // Fallback to default if round doesn't have platform
+          setSelectedMeetingPlatform(data.data.defaultProvider);
+        }
+
         // Rest of your form population...
-        setSelectedMeetingPlatform(round.meetPlatform || "Google Meet");
+        // setSelectedMeetingPlatform(round.meetPlatform || "Google Meet");
         setStatus(round.status);
+
+        // Convert backend value back to "15+" if needed
+        let experienceDisplay = data.currentExperience;
+        if (data.currentExperience === 99 || data.currentExperience === 16) {
+          experienceDisplay = "15+";
+        }
 
         // Set formData with both candidate AND round fields
         setFormData({
           skills: skillStrings,
           candidateName: data.candidateName || "",
           higherQualification: data.higherQualification || "",
-          currentExperience: data.currentExperience || "",
+          currentExperience: experienceDisplay || "",
           jobDescription: data.jobDescription || "",
           currentRole: data.currentRole || "",
           rounds: {
@@ -540,7 +557,7 @@ const MockSchedulelater = () => {
     } else if (!id) {
       updateTimes(formData.rounds.duration);
     }
-  }, [id, mockInterview, isMockLoading, createdMockInterviewId]);
+  }, [id, mockInterview, isMockLoading, createdMockInterviewId, data]);
 
   function formatStartTimeForZoom(combinedDateTime) {
     if (!combinedDateTime) return null;
@@ -609,14 +626,37 @@ const MockSchedulelater = () => {
     const { name, value } = e.target;
     let errorMessage = getErrorMessage(name, value);
 
+    // if (name === "currentExperience") {
+    //   const numValue = parseInt(value, 10);
+    //   if (isNaN(numValue) || numValue < 1 || numValue > 15) {
+    //     errorMessage = "Experience must be between 1 and 15";
+    //   }
+    // } else {
+    //   errorMessage = getErrorMessage(name, value);
+    // }
+    // Special handling for currentExperience
     if (name === "currentExperience") {
-      const numValue = parseInt(value, 10);
-      if (isNaN(numValue) || numValue < 1 || numValue > 15) {
-        errorMessage = "Experience must be between 1 and 15";
+      // Allow empty value or "15+" string
+      setFormData((prev) => ({ ...prev, [name]: value }));
+
+      // Only validate if there's a value and it's not "15+"
+      if (value && value !== "15+") {
+        const numValue = parseInt(value, 10);
+        if (isNaN(numValue) || numValue < 1 || numValue > 15) {
+          setErrors((prev) => ({
+            ...prev,
+            [name]: "Experience must be between 1 and 15 years, or select 15+ for above 15 years"
+          }));
+        } else {
+          setErrors((prev) => ({ ...prev, [name]: "" }));
+        }
+      } else {
+        setErrors((prev) => ({ ...prev, [name]: "" }));
       }
-    } else {
-      errorMessage = getErrorMessage(name, value);
+      return;
     }
+
+
 
     if (name.startsWith("rounds.")) {
       const roundField = name.split(".")[1];
@@ -1125,6 +1165,16 @@ const MockSchedulelater = () => {
   // Page 1: Save only candidate/mock details
   const handleNext = async () => {
     setShowSkillValidation(true);
+
+    // / Validate currentExperience specifically
+    if (!formData.currentExperience) {
+      setErrors((prev) => ({
+        ...prev,
+        currentExperience: "Current experience is required"
+      }));
+      scrollToFirstError({ currentExperience: "Required" }, fieldRefs);
+      return;
+    }
     const { formIsValid, newErrors } = validatePage1(formData);
     setErrors(newErrors);
     scrollToFirstError(newErrors, fieldRefs);
@@ -1139,6 +1189,8 @@ const MockSchedulelater = () => {
       // Always use the existing ID if available (from edit mode or previous creation)
       // const mockIdToUse = mockEdit ? id : createdMockInterviewId;
       // NEW (fixed):
+      // Keep "15+" as string, don't convert to number
+      const experienceValue = formData.currentExperience;
       const mockIdToUse = id || createdMockInterviewId;
 
       const response = await saveMockInterview({
@@ -1146,7 +1198,7 @@ const MockSchedulelater = () => {
           skills: formData.skills,
           candidateName: formData.candidateName,
           higherQualification: formData.higherQualification,
-          currentExperience: formData.currentExperience,
+          currentExperience: experienceValue,
           currentRole: formData.currentRole,
           jobDescription: formData.jobDescription,
         },
@@ -1342,7 +1394,7 @@ const MockSchedulelater = () => {
         scheduledDate: newScheduledDate,
         combinedDateTime: newCombinedDateTime,
         startTime: newStartTime,
-        selectedInterviewers: [],
+        // selectedInterviewers: [],
         // endTime: newEndTime,
       });
       // Close confirmation popup and clear pending change
@@ -1757,7 +1809,12 @@ const MockSchedulelater = () => {
         selectedInterviewers: effectiveInterviewers,
         maxHourlyRate: externalMaxHourlyRate,
         expiryDateTime,
+        // meetPlatform: selectedMeetingPlatform,
       };
+
+      console.log("existingRoundId", existingRoundId)
+      console.log("roundPayload", roundPayload)
+
 
       let roundResponse;
 
@@ -1786,6 +1843,8 @@ const MockSchedulelater = () => {
       const newStatus = savedRound?.status;
       if (newStatus) setStatus(newStatus);
 
+      console.log("roundResponse roundResponse roundResponse", roundResponse)
+
       const generateMeetingLink = roundResponse?.generateMeetingLink === true;
       let meetingLink = null;
       // Step 2: Create & Save Meeting Link (only if backend allows)
@@ -1793,6 +1852,8 @@ const MockSchedulelater = () => {
         try {
           setIsMeetingCreationLoading(true);
           setMeetingCreationProgress("Creating meeting link...");
+
+          console.log("selectedMeetingPlatform", selectedMeetingPlatform)
 
           const { createMeeting } =
             await import("../../../../utils/meetingPlatforms.js");
@@ -2853,7 +2914,7 @@ const MockSchedulelater = () => {
                         error={errors.candidateName}
                         className="cursor-not-allowed bg-gray-50"
                       />
-                      <InputField
+                      <DropdownWithSearchField
                         inputRef={fieldRefs.currentExperience}
                         type="number"
                         name="currentExperience"
@@ -2863,11 +2924,19 @@ const MockSchedulelater = () => {
                         onKeyDown={handleExperienceKeyDown}
                         id="Experience"
                         label="Current Experience"
+                        options={[
+                          ...Array.from({ length: 15 }, (_, i) => ({
+                            value: (i + 1).toString(),
+                            label: `${i + 1} Year${i + 1 > 1 ? "s" : ""}`,
+                          })),
+                          { value: "15+", label: "15+ Years" },
+                        ]}
+                        placeholder="Select Years of Experience"
                         required
                         min="1"
                         max="15"
                         error={errors.currentExperience}
-                        placeholder="Enter experience in years"
+                      // placeholder="Enter experience in years"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-1">
@@ -3890,12 +3959,12 @@ const MockSchedulelater = () => {
               <LoadingButton
                 onClick={(e) => handleSubmit(e)}
                 // isLoading={isMutationLoading}
-                isLoading={isSubmitting || isMutationLoading}
+                isLoading={isSubmitting || isMutationLoading || isMeetingCreationLoading}
                 loadingText={mockEdit ? "Updating..." : "Saving..."}
               >
                 {mockEdit
-                  ? `${selectedInterviewers.length > 0 ? "Update Schedule & Round" : "Update Round"} `
-                  : `${selectedInterviewers.length > 0 ? "Create & Schedule Round" : "Create Round"}`}
+                  ? `${selectedInterviewers.length > 0 ? "Update & Schedule " : "Update Round"} `
+                  : `${selectedInterviewers.length > 0 ? "Create & Schedule " : "Create Round"}`}
                 {/* {formData.rounds.interviewType === "instant"
                   ? "Save & Schedule"
                   : "Save"} */}

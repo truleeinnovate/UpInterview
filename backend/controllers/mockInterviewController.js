@@ -955,6 +955,9 @@ exports.updateMockInterviewRound = async (req, res) => {
       Array.isArray(round.selectedInterviewers) &&
       round.selectedInterviewers.length > 0;
 
+    console.log("hasSelectedInterviewers", hasSelectedInterviewers)
+    console.log(" existingRound.status", existingRound.status)
+
     const hasAccepted = await InterviewRequest.exists({
       roundId: existingRound._id,
       status: "accepted",
@@ -966,6 +969,16 @@ exports.updateMockInterviewRound = async (req, res) => {
 
     // Always external
     if (round.interviewerType) updatePayload.$set.interviewerType = "External";
+
+
+    if (updateType === "FULL_UPDATE") {
+      // For full updates, set all provided fields
+      Object.keys(round).forEach((key) => {
+        updatePayload.$set[key] = round[key];
+      });
+    }
+
+
 
     // ==================================================================
     // OUTSOURCE LOGIC (EXACT SAME AS INTERVIEW)
@@ -1158,7 +1171,7 @@ exports.updateMockInterviewRound = async (req, res) => {
       selectedInterviewers: round.selectedInterviewers || [],
     });
 
-    if (!changes.anyChange && updateType !== "CLEAR_INTERVIEWERS") {
+    if (!changes.anyChange && updateType !== "FULL_UPDATE") {
       return res
         .status(200)
         .json({ message: "No changes detected", status: "noop" });

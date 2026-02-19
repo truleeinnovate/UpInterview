@@ -32,7 +32,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   // const { addOrUpdateMockInterview } = useMockInterviews();
   const updateMockRoundStatus = useUpdateRoundStatus();
 
-  const [isButtonEnabled, setIsButtonEnabled] = useState(false);
+  // const [isButtonEnabled, setIsButtonEnabled] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const [localInterviewTime, setLocalInterviewTime] = useState("");
   const [localEndTime, setLocalEndTime] = useState("");
@@ -94,8 +94,8 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
   );
 
   // Statuses that should disable the button completely
-  const disabledStatuses = ["Draft", "Completed", "Evaluated", "FeedbackSubmitted"];
-  const isStatusDisabled = disabledStatuses.includes(currentStatus);
+  // const disabledStatuses = ["Draft", "Completed", "Evaluated", "FeedbackSubmitted"];
+  // const isStatusDisabled = disabledStatuses.includes(currentStatus);
 
   // Function to update interview status to "in-progress"
   const updateInterviewStatus = async (role) => {
@@ -218,17 +218,39 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
       end: parseTime(datePart, endTime, endPeriod),
     };
   };
+  // Add this state for join button
+  const [isJoinButtonEnabled, setIsJoinButtonEnabled] = useState(false);
 
+  // Add this new state for edit button
+  const [isEditButtonDisabled, setIsEditButtonDisabled] = useState(false);
+
+  // Add this function to calculate extended end time (+10 minutes)
+  const getExtendedEndTime = (dateTimeStr) => {
+    if (!dateTimeStr) return null;
+
+    const { end: originalEnd } = parseCustomDateTime(dateTimeStr);
+    if (!originalEnd) return null;
+
+    const extendedEnd = new Date(originalEnd);
+    extendedEnd.setMinutes(extendedEnd.getMinutes() + 10);
+    return extendedEnd;
+  };
+
+  // Update the useEffect
   useEffect(() => {
     if (!interviewRoundData?.dateTime) return;
 
-    // Parse start and end times from the interview data
-    const { start: interviewStart, end: interviewEnd } = parseCustomDateTime(
+    // Parse original start and end times
+    const { start: interviewStart, end: originalEnd } = parseCustomDateTime(
       interviewRoundData?.dateTime,
     );
-    if (!interviewStart || !interviewEnd) return;
 
-    // Format times for display in user's local timezone
+    // Get extended end time (+10 minutes) for join button cutoff
+    const extendedEndTime = getExtendedEndTime(interviewRoundData?.dateTime);
+
+    if (!interviewStart || !originalEnd || !extendedEndTime) return;
+
+    // Format times for display
     const formatTime = (date) => {
       return date.toLocaleTimeString(undefined, {
         hour: "2-digit",
@@ -238,20 +260,27 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
     };
 
     setLocalInterviewTime(formatTime(interviewStart));
-    setLocalEndTime(formatTime(interviewEnd));
+    setLocalEndTime(formatTime(originalEnd));
 
-    // Update button state and countdown timer
-    const updateTimes = () => {
+    // Update button states
+    const updateButtonStates = () => {
       const now = new Date();
       const startTime = interviewStart.getTime();
+      const extendedEndTimeValue = extendedEndTime.getTime(); // Original end + 10 minutes
       const currentTime = now.getTime();
-      const fifteenMinutes = 15 * 60 * 1000; // 15 minutes in milliseconds
+      const fifteenMinutes = 15 * 60 * 1000;
 
-      // NEW: Enable button ONLY if current time is within 15 minutes before start time OR after start time
-      const shouldEnable = currentTime >= startTime - fifteenMinutes;
-      setIsButtonEnabled(shouldEnable);
+      // Enable join button from 15 minutes before start until extended end time (+10 minutes)
+      const shouldEnableJoin =
+        currentTime >= startTime - fifteenMinutes &&
+        currentTime <= extendedEndTimeValue;
 
-      // Calculate time remaining display
+      setIsJoinButtonEnabled(shouldEnableJoin);
+
+      // Disable edit button after extended end time (+10 minutes)
+      setIsEditButtonDisabled(currentTime > extendedEndTimeValue);
+
+      // Update time left message
       if (currentTime < startTime) {
         const diff = startTime - currentTime;
         const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -262,16 +291,23 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
         } else {
           setTimeLeft(`Scheduled for ${formatTime(interviewStart)}`);
         }
+      } else if (currentTime <= extendedEndTimeValue) {
+        setTimeLeft("Interview in progress");
       } else {
-        setTimeLeft("Interview has started - Join now");
+        setTimeLeft("Interview completed");
       }
     };
 
-    updateTimes();
-    const interval = setInterval(updateTimes, 60000); // Update every minute
+    updateButtonStates();
+    const interval = setInterval(updateButtonStates, 60000);
 
     return () => clearInterval(interval);
   }, [interviewRoundData?.dateTime]);
+
+  // Remove these as they're not needed:
+  // - addTenMinutesToEndTime function
+  // - modifiedDateTime variable
+  // - isEditButtonDisabled state (already added above)
 
   const showCandidateSection =
     !roleInfo?.hasRolePreference || roleInfo?.isCandidate;
@@ -645,23 +681,27 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
                 // isButtonEnabled && isFinalStatus
                 // isStatusDisabled ||
                 disabled={
-                  // !isButtonEnabled ||
+                  !isJoinButtonEnabled ||
                   !isFinalStatus}
-                className={`w-full sm:text-sm md:text-sm ${!isStatusDisabled && isButtonEnabled && isFinalStatus
-                  ? "bg-custom-blue hover:bg-custom-blue/90"
-                  : "bg-gray-400 cursor-not-allowed"
+                className={`w-full sm:text-sm md:text-sm ${
+                  // !isStatusDisabled&& 
+                  isJoinButtonEnabled && isFinalStatus
+                    ? "bg-custom-blue hover:bg-custom-blue/90"
+                    : "bg-gray-400 cursor-not-allowed"
                   } text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3`}
               >
                 <Users className="w-5 h-5" />
                 {/* Join as Interviewer */}
                 {/* {isButtonEnabled && isFinalStatus */}
-                {isStatusDisabled
-                  ? `Interview ${currentStatus}`
-                  : isButtonEnabled && isFinalStatus
+                {
+                  // isStatusDisabled
+                  // ? `Interview ${currentStatus}`
+                  isJoinButtonEnabled && isFinalStatus
                     ? roleInfo?.isInterviewer
                       ? "Start Interview"
                       : "Join as Interviewer"
-                    : "Join (Available 15 mins before)"}
+                    :
+                    "Join (Available 15 mins before)"}
               </button>
 
               {/* <button
