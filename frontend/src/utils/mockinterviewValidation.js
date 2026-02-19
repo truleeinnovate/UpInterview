@@ -19,9 +19,9 @@ const getErrorMessage = (field, value) => {
 
   // Additional validation for specific fields
   if (field === "currentExperience") {
-    const numValue = Number(value);
-    if (isNaN(numValue) || numValue < 1 || numValue > 15) {
-      return "Experience must be a number between 1 and 15 years";
+    // const numValue = Number(value);
+    if (value === "15+") {
+      return ""; // No error for 15+
     }
   }
 

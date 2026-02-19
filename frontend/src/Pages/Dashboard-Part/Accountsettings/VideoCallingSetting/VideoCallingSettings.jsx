@@ -116,20 +116,20 @@ export function VideoCallingSettings() {
         "Advanced Security Features",
       ],
     },
-    {
-      id: "zoom",
-      name: "Zoom",
-      description: "Use Zoom for professional video interviews",
-      icon: VideoCameraIcon,
-      specifications: [
-        "Professional Video Quality",
-        "Zoom Rooms Support",
-        "Webinar Capabilities",
-        "Local & Cloud Recording",
-        "Breakout Rooms",
-        "Advanced Security Features",
-      ],
-    },
+    // {
+    //   id: "zoom",
+    //   name: "Zoom",
+    //   description: "Use Zoom for professional video interviews",
+    //   icon: VideoCameraIcon,
+    //   specifications: [
+    //     "Professional Video Quality",
+    //     "Zoom Rooms Support",
+    //     "Webinar Capabilities",
+    //     "Local & Cloud Recording",
+    //     "Breakout Rooms",
+    //     "Advanced Security Features",
+    //   ],
+    // },
     // {
     //   id: "google-meet",
     //   name: "Google Meet",
@@ -303,8 +303,7 @@ export function VideoCallingSettings() {
 
       // Show success toast
       notify.success(
-        `Provider changed to ${
-          videoProviders.find((p) => p.id === pendingProvider)?.name
+        `Provider changed to ${videoProviders.find((p) => p.id === pendingProvider)?.name
         }`
       );
     }
@@ -465,29 +464,29 @@ export function VideoCallingSettings() {
       //   ],
       //   docs: "https://developers.google.com/meet/api",
       // },
-      zoom: {
-        fields: [
-          {
-            key: "apiKey",
-            label: "API Key",
-            type: "text",
-            placeholder: "Zoom API Key",
-          },
-          {
-            key: "apiSecret",
-            label: "API Secret",
-            type: "password",
-            placeholder: "Zoom API Secret",
-          },
-          {
-            key: "accountId",
-            label: "Account ID",
-            type: "text",
-            placeholder: "Zoom Account ID",
-          },
-        ],
-        docs: "https://marketplace.zoom.us/docs/api-reference",
-      },
+      // zoom: {
+      //   fields: [
+      //     {
+      //       key: "apiKey",
+      //       label: "API Key",
+      //       type: "text",
+      //       placeholder: "Zoom API Key",
+      //     },
+      //     {
+      //       key: "apiSecret",
+      //       label: "API Secret",
+      //       type: "password",
+      //       placeholder: "Zoom API Secret",
+      //     },
+      //     {
+      //       key: "accountId",
+      //       label: "Account ID",
+      //       type: "text",
+      //       placeholder: "Zoom Account ID",
+      //     },
+      //   ],
+      //   docs: "https://marketplace.zoom.us/docs/api-reference",
+      // },
       teams: {
         fields: [
           {
@@ -588,13 +587,12 @@ export function VideoCallingSettings() {
 
           {settings.testConnection?.status && (
             <div
-              className={`flex items-center space-x-2 ${
-                settings.testConnection.status === "success"
-                  ? "text-green-600"
-                  : settings.testConnection.status === "failed"
+              className={`flex items-center space-x-2 ${settings.testConnection.status === "success"
+                ? "text-green-600"
+                : settings.testConnection.status === "failed"
                   ? "text-red-600"
                   : "text-[#217989]"
-              }`}
+                }`}
             >
               {settings.testConnection.status === "success" && (
                 <CheckCircleIcon className="h-5 w-5" />
@@ -763,9 +761,8 @@ export function VideoCallingSettings() {
         onConfirm={confirmProviderChange}
         onCancel={cancelProviderChange}
         title="Change Video Provider"
-        message={`Are you sure you want to change your video provider to ${
-          videoProviders.find((p) => p.id === pendingProvider)?.name
-        }? This may affect your existing video call settings.`}
+        message={`Are you sure you want to change your video provider to ${videoProviders.find((p) => p.id === pendingProvider)?.name
+          }? This may affect your existing video call settings.`}
       />
 
       <div className="flex justify-between items-center px-2">
@@ -815,11 +812,10 @@ export function VideoCallingSettings() {
           {videoProviders.map((provider) => (
             <div
               key={provider.id}
-              className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                settings.defaultProvider === provider.id
-                  ? "border-[#217989] bg-[#217989]/5"
-                  : "border-gray-200 hover:border-[#217989]/50 bg-white"
-              }`}
+              className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${settings.defaultProvider === provider.id
+                ? "border-[#217989] bg-[#217989]/5"
+                : "border-gray-200 hover:border-[#217989]/50 bg-white"
+                }`}
               onClick={() => handleProviderChange(provider.id)}
             >
               {/* Selection Indicator */}
@@ -832,11 +828,10 @@ export function VideoCallingSettings() {
               {/* Provider Header */}
               <div className="flex items-center space-x-3 mb-3">
                 <div
-                  className={`p-3 rounded-lg ${
-                    settings.defaultProvider === provider.id
-                      ? "bg-[#217989] text-white"
-                      : "bg-gray-100 text-gray-600"
-                  }`}
+                  className={`p-3 rounded-lg ${settings.defaultProvider === provider.id
+                    ? "bg-[#217989] text-white"
+                    : "bg-gray-100 text-gray-600"
+                    }`}
                 >
                   <provider.icon className="h-5 w-5" />
                 </div>
@@ -875,7 +870,7 @@ export function VideoCallingSettings() {
         </div>
 
         {/* Provider Comparison */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        {/* <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <h4 className="font-medium text-gray-900 mb-3">
             Need help choosing?
           </h4>
@@ -885,13 +880,13 @@ export function VideoCallingSettings() {
               <p className="text-gray-600">
                 Perfect for enterprise environments
               </p>
-            </div>
-            {/* <div>
+            </div> */}
+        {/* <div>
               <span className="font-medium text-[#217989]">Google Meet:</span>
               <p className="text-gray-600">Ideal for Google Workspace users</p>
             </div> */}
-          </div>
-        </div>
+        {/* </div> */}
+        {/* </div> */}
       </div>
 
       {/* Credential Configuration */}
@@ -967,114 +962,116 @@ export function VideoCallingSettings() {
 */}
 
       {/* Credential Configuration */}
-      {settings.defaultProvider !== "platform" && (
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium mb-4">Credential Configuration</h3>
+      {
+        settings.defaultProvider !== "platform" && (
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium mb-4">Credential Configuration</h3>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Choose Credential Type
-              </label>
-
-              <div className="space-y-3">
-                {/* Always show Platform Credentials */}
-                <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    name="credentialType"
-                    value="platform"
-                    checked={settings.credentialType === "platform"}
-                    onChange={(e) => handleCredentialTypeChange(e.target.value)}
-                    className="text-[#217989] focus:ring-[#217989]"
-                    disabled={isOrganization === false}
-                    // added by Ranjith – disable change when org is false
-                  />
-                  <div className="ml-3">
-                    <div className="font-medium">Use Platform Credentials</div>
-                    <div className="text-sm text-gray-500">
-                      Use our managed{" "}
-                      {
-                        videoProviders.find(
-                          (p) => p.id === settings.defaultProvider
-                        )?.name
-                      }{" "}
-                      integration (Recommended)
-                    </div>
-                  </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Choose Credential Type
                 </label>
 
-                {/* Show “Use Your Own Credentials” only if organization is true */}
-                {isOrganization === true && (
-                  // added by Ranjith – show tenant option only for organization=true
+                <div className="space-y-3">
+                  {/* Always show Platform Credentials */}
                   <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
                       name="credentialType"
-                      value="tenant"
-                      checked={settings.credentialType === "tenant"}
-                      onChange={(e) =>
-                        handleCredentialTypeChange(e.target.value)
-                      }
+                      value="platform"
+                      checked={settings.credentialType === "platform"}
+                      onChange={(e) => handleCredentialTypeChange(e.target.value)}
                       className="text-[#217989] focus:ring-[#217989]"
+                      disabled={isOrganization === false}
+                    // added by Ranjith – disable change when org is false
                     />
                     <div className="ml-3">
-                      <div className="font-medium">
-                        Use Your Own Credentials
-                      </div>
+                      <div className="font-medium">Use Platform Credentials</div>
                       <div className="text-sm text-gray-500">
-                        Connect your own{" "}
+                        Use our managed{" "}
                         {
                           videoProviders.find(
                             (p) => p.id === settings.defaultProvider
                           )?.name
                         }{" "}
-                        account for full control
+                        integration (Recommended)
                       </div>
                     </div>
                   </label>
-                )}
-              </div>
-            </div>
 
-            {/* Show tenant credential form only if selected & organization=true */}
-            {isOrganization === true &&
-              settings.credentialType === "tenant" && (
-                // added by Ranjith – tenant credential form only for organization=true
-                <div className="mt-6">
-                  <h4 className="text-lg font-medium mb-4">
-                    {
-                      videoProviders.find(
-                        (p) => p.id === settings.defaultProvider
-                      )?.name
-                    }{" "}
-                    Credentials
-                  </h4>
-                  {renderCredentialForm(settings.defaultProvider)}
+                  {/* Show “Use Your Own Credentials” only if organization is true */}
+                  {isOrganization === true && (
+                    // added by Ranjith – show tenant option only for organization=true
+                    <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        name="credentialType"
+                        value="tenant"
+                        checked={settings.credentialType === "tenant"}
+                        onChange={(e) =>
+                          handleCredentialTypeChange(e.target.value)
+                        }
+                        className="text-[#217989] focus:ring-[#217989]"
+                      />
+                      <div className="ml-3">
+                        <div className="font-medium">
+                          Use Your Own Credentials
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Connect your own{" "}
+                          {
+                            videoProviders.find(
+                              (p) => p.id === settings.defaultProvider
+                            )?.name
+                          }{" "}
+                          account for full control
+                        </div>
+                      </div>
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              {/* Show tenant credential form only if selected & organization=true */}
+              {isOrganization === true &&
+                settings.credentialType === "tenant" && (
+                  // added by Ranjith – tenant credential form only for organization=true
+                  <div className="mt-6">
+                    <h4 className="text-lg font-medium mb-4">
+                      {
+                        videoProviders.find(
+                          (p) => p.id === settings.defaultProvider
+                        )?.name
+                      }{" "}
+                      Credentials
+                    </h4>
+                    {renderCredentialForm(settings.defaultProvider)}
+                  </div>
+                )}
+
+              {/* Always show platform info box */}
+              {settings.credentialType === "platform" && (
+                <div className="bg-[#217989]/5 border-l-4 border-[#217989] p-4 rounded-r-lg">
+                  <div className="flex items-center">
+                    <CheckCircleIcon className="h-5 w-5 text-[#217989] mr-2" />
+                    <p className="text-sm text-[#217989]">
+                      You're using our managed{" "}
+                      {
+                        videoProviders.find(
+                          (p) => p.id === settings.defaultProvider
+                        )?.name
+                      }{" "}
+                      integration. No additional setup required - meetings will be
+                      created automatically during interview scheduling.
+                    </p>
+                  </div>
                 </div>
               )}
-
-            {/* Always show platform info box */}
-            {settings.credentialType === "platform" && (
-              <div className="bg-[#217989]/5 border-l-4 border-[#217989] p-4 rounded-r-lg">
-                <div className="flex items-center">
-                  <CheckCircleIcon className="h-5 w-5 text-[#217989] mr-2" />
-                  <p className="text-sm text-[#217989]">
-                    You're using our managed{" "}
-                    {
-                      videoProviders.find(
-                        (p) => p.id === settings.defaultProvider
-                      )?.name
-                    }{" "}
-                    integration. No additional setup required - meetings will be
-                    created automatically during interview scheduling.
-                  </p>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Usage Instructions */}
       <div className="bg-white p-6 rounded-lg shadow">
@@ -1118,7 +1115,7 @@ export function VideoCallingSettings() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
     // v1.0.1 --------------------------------------------------------------------------->
   );
 }

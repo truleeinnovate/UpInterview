@@ -195,12 +195,17 @@ export const useMockInterviews = (params = {}) => {
         payload,
       );
 
+      console.log("response", response.data);
+
       return response.data;
     },
 
     // ← Fixed: same pattern
     onSuccess: (data, variables) => {
+      console.log("data", data);
+      console.log("variables", variables);
       const { mockInterviewId } = variables;
+      console.log("mockInterviewId", mockInterviewId);
 
       queryClient.invalidateQueries({ queryKey: ["mockinterviews"] });
       if (mockInterviewId) {

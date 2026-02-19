@@ -66,6 +66,40 @@ import AssessmentActionPopup from "../../Assessment-Tab/AssessmentViewDetails/As
 import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatformBadge.js";
 import FeedbackFormModal from "../../Feedback/FeedbackFormModel.jsx";
 
+
+// Add this function to check if interview has started
+const hasInterviewStarted = (scheduledDateTime) => {
+  if (!scheduledDateTime) return false;
+
+  // Parse the dateTime string (format: "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM")
+  const [startTimeStr] = scheduledDateTime.split(' - ');
+
+  console.log("startTimeStr", startTimeStr); // Should be "19-02-2026 04:06 PM"
+
+  // Split into date and time parts
+  const [datePart, timePart, period] = startTimeStr.split(' ');
+  const [day, month, year] = datePart.split('-');
+  const [hours, minutes] = timePart.split(':');
+
+  // Convert to 24-hour format
+  let hour24 = parseInt(hours);
+  if (period === 'PM' && hour24 !== 12) {
+    hour24 += 12;
+  } else if (period === 'AM' && hour24 === 12) {
+    hour24 = 0;
+  }
+
+  console.log("Parsed values:", { day, month, year, hour24, minutes, period });
+
+  // Create date object (month is 0-indexed in JavaScript Date)
+  const scheduledTime = new Date(year, parseInt(month) - 1, parseInt(day), hour24, parseInt(minutes));
+
+  console.log("scheduledTime", scheduledTime);
+  const now = new Date();
+  console.log("current time", now);
+
+  return now >= scheduledTime;
+};
 const RoundCard = ({
   round,
   interviewData,
@@ -1932,6 +1966,7 @@ const RoundCard = ({
 
                   {/* No Show */}
                   {permissions.canNoShow &&
+                    hasInterviewStarted(round.dateTime) &&
                     round.roundTitle !== "Assessment" && (
                       <button
                         onClick={() => {
@@ -1986,8 +2021,8 @@ const RoundCard = ({
                       </button>
                     )}
                   {/* Complete */}
-                  {permissions.canComplete &&
-                    round.roundTitle !== "Assessment" && (
+                  {permissions.canComplete && hasInterviewStarted(round.dateTime)
+                    && round.roundTitle !== "Assessment" && (
                       <button
                         onClick={() => {
                           setActionInProgress(true);
@@ -2399,5 +2434,9 @@ const RoundCard = ({
     </>
   );
 };
+
+
+
+
 
 export default RoundCard;

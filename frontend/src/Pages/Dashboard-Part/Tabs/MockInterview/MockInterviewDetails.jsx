@@ -45,6 +45,7 @@ import { useRef } from "react";
 import { getStatusBadgeColor } from "../CommonCode-AllTabs/StatusBadge.jsx";
 import FeedbackFormModal from "../Feedback/FeedbackFormModel.jsx";
 import { createJoinMeetingUrl } from "../Interview-New/components/joinMeeting";
+import Loading from "../../../../Components/Loading.js";
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
@@ -769,8 +770,11 @@ const MockInterviewDetails = () => {
   // Ensure hooks are always called before any conditional return
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        Loading...
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loading />
+          <p className="mt-4 text-gray-600">Loading mock interview details...</p>
+        </div>
       </div>
     );
   }

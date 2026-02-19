@@ -530,7 +530,7 @@ function OutsourcedInterviewerModal({
   const userId = tokenPayload?.userId;
   // const { data: walletBalance, refetch } = useWallet();
 
-
+  console.log("candidateExperience", candidateExperience)
 
   // const pageType = "adminPortal";
   // const {
@@ -1520,6 +1520,148 @@ function OutsourcedInterviewerModal({
   // ]);
 
   // Update the useEffect that handles filtering to work immediately with skill selections
+  // useEffect(() => {
+  //   if (!baseInterviewers.length) return;
+
+  //   const getExperienceBasedRateValue = (contact, experience) => {
+  //     const rates = contact?.rates;
+  //     if (!rates) return 0;
+
+  //     let selectedLevel = null;
+  //     if (experience >= 1 && experience <= 3) selectedLevel = "junior";
+  //     else if (experience > 3 && experience <= 6) selectedLevel = "mid";
+  //     else if (experience > 6) selectedLevel = "senior";
+
+  //     let rate = rates[selectedLevel]?.inr || 0;
+  //     if (rate === 0) {
+  //       if (selectedLevel === "senior") {
+  //         rate = rates?.mid?.inr || rates?.junior?.inr || 0;
+  //       } else if (selectedLevel === "mid") {
+  //         rate = rates?.junior?.inr || 0;
+  //       }
+  //     }
+  //     return rate;
+  //   };
+
+  //   let filtered = [...baseInterviewers];
+
+  //   // Apply search filter
+  //   if (searchTerm.trim()) {
+  //     const searchLower = searchTerm.toLowerCase().trim();
+  //     filtered = filtered.filter((interviewer) => {
+  //       const firstName = interviewer?.contact?.firstName || "";
+  //       const lastName = interviewer?.contact?.lastName || "";
+  //       const fullName = `${firstName} ${lastName}`.toLowerCase();
+  //       const nameMatch = fullName.includes(searchLower);
+  //       if (nameMatch) return true;
+
+  //       const company = interviewer?.contact?.company || "N/A";
+  //       if (company.toLowerCase().includes(searchLower)) return true;
+
+  //       const skills = interviewer?.contact?.skills || [];
+  //       const hasSkillMatch = skills.some((skill) => {
+  //         const skillName =
+  //           typeof skill === "string"
+  //             ? skill.toLowerCase()
+  //             : (skill?.skill || skill?.SkillName || "").toLowerCase();
+  //         return skillName.includes(searchLower);
+  //       });
+
+  //       return hasSkillMatch;
+  //     });
+  //   }
+
+  //   // Apply rate filter
+  //   if (isRateApplied) {
+  //     filtered = filtered.filter((interviewer) => {
+  //       const hourlyRate = getExperienceBasedRateValue(
+  //         interviewer.contact,
+  //         candidateExperience,
+  //       );
+  //       return (
+  //         hourlyRate >= appliedRateRange[0] &&
+  //         (appliedRateRange[1] === Infinity ||
+  //           hourlyRate <= appliedRateRange[1])
+  //       );
+  //     });
+  //   }
+
+  //   // Calculate match scores for sorting
+  //   const scoredInterviewers = filtered.map((interviewer) => {
+  //     let matchScore = 0;
+  //     let skillsMatchCount = 0;
+
+  //     // Check skills match
+  //     if (tempSelectedSkills.length > 0) {
+  //       const selectedSkillsLower = tempSelectedSkills
+  //         .map((s) => {
+  //           const skillName = s?.SkillName || s?.skill || s;
+  //           return typeof skillName === "string"
+  //             ? skillName.toLowerCase().trim()
+  //             : "";
+  //         })
+  //         .filter(Boolean);
+
+  //       const interviewerSkills = (interviewer.contact?.skills || [])
+  //         .map((skill) => {
+  //           if (typeof skill === "string") return skill.toLowerCase().trim();
+  //           return (skill?.skill || skill?.SkillName || "")
+  //             .toLowerCase()
+  //             .trim();
+  //         })
+  //         .filter(Boolean);
+
+  //       skillsMatchCount = interviewerSkills.filter((skill) =>
+  //         selectedSkillsLower.includes(skill),
+  //       ).length;
+
+  //       matchScore += skillsMatchCount * 10;
+  //     }
+
+  //     return {
+  //       ...interviewer,
+  //       matchScore,
+  //       skillsMatchCount,
+  //       hasAnyFilterMatch: skillsMatchCount > 0,
+  //     };
+  //   });
+
+  //   // Sort by match score
+  //   scoredInterviewers.sort((a, b) => {
+  //     if (a.hasAnyFilterMatch && !b.hasAnyFilterMatch) return -1;
+  //     if (!a.hasAnyFilterMatch && b.hasAnyFilterMatch) return 1;
+  //     if (a.matchScore !== b.matchScore) return b.matchScore - a.matchScore;
+  //     return 0;
+  //   });
+
+  //   // Apply skill filter when skills are selected
+  //   if (isFiltersApplied && tempSelectedSkills.length > 0) {
+  //     const matchingInterviewers = scoredInterviewers.filter((interviewer) => {
+  //       return interviewer.skillsMatchCount > 0;
+  //     });
+
+  //     matchingInterviewers.sort((a, b) => {
+  //       const aScore = (a.skillsMatchCount * 10);
+  //       const bScore = (b.skillsMatchCount * 10);
+  //       return bScore - aScore;
+  //     });
+
+  //     setFilteredInterviewers(matchingInterviewers);
+  //   } else {
+  //     setFilteredInterviewers(scoredInterviewers);
+  //   }
+  // }, [
+  //   baseInterviewers,
+  //   searchTerm,
+  //   tempSelectedSkills,
+  //   appliedRateRange,
+  //   isRateApplied,
+  //   isFiltersApplied,
+  //   candidateExperience,
+  // ]);
+
+  // Update the useEffect that handles filtering
+  // Update the useEffect that handles filtering
   useEffect(() => {
     if (!baseInterviewers.length) return;
 
@@ -1586,10 +1728,23 @@ function OutsourcedInterviewerModal({
       });
     }
 
-    // Calculate match scores for sorting
+    // Calculate scores for sorting
     const scoredInterviewers = filtered.map((interviewer) => {
       let matchScore = 0;
       let skillsMatchCount = 0;
+      let isCurrentRoleMatch = false;
+
+      // Check current role match
+      if (currentRole && currentRole.trim() !== "") {
+        const interviewerRole =
+          interviewer.contact?.currentRole ||
+          interviewer.contact?.roleLabel ||
+          interviewer.contact?.roleName ||
+          "";
+
+        isCurrentRoleMatch = interviewerRole.toLowerCase() === currentRole.toLowerCase();
+        if (isCurrentRoleMatch) matchScore += 50;
+      }
 
       // Check skills match
       if (tempSelectedSkills.length > 0) {
@@ -1622,34 +1777,51 @@ function OutsourcedInterviewerModal({
         ...interviewer,
         matchScore,
         skillsMatchCount,
-        hasAnyFilterMatch: skillsMatchCount > 0,
+        isCurrentRoleMatch,
+        hasSkillsMatch: skillsMatchCount > 0,
       };
     });
 
     // Sort by match score
     scoredInterviewers.sort((a, b) => {
-      if (a.hasAnyFilterMatch && !b.hasAnyFilterMatch) return -1;
-      if (!a.hasAnyFilterMatch && b.hasAnyFilterMatch) return 1;
       if (a.matchScore !== b.matchScore) return b.matchScore - a.matchScore;
       return 0;
     });
 
-    // Apply skill filter when skills are selected
-    if (isFiltersApplied && tempSelectedSkills.length > 0) {
-      const matchingInterviewers = scoredInterviewers.filter((interviewer) => {
-        return interviewer.skillsMatchCount > 0;
-      });
+    // FILTERING LOGIC:
+    // - If skills are present -> filter by skills only
+    // - If no skills -> filter by current role only
+    let finalFilteredInterviewers = [];
 
-      matchingInterviewers.sort((a, b) => {
-        const aScore = (a.skillsMatchCount * 10);
-        const bScore = (b.skillsMatchCount * 10);
-        return bScore - aScore;
-      });
+    if (isFiltersApplied) {
+      if (tempSelectedSkills.length > 0) {
+        // Skills are present - filter by skills only
+        finalFilteredInterviewers = scoredInterviewers.filter(
+          interviewer => interviewer.hasSkillsMatch
+        );
 
-      setFilteredInterviewers(matchingInterviewers);
+        // Sort by number of skills matched
+        finalFilteredInterviewers.sort((a, b) =>
+          b.skillsMatchCount - a.skillsMatchCount
+        );
+      }
+      else if (currentRole && currentRole.trim() !== "") {
+        // No skills - filter by current role only
+        finalFilteredInterviewers = scoredInterviewers.filter(
+          interviewer => interviewer.isCurrentRoleMatch
+        );
+      }
+      else {
+        // No filters - show all
+        finalFilteredInterviewers = scoredInterviewers;
+      }
     } else {
-      setFilteredInterviewers(scoredInterviewers);
+      // Filters not applied - show all
+      finalFilteredInterviewers = scoredInterviewers;
     }
+
+    setFilteredInterviewers(finalFilteredInterviewers);
+
   }, [
     baseInterviewers,
     searchTerm,
@@ -1658,6 +1830,7 @@ function OutsourcedInterviewerModal({
     isRateApplied,
     isFiltersApplied,
     candidateExperience,
+    currentRole,
   ]);
 
   const handleSelectClick = (interviewer) => {
@@ -2320,10 +2493,10 @@ function OutsourcedInterviewerModal({
                               // Reset initialization ref to prevent duplicate
                               hasInitializedSkillsRef.current = true;
                             }}
-                            className="w-full h-10 px-4 text-sm rounded-md bg-custom-blue px-4 py-2 hover:bg-custom-blue/90 rounded-md text-white  text-white  duration-200 flex items-center justify-center whitespace-nowrap gap-2"
+                            className="w-full h-10 px-4 text-sm rounded-md bg-custom-blue hover:bg-custom-blue/90 text-white duration-200 flex items-center justify-center whitespace-nowrap gap-2"
                           >
                             <RefreshCw className="h-4 w-4" />
-                            Reset  Skills
+                            Reset Skills
                           </button>
                         </div>
                       )}
@@ -2425,8 +2598,7 @@ function OutsourcedInterviewerModal({
                         </span>
 
                         {tempSelectedSkills.map((skill) => {
-                          const skillName =
-                            skill?.SkillName || skill?.skill || skill;
+                          const skillName = skill?.SkillName || skill?.skill || skill;
 
                           return (
                             <span
@@ -2436,22 +2608,20 @@ function OutsourcedInterviewerModal({
                               {skillName}
                               <button
                                 onClick={() => {
-                                  setTempSelectedSkills((prev) =>
-                                    prev.filter((s) => {
-                                      const sName =
-                                        s?.SkillName || s?.skill || s;
-                                      const currentSkillName =
-                                        skill?.SkillName ||
-                                        skill?.skill ||
-                                        skill;
-                                      return sName !== currentSkillName;
-                                    }),
-                                  );
+                                  // Remove this specific skill
+                                  const updatedSkills = tempSelectedSkills.filter((s) => {
+                                    const sName = s?.SkillName || s?.skill || s;
+                                    const currentSkillName = skill?.SkillName || skill?.skill || skill;
+                                    return sName !== currentSkillName;
+                                  });
 
-                                  // Clear filters if no skills remain
-                                  if (tempSelectedSkills.length === 1) {
-                                    setIsFiltersApplied(false);
-                                    setFilteredInterviewers(baseInterviewers);
+                                  setTempSelectedSkills(updatedSkills);
+
+                                  // If after removal, no skills left, we'll rely on the useEffect
+                                  // to switch to role-based filtering automatically
+                                  if (updatedSkills.length === 0) {
+                                    // Keep filters applied to trigger role-based filtering
+                                    setIsFiltersApplied(true);
                                   }
                                 }}
                                 className="ml-1 text-gray-500 hover:text-red-500"

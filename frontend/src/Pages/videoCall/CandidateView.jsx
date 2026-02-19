@@ -133,14 +133,32 @@ const CandidateView = () =>
     };
   };
 
+
+  // Add this function to calculate extended end time (+10 minutes)
+  const getExtendedEndTime = (dateTimeStr) => {
+    if (!dateTimeStr) return null;
+
+    const { end: originalEnd } = parseCustomDateTime(dateTimeStr);
+    if (!originalEnd) return null;
+
+    const extendedEnd = new Date(originalEnd);
+    extendedEnd.setMinutes(extendedEnd.getMinutes() + 10);
+    return extendedEnd;
+  };
+
+  // Replace your existing useEffect (around line 150-200) with this:
   useEffect(() => {
     if (!interviewRoundData?.dateTime) return;
 
     // Parse start and end times
-    const { start: interviewStart, end: interviewEnd } = parseCustomDateTime(
+    const { start: interviewStart, end: originalEnd } = parseCustomDateTime(
       interviewRoundData.dateTime,
     );
-    if (!interviewStart || !interviewEnd) return;
+
+    // Get extended end time (+10 minutes)
+    const extendedEndTime = getExtendedEndTime(interviewRoundData.dateTime);
+
+    if (!interviewStart || !originalEnd || !extendedEndTime) return;
 
     // Format local times for display
     const formatTime = (date) => {
@@ -152,20 +170,20 @@ const CandidateView = () =>
     };
 
     setLocalInterviewTime(formatTime(interviewStart));
-    setLocalEndTime(formatTime(interviewEnd));
+    setLocalEndTime(formatTime(originalEnd));
 
     // Update button state and countdown
     const updateTimes = () => {
       const now = new Date();
       const startTime = interviewStart.getTime();
-      const endTime = interviewEnd.getTime();
+      const extendedEndTimeValue = extendedEndTime.getTime(); // Original end + 10 minutes
       const currentTime = now.getTime();
       const fifteenMinutes = 15 * 60 * 1000;
 
-      // Enable button only if current time is within ±15 minutes of interview time
+      // Enable button from 15 minutes before start until extended end time (+10 minutes)
       const shouldEnable =
         currentTime >= startTime - fifteenMinutes &&
-        currentTime <= endTime + fifteenMinutes;
+        currentTime <= extendedEndTimeValue;
       setIsButtonEnabled(shouldEnable);
 
       // Calculate time remaining
@@ -175,14 +193,19 @@ const CandidateView = () =>
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         setTimeLeft(`Starts in ${hours}h ${minutes}m`);
-      } else if (currentTime <= endTime) {
-        // During interview
-        const diff = endTime - currentTime;
+      } else if (currentTime <= originalEnd.getTime()) {
+        // During interview (original end time)
+        const diff = originalEnd.getTime() - currentTime;
         const minutes = Math.floor(diff / (1000 * 60));
         setTimeLeft(`Ends in ${minutes}m`);
+      } else if (currentTime <= extendedEndTimeValue) {
+        // Grace period (+10 minutes)
+        const diff = extendedEndTimeValue - currentTime;
+        const minutes = Math.floor(diff / (1000 * 60));
+        setTimeLeft(`Grace period: ${minutes}m remaining to join`);
       } else {
-        // After interview
-        setTimeLeft("Interview completed");
+        // After extended end time
+        setTimeLeft("Interview joining window closed");
       }
     };
 
@@ -608,7 +631,7 @@ const CandidateView = () =>
                 onClick={() => {
                   handleCandidateEnterMeeting();
                 }}
-                // disabled={!isButtonEnabled}
+                disabled={!isButtonEnabled}
                 className={`w-full md:text-sm ${isButtonEnabled
                   ? "bg-[#217989] hover:bg-[#1a616e] hover:scale-105"
                   : "bg-gray-400 cursor-not-allowed sm:text-sm"
@@ -617,7 +640,13 @@ const CandidateView = () =>
                 <Video className="w-6 h-6" />
                 {isButtonEnabled
                   ? "Join Meeting"
-                  : "Join Meeting (Available 15 mins before start)"}
+                  : timeLeft.includes("Grace period")
+                    ? timeLeft
+                    : "Join Meeting (Available 15 mins before start)"}
+
+                {/* {isButtonEnabled
+                  ? "Join Meeting"
+                  : "Join Meeting (Available 15 mins before start)"} */}
               </button>
 
               <p className="text-sm text-gray-500">
