@@ -277,11 +277,21 @@ const InterviewRequests = () => {
 
               {/* Info fields — single column */}
               <div className="flex flex-col gap-2 mb-3">
-                {request.roundDetails?.dateTime && (
+                <div className="flex items-center gap-1.5">
+                  {request.isMockInterview ? (
+                    <User size={14} className="text-gray-400 flex-shrink-0" />
+                  ) : (
+                    <Users size={14} className="text-gray-400 flex-shrink-0" />
+                  )}
+                  <span className="text-xs text-gray-600 truncate">
+                    Type: {request.isMockInterview ? "Mock Interview" : "Real Interview"}
+                  </span>
+                </div>
+                {!request.isMockInterview && (
                   <div className="flex items-center gap-1.5">
-                    <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+                    <Briefcase size={14} className="text-gray-400 flex-shrink-0" />
                     <span className="text-xs text-gray-600 truncate">
-                      Scheduled At: {request.roundDetails.dateTime.split(' - ')[0]}
+                      Position: {capitalizeFirstLetter(request.positionDetails?.title) || "N/A"}
                     </span>
                   </div>
                 )}
@@ -293,20 +303,20 @@ const InterviewRequests = () => {
                     </span>
                   </div>
                 )}
+                {request.roundDetails?.dateTime && (
+                  <div className="flex items-center gap-1.5">
+                    <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+                    <span className="text-xs text-gray-600 truncate">
+                      Scheduled At: {request.roundDetails.dateTime.split(' - ')[0]}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1.5">
                   <Clock size={14} className="text-gray-400 flex-shrink-0" />
                   <span className="text-xs text-gray-600 truncate">
                     Requested At: {request.requestedDate}
                   </span>
                 </div>
-                {!request.isMockInterview && (
-                  <div className="flex items-center gap-1.5">
-                    <Briefcase size={14} className="text-gray-400 flex-shrink-0" />
-                    <span className="text-xs text-gray-600 truncate">
-                      Position: {capitalizeFirstLetter(request.positionDetails?.title) || "N/A"}
-                    </span>
-                  </div>
-                )}
               </div>
 
               <div className="flex items-center justify-end mt-auto">
@@ -364,7 +374,7 @@ const InterviewRequests = () => {
       {/* Details Popup (same UI) */}
       {selectedRequest && (
         <SidebarPopup title="Interview Request Details" onClose={closePopup}>
-          <div className="mt-4 mb-20 px-4">
+          <div className="mt-4 pb-16 px-4">
             <div className="space-y-5">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
@@ -427,6 +437,21 @@ const InterviewRequests = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-1 gap-6 text-gray-600">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
+                        {selectedRequest.isMockInterview ? (
+                          <User className="w-5 h-5 text-gray-500" />
+                        ) : (
+                          <Users className="w-5 h-5 text-gray-500" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Type</p>
+                        <p className="text-gray-700">
+                          {selectedRequest.isMockInterview ? "Mock Interview" : "Real Interview"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-custom-bg rounded-lg">
                         <Clipboard className="w-5 h-5 text-gray-500" />
                       </div>
                       <div>
@@ -438,53 +463,21 @@ const InterviewRequests = () => {
                         </p>
                       </div>
                     </div>
-                    {/* <div className="flex items-center gap-3">
-                      <div className="p-2 bg-custom-bg rounded-lg">
-                        <CheckCircle className="w-5 h-5 text-gray-500" />
+                    {!selectedRequest.isMockInterview && (
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-custom-bg rounded-lg">
+                          <Briefcase className="w-5 h-5 text-gray-500" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Position</p>
+                          <p className="text-gray-700">
+                            {capitalizeFirstLetter(
+                              selectedRequest.positionDetails?.title,
+                            ) || "N/A"}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Status</p>
-                        <p
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${selectedRequest.status === "accepted"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                            }`}
-                        >
-                          {selectedRequest?.status
-                            ? selectedRequest.status.charAt(0).toUpperCase() +
-                            selectedRequest.status.slice(1)
-                            : "N/A"}
-                        </p>
-                      </div>
-                    </div> */}
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-custom-bg rounded-lg">
-                        <Calendar className="w-5 h-5 text-gray-500" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Requested At</p>
-                        <p className="text-gray-700">
-                          {selectedRequest.requestedDate}
-                        </p>
-                      </div>
-                    </div>
-                    {/* <div className="flex items-center gap-3">
-                      <div className="p-2 bg-custom-bg rounded-lg">
-                        <AlertTriangle className="w-5 h-5 text-gray-500" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Urgency</p>
-                        <p
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${selectedRequest.urgency === "High"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-blue-100 text-blue-800"
-                            }`}
-                        >
-                          {capitalizeFirstLetter(selectedRequest.urgency)}
-                        </p>
-                      </div>
-                    </div> */}
-
+                    )}
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-custom-bg rounded-lg">
                         <Clock className="w-5 h-5 text-gray-500" />
@@ -507,6 +500,17 @@ const InterviewRequests = () => {
                         </p>
                       </div>
                     </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-custom-bg rounded-lg">
+                        <Calendar className="w-5 h-5 text-gray-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Requested At</p>
+                        <p className="text-gray-700">
+                          {selectedRequest.requestedDate}
+                        </p>
+                      </div>
+                    </div>
 
                   </div>
                 </div>
@@ -514,54 +518,55 @@ const InterviewRequests = () => {
 
 
             </div>
-
-            {(selectedRequest.status !== "accepted") && <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={closePopup}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-300"
-              >
-                Close
-              </button>
-              {selectedRequest.status === "inprogress" ? (
-                <button
-                  onClick={() =>
-                    handleAccept(
-                      selectedRequest.id,
-                      selectedRequest.interviewerId,
-                      selectedRequest.roundId,
-                    )
-                  }
-                  disabled={acceptingId === selectedRequest.id}
-                  className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === selectedRequest.id
-                    ? "opacity-60 cursor-wait"
-                    : "cursor-pointer"
-                    }`}
-                >
-                  {acceptingId === selectedRequest.id
-                    ? "Accepting..."
-                    : "Accept"}
-                </button>
-              ) : (
-                <button
-                  disabled
-                  className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${selectedRequest.status === "accepted"
-                    ? "bg-green-600"
-                    : selectedRequest.status === "declined"
-                      ? "bg-red-500"
-                      : selectedRequest.status === "expired"
-                        ? "bg-gray-500"
-                        : selectedRequest.status === "cancelled"
-                          ? "bg-orange-500"
-                          : selectedRequest.status === "withdrawn"
-                            ? "bg-amber-600"
-                            : "bg-gray-400"
-                    }`}
-                >
-                  {capitalizeFirstLetter(selectedRequest?.status)}
-                </button>
-              )}
-            </div>}
           </div>
+
+          {/* Fixed bottom buttons */}
+          {(selectedRequest.status !== "accepted") && <div className="fixed bottom-0 right-0 w-full xl:w-1/2 2xl:w-1/2 bg-white px-4 py-3 flex justify-end gap-3 z-10">
+            <button
+              onClick={closePopup}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-300"
+            >
+              Close
+            </button>
+            {selectedRequest.status === "inprogress" ? (
+              <button
+                onClick={() =>
+                  handleAccept(
+                    selectedRequest.id,
+                    selectedRequest.interviewerId,
+                    selectedRequest.roundId,
+                  )
+                }
+                disabled={acceptingId === selectedRequest.id}
+                className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === selectedRequest.id
+                  ? "opacity-60 cursor-wait"
+                  : "cursor-pointer"
+                  }`}
+              >
+                {acceptingId === selectedRequest.id
+                  ? "Accepting..."
+                  : "Accept"}
+              </button>
+            ) : (
+              <button
+                disabled
+                className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${selectedRequest.status === "accepted"
+                  ? "bg-green-600"
+                  : selectedRequest.status === "declined"
+                    ? "bg-red-500"
+                    : selectedRequest.status === "expired"
+                      ? "bg-gray-500"
+                      : selectedRequest.status === "cancelled"
+                        ? "bg-orange-500"
+                        : selectedRequest.status === "withdrawn"
+                          ? "bg-amber-600"
+                          : "bg-gray-400"
+                  }`}
+              >
+                {capitalizeFirstLetter(selectedRequest?.status)}
+              </button>
+            )}
+          </div>}
         </SidebarPopup>
       )}
 
@@ -617,11 +622,21 @@ const InterviewRequests = () => {
 
                   {/* Info fields — single column */}
                   <div className="flex flex-col gap-2">
-                    {req.roundDetails?.dateTime && (
+                    <div className="flex items-center gap-1.5">
+                      {req.isMockInterview ? (
+                        <User size={14} className="text-gray-400 flex-shrink-0" />
+                      ) : (
+                        <Users size={14} className="text-gray-400 flex-shrink-0" />
+                      )}
+                      <span className="text-xs text-gray-600 truncate">
+                        Type: {req.isMockInterview ? "Mock Interview" : "Real Interview"}
+                      </span>
+                    </div>
+                    {!req.isMockInterview && (
                       <div className="flex items-center gap-1.5">
-                        <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+                        <Briefcase size={14} className="text-gray-400 flex-shrink-0" />
                         <span className="text-xs text-gray-600 truncate">
-                          Scheduled At: {req.roundDetails.dateTime.split(' - ')[0]}
+                          Position: {capitalizeFirstLetter(req.positionDetails?.title) || "N/A"}
                         </span>
                       </div>
                     )}
@@ -633,20 +648,20 @@ const InterviewRequests = () => {
                         </span>
                       </div>
                     )}
+                    {req.roundDetails?.dateTime && (
+                      <div className="flex items-center gap-1.5">
+                        <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+                        <span className="text-xs text-gray-600 truncate">
+                          Scheduled At: {req.roundDetails.dateTime.split(' - ')[0]}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-1.5">
                       <Clock size={14} className="text-gray-400 flex-shrink-0" />
                       <span className="text-xs text-gray-600 truncate">
                         Requested At: {req.requestedDate}
                       </span>
                     </div>
-                    {!req.isMockInterview && (
-                      <div className="flex items-center gap-1.5">
-                        <Briefcase size={14} className="text-gray-400 flex-shrink-0" />
-                        <span className="text-xs text-gray-600 truncate">
-                          Position: {capitalizeFirstLetter(req.positionDetails?.title) || "N/A"}
-                        </span>
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex items-center gap-2 justify-end">
