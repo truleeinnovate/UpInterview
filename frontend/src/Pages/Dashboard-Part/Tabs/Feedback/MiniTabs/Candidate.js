@@ -136,7 +136,7 @@ const CandidateMiniTab = ({
 
   return (
     // v1.0.0 <-----------------------------------------------------------
-    <div className="sm:px-0 px-5 space-y-6 min-h-screen">
+    <div className="sm:px-0 px-5 py-6 space-y-6 min-h-screen">
       {/* v1.0.0 <----------------------------------------------------------- */}
       {/* Basic Info */}
 

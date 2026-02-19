@@ -691,7 +691,7 @@ const InterviewsMiniTabComponent = ({
   //<----v1.0.0----
   return (
     // v1.0.1 <-----------------------------------------------------------
-    <div>
+    <div className="pb-6">
       {!custom && isAddMode && (
         <div className="mb-6">
           <div className="flex justify-end items-center gap-3">

@@ -217,7 +217,7 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
       <div>
         <ul
           className="flex items-center gap-8 cursor-pointer py-1 sm:px-4 px-8 
-             overflow-x-auto whitespace-nowrap scrollbar-hide"
+             overflow-x-auto"
         >
           { }
           {tabsList.map((EachTab) => (

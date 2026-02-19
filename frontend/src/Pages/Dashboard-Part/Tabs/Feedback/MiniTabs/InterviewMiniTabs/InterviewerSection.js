@@ -897,8 +897,8 @@ const InterviewerSectionComponent = ({
   // v1.0.5 <-----------------------------------------------------
   const RadioGroupInput = React.memo(({ each }) => {
     return (
-      <div className="flex sm:flex-col md:flex-col lg:flex-col  xl:flex-col  2xl:flex-col  rounded-md mt-2">
-        <p className="sm:text-sm md:text-sm w-[200px] font-bold text-gray-700 sm:mb-2 md:mb-2">
+      <div className="flex flex-row items-center rounded-md my-2">
+        <p className="text-sm font-bold text-gray-600 sm:mb-2 md:mb-2">
           Response Type{" "}
           {(each.mandatory === "true" ||
             each.snapshot?.mandatory === "true") && (
@@ -907,11 +907,11 @@ const InterviewerSectionComponent = ({
         </p>
         {isEditMode || isAddMode ?
           <div
-            className={`w-full grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3 gap-x-8 gap-y-2`}
+            className={`grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3`}
           >
             {["Not Answered", "Partially Answered", "Fully Answered"].map(
               (option) => (
-                <span key={option} className="flex items-center gap-2">
+                <span key={option} className="flex items-center gap-2 pl-8 sm:pl-0">
                   <input
                     checked={each.isAnswered === option}
                     value={option}
@@ -930,7 +930,7 @@ const InterviewerSectionComponent = ({
                   />
                   <label
                     htmlFor={`isAnswered-${each.questionId || each.id}-${option}`}
-                    className="text-sm cursor-pointer"
+                    className="text-xs cursor-pointer"
                   >
                     {option}
                   </label>
@@ -939,7 +939,7 @@ const InterviewerSectionComponent = ({
             )}
           </div>
           : (
-            <p className="w-full flex gap-x-8 gap-y-2 ">
+            <p className="w-full text-sm flex gap-x-8 gap-y-2 ">
               {each.isAnswered || "Not Answered"}
             </p>
           )}

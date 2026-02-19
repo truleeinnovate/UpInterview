@@ -181,7 +181,7 @@ const EditModeActions = ({
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
                 onClick={() => onNoteAdd(questionId)}
-                className={`px-3 sm:px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${question.notesBool
+                className={`px-3 sm:px-4 py-1.5 text-sm font-medium rounded-md transition-all ${question.notesBool
                     ? 'bg-red-50 text-red-600 hover:bg-red-100'
                     : 'bg-[#227a8a] text-white hover:bg-[#1b6270]'
                     }`}
