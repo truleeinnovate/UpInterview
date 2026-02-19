@@ -268,7 +268,7 @@ const DateChangeConfirmationModal = ({
     if (isWithdrawAction) return "Withdraw Application";
     if (actionType === "Complete") return "Complete Interview";
     if (actionType === "Select") return "Select Candidate";
-    return "Confirm Interview Change";
+    return "Confirmation Interview Change";
   };
 
   // Determine confirm button text
@@ -282,8 +282,8 @@ const DateChangeConfirmationModal = ({
     if (actionType === "Complete") return "Confirm Completion";
     if (actionType === "Select") return "Confirm Selection";
     if (isExternal && isRequestSent) return "Proceed & Cancel Invitations";
-    if (isExternal && isScheduledOrReschedule) return "Proceed & Apply Policy";
-    return "Proceed & Clear Interviewers";
+    if (isExternal && isScheduledOrReschedule) return "Proceed";
+    return "Proceed";
   };
 
   // Check if confirm should be disabled
@@ -488,6 +488,17 @@ const DateChangeConfirmationModal = ({
                       scheduling.
                     </p>
                     <p className="font-medium">Do you wish to proceed?</p>
+                  </div>
+                )}
+
+                {/* Note for reschedule / date change */}
+                {isExternal && isScheduledOrReschedule && (
+                  <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-amber-800">
+                      <strong>Note:</strong> Changing the date and time will remove all selected
+                      interviewers. Do you want to proceed?
+                    </p>
                   </div>
                 )}
               </>
