@@ -840,7 +840,7 @@ exports.createMockInterviewRound = async (req, res) => {
     //   );
     // }
 
-    // console.log("historyUpdate result:", historyUpdate);
+    console.log("historyUpdate result:", historyUpdate);
 
     if (historyUpdate) {
       console.log("Updating round with history:", historyUpdate);

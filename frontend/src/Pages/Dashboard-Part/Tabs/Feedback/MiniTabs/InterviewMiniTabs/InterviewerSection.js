@@ -1254,7 +1254,7 @@ const InterviewerSectionComponent = ({
             {/* QuestionBank Content */}
             <div className="flex-1 overflow-hidden">
               <QuestionBank
-                interviewQuestionsLists={[interviewerSectionData, ...preselectedQuestionsResponses] || []}
+                interviewQuestionsLists={[...(interviewerSectionData || []), ...(preselectedQuestionsResponses || [])]}
                 type="feedback"
                 fromScheduleLater={true}
                 onAddQuestion={handleAddQuestionToRound}
