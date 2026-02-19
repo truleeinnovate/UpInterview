@@ -54,7 +54,6 @@ const { Resume } = require("../models/Resume.js");
 const { buildPermissionQuery } = require("../utils/buildPermissionQuery.js");
 const { MockInterview } = require("../models/Mockinterview/mockinterview.js");
 const { startOfDay, parse } = require('date-fns');
-const {TenantCompany} = require('../models/TenantCompany/TenantCompany.js')
 
 
 //  post call for interview page
@@ -1884,14 +1883,10 @@ const getUpcomingRoundsForInterviews = async (req, res) => {
   const { actingAsUserId, actingAsTenantId } = res.locals.auth;
 
   const {
-    effectivePermissions,
-    inheritedRoleIds,
-    effectivePermissions_RoleType,
-    effectivePermissions_RoleName,
+    inheritedRoleIds = [],
+    effectivePermissions_RoleType = [],
+    effectivePermissions_RoleName = [],
   } = res.locals;
-
-  console.log('[DEBUG] actingAsUserId:', actingAsUserId?.toString());
-  console.log('[DEBUG] actingAsTenantId:', actingAsTenantId?.toString());
 
   if (!actingAsUserId) {
     return res.status(403).json({
@@ -1902,17 +1897,14 @@ const getUpcomingRoundsForInterviews = async (req, res) => {
 
   try {
     const todayStart = startOfDay(new Date());
-    console.log('[DEBUG] todayStart:', todayStart.toISOString());
 
-    // Step 1: Get user's Contact IDs
     const userContacts = await Contacts.find({ ownerId: actingAsUserId })
       .select('_id')
       .lean();
 
-    console.log('[DEBUG] Found contacts count:', userContacts.length);
-    console.log('[DEBUG] Contact IDs:', userContacts.map(c => c._id.toString()));
+    const contactIds = userContacts.map(c => c._id);
 
-    if (!userContacts.length) {
+    if (!contactIds.length) {
       return res.status(200).json({
         success: true,
         count: 0,
@@ -1921,32 +1913,9 @@ const getUpcomingRoundsForInterviews = async (req, res) => {
       });
     }
 
-    const contactIds = userContacts.map(c => c._id);
+    const ownerInterviewIds = await Interview.distinct('_id', { ownerId: actingAsUserId });
+    const ownerMockIds = await MockInterview.distinct('_id', { ownerId: actingAsUserId });
 
-    // Step 2: Build permission query (used only on parent)
-    const permissionQuery = await buildPermissionQuery(
-      actingAsUserId,
-      actingAsTenantId,
-      inheritedRoleIds || [],
-      effectivePermissions_RoleType || [],
-      effectivePermissions_RoleName || []
-    );
-
-    console.log('[DEBUG] permissionQuery:', JSON.stringify(permissionQuery, null, 2));
-
-    // Step 3: Find parent IDs where user is owner
-    const ownerInterviewIds = await Interview.find({ ownerId: actingAsUserId })
-      .distinct('_id')
-      .lean();
-
-    const ownerMockIds = await MockInterview.find({ ownerId: actingAsUserId })
-      .distinct('_id')
-      .lean();
-
-    console.log('[DEBUG] Owner interview IDs count:', ownerInterviewIds.length);
-    console.log('[DEBUG] Owner mock IDs count:', ownerMockIds.length);
-
-    // Step 4: Round query – interviewers OR parent owner
     const roundQuery = {
       dateTime: { $exists: true, $ne: null },
       status: { $in: ['Scheduled', 'Rescheduled', 'InProgress'] },
@@ -1957,75 +1926,119 @@ const getUpcomingRoundsForInterviews = async (req, res) => {
       ]
     };
 
-    console.log('[DEBUG] roundQuery:', JSON.stringify(roundQuery, null, 2));
-
-    // ─── REAL INTERVIEW ROUNDS ─────────────────────────────────────
+    // REAL INTERVIEW ROUNDS
     let realRoundsRaw = await InterviewRounds.find(roundQuery)
       .select(
         'interviewId sequence roundTitle interviewMode interviewType duration dateTime ' +
-        'status meetPlatform meetLink interviewers history currentAction'
+        'status meetPlatform meetLink interviewers'
       )
       .lean();
 
-    console.log('[DEBUG] Real raw count:', realRoundsRaw.length);
-
-    // Filter upcoming
     realRoundsRaw = realRoundsRaw.filter((round) => {
       if (!round.dateTime) return false;
       const startStr = round.dateTime.split(' - ')[0]?.trim();
       if (!startStr) return false;
       const start = parse(startStr, 'dd-MM-yyyy hh:mm a', new Date());
-      const isValid = !isNaN(start.getTime());
-      const isUpcoming = start >= todayStart;
-
-      console.log('[DEBUG] Real round check:', {
-        id: round._id.toString(),
-        startStr,
-        parsed: isValid ? start.toISOString() : 'Invalid',
-        isValid,
-        isUpcoming,
-        status: round.status
-      });
-
-      return isValid && isUpcoming;
+      return !isNaN(start.getTime()) && start >= todayStart;
     });
 
-    console.log('[DEBUG] Upcoming real after filter:', realRoundsRaw.length);
+    // MOCK INTERVIEW ROUNDS
+    let mockRoundsRaw = await MockInterviewRound.find(roundQuery)
+      .select(
+        'mockInterviewId sequence roundTitle interviewMode interviewType duration dateTime ' +
+        'status meetPlatform meetLink interviewers'
+      )
+      .lean();
 
-    // Fetch parent Interview data (apply permissionQuery here)
-    const realInterviewIds = [...new Set(realRoundsRaw.map(r => r.interviewId.toString()))];
-    const parentInterviews = await Interview.find({
-      _id: { $in: realInterviewIds },
-      tenantId: actingAsTenantId,
-      ...permissionQuery
+    mockRoundsRaw = mockRoundsRaw.filter((round) => {
+      if (!round.dateTime) return false;
+      const startStr = round.dateTime.split(' - ')[0]?.trim();
+      if (!startStr) return false;
+      const start = parse(startStr, 'dd-MM-yyyy hh:mm a', new Date());
+      return !isNaN(start.getTime()) && start >= todayStart;
+    });
+
+    const allMockInterviewIds = [...new Set(
+      mockRoundsRaw.map(r => r.mockInterviewId?.toString()).filter(Boolean)
+    )];
+
+    const permissionQuery = await buildPermissionQuery(
+      actingAsUserId,
+      actingAsTenantId,
+      inheritedRoleIds,
+      effectivePermissions_RoleType,
+      effectivePermissions_RoleName
+    );
+
+    // Owned mock parents
+    const ownedMockParents = await MockInterview.find({
+      _id: { $in: allMockInterviewIds.map(id => new mongoose.Types.ObjectId(id)) },
+      ...permissionQuery,
+      tenantId: actingAsTenantId
+    })
+      .select('mockInterviewCode ownerId candidateName currentRole tenantId candidateEmail')
+      .lean();
+
+    // External mock parents
+    const ownedMockIdsSet = new Set(ownedMockParents.map(p => p._id.toString()));
+    const externalMockIds = allMockInterviewIds.filter(id => !ownedMockIdsSet.has(id));
+
+    const externalMockParents = externalMockIds.length > 0
+      ? await MockInterview.find({
+          _id: { $in: externalMockIds.map(id => new mongoose.Types.ObjectId(id)) }
+        })
+          .select('mockInterviewCode ownerId candidateName currentRole tenantId candidateEmail')
+          .lean()
+      : [];
+
+    const parentMocks = [...ownedMockParents, ...externalMockParents];
+    const mockParentMap = new Map(parentMocks.map(m => [m._id.toString(), m]));
+
+    // REAL parents & related data
+    const allRealInterviewIds = [...new Set(realRoundsRaw.map(r => r.interviewId.toString()))];
+
+    const ownedRealParents = await Interview.find({
+      _id: { $in: allRealInterviewIds },
+      ...permissionQuery,
+      tenantId: actingAsTenantId
     })
       .select('interviewCode ownerId candidateId positionId tenantId')
       .lean();
 
-    // Fetch Candidate & Position directly
-    const candidateIds = parentInterviews.map(i => i.candidateId).filter(id => id);
-    const positionIds = parentInterviews.map(i => i.positionId).filter(id => id);
+    const ownedRealIdsSet = new Set(ownedRealParents.map(p => p._id.toString()));
+    const externalRealIds = allRealInterviewIds.filter(id => !ownedRealIdsSet.has(id));
+
+    const externalRealParents = externalRealIds.length > 0
+      ? await Interview.find({ _id: { $in: externalRealIds } })
+          .select('interviewCode ownerId candidateId positionId tenantId')
+          .lean()
+      : [];
+
+    const parentInterviews = [...ownedRealParents, ...externalRealParents];
+
+    const candidateIds = parentInterviews
+      .map(i => i.candidateId)
+      .filter(id => id && mongoose.isValidObjectId(id));
+
+    const positionIds = parentInterviews
+      .map(i => i.positionId)
+      .filter(id => id && mongoose.isValidObjectId(id));
 
     const candidates = await Candidate.find({ _id: { $in: candidateIds } })
-      .select('FirstName LastName Email')
-      .lean();
+      .select('FirstName LastName')
+      .lean();  // Removed Email
 
     const positions = await Position.find({ _id: { $in: positionIds } })
       .select('title companyname')
+      .populate('companyname', 'name')
       .lean();
 
-    // Fetch TenantCompany name
-    const companyIds = positions.map(p => p.companyname).filter(id => id);
-    const companies = await TenantCompany.find({ _id: { $in: companyIds } })
-      .select('name')
-      .lean();
-
-    // Maps
     const candidateMap = new Map(candidates.map(c => [c._id.toString(), c]));
     const positionMap = new Map(positions.map(p => [p._id.toString(), p]));
-    const companyMap = new Map(companies.map(c => [c._id.toString(), c.name]));
+
     const interviewMap = new Map(parentInterviews.map(i => [i._id.toString(), i]));
 
+    // Map REAL rounds (no email)
     const realMapped = realRoundsRaw.map((round) => {
       const parentId = round.interviewId.toString();
       const parent = interviewMap.get(parentId) || {};
@@ -2033,23 +2046,25 @@ const getUpcomingRoundsForInterviews = async (req, res) => {
       const candidate = candidateMap.get(parent.candidateId?.toString()) || {};
       const position = positionMap.get(parent.positionId?.toString()) || {};
 
-      const companyName = position.companyname
-        ? companyMap.get(position.companyname.toString()) || 'Not Specified'
-        : 'Not Specified';
+      const companyName = position.companyname?.name || 'Not Specified';
 
-      // Determine joinAs
-      const isInterviewer = round.interviewers.some(id => id.toString() === contactIds[0]?.toString());
-      const isScheduler = parent.ownerId?.toString() === actingAsUserId;
-      let joinAs = 'interviewer';
-      if (isScheduler && isInterviewer) joinAs = 'both';
+      const isInterviewer = round.interviewers?.some(id =>
+        contactIds.some(cid => cid.equals(id))
+      ) || false;
+
+      const isScheduler = parent.ownerId?.toString() === actingAsUserId?.toString();
+
+      let joinAs = 'none';
+      if (isInterviewer && isScheduler) joinAs = 'both';
+      else if (isInterviewer) joinAs = 'interviewer';
       else if (isScheduler) joinAs = 'scheduler';
 
       return {
         type: 'interview',
-        joinAs,  // ← "scheduler", "interviewer", or "both"
+        joinAs,
         _id: round._id.toString(),
         interviewId: parentId,
-        interviewCode: parent.interviewCode || null,
+        interviewCode: parent.interviewCode || 'Shared Interview',
         ownerId: parent.ownerId?.toString() || null,
         status: round.status,
         roundTitle: round.roundTitle,
@@ -2059,87 +2074,57 @@ const getUpcomingRoundsForInterviews = async (req, res) => {
         meetLink: round.meetLink || null,
         candidateName: candidate.FirstName || candidate.LastName
           ? `${candidate.FirstName || ''} ${candidate.LastName || ''}`.trim() || 'Unknown'
-          : null,
-        candidateEmail: candidate.Email || null,
-        positionTitle: position.title || null,
-        companyName: companyName,
-        sequence: round.sequence
+          : 'Shared Candidate',
+        positionTitle: position.title || 'Not Specified',
+        companyName,
+        parentTenantId: parent.tenantId?.toString() || null,
+        myTenantId: actingAsTenantId?.toString()
       };
     });
 
-    // ─── MOCK INTERVIEW ROUNDS ─────────────────────────────────────
-    let mockRoundsRaw = await MockInterviewRound.find(roundQuery)
-      .select(
-        'mockInterviewId sequence roundTitle interviewMode interviewType duration dateTime ' +
-        'status meetPlatform meetLink interviewers history currentAction'
-      )
-      .lean();
-
-    mockRoundsRaw = mockRoundsRaw.filter((round) => {
-      if (!round.dateTime) return false;
-      const startStr = round.dateTime.split(' - ')[0]?.trim();
-      if (!startStr) return false;
-      const start = parse(startStr, 'dd-MM-yyyy hh:mm a', new Date());
-      const isValid = !isNaN(start.getTime());
-      const isUpcoming = start >= todayStart;
-
-      return isValid && isUpcoming;
-    });
-
-    const mockParentIds = [...new Set(mockRoundsRaw.map(r => r.mockInterviewId.toString()))];
-    const parentMocks = await MockInterview.find({
-      _id: { $in: mockParentIds },
-      tenantId: actingAsTenantId,
-      ...permissionQuery
-    })
-      .select('mockInterviewCode ownerId candidateName currentRole tenantId')
-      .lean();
-
-    const mockParentMap = new Map(parentMocks.map(m => [m._id.toString(), m]));
-
+    // Map MOCK rounds (no email)
     const mockMapped = mockRoundsRaw.map((round) => {
-      const parentId = round.mockInterviewId.toString();
+      const parentId = round.mockInterviewId?.toString();
       const parent = mockParentMap.get(parentId) || {};
 
-      const isInterviewer = round.interviewers.some(id => id.toString() === contactIds[0]?.toString());
-      const isScheduler = parent.ownerId?.toString() === actingAsUserId;
-      let joinAs = 'interviewer';
-      if (isScheduler && isInterviewer) joinAs = 'both';
+      const isInterviewer = round.interviewers?.some(id =>
+        contactIds.some(cid => cid.equals(id))
+      ) || false;
+
+      const isScheduler = parent.ownerId?.toString() === actingAsUserId?.toString();
+
+      let joinAs = 'none';
+      if (isInterviewer && isScheduler) joinAs = 'both';
+      else if (isInterviewer) joinAs = 'interviewer';
       else if (isScheduler) joinAs = 'scheduler';
 
       return {
         type: 'mockinterview',
         joinAs,
         _id: round._id.toString(),
-        interviewId: parentId,
-        interviewCode: parent.mockInterviewCode || null,
+        interviewId: parentId || null,
+        interviewCode: parent.mockInterviewCode || 'Not Specified',
         ownerId: parent.ownerId?.toString() || null,
         status: round.status,
-        roundTitle: round.roundTitle,
+        roundTitle: round.roundTitle || 'Not Specified',
         interviewMode: round.interviewMode,
         dateTime: round.dateTime,
         meetPlatform: round.meetPlatform,
         meetLink: round.meetLink || null,
         mockCandidateName: parent.candidateName || 'Mock Candidate',
-        mockCurrentRole: parent.currentRole || 'Mock Role',
-        companyName: 'Mock Interview',
-        sequence: round.sequence
+        mockCurrentRole: parent.currentRole || 'Not Specified',
+        parentTenantId: parent.tenantId?.toString() || null,
+        myTenantId: actingAsTenantId?.toString()
       };
     });
 
-    // Combine + sort + limit to 3
     const allUpcoming = [...realMapped, ...mockMapped]
       .sort((a, b) => {
         const aStart = parse(a.dateTime.split(' - ')[0], 'dd-MM-yyyy hh:mm a', new Date());
         const bStart = parse(b.dateTime.split(' - ')[0], 'dd-MM-yyyy hh:mm a', new Date());
         return aStart - bStart;
       })
-      .slice(0, 3);
-
-    console.log('[DEBUG] Final upcoming count:', allUpcoming.length);
-    if (allUpcoming.length > 0) {
-      console.log('[DEBUG] First upcoming round:', JSON.stringify(allUpcoming[0], null, 2));
-    }
+      .slice(0, 10);
 
     return res.status(200).json({
       success: true,
@@ -2147,7 +2132,6 @@ const getUpcomingRoundsForInterviews = async (req, res) => {
       data: allUpcoming
     });
   } catch (err) {
-    console.error('[ERROR] getUpcomingRoundsForInterviewer:', err);
     return res.status(500).json({
       success: false,
       message: 'Server error',
