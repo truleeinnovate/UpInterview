@@ -939,7 +939,7 @@ const InterviewerSectionComponent = ({
             )}
           </div>
           : (
-            <p className="w-full text-sm flex gap-x-8 gap-y-2 ">
+            <p className="text-xs ml-6">
               {each.isAnswered || "Not Answered"}
             </p>
           )}
