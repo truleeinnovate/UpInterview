@@ -261,14 +261,14 @@ const DateChangeConfirmationModal = ({
 
   // Determine title based on action type
   const getTitle = () => {
-    if (isCancelAction) return "Cancel Round";
-    if (isNoShowAction) return "Mark as No Show";
-    if (isRejectAction) return "Reject Candidate";
+    if (isCancelAction) return "Conformation";
+    if (isNoShowAction) return "Conformation";
+    if (isRejectAction) return "Conformation";
     if (isEvaluatedAction) return "Mark as Evaluated";
     if (isWithdrawAction) return "Withdraw Application";
     if (actionType === "Complete") return "Complete Interview";
     if (actionType === "Select") return "Select Candidate";
-    return "Confirmation Interview Change";
+    return "Conformation";
   };
 
   // Determine confirm button text
