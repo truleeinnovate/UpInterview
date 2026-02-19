@@ -112,6 +112,8 @@ const SchedulerSectionComponent = ({
 
   }, [feedbackData, interviewdata]);
 
+  console.log("feedbackDataResponse", feedbackDataResponse)
+
   const isSubmitted = feedbackDataResponse?.status === "submitted" || feedbackDataResponse?.status === "Submitted";
   const isReadOnly = isViewMode || isSubmitted;
 

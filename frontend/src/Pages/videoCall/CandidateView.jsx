@@ -112,25 +112,46 @@ const CandidateView = () =>
   const parseCustomDateTime = (dateTimeStr) => {
     if (!dateTimeStr) return { start: null, end: null };
 
-    const [startPart, endPart] = dateTimeStr.split(" - ");
-    const [startDate, startTime, startPeriod] = startPart.split(/\s+/);
-    const [endTime, endPeriod] = endPart.split(/\s+/);
+    try {
+      // Split into start and end parts
+      const [startPart, endPart] = dateTimeStr.split(" - ");
 
-    const parseTime = (dateStr, timeStr, period) => {
-      const [day, month, year] = dateStr.split("-").map(Number);
-      const [hours, minutes] = timeStr.split(":").map(Number);
+      // Parse the date part (DD-MM-YYYY)
+      const [datePart, startTime, startPeriod] = startPart.split(/\s+/);
+      const [day, month, year] = datePart.split("-").map(Number);
 
-      let hours24 = hours;
-      if (period === "PM" && hours < 12) hours24 += 12;
-      if (period === "AM" && hours === 12) hours24 = 0;
+      // Parse start time
+      const [startHours, startMinutes] = startTime.split(":").map(Number);
+      let startHours24 = startHours;
+      if (startPeriod === "PM" && startHours < 12) startHours24 += 12;
+      if (startPeriod === "AM" && startHours === 12) startHours24 = 0;
 
-      return new Date(year, month - 1, day, hours24, minutes);
-    };
+      // Parse end time (handle both "HH:MM" and "HH:MM AM/PM" formats)
+      let endHours, endMinutes, endPeriod;
 
-    return {
-      start: parseTime(startDate, startTime, startPeriod),
-      end: parseTime(startDate, endTime, endPeriod),
-    };
+      if (endPart.includes("AM") || endPart.includes("PM")) {
+        // Format: "09:04 PM"
+        const [endTime, period] = endPart.split(/\s+/);
+        [endHours, endMinutes] = endTime.split(":").map(Number);
+        endPeriod = period;
+      } else {
+        // Format: "09:04" (assuming same period as start)
+        [endHours, endMinutes] = endPart.split(":").map(Number);
+        endPeriod = startPeriod;
+      }
+
+      let endHours24 = endHours;
+      if (endPeriod === "PM" && endHours < 12) endHours24 += 12;
+      if (endPeriod === "AM" && endHours === 12) endHours24 = 0;
+
+      return {
+        start: new Date(year, month - 1, day, startHours24, startMinutes),
+        end: new Date(year, month - 1, day, endHours24, endMinutes),
+      };
+    } catch (error) {
+      console.error("Error parsing date time:", error, dateTimeStr);
+      return { start: null, end: null };
+    }
   };
 
 

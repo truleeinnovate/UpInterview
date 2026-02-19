@@ -650,6 +650,7 @@ const InterviewsMiniTabComponent = ({
             }
             isSchedule={urlData?.isSchedule}
             triggerAutoSave={autoSaveQuestions}
+            feedbackDataResponse={feedbackData}
           />
         ); //<----v1.0.0---
       case 2:
