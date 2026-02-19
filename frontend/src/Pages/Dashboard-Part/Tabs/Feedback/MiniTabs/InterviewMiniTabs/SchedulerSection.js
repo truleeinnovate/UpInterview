@@ -599,7 +599,7 @@ const SchedulerSectionComponent = ({
             )}
           </div>
         ) : (
-          <p className="w-full flex gap-x-8 gap-y-2 ">
+          <p className="text-xs ml-6">
             {each.isAnswered || "Not Answered"}
           </p>
         )}
