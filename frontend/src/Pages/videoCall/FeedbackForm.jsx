@@ -37,6 +37,7 @@ import useAutoSaveFeedback from "../../apiHooks/useAutoSaveFeedback.js";
 import { useInterviews } from "../../apiHooks/useInterviews.js";
 import { useMockInterviewById } from "../../apiHooks/useMockInterviews.js";
 import QuestionCard, { EmptyState } from "../../Components/QuestionCard.jsx";
+import { Button } from "../../Components/Buttons/Button.jsx";
 // import { useMeeting } from "@videosdk.live/react-sdk";
 
 const dislikeOptions = [
@@ -516,7 +517,11 @@ const FeedbackForm = ({
     return [{ skill: "", rating: 0, comments: "" }];
   }, [feedbackData?._id, skillsData, isMockInterview, candidateData, positionData]);
 
-  const [skillRatings, setSkillRatings] = useState(initialSkillRatings);
+  // const [skillRatings, setSkillRatings] = useState(initialSkillRatings);
+  // changed to allow only 5 skills populated initially
+  const [skillRatings, setSkillRatings] = useState(() => {
+    return initialSkillRatings.slice(0, 5);
+  });
 
   // Track if user has interacted with skills to prevents overwriting user work with async loaded data
   const hasUserInteractedWithSkills = useRef(false);
@@ -527,12 +532,17 @@ const FeedbackForm = ({
   useEffect(() => {
     // If we have saved data (via ID) and we haven't synced yet, AND user hasn't touched the form manually
     if (feedbackData?._id && !hasLoadedSavedSkills.current && !hasUserInteractedWithSkills.current) {
-      setSkillRatings(initialSkillRatings);
+      // When loading existing feedback, we show what was saved (up to 10)
+      // but if it's a fresh load, we apply the 5 limit
+      const limitedSkills = initialSkillRatings.slice(0, 5);
+      // setSkillRatings(initialSkillRatings);
+      setSkillRatings(limitedSkills);
       hasLoadedSavedSkills.current = true;
     }
     // Fallback: If current state is empty/default, always accept incoming data
     else if ((!skillRatings || (skillRatings.length === 1 && !skillRatings[0].skill)) && initialSkillRatings.length > 0 && initialSkillRatings[0].skill) {
-      setSkillRatings(initialSkillRatings);
+      // setSkillRatings(initialSkillRatings);
+      setSkillRatings(initialSkillRatings.slice(0, 5));
     }
   }, [initialSkillRatings, feedbackData?._id]);
 
@@ -1261,18 +1271,18 @@ const FeedbackForm = ({
 
   const RadioGroupInput = React.memo(({ each }) => {
     return (
-      <div className="flex rounded-md mt-2">
-        <p className="w-[200px] font-bold text-gray-700">
+      <div className="flex flex-row items-center rounded-md my-2">
+        <p className="text-sm font-bold text-gray-600 sm:mb-2 md:mb-2">
           Response Type{" "}
           {(each.mandatory === "true" ||
             each.snapshot?.mandatory === "true") && (
               <span className="text-[red]">*</span>
             )}
         </p>
-        <div className={`w-full flex gap-x-8 gap-y-2 `}>
+        <div className={`grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3`}>
           {["Not Answered", "Partially Answered", "Fully Answered"].map(
             (option) => (
-              <span key={option} className="flex items-center gap-2">
+              <span key={option} className="flex items-center gap-2 pl-8 sm:pl-0">
                 <input
                   checked={each.isAnswered === option}
                   value={option}
@@ -1286,11 +1296,11 @@ const FeedbackForm = ({
                     )
                   }
                   disabled={isReadOnly}
-                  className="whitespace-nowrap"
+                  className="accent-custom-blue whitespace-nowrap"
                 />
                 <label
                   htmlFor={`isAnswered-${each.questionId || each.id}-${option}`}
-                  className="cursor-pointer"
+                  className="text-xs cursor-pointer"
                 >
                   {option}
                 </label>
@@ -1325,6 +1335,10 @@ const FeedbackForm = ({
   };
 
   const handleAddSkill = () => {
+    if (skillRatings.length >= 10) {
+      notify.error("Maximum 10 skills allowed");
+      return;
+    }
     hasUserInteractedWithSkills.current = true;
     setSkillRatings([
       ...skillRatings,
@@ -1902,42 +1916,42 @@ const FeedbackForm = ({
   // Before the closing </div> of your main container (around line 1100):
 
   // Button component for consistency
-  const Button = ({
-    children,
-    onClick,
-    variant = "default",
-    size = "default",
-    className = "",
-    style = {},
-    disabled = false,
-    type = "button",
-  }) => {
-    const baseClasses =
-      "inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
-    const variants = {
-      default: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
-      outline:
-        "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500",
-      ghost: "text-gray-700 hover:bg-gray-100 focus:ring-blue-500",
-    };
-    const sizes = {
-      sm: "px-3 py-1.5 text-sm",
-      default: "px-4 py-2 text-sm",
-    };
+  // const Button = ({
+  //   children,
+  //   onClick,
+  //   variant = "default",
+  //   size = "default",
+  //   className = "",
+  //   style = {},
+  //   disabled = false,
+  //   type = "button",
+  // }) => {
+  //   const baseClasses =
+  //     "inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
+  //   const variants = {
+  //     default: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
+  //     outline:
+  //       "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500",
+  //     ghost: "text-gray-700 hover:bg-gray-100 focus:ring-blue-500",
+  //   };
+  //   const sizes = {
+  //     sm: "px-3 py-1.5 text-sm",
+  //     default: "px-4 py-2 text-sm",
+  //   };
 
-    return (
-      <button
-        type={type}
-        onClick={onClick}
-        disabled={disabled}
-        className={`${baseClasses} ${variants[variant]} ${sizes[size]
-          } ${className} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-        style={style}
-      >
-        {children}
-      </button>
-    );
-  };
+  //   return (
+  //     <button
+  //       type={type}
+  //       onClick={onClick}
+  //       disabled={disabled}
+  //       className={`${baseClasses} ${variants[variant]} ${sizes[size]
+  //         } ${className} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+  //       style={style}
+  //     >
+  //       {children}
+  //     </button>
+  //   );
+  // };
 
   return (
     // v1.0.4 <----------------------------------------------------------------------
@@ -1964,7 +1978,7 @@ const FeedbackForm = ({
 
       {/* v1.0.3 <--------------------------------------------------------- */}
       <div
-        className="bg-white rounded-lg px-4 sm:px-6 py-6 shadow-sm pb-20 mb-8"
+        className="bg-white px-6 pt-6 pb-20"
       // className="bg-white rounded-lg sm:px-3 px-6 py-6 shadow-sm pb-20 mb-8"
       >
         {/* v1.0.3 ---------------------------------------------------------> */}
@@ -1978,9 +1992,10 @@ const FeedbackForm = ({
           </h3>
         </div> */}
 
-        <div className="grid grid-cols-1 gap-6 mb-8">
-          <div className="bg-gray-50 p-4  sm:grid-cols-2  lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 rounded-lg">
-            <div>
+        <div className="grid grid-cols-1 space-y-5">
+
+          <div className="bg-gray-50 p-4 gap-4 grid grid-cols-2 sm:grid-cols-1 md:grid-cols-1 rounded-lg">
+            <div className="bg-gray-50 p-4 rounded-lg">
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Overall Rating{" "}
                 {!isReadOnly && <span className="text-red-500">*</span>}
@@ -2020,26 +2035,36 @@ const FeedbackForm = ({
             </div>
           </div>
 
-          <div className="mb-8 ">
+          <div>
             <div className="flex w-full items-center justify-between mb-4">
-              <p className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              {/* <p className="flex items-center gap-1 text-sm font-medium text-gray-700">
                 Skill Ratings
                 {!isReadOnly && <span className="text-red-500">*</span>}
-              </p>
+              </p> */}
+              <div className="flex flex-col">
+                <p className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                    Skill Ratings
+                    {!isReadOnly && <span className="text-red-500">*</span>}
+                </p>
+                {/* Step 3: Display the counter */}
+                <span className="text-xs text-gray-600">
+                    {skillRatings.length} / 10 Skills
+                </span>
+              </div>
 
               {!isReadOnly && !urlData?.isSchedule && (
                 <Button
                   type="button"
                   onClick={handleAddSkill}
-                  variant="outline"
-                  size="sm"
-                  style={{
-                    borderColor: "rgb(33, 121, 137)",
-                    color: "rgb(33, 121, 137)",
-                  }}
-                  className="flex items-center px-3 py-1.5 text-sm bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors"
+                  // className="flex items-center text-sm bg-custom-blue text-white hover:bg-custom-blue/90 transition-colors"
+                  disabled={skillRatings.length >= 10}
+                  className={`flex items-center text-sm transition-colors ${
+                      skillRatings.length >= 10 
+                      ? "bg-gray-400 cursor-not-allowed" 
+                      : "bg-custom-blue hover:bg-custom-blue/90"
+                  } text-white`}
                 >
-                  <Plus className="h-3 w-3 mr-1" />
+                  <Plus className="h-4 w-4 mr-1 text-white" />
                   Add Skill
                 </Button>
               )}
@@ -2143,31 +2168,30 @@ const FeedbackForm = ({
             )}
           </div>
 
-          <div className="mb-8">
-            <div className="flex  sm:flex-row sm:items-center justify-between mb-1">
-              {/* v1.0.3 <-------------------------------------------------------- */}
-              <div>
-                <label className=" text-sm font-medium text-gray-700">
-                  Questions Asked
-                </label>
-                <span className="text-xs text-gray-500 mt-1 block">
-                  {questionsWithFeedback.length} question(s) from question bank
-                </span>
-              </div>
-              {/* v1.0.3 --------------------------------------------------------> */}
-              {!isReadOnly && (
-                <button
-                  className="text-sm flex items-center gap-2 sm:px-3 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 font-medium"
-                  onClick={openQuestionBank}
-                  title="Add Question from Question Bank"
-                // disabled={decodedData?.schedule}
-                >
-                  <Plus className="text-sm" />
-                  <span>Add</span>
-                  <span className="sm:hidden inline">Question</span>
-                </button>
-              )}
+
+          <div className="flex sm:flex-row sm:items-center justify-between">
+            {/* v1.0.3 <-------------------------------------------------------- */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Questions Asked
+              </label>
+              <span className="text-xs text-gray-500 mt-1 block">
+                {questionsWithFeedback.length} question(s) from question bank
+              </span>
             </div>
+            {/* v1.0.3 --------------------------------------------------------> */}
+            {!isReadOnly && (
+              <Button
+                className="flex items-center gap-2 bg-custom-blue text-white hover:bg-custom-blue/90 font-medium"
+                onClick={openQuestionBank}
+                title="Add Question from Question Bank"
+              // disabled={decodedData?.schedule}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add</span>
+                <span className="sm:hidden inline">Question</span>
+              </Button>
+            )}
           </div>
 
           {/* {isViewMode ? (
@@ -2501,11 +2525,8 @@ const FeedbackForm = ({
           )}
 
 
-          {/* </div> */}
-
-
           {/* Comments Section */}
-          <div className="mb-8">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Overall Comments{" "}
               {!isReadOnly && <span className="text-red-500">*</span>}
@@ -2515,20 +2536,22 @@ const FeedbackForm = ({
                 {comments || "Not Provided"}
               </div>
             ) : (
-              <DescriptionField
-                rows={4}
-                value={comments}
-                onChange={handleCommentsChange}
-                maxLength={1000}
-                placeholder="Provide overall feedback about the candidate's performance..."
-                error={errors.comments}
-              />
+              <div>
+                <DescriptionField
+                  rows={4}
+                  value={comments}
+                  onChange={handleCommentsChange}
+                  maxLength={1000}
+                  placeholder="Provide overall feedback about the candidate's performance..."
+                  error={errors.comments}
+                />
+              </div>
             )}
           </div>
 
 
           {/* Recommendation Section */}
-          <div className="mb-8">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Recommendation{" "}
               {!isReadOnly && <span className="text-red-500">*</span>}
@@ -2568,18 +2591,14 @@ const FeedbackForm = ({
 
           {/* Action Buttons */}
           {!isReadOnly && !urlData?.isSchedule && (
-            <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg mt-6 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 z-40">
+            <div>
               {!urlData?.isSchedule && (
-                <div className="flex justify-end items-center gap-3 max-w-7xl mx-auto">
+                <div className="flex justify-end items-center gap-3 mt-6">
                   <Button
                     onClick={saveFeedback}
                     variant="outline"
+                    className="border border-custom-blue text-custom-blue"
                     // disabled={decodedData.schedule}
-                    style={{
-                      borderColor: "rgb(33, 121, 137)",
-                      color: "rgb(33, 121, 137)",
-                    }}
-                    className="hover:bg-gray-50"
                   >
                     Save Draft
                   </Button>

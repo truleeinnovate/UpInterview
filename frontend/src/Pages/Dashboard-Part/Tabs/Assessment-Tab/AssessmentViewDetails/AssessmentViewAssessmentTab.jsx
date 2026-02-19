@@ -222,7 +222,7 @@ function AssessmentsTab({ assessment }) {
           {hasSections && (
             <button
               onClick={() => setIsShareOpen(true)}
-              className="flex items-center px-4 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/90 transition-colors"
+              className="flex mt-4 items-center px-4 py-2 text-sm font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/90 transition-colors"
             >
               <UserPlusIcon className="w-5 h-5 mr-2" />
               New Assessment

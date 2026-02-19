@@ -561,8 +561,8 @@ const SchedulerSectionComponent = ({
   // v1.0.2 <-----------------------------------------------------------------------
   const RadioGroupInput = React.memo(({ each }) => {
     return (
-      <div className="flex sm:flex-col md:flex-col lg:flex-col rounded-md mt-2">
-        <p className="sm:text-sm md:text-sm w-[200px] font-bold text-gray-700 sm:mb-2 md:mb-2">
+      <div className="flex flex-row items-center rounded-md my-2">
+        <p className="text-sm font-bold text-gray-600 sm:mb-2 md:mb-2">
           Response Type
           {each.mandatory === "true" && (
             <span className="text-[red] ml-1">*</span>
@@ -571,11 +571,11 @@ const SchedulerSectionComponent = ({
         {isEditMode || isAddMode ? (
           // <div className={`w-full flex gap-x-2 gap-y-2`}>
           <div
-            className={`w-full grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3`}
+            className={`grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3`}
           >
             {["Not Answered", "Partially Answered", "Fully Answered"].map(
               (option) => (
-                <span key={option} className="flex items-center gap-2">
+                <span key={option} className="flex items-center gap-2 pl-8 sm:pl-0">
                   <input
                     checked={each.isAnswered === option}
                     value={option}
@@ -590,7 +590,7 @@ const SchedulerSectionComponent = ({
                   />
                   <label
                     htmlFor={`isAnswered-${each._id}-${option}`}
-                    className="text-sm cursor-pointer"
+                    className="text-xs cursor-pointer"
                   >
                     {option}
                   </label>
