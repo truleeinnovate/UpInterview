@@ -48,4 +48,7 @@ export const createJoinMeetingUrl = (round, interviewData, contactId = null, typ
     if (type === "interview") {
         return `${baseUrl}?scheduler=true&round=${encodeURIComponent(encryptedRoundId)}&schedulertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedOwnerId)}${type ? `&type=${type}` : ''}`;
     }
+    if (type === "interview" || type === "mockinterview" && round.joinAs === "interviewer") {
+        const interviewerLink = `${baseUrl}?interviewer=true&round=${encodeURIComponent(encryptedRoundId)}&interviewertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedOwnerId)}${type ? `&type=${type}` : ''}`;
+    }
 };

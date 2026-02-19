@@ -747,7 +747,7 @@ const MainAppRoutes = ({
               <Route path="/positions" element={<Position />} />
             )}
             {hasPermission("Positions", "Create") && (
-              <Route path="/positions/new-position" element={<PositionForm />} />
+              <Route path="/positions/new" element={<PositionForm />} />
             )}
             {hasPermission("Positions", "Edit") && (
               <Route
