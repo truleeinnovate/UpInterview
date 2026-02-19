@@ -908,37 +908,57 @@ const MockInterviewDetails = () => {
                     );
                   })} */}
 
-                  {/* "More" button only if there are actually hidden actions */}
-                  {hiddenActions.length > 0 && (
-                    <div
-                      className=" relative inline-block"
-                      ref={moreActionsRef}
-                    >
-                      <button
-                        onClick={() => setShowMoreActions((prev) => !prev)}
-                        className="inline-flex items-center justify-center p-2 border border-gray-300 rounded-md"
-                      >
-                        <MoreVertical className="h-5 w-5" />
-                      </button>
+                  {/* First 2 buttons shown directly, remaining in dropdown */}
+                  {actionButtons.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      {/* Show first 2 buttons inline */}
+                      {actionButtons.slice(0, 2).map((action, index) => {
+                        const Icon = action.icon;
+                        return (
+                          <button
+                            key={index}
+                            onClick={action.onClick}
+                            className={`${action.className} inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors`}
+                          >
+                            <Icon className="h-4 w-4 mr-1.5" />
+                            {action.label}
+                          </button>
+                        );
+                      })}
 
-                      {showMoreActions && (
-                        <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-xl bg-white z-50">
-                          {hiddenActions.map((action, index) => {
-                            const Icon = action.icon;
-                            return (
-                              <button
-                                key={index}
-                                onClick={() => {
-                                  action.onClick();
-                                  setShowMoreActions(false);
-                                }}
-                                className="w-full flex items-center px-4 py-3 text-sm hover:bg-blue-50"
-                              >
-                                <Icon className="h-4 w-4 mr-3" />
-                                {action.label}
-                              </button>
-                            );
-                          })}
+                      {/* Remaining buttons in dropdown */}
+                      {actionButtons.length > 2 && (
+                        <div
+                          className="relative inline-block"
+                          ref={moreActionsRef}
+                        >
+                          <button
+                            onClick={() => setShowMoreActions((prev) => !prev)}
+                            className="inline-flex items-center justify-center p-2 border border-gray-300 rounded-md"
+                          >
+                            <MoreVertical className="h-5 w-5" />
+                          </button>
+
+                          {showMoreActions && (
+                            <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-xl bg-white z-50">
+                              {actionButtons.slice(2).map((action, index) => {
+                                const Icon = action.icon;
+                                return (
+                                  <button
+                                    key={index}
+                                    onClick={() => {
+                                      action.onClick();
+                                      setShowMoreActions(false);
+                                    }}
+                                    className="w-full flex items-center px-4 py-3 text-sm hover:bg-blue-50"
+                                  >
+                                    <Icon className="h-4 w-4 mr-3" />
+                                    {action.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
