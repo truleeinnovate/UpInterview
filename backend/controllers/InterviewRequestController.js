@@ -423,7 +423,7 @@ const formatInterviewRequest = async (request) => {
       const mockRound = await mongoose
         .model("MockInterviewRound")
         .findById(request.roundId)
-        .select("roundTitle interviewType duration dateTime")
+        .select("roundTitle interviewType duration dateTime mockInterviewId")
         .lean();
       roundDetails = mockRound
         ? {
@@ -433,6 +433,21 @@ const formatInterviewRequest = async (request) => {
           dateTime: mockRound.dateTime,
         }
         : null;
+
+      // Get candidate name from MockInterview via the round's mockInterviewId
+      if (mockRound?.mockInterviewId) {
+        const mockInterview = await mongoose
+          .model("MockInterview")
+          .findById(mockRound.mockInterviewId)
+          .select("candidateName")
+          .lean();
+        candidateDetails = mockInterview?.candidateName
+          ? {
+            id: mockRound.mockInterviewId,
+            name: mockInterview.candidateName,
+          }
+          : null;
+      }
     } else {
       // Fetch from InterviewRounds collection
       const interviewRound = await mongoose
@@ -451,24 +466,8 @@ const formatInterviewRequest = async (request) => {
     }
   }
 
-  // Handle candidate/contact data based on isMockInterview
-  if (request.isMockInterview) {
-    if (request.contactId) {
-      const contact = await mongoose
-        .model("Contacts")
-        .findById(request.contactId)
-        .select("firstName lastName email phone")
-        .lean();
-      candidateDetails = contact
-        ? {
-          id: contact._id,
-          name: `${contact.firstName} ${contact.lastName}`,
-          email: contact.email,
-          phone: contact.phone,
-        }
-        : null;
-    }
-  } else {
+  // Handle candidate data for non-mock interviews (mock candidate is already fetched above)
+  if (!request.isMockInterview) {
     if (request.candidateId) {
       const candidate = await mongoose
         .model("Candidate")
@@ -523,6 +522,7 @@ const formatInterviewRequest = async (request) => {
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
+        timeZone: "Asia/Kolkata",
       })
       : new Date().toLocaleString("en-IN", {
         year: "numeric",
@@ -531,6 +531,7 @@ const formatInterviewRequest = async (request) => {
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
+        timeZone: "Asia/Kolkata",
       }),
     urgency: request.expiryDateTime
       ? new Date(request.expiryDateTime) < new Date()
