@@ -952,11 +952,11 @@ function Activity({ parentId, parentId2, mode }) {
     //     </div>
     //   </div>
     // </div>
-    <div className="w-full mx-auto p-4 md:p-6 bg-slate-50/50 min-h-screen">
+    <div className="w-full mx-auto p-4 md:p-6 bg-slate-50/50 min-h-screen rounded-lg">
       {/* Header Section */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
+          <h3 className="text-lg xl:text-xl 2xl:text-2xl font-semibold text-slate-800 tracking-tight">
             Feeds
           </h3>
         </div>
