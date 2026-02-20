@@ -160,7 +160,7 @@ const InterviewerSchedule = () => {
               : round?.positionTitle || "Not Specified";
 
             const companyName = isMock
-              ? "—"  // No company for mock
+              ? "Not Specified"  // No company for mock
               : round?.companyName || "Not Specified";
 
             const interviewTypeLabel = isMock ? "Mock Interview" : "Real Interview";
