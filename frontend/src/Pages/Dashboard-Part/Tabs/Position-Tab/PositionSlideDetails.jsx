@@ -1185,7 +1185,7 @@ const PositionSlideDetails = () => {
             )}
             {/* v1.0.5 <------------------------------- */}
             {activeTab === "Feeds" && (
-              <div className="sm:p-0 p-6">
+              <div className="sm:p-0 mt-6">
                 <Activity parentId={id} />
               </div>
             )}

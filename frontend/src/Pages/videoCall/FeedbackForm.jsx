@@ -1222,6 +1222,7 @@ const FeedbackForm = ({
                     name={`dislike-${each.questionId || each.id}`}
                     value={option.value}
                     checked={each.whyDislike === option.value}
+                    className="accent-custom-blue"
                     onChange={(e) => {
                       onChangeDislikeRadioInput(
                         each.questionId || each.id,
