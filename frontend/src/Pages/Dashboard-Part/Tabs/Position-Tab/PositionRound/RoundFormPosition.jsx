@@ -1698,7 +1698,7 @@ function RoundFormPosition() {
                                                         </div>
 
                                                         {/* Display question options if MCQ */}
-                                                        {question.snapshot
+                                                        {/* {question.snapshot
                                                           ?.questionType ===
                                                           "MCQ" && (
                                                           <div className="mt-2">
@@ -1735,6 +1735,33 @@ function RoundFormPosition() {
                                                                   </div>
                                                                 ),
                                                               )}
+                                                            </div>
+                                                          </div>
+                                                        )} */}
+                                                        {/* Display question options if MCQ */}
+                                                        {question.snapshot?.questionType === "MCQ" && (
+                                                          <div className="mt-2">
+                                                            <span className="text-sm font-medium text-gray-500">
+                                                              Options:
+                                                            </span>
+                                                            <div className="grid grid-cols-2 gap-2 mt-1">
+                                                              {question.snapshot?.options?.map((option, optIdx) => (
+                                                                <div
+                                                                  key={option._id || optIdx}
+                                                                  className={`text-sm p-2 rounded border ${
+                                                                    option.isCorrect
+                                                                      ? "bg-green-50 border-green-200 text-green-800"
+                                                                      : "bg-gray-50 border-gray-200 text-gray-700"
+                                                                  }`}
+                                                                >
+                                                                  {option.optionText}
+                                                                  {option.isCorrect && (
+                                                                    <span className="ml-2 text-green-600 font-bold">
+                                                                      ✓
+                                                                    </span>
+                                                                  )}
+                                                                </div>
+                                                              ))}
                                                             </div>
                                                           </div>
                                                         )}

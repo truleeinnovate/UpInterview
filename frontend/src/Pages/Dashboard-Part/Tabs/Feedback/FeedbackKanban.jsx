@@ -18,11 +18,10 @@ import {
 import { Star } from "lucide-react";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
-
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
 const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
   const [filteredData, setFilteredData] = useState([]);
-
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -86,9 +85,10 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
       stars.push(
         <Star
           key={i}
-          className={`w-3 h-3 ${i <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
-            }`}
-        />
+          className={`w-3 h-3 ${
+            i <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
+          }`}
+        />,
       );
     }
     return stars;
@@ -159,11 +159,11 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-xl p-6 overflow-auto"
+      className="w-full h-[calc(100vh-12rem)] bg-gray-50 rounded-xl px-6 pt-3 overflow-auto"
     >
-      <div className="h-full w-full pb-6">
+      <div className="h-full w-full pb-8">
         <motion.div
-          className="flex items-center justify-between mb-6"
+          className="flex items-center justify-between mb-4"
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
@@ -203,74 +203,122 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center">
                               <div className="w-6 h-6 bg-[#217989] rounded-full flex items-center justify-center text-white text-xs font-medium">
-                                {item.candidateId?.FirstName[0]}
+                                {capitalizeFirstLetter(
+                                  item.candidateId?.FirstName[0],
+                                )}
                               </div>
-                              <span className="ml-2 font-medium text-sm text-gray-900 truncate">
-                                {item.candidateId?.FirstName +
+                              <span className="ml-2 font-medium text-sm text-gray-900 truncate max-w-[168px]">
+                                {capitalizeFirstLetter(
+                                  item.candidateId?.FirstName,
+                                ) +
                                   " " +
-                                  item.candidateId?.LastName}
+                                  capitalizeFirstLetter(
+                                    item.candidateId?.LastName,
+                                  )}
                               </span>
                             </div>
-                            {getStatusIcon(item.interviewRoundId?.status)}
+                            <div className="inline-flex items-center justify-start space-x-2 mt-3 bg-custom-blue/10 px-2 py-1 rounded-md">
+                              <button
+                                className="text-[#217989] hover:text-[#1a616e] text-xs"
+                                onClick={() => onView(item)}
+                              >
+                                <Eye className="w-3 h-3 inline mr-1" />
+                                View
+                              </button>
+                              {item.status === "draft" &&
+                                item?.ownerId?._id === tokenPayload.userId && (
+                                  <>
+                                    <button
+                                      className="text-green-500 hover:text-gray-600 text-xs"
+                                      onClick={() => onEdit(item)}
+                                    >
+                                      <Edit className="w-4 h-4 inline mr-1" />
+                                      Edit
+                                    </button>
+                                  </>
+                                )}
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-600 mb-2 truncate">
-                            {item.positionId?.title}
-                          </p>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-gray-500">
-                              <User className="w-3 h-3 inline mr-1" />
+                          <div className="grid grid-cols-2">
+                            <p className="text-sm text-gray-500">Position</p>
+                            <p
+                              className="text-sm text-gray-800 font-medium mb-2 truncate max-w-[140px]"
+                              title={capitalizeFirstLetter(
+                                item.positionId?.title,
+                              )}
+                            >
+                              {capitalizeFirstLetter(item.positionId?.title) ||
+                                "N/A"}
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2">
+                            <p className="text-sm text-gray-500">Candidate</p>
+                            <p className="text-sm text-gray-800 font-medium mb-2 truncate max-w-[140px]">
                               <span className="truncate">
-                                {item.interviewerId?.firstName +
+                                {capitalizeFirstLetter(
+                                  item.interviewerId?.firstName,
+                                ) +
                                   " " +
-                                  item.interviewerId?.lastName}
+                                  capitalizeFirstLetter(
+                                    item.interviewerId?.lastName,
+                                  )}
                               </span>
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              <Calendar className="w-3 h-3 inline mr-1" />
-                              {item.interviewRoundId?.dateTime}
-                            </span>
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2">
+                            <p className="text-sm text-gray-500">Date</p>
+                            <p className="text-sm text-gray-800 font-medium mb-2 truncate max-w-[140px]">
+                              <span className="truncate">
+                                {item.interviewRoundId?.dateTime || "N/A"}
+                              </span>
+                            </p>
                           </div>
                           {item.overallImpression?.overallRating > 0 && (
-                            <div className="flex">
-                              {renderStars(
-                                item.overallImpression?.overallRating
-                              )}
+                            <div className="grid grid-cols-2">
+                              <p className="text-sm text-gray-500">Rating</p>
+                              <p className="text-sm text-gray-800 font-medium truncate max-w-[140px]">
+                                <div className="flex">
+                                  {renderStars(
+                                    item.overallImpression?.overallRating,
+                                  )}
+                                </div>
+                              </p>
                             </div>
                           )}
-                          <div className="flex items-center justify-between">
-                            <span
-                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getRecommendationColor(
-                                item.overallImpression?.recommendation
-                              )}`}
-                            >
-                              {item.overallImpression?.recommendation}
-                            </span>
+                          <div className="grid grid-cols-2 mt-2">
+                            <p className="text-sm text-gray-500">
+                              Recommendation
+                            </p>
+                            <p className="text-sm text-gray-800 font-medium mb-2 truncate max-w-[140px]">
+                              <div
+                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getRecommendationColor(
+                                  item.overallImpression?.recommendation,
+                                )}`}
+                              >
+                                {item.overallImpression?.recommendation}
+                              </div>
+                            </p>
                           </div>
                           {item.generalComments && (
-                            <p className="text-xs text-gray-600 mt-2 truncate">
-                              {item.generalComments}
-                            </p>
-                          )}
-                          <div className="flex space-x-2 mt-3">
-                            <button
-                              className="text-[#217989] hover:text-[#1a616e] text-xs"
-                              onClick={() => onView(item)}
+                            <div
+                              className="grid grid-cols-2"
+                              title={capitalizeFirstLetter(
+                                item.generalComments,
+                              )}
                             >
-                              <Eye className="w-3 h-3 inline mr-1" />
-                              View
-                            </button>
-                            {item.status === "draft" && item?.ownerId?._id === tokenPayload.userId &&
-                              <>
-                                < button
-                                  className="text-green-500 hover:text-gray-600 text-xs"
-                                  onClick={() => onEdit(item)}
-                                >
-                                  <Edit className="w-3 h-3 inline mr-1" />
-                                  Edit
-                                </button>
-                              </>
-                            }
-                          </div>
+                              <p className="text-sm text-gray-500">Comments</p>
+                              <p className="text-sm text-gray-800 font-medium mb-2 truncate max-w-[140px]">
+                                {capitalizeFirstLetter(item.generalComments)}
+                              </p>
+                            </div>
+                          )}
+                          {/* <div className="grid grid-cols-2">
+                            <p className="text-sm text-gray-500">Status</p>
+                            <p className="text-sm text-gray-800 font-medium mb-2 truncate max-w-[140px]">
+                              {getStatusIcon(item.interviewRoundId?.status)}
+                              <span>{item.interviewRoundId?.status}</span>
+                            </p>
+                          </div> */}
                         </div>
                       ))}
                     </div>
@@ -281,7 +329,7 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
           </div>
         </div>
       </div>
-    </motion.div >
+    </motion.div>
   );
 };
 

@@ -826,7 +826,7 @@ export const getInterviewTemplateColumns = (navigate, options = {}) => {
             key: "description",
             header: "Description",
             render: (value) => (
-                <span className="text-gray-600 truncate max-w-[250px]" title={value}>
+                <span className="block text-gray-600 truncate max-w-[250px] cursor-default" title={value}>
                     {value || "No description"}
                 </span>
             ),
