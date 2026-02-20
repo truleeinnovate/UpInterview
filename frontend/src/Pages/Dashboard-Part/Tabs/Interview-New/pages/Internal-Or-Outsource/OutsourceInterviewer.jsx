@@ -529,8 +529,9 @@ function OutsourcedInterviewerModal({
   const tokenPayload = decodeJwt(authToken);
   const userId = tokenPayload?.userId;
   // const { data: walletBalance, refetch } = useWallet();
+  const [temRole, setTemRole] = useState("")
 
-  console.log("candidateExperience", candidateExperience)
+  console.log("currentRole", currentRole)
 
   // const pageType = "adminPortal";
   // const {
@@ -854,8 +855,6 @@ function OutsourcedInterviewerModal({
 
         const [datePart, ...timeParts] = dateTime.split(" ");
         const timeRange = timeParts.join(" ");
-        // console.log("📅 Date Part:", datePart);
-        // console.log("🕒 Time Range:", timeRange);
 
         const [startTimeStr, endTimeStr] = timeRange
           .split("-")
@@ -924,6 +923,10 @@ function OutsourcedInterviewerModal({
               ?.trim();
             const candidateTech = currentRole?.toLowerCase()?.trim();
             const isMatch = interviewerTech === candidateTech;
+            // console.log("setTemRole", interviewer?.contact)
+            setTemRole(interviewer?.contact?.roleLabel)
+
+
             // console.log(
             //   `💻 Interviewer: ${
             //     interviewer.contact?.firstName || "Unknown"
@@ -2640,7 +2643,7 @@ function OutsourcedInterviewerModal({
                           Current Role:
                         </span>
                         <span className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800">
-                          {currentRole}
+                          {temRole}
                           {/* <button
                               onClick={() => {
                                 setCurrentRole(null);

@@ -1661,7 +1661,7 @@ const FeedbackForm = ({
             {
               onSuccess: (data) => {
                 if (data.success) {
-                  notify.success("Feedback updated successfully!");
+                  notify.success("Feedback submitted successfully!");
                 } else {
                   notify.error("Failed to update feedback: " + data.message);
                 }
@@ -1849,7 +1849,7 @@ const FeedbackForm = ({
             {
               onSuccess: (data) => {
                 if (data.success) {
-                  notify.success("Feedback saved as draft successfully!");
+                  notify.success("Feedback saved  successfully!");
                 } else {
                   notify.error(
                     "Failed to save feedback as draft: " + data.message,
@@ -2043,12 +2043,12 @@ const FeedbackForm = ({
               </p> */}
               <div className="flex flex-col">
                 <p className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
-                    Skill Ratings
-                    {!isReadOnly && <span className="text-red-500">*</span>}
+                  Skill Ratings
+                  {!isReadOnly && <span className="text-red-500">*</span>}
                 </p>
                 {/* Step 3: Display the counter */}
                 <span className="text-xs text-gray-600">
-                    {skillRatings.length} / 10 Skills
+                  {skillRatings.length} / 10 Skills
                 </span>
               </div>
 
@@ -2058,11 +2058,10 @@ const FeedbackForm = ({
                   onClick={handleAddSkill}
                   // className="flex items-center text-sm bg-custom-blue text-white hover:bg-custom-blue/90 transition-colors"
                   disabled={skillRatings.length >= 10}
-                  className={`flex items-center text-sm transition-colors ${
-                      skillRatings.length >= 10 
-                      ? "bg-gray-400 cursor-not-allowed" 
-                      : "bg-custom-blue hover:bg-custom-blue/90"
-                  } text-white`}
+                  className={`flex items-center text-sm transition-colors ${skillRatings.length >= 10
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-custom-blue hover:bg-custom-blue/90"
+                    } text-white`}
                 >
                   <Plus className="h-4 w-4 mr-1 text-white" />
                   Add Skill
@@ -2598,7 +2597,7 @@ const FeedbackForm = ({
                     onClick={saveFeedback}
                     variant="outline"
                     className="border border-custom-blue text-custom-blue"
-                    // disabled={decodedData.schedule}
+                  // disabled={decodedData.schedule}
                   >
                     Save Draft
                   </Button>

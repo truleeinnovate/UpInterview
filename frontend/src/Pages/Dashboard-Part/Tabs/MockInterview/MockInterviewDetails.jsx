@@ -635,7 +635,7 @@ const MockInterviewDetails = () => {
         icon: UserX,
         onClick: () => setNoShowReasonModalOpen(true),
         className:
-          "inline-flex items-center  text-sm  text-gray-700 bg-gray-50 hover:bg-gray-100",
+          "inline-flex items-center  text-sm  border border-gray-300 text-gray-700 bg-gray-50 hover:bg-gray-100",
         showInMore: true,
       });
     }
@@ -662,7 +662,7 @@ const MockInterviewDetails = () => {
         icon: XCircle,
         onClick: () => setCancelReasonModalOpen(true),
         className:
-          "inline-flex items-center  text-sm text-red-700 bg-red-50 hover:bg-red-100",
+          "inline-flex items-center border border-red-300   text-sm text-red-700 bg-red-50 hover:bg-red-100",
         showInMore: true,
       });
     }
@@ -677,7 +677,7 @@ const MockInterviewDetails = () => {
             state: { isEdit: true },
           }),
         className:
-          "inline-flex items-center text-sm text-yellow-700 bg-yellow-50 hover:bg-yellow-100",
+          "inline-flex items-center text-sm border border-yellow-300 text-yellow-700 bg-yellow-50 hover:bg-yellow-100",
         showInMore: true,
       });
     }
@@ -695,7 +695,7 @@ const MockInterviewDetails = () => {
             state: { isRequestSent: true },
           }),
         className:
-          "inline-flex items-center  text-sm  text-yellow-800 bg-yellow-50 hover:bg-yellow-100",
+          "inline-flex items-center border border-yellow-500 text-sm  text-yellow-800 bg-yellow-50 hover:bg-yellow-100",
         showInMore: true,
       });
     }
@@ -719,7 +719,7 @@ const MockInterviewDetails = () => {
         icon: Clock,
         onClick: () => handleActionClick("Scheduled"),
         className:
-          "inline-flex items-center  text-sm  text-indigo-700 bg-indigo-50 hover:bg-indigo-100",
+          "inline-flex items-center border border-indigo-300 text-sm  text-indigo-700 bg-indigo-50 hover:bg-indigo-100",
         showInMore: true,
       });
     }
@@ -731,7 +731,7 @@ const MockInterviewDetails = () => {
         icon: CheckCircle,
         onClick: () => setCompletedReasonModalOpen(true),
         className:
-          "inline-flex items-center text-sm  text-green-700 bg-green-50 hover:bg-green-100",
+          "inline-flex items-center  border border-green-300 text-sm  text-green-700 bg-green-50 hover:bg-green-100",
         showInMore: true,
       });
     }
@@ -743,7 +743,7 @@ const MockInterviewDetails = () => {
         icon: MessageSquare,
         onClick: () => setShowFeedbackModal(true),
         className:
-          "inline-flex items-center    text-sm  text-purple-700 bg-purple-50 hover:bg-purple-100",
+          "inline-flex items-center  border border-purple-300  text-sm  text-purple-700 bg-purple-50 hover:bg-purple-100",
         showInMore: true,
       });
     }
@@ -1007,7 +1007,7 @@ const MockInterviewDetails = () => {
                             </div>
                           </div>
                           <div className="grid grid-cols-2 text-xs text-gray-500 mt-1">
-                            <span>Current Role:</span> {candidate?.currentRole}
+                            <span>Current Role:</span> {candidate?.roleDetails?.roleLabel}
                           </div>
                           <div className="grid grid-cols-2 text-xs text-gray-500 mt-1">
                             <span>Experience:</span>
