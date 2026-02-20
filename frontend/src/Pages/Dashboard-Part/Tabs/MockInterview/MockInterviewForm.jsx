@@ -57,9 +57,15 @@ const {
 // Helper function to parse custom dateTime format (e.g., "31-03-2025 10:00 PM")
 const parseCustomDateTime = (dateTimeStr) => {
   if (!dateTimeStr) return null;
-  const [datePart, timePart] = dateTimeStr.split(" ");
+  const parts = dateTimeStr.split(" ");
+  if (parts.length < 3) return null; // Expected "DD-MM-YYYY HH:MM AM/PM"
+  const [datePart, timePart, meridian] = parts;
   const [day, month, year] = datePart.split("-");
-  const formattedDate = `${year}-${month}-${day}T${timePart}:00`;
+  let [hours, minutes] = timePart.split(":");
+  hours = parseInt(hours);
+  if (meridian?.toUpperCase() === "PM" && hours < 12) hours += 12;
+  if (meridian?.toUpperCase() === "AM" && hours === 12) hours = 0;
+  const formattedDate = `${year}-${month}-${day}T${String(hours).padStart(2, "0")}:${minutes}:00`;
   const date = new Date(formattedDate);
   return isNaN(date.getTime()) ? null : date;
 };
@@ -558,6 +564,18 @@ const MockSchedulelater = () => {
       updateTimes(formData.rounds.duration);
     }
   }, [id, mockInterview, isMockLoading, createdMockInterviewId, data]);
+
+
+  useEffect(() => {
+    if (interviewType === "scheduled") {
+      const minVal = twoHoursFromNowLocal();
+      if (!scheduledDate || scheduledDate < minVal) {
+        setScheduledDate(minVal);
+        // Trigger time calculation after setting scheduled date
+        setTimeout(() => updateTimes(formData.rounds?.duration || 60), 100);
+      }
+    }
+  }, [interviewType]);
 
   function formatStartTimeForZoom(combinedDateTime) {
     if (!combinedDateTime) return null;
@@ -1315,9 +1333,10 @@ const MockSchedulelater = () => {
         newEndTime = end?.toISOString() || "";
 
         const formattedStart = formatToCustomDateTime(start);
-        const formattedEnd = formatToCustomDateTime(end).split(" ")[1] || "";
+        const formattedEnd = formatToCustomDateTime(end);
+        const timePartEnd = formattedEnd.split(" ").slice(1).join(" ");
 
-        newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
+        newCombinedDateTime = `${formattedStart} - ${timePartEnd}`;
 
         setStartTime(newStartTime);
         setEndTime(newEndTime);
@@ -1343,9 +1362,10 @@ const MockSchedulelater = () => {
       newEndTime = end?.toISOString() || "";
 
       const formattedStart = formatToCustomDateTime(start);
-      const formattedEnd = formatToCustomDateTime(end).split(" ")[1] || "";
+      const formattedEnd = formatToCustomDateTime(end);
+      const timePartEnd = formattedEnd.split(" ").slice(1).join(" ");
 
-      newCombinedDateTime = `${formattedStart} - ${formattedEnd}`;
+      newCombinedDateTime = `${formattedStart} - ${timePartEnd}`;
       setStartTime(newStartTime);
       setEndTime(newEndTime);
       setCombinedDateTime(newCombinedDateTime);
@@ -2290,8 +2310,9 @@ const MockSchedulelater = () => {
         setStartTime(start.toISOString());
         setEndTime(end.toISOString());
         const formattedStart = formatToCustomDateTime(start);
-        const formattedEnd = formatToCustomDateTime(end).split(" ")[1];
-        setCombinedDateTime(`${formattedStart} - ${formattedEnd}`);
+        const formattedEnd = formatToCustomDateTime(end);
+        const timePartEnd = formattedEnd.split(" ").slice(1).join(" ");
+        setCombinedDateTime(`${formattedStart} - ${timePartEnd}`);
 
         // Only update formData if the values actually changed to prevent infinite loops
         setFormData((prev) => {
@@ -2374,7 +2395,7 @@ const MockSchedulelater = () => {
 
     // return {- ${formatToCustomDateTime(end).split(" ")[1] || "??:??"
     return {
-      display: `${formatToCustomDateTime(start)}`,
+      display: `${formatToCustomDateTime(start)} - ${formatToCustomDateTime(end).split(" ").slice(1).join(" ") || "??:??"}`,
       startISO: start.toISOString(),
     };
   }, []);
@@ -2423,8 +2444,9 @@ const MockSchedulelater = () => {
       setStartTime(start.toISOString());
       setEndTime(end.toISOString());
       const formattedStart = formatToCustomDateTime(start);
-      const formattedEnd = formatToCustomDateTime(end).split(" ")[1];
-      const newDateTime = `${formattedStart} - ${formattedEnd}`;
+      const formattedEnd = formatToCustomDateTime(end);
+      const timePartEnd = formattedEnd.split(" ").slice(1).join(" ");
+      const newDateTime = `${formattedStart} - ${timePartEnd} `;
 
       setCombinedDateTime(newDateTime);
       setFormData((prev) => ({
@@ -2442,7 +2464,8 @@ const MockSchedulelater = () => {
   //     _id: interviewer?.contact?._id,
   //     name:
   //       interviewer?.contact?.Name ||
-  //       `${interviewer?.contact?.firstName || ""} ${interviewer?.contact?.lastName || ""
+  //       `${ interviewer?.contact?.firstName || "" } ${
+  // interviewer?.contact?.lastName || ""
   //         }`.trim(),
   //   }));
 
@@ -3647,7 +3670,9 @@ const MockSchedulelater = () => {
                                 type="datetime-local"
                                 id="scheduledDate"
                                 name="scheduledDate"
-                                value={scheduledDate}
+                                value={interviewType === "scheduled"
+                                  ? scheduledDate
+                                  : ""}
                                 // onChange={(e) =>
                                 //   setScheduledDate(e.target.value)
                                 // }
@@ -3726,14 +3751,16 @@ const MockSchedulelater = () => {
                               <p className="text-sm text-custom-blue">
                                 Interview will start at{" "}
                                 <span className="font-medium">
-                                  {/* {combinedDateTime || "Calculating..."} */}
-                                  {liveInstantDisplay || "Calculating..."}{" "}
-                                  {/* ← NEW */}
-                                  {/* {new Date(startTime).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })} */}
+                                  {liveInstantDisplay
+                                    ? liveInstantDisplay.split(' - ')[0] // Extract only the start time part
+                                    : "Calculating..."}
                                 </span>
+                                {/* {" and end at "}
+                                <span className="font-medium">
+                                  {liveInstantDisplay
+                                    ? liveInstantDisplay.split(' - ')[1] // Extract only the end time part
+                                    : "Calculating..."}
+                                </span> */}
                                 {/* {" "}
                                                                     and end at{" "}
                                                                     <span className="font-medium">
@@ -3963,8 +3990,8 @@ const MockSchedulelater = () => {
                 loadingText={mockEdit ? "Updating..." : "Saving..."}
               >
                 {mockEdit
-                  ? `${selectedInterviewers.length > 0 ? "Update & Schedule " : "Update Round"} `
-                  : `${selectedInterviewers.length > 0 ? "Create & Schedule " : "Create Round"}`}
+                  ? `${selectedInterviewers.length > 0 ? "Update & Schedule " : "Update"} `
+                  : `${selectedInterviewers.length > 0 ? "Create & Schedule " : "Create"}`}
                 {/* {formData.rounds.interviewType === "instant"
                   ? "Save & Schedule"
                   : "Save"} */}

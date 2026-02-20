@@ -34,6 +34,7 @@ const {
 } = require("./interviewRoundsController.js");
 const InterviewRequest = require("../models/InterviewRequest.js");
 const { scheduleOrRescheduleNoShow } = require("../services/interviews/roundNoShowScheduler.js");
+const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
 // Get single mock interview with rounds by id
 // GET /mockinterview/:id
 // exports.getMockInterviewDetails = async (req, res) => {
@@ -197,6 +198,29 @@ exports.getMockInterviewDetails = async (req, res) => {
       });
     }
 
+    // const roleNames = mockInterview
+    //   .map((i) => i.currentRole)
+    //   .filter(Boolean);
+
+    let roleDocs = [];
+
+    if (mockInterview?.currentRole) {
+      roleDocs = await RoleMaster.find({
+        roleName: mockInterview?.currentRole,
+      }).lean();
+    }
+
+    const roleMaps = {};
+
+    roleDocs.forEach((r) => {
+      roleMaps[r?.roleName] = r;
+    });
+    const roleInfo = roleMaps[mockInterview?.currentRole] || null;
+
+
+    if (roleInfo) {
+      mockInterview.roleDetails = roleInfo;
+    }
     /* ------------------------------------------------
        3️⃣ Fetch Rounds
     ------------------------------------------------ */
@@ -247,6 +271,7 @@ exports.getMockInterviewDetails = async (req, res) => {
 
     const fullRounds = filteredRounds.map((round) => ({
       ...round,
+      // roleDetails: roleInfo,
       interviewers: round.interviewers || [],
       questions: [], // Mock has no questions
       pendingOutsourceRequests: isFromRound

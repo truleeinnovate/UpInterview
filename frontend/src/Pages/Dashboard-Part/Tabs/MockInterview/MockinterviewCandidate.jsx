@@ -47,7 +47,7 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
         {/* v1.0.0 ---------------------------------------------------------------------------> */}
         <h2 className="text-xl font-bold text-gray-800">Candidate</h2>
         <div className="flex items-center gap-2">
-          {!isFullScreen && (
+          {/* {!isFullScreen && (
             <button
               onClick={() => {
                 sessionStorage.setItem(
@@ -61,7 +61,7 @@ const MockCandidateDetails = ({ candidate, onClose, isFullScreen, onEdit }) => {
             >
               <ExternalLink className="w-5 h-5 text-gray-500" />
             </button>
-          )}
+          )} */}
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"

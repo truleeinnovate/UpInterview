@@ -109,47 +109,89 @@ const CandidateView = () =>
   // console.log("interviewRoundData in candidate details ", interviewRoundData);
 
   // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
+  // Parse custom datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
   const parseCustomDateTime = (dateTimeStr) => {
     if (!dateTimeStr) return { start: null, end: null };
 
     try {
       // Split into start and end parts
-      const [startPart, endPart] = dateTimeStr.split(" - ");
-
-      // Parse the date part (DD-MM-YYYY)
-      const [datePart, startTime, startPeriod] = startPart.split(/\s+/);
-      const [day, month, year] = datePart.split("-").map(Number);
-
-      // Parse start time
-      const [startHours, startMinutes] = startTime.split(":").map(Number);
-      let startHours24 = startHours;
-      if (startPeriod === "PM" && startHours < 12) startHours24 += 12;
-      if (startPeriod === "AM" && startHours === 12) startHours24 = 0;
-
-      // Parse end time (handle both "HH:MM" and "HH:MM AM/PM" formats)
-      let endHours, endMinutes, endPeriod;
-
-      if (endPart.includes("AM") || endPart.includes("PM")) {
-        // Format: "09:04 PM"
-        const [endTime, period] = endPart.split(/\s+/);
-        [endHours, endMinutes] = endTime.split(":").map(Number);
-        endPeriod = period;
-      } else {
-        // Format: "09:04" (assuming same period as start)
-        [endHours, endMinutes] = endPart.split(":").map(Number);
-        endPeriod = startPeriod;
+      const parts = dateTimeStr.split(" - ");
+      if (parts.length !== 2) {
+        console.error("Invalid date time format:", dateTimeStr);
+        return { start: null, end: null };
       }
 
-      let endHours24 = endHours;
-      if (endPeriod === "PM" && endHours < 12) endHours24 += 12;
-      if (endPeriod === "AM" && endHours === 12) endHours24 = 0;
+      const [startPart, endPart] = parts;
+
+      // Parse start part: "DD-MM-YYYY HH:MM AM/PM" - allow single or double digits for hours
+      const startMatch = startPart.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s+(AM|PM)$/i);
+      if (!startMatch) {
+        console.error("Invalid start time format:", startPart);
+        return { start: null, end: null };
+      }
+
+      let [_, day, month, year, startHour, startMinute, startPeriod] = startMatch;
+
+      // Parse end part: could be "HH:MM AM/PM" or just "HH:MM" - allow single or double digits for hours
+      let endHour, endMinute, endPeriod;
+
+      const endMatchWithPeriod = endPart.match(/^(\d{1,2}):(\d{2})\s+(AM|PM)$/i);
+      const endMatchWithoutPeriod = endPart.match(/^(\d{1,2}):(\d{2})$/);
+
+      if (endMatchWithPeriod) {
+        // Format: "9:04 PM" or "09:04 PM"
+        [_, endHour, endMinute, endPeriod] = endMatchWithPeriod;
+      } else if (endMatchWithoutPeriod) {
+        // Format: "9:04" or "09:04" (assume same period as start)
+        [_, endHour, endMinute] = endMatchWithoutPeriod;
+        endPeriod = startPeriod;
+      } else {
+        console.error("Invalid end time format:", endPart);
+        return { start: null, end: null };
+      }
+
+      // Convert to numbers
+      const dayNum = parseInt(day, 10);
+      const monthNum = parseInt(month, 10);
+      const yearNum = parseInt(year, 10);
+      let startHourNum = parseInt(startHour, 10);
+      let startMinuteNum = parseInt(startMinute, 10);
+      let endHourNum = parseInt(endHour, 10);
+      let endMinuteNum = parseInt(endMinute, 10);
+
+      // Validate ranges
+      if (dayNum < 1 || dayNum > 31 || monthNum < 1 || monthNum > 12 || yearNum < 1000) {
+        throw new Error("Invalid date values");
+      }
+
+      if (startHourNum < 0 || startHourNum > 23 || startMinuteNum < 0 || startMinuteNum > 59 ||
+        endHourNum < 0 || endHourNum > 23 || endMinuteNum < 0 || endMinuteNum > 59) {
+        throw new Error("Invalid time values");
+      }
+
+      // Convert to 24-hour format for start
+      if (startPeriod.toUpperCase() === "PM" && startHourNum < 12) startHourNum += 12;
+      if (startPeriod.toUpperCase() === "AM" && startHourNum === 12) startHourNum = 0;
+
+      // Convert to 24-hour format for end
+      if (endPeriod.toUpperCase() === "PM" && endHourNum < 12) endHourNum += 12;
+      if (endPeriod.toUpperCase() === "AM" && endHourNum === 12) endHourNum = 0;
+
+      // Create Date objects
+      const startDate = new Date(yearNum, monthNum - 1, dayNum, startHourNum, startMinuteNum);
+      const endDate = new Date(yearNum, monthNum - 1, dayNum, endHourNum, endMinuteNum);
+
+      // Validate if dates are valid
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        throw new Error("Invalid date objects created");
+      }
 
       return {
-        start: new Date(year, month - 1, day, startHours24, startMinutes),
-        end: new Date(year, month - 1, day, endHours24, endMinutes),
+        start: startDate,
+        end: endDate,
       };
     } catch (error) {
-      console.error("Error parsing date time:", error, dateTimeStr);
+      console.error("Error parsing date time:", error.message, dateTimeStr);
       return { start: null, end: null };
     }
   };
