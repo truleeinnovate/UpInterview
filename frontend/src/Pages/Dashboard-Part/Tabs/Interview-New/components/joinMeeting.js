@@ -1,6 +1,10 @@
 //this code only for scheduler join meeting button click sending to join meeting
 import CryptoJS from "crypto-js";
 import { config } from "../../../../../config";
+import AuthCookieManager, {
+    getAuthToken,
+} from "../../../../../utils/AuthCookieManager/AuthCookieManager";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 
 const SECRET_KEY = "asdnalksm$$@#@cjh#@$abidsduwoa";
 
@@ -19,7 +23,10 @@ export const encryptData = (data) => {
 };
 
 export const createJoinMeetingUrl = (round, interviewData, contactId = null, type) => {
-    if (!round?._id || !interviewData?._id || !interviewData?.ownerId) return null;
+    const authToken = getAuthToken(); // Use validated token getter
+    const tokenPayload = decodeJwt(authToken);
+    const ownerId = tokenPayload?.userId;
+    if (!round?._id || !interviewData?._id || !ownerId) return null;
 
     // console.log("type interviewData", type, interviewData)
     let base = config.REACT_APP_API_URL_FRONTEND;
@@ -36,19 +43,26 @@ export const createJoinMeetingUrl = (round, interviewData, contactId = null, typ
     const baseUrl = `${base}/join-meeting`;
 
     const encryptedRoundId = encryptData(round._id);
-    const encryptedSchedulerId = encryptData(contactId);
-    const encryptedOwnerId = encryptData(interviewData.ownerId);
+    const encryptedContactId = encryptData(contactId);
+    const encryptedOwnerId = encryptData(ownerId);
 
     if (!encryptedRoundId || !encryptedOwnerId) return null;
-    if (type === "interview" && !encryptedSchedulerId) return null;
+    // NEW: Prioritize joinAs over type for interviewer case
+    if (round.joinAs === "interviewer") {
+        // Interviewer URL (works for both real & mock)
+        return `${baseUrl}?interviewer=true&round=${encodeURIComponent(encryptedRoundId)}&interviewertoken=${encodeURIComponent(encryptedContactId)}&owner=${encodeURIComponent(encryptedOwnerId)}${type ? `&type=${type}` : ''}`;
+    }
 
+    // Scheduler / Candidate cases (fallback)
     if (type === "mockinterview") {
-        return `${baseUrl}?candidate=true&round=${encodeURIComponent(encryptedRoundId)}${type ? `&type=${type}` : ';'}`;
+        // Mock candidate URL
+        return `${baseUrl}?candidate=true&round=${encodeURIComponent(encryptedRoundId)}${type ? `&type=${type}` : ''}`;
     }
+
     if (type === "interview") {
-        return `${baseUrl}?scheduler=true&round=${encodeURIComponent(encryptedRoundId)}&schedulertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedOwnerId)}${type ? `&type=${type}` : ''}`;
+        // Real interview scheduler URL
+        return `${baseUrl}?scheduler=true&round=${encodeURIComponent(encryptedRoundId)}&schedulertoken=${encodeURIComponent(encryptedContactId)}&owner=${encodeURIComponent(encryptedOwnerId)}${type ? `&type=${type}` : ''}`;
     }
-    if (type === "interview" || type === "mockinterview" && round.joinAs === "interviewer") {
-        const interviewerLink = `${baseUrl}?interviewer=true&round=${encodeURIComponent(encryptedRoundId)}&interviewertoken=${encodeURIComponent(encryptedSchedulerId)}&owner=${encodeURIComponent(encryptedOwnerId)}${type ? `&type=${type}` : ''}`;
-    }
+
+    return null; // fallback if nothing matches
 };

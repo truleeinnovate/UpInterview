@@ -113,7 +113,6 @@ const InterviewerSchedule = () => {
 
     const interviewData = {
       _id: round.interviewId || round._id,
-      ownerId: round.ownerId || null,
     };
 
     const joinUrl = createJoinMeetingUrl(round, interviewData, singleContact?.contactId, type);
@@ -163,6 +162,8 @@ const InterviewerSchedule = () => {
             const companyName = isMock
               ? "—"  // No company for mock
               : round?.companyName || "Not Specified";
+
+            const interviewTypeLabel = isMock ? "Mock Interview" : "Real Interview";
 
             let canJoin = false;
             if (round?.dateTime && (round.status === "Scheduled" || round.status === "Rescheduled") && round.meetPlatform) {
@@ -216,9 +217,9 @@ const InterviewerSchedule = () => {
                           onClick={() => canJoin && handleJoinClick(round)}
                           disabled={!canJoin}
                           className={`
-                            inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm whitespace-nowrap
-                            ${canJoin ? "bg-custom-blue hover:bg-custom-blue/90 text-white cursor-pointer" : "bg-gray-400 text-gray-200 cursor-not-allowed opacity-50"}
-                          `}
+                          inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm whitespace-nowrap
+                          ${canJoin ? "bg-custom-blue hover:bg-custom-blue/90 text-white cursor-pointer" : "bg-gray-400 text-gray-200 cursor-not-allowed opacity-50"}
+                        `}
                         >
                           <Video size={16} />
                           Join
@@ -254,10 +255,15 @@ const InterviewerSchedule = () => {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3 flex-wrap">
                       {statusDetails.icon}
-                      <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${statusDetails.bg} ${statusDetails.text}`}>
+                      <span
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium ${statusDetails.bg} ${statusDetails.text}`}
+                      >
                         {capitalizeFirstLetter(statusToShow)}
+                      </span>
+                      <span className="inline-flex items-center px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium">
+                        {interviewTypeLabel}
                       </span>
                     </div>
                   </div>
