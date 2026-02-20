@@ -531,17 +531,11 @@ function OutsourcedInterviewerModal({
   // const { data: walletBalance, refetch } = useWallet();
   const [temRole, setTemRole] = useState("")
 
-  console.log("currentRole", currentRole)
+  // console.log("currentRole", currentRole)
 
-  // const pageType = "adminPortal";
-  // const {
-  //   // skills: skillsData,
-  //   currentRoles,
-  //   loadCurrentRoles,
-  //   loadSkills,
-  //   isCurrentRolesFetching,
-  //   isSkillsFetching,
-  // } = useMasterData({}, pageType);
+
+
+
   const [skillInput, setSkillInput] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
   const skillsPopupRef = useRef(null);
@@ -592,6 +586,22 @@ function OutsourcedInterviewerModal({
   // console.log("currentRoles", currentRoles);
   // console.log("tempSelectedSkills", tempSelectedSkills);
 
+
+  const pageType = "adminPortal";
+  const {
+    currentRoles,
+    isCurrentRolesFetching,
+
+  } = useMasterData({}, pageType);
+
+
+  useEffect(() => {
+    if (currentRole) {
+      let matchrole = currentRoles?.find((item) => item.roleName === currentRole)
+      setTemRole(matchrole?.roleLabel)
+    }
+    // console.log("currentRoles", currentRoles);
+  }, [currentRoles, currentRole]);
 
 
   // Auto-refresh wallet balance on window focus
@@ -924,7 +934,7 @@ function OutsourcedInterviewerModal({
             const candidateTech = currentRole?.toLowerCase()?.trim();
             const isMatch = interviewerTech === candidateTech;
             // console.log("setTemRole", interviewer?.contact)
-            setTemRole(interviewer?.contact?.roleLabel)
+            // setTemRole(interviewer?.contact?.roleLabel)
 
 
             // console.log(
