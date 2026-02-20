@@ -104,6 +104,15 @@ const CandidateView = () =>
     : interviewData?.rounds[0] || {};
 
 
+  const currentStatus = interviewRoundData?.status;
+
+  // Statuses that allow joining the interview
+  const isFinalStatus = ["InProgress", "Scheduled", "Rescheduled"].includes(
+    currentStatus,
+  );
+
+
+
   // console.log("candidateData candidateData CandidateMiniTab", candidateData);
   // console.log("positionData in candidate details ", positionData);
   // console.log("interviewRoundData in candidate details ", interviewRoundData);
@@ -444,6 +453,38 @@ const CandidateView = () =>
     }
   };
 
+  // Add this function to get button text based on status and time
+  // const getButtonText = () => {
+  //   // First check if status prevents joining
+  //   if (!isFinalStatus) {
+  //     switch (currentStatus) {
+  //       case "Draft":
+  //         return "Interview in Draft";
+  //       case "Completed":
+  //         return "Interview Completed";
+  //       case "Evaluated":
+  //         return "Interview Evaluated";
+  //       case "FeedbackSubmitted":
+  //         return "Feedback Submitted";
+  //       case "Cancelled":
+  //         return "Interview Cancelled";
+  //       default:
+  //         return `Interview ${currentStatus || 'Unavailable'}`;
+  //     }
+  //   }
+
+  //   // If status allows joining, check time-based messages
+  //   if (!isButtonEnabled) {
+  //     if (timeLeft.includes("Grace period")) {
+  //       return timeLeft; // Shows "Grace period: Xm remaining to join"
+  //     }
+  //     return "Join Meeting (Available 15 mins before start)";
+  //   }
+
+  //   // Button is enabled and status allows joining
+  //   return "Join Meeting";
+  // };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#217989] to-[#1a616e] p-4">
       <div className="max-w-8xl mx-auto">
@@ -536,7 +577,7 @@ const CandidateView = () =>
                   Ready to join your interview?
                 </p>
 
-                {interviewRoundData?.dateTime && (
+                {/* {interviewRoundData?.dateTime && (
                   <div className="mt-3">
                     {(() => {
                       const { start, end } = parseCustomDateTime(
@@ -591,7 +632,7 @@ const CandidateView = () =>
                       );
                     })()}
                   </div>
-                )}
+                )} */}
 
                 {/* {feedbackData?.round?.dateTime && (
                   <div className="mt-3">
@@ -694,14 +735,15 @@ const CandidateView = () =>
                 onClick={() => {
                   handleCandidateEnterMeeting();
                 }}
-                disabled={!isButtonEnabled}
-                className={`w-full md:text-sm ${isButtonEnabled
+                disabled={!isButtonEnabled ||
+                  !isFinalStatus}
+                className={`w-full md:text-sm ${isButtonEnabled && isFinalStatus
                   ? "bg-[#217989] hover:bg-[#1a616e] hover:scale-105"
                   : "bg-gray-400 cursor-not-allowed sm:text-sm"
                   } text-white font-bold sm:py-3 md:py-3 py-4 sm:px-4 md:px-4 lg:px-4 xl:px-8 2xl:px-8 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg mb-4`}
               >
                 <Video className="w-6 h-6" />
-                {isButtonEnabled
+                {isButtonEnabled && isFinalStatus
                   ? "Join Meeting"
                   : timeLeft.includes("Grace period")
                     ? timeLeft

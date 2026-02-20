@@ -611,22 +611,22 @@ const MockInterviewDetails = () => {
     const actions = [];
 
     // Reschedule
-    // if (
-    //   permissions.canReschedule &&
-    //   rounds[0]?.interviewType.toLowerCase() !== "instant"
-    // ) {
-    //   actions.push({
-    //     label: "Reschedule",
-    //     icon: Calendar,
-    //     onClick: () =>
-    //       navigate(`/mock-interviews/${mockinterview?._id}/edit`, {
-    //         state: { isReschedule: true },
-    //       }),
-    //     className:
-    //       "inline-flex items-center  text-sm text-blue-700 bg-blue-50 hover:bg-blue-100",
-    //     showInMore: true,
-    //   });
-    // }
+    if (
+      permissions.canReschedule &&
+      rounds[0]?.interviewType.toLowerCase() !== "instant"
+    ) {
+      actions.push({
+        label: "Reschedule",
+        icon: Calendar,
+        onClick: () =>
+          navigate(`/mock-interviews/${mockinterview?._id}/edit`, {
+            state: { isReschedule: true },
+          }),
+        className:
+          "inline-flex items-center  text-sm text-blue-700 bg-blue-50 hover:bg-blue-100",
+        showInMore: true,
+      });
+    }
 
     // No Show
     if (permissions.canNoShow) {
@@ -654,8 +654,9 @@ const MockInterviewDetails = () => {
 
     // Cancel
     if (
-      permissions.canCancel &&
-      rounds[0]?.interviewType.toLowerCase() !== "instant"
+      permissions.canCancel
+      // &&
+      // rounds[0]?.interviewType.toLowerCase() !== "instant"
     ) {
       actions.push({
         label: "Cancel",
@@ -862,41 +863,49 @@ const MockInterviewDetails = () => {
 
             <div className="mt-4 px-4 bg-white shadow overflow-hidden rounded-lg">
               {/* v1.0.2 <------------------------------------------------------------------------- */}
-              <div className="flex flex-col justify-between items-start sm:items-center px-4 py-5 sm:px-6 gap-4">
+              <div className="flex flex-col justify-between items-start sm:items-center px-4 py-2 sm:px-6 gap-4">
                 <div className="flex justify-between w-full">
                   {/* v1.0.1 <----------------------------------------------------------------------------- */}
-                  <h3 className="flex items-center text-lg leading-6 font-medium text-gray-900 gap-3">
-                    Mock Interview Details
-                    {mockinterview?.rounds[0]?.status && (
-                      // <span className="ml-1">
-                      //   <StatusBadge
-                      //     status={mockinterview?.rounds[0]?.status}
-                      //     size="md"
-                      //   />
-                      // </span>
-                      <span
-                        className={`mx-2 text-xs px-2 py-0.5 rounded-full ${getStatusBadgeColor(
-                          mockinterview?.rounds[0]?.status,
-                        )}`}
-                      >
-                        {mockinterview?.rounds[0]?.status === "RequestSent"
-                          ? "Request Sent"
-                          : mockinterview?.rounds[0]?.status === "InProgress"
-                            ? "In Progress"
-                            : mockinterview?.rounds[0]?.status ===
-                              "FeedbackPending"
-                              ? "Feedback Pending"
+                  <div className="flex flex-col gap-2">
+                    <h3 className="flex items-center text-lg leading-6 font-medium text-gray-900 ">
+                      Mock Interview Details
+                      {mockinterview?.rounds[0]?.status && (
+                        // <span className="ml-1">
+                        //   <StatusBadge
+                        //     status={mockinterview?.rounds[0]?.status}
+                        //     size="md"
+                        //   />
+                        // </span>
+                        <span
+                          className={`mx-2 text-xs px-2 py-0.5 rounded-full ${getStatusBadgeColor(
+                            mockinterview?.rounds[0]?.status,
+                          )}`}
+                        >
+                          {mockinterview?.rounds[0]?.status === "RequestSent"
+                            ? "Request Sent"
+                            : mockinterview?.rounds[0]?.status === "InProgress"
+                              ? "In Progress"
                               : mockinterview?.rounds[0]?.status ===
-                                "FeedbackSubmitted"
-                                ? "Feedback Submitted"
-                                : // : round?.status,
-                                capitalizeFirstLetter(
-                                  mockinterview?.rounds[0]?.status,
-                                )}
-                      </span>
-                    )}
-                  </h3>
+                                "FeedbackPending"
+                                ? "Feedback Pending"
+                                : mockinterview?.rounds[0]?.status ===
+                                  "FeedbackSubmitted"
+                                  ? "Feedback Submitted"
+                                  : // : round?.status,
+                                  capitalizeFirstLetter(
+                                    mockinterview?.rounds[0]?.status,
+                                  )}
+                        </span>
+                      )}
 
+                    </h3>
+                    <p className=" text-sm text-gray-500">
+                      Created At{" "}
+                      {mockinterview?.createdAt
+                        ? formatDateTime(mockinterview?.createdAt)
+                        : "N/A"}
+                    </p>
+                  </div>
                   {/* Always visible buttons */}
                   {/* {visibleActions.map((action, index) => {
                     const Icon = action.icon;
@@ -935,12 +944,7 @@ const MockInterviewDetails = () => {
                 <div>
                   {/* v1.0.1 -----------------------------------------------------------------------------> */}
                   {/* v1.0.0 <--------------------------------------------------------------- */}
-                  <p className="mt-1 max-w-2xl text-sm text-gray-500">
-                    Created on{" "}
-                    {mockinterview?.createdAt
-                      ? formatDateTime(mockinterview?.createdAt)
-                      : "N/A"}
-                  </p>
+
                   {/* v1.0.0 ---------------------------------------------------------------> */}
                 </div>
                 <div className="flex space-x-2">

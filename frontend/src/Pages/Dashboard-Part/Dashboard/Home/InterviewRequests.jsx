@@ -27,6 +27,11 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { notify } from "../../../../services/toastService";
+import { formatRequestedDate } from "../../../../utils/dateFormatter";
+
+
+
+
 
 const InterviewRequests = () => {
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -171,6 +176,8 @@ const InterviewRequests = () => {
     },
   });
 
+
+
   /** ────────────────────────────────
    *  Handlers
    *  ──────────────────────────────── */
@@ -201,6 +208,7 @@ const InterviewRequests = () => {
     if (typeof str !== "string" || !str) return "";
     return str.charAt(0).toUpperCase() + str.slice(1);
   };
+
 
   return (
     <div className="mt-8">
@@ -314,7 +322,7 @@ const InterviewRequests = () => {
                 <div className="flex items-center gap-1.5">
                   <Clock size={14} className="text-gray-400 flex-shrink-0" />
                   <span className="text-xs text-gray-600 truncate">
-                    Requested At: {request.requestedDate}
+                    Requested At: {formatRequestedDate(request.requestedDate)}
                   </span>
                 </div>
               </div>
@@ -507,7 +515,7 @@ const InterviewRequests = () => {
                       <div>
                         <p className="text-sm text-gray-500">Requested At</p>
                         <p className="text-gray-700">
-                          {selectedRequest.requestedDate}
+                          {formatRequestedDate(selectedRequest.requestedDate)}
                         </p>
                       </div>
                     </div>
