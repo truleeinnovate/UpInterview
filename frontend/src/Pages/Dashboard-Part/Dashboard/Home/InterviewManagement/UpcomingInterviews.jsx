@@ -239,7 +239,7 @@ const InterviewerSchedule = () => {
                     <div className="flex items-center gap-2">
                       <Briefcase size={18} className="text-gray-400" />
                       <div>
-                        <p className="text-sm font-medium text-gray-800">{positionTitle}</p>
+                        <p className="text-sm font-medium text-gray-800">{capitalizeFirstLetter(positionTitle)}</p>
                         <p className="text-sm text-gray-600">{companyName}</p>
                       </div>
                     </div>
@@ -262,7 +262,7 @@ const InterviewerSchedule = () => {
                       >
                         {capitalizeFirstLetter(statusToShow)}
                       </span>
-                      <span className="inline-flex items-center px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium">
+                      <span className="inline-flex items-center px-2.5 py-1 bg-blue-100 text-custom-blue rounded-lg text-xs font-medium">
                         {interviewTypeLabel}
                       </span>
                     </div>
