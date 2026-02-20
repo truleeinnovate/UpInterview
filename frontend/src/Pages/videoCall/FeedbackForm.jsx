@@ -642,7 +642,7 @@ const FeedbackForm = ({
     // Start with interviewer-added questions from preselected/merged data
     const allQuestions = [...(filteredInterviewerQuestions || [])];
 
-    console.log("allQuestions", allQuestions);
+    // console.log("allQuestions", allQuestions);
 
     // Build a quick lookup of current UI state overlays
     const overlayMap = (interviewerSectionData || []).reduce((acc, q) => {
@@ -729,7 +729,7 @@ const FeedbackForm = ({
 
   // Final list of questions to render in the interviewer section
 
-  console.log("questionsWithFeedback", questionsWithFeedback)
+  // console.log("questionsWithFeedback", questionsWithFeedback)
 
   const questionsToRender = React.useMemo(() => {
     if (isEditMode || isViewMode || isAddMode) {
@@ -1707,7 +1707,7 @@ const FeedbackForm = ({
 
   const saveFeedback = async () => {
     try {
-      console.log("💾 Starting draft save...");
+      // console.log("💾 Starting draft save...");
 
       // Prepare feedback data for draft save
       const feedbackData = {

@@ -355,7 +355,7 @@ export function VideoCallingSettings() {
           ownerId: ownerId,
         }
       );
-      console.log("response test-connection", response);
+      // console.log("response test-connection", response);
       if (response.data.success) {
         setSettings((prev) => ({
           ...prev,

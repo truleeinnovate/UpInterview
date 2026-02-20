@@ -55,7 +55,7 @@ export const OutsourcedInterviewerCard = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  console.log("interviewer dashboard", source, interviewer);
+  // console.log("interviewer dashboard", source, interviewer);
 
   const firstName =
     source === "internal-interview"
@@ -832,7 +832,7 @@ function OutsourcedInterviewerModal({
             );
           }
 
-          console.log("skillFilteredInterviewers", skillFilteredInterviewers)
+          // console.log("skillFilteredInterviewers", skillFilteredInterviewers)
 
           // Filter for approved interviewers
           const approvedInterviewers = skillFilteredInterviewers.filter(
@@ -843,7 +843,7 @@ function OutsourcedInterviewerModal({
             "✅ Approved interviewers count:",
             approvedInterviewers.length,
           );
-          console.log("✅ Approved interviewers:", approvedInterviewers);
+          // console.log("✅ Approved interviewers:", approvedInterviewers);
 
           setBaseInterviewers(approvedInterviewers);
           setFilteredInterviewers(approvedInterviewers);
@@ -1018,7 +1018,7 @@ function OutsourcedInterviewerModal({
           (i) => i.matchedSkills > 0,
         );
 
-        console.log("✅ Tech+Skill Matched Interviewers:", techSkillFiltered);
+        // console.log("✅ Tech+Skill Matched Interviewers:", techSkillFiltered);
         console.log(
           "✅ Skill-Only Matched Interviewers:",
           nonTechSkillFiltered
@@ -1045,7 +1045,7 @@ function OutsourcedInterviewerModal({
 
         let approvedInterviewers;
 
-        console.log("combinedInterviewers", combinedInterviewers)
+        // console.log("combinedInterviewers", combinedInterviewers)
 
         if (navigatedfrom === "mock-interview") {
           approvedInterviewers = combinedInterviewers.filter(
@@ -1135,7 +1135,7 @@ function OutsourcedInterviewerModal({
     };
 
     let filtered = [...baseInterviewers]; // always start fresh from base
-    console.log("Applying filters with selectedRole:", filtered);
+    // console.log("Applying filters with selectedRole:", filtered);
     // 1. Role filter — live
     // if (selectedRole) {
     //   filtered = filtered.filter((interviewer) => {
@@ -1899,7 +1899,7 @@ function OutsourcedInterviewerModal({
       // Calculate rates from ONLY the selected interviewers
       const selectedRates = selectedInterviewersLocal.map((interviewer) => {
         const contact = interviewer?.contact;
-        console.log("Contact:", contact?.yearsOfExperience);
+        // console.log("Contact:", contact?.yearsOfExperience);
         if (!contact?.rates) return 0;
 
         let experienceLevel;
@@ -1917,11 +1917,11 @@ function OutsourcedInterviewerModal({
 
       // Use the highest rate among selected interviewers ONLY
       baseRequiredAmount = Math.max(...selectedRates, 0);
-      console.log("Selected Rates:", selectedRates);
-      console.log("Max Rate from Selected Interviewers:", baseRequiredAmount);
+      // console.log("Selected Rates:", selectedRates);
+      // console.log("Max Rate from Selected Interviewers:", baseRequiredAmount);
     }
 
-    console.log("Base Required Amount (without GST):", baseRequiredAmount);
+    // console.log("Base Required Amount (without GST):", baseRequiredAmount);
 
     // Apply GST using same formula as backend helper (computeBaseGstGross)
     const base = Number(baseRequiredAmount || 0);
@@ -2095,10 +2095,10 @@ function OutsourcedInterviewerModal({
 
   // console.log("currentRoles===", currentRoles);
 
-  console.log("skills...", skills);
+  // console.log("skills...", skills);
   // console.log("skillsData...", skillsData);
 
-  console.log("filteredInterviewers", filteredInterviewers);
+  // console.log("filteredInterviewers", filteredInterviewers);
 
   return (
     <>

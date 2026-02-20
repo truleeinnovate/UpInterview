@@ -67,7 +67,7 @@ const WalletDashboard = () => {
 
         setTenantData((prevData) => ({ ...prevData, balance }));
         setTransactionsData(reversedData);
-        console.log("reversedData", reversedData);
+        // console.log("reversedData", reversedData);
       } catch (error) {
         console.error("Error fetching wallet details:", error);
       } finally {
@@ -260,7 +260,7 @@ const WalletDashboard = () => {
         }
 
 
-        console.log("Encrypted Amount:", encryptedAmount);
+        // console.log("Encrypted Amount:", encryptedAmount);
 
         setTenantData((prev) => ({
           ...prev,

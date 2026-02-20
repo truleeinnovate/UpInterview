@@ -13,8 +13,8 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
     interviewQuestions = {},
   } = feedbackData || {};
 
-  console.log("schedulerFeedbackData SchedulerViewMode", feedbackData)
-  console.log("isViewMode SchedulerViewMode", isViewMode)
+  // console.log("schedulerFeedbackData SchedulerViewMode", feedbackData)
+  // console.log("isViewMode SchedulerViewMode", isViewMode)
   // Track which feedback is active
   const [activeFeedbackIndex, setActiveFeedbackIndex] = useState(0);
 

@@ -18,8 +18,8 @@ function AssessmentTest({
   duration,
   candidateAssessmentId,
 }) {
-  console.log("ASSESSMENT TEST ==========================> ", assessment);
-  console.log("ASSESSMENT QUESTIONS ==========================> ", questions);
+  // console.log("ASSESSMENT TEST ==========================> ", assessment);
+  // console.log("ASSESSMENT QUESTIONS ==========================> ", questions);
   const [currentSection, setCurrentSection] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});

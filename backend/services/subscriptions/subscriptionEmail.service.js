@@ -11,12 +11,12 @@ const config = require("../../config.js");
  * Main job runner
  */
 async function runSubscriptionEmailReminderJob({ enableTest10s = false } = {}) {
-  console.log("[Cron] Subscription email reminder job started");
+  // console.log("[Cron] Subscription email reminder job started");
 
   await handleIncompletePaymentReminders(enableTest10s);
   await handleRenewalReminders();
 
-  console.log("[Cron] Subscription email reminder job finished");
+  // console.log("[Cron] Subscription email reminder job finished");
 }
 
 /**

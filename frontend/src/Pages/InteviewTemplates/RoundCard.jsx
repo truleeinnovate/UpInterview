@@ -54,7 +54,7 @@ const RoundCard = ({
   const { fetchAssessmentQuestions } = useAssessments();
 
   const handleDeleteRound = async () => {
-    console.log("round", round);
+    // console.log("round", round);
     try {
       await deleteRound(round?._id);
       // v1.0.1 <----------------------------------------------------------------------

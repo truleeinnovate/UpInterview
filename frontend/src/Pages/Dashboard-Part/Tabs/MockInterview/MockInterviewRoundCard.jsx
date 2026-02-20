@@ -106,10 +106,10 @@ const MoockRoundCard = ({
         action: newStatus,
       };
 
-      console.log("payload", round?._id);
-      console.log("payload", mockinterview?._id);
+      // console.log("payload", round?._id);
+      // console.log("payload", mockinterview?._id);
 
-      console.log("payload", payload);
+      // console.log("payload", payload);
 
       // Add cancellation / NoShow reason if provided
       if (
@@ -131,7 +131,7 @@ const MoockRoundCard = ({
         }
       }
 
-      console.log("payload", payload);
+      // console.log("payload", payload);
 
       const response = await updateRoundStatus.mutateAsync({
         mockInterviewId: mockinterview?._id,

@@ -98,11 +98,11 @@ function Activity({ parentId, parentId2, mode }) {
         const response = await axios.get(`${config.REACT_APP_API_URL}/feeds`, {
           params: { parentId },
         });
-        console.log("PARENT ID ==================>", parentId);
-        console.log(
-          "RESPONSE FOR ASSESSMENT FEEDS ==================>",
-          response,
-        );
+        // console.log("PARENT ID ==================>", parentId);
+        // console.log(
+        //   "RESPONSE FOR ASSESSMENT FEEDS ==================>",
+        //   response,
+        // );
 
         // Check if response has data
         if (

@@ -260,7 +260,7 @@ const InterviewActions = ({
         payload.comment = comment || null;
       }
 
-      console.log("payload payload", payload);
+      // console.log("payload payload", payload);
 
       // await updateRoundStatus(payload);
 

@@ -51,7 +51,7 @@ export const InterviewerCard = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  console.log("interviewer interviewer", interviewer);
+  // console.log("interviewer interviewer", interviewer);
 
   const isActive = interviewer?.interviwer?.is_active || interviewer?.is_active;
   // console.log(interviewer);

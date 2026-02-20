@@ -44,7 +44,7 @@ const Topup = () => {
 
                     const decryptedAmount = await decryptData(decodeURIComponent(encryptedAmount));
 
-                    console.log("decryptData", decryptedAmount);
+                    // console.log("decryptData", decryptedAmount);
 
                     if (!isNaN(decryptedAmount) && ownerId) {
                         setPaymentData((prev) => ({
@@ -95,7 +95,7 @@ const Topup = () => {
                     setSelectedCardIndex(defaultCardIndex !== -1 ? defaultCardIndex : 0);
                     setIsChecked(initialCard.defaultCard || false);
 
-                    console.log("cards", initialCard.defaultCard);
+                    // console.log("cards", initialCard.defaultCard);
                     setCardsData(cards);
                     setPaymentData((prevData) => ({
                         ...prevData,
@@ -157,7 +157,7 @@ const Topup = () => {
         }
 
         const isValid = validateCardFields(setErrors, paymentData);
-        console.log("Validation result:", isValid);
+        // console.log("Validation result:", isValid);
 
         if (!isValid) {
             console.log("Validation failed with errors:", errors);

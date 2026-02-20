@@ -76,7 +76,7 @@ const CreateInterviewer = () => {
   const { interviewers: internalUsers, loading: usersLoading } =
     useInterviewersHook();
 
-  console.log("teams===", teams);
+  // console.log("teams===", teams);
 
   const teamsArray = teams || [];
   const tags = tagsData || [];
@@ -84,7 +84,7 @@ const CreateInterviewer = () => {
   // Load data for edit mode
   useEffect(() => {
     if (isEditMode && interviewerData) {
-      console.log("Edit mode - interviewerData:", interviewerData);
+      // console.log("Edit mode - interviewerData:", interviewerData);
 
       // Get the contactId value - could be object with _id or just string
       let userId =
@@ -101,11 +101,11 @@ const CreateInterviewer = () => {
         );
         if (matchingUser) {
           userId = matchingUser.contact?._id || matchingUser._id;
-          console.log("Found user by email match:", matchingUser);
+          // console.log("Found user by email match:", matchingUser);
         }
       }
 
-      console.log("Edit mode - resolved userId:", userId);
+      // console.log("Edit mode - resolved userId:", userId);
 
       setFormData({
         full_name: interviewerData.full_name || "",
@@ -144,7 +144,7 @@ const CreateInterviewer = () => {
           (u) => u?.contact?._id === userId || u?._id === userId,
         );
 
-        console.log("Found linkedUser:", linkedUser);
+        // console.log("Found linkedUser:", linkedUser);
         if (linkedUser) {
           setSelectedUserData(linkedUser);
         }

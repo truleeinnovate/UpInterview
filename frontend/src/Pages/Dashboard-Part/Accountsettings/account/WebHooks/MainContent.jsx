@@ -17,7 +17,7 @@ function MainContent() {
     { id: 'integrations', label: 'Webhooks', icon: Settings },
     { id: 'api-keys', label: 'External keys', icon: Key },
     { id: 'logs', label: 'Webhook Logs', icon: Activity },
-    { id: 'test', label: 'Test Webhook', icon: TestTube },
+    // { id: 'test', label: 'Test Webhook', icon: TestTube },//commented for temporary
     { id: 'docs', label: 'Documentation', icon: FileText }
   ];
 
@@ -29,8 +29,8 @@ function MainContent() {
         return <ApiKeysTab />;
       case 'logs':
         return <WebhookLogsTab />;
-      case 'test':
-        return <TestWebhookTab />;
+      // case 'test':
+      //   return <TestWebhookTab />;
       case 'docs':
         return <DocumentationTab />;
       default:

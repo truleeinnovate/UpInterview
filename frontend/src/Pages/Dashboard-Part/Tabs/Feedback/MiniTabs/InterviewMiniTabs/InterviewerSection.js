@@ -59,7 +59,7 @@ const InterviewerSectionComponent = ({
 }) => {
   const saveTimeoutRef = useRef(null);
 
-  console.log("interviewerSectionData InterviewerSectionComponent", interviewerSectionData)
+  // console.log("interviewerSectionData InterviewerSectionComponent", interviewerSectionData)
 
   const triggerDebouncedSave = () => {
     if (isAddMode || isEditMode) {
@@ -79,9 +79,9 @@ const InterviewerSectionComponent = ({
     return rawFeedbackData || interviewData || {};
   }, [rawFeedbackData, interviewData]);
 
-  console.log("feedbackData", feedbackData);
-  console.log("interviewData", interviewData);
-  console.log("rawFeedbackData", rawFeedbackData);
+  // console.log("feedbackData", feedbackData);
+  // console.log("interviewData", interviewData);
+  // console.log("rawFeedbackData", rawFeedbackData);
 
   // Get interviewer-added questions from the new API structure
   const rawInterviewerAddedQuestionsFromAPI =
@@ -110,9 +110,9 @@ const InterviewerSectionComponent = ({
   const isSubmitted = feedbackDataResponse?.status === "submitted" || feedbackDataResponse?.status === "Submitted";
   const isReadOnly = isViewMode || isSubmitted;
 
-  console.log("isReadOnly", isReadOnly);
+  // console.log("isReadOnly", isReadOnly);
 
-  console.log("feedbackData", feedbackData)
+  // console.log("feedbackData", feedbackData)
 
   // Use interviewer-added questions from API if available, otherwise fallback to old logic
   const filteredInterviewerQuestions = React.useMemo(() => {

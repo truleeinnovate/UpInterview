@@ -310,7 +310,7 @@ const MultiStepForm = () => {
     higherQualification: "",
     universityCollege: "",
   });
-  console.log("additionalDetailsData", additionalDetailsData);
+  // console.log("additionalDetailsData", additionalDetailsData);
   const [interviewDetailsData, setInterviewDetailsData] = useState({
     skills: [],
     currentRole: "",

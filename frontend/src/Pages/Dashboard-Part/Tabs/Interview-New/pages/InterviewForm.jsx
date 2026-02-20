@@ -400,13 +400,13 @@ const InterviewForm = () => {
       return;
     }
 
-    console.log("interview", interview);
+    // console.log("interview", interview);
 
     const isOriginalInterviewPosition =
       isEditing && interview?.positionId?._id === positionId;
 
-    console.log("isOriginalInterviewPosition", isOriginalInterviewPosition);
-    console.log("selectedPosition", selectedPosition);
+    // console.log("isOriginalInterviewPosition", isOriginalInterviewPosition);
+    // console.log("selectedPosition", selectedPosition);
 
     // Always apply position template when position changes (for both create and edit modes)
     // Only skip in edit mode if it's the original position that hasn't changed

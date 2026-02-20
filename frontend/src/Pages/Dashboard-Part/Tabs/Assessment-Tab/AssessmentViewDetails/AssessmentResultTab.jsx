@@ -108,7 +108,7 @@ function AssessmentResultsTab({
       const formatted = `${timeTakenMin}:${timeTakenSec
         .toString()
         .padStart(2, "0")}`;
-      console.log("formatted", formatted);
+      // console.log("formatted", formatted);
       return formatted;
     }
     return "-";

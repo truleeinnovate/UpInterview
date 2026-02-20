@@ -168,8 +168,8 @@ function IntegrationsPage() {
   });
   const { selectedLog } = useIntegrationLogById(selectedLogId); // from apiHooks
   // v1.0.0 <-----------------------------------------------------------------------------------
-  console.log("2. INTEGRATIONS LOGS AFTER RESPONSE: ", integrations);
-  console.log("4. SELECTED INTEGRATION LOG: ", selectedLog);
+  // console.log("2. INTEGRATIONS LOGS AFTER RESPONSE: ", integrations);
+  // console.log("4. SELECTED INTEGRATION LOG: ", selectedLog);
   // v1.0.0 ----------------------------------------------------------------------------------->
 
   const handleCurrentStatusToggle = (status) => {

@@ -21,7 +21,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
   const [showCandidateSidebar, setShowCandidateSidebar] = useState(false);
   const [showPositionSidebar, setShowPositionSidebar] = useState(false);
   const [candidateData, setCandidateData] = useState(null);
-  console.log("intData----", interviewData);
+  // console.log("intData----", interviewData);
   const [positionData, setPositionData] = useState(null);
   //console.log("positionDat--",positionData);
   const [loading, setLoading] = useState(false);

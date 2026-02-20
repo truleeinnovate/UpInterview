@@ -224,10 +224,10 @@ const MockSchedulelater = () => {
   // 1. Add state to track the created mock interview ID
   const [createdMockInterviewId, setCreatedMockInterviewId] = useState(null);
   const isExternalSelected = selectedInterviewType === "External";
-  console.log("isReschedule:", isReschedule);
-  console.log("isEdit:", isEdit);
-  console.log("isRequestSent:", isRequestSent);
-  console.log("isRequestSent:", showDateChangeConfirmation);
+  // console.log("isReschedule:", isReschedule);
+  // console.log("isEdit:", isEdit);
+  // console.log("isRequestSent:", isRequestSent);
+  // console.log("isRequestSent:", showDateChangeConfirmation);
 
 
   // Role dropdown states - no longer needed with DropdownWithSearchField
@@ -292,7 +292,7 @@ const MockSchedulelater = () => {
         fieldName === "clearInterviewersBtn" ||
         fieldName === "removeInterviewerBtn"
       ) {
-        console.log("Editable field in edit mode: Draft", fieldName);
+        // console.log("Editable field in edit mode: Draft", fieldName);
         return false;
       }
       return true;
@@ -319,7 +319,7 @@ const MockSchedulelater = () => {
         // fieldName === "sequence" ||
         // fieldName === "questions"
       ) {
-        console.log("Editable field in edit mode: 2", fieldName);
+        // console.log("Editable field in edit mode: 2", fieldName);
         return false; // These are editable
       }
       return true; // Everything else is disabled
@@ -344,7 +344,7 @@ const MockSchedulelater = () => {
         // ||
         // category === "interviewers"
       ) {
-        console.log("Editable field in edit mode: datetime", fieldName);
+        // console.log("Editable field in edit mode: datetime", fieldName);
         // console.log("Editable field in reschedule:", fieldName, category);
         // console.log("Editable field in reschedule:", category);
         return false; // These are editable
@@ -367,7 +367,7 @@ const MockSchedulelater = () => {
 
     const statusList = disabledInStatus[fieldName] || [];
 
-    console.log("statusList", statusList);
+    // console.log("statusList", statusList);
     return statusList.includes(formData?.rounds?.status);
   };
 
@@ -436,7 +436,7 @@ const MockSchedulelater = () => {
           round.interviewers.length > 0
         ) {
           source = round.interviewers;
-          console.log("Using accepted interviewers:", source);
+          // console.log("Using accepted interviewers:", source);
         }
         // Priority 2: Fall back to pending outsource requests (if no accepted yet)
         else if (
@@ -446,7 +446,7 @@ const MockSchedulelater = () => {
           source = round.pendingOutsourceRequests
             .map((req) => req.interviewerId)
             .filter(Boolean);
-          console.log("Falling back to pending requests:", source);
+          // console.log("Falling back to pending requests:", source);
         }
 
         // Normalize to consistent externalInterviewers format
@@ -512,7 +512,7 @@ const MockSchedulelater = () => {
 
         // Replace the dateTime handling section with this:
         if (round.dateTime) {
-          console.log("Setting datetime for edit mode:", round.dateTime);
+          // console.log("Setting datetime for edit mode:", round.dateTime);
 
           // Parse the existing datetime format "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM"
           const [dateTimePart, endTimePart] = round.dateTime.split(" - ");
@@ -536,7 +536,7 @@ const MockSchedulelater = () => {
               );
 
               const datetimeLocalValue = `${year}-${month}-${day}T${hours}:${minutes}`;
-              console.log("Setting scheduledDate to:", datetimeLocalValue);
+              // console.log("Setting scheduledDate to:", datetimeLocalValue);
 
               setScheduledDate(datetimeLocalValue);
             }
@@ -600,7 +600,7 @@ const MockSchedulelater = () => {
     if (!combinedDateTime) return null;
 
     try {
-      console.log("🔵 Formatting for Zoom - Input:", combinedDateTime);
+      // console.log("🔵 Formatting for Zoom - Input:", combinedDateTime);
 
       // Parse "05-01-2026 08:10 PM - 09:10 PM" format
       const [dateTimePart] = combinedDateTime.split(" - ");
@@ -617,7 +617,7 @@ const MockSchedulelater = () => {
       const [day, month, year] = datePart.split("-").map(Number);
       let [hours, minutes] = timePart.split(":").map(Number);
 
-      console.log("🔵 Parsed:", { day, month, year, hours, minutes, meridiem });
+      // console.log("🔵 Parsed:", { day, month, year, hours, minutes, meridiem });
 
       // Convert to 24-hour format
       if (meridiem === "PM" && hours !== 12) hours += 12;
@@ -626,14 +626,14 @@ const MockSchedulelater = () => {
       // Create date in LOCAL timezone (not UTC)
       const localDate = new Date(year, month - 1, day, hours, minutes, 0);
 
-      console.log("🔵 Local date created:", localDate.toString());
+      // console.log("🔵 Local date created:", localDate.toString());
 
       // Ensure it's at least 5 minutes in the future
       const now = new Date();
       const minFuture = new Date(now.getTime() + 5 * 60 * 1000);
 
-      console.log("🔵 Current time:", now.toString());
-      console.log("🔵 Min future time:", minFuture.toString());
+      // console.log("🔵 Current time:", now.toString());
+      // console.log("🔵 Min future time:", minFuture.toString());
 
       if (localDate < minFuture) {
         console.warn(
@@ -644,13 +644,13 @@ const MockSchedulelater = () => {
           .toISOString()
           .replace("Z", "")
           .slice(0, 19);
-        console.log("🔵 Adjusted formatted time:", formatted);
+        // console.log("🔵 Adjusted formatted time:", formatted);
         return formatted;
       }
 
       // Format for Zoom API: YYYY-MM-DDTHH:mm:ss (NO 'Z' suffix)
       const formatted = localDate.toISOString().replace("Z", "").slice(0, 19);
-      console.log("🔵 Final formatted time:", formatted);
+      // console.log("🔵 Final formatted time:", formatted);
 
       return formatted;
     } catch (error) {
@@ -1825,10 +1825,10 @@ const MockSchedulelater = () => {
         notify.error("At least one interviewer must be selected");
         return;
       }
-      console.log("mockEdit", mockEdit)
+      // console.log("mockEdit", mockEdit)
 
       const mockId = mockEdit ? id : createdMockInterviewId;
-      console.log("mockId", mockId)
+      // console.log("mockId", mockId)
       if (!mockId) {
         notify.error("Please save candidate details first");
         return;
@@ -1836,7 +1836,7 @@ const MockSchedulelater = () => {
 
       const existingRoundId = mockEdit ? formData.rounds.id : null;
 
-      console.log("existingRoundId existingRoundId", existingRoundId);
+      // console.log("existingRoundId existingRoundId", existingRoundId);
 
       // Use override values if provided (from date change confirmation)
       const effectiveInterviewType = overrides.interviewType || interviewType;
@@ -1871,8 +1871,8 @@ const MockSchedulelater = () => {
         // meetPlatform: selectedMeetingPlatform,
       };
 
-      console.log("existingRoundId", existingRoundId)
-      console.log("roundPayload", roundPayload)
+      // console.log("existingRoundId", existingRoundId)
+      // console.log("roundPayload", roundPayload)
 
 
       let roundResponse;
@@ -1902,7 +1902,7 @@ const MockSchedulelater = () => {
       const newStatus = savedRound?.status;
       if (newStatus) setStatus(newStatus);
 
-      console.log("roundResponse roundResponse roundResponse", roundResponse)
+      // console.log("roundResponse roundResponse roundResponse", roundResponse)
 
       const generateMeetingLink = roundResponse?.generateMeetingLink === true;
       let meetingLink = null;
@@ -1912,7 +1912,7 @@ const MockSchedulelater = () => {
           setIsMeetingCreationLoading(true);
           setMeetingCreationProgress("Creating meeting link...");
 
-          console.log("selectedMeetingPlatform", selectedMeetingPlatform)
+          // console.log("selectedMeetingPlatform", selectedMeetingPlatform)
 
           const { createMeeting } =
             await import("../../../../utils/meetingPlatforms.js");
@@ -2567,7 +2567,7 @@ const MockSchedulelater = () => {
       }),
     );
 
-    console.log("normalized", normalized);
+    // console.log("normalized", normalized);
     setExternalInterviewers(normalized);
     // setExternalInterviewers([...externalInterviewers, ...uniqueInterviewers]); // Append new interviewers
     setExternalMaxHourlyRate(Number(maxHourlyRate) || 0);

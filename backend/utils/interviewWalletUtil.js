@@ -1259,7 +1259,7 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
           transactions: [],
         });
         await interviewerWallet.save();
-        console.log("Created new interviewer wallet:", interviewerWallet.walletCode);
+        // console.log("Created new interviewer wallet:", interviewerWallet.walletCode);
       }
 
       const interviewerPrevBalance = Number(interviewerWallet.balance || 0);
@@ -1446,7 +1446,7 @@ async function processWithdrawnRefund({ roundId }) {
   }
 
   try {
-    console.log("[processWithdrawnRefund] Processing refund for round:", roundId);
+    // console.log("[processWithdrawnRefund] Processing refund for round:", roundId);
 
     // 1. Find the organization wallet with HOLD transaction for this round
     const orgWallet = await WalletTopup.findOne({

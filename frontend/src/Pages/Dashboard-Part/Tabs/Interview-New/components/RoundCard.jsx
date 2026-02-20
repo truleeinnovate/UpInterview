@@ -74,7 +74,7 @@ const hasInterviewStarted = (scheduledDateTime) => {
   // Parse the dateTime string (format: "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM")
   const [startTimeStr] = scheduledDateTime.split(' - ');
 
-  console.log("startTimeStr", startTimeStr); // Should be "19-02-2026 04:06 PM"
+  // console.log("startTimeStr", startTimeStr); // Should be "19-02-2026 04:06 PM"
 
   // Split into date and time parts
   const [datePart, timePart, period] = startTimeStr.split(' ');
@@ -89,14 +89,14 @@ const hasInterviewStarted = (scheduledDateTime) => {
     hour24 = 0;
   }
 
-  console.log("Parsed values:", { day, month, year, hour24, minutes, period });
+  // console.log("Parsed values:", { day, month, year, hour24, minutes, period });
 
   // Create date object (month is 0-indexed in JavaScript Date)
   const scheduledTime = new Date(year, parseInt(month) - 1, parseInt(day), hour24, parseInt(minutes));
 
-  console.log("scheduledTime", scheduledTime);
+  // console.log("scheduledTime", scheduledTime);
   const now = new Date();
-  console.log("current time", now);
+  // console.log("current time", now);
 
   return now >= scheduledTime;
 };
@@ -970,7 +970,7 @@ const RoundCard = ({
   };
 
   const openAssessmentAction = (round, action) => {
-    console.log("open assessment clicked");
+    // console.log("open assessment clicked");
 
     setSelectedSchedule(round.scheduledAssessment);
     setSelectedAction(action); // "extend" | "cancel"

@@ -54,7 +54,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
   // Get first 3 interviewers only
   const displayInterviewers = formattedInterviewers?.slice(0, 3);
 
-  console.log("Formatted Interviewers: ", formattedInterviewers);
+  // console.log("Formatted Interviewers: ", formattedInterviewers);
 
   // Auto-rotate slides
   useEffect(() => {

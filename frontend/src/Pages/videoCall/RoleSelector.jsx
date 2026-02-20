@@ -115,7 +115,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
           (normalizedRole === "Interviewer" && true) ||
           (normalizedRole === "Scheduler" && true),
       };
-      console.log("payload", payload)
+      // console.log("payload", payload)
 
       let response;
 
@@ -127,11 +127,11 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
             ? interviewRoundData?.mockInterviewId?._id
             : interviewRoundData?.mockInterviewId);
 
-        console.log("Resolving mockId for status update:", {
-          fromMockObj: mockinterview?._id,
-          fromRoundDate: interviewRoundData?.mockInterviewId,
-          resolved: mockId,
-        });
+        // console.log("Resolving mockId for status update:", {
+        //   fromMockObj: mockinterview?._id,
+        //   fromRoundDate: interviewRoundData?.mockInterviewId,
+        //   resolved: mockId,
+        // });
 
         if (!mockId) {
           console.error("Missing mockInterviewId for status update!");
@@ -148,7 +148,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
         response = await updateRoundStatus(payload);
       }
 
-      console.log("response", response);
+      // console.log("response", response);
       return response;
 
       // console.log("Status update response:", response);

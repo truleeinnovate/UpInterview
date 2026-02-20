@@ -36,7 +36,7 @@ const AssessmentTest = () => {
   const [candidateAssessmentId, setCandidateAssessmentId] = useState(null);
 
   const { tenant } = useTenantById(assessment?.tenantId);
-  console.log("ASSESSMENT TENANT =======================> ", tenant);
+  // console.log("ASSESSMENT TENANT =======================> ", tenant);
 
   // Fallback URL
 
@@ -210,7 +210,7 @@ const AssessmentTest = () => {
         );
         if (assessmentResponse.data.scheduledAssessment) {
           setAssessment(assessmentResponse.data.scheduledAssessment);
-          console.log("Assessment Data:", assessmentResponse.data);
+          // console.log("Assessment Data:", assessmentResponse.data);
         } else {
           throw new Error("Failed to load assessment details");
         }
@@ -220,7 +220,7 @@ const AssessmentTest = () => {
           `${config.REACT_APP_API_URL}/candidate-assessment/public-candidate/${decryptedId}`,
         );
         const candidateData = candidateResponse?.data || null;
-        console.log("Candidate Data:", candidateData);
+        // console.log("Candidate Data:", candidateData);
 
         if (!candidateData) {
           throw new Error("Candidate not found");

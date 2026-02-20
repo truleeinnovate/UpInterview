@@ -895,7 +895,7 @@ const QuestionBankForm = ({
       questionData.tenantId = orgId;
     }
 
-    console.log("questionData", questionData);
+    // console.log("questionData", questionData);
     try {
       // Use saveOrUpdateQuestion mutation instead of direct axios call
       const questionResponse = await saveOrUpdateQuestion({
@@ -903,7 +903,7 @@ const QuestionBankForm = ({
         isEdit,
         questionId: isEdit ? question._id : undefined,
       });
-      console.log("tenant question response", questionResponse);
+      // console.log("tenant question response", questionResponse);
       if (type === "Feedback") {
       }
 
@@ -1009,7 +1009,7 @@ const QuestionBankForm = ({
       const { message, fieldErrors, detailedMessages } =
         extractValidationErrors(error);
 
-      console.log("fieldErrors", message, fieldErrors, detailedMessages);
+      // console.log("fieldErrors", message, fieldErrors, detailedMessages);
 
       // Merge server-side field errors into local error state for inline display
       if (fieldErrors && Object.keys(fieldErrors).length > 0) {

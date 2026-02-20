@@ -605,7 +605,7 @@ Object.keys(activeFilters).forEach(key => {
       .slice(0, 2000);
 
     const mappedData = sortedData.map((d) => ({ id: d._id?.toString() || d.id, ...d }));
-    console.log("mappedData", mappedData);
+    // console.log("mappedData", mappedData);
     
 
     // 11. KPI + CHARTS

@@ -449,7 +449,7 @@ const BasicDetailsEditPage = ({
   const validationErrors = validateFormMyProfile(formData);
 
   // Debug: always log to confirm
-  console.log("Validation Errors:", validationErrors);
+  // console.log("Validation Errors:", validationErrors);
 
   setErrors(validationErrors);
 
