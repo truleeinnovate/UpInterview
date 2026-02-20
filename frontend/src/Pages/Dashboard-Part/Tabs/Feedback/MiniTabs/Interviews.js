@@ -113,7 +113,7 @@ const InterviewsMiniTabComponent = ({
 
   const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType || locationFeedback?.isMockInterview;
 
-  console.log("isMockInterviewisMockInterview", isMockInterview)
+  // console.log("isMockInterviewisMockInterview", isMockInterview)
 
   // ✅ ALWAYS call hooks
   const {
@@ -184,7 +184,7 @@ const InterviewsMiniTabComponent = ({
     return 1;
   };
 
-  console.log("feedbackData?.isMockInterview", feedbackData?.isMockInterview)
+  // console.log("feedbackData?.isMockInterview", feedbackData?.isMockInterview)
 
   const [interviewMiniTab, setInterviewMiniTab] = useState(getDefaultTab);
 
@@ -213,7 +213,7 @@ const InterviewsMiniTabComponent = ({
     }, 500);
   };
 
-  console.log("feedbackData", feedbackData)
+  // console.log("feedbackData", feedbackData)
 
   // const getInterviewerSectionData = useCallback(() => {
   //   // Get merged question feedback from the feedbacks array (API response structure)
@@ -274,7 +274,7 @@ const InterviewsMiniTabComponent = ({
 
     if (!questions || questions.length === 0) return [];
 
-    console.log("questions questions", questions);
+    // console.log("questions questions", questions);
 
     const allQuestions =
       Array.isArray(questions)
@@ -389,7 +389,7 @@ const InterviewsMiniTabComponent = ({
     }));
   };
 
-  console.log("feedbackData interviewRoundData", interviewRoundData);
+  // console.log("feedbackData interviewRoundData", interviewRoundData);
 
   const {
     saveNow: autoSaveQuestions,

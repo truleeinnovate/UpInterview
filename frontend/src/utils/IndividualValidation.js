@@ -94,7 +94,7 @@ export const validateSteps = (step, params, setErrors, checkProfileIdExists, che
     }
 
     // Validate Mock Interview Fields Only if "Yes" is Selected
-    console.log("Interview Format We Offer:", formData2.interviewFormatWeOffer);
+    // console.log("Interview Format We Offer:", formData2.interviewFormatWeOffer);
 
   } else {
     // Reset values when "No" is selected

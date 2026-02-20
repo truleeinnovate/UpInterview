@@ -328,7 +328,7 @@ const RoundFormInterviews = () => {
     isError,
     error,
   } = useOrganizationDetails(orgId);
-  console.log("interviewQuestionsList response:", interviewQuestionsList);
+  // console.log("interviewQuestionsList response:", interviewQuestionsList);
   // const offices = response?.offices || [];
 
   // Add this useEffect to handle address when switching to Face to Face mode
@@ -663,7 +663,7 @@ const RoundFormInterviews = () => {
     setRemovedQuestionIds((prev) => [...prev, questionId]);
   };
 
-  console.log("originalQuestions List:", originalQuestions);
+  // console.log("originalQuestions List:", originalQuestions);
 
   // const handleSuggestedTabClick = (questionType) => {
   //   setActiveTab("SuggesstedQuestions");
@@ -1326,7 +1326,7 @@ const RoundFormInterviews = () => {
         // console.log("Editable field in reschedule:", category);
         return false; // These are editable
       }
-      console.log("Editable field in edit mode: datetime", fieldName);
+      // console.log("Editable field in edit mode: datetime", fieldName);
       return true; // Everything else is disabled
     }
 
@@ -1864,7 +1864,7 @@ const RoundFormInterviews = () => {
       setInterviewerViewType("individuals");
     }
 
-    console.log("internalInterviewers", internalInterviewers);
+    // console.log("internalInterviewers", internalInterviewers);
 
     setSelectedInterviewType("External");
 
@@ -1873,7 +1873,7 @@ const RoundFormInterviews = () => {
       (newInterviewer) =>
         !externalInterviewers.some((i) => i.id === newInterviewer.id),
     );
-    console.log("uniqueInterviewers", uniqueInterviewers);
+    // console.log("uniqueInterviewers", uniqueInterviewers);
 
     setSelectedInterviewType("External");
     setExternalInterviewers([...externalInterviewers, ...uniqueInterviewers]); // Append new interviewers
@@ -1993,7 +1993,7 @@ const RoundFormInterviews = () => {
       ? internalInterviewers
       : externalInterviewers;
 
-  console.log("selectedInterviewers", selectedInterviewers);
+  // console.log("selectedInterviewers", selectedInterviewers);
 
   const isInternalSelected = selectedInterviewType === "Internal";
   const isExternalSelected = selectedInterviewType === "External";
@@ -2294,7 +2294,7 @@ const RoundFormInterviews = () => {
         }
       }
 
-      console.log("payload", payload);
+      // console.log("payload", payload);
 
       // console.log("=== PAYLOAD DEBUG ===");
       // console.log("roundData.dateTime:", roundData.dateTime);
@@ -2337,7 +2337,7 @@ const RoundFormInterviews = () => {
           notify.warn("Round saved but meeting could not be initialized.");
         }
 
-        console.log("roundIdToUse", roundIdToUse);
+        // console.log("roundIdToUse", roundIdToUse);
 
         // Only generate meeting if backend says so
         if (
@@ -2403,9 +2403,9 @@ const RoundFormInterviews = () => {
               //   formatStartTimeForZoom(combinedDateTime);
               // if (!formattedStartTime) throw new Error("Invalid start time");
 
-              console.log("🟣 Creating Zoom meeting...");
-              console.log("🟣 combinedDateTime:", effectiveCombinedDateTime);
-              console.log("🟣 interviewType:", effectiveInterviewType);
+              // console.log("🟣 Creating Zoom meeting...");
+              // console.log("🟣 combinedDateTime:", effectiveCombinedDateTime);
+              // console.log("🟣 interviewType:", effectiveInterviewType);
 
               const formattedStartTime = formatStartTimeForZoom(
                 effectiveCombinedDateTime,
@@ -2430,7 +2430,7 @@ const RoundFormInterviews = () => {
                   participant_video: false,
                 },
               };
-              console.log("zoomPayload", zoomPayload);
+              // console.log("zoomPayload", zoomPayload);
 
               meetingLink = await createMeeting(
                 "zoommeet",
@@ -2462,7 +2462,7 @@ const RoundFormInterviews = () => {
                   meetPlatform: selectedMeetingPlatform,
                 },
               };
-              console.log("meetingPayload", meetingPayload);
+              // console.log("meetingPayload", meetingPayload);
 
               response = await updateInterviewRound(meetingPayload);
 
@@ -2511,7 +2511,7 @@ const RoundFormInterviews = () => {
       //   // changes-confirmed
       // }
 
-      console.log("response", response);
+      // console.log("response", response);
 
       // === FINAL SUCCESS ===
       notify.success("Round saved successfully!");
@@ -2640,7 +2640,7 @@ const RoundFormInterviews = () => {
       linkExpiryDays: assessment?.linkExpiryDays,
       passScoreType: assessment?.passScoreType,
     };
-    console.log("assessment handleAssessmentSelect", assessment);
+    // console.log("assessment handleAssessmentSelect", assessment);
     setAssessmentTemplate(assessmentData);
     setSelectedAssessmentData(assessment);
     const clearInstructions = assessment.Instructions?.replace(
@@ -2794,7 +2794,7 @@ const RoundFormInterviews = () => {
   //   setIsAddressPopupOpen(!isAddressPopupOpen);
   // };
 
-  console.log("outsourceInterviewers ", externalInterviewers);
+  // console.log("outsourceInterviewers ", externalInterviewers);
 
   return (
     <div className="h-[calc(100vh-4rem)] mt-2 overflow-y-auto bg-gray-50">

@@ -223,7 +223,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
 
                 return r;
             });
-            console.log("finalResults", finalResults);
+            // console.log("finalResults", finalResults);
 
 
             setProcessingProgress(100);
@@ -1071,7 +1071,7 @@ export default function ResumeUploadPage({ positionId: propPositionId, positionT
                                     if (data?.createdApplication || data?.candidate) {
                                         setScreeningResults(prev => prev.map(item => {
                                             if (item.id === viewingResult.id) {
-                                                console.log("Updating Item in List:", item.id, "With data:", data);
+                                                // console.log("Updating Item in List:", item.id, "With data:", data);
                                                 return {
                                                     ...item,
                                                     // Safely extract ID (handle if candidateId is populated object)

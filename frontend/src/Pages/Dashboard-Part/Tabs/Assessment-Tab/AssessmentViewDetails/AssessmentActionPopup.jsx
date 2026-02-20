@@ -24,7 +24,7 @@ const AssessmentActionPopup = ({
   onSuccess,
   defaultAction = ''
 }) => {
-  console.log("schedule",schedule);
+  // console.log("schedule",schedule);
   
   // const candidates = schedule?.candidates || [];
   const [action, setAction] = useState(defaultAction); // 'extend' or 'cancel'

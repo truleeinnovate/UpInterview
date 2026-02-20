@@ -29,7 +29,7 @@ const QuestionCard = ({
         question?.snapshot?.snapshot?.category?.[0] ||
         "N/A";
 
-    console.log("isViewMode", isViewMode)
+    // console.log("isViewMode", isViewMode)
 
     const difficulty = question.snapshot?.difficultyLevel ||
         question.snapshot?.snapshot?.difficultyLevel ||

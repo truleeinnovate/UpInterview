@@ -50,7 +50,7 @@ const AddressesPopup = ({
   //   fetchData();
   // }, [organizationId, isOpen]);
 
-  console.log("address", address);
+  // console.log("address", address);
 
   // Fetch addresses using TanStack Query
   const {
@@ -62,7 +62,7 @@ const AddressesPopup = ({
 
   const offices = response?.offices || [];
 
-  console.log("offices offices", offices);
+  // console.log("offices offices", offices);
 
   // Update logic to toggle isDefault and update the organization
   // const handleSetDefault = async (selectedIndex) => {

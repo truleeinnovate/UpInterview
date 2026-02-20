@@ -232,7 +232,7 @@ const EditAdvacedDetails = ({
     }
   }, [resolvedId, profileData]);
 
-  console.log("Profile Data in Edit Advanced Details:", profileData);
+  // console.log("Profile Data in Edit Advanced Details:", profileData);
 
   // Handle input changes for text fields
   const handleInputChange = (selectedOption, meta) => {
@@ -297,7 +297,7 @@ const EditAdvacedDetails = ({
       higherQualification: formData.higherQualification?.trim() || "",
       universityCollege: formData.universityCollege?.trim() || "",
     };
-    console.log("cleanFormData", cleanFormData);
+    // console.log("cleanFormData", cleanFormData);
     try {
       setLoading(true);
 
@@ -435,7 +435,7 @@ const EditAdvacedDetails = ({
   //   // setErrors((prev) => ({ ...prev, [name]: '' }));
   // };
 
-  console.log("from", from);
+  // console.log("from", from);
 
   return (
     // v1.0.1 <----------------------------------------------------------------

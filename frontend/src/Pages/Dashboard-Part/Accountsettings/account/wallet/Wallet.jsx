@@ -57,7 +57,7 @@ const Wallet = () => {
   const { checkPermission, isInitialized } = usePermissionCheck();
   const { data: walletBalance, isLoading, refetch } = useWallet(); //<----v1.0.0-----
   const [isRefetching, setIsRefetching] = useState(false);
-  console.log(" walletBalance", walletBalance);
+  // console.log(" walletBalance", walletBalance);
   // --------------------FOR PADDING-------------------------
   const context = useOutletContext();
   const typeFrom = context?.typeFrom;

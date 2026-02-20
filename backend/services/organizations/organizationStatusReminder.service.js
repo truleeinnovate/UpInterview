@@ -108,7 +108,7 @@ exports.runOrganizationStatusReminderJob = async ({
       console.log(`[Email] Draft → ${user.email}`);
     }
 
-    console.log("[Service] Tenant Status Reminder Job completed");
+    // console.log("[Service] Tenant Status Reminder Job completed");
   } catch (error) {
     console.error("❌ Tenant Status Reminder Job Error:", error);
   }

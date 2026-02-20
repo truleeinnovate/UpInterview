@@ -131,7 +131,7 @@ const InterviewRequests = () => {
       });
     },
     onSuccess: async (data, variables) => {
-      console.log("data data", data);
+      // console.log("data data", data);
 
       // Show success toast
       notify.success("The interview has been successfully scheduled with you.");
