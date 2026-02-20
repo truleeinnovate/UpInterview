@@ -74,6 +74,7 @@ const MockInterviewRoundSchema = new mongoose.Schema(
         "Draft",
         "RequestSent",
         "Scheduled",
+        "Rescheduled",
         "InProgress",
         "Completed",
         "InCompleted",

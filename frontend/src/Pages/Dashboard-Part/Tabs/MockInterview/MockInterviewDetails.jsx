@@ -509,17 +509,17 @@ const MockInterviewDetails = () => {
       canNoShow: true,
       canFeedbackPending: false,
     },
-    // Rescheduled: {
-    //   canEdit: true,
-    //   canDelete: false,
-    //   canMarkScheduled: false,
-    //   // canReschedule: true,
-    //   canCancel: true,
-    //   canComplete: true,
-    //   canFeedback: false,
-    //   canNoShow: true,
-    //   canFeedbackPending: false,
-    // },
+    Rescheduled: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      // canReschedule: true,
+      canCancel: true,
+      canComplete: true,
+      canFeedback: false,
+      canNoShow: true,
+      canFeedbackPending: false,
+    },
     Completed: {
       canEdit: false,
       canDelete: false,
@@ -899,7 +899,7 @@ const MockInterviewDetails = () => {
                       )}
 
                     </h3>
-                    <p className=" text-sm text-gray-500">
+                    <p className=" max-w-2xl text-sm text-gray-500">
                       Created At{" "}
                       {mockinterview?.createdAt
                         ? formatDateTime(mockinterview?.createdAt)

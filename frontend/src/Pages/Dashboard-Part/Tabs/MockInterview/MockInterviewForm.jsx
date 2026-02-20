@@ -83,6 +83,25 @@ const formatToCustomDateTime = (date) => {
   })}`;
 };
 
+// Helper: format a Date to 'YYYY-MM-DDTHH:mm' for <input type="datetime-local"/>
+const formatForDatetimeLocal = (date) => {
+  const pad = (n) => String(n).padStart(2, "0");
+  const y = date.getFullYear();
+  const m = pad(date.getMonth() + 1);
+  const d = pad(date.getDate());
+  const hh = pad(date.getHours());
+  const mm = pad(date.getMinutes());
+  return `${y}-${m}-${d}T${hh}:${mm}`;
+};
+
+// Helper: minimum selectable scheduled time = now + 2 hours (local time)
+const twoHoursFromNowLocal = () => {
+  const d = new Date();
+  d.setHours(d.getHours() + 2);
+  d.setSeconds(0, 0); // strip seconds/millis for consistency
+  return formatForDatetimeLocal(d);
+};
+
 const MockSchedulelater = () => {
   const { singleContact } = useSingleContact();
   const pageType = "adminPortal";
@@ -1345,8 +1364,28 @@ const MockSchedulelater = () => {
         // Clear scheduled date when switching to instant
         newScheduledDate = "";
         setScheduledDate("");
+      } else if (newInterviewType === "scheduled") {
+        if (!scheduledDate) {
+          const minVal = twoHoursFromNowLocal();
+          newScheduledDate = minVal;
+          setScheduledDate(minVal);
+
+          const { start, end } = calculateNewTimes(newScheduledDate);
+          newStartTime = start?.toISOString() || "";
+          newEndTime = end?.toISOString() || "";
+
+          const formattedStart = formatToCustomDateTime(start);
+          const formattedEnd = formatToCustomDateTime(end);
+          const timePartEnd = formattedEnd.split(" ").slice(1).join(" ");
+
+          newCombinedDateTime = `${formattedStart} - ${timePartEnd}`;
+
+          setStartTime(newStartTime);
+          setEndTime(newEndTime);
+          setCombinedDateTime(newCombinedDateTime);
+        }
       }
-    } else if (newInterviewType === "scheduledDate") {
+    } else if (pendingDateChange.type === "scheduledDate") {
       // console.log("scheduledDate", scheduledDate);
       const minAllowed = twoHoursFromNowLocal(); // your helper function
       newScheduledDate =
