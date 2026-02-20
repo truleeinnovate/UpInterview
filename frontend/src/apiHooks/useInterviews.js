@@ -70,7 +70,7 @@ export const useInterviews = (
       // return response?.data
       // return interviewsWithCandidates;
     },
-    enabled: !!hasViewPermission && (options?.enabled !== false),
+    // enabled: !!hasViewPermission && (options?.enabled !== false),
     retry: 1,
     staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
     cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
