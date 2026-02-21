@@ -15,6 +15,7 @@ import {
   ThumbsDown,
   XCircle,
   AlertCircle,
+  Star, CheckCircle, ArrowLeft, Sparkles
 } from "lucide-react";
 import Popup from "reactjs-popup";
 import QuestionBank from "../Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank.jsx";
@@ -38,6 +39,7 @@ import { useInterviews } from "../../apiHooks/useInterviews.js";
 import { useMockInterviewById } from "../../apiHooks/useMockInterviews.js";
 import QuestionCard, { EmptyState } from "../../Components/QuestionCard.jsx";
 import { Button } from "../../Components/Buttons/Button.jsx";
+import TechnicalSkillsAssessment from "../Dashboard-Part/Tabs/Feedback/TechnicalSkillsAssessment.jsx";
 // import { useMeeting } from "@videosdk.live/react-sdk";
 
 const dislikeOptions = [
@@ -724,6 +726,144 @@ const FeedbackForm = ({
     filteredInterviewerQuestions,
     isAddMode,
   ]);
+
+
+  // <---------------------------- NEW UI FIELDS -------------------------------------------
+    const [formData, setFormData] = useState({
+      candidateName: '',
+      position: '',
+      roundTitle: '',
+      interviewerName: '',
+      interviewDate: new Date().toISOString().split('T')[0],
+      isMockInterview: false,
+      overallRating: 0,
+      recommendation: 'Hire',
+      skillRatings: [
+        { skillName: 'Problem Solving', rating: 0, notes: '' },
+        { skillName: 'Technical Knowledge', rating: 0, notes: '' },
+        { skillName: 'Communication', rating: 0, notes: '' }
+      ],
+      technicalSkills: {
+        strong: [],
+        good: [],
+        needsImprovement: []
+      },
+      questionsAsked: [
+        { question: '', answered: true, notes: '' }
+      ],
+      strengths: [''],
+      areasForImprovement: [''],
+      additionalComments: '',
+      cultureFit: 0,
+      willingnessToLearn: 0,
+      mockInterviewNotes: ''
+    });
+
+    // Questions Asked Handlers
+    const addQuestion = () => {
+    setFormData({
+      ...formData,
+      questionsAsked: [...formData.questionsAsked, { question: '', answered: true, notes: '' }]
+      });
+    };
+
+    const removeQuestion = (index) => {
+      const updated = formData.questionsAsked.filter((_, i) => i !== index);
+      setFormData({ ...formData, questionsAsked: updated });
+    };
+
+    const updateQuestion = (index, field, value) => {
+      const updated = formData.questionsAsked.map((q, i) =>
+        i === index ? { ...q, [field]: value } : q
+      );
+      setFormData({ ...formData, questionsAsked: updated });
+    };
+
+    // Skill Ratings Handlers
+    const addSkillRating = () => {
+      setFormData({
+        ...formData,
+        skillRatings: [...formData.skillRatings, { skillName: '', rating: 0, notes: '' }]
+      });
+    };
+
+    const removeSkillRating = (index) => {
+      const updated = formData.skillRatings.filter((_, i) => i !== index);
+      setFormData({ ...formData, skillRatings: updated });
+    };
+
+    const updateSkillRating = (index, field, value) => {
+      const updated = formData.skillRatings.map((skill, i) =>
+        i === index ? { ...skill, [field]: value } : skill
+      );
+      setFormData({ ...formData, skillRatings: updated });
+    };
+
+    // Strengths Handlers
+    const addStrength = () => {
+      setFormData({ ...formData, strengths: [...formData.strengths, ''] });
+    };
+
+    const removeStrength = (index) => {
+      const updated = formData.strengths.filter((_, i) => i !== index);
+      setFormData({ ...formData, strengths: updated });
+    };
+
+    const updateStrength = (index, value) => {
+      const updated = formData.strengths.map((s, i) => (i === index ? value : s));
+      setFormData({ ...formData, strengths: updated });
+    };
+
+    // Areas for Improvement Handlers
+    const addArea = () => {
+      setFormData({
+      ...formData,
+      areasForImprovement: [...formData.areasForImprovement, '']
+    });
+    };
+
+    const removeArea = (index) => {
+      const updated = formData.areasForImprovement.filter((_, i) => i !== index);
+      setFormData({ ...formData, areasForImprovement: updated });
+    };
+
+    const updateArea = (index, value) => {
+      const updated = formData.areasForImprovement.map((a, i) => (i === index ? value : a));
+      setFormData({ ...formData, areasForImprovement: updated });
+    };
+
+    // Additional Ratings
+    const StarRating = ({ rating, onChange, size = 'md' }) => {
+      const sizeClasses = {
+        sm: 'w-4 h-4',
+        md: 'w-5 h-5',
+        lg: 'w-6 h-6'
+      };
+  
+      return (
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => onChange(star)}
+              className="transition-colors"
+            >
+              <Star
+                className={`${sizeClasses[size]} ${
+                  star <= rating
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'text-gray-300'
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+      );
+    };
+
+
+  // ---------------------------- NEW UI FIELDS ------------------------------------------->
 
 
 
@@ -1994,6 +2134,403 @@ const FeedbackForm = ({
         </div> */}
 
         <div className="grid grid-cols-1 space-y-5">
+          {/* -------------------------------NEW UI----------------------------------- */}
+          {/* Basic Information */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+            <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Candidate Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  disabled={true}
+                  // value={formData.candidateName}
+                  // onChange={(e) => setFormData({ ...formData, candidateName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                  placeholder="Enter candidate name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Position <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  disabled={true}
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                  placeholder="e.g., Senior Software Engineer"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Round Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  disabled={true}
+                  value={formData.roundTitle}
+                  onChange={(e) => setFormData({ ...formData, roundTitle: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                  placeholder="e.g., Technical Screening, System Design"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Interviewer Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  disabled={true}
+                  value={formData.interviewerName}
+                  onChange={(e) => setFormData({ ...formData, interviewerName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                  placeholder="Enter your name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Interview Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  disabled={true}
+                  value={formData.interviewDate}
+                  onChange={(e) => setFormData({ ...formData, interviewDate: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                />
+              </div>
+
+              <div className="flex items-center pt-6">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    disabled
+                    checked={formData.isMockInterview}
+                    onChange={(e) => setFormData({ ...formData, isMockInterview: e.target.checked })}
+                    className="w-4 h-4 accent-custom-blue text-[rgb(33,121,137)] border-gray-300 rounded focus:ring-[rgb(33,121,137)]"
+                  />
+                  <span className="ml-2 text-sm font-medium text-gray-700">
+                    This is a Mock Interview
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Technical Skills Assessment */}
+          <div className="border-t border-gray-200 pt-8">
+            <TechnicalSkillsAssessment
+              formData={formData}
+              setFormData={setFormData}
+            />
+          </div>
+
+          {/* Questions Asked */}
+          <div className="border-t border-gray-200 pt-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Questions Asked</h3>
+              <button
+                type="button"
+                onClick={addQuestion}
+                style={{ backgroundColor: 'rgb(33, 121, 137)' }}
+                className="flex items-center gap-2 px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add Question
+              </button>
+            </div>
+            <div className="space-y-4">
+              {formData.questionsAsked.map((q, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <div className="flex justify-between items-start mb-3">
+                    <input
+                      type="text"
+                      value={q.question}
+                      onChange={(e) => updateQuestion(index, 'question', e.target.value)}
+                      placeholder="e.g., Implement a binary search tree"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white"
+                    />
+                    {formData.questionsAsked.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeQuestion(index)}
+                        className="ml-2 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="mb-3 flex items-center gap-4">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={q.answered === true}
+                        onChange={() => updateQuestion(index, 'answered', true)}
+                        className="w-4 h-4 accent-custom-blue border-gray-300 focus:ring-custom-blue"
+                      />
+                      <CheckCircle className="w-4 h-4 text-green-600 ml-2 mr-1" />
+                      <span className="text-sm text-gray-700">Answered</span>
+                    </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={q.answered === false}
+                        onChange={() => updateQuestion(index, 'answered', false)}
+                        className="w-4 h-4 accent-custom-blue border-gray-300 focus:ring-custom-blue"
+                      />
+                      <XCircle className="w-4 h-4 text-red-600 ml-2 mr-1" />
+                      <span className="text-sm text-gray-700">Not Answered</span>
+                    </label>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                    <textarea
+                      value={q.notes}
+                      onChange={(e) => updateQuestion(index, 'notes', e.target.value)}
+                      rows="2"
+                      placeholder="How did the candidate approach this question?"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Skill Ratings */}
+          <div className="border-t border-gray-200 pt-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Skill Ratings</h3>
+              <button
+                type="button"
+                onClick={addSkillRating}
+                style={{ backgroundColor: 'rgb(33, 121, 137)' }}
+                className="flex items-center gap-2 px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add Skill
+              </button>
+            </div>
+            <div className="space-y-4">
+              {formData.skillRatings.map((skill, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-4 flex-1">
+                      <input
+                        type="text"
+                        value={skill.skillName}
+                        onChange={(e) => updateSkillRating(index, 'skillName', e.target.value)}
+                        placeholder="e.g., Problem Solving, Coding Skills"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white"
+                      />
+                      <div className="flex items-center gap-2">
+                        <StarRating
+                          rating={skill.rating}
+                          onChange={(rating) => updateSkillRating(index, 'rating', rating)}
+                        />
+                        <span className="text-sm text-gray-600 min-w-[50px]">
+                          {skill.rating > 0 ? `${skill.rating}/5` : 'Rate'}
+                        </span>
+                      </div>
+                    </div>
+                    {formData.skillRatings.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeSkillRating(index)}
+                        className="ml-2 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <div>
+                    <textarea
+                      value={skill.notes}
+                      onChange={(e) => updateSkillRating(index, 'notes', e.target.value)}
+                      rows="2"
+                      placeholder="Provide specific observations about this skill..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Strengths */}
+          <div className="border-t border-gray-200 pt-8">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Strengths</h3>
+                <p className="text-sm text-gray-600 mt-0.5">What did the candidate do well?</p>
+              </div>
+              <button
+                type="button"
+                onClick={addStrength}
+                style={{ backgroundColor: 'rgb(33, 121, 137)' }}
+                className="flex items-center gap-2 px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add Strength
+              </button>
+            </div>
+            <div className="space-y-3">
+              {formData.strengths.map((strength, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={strength}
+                    onChange={(e) => updateStrength(index, e.target.value)}
+                    placeholder="e.g., Strong problem-solving approach, Excellent communication skills"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                  />
+                  {formData.strengths.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeStrength(index)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Areas for Improvement */}
+          <div className="border-t border-gray-200 pt-8">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Areas for Improvement</h3>
+                <p className="text-sm text-gray-600 mt-0.5">What could the candidate work on?</p>
+              </div>
+              <button
+                type="button"
+                onClick={addArea}
+                style={{ backgroundColor: 'rgb(33, 121, 137)' }}
+                className="flex items-center gap-2 px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add Area
+              </button>
+            </div>
+            <div className="space-y-3">
+              {formData.areasForImprovement.map((area, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={area}
+                    onChange={(e) => updateArea(index, e.target.value)}
+                    placeholder="e.g., Needs to work on time complexity analysis, Could improve code organization"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                  />
+                  {formData.areasForImprovement.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeArea(index)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Additional Comments */}
+          <div className="border-t border-gray-200 pt-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Ratings</h3>
+            <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Culture Fit</label>
+                <div className="flex items-center gap-3">
+                  <StarRating
+                    rating={formData.cultureFit}
+                    onChange={(rating) => setFormData({ ...formData, cultureFit: rating })}
+                  />
+                  <span className="text-sm text-gray-600">
+                    {formData.cultureFit > 0 ? `${formData.cultureFit}/5` : 'Not rated'}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Willingness to Learn</label>
+                <div className="flex items-center gap-3">
+                  <StarRating
+                    rating={formData.willingnessToLearn}
+                    onChange={(rating) => setFormData({ ...formData, willingnessToLearn: rating })}
+                  />
+                  <span className="text-sm text-gray-600">
+                    {formData.willingnessToLearn > 0 ? `${formData.willingnessToLearn}/5` : 'Not rated'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Overall Assessment */}
+          <div className="border-t border-gray-200 pt-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Overall Assessment</h3>
+            <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Overall Rating <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <StarRating
+                    rating={formData.overallRating}
+                    onChange={(rating) => setFormData({ ...formData, overallRating: rating })}
+                    size="lg"
+                  />
+                  <span className="text-sm text-gray-600">
+                    {formData.overallRating > 0 ? `${formData.overallRating}/5` : 'Not rated'}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Recommendation <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.recommendation}
+                  onChange={(e) => setFormData({ ...formData, recommendation: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                >
+                  <option value="Strong Hire">Strong Hire</option>
+                  <option value="Hire">Hire</option>
+                  <option value="No Hire">No Hire</option>
+                  <option value="Strong No Hire">Strong No Hire</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Comments */}
+          <div className="border-t border-gray-200 pt-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Additional Comments</h3>
+            <p className="text-sm text-gray-600 mb-4">Any other observations or feedback</p>
+            <textarea
+              value={formData.additionalComments}
+              onChange={(e) => setFormData({ ...formData, additionalComments: e.target.value })}
+              rows="4"
+              placeholder="Share any additional thoughts, observations, or context that would be helpful for the hiring decision..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+            />
+          </div>
+          {/* -------------------------------NEW UI----------------------------------- */}
+        
 
           <div className="bg-gray-50 p-4 gap-4 grid grid-cols-2 sm:grid-cols-1 md:grid-cols-1 rounded-lg">
             <div className="bg-gray-50 p-4 rounded-lg">
@@ -2594,6 +3131,12 @@ const FeedbackForm = ({
             <div>
               {!urlData?.isSchedule && (
                 <div className="flex justify-end items-center gap-3 mt-6">
+                  <Button
+                    variant="outline"
+                    className="border border-custom-blue text-custom-blue"
+                  >
+                    Cancel
+                  </Button>
                   <Button
                     onClick={saveFeedback}
                     variant="outline"
