@@ -34,6 +34,7 @@ const {
 const {
   scheduleOrRescheduleNoShow,
 } = require("../services/interviews/roundNoShowScheduler");
+const { MockInterviewRound } = require("../models/Mockinterview/mockinterviewRound.js");
 // const {
 // handleInterviewerRequestFlow
 // } = require("../utils/Interviews/handleInterviewerRequestFlow.js");
@@ -47,7 +48,6 @@ const saveInterviewRound = async (req, res) => {
   try {
     const { roundId, interviewId, round, questions } = req.body;
 
-    console.log("req.bodyround", round);
 
     if (!interviewId || !round) {
       return res
@@ -85,8 +85,7 @@ const saveInterviewRound = async (req, res) => {
       // isNewRound = false,
       // roundId = null,
       // shouldValidateParallelScheduling = false,
-      console.log("validation", validation);
-      console.log("round?.interviewers.length", round?.interviewers);
+
       if (
         !validation.isValid
         // &&
@@ -217,7 +216,6 @@ const saveInterviewRound = async (req, res) => {
 
     if (savedRound.roundTitle === "Assessment" && round?.assessmentId) {
       try {
-        console.log("[ASSESSMENT] shareAssessment() triggered");
 
         let assessmentResponse = null;
         let responseStatus = 200;
@@ -225,10 +223,7 @@ const saveInterviewRound = async (req, res) => {
         const mockRes = {
           status: function (statusCode) {
             responseStatus = statusCode;
-            console.log(
-              "[ASSESSMENT] shareAssessment response status:",
-              statusCode,
-            );
+
             return this;
           },
           json: function (data) {
@@ -246,7 +241,7 @@ const saveInterviewRound = async (req, res) => {
           userId: interview?.ownerId.toString(),
         };
 
-        console.log("[ASSESSMENT] shareAssessment payload:", payload);
+
 
         await shareAssessment({ body: payload }, mockRes);
 
@@ -277,7 +272,6 @@ const saveInterviewRound = async (req, res) => {
           });
         }
 
-        console.log("[ASSESSMENT] Assessment shared successfully");
       } catch (error) {
         console.error("[ASSESSMENT] Error during shareAssessment execution:", {
           message: error.message,
@@ -303,7 +297,6 @@ const saveInterviewRound = async (req, res) => {
       isCreate: true,
     });
 
-    console.log("historyUpdate", historyUpdate);
 
     // if (historyUpdate) {
     //   await InterviewRounds.findByIdAndUpdate(savedRound._id, historyUpdate, {
@@ -320,7 +313,6 @@ const saveInterviewRound = async (req, res) => {
       );
     }
 
-    console.log("updatedRound InterviewRounds", updatedRound);
 
     if (
       interview &&
@@ -489,8 +481,7 @@ const updateInterviewRound = async (req, res) => {
     //  interviewId: interviewId,
     // isNewRound: true,
     // shouldValidateParallelScheduling: shouldValidateParallelScheduling
-    console.log("validation", validation);
-    console.log("round?.interviewers.length", round?.interviewers);
+
     if (
       !validation.isValid
       // &&
@@ -517,7 +508,7 @@ const updateInterviewRound = async (req, res) => {
   }
 
   const updateType = req.body.updateType;
-  console.log("updateType", updateType);
+
   let updatePayload = {
     $set: {},
     $push: { history: [] },
@@ -550,12 +541,8 @@ const updateInterviewRound = async (req, res) => {
     const diffTime = expiryDate.getTime() - today.getTime();
     linkExpiryDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
-  console.log(
-    "[ASSESSMENT] linkExpiryDays",
-    existingRound.scheduleAssessmentId,
-  );
-  console.log("[ASSESSMENT] existingRound", existingRound.roundTitle);
-  console.log("[ASSESSMENT] req.body.round", req.body.round);
+
+
   if (
     incomingRound.roundTitle === "Assessment" &&
     !existingRound.scheduleAssessmentId &&
@@ -563,7 +550,7 @@ const updateInterviewRound = async (req, res) => {
     //  &&
     // updateType === "AssessmentChange"
   ) {
-    console.log("[ASSESSMENT] Auto scheduling assessment");
+
 
     const interview = await Interview.findById(interviewId).lean();
     if (!interview) {
@@ -607,10 +594,7 @@ const updateInterviewRound = async (req, res) => {
       });
     }
 
-    console.log(
-      "[ASSESSMENT] Assessment scheduled successfully",
-      assessmentResponse,
-    );
+
 
     updatePayload.$set.scheduleAssessmentId =
       assessmentResponse.data?.scheduledAssessmentId;
@@ -620,10 +604,7 @@ const updateInterviewRound = async (req, res) => {
     updatePayload.$set.instructions = req.body.round?.instructions;
     updatePayload.$set.sequence = req.body.round?.sequence;
 
-    console.log(
-      "[ASSESSMENT] Scheduled assessment created:",
-      updatePayload.$set.scheduleAssessmentId,
-    );
+
   }
 
   if (updateType === "FULL_UPDATE") {
@@ -677,7 +658,6 @@ const updateInterviewRound = async (req, res) => {
     (hasOnlySafeChanges || hasOnlyQuestionsChange) &&
     updateType === "SAFE_UPDATE"
   ) {
-    console.log("Safe update: only instructions, sequence, or questions");
 
     const updateOps = { $set: {}, $push: { history: [] } };
 
@@ -892,10 +872,7 @@ const updateInterviewRound = async (req, res) => {
         await processWithdrawnRefund({
           roundId: existingRound._id.toString(),
         });
-        console.log(
-          "[saveInterviewRound] Selection hold refunded for withdrawn round:",
-          existingRound._id,
-        );
+
       } catch (refundError) {
         console.error(
           "[saveInterviewRound] Error refunding selection hold:",
@@ -932,10 +909,7 @@ const updateInterviewRound = async (req, res) => {
             roundId: existingRound._id.toString(),
             action: "Rescheduled",
           });
-          console.log(
-            "[saveInterviewRound] Auto-settlement for rescheduled round:",
-            existingRound._id,
-          );
+
         } catch (settlementError) {
           console.error(
             "[saveInterviewRound] Auto-settlement error for rescheduled round:",
@@ -1010,7 +984,7 @@ const updateInterviewRound = async (req, res) => {
         (h) => h.action === "Scheduled",
       );
 
-      console.log("starting round status:", generateMeetingLink);
+
 
       const scheduleAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
 
@@ -1140,7 +1114,6 @@ const updateInterviewRound = async (req, res) => {
       changes,
     });
   }
-  console.log("ending round status:", generateMeetingLink);
   // merging history from both updates interviwers and date time change
   function mergeUpdates(a, b) {
     const out = {};
@@ -1172,7 +1145,6 @@ const updateInterviewRound = async (req, res) => {
     };
   }
 
-  console.log("finalUpdate", finalUpdate);
 
   //     const smartUpdate = buildSmartRoundUpdate({
   //   existingRound,
@@ -1198,8 +1170,7 @@ const updateInterviewRound = async (req, res) => {
   // SEND INTERNAL EMAIL ONLY WHEN STATUS BECOMES Scheduled/Rescheduled
   // ==================================================================
   if (shouldSendInternalEmail && isInternal) {
-    console.log("shouldSendInternalEmail", shouldSendInternalEmail);
-    console.log("isInternal", isInternal);
+
     await handleInternalRoundEmails({
       interviewId,
       roundId: updatedRound._id,
@@ -1657,7 +1628,7 @@ const updateInterviewRoundStatus = async (req, res) => {
       const hasCandidate = participants.some(
         p => p.role === "Candidate" && p.status === "Joined"
       );
-      console.log("participants", participants);
+
       // const hasInterviewer = participants.some(
       //   (p) => p.role === "Interviewer"
       // );
@@ -1665,10 +1636,9 @@ const updateInterviewRoundStatus = async (req, res) => {
       // const hasCandidate = participants.some(
       //   (p) => p.role === "Candidate"
       // );
-      console.log("hasInterviewer", hasInterviewer)
-      console.log("hasCandidate", hasCandidate)
+
       const isHistoryHandled = hasInterviewer && hasCandidate;
-      console.log("isHistoryHandled", isHistoryHandled);
+
 
       if (isHistoryHandled && action !== "InProgress") {
         // ONE-TIME SPECIAL HISTORY CREATION
@@ -1891,7 +1861,7 @@ const updateInterviewRoundStatus = async (req, res) => {
 
     let finalUpdate = smartUpdate;
 
-    console.log("finalUpdate", finalUpdate);
+
 
     // if (Object.keys(extraUpdate.$set).length > 0) {
     //   finalUpdate = mergeUpdates(
@@ -1969,6 +1939,101 @@ const getRoundScoreFromOutcome = (roundOutcome) => {
 
   return outcomeScoreMap[roundOutcome] || null;
 };
+
+const getValdiateRoundStatus = async (req, res) => {
+  try {
+    const { roundId, status, type } = req.body;
+
+
+
+    // Validate required fields
+    if (!roundId || !status || !type) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields',
+        data: {
+          required: ['roundId', 'status', 'type'],
+          received: { roundId, status, type }
+        }
+      });
+    }
+
+    // Validate type
+    if (!['mockinterview', 'interview'].includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid interview type',
+        data: { validTypes: ['mockinterview', 'interview'] }
+      });
+    }
+
+    // Determine which model to use
+    let Model;
+    if (type === 'mockinterview') {
+      Model = MockInterviewRound;
+    } else {
+      Model = InterviewRounds;
+    }
+
+    // Check if round exists in database
+    const round = await Model.findById(roundId).select('status');
+
+    if (!round) {
+      return res.status(404).json({
+        success: false,
+        message: `Round not found in database`,
+        data: {
+          roundId,
+          type,
+          requestedStatus: status
+        }
+      });
+    }
+
+    // Compare database status with requested status
+    if (round.status === status) {
+      return res.json({
+        success: true,
+        message: 'Status verified successfully',
+        data: {
+          roundId,
+          status: round.status,
+          type,
+          verified: true
+        }
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Status mismatch',
+        data: {
+          roundId,
+          databaseStatus: round.status,
+          providedStatus: status,
+          type,
+          verified: false
+        }
+      });
+    }
+
+  } catch (error) {
+    // Handle invalid ObjectId
+    if (error instanceof mongoose.Error.CastError) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid round ID format',
+        error: error.message
+      });
+    }
+
+    console.error('Error validating round status:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 
 /**
  * Smart update builder for InterviewRounds
@@ -2917,5 +2982,6 @@ module.exports = {
   updateInterviewRoundStatus,
   buildSmartRoundUpdate,
   getRoundScoreFromOutcome,
+  getValdiateRoundStatus
   // parseDateTimeString,
 };

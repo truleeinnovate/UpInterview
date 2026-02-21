@@ -1321,12 +1321,13 @@ const FeedbackForm = ({
             key={star}
             type="button"
             onClick={() => {
+              if (isReadOnly || !setRating) return;
               setRating(star);
               triggerAutoSave();
             }}
-            disabled={isReadOnly}
+            disabled={isReadOnly || !setRating}
             className={`w-6 h-6 ${star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
-              } hover:text-yellow-400 transition-colors`}
+              } ${isReadOnly || !setRating ? "cursor-default" : "hover:text-yellow-400 transition-colors cursor-pointer"}`}
           >
             ★
           </button>

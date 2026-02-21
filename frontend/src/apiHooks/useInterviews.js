@@ -478,7 +478,49 @@ export const useInterviews = (
     },
   });
 
+  // const validateRoundStatusMutation = useMutation({
+  //   mutationFn: async ({ roundId, status, type = "interview" }) => {
+  //     const response = await axios.post(
+  //       `${config.REACT_APP_API_URL}/interview-rounds/validate-status-change`,
+  //       { roundId, status, type },
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${Cookies.get("authToken")}`,
+  //         },
+  //       }
+  //     );
+
+  //     return response.data; // expected: { success: true/false, message: "" }
+  //   },
+  // });
+
+  const validateRoundStatusMutation = useMutation({
+    mutationKey: ["validate-round-status"],
+
+    mutationFn: async ({ roundId, status, type = "interview" }) => {
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/interview-rounds/validate-status-change`,
+        { roundId, status, type },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Cookies.get("authToken")}`,
+          },
+        }
+      );
+
+      return response.data; // expected: { success: boolean, message: string }
+    },
+
+    onError: (error) => {
+      console.error("Validate round status error:", error);
+    },
+  });
+
   //  round deletion
+
+
   const deleteRoundMutation = useMutation({
     mutationFn: async (roundId) => {
       const response = await axios.delete(
@@ -545,6 +587,8 @@ export const useInterviews = (
   const isLoading =
     isQueryLoading || isMutationLoading || deleteInterviewMutation.isPending;
 
+
+
   // Controlled logging
   useEffect(() => {
     if (initialLoad.current) {
@@ -584,9 +628,15 @@ export const useInterviews = (
     deleteRoundMutation: deleteRoundMutation.mutateAsync,
     deleteInterviewMutation: deleteInterviewMutation.mutateAsync,
     updateRoundStatus: updateRoundStatus.mutateAsync,
+    validateRoundStatus: validateRoundStatusMutation.mutateAsync,
+    isValidateRoundStatusLoading: validateRoundStatusMutation.isPending,
+    validateRoundStatusError: validateRoundStatusMutation.error,
     refetch,
   };
 };
+
+
+
 
 // Add this to your existing useInterviews hook
 // Interview round status update mutation

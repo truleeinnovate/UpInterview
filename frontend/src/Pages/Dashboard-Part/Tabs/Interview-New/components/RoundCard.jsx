@@ -74,7 +74,7 @@ const hasInterviewStarted = (scheduledDateTime) => {
   // Parse the dateTime string (format: "DD-MM-YYYY HH:MM AM/PM - HH:MM AM/PM")
   const [startTimeStr] = scheduledDateTime.split(' - ');
 
-  console.log("startTimeStr", startTimeStr); // Should be "19-02-2026 04:06 PM"
+  // console.log("startTimeStr", startTimeStr); // Should be "19-02-2026 04:06 PM"
 
   // Split into date and time parts
   const [datePart, timePart, period] = startTimeStr.split(' ');
@@ -89,17 +89,19 @@ const hasInterviewStarted = (scheduledDateTime) => {
     hour24 = 0;
   }
 
-  console.log("Parsed values:", { day, month, year, hour24, minutes, period });
+  // console.log("Parsed values:", { day, month, year, hour24, minutes, period });
 
   // Create date object (month is 0-indexed in JavaScript Date)
   const scheduledTime = new Date(year, parseInt(month) - 1, parseInt(day), hour24, parseInt(minutes));
 
-  console.log("scheduledTime", scheduledTime);
+  // console.log("scheduledTime", scheduledTime);
   const now = new Date();
-  console.log("current time", now);
+  // console.log("current time", now);
 
   return now >= scheduledTime;
 };
+
+
 const RoundCard = ({
   round,
   interviewData,
@@ -118,7 +120,7 @@ const RoundCard = ({
   //   // questionsError,
   //   // setSectionQuestions,
   // } = useCustomContext();
-  const { deleteRoundMutation, updateRoundStatus, updateInterviewRound } =
+  const { deleteRoundMutation, updateRoundStatus, updateInterviewRound, validateRoundStatus } =
     useInterviews();
   const { fetchAssessmentQuestions, fetchAssessmentResults, assessmentData } =
     useAssessments();
@@ -180,6 +182,10 @@ const RoundCard = ({
   const [isCancellingRound, setIsCancellingRound] = useState(false); // Loading state for cancel operation
   const [isNoShowingRound, setIsNoShowingRound] = useState(false); // Loading state for no-show operation
 
+
+  // State for tracking validation
+  const [isValidating, setIsValidating] = useState(false);
+
   useEffect(() => {
     if (isExpanded && round?.assessmentId) {
       // const data = fetchAssessmentQuestions(round.assessmentId);
@@ -239,7 +245,7 @@ const RoundCard = ({
       await deleteRoundMutation(round._id);
       notify.success("Round Deleted successfully");
     } catch (error) {
-      console.error("Error Deleting Round:", error);
+      // console.error("Error Deleting Round:", error);
       notify.error("Failed to Delete Round");
     }
   };
@@ -277,37 +283,64 @@ const RoundCard = ({
     comment = null,
     roundOutcome = null,
   ) => {
-    // const roundData = {
-    //   status: newStatus,
-    //   completedDate: newStatus === "Completed",
-    //   rejectionReason: reason || null,
-    // };
-
-    // const payload = {
-    //   interviewId: interview._id,
-    //   round: { ...roundData },
-    //   roundId: round._id,
-    //   isEditing: true, // Always set isEditing to true
-    // };
-
-    // For cancellation/no-show, we need to ensure we pass a reason
-    if ((newStatus === "Cancelled" || newStatus === "NoShow") && !reasonValue) {
-      if (newStatus === "Cancelled") {
-        setActionInProgress(true);
-        setCancelReasonModalOpen(true);
-      } else if (newStatus === "NoShow") {
-        setActionInProgress(true);
-        setNoShowReasonModalOpen(true);
-      }
-      return;
-    }
+    // Step 1: Validate first using TanStack Query
+    setIsValidating(true);
 
     try {
-      // const response = await axios.post(
-      //   `${config.REACT_APP_API_URL}/interview/save-round`,
-      //   payload
-      // );
-      // const response = await updateInterviewRound(payload);
+      // Step 2: VALIDATE FIRST - Check if this status change is allowed
+      // Build the payload based on status
+
+
+      const validationResponse = await validateRoundStatus({
+        roundId: round?._id,
+        status: round?.status,
+        type: "interview"
+      });
+      // console.log("validationResponse", validationResponse)
+      // If validation fails (should not happen as axios will throw on 400)
+      if (!validationResponse.success) {
+        notify.error(validationResponse.message || "Status mismatch");
+
+        // 🔹 REFRESH INTERVIEW DETAILS to get latest round data
+        queryClient.invalidateQueries(["interview-details", interview?._id]);
+        setActionInProgress(false);
+        setIsValidating(false);
+        return;
+      }
+
+
+
+      // Step 3: Validation passed, now check for reason requirements
+      if ((newStatus === "Cancelled" || newStatus === "NoShow") && !reasonValue) {
+        // Don't proceed with update yet, open modal to get reason
+        setIsValidating(false);
+        // setActionInProgress remains true until modal is closed
+
+        if (newStatus === "Cancelled") {
+          setCancelReasonModalOpen(true);
+        } else if (newStatus === "NoShow") {
+          setNoShowReasonModalOpen(true);
+        }
+        return;
+      }
+
+
+      // For cancellation/no-show, we need to ensure we pass a reason
+      // if ((newStatus === "Cancelled" || newStatus === "NoShow") && !reasonValue) {
+      //   if (newStatus === "Cancelled") {
+      //     setActionInProgress(true);
+      //     setCancelReasonModalOpen(true);
+      //   } else if (newStatus === "NoShow") {
+      //     setActionInProgress(true);
+      //     setNoShowReasonModalOpen(true);
+      //   }
+      //   return;
+      // }
+
+
+
+
+
 
       // Build the payload based on status
       const payload = {
@@ -347,13 +380,25 @@ const RoundCard = ({
       // Show success toast
       notify.success(`Round Status updated to ${newStatus}`, {});
     } catch (error) {
+      // Handle validation errors (400 responses)
+      if (error.response?.status === 400) {
+        notify.error(error.response.data.message);
 
-      console.log("error", error)
-      if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
-        notify.error(error.message);
+        // Log allowed statuses for debugging
+        if (error.response.data.data?.allowedNextStatuses) {
+          console.info(`Valid next statuses are: ${error.response.data.data.allowedNextStatuses.join(', ')}`);
+        }
       }
+      // Handle other errors
+      else if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
+        notify.error(error.message);
+      } else {
+        console.error("Error updating status:", error);
+        notify.error("Failed to update round status");
+      }
+    } finally {
       setActionInProgress(false);
-      // console.error("Error updating status:", error);
+      setIsValidating(false);
     }
   };
 
@@ -581,7 +626,7 @@ const RoundCard = ({
 
     if (!candidateAssessment?._id) {
       notify.error("Candidate assessment ID is missing. Cannot resend link.");
-      console.error("candidateAssessment:", candidateAssessment);
+      // console.error("candidateAssessment:", candidateAssessment);
       return;
     }
 
@@ -613,7 +658,7 @@ const RoundCard = ({
         notify.error(data.message || "Failed to resend link");
       }
     } catch (error) {
-      console.error("Resend link error:", error);
+      // console.error("Resend link error:", error);
       const msg =
         error.response?.data?.message ||
         error.message ||
@@ -970,7 +1015,7 @@ const RoundCard = ({
   };
 
   const openAssessmentAction = (round, action) => {
-    console.log("open assessment clicked");
+    // console.log("open assessment clicked");
 
     setSelectedSchedule(round.scheduledAssessment);
     setSelectedAction(action); // "extend" | "cancel"

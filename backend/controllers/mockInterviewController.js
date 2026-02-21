@@ -1172,6 +1172,12 @@ exports.updateMockInterviewRound = async (req, res) => {
     if (req.body.round?.dateTime) {
       updatePayload.$set.dateTime = req.body.round.dateTime;
     }
+    if (req.body.round?.interviewType) {
+      updatePayload.$set.interviewType = req.body.round.interviewType;
+    }
+    if (req.body.round?.duration) {
+      updatePayload.$set.duration = req.body.round.duration;
+    }
 
     // === INSTRUCTIONS CHANGE ===
     if (req.body.round?.instructions !== undefined) {
