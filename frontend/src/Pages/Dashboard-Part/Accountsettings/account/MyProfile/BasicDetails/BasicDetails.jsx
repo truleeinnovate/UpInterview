@@ -97,7 +97,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
             {contactData.newEmail && (
               <button
                 onClick={handleResendEmailVerification}
-                className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg  transition-colors"
+                className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md  transition-colors"
               >
                 Resend Email Verification
               </button>
@@ -105,7 +105,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
             {!contactData.newEmail && (
               <button
                 onClick={handleResendPasswordChange}
-                className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg  transition-colors"
+                className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md  transition-colors"
               >
                 Resend Password Change
               </button>
@@ -133,7 +133,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
             }
           }}
           // v1.0.1 <---------------------------------------------------------------------------------------------
-          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg ml-2 my-4 transition-colors"
+          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md ml-2 my-4 transition-colors"
           // v1.0.1 <--------------------------------------------------------------------------------------------->
         >
           Edit

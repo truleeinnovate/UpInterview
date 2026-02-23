@@ -144,7 +144,7 @@ const NotificationsSection = () => {
               <button
                 title="Mail"
                 onClick={() => setActiveTab("email")}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${activeTab === "email"
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 ${activeTab === "email"
                   ? "bg-indigo-50 text-custom-blue"
                   : "text-gray-600 hover:bg-gray-50"
                   }`}
@@ -291,7 +291,7 @@ const NotificationsSection = () => {
                     </div>
                     <button
                       onClick={() => setSelectedNotification(notification)}
-                      className="flex items-center border border-gray-200 rounded-lg bg-gray-50 p-2 text-gray-600 hover:text-custom-blue transition-colors duration-300"
+                      className="flex items-center border border-gray-200 rounded-md bg-gray-50 p-2 text-gray-600 hover:text-custom-blue transition-colors duration-300"
                     >
                       <span className="text-sm sm:text-xs font-medium">
                         View Details

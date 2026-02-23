@@ -44,6 +44,7 @@ import {
   getFeedbackColumns,
   getFeedbackActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
+import { Button } from "../../../../Components/Buttons/Button.jsx";
 
 
 const Feedback = () => {
@@ -98,6 +99,10 @@ const Feedback = () => {
   const [isRatingOpen, setIsRatingOpen] = useState(false);
   const [isInterviewDateOpen, setIsInterviewDateOpen] = useState(false);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
+
+  // ----------------------------------------------------------------
+  const [isFeedbackCreationOpen, setIsFeedbackCreationOpen] = useState(false);
+  // ----------------------------------------------------------------
 
 
   // ------------------------------v1.0.3 >
@@ -547,7 +552,8 @@ const Feedback = () => {
   };
 
   const handleAddFeedback = () => {
-    navigate("/dashboard/feedbacks/add");
+    // navigate("/dashboard/feedbacks/add");
+    setIsFeedbackCreationOpen(true);
   };
 
   const getStatusIcon = (status) => {
@@ -612,7 +618,7 @@ const Feedback = () => {
                 title="Feedback"
                 addButtonText="Add Feedback"
                 onAddClick={handleAddFeedback}
-                canCreate={false}
+                canCreate={true}
               />
               <Toolbar
                 view={viewMode}
@@ -1040,6 +1046,45 @@ const Feedback = () => {
         onClose={() => setShowSummaryModal(false)}
         data={summaryData}
       />
+
+      {isFeedbackCreationOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          
+          {/* Black Overlay */}
+          <div
+            className="absolute inset-0 bg-black bg-opacity-60"
+            onClick={() => setIsFeedbackCreationOpen(false)}
+          ></div>
+
+          {/* Center Card */}
+          <div className="relative bg-white rounded-xl shadow-xl w-[90%] max-w-md p-6 z-10">
+            
+            <h2 className="text-lg font-semibold mb-4 text-gray-800">
+              Select Option to Create Feedback
+            </h2>
+
+            <select
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bg-custom-blue"
+            >
+              <option value="from_scratch">From Scratch</option>
+              <option value="from_interview">From Interview</option>
+            </select>
+
+            <div className="flex justify-end mt-5 space-x-3">
+              <Button
+                variant="outline"
+                className="border border-custom-blue text-custom-blue"
+                onClick={() => setIsFeedbackCreationOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button className="bg-custom-blue text-white hover:bg-custom-blue/90">
+                Continue
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

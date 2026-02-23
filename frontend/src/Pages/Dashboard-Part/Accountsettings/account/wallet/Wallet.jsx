@@ -229,14 +229,14 @@ const Wallet = () => {
             Wallet
           </h2>
           <div className="flex space-x-3">
-            <button className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-lg">
+            <button className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-md">
               Bank Accounts
             </button>
-            <button className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-lg">
+            <button className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-md">
               Withdraw
             </button>
             <button
-              className={`sm:px-2 px-4 sm:py-1 py-2 bg-custom-blue text-white rounded-lg text-sm hover:bg-custom-blue/90
+              className={`sm:px-2 px-4 sm:py-1 py-2 bg-custom-blue text-white rounded-md text-sm hover:bg-custom-blue/90
               }`}
             >
               Top Up
@@ -326,20 +326,20 @@ const Wallet = () => {
           <div className="flex space-x-3">
             <button
               onClick={() => setIsBankAccountsOpen(true)}
-              className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-lg"
+              className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-md"
             >
               Bank Accounts
             </button>
             <button
               onClick={() => setIsWithdrawalOpen(true)}
-              className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-lg"
+              className="sm:px-2 px-4 sm:py-1 py-2 border border-custom-blue text-custom-blue text-sm hover:bg-custom-blue/90 hover:text-white rounded-md"
             >
               Withdraw
             </button>
             <button
               ref={topUpButtonRef}
               onClick={() => setIsTopupOpen(true)}
-              className={`sm:px-2 px-4 sm:py-1 py-2 bg-custom-blue text-white rounded-lg text-sm hover:bg-custom-blue/90 ${animateTopUp ? "top-up-button-animation pulse-glow" : ""
+              className={`sm:px-2 px-4 sm:py-1 py-2 bg-custom-blue text-white rounded-md text-sm hover:bg-custom-blue/90 ${animateTopUp ? "top-up-button-animation pulse-glow" : ""
                 }`}
             >
               Top Up

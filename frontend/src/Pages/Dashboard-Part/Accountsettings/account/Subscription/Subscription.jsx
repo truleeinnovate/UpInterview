@@ -541,7 +541,7 @@ const Subscription = () => {
                   className={`${isSubscriptionExpired
                       ? "bg-green-600 hover:bg-green-700 animate-pulse"
                       : "bg-custom-blue hover:bg-custom-blue/80"
-                    } py-2 px-4 rounded-lg text-white transition-all duration-300 font-semibold`}
+                    } py-2 px-4 rounded-md text-white transition-all duration-300 font-semibold`}
                 >
                   {isSubscriptionExpired
                     ? "🔄 Renew Subscription"
@@ -956,7 +956,7 @@ const Subscription = () => {
                                 ? handleRenewalPlanSelection(plan)
                                 : submitPlans(plan)
                         }
-                        className={`w-full font-semibold py-2.5 mt-auto rounded-lg text-sm
+                        className={`w-full font-semibold py-2.5 mt-auto rounded-md text-sm
                 ${isHighlighted(plan)
                             ? "bg-white text-custom-blue"
                             : isSubscriptionExpired

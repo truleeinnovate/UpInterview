@@ -31,6 +31,8 @@ import {
   DropdownWithSearchField,
 } from "../../../../../Components/FormFields";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
+import LoadingButton from "../../../../../Components/LoadingButton.jsx";
+import { Button } from "../../../../../Components/Buttons/Button.jsx";
 
 const UserForm = ({ mode }) => {
   // Fetch all roles and filter based on user type
@@ -309,11 +311,11 @@ const UserForm = ({ mode }) => {
       title={editMode ? "Edit User" : "New User"}
       onClose={handleClose}
     >
-      {isLoading && (
+      {/* {isLoading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
         </div>
-      )}
+      )} */}
 
       <div className="sm:px-4 md:px-4 p-6 mb-10">
         <form id="user-form" onSubmit={handleSubmit}>
@@ -325,7 +327,7 @@ const UserForm = ({ mode }) => {
           <div className="flex flex-col justify-center items-center mb-4">
             <div className="relative">
               <div
-                className="relative group sm:w-28 sm:h-28 md:w-32 md:h-32 w-40 h-40 border-2 border-gray-200 rounded-full shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-center cursor-pointer"
+                className="relative group w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden transition-all duration-200 hover:border-blue-400 hover:shadow-lg"
                 onClick={() => !isLoading && fileInputRef.current?.click()}
               >
                 <input
@@ -343,16 +345,14 @@ const UserForm = ({ mode }) => {
                     className="sm:w-28 sm:h-28 md:w-32 md:h-32  w-full h-full object-cover rounded-full"
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center sm:w-28 sm:h-28 md:w-32 md:h-32  w-full h-full hover:bg-gray-50 pointer-events-none">
-                    <Camera className="text-4xl text-gray-400" />
-                    <span className="text-sm text-gray-500 mt-2">
-                      Upload Photo
-                    </span>
-                  </div>
+                  // <div className="flex flex-col items-center justify-center w-32 h-32 hover:bg-gray-50 pointer-events-none">
+                  //   <Camera className="text-4xl text-gray-400" />
+                  //   <span className="text-sm text-gray-500 mt-2">
+                  //     Upload Photo
+                  //   </span>
+                  // </div>
+                  <p className="text-xs text-gray-400">Upload Photo</p>
                 )}
-                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
-                  {/* Icon placeholder */}
-                </div>
               </div>
               {filePreview && (
                 <button
@@ -485,24 +485,27 @@ const UserForm = ({ mode }) => {
           </div>
           {/* ------------------------------ v1.0.0 > */}
           <div className="flex justify-end gap-3 pt-6">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleClose}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200"
+              className="border border-custom-blue text-custom-blue"
               disabled={isLoading}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <LoadingButton
               type="submit"
               form="user-form"
-              className={`mx-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200 ${
+              className={`bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 ${
                 isLoading ? "opacity-50 cursor-not-allowed" : ""
               }`}
               disabled={isLoading}
+              isLoading={isLoading}
+              loadingText={editMode ? "Updating..." : "Saving..."}
             >
               {editMode ? "Save Changes" : "Save"}
-            </button>
+            </LoadingButton>
           </div>
         </form>
         {/* ------------------------------ v1.0.0 > */}
@@ -520,13 +523,13 @@ const UserForm = ({ mode }) => {
                 <div className="flex justify-center gap-4">
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleDeleteImage}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
                   >
                     Delete
                   </button>

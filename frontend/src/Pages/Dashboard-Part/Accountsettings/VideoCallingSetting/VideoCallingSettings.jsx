@@ -623,7 +623,7 @@ export function VideoCallingSettings() {
           <h2 className="sm:text-lg md:text-lg lg:text-xl xl:text-xl 2xl:text-xl font-bold">
             Video Calling Settings
           </h2>
-          <button className="text-sm px-4 py-2 bg-[#217989] text-white rounded-lg hover:bg-[#1a6b7a] disabled:bg-gray-400 flex items-center space-x-2">
+          <button className="text-sm px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 disabled:bg-gray-400 flex items-center space-x-2">
             Save Settings
           </button>
         </div>

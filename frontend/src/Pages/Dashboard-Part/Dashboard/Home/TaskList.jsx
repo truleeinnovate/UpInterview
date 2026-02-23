@@ -88,7 +88,7 @@ const TaskList = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate("/tasks")}
-          className="flex items-center sm:space-x-1 space-x-2 bg-custom-blue text-white sm:text-xs px-3 py-1.5 sm:rounded-lg rounded-xl hover:bg-custom-blue/90 transition-all duration-300"
+          className="flex items-center sm:space-x-1 space-x-2 bg-custom-blue text-white sm:text-xs px-3 py-1.5 rounded-md hover:bg-custom-blue/90 transition-all duration-300"
         >
           <span className="text-sm">View All</span>
           <ChevronRight className="w-[18px] h-[18px]" />

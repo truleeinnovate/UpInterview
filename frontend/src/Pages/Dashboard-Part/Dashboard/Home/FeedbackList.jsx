@@ -117,7 +117,7 @@ const FeedbackList = () => {
         <button
           onClick={() => navigate("/feedback")}
           // className="sm:-mt-10 flex items-center space-x-2 text-sm text-custom-blue hover:text-custom-blue/80 font-medium bg-indigo-50 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105"
-          className="flex items-center sm:space-x-1 space-x-2 bg-custom-blue text-white sm:text-xs px-3 py-1.5 sm:rounded-lg rounded-xl hover:bg-custom-blue/90 transition-all duration-300"
+          className="flex items-center sm:space-x-1 space-x-2 bg-custom-blue text-white sm:text-xs px-3 py-1.5 rounded-md hover:bg-custom-blue/90 transition-all duration-300"
         >
           <span className="sm:hidden">View All Feedback</span>
           <span className="md:hidden lg:hidden xl:hidden 2xl:hidden sm:text-sm">

@@ -153,7 +153,7 @@ const InterviewUserDetails = ({
               navigate(`/account-settings/my-profile/interview-edit/${editId}`);
             }
           }}
-          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg"
+          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md"
         >
           Edit
         </button>

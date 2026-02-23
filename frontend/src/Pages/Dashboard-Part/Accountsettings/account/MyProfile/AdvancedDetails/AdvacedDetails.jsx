@@ -54,7 +54,7 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
           }}
           // ------------------------------ v1.0.0 >
 
-          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-lg"
+          className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md"
         >
           Edit
         </button>
