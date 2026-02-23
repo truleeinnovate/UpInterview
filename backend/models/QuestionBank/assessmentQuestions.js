@@ -83,7 +83,13 @@ const suggestedQuestionSchema = new mongoose.Schema(
     tags: [{ type: String }],
     difficultyLevel: { type: String },
     correctAnswer: { type: String },
-    options: [{ type: String }],
+    // options: [{ type: String }],
+    options: [
+      {
+        optionText: String,
+        isCorrect: { type: Boolean, default: false }
+      }
+    ],
     hints: [{ type: String }],
     explanation: { type: String }, // NEW FIELD from JSON
     isAutoAssessment: { type: Boolean },

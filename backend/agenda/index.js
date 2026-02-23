@@ -1,5 +1,4 @@
-const Agenda = require("agenda");
-require("dotenv").config();
+const { Agenda } = require("agenda");
 
 // Use the MongoDB connection string directly (Agenda v5 recommended approach)
 const mongoUri = process.env.MONGODB_URI;
