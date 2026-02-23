@@ -817,6 +817,20 @@ exports.createMockInterviewRound = async (req, res) => {
 
     const savedRound = await newRound.save();
 
+    // =================== NOSHOW SCHEDULER (immediately after save) ===================
+    // Must be before wallet hold check which can return early
+    try {
+      if (savedRound && ["Scheduled", "Rescheduled", "RequestSent"].includes(savedRound.status)) {
+        console.log("[MockRound-Create] 📋 Scheduling NoShow for mock round:", savedRound._id, "status:", savedRound.status);
+        await scheduleOrRescheduleNoShow(savedRound, { isMock: true });
+        console.log("[MockRound-Create] ✅ NoShow job scheduled for mock round:", savedRound._id);
+      } else {
+        console.log("[MockRound-Create] ℹ️ Skipping NoShow - status:", savedRound?.status);
+      }
+    } catch (noShowErr) {
+      console.error("[MockRound-Create] ❌ NoShow scheduling error:", noShowErr.message);
+    }
+
     // =================== WALLET HOLD FOR OUTSOURCED (SELECTION TIME) ===================
     if (hasSelectedInterviewers && hasDateTime) {
       const walletHoldResponse =
@@ -1270,6 +1284,17 @@ exports.updateMockInterviewRound = async (req, res) => {
       });
     }
 
+    // =================== NOSHOW SCHEDULER ===================
+    // Schedule/reschedule NoShow job for updated mock rounds
+    try {
+      if (updatedRound && ["Scheduled", "Rescheduled", "RequestSent"].includes(updatedRound.status)) {
+        await scheduleOrRescheduleNoShow(updatedRound, { isMock: true });
+        console.log("[MockRound-Update] ✅ NoShow job scheduled for mock round:", updatedRound._id);
+      }
+    } catch (noShowErr) {
+      console.error("[MockRound-Update] ❌ NoShow scheduling error:", noShowErr);
+    }
+
     res.locals.logData = {
       tenantId: mockInterview.tenantId?.toString(),
       ownerId: mockInterview.ownerId?.toString(),
@@ -1703,6 +1728,10 @@ exports.updateInterviewRoundStatus = async (req, res) => {
       extraUpdate.$set.meetingId = "";
       extraUpdate.$set.meetPlatform = "";
     }
+
+    // Manual NoShow / InCompleted — NO auto-settlement
+    // Settlement for manually-triggered NoShow/InCompleted is done by SuperAdmin only.
+    // The scheduler-triggered NoShow/InCompleted (in roundNoShow.job.js) handles auto-settlement.
 
     // Handle Evaluated action - save roundOutcome and evaluation reason
     // if (action === "Evaluated") {

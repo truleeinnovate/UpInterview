@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const InterviewRequest = require('../../models/InterviewRequest');
 const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
-const { MockInterviewRound } = require("../../models/Mockinterview/mockinterviewRound"); // ← added import
+const { MockInterviewRound } = require("../../models/Mockinterview/mockinterviewRound");
+const { processAutoSettlement, processWithdrawnRefund } = require("../../utils/interviewWalletUtil");
 
 async function expireInterviewRequests() {
   const now = new Date();
@@ -63,8 +64,8 @@ async function evaluateRoundAfterExpiry(roundId, now) {
         _id: null,
         accepted: { $sum: { $cond: [{ $eq: ["$status", "accepted"] }, 1, 0] } },
         declined: { $sum: { $cond: [{ $eq: ["$status", "declined"] }, 1, 0] } },
-        expired:  { $sum: { $cond: [{ $eq: ["$status", "expired"] }, 1, 0] } },
-        total:    { $sum: 1 }
+        expired: { $sum: { $cond: [{ $eq: ["$status", "expired"] }, 1, 0] } },
+        total: { $sum: 1 }
       }
     }
   ]);
@@ -88,13 +89,15 @@ async function evaluateRoundAfterExpiry(roundId, now) {
         rejectionReason: "No interviewer accepted within acceptance window",
         currentAction: "Interviewer_NoShow",
         currentActionReason: "Auto-expired by system",
+        noShowJobId: null,
         updatedAt: now
       },
       $push: {
         history: {
           scheduledAt: now,
           action: "Expired",
-          reason: "System auto-expiry (no interviewer response)",
+          reasonCode: "SYSTEM_AUTO_INCOMPLETE",
+          comment: "No interviewer accepted the request before the scheduled interview time. Auto-marked by system.",
           participants: [],
           updatedBy: null,
           updatedAt: now
@@ -104,6 +107,25 @@ async function evaluateRoundAfterExpiry(roundId, now) {
   );
 
   console.log(`[Cron] Round ${roundId} marked as ${finalStatus} (real)`);
+
+  // Withdraw any remaining inprogress requests for this round
+  try {
+    const withdrawResult = await InterviewRequest.updateMany(
+      { roundId: new mongoose.Types.ObjectId(roundId), status: "inprogress" },
+      { $set: { status: "withdrawn", respondedAt: now } }
+    );
+    console.log(`[Cron] Withdrew ${withdrawResult.modifiedCount} remaining requests for round ${roundId}`);
+  } catch (withdrawErr) {
+    console.error(`[Cron] Error withdrawing requests for round ${roundId}:`, withdrawErr.message);
+  }
+
+  // Auto-settlement: refund selection hold back to org
+  try {
+    await processWithdrawnRefund({ roundId });
+    console.log(`[Cron] ✅ Selection hold refunded for round ${roundId}`);
+  } catch (refundErr) {
+    console.error(`[Cron] ❌ Selection hold refund error for round ${roundId}:`, refundErr.message);
+  }
 }
 
 // ────────────────────────────────────────────────
@@ -117,8 +139,8 @@ async function evaluateMockRoundAfterExpiry(roundId, now) {
         _id: null,
         accepted: { $sum: { $cond: [{ $eq: ["$status", "accepted"] }, 1, 0] } },
         declined: { $sum: { $cond: [{ $eq: ["$status", "declined"] }, 1, 0] } },
-        expired:  { $sum: { $cond: [{ $eq: ["$status", "expired"] }, 1, 0] } },
-        total:    { $sum: 1 }
+        expired: { $sum: { $cond: [{ $eq: ["$status", "expired"] }, 1, 0] } },
+        total: { $sum: 1 }
       }
     }
   ]);
@@ -140,19 +162,19 @@ async function evaluateMockRoundAfterExpiry(roundId, now) {
     roundId,
     {
       $set: {
-        status: finalStatus,                           // "Rejected" or "Incomplete"
-        // If your MockInterviewRound enum doesn't have these → map them:
-        // status: finalStatus === "Rejected" ? "Cancelled" : "InCompleted",
+        status: finalStatus,
         currentAction: "Interviewer_NoShow",
         currentActionReason: "Auto-expired by system",
+        noShowJobId: null,
         updatedAt: now
       },
       $push: {
         history: {
           scheduledAt: now,
           action: "Expired",
-          reason: "System auto-expiry (no interviewer response)",
-          interviewers: [],           // or populate from request if needed
+          reasonCode: "SYSTEM_AUTO_INCOMPLETE",
+          comment: "No interviewer accepted the request before the scheduled interview time. Auto-marked by system.",
+          interviewers: [],
           createdBy: null,
         }
       }
@@ -160,6 +182,25 @@ async function evaluateMockRoundAfterExpiry(roundId, now) {
   );
 
   console.log(`[Cron] Mock round ${roundId} marked as ${finalStatus}`);
+
+  // Withdraw any remaining inprogress requests for this round
+  try {
+    const withdrawResult = await InterviewRequest.updateMany(
+      { roundId: new mongoose.Types.ObjectId(roundId), status: "inprogress" },
+      { $set: { status: "withdrawn", respondedAt: now } }
+    );
+    console.log(`[Cron] Withdrew ${withdrawResult.modifiedCount} remaining requests for mock round ${roundId}`);
+  } catch (withdrawErr) {
+    console.error(`[Cron] Error withdrawing requests for mock round ${roundId}:`, withdrawErr.message);
+  }
+
+  // Auto-settlement: refund selection hold back to org
+  try {
+    await processWithdrawnRefund({ roundId });
+    console.log(`[Cron] ✅ Selection hold refunded for mock round ${roundId}`);
+  } catch (refundErr) {
+    console.error(`[Cron] ❌ Selection hold refund error for mock round ${roundId}:`, refundErr.message);
+  }
 }
 
 module.exports = { expireInterviewRequests };

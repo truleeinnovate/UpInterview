@@ -1,6 +1,6 @@
 const agenda = require("../../agenda");
 const { DateTime } = require('luxon');
-const NO_SHOW_DELAY_MINUTES = 20;
+const NO_SHOW_DELAY_MINUTES = 10;
 //agenda not working in dev becuase azure not active every time so i wont load correctly
 
 function extractStartDate(dateTimeStr) {
@@ -68,18 +68,22 @@ function extractStartDate(dateTimeStr) {
   return result;
 }
 
-async function scheduleOrRescheduleNoShow(roundDoc) {
+async function scheduleOrRescheduleNoShow(roundDoc, options = {}) {
+  const isMock = options.isMock || false;
+
   console.log("\n[NoShow] ========== scheduleOrRescheduleNoShow CALLED ==========");
   console.log("[NoShow] Round ID:", roundDoc._id);
   console.log("[NoShow] Round Title:", roundDoc.roundTitle);
   console.log("[NoShow] Status:", roundDoc.status);
   console.log("[NoShow] InterviewerType:", roundDoc.interviewerType);
   console.log("[NoShow] DateTime:", roundDoc.dateTime);
+  console.log("[NoShow] isMock:", isMock);
   console.log("[NoShow] Existing noShowJobId:", roundDoc.noShowJobId);
 
-  const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
-
-
+  // Get the correct model based on interview type
+  const Model = isMock
+    ? require("../../models/Mockinterview/mockinterviewRound").MockInterviewRound
+    : require("../../models/Interview/InterviewRounds").InterviewRounds;
 
   if (roundDoc.roundTitle === "Assessment" && roundDoc?.assessmentId) {
     console.log("[NoShow-Job] ❌ Round title is Assessment, exiting");
@@ -88,28 +92,18 @@ async function scheduleOrRescheduleNoShow(roundDoc) {
 
   // ================ CRITICAL GUARDS ================
 
-  // 1. Only for Internal interviews
-  // if (roundDoc.interviewerType !== "Internal") {
-  //   console.log("[NoShow] ❌ GUARD 1 FAILED: interviewerType is", roundDoc.interviewerType, "(not Internal) → cancelling");
-  //   await cancelNoShow(roundDoc);
-  //   return;
-  // }
-
-
-  // console.log("[NoShow] ✅ GUARD 1 PASSED: interviewerType is Internal");
-
-  // 2. Only when status is exactly "Scheduled" or "Rescheduled"
-  if (!["Scheduled", "Rescheduled"].includes(roundDoc.status)) {
-    console.log("[NoShow] ❌ GUARD 2 FAILED: status is", roundDoc.status, "(not Scheduled/Rescheduled) → cancelling");
-    await cancelNoShow(roundDoc);
+  // 1. Only when status is exactly "Scheduled" or "Rescheduled"
+  if (!["Scheduled", "Rescheduled", "RequestSent"].includes(roundDoc.status)) {
+    console.log("[NoShow] ❌ GUARD 2 FAILED: status is", roundDoc.status, "(not Scheduled/Rescheduled/RequestSent) → cancelling");
+    await cancelNoShow(roundDoc, { isMock });
     return;
   }
   console.log("[NoShow] ✅ GUARD 2 PASSED: status is", roundDoc.status);
 
-  // 3. Must have a valid dateTime
+  // 2. Must have a valid dateTime
   if (!roundDoc.dateTime) {
     console.log("[NoShow] ❌ GUARD 3 FAILED: dateTime is missing/falsy → cancelling");
-    await cancelNoShow(roundDoc);
+    await cancelNoShow(roundDoc, { isMock });
     return;
   }
   console.log("[NoShow] ✅ GUARD 3 PASSED: dateTime =", roundDoc.dateTime);
@@ -118,7 +112,7 @@ async function scheduleOrRescheduleNoShow(roundDoc) {
   const interviewStart = extractStartDate(roundDoc.dateTime);
   if (!interviewStart) {
     console.log("[NoShow] ❌ PARSE FAILED: Could not extract start date from:", roundDoc.dateTime, "→ cancelling");
-    await cancelNoShow(roundDoc);
+    await cancelNoShow(roundDoc, { isMock });
     return;
   }
   console.log("[NoShow] ✅ PARSE OK: interviewStart =", interviewStart);
@@ -136,7 +130,7 @@ async function scheduleOrRescheduleNoShow(roundDoc) {
   // Don't schedule jobs in the past
   if (runAt <= new Date()) {
     console.log("[NoShow] ❌ PAST CHECK FAILED: runAt is in the past or now → cancelling");
-    await cancelNoShow(roundDoc);
+    await cancelNoShow(roundDoc, { isMock });
     return;
   }
   console.log("[NoShow] ✅ PAST CHECK PASSED: runAt is in the future");
@@ -155,23 +149,21 @@ async function scheduleOrRescheduleNoShow(roundDoc) {
   }
 
   // ================ Schedule new job ================
-  console.log("[NoShow] Scheduling new job: round-no-show at", runAt, "for roundId:", roundDoc._id);
+  console.log("[NoShow] Scheduling new job: round-no-show at", runAt, "for roundId:", roundDoc._id, "isMock:", isMock);
 
   try {
     const job = await agenda.schedule(runAt, "round-no-show", {
-      // roundId: roundDoc._id.toString(),
       roundId: roundDoc._id,
-
+      isMock: isMock,
     });
 
     const newJobId = job.attrs._id.toString();
     console.log("[NoShow] ✅ Job scheduled successfully! newJobId =", newJobId);
 
     // ================ KEY FIX: Only update DB if job ID actually changed ================
-    // This prevents infinite loop: update → hook → reschedule → update → ...
     if (newJobId.toString() !== (roundDoc.noShowJobId?.toString() || "")) {
       console.log("[NoShow] Job ID changed, updating DB...");
-      await InterviewRounds.collection.updateOne(
+      await Model.collection.updateOne(
         { _id: roundDoc._id },
         { $set: { noShowJobId: newJobId } },
       );
@@ -187,10 +179,13 @@ async function scheduleOrRescheduleNoShow(roundDoc) {
   console.log("[NoShow] ========== scheduleOrRescheduleNoShow COMPLETE ==========\n");
 }
 
-async function cancelNoShow(roundDoc) {
-  console.log("[NoShow] cancelNoShow called for round:", roundDoc._id, "| existing noShowJobId:", roundDoc.noShowJobId);
+async function cancelNoShow(roundDoc, options = {}) {
+  const isMock = options.isMock || false;
+  console.log("[NoShow] cancelNoShow called for round:", roundDoc._id, "| isMock:", isMock, "| existing noShowJobId:", roundDoc.noShowJobId);
 
-  const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
+  const Model = isMock
+    ? require("../../models/Mockinterview/mockinterviewRound").MockInterviewRound
+    : require("../../models/Interview/InterviewRounds").InterviewRounds;
 
   if (roundDoc.roundTitle === "Assessment" && roundDoc?.assessmentId) {
     console.log("[NoShow-Job] ❌ Round title is Assessment, exiting");
@@ -205,7 +200,7 @@ async function cancelNoShow(roundDoc) {
       console.warn("[NoShow] ⚠️ Failed to cancel job during cleanup:", err.message);
     }
 
-    await InterviewRounds.collection.updateOne(
+    await Model.collection.updateOne(
       { _id: roundDoc._id },
       { $set: { noShowJobId: null } },
     );
