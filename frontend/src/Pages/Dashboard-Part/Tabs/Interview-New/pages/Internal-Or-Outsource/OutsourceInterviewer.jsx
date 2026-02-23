@@ -2317,74 +2317,6 @@ function OutsourcedInterviewerModal({
                   )}
                 </div>
 
-                {/* Date & Time Selection for Availability View */}
-                <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Clock className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">Availability Date & Time</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex-1 min-w-[200px]">
-                      <input
-                        type="datetime-local"
-                        value={(() => {
-                          if (!localDate || !localStartTime) return "";
-                          try {
-                            const [d, m, y] = localDate.split("-");
-                            const [time, period] = localStartTime.split(" ");
-                            let [h, min] = time.split(":").map(Number);
-                            if (period === "PM" && h !== 12) h += 12;
-                            if (period === "AM" && h === 12) h = 0;
-                            return `${y}-${m}-${d}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
-                          } catch { return ""; }
-                        })()}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val) {
-                            try {
-                              const dateObj = new Date(val);
-                              const d = String(dateObj.getDate()).padStart(2, "0");
-                              const m = String(dateObj.getMonth() + 1).padStart(2, "0");
-                              const y = dateObj.getFullYear();
-                              setLocalDate(`${d}-${m}-${y}`);
-
-                              let h = dateObj.getHours();
-                              const min = dateObj.getMinutes();
-                              const period = h >= 12 ? "PM" : "AM";
-                              h = h % 12 || 12;
-                              setLocalStartTime(`${h}:${String(min).padStart(2, "0")} ${period}`);
-
-                              // Preserve the existing duration (gap between start & end)
-                              let durationMs = 60 * 60000; // default 60 min
-                              if (localStartTime && localEndTime) {
-                                try {
-                                  const parseT = (t) => {
-                                    const [tp, pr] = t.split(" ");
-                                    let [th, tm] = tp.split(":").map(Number);
-                                    if (pr === "PM" && th !== 12) th += 12;
-                                    if (pr === "AM" && th === 12) th = 0;
-                                    return th * 60 + tm;
-                                  };
-                                  const diff = (parseT(localEndTime) - parseT(localStartTime)) * 60000;
-                                  if (diff > 0) durationMs = diff;
-                                } catch { }
-                              }
-                              const endObj = new Date(dateObj.getTime() + durationMs);
-                              let eh = endObj.getHours();
-                              const emin = endObj.getMinutes();
-                              const ePeriod = eh >= 12 ? "PM" : "AM";
-                              eh = eh % 12 || 12;
-                              setLocalEndTime(`${eh}:${String(emin).padStart(2, "0")} ${ePeriod}`);
-                            } catch (err) {
-                              console.error("Error parsing datetime-local:", err);
-                            }
-                          }
-                        }}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                </div>
 
                 <div className="w-full flex  justify-between items-center mt-4">
                   <div className="flex items-center gap-6 w-full">
@@ -2646,6 +2578,70 @@ function OutsourcedInterviewerModal({
                         /> */}
                       </div>
 
+                      {/* Date & Time Selection */}
+                      <div className="md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Scheduled Date & Time
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={(() => {
+                            if (!localDate || !localStartTime) return "";
+                            try {
+                              const [d, m, y] = localDate.split("-");
+                              const [time, period] = localStartTime.split(" ");
+                              let [h, min] = time.split(":").map(Number);
+                              if (period === "PM" && h !== 12) h += 12;
+                              if (period === "AM" && h === 12) h = 0;
+                              return `${y}-${m}-${d}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+                            } catch { return ""; }
+                          })()}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val) {
+                              try {
+                                const dateObj = new Date(val);
+                                const d = String(dateObj.getDate()).padStart(2, "0");
+                                const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+                                const y = dateObj.getFullYear();
+                                setLocalDate(`${d}-${m}-${y}`);
+
+                                let h = dateObj.getHours();
+                                const min = dateObj.getMinutes();
+                                const period = h >= 12 ? "PM" : "AM";
+                                h = h % 12 || 12;
+                                setLocalStartTime(`${h}:${String(min).padStart(2, "0")} ${period}`);
+
+                                // Preserve the existing duration (gap between start & end)
+                                let durationMs = 60 * 60000; // default 60 min
+                                if (localStartTime && localEndTime) {
+                                  try {
+                                    const parseT = (t) => {
+                                      const [tp, pr] = t.split(" ");
+                                      let [th, tm] = tp.split(":").map(Number);
+                                      if (pr === "PM" && th !== 12) th += 12;
+                                      if (pr === "AM" && th === 12) th = 0;
+                                      return th * 60 + tm;
+                                    };
+                                    const diff = (parseT(localEndTime) - parseT(localStartTime)) * 60000;
+                                    if (diff > 0) durationMs = diff;
+                                  } catch { }
+                                }
+                                const endObj = new Date(dateObj.getTime() + durationMs);
+                                let eh = endObj.getHours();
+                                const emin = endObj.getMinutes();
+                                const ePeriod = eh >= 12 ? "PM" : "AM";
+                                eh = eh % 12 || 12;
+                                setLocalEndTime(`${eh}:${String(emin).padStart(2, "0")} ${ePeriod}`);
+                              } catch (err) {
+                                console.error("Error parsing datetime-local:", err);
+                              }
+                            }
+                          }}
+                          className="w-full h-[38px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+
                       {/* Parent Skills Reset Button */}
                       {skills && skills.length > 0 && (
                         <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-2 flex items-end mt-6">
@@ -2885,7 +2881,25 @@ function OutsourcedInterviewerModal({
                       </div>
                     </div>
 
-
+                    {/* Date & Time Chip */}
+                    {localDate && localStartTime && (
+                      <div className="flex mt-4 flex-wrap items-center gap-1.5">
+                        <span className="text-xs text-gray-500 mr-1">
+                          Date & Time:
+                        </span>
+                        <span className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800">
+                          {(() => {
+                            try {
+                              const [d, m, y] = localDate.split("-");
+                              return `${d}-${m}-${y}`;
+                            } catch { return localDate; }
+                          })()}
+                          {" "}
+                          {localStartTime}
+                          {localEndTime ? ` - ${localEndTime}` : ""}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Selected Skills */}
                     {/* {tempSelectedSkills.length > 0 && (
