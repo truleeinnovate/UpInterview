@@ -15,6 +15,7 @@ import InterviewRequests from "./InterviewRequests";
 import DashboardOutsourceInterviewers from "./DashboardOutsourceInterviewers.jsx";
 import DashboardInternalInterviewers from "./DashboardInternalInterviewers.jsx";
 import FeedbackList from "./FeedbackList";
+import PendingFeedbackBanner from "./PendingFeedbackBanner";
 import NotificationSection from "../NotificationTab/NotificationsSection";
 import TaskList from "./TaskList";
 import InterviewerSchedule from "./InterviewManagement/UpcomingInterviews";
@@ -112,18 +113,23 @@ const Home = () => {
           transition={{ duration: 0.5 }}
           // <---------v1.0.0
           className="space-y-6 lg:space-y-8"
-          // v1.0.0 ----------->
+        // v1.0.0 ----------->
         >
           <WelcomeSection
             selectedFilter={selectedFilter}
             setSelectedFilter={setSelectedFilter}
           />
         </motion.div>
-        <div className="w-full mb-6">
+        <div className="w-full mb-6 space-y-4">
           {/* showding outsource request status for user when user is freelancer */}
           {!outsourceLoading && freelancer && (
             <OutsourceInterviewerRequestStatus status={outsourceStatus} />
           )}
+          {/* Pending feedback banner — shows only when there are draft feedbacks */}
+          <PendingFeedbackBanner
+            count={pendingDraftCount}
+            isLoading={feedbacksLoading}
+          />
         </div>
 
         <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row gap-6 lg:gap-8">
@@ -201,7 +207,7 @@ const Home = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             // <---------v1.0.0
             className="lg:w-96 xl:w-[420px] 2xl:w-[450px] flex-shrink-0 space-y-6 lg:space-y-8"
-            // v1.0.0 ----------->
+          // v1.0.0 ----------->
           >
             <TaskList />
             <InterviewerSchedule />

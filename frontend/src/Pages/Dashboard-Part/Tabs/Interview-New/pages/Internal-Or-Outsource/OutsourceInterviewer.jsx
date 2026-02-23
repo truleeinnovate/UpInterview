@@ -508,6 +508,7 @@ function OutsourcedInterviewerModal({
   source,
   navigatedfrom,
   previousSelectedInterviewers,
+  onDateTimeChange,
 
   // positionData,
   // candidateData,
@@ -530,6 +531,15 @@ function OutsourcedInterviewerModal({
   const userId = tokenPayload?.userId;
   // const { data: walletBalance, refetch } = useWallet();
   const [temRole, setTemRole] = useState("")
+
+  // Role-based filtering state (multi-select with removable chips)
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const hasInitializedRolesRef = useRef(false);
+
+  // Date/Time selection state for availability view
+  const [localDate, setLocalDate] = useState("");
+  const [localStartTime, setLocalStartTime] = useState("");
+  const [localEndTime, setLocalEndTime] = useState("");
 
   // console.log("currentRole", currentRole)
 
@@ -591,7 +601,7 @@ function OutsourcedInterviewerModal({
   const {
     currentRoles,
     isCurrentRolesFetching,
-
+    loadCurrentRoles,
   } = useMasterData({}, pageType);
 
 
@@ -602,6 +612,57 @@ function OutsourcedInterviewerModal({
     }
     // console.log("currentRoles", currentRoles);
   }, [currentRoles, currentRole]);
+
+  // Initialize selectedRoles from parent currentRole - ONLY ONCE
+  useEffect(() => {
+    if (currentRole && currentRole.trim() !== "" && currentRoles?.length > 0 && !hasInitializedRolesRef.current) {
+      hasInitializedRolesRef.current = true;
+      const matchedRole = currentRoles?.find((item) => item.roleName === currentRole);
+      if (matchedRole) {
+        setSelectedRoles([{ roleName: matchedRole.roleName, roleLabel: matchedRole.roleLabel || matchedRole.roleName, fromParent: true }]);
+      } else {
+        setSelectedRoles([{ roleName: currentRole, roleLabel: currentRole, fromParent: true }]);
+      }
+    }
+  }, [currentRole, currentRoles]);
+
+  // Parse dateTime prop into local date/time state for availability view
+  useEffect(() => {
+    if (dateTime) {
+      try {
+        const [datePart, ...timeParts] = dateTime.split(" ");
+        const timeRange = timeParts.join(" ");
+        const [startTimeStr, endTimeStr] = timeRange.split("-").map((t) => t.trim());
+        dateTimeFromParentRef.current = { date: datePart, start: startTimeStr || "", end: endTimeStr || "" };
+        setLocalDate(datePart);
+        setLocalStartTime(startTimeStr || "");
+        setLocalEndTime(endTimeStr || "");
+      } catch (e) {
+        console.error("Error parsing dateTime:", e);
+      }
+    }
+  }, [dateTime]);
+
+  // Ref to track parent dateTime to avoid syncing back what came from parent
+  const dateTimeFromParentRef = useRef({ date: "", start: "", end: "" });
+
+  // Sync local date/time changes back to RoundForm via onDateTimeChange
+  useEffect(() => {
+    if (!localDate || !localStartTime || !localEndTime || !onDateTimeChange) return;
+
+    // Only sync if the values differ from what the parent sent
+    const parentRef = dateTimeFromParentRef.current;
+    if (
+      localDate === parentRef.date &&
+      localStartTime === parentRef.start &&
+      localEndTime === parentRef.end
+    ) {
+      return; // No change from parent's value, don't sync back
+    }
+
+    const newCombinedDateTime = `${localDate} ${localStartTime} - ${localEndTime}`;
+    onDateTimeChange(newCombinedDateTime);
+  }, [localDate, localStartTime, localEndTime, onDateTimeChange]);
 
 
   // Auto-refresh wallet balance on window focus
@@ -863,7 +924,12 @@ function OutsourcedInterviewerModal({
 
         // console.log("📅 Processing dateTime:", dateTime);
 
-        const [datePart, ...timeParts] = dateTime.split(" ");
+        // Use local date/time state if available, otherwise fall back to prop
+        const effectiveDateTime = (localDate && localStartTime && localEndTime)
+          ? `${localDate} ${localStartTime} - ${localEndTime}`
+          : dateTime;
+
+        const [datePart, ...timeParts] = effectiveDateTime.split(" ");
         const timeRange = timeParts.join(" ");
 
         const [startTimeStr, endTimeStr] = timeRange
@@ -1112,6 +1178,9 @@ function OutsourcedInterviewerModal({
     interviewers,
     candidateExperience,
     userId,
+    localDate,
+    localStartTime,
+    localEndTime,
   ]);
 
   // Filter interviewers based on search term and applied rate range
@@ -1746,9 +1815,26 @@ function OutsourcedInterviewerModal({
       let matchScore = 0;
       let skillsMatchCount = 0;
       let isCurrentRoleMatch = false;
+      let isSelectedRoleMatch = false;
 
-      // Check current role match
-      if (currentRole && currentRole.trim() !== "") {
+      // Check selected roles match (multi-role OR logic)
+      if (selectedRoles.length > 0) {
+        const interviewerRole = (
+          interviewer.contact?.currentRole ||
+          interviewer.contact?.roleLabel ||
+          interviewer.contact?.roleName ||
+          ""
+        ).toLowerCase().trim();
+
+        isSelectedRoleMatch = selectedRoles.some((role) => {
+          const roleName = (role?.roleName || "").toLowerCase().trim();
+          return interviewerRole === roleName;
+        });
+        if (isSelectedRoleMatch) matchScore += 50;
+      }
+
+      // Check current role match (fallback when no selectedRoles)
+      if (currentRole && currentRole.trim() !== "" && selectedRoles.length === 0) {
         const interviewerRole =
           interviewer.contact?.currentRole ||
           interviewer.contact?.roleLabel ||
@@ -1791,6 +1877,7 @@ function OutsourcedInterviewerModal({
         matchScore,
         skillsMatchCount,
         isCurrentRoleMatch,
+        isSelectedRoleMatch,
         hasSkillsMatch: skillsMatchCount > 0,
       };
     });
@@ -1802,32 +1889,46 @@ function OutsourcedInterviewerModal({
     });
 
     // FILTERING LOGIC:
-    // - If skills are present -> filter by skills only
-    // - If no skills -> filter by current role only
+    // - If selected roles are present -> filter by selected roles (OR logic)
+    // - If skills are present -> also filter by skills
+    // - If both -> show interviewers matching roles OR skills
     let finalFilteredInterviewers = [];
 
     if (isFiltersApplied) {
-      if (tempSelectedSkills.length > 0) {
-        // Skills are present - filter by skills only
+      const hasRoles = selectedRoles.length > 0;
+      const hasSkills = tempSelectedSkills.length > 0;
+
+      if (hasRoles && hasSkills) {
+        // Show interviewers matching selected roles OR skills
+        finalFilteredInterviewers = scoredInterviewers.filter(
+          interviewer => interviewer.isSelectedRoleMatch || interviewer.hasSkillsMatch
+        );
+      } else if (hasSkills) {
+        // Skills only - filter by skills
         finalFilteredInterviewers = scoredInterviewers.filter(
           interviewer => interviewer.hasSkillsMatch
         );
-
-        // Sort by number of skills matched
-        finalFilteredInterviewers.sort((a, b) =>
-          b.skillsMatchCount - a.skillsMatchCount
+      } else if (hasRoles) {
+        // Roles only - filter by selected roles
+        finalFilteredInterviewers = scoredInterviewers.filter(
+          interviewer => interviewer.isSelectedRoleMatch
         );
-      }
-      else if (currentRole && currentRole.trim() !== "") {
-        // No skills - filter by current role only
+      } else if (currentRole && currentRole.trim() !== "") {
+        // No selections - filter by current role
         finalFilteredInterviewers = scoredInterviewers.filter(
           interviewer => interviewer.isCurrentRoleMatch
         );
-      }
-      else {
-        // No filters - show all
+      } else {
+        // No filters at all
         finalFilteredInterviewers = scoredInterviewers;
       }
+
+      // Sort: role matches first, then by skills matched count
+      finalFilteredInterviewers.sort((a, b) => {
+        if (a.isSelectedRoleMatch && !b.isSelectedRoleMatch) return -1;
+        if (!a.isSelectedRoleMatch && b.isSelectedRoleMatch) return 1;
+        return b.skillsMatchCount - a.skillsMatchCount;
+      });
     } else {
       // Filters not applied - show all
       finalFilteredInterviewers = scoredInterviewers;
@@ -1844,6 +1945,7 @@ function OutsourcedInterviewerModal({
     isFiltersApplied,
     candidateExperience,
     currentRole,
+    selectedRoles,
   ]);
 
   const handleSelectClick = (interviewer) => {
@@ -2221,6 +2323,87 @@ function OutsourcedInterviewerModal({
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Date & Time Selection for Availability View */}
+                <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">Availability Date & Time</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-500">Date:</label>
+                      <input
+                        type="date"
+                        value={(() => {
+                          if (!localDate) return "";
+                          const [d, m, y] = localDate.split("-");
+                          return `${y}-${m}-${d}`;
+                        })()}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val) {
+                            const [y, m, d] = val.split("-");
+                            setLocalDate(`${d}-${m}-${y}`);
+                          }
+                        }}
+                        className="px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-500">From:</label>
+                      <input
+                        type="time"
+                        value={(() => {
+                          if (!localStartTime) return "";
+                          try {
+                            const [time, period] = localStartTime.split(" ");
+                            let [h, m] = time.split(":").map(Number);
+                            if (period === "PM" && h !== 12) h += 12;
+                            if (period === "AM" && h === 12) h = 0;
+                            return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+                          } catch { return ""; }
+                        })()}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val) {
+                            let [h, m] = val.split(":").map(Number);
+                            const period = h >= 12 ? "PM" : "AM";
+                            h = h % 12 || 12;
+                            setLocalStartTime(`${h}:${String(m).padStart(2, "0")} ${period}`);
+                          }
+                        }}
+                        className="px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-500">To:</label>
+                      <input
+                        type="time"
+                        value={(() => {
+                          if (!localEndTime) return "";
+                          try {
+                            const [time, period] = localEndTime.split(" ");
+                            let [h, m] = time.split(":").map(Number);
+                            if (period === "PM" && h !== 12) h += 12;
+                            if (period === "AM" && h === 12) h = 0;
+                            return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+                          } catch { return ""; }
+                        })()}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val) {
+                            let [h, m] = val.split(":").map(Number);
+                            const period = h >= 12 ? "PM" : "AM";
+                            h = h % 12 || 12;
+                            setLocalEndTime(`${h}:${String(m).padStart(2, "0")} ${period}`);
+                          }
+                        }}
+                        className="px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="w-full flex  justify-between items-center mt-4">
@@ -2646,26 +2829,81 @@ function OutsourcedInterviewerModal({
                         })}
                       </div>
                     )}
-                    {
-                      currentRole &&
-                      <div className="flex mt-4 flex-wrap items-center gap-1.5">
-                        <span className="text-xs text-gray-500 mr-1">
-                          Current Role:
+                    {/* Role Filter Dropdown + Chips */}
+                    <div className="flex mt-4 flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-gray-500 mr-1">
+                        Roles:
+                      </span>
+                      {selectedRoles.map((role) => (
+                        <span
+                          key={role.roleName}
+                          className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${role.fromParent
+                            ? "bg-blue-100 border-blue-200 text-blue-800"
+                            : "bg-gray-100 border-gray-200 text-gray-800"
+                            }`}
+                        >
+                          {role.roleLabel || role.roleName}
+                          <button
+                            onClick={() => {
+                              setSelectedRoles((prev) =>
+                                prev.filter((r) => r.roleName !== role.roleName)
+                              );
+                            }}
+                            className={`ml-1 ${role.fromParent
+                              ? "text-blue-500 hover:text-red-500"
+                              : "text-gray-500 hover:text-red-500"
+                              }`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
                         </span>
-                        <span className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800">
-                          {temRole}
-                          {/* <button
-                              onClick={() => {
-                                setCurrentRole(null);
-                              }}
-                              className="ml-1 text-gray-500 hover:text-red-500"
-                            >
-                              <X className="h-3 w-3" />
-                            </button> */}
-                        </span>
-                      </div>
+                      ))}
+                      {/* Add Role Dropdown */}
+                      <div className="inline-block min-w-[140px]">
+                        <DropdownWithSearchField
+                          value={null}
+                          options={
+                            currentRoles
+                              ?.filter(
+                                (role) =>
+                                  !selectedRoles.some(
+                                    (s) => s.roleName === role.roleName
+                                  )
+                              )
+                              ?.map((role) => ({
+                                value: role.roleName,
+                                label: role.roleLabel || role.roleName,
+                              })) || []
+                          }
+                          onChange={(option) => {
+                            if (!option) return;
+                            const value = option?.value || option?.target?.value;
+                            if (!value) return;
 
-                    }
+                            const matchedRole = currentRoles?.find(
+                              (r) => r.roleName === value
+                            );
+                            setSelectedRoles((prev) => {
+                              if (prev.some((r) => r.roleName === value)) return prev;
+                              return [
+                                ...prev,
+                                {
+                                  roleName: value,
+                                  roleLabel: matchedRole?.roleLabel || value,
+                                  fromParent: false,
+                                },
+                              ];
+                            });
+                            setIsFiltersApplied(true);
+                          }}
+                          onMenuOpen={() => {
+                            loadCurrentRoles();
+                          }}
+                          loading={isCurrentRolesFetching}
+                          placeholder="+ Add role"
+                        />
+                      </div>
+                    </div>
 
 
 

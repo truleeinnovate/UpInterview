@@ -3493,7 +3493,7 @@ const RoundFormInterviews = () => {
                                                                         </div>
                                                                       </div>
                                                                     )} */}
-                                                                                                                            {question.snapshot?.questionType === "MCQ" && (
+                                                                  {question.snapshot?.questionType === "MCQ" && (
                                                                     <div className="mt-2">
                                                                       <span className="text-sm font-medium text-gray-500">
                                                                         Options:
@@ -3502,11 +3502,10 @@ const RoundFormInterviews = () => {
                                                                         {question.snapshot?.options?.map((option, optIdx) => (
                                                                           <div
                                                                             key={option._id || optIdx}
-                                                                            className={`text-sm p-2 rounded border ${
-                                                                              option.isCorrect
-                                                                                ? "bg-green-50 border-green-200 text-green-800"
-                                                                                : "bg-gray-50 border-gray-200 text-gray-700"
-                                                                            }`}
+                                                                            className={`text-sm p-2 rounded border ${option.isCorrect
+                                                                              ? "bg-green-50 border-green-200 text-green-800"
+                                                                              : "bg-gray-50 border-gray-200 text-gray-700"
+                                                                              }`}
                                                                           >
                                                                             {option?.optionText}
                                                                             {option.isCorrect && (
@@ -4652,6 +4651,41 @@ const RoundFormInterviews = () => {
           onProceed={handleExternalInterviewerSelect}
           previousSelectedInterviewers={externalInterviewers}
           source="outsource-interview"
+          onDateTimeChange={(newCombinedDateTime) => {
+            // Sync date/time from outsource modal back to RoundForm
+            setCombinedDateTime(newCombinedDateTime);
+            try {
+              const [datePart, ...timeParts] = newCombinedDateTime.split(" ");
+              const timeRange = timeParts.join(" ");
+              const [startStr, endStr] = timeRange.split("-").map((t) => t.trim());
+              const [day, month, year] = datePart.split("-");
+
+              // Parse start time
+              const parseTime = (dateStr, timeStr) => {
+                const [time, period] = timeStr.split(" ");
+                let [h, m] = time.split(":").map(Number);
+                if (period === "PM" && h !== 12) h += 12;
+                if (period === "AM" && h === 12) h = 0;
+                const d = new Date(`${year}-${month}-${day}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
+                return d;
+              };
+
+              const newStart = parseTime(datePart, startStr);
+              const newEnd = parseTime(datePart, endStr);
+
+              if (!isNaN(newStart.getTime()) && !isNaN(newEnd.getTime())) {
+                setStartTime(newStart.toISOString());
+                setEndTime(newEnd.toISOString());
+                // datetime-local input needs YYYY-MM-DDTHH:MM format (local time, no seconds/Z)
+                const localDateStr = `${year}-${month}-${day}T${String(newStart.getHours()).padStart(2, "0")}:${String(newStart.getMinutes()).padStart(2, "0")}`;
+                setScheduledDate(localDateStr);
+                const durationMin = Math.round((newEnd - newStart) / 60000);
+                if (durationMin > 0) setDuration(durationMin);
+              }
+            } catch (e) {
+              console.error("Error syncing date/time from outsource modal:", e);
+            }
+          }}
         />
       )}
 
