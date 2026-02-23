@@ -3797,7 +3797,12 @@ const settleInterviewPayment = async (req, res) => {
       previewOnly,
     } = req.body;
 
-    let companyNamePopulate = await TenantCompany.findById(companyName).lean();
+    let companyNamePopulate = null;
+    if (companyName && mongoose.Types.ObjectId.isValid(companyName)) {
+      companyNamePopulate = await TenantCompany.findById(companyName).lean();
+    } else if (companyName) {
+      companyNamePopulate = await TenantCompany.findOne({ name: companyName }).lean();
+    }
 
     const isPreview = Boolean(previewOnly);
 
@@ -3936,6 +3941,11 @@ const settleInterviewPayment = async (req, res) => {
       payPercent = 0;
       settlementScenario = "interviewer_no_show";
       appliedPolicyName = "interviewer_no_show";
+    } else if (roundStatus === "NoShow" || roundStatus === "InCompleted") {
+      // NoShow / InCompleted: interviewer gets 0%, org gets 100% refund
+      payPercent = 0;
+      settlementScenario = roundStatus === "NoShow" ? "no_show" : "incompleted";
+      appliedPolicyName = settlementScenario;
     } else if (roundStatus === "Completed") {
       // Completed interview: always pay 100%
       payPercent = 100;
@@ -4010,11 +4020,19 @@ const settleInterviewPayment = async (req, res) => {
     // Compute amounts using util
     const {
       grossSettlementAmount,
-      refundAmount,
+      refundAmount: baseRefundAmount,
       serviceCharge,
       serviceChargeGst,
       settlementAmount,
     } = computeSettlementAmounts(baseAmount, payPercent, serviceChargePercent, gstRate);
+
+    // Include proportional GST refund (matching processAutoSettlement logic)
+    const gstFromHold = Number(activeHoldTransaction.gstAmount || 0);
+    const totalHoldAmount = Number(activeHoldTransaction.totalAmount || baseAmount + gstFromHold);
+    const gstRefundProportion = gstFromHold > 0 && baseAmount > 0
+      ? Math.round(((baseRefundAmount / baseAmount) * gstFromHold) * 100) / 100
+      : 0;
+    const refundAmount = Math.max(0, baseRefundAmount + gstRefundProportion);
 
     if (isPreview) {
       const previewData = {
@@ -4028,6 +4046,20 @@ const settleInterviewPayment = async (req, res) => {
         settlementPolicyId: appliedPolicyId,
         settlementPolicyCategory: appliedPolicyCategory,
         settlementPolicyName: appliedPolicyName || settlementScenario,
+        // Additional context for SuperAdmin UI
+        baseAmount,
+        roundStatus,
+        currentAction,
+        isMockInterview,
+        hoursBefore,
+        // Mock discount info from hold metadata
+        mockDiscountPercentage: Number(activeHoldTransaction.metadata?.mockDiscountPercentage || 0),
+        mockDiscountAmount: Number(activeHoldTransaction.metadata?.mockDiscountAmount || 0),
+        originalAmountBeforeDiscount: Number(activeHoldTransaction.metadata?.originalAmountBeforeDiscount || 0),
+        // Hold GST info
+        gstFromHold,
+        gstRefundProportion,
+        totalHoldAmount,
         organizationWallet: {
           ownerId: orgWallet.ownerId,
           balance: orgWallet.balance,
@@ -4063,7 +4095,7 @@ const settleInterviewPayment = async (req, res) => {
         "transactions.$.type": "debited",
         "transactions.$.status": "completed",
         "transactions.$.amount": grossSettlementAmount,
-        "transactions.$.description": `Settled payment to interviewer for ${companyNamePopulate.name || "Company"} - ${roundTitle || "Interview Round"}`,
+        "transactions.$.description": `Settled payment to interviewer for ${companyNamePopulate?.name || "Company"} - ${roundTitle || "Interview Round"}`,
         "transactions.$.metadata.settledAt": new Date(),
         "transactions.$.metadata.settlementStatus": "completed",
         "transactions.$.metadata.settlementBaseAmount": baseAmount,
@@ -4077,10 +4109,12 @@ const settleInterviewPayment = async (req, res) => {
         "transactions.$.metadata.settlementPolicyId": appliedPolicyId,
         "transactions.$.metadata.settlementPolicyCategory": appliedPolicyCategory,
         "transactions.$.metadata.settlementPolicyName": appliedPolicyName || settlementScenario,
+        "transactions.$.metadata.originalGstAmount": gstFromHold,
+        "transactions.$.metadata.gstRefundProportion": gstRefundProportion,
       },
       $inc: {
-        holdAmount: -baseAmount,
-        balance: refundAmount,
+        holdAmount: -totalHoldAmount,  // Release full hold (base + GST)
+        balance: refundAmount,         // Refund includes proportional GST
       },
     };
 
@@ -4105,8 +4139,10 @@ const settleInterviewPayment = async (req, res) => {
     if (refundAmount > 0) {
       const refundTransaction = {
         type: "refund",
-        amount: refundAmount,
-        description: `Refund for ${companyNamePopulate.name || "Company"} - ${roundTitle || "Interview Round"}`,
+        amount: baseRefundAmount,
+        gstAmount: gstRefundProportion,
+        totalAmount: refundAmount,
+        description: `Refund for ${companyNamePopulate?.name || "Company"} - ${roundTitle || "Interview Round"}`,
         relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
         status: "completed",
         metadata: {
@@ -4115,7 +4151,7 @@ const settleInterviewPayment = async (req, res) => {
           originalTransactionId: transactionId,
           roundId: roundId,
           settlementType: "interview_refund",
-          companyName: companyNamePopulate.name || "Company",
+          companyName: companyNamePopulate?.name || "Company",
           roundTitle: roundTitle || "Interview Round",
           positionTitle: positionTitle || "Position",
           settlementPolicyId: appliedPolicyId,
@@ -4168,7 +4204,7 @@ const settleInterviewPayment = async (req, res) => {
         gstAmount: 0,
         serviceCharge: 0,
         totalAmount: settlementAmount,
-        description: `Payment from ${companyNamePopulate.name || "Company"} - ${roundTitle || "Interview Round"} for ${positionTitle || "Position"}`,
+        description: `Payment from ${companyNamePopulate?.name || "Company"} - ${roundTitle || "Interview Round"} for ${positionTitle || "Position"}`,
         relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
         status: "completed",
         metadata: {
@@ -4178,7 +4214,7 @@ const settleInterviewPayment = async (req, res) => {
           organizationWalletId: orgWallet._id.toString(),
           roundId: roundId,
           settlementType: "interview_payment",
-          companyName: companyNamePopulate.name || "Company",
+          companyName: companyNamePopulate?.name || "Company",
           roundTitle: roundTitle || "Interview Round",
           positionTitle: positionTitle || "Position",
           settlementPolicyId: appliedPolicyId,
@@ -4235,7 +4271,7 @@ const settleInterviewPayment = async (req, res) => {
           gstAmount: 0,
           serviceCharge: serviceCharge,
           totalAmount: serviceCharge,
-          description: `Platform fee for ${companyNamePopulate.name || "Company"} - ${roundTitle || "Interview Round"}`,
+          description: `Platform fee for ${companyNamePopulate?.name || "Company"} - ${roundTitle || "Interview Round"}`,
           relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
           status: "completed",
           reason: "PLATFORM_COMMISSION",
@@ -4270,7 +4306,7 @@ const settleInterviewPayment = async (req, res) => {
           gstAmount: serviceChargeGst,
           serviceCharge: 0,
           totalAmount: serviceChargeGst,
-          description: `GST on platform fee for ${companyNamePopulate.name || "Company"} - ${roundTitle || "Interview Round"}`,
+          description: `GST on platform fee for ${companyNamePopulate?.name || "Company"} - ${roundTitle || "Interview Round"}`,
           relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
           status: "completed",
           reason: "PLATFORM_GST",
@@ -4313,7 +4349,7 @@ const settleInterviewPayment = async (req, res) => {
         interviewerTenantId,
         {
           amount: settlementAmount,
-          companyName: companyNamePopulate.name || "Company",
+          companyName: companyNamePopulate?.name || "Company",
           roundTitle: roundTitle || "Interview Round",
           positionTitle: positionTitle || "Position",
           settlementCode: transactionId,
@@ -4331,6 +4367,13 @@ const settleInterviewPayment = async (req, res) => {
       serviceChargeGst,
       grossSettlementAmount,
       settlementScenario,
+      settlementPolicyName: appliedPolicyName || settlementScenario,
+      baseAmount,
+      roundStatus,
+      currentAction,
+      isMockInterview,
+      mockDiscountPercentage: Number(activeHoldTransaction.metadata?.mockDiscountPercentage || 0),
+      mockDiscountAmount: Number(activeHoldTransaction.metadata?.mockDiscountAmount || 0),
       organizationWallet: {
         ownerId: updatedOrgWallet.ownerId,
         balance: updatedOrgWallet.balance,

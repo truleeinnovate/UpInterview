@@ -805,7 +805,8 @@ async function applyAcceptInterviewWalletFlow({
  * @param {String} params.reasonCode - Reason code for settlement
  * @returns {Promise<Object|null>} Settlement result or null if no settlement needed
  */
-async function processAutoSettlement({ roundId, action, reasonCode }) {
+async function processAutoSettlement({ roundId, action, reasonCode, currentAction, isMockInterview: isMockOverride }) {
+  console.log(`[processAutoSettlement] ▶️ CALLED with roundId=${roundId}, action=${action}, reasonCode=${reasonCode}`);
   // These requires are placed here to avoid circular dependencies
   const InterviewRequest = require("../models/InterviewRequest");
   const { InterviewRounds } = require("../models/Interview/InterviewRounds");
@@ -820,9 +821,9 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
     return null;
   }
 
-  // Only process for Completed, Cancelled, or Rescheduled actions
-  if (action !== "Completed" && action !== "Cancelled" && action !== "Rescheduled") {
-    console.log("[processAutoSettlement] Skipping - action not Completed, Cancelled, or Rescheduled");
+  // Only process for Completed, Cancelled, Rescheduled, NoShow, or InCompleted actions
+  if (action !== "Completed" && action !== "Cancelled" && action !== "Rescheduled" && action !== "NoShow" && action !== "InCompleted") {
+    console.log("[processAutoSettlement] Skipping - action not Completed, Cancelled, Rescheduled, NoShow, or InCompleted");
     return null;
   }
 
@@ -834,13 +835,14 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
     }).lean();
 
     if (!acceptedRequest) {
-      console.log("[processAutoSettlement] No accepted interview request found for round:", roundId);
+      console.log("[processAutoSettlement] ❌ STEP 1 FAILED: No accepted interview request found for round:", roundId);
       return null;
     }
 
     // Skip if it's an internal interviewer (no wallet settlement needed)
+    console.log(`[processAutoSettlement] ✅ STEP 1: Found accepted request. interviewerType=${acceptedRequest.interviewerType}, isMockInterview=${acceptedRequest.isMockInterview}`);
     if (acceptedRequest.interviewerType === "Internal") {
-      console.log("[processAutoSettlement] Skipping internal interviewer - no wallet settlement needed");
+      console.log("[processAutoSettlement] ❌ STEP 2 SKIPPED: Internal interviewer - no wallet settlement needed");
       return null;
     }
 
@@ -931,7 +933,7 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
     });
 
     if (!orgWallet) {
-      console.log("[processAutoSettlement] Organization wallet with round transactions not found:", roundId);
+      console.log("[processAutoSettlement] ❌ STEP 4 FAILED: Organization wallet with round transactions not found:", roundId);
       return null;
     }
 
@@ -947,7 +949,7 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
 
     if (!activeHoldTransaction) {
-      console.log("[processAutoSettlement] No active hold transaction found for round:", roundId);
+      console.log("[processAutoSettlement] ❌ STEP 5 FAILED: No active hold transaction found for round:", roundId);
       return null;
     }
 
@@ -1124,6 +1126,13 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
         settlementScenario = "no_reschedule_policy_found";
         appliedPolicyName = "no_reschedule_policy_found";
       }
+    } else if (action === "NoShow" || action === "InCompleted") {
+      // NoShow / InCompleted: interviewer gets 0%, org gets 100% refund
+      // No policy lookup needed — this is the business rule
+      payPercent = 0;
+      settlementScenario = action === "NoShow" ? "no_show" : "incompleted";
+      appliedPolicyName = settlementScenario;
+      console.log(`[processAutoSettlement] ${action}: PayPercent=0 (full refund to org)`);
     }
 
     // 7. Get tax config for service charge percentage
@@ -1224,7 +1233,7 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
         description: `Refund for cancelled/partial settlement - ${roundTitle}`,
         relatedInvoiceId: activeHoldTransaction.relatedInvoiceId,
         status: "completed",
-        reason: action === "Cancelled" ? reasonCode : "INTERVIEW_SETTLEMENT_REFUND",
+        reason: ["Cancelled", "NoShow", "InCompleted"].includes(action) ? (reasonCode || "INTERVIEW_SETTLEMENT_REFUND") : "INTERVIEW_SETTLEMENT_REFUND",
         metadata: {
           roundId: roundId,
           settlementDate: new Date(),
@@ -1312,7 +1321,7 @@ async function processAutoSettlement({ roundId, action, reasonCode }) {
         description: `Payment from ${companyName} - ${roundTitle} for ${positionTitle}`,
         relatedInvoiceId: invoiceDoc._id.toString(),
         status: "completed",
-        reason: action === "Completed" ? (reasonCode ? reasonCode : "INTERVIEW_COMPLETED_PAYOUT") : "INTERVIEW_CANCELLED_PAYOUT",
+        reason: action === "Completed" ? "INTERVIEW_COMPLETED_PAYOUT" : `INTERVIEW_${action.toUpperCase()}_PAYOUT`,
         metadata: {
           interviewId: interview._id?.toString(),
           roundId: roundId,

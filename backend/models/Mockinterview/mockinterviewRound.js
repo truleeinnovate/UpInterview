@@ -108,6 +108,9 @@ const MockInterviewRoundSchema = new mongoose.Schema(
     // Extra
     meetingId: String,
     meetPlatform: String,
+
+    // NoShow job tracking
+    noShowJobId: { type: String, default: null },
   },
   { timestamps: true }
 );
@@ -118,3 +121,4 @@ const MockInterviewRound =
   mongoose.model("MockInterviewRound", MockInterviewRoundSchema);
 
 module.exports = { MockInterviewRound };
+

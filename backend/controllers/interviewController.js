@@ -1155,7 +1155,7 @@ const getAllInterviewRounds = async (req, res) => {
       : [];
 
     // Base pipeline shared for both regular and mock
-    const interviewerTypeMatch = isMock ? "external" : "External";
+    const interviewerTypeMatch = "External";
     const mainLookup = isMock
       ? {
         from: "mockinterviews",
@@ -1193,16 +1193,26 @@ const getAllInterviewRounds = async (req, res) => {
           {
             $addFields: {
               mainTenantIdNormalized: {
-                $cond: [
-                  {
-                    $and: [
-                      { $ne: ["$mainInterview.tenantId", null] },
-                      { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
-                    ],
-                  },
-                  { $toObjectId: "$mainInterview.tenantId" },
-                  null,
-                ],
+                $switch: {
+                  branches: [
+                    // If tenantId is already an ObjectId, use it directly
+                    {
+                      case: { $eq: [{ $type: "$mainInterview.tenantId" }, "objectId"] },
+                      then: "$mainInterview.tenantId",
+                    },
+                    // If tenantId is a 24-char string, convert to ObjectId
+                    {
+                      case: {
+                        $and: [
+                          { $eq: [{ $type: "$mainInterview.tenantId" }, "string"] },
+                          { $eq: [{ $strLenCP: "$mainInterview.tenantId" }, 24] },
+                        ],
+                      },
+                      then: { $toObjectId: "$mainInterview.tenantId" },
+                    },
+                  ],
+                  default: null,
+                },
               },
             },
           },
@@ -1985,10 +1995,10 @@ const getUpcomingRoundsForInterviews = async (req, res) => {
 
     const externalMockParents = externalMockIds.length > 0
       ? await MockInterview.find({
-          _id: { $in: externalMockIds.map(id => new mongoose.Types.ObjectId(id)) }
-        })
-          .select('mockInterviewCode ownerId candidateName currentRole tenantId candidateEmail')
-          .lean()
+        _id: { $in: externalMockIds.map(id => new mongoose.Types.ObjectId(id)) }
+      })
+        .select('mockInterviewCode ownerId candidateName currentRole tenantId candidateEmail')
+        .lean()
       : [];
 
     const parentMocks = [...ownedMockParents, ...externalMockParents];
@@ -2010,8 +2020,8 @@ const getUpcomingRoundsForInterviews = async (req, res) => {
 
     const externalRealParents = externalRealIds.length > 0
       ? await Interview.find({ _id: { $in: externalRealIds } })
-          .select('interviewCode ownerId candidateId positionId tenantId')
-          .lean()
+        .select('interviewCode ownerId candidateId positionId tenantId')
+        .lean()
       : [];
 
     const parentInterviews = [...ownedRealParents, ...externalRealParents];
