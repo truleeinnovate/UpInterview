@@ -2881,7 +2881,25 @@ function OutsourcedInterviewerModal({
                       </div>
                     </div>
 
-
+                    {/* Date & Time Chip */}
+                    {localDate && localStartTime && (
+                      <div className="flex mt-4 flex-wrap items-center gap-1.5">
+                        <span className="text-xs text-gray-500 mr-1">
+                          Date & Time:
+                        </span>
+                        <span className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800">
+                          {(() => {
+                            try {
+                              const [d, m, y] = localDate.split("-");
+                              return `${d}-${m}-${y}`;
+                            } catch { return localDate; }
+                          })()}
+                          {" "}
+                          {localStartTime}
+                          {localEndTime ? ` - ${localEndTime}` : ""}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Selected Skills */}
                     {/* {tempSelectedSkills.length > 0 && (
