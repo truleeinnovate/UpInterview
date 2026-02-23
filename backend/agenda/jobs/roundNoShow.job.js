@@ -81,13 +81,13 @@ async function processNoShow(isMock, Model, roundId) {
 
   if (!candidateJoined && !interviewerJoined) {
     reasonCode = "SYSTEM_AUTO_NOSHOW_BOTH";
-    comment = "Neither candidate nor interviewer joined within 1 minute of the scheduled interview time. Auto-marked by system.";
+    comment = "Neither candidate nor interviewer joined within 20 minutes of the scheduled interview time. Auto-marked by system.";
   } else if (!interviewerJoined) {
     reasonCode = "SYSTEM_AUTO_NOSHOW_INTERVIEWER";
-    comment = "Interviewer did not join within 1 minute of the scheduled interview time. Candidate was present. Auto-marked by system.";
+    comment = "Interviewer did not join within 20 minutes of the scheduled interview time. Candidate was present. Auto-marked by system.";
   } else {
     reasonCode = "SYSTEM_AUTO_NOSHOW_CANDIDATE";
-    comment = "Candidate did not join within 1 minute of the scheduled interview time. Interviewer was present. Auto-marked by system.";
+    comment = "Candidate did not join within 20 minutes of the scheduled interview time. Interviewer was present. Auto-marked by system.";
   }
 
   // Atomic update to NoShow with clear reason
