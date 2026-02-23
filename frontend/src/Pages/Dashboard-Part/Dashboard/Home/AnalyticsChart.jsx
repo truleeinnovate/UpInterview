@@ -28,7 +28,7 @@ const AnalyticsChart = ({ data, setPeriod, period }) => {
           <button
             className={`text-sm ${
               period === "weekly"
-                ? "text-white bg-custom-blue/80 px-3 py-1 rounded-lg"
+                ? "text-white bg-custom-blue/80 px-3 py-1 rounded-md"
                 : "text-gray-600 hover:text-gray-900"
             }`}
             onClick={() => setPeriod("weekly")}
@@ -38,7 +38,7 @@ const AnalyticsChart = ({ data, setPeriod, period }) => {
           <button
             className={`text-sm ${
               period === "monthly"
-                ? "text-white bg-custom-blue/80 px-3 py-1 rounded-lg"
+                ? "text-white bg-custom-blue/80 px-3 py-1 rounded-md"
                 : "text-gray-600 hover:text-gray-900"
             }`}
             onClick={() => setPeriod("monthly")}
@@ -48,7 +48,7 @@ const AnalyticsChart = ({ data, setPeriod, period }) => {
           <button
             className={`text-sm ${
               period === "yearly"
-                ? "text-white bg-custom-blue/80 px-3 py-1 rounded-lg"
+                ? "text-white bg-custom-blue/80 px-3 py-1 rounded-md"
                 : "text-gray-600 hover:text-gray-900"
             }`}
             onClick={() => setPeriod("yearly")}

@@ -26,6 +26,7 @@ import { scrollToFirstError } from "../../../../../utils/ScrollToFirstError/scro
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { useUpdateOrganization } from "../../../../../apiHooks/useOrganization";
 import LoadingButton from "../../../../../Components/LoadingButton";
+import { Button } from "../../../../../Components/Buttons/Button";
 import PhoneField from "../../../../../Components/FormFields/PhoneField";
 
 Modal.setAppElement("#root");
@@ -463,13 +464,13 @@ const CompanyEditProfile = () => {
                     />
                   ) : (
                     <>
-                      <Camera className="w-8 h-8 text-gray-300 mb-1" />
+                      {/* <Camera className="w-8 h-8 text-gray-300 mb-1" /> */}
                       <p className="text-xs text-gray-400">Upload Logo</p>
                     </>
                   )}
-                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
+                  {/* <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full">
                     <Camera className="w-6 h-6 text-white" />
-                  </div>
+                  </div> */}
                 </div>
 
                 <input
@@ -998,23 +999,17 @@ const CompanyEditProfile = () => {
           </div>
 
           <div className="flex justify-end gap-3 pt-6">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={
                 () => navigate("/account-settings/profile")
                 // setIsEditing(false)
               }
-              className="px-4 py-2 text-custom-blue border border-custom-blue rounded-lg hover:bg-blue-50 transition-colors"
+              className="text-custom-blue border border-custom-blue"
             >
               Cancel
-            </button>
-            {/* <button
-              type="button"
-              onClick={handleSave}
-              className="px-4 py-2 bg-custom-blue text-white rounded-lg  transition-colors"
-            >
-              Save
-            </button> */}
+            </Button>
             <LoadingButton
               type="button"
               onClick={handleSave}
