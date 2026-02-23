@@ -256,23 +256,12 @@ export const OutsourcedInterviewerCard = ({
 
               </div>
 
-              {source === "internal-interview" ? null : (
-                <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                  {/* Rating */}
-                  <div className="flex items-center gap-1 bg-yellow-100 p-1 rounded">
-                    <span className="flex items-center justify-center w-5 h-5 rounded-full">
-                      <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
-                    </span>
-                    <span className="text-xs font-medium text-gray-700">
-                      {rating}
-                    </span>
-                  </div>
-
-                  {/* Hourly Rate - right below rating */}
-                  <span className="text-sm font-medium text-custom-blue">
-                    {hourlyRate}
-                  </span>
-                </div>
+              {/* Rating and hourly rate moved to bottom with Select button */}
+              {/* Mock Interview Discount */}
+              {navigatedfrom === "mock-interview" && interviewer?.contact?.mock_interview_discount && (
+                <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded">
+                  {interviewer.contact.mock_interview_discount}% off
+                </span>
               )}
             </div>
           </div>
@@ -472,17 +461,20 @@ export const OutsourcedInterviewerCard = ({
       {/* Buttons section - with side gaps like internal UI */}
       {navigatedfrom !== "dashboard" && (
         <div className="border-t border-gray-100 mt-4 mx-4">
-          <div className="py-3 flex justify-end items-center gap-2">
-            {/* {source === "internal-interview" ? null : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onViewDetails}
-                className="text-custom-blue hover:text-custom-blue/80"
-              >
-                <ExternalLink className="h-3 w-3 mr-1" /> View Details
-              </Button>
-            )} */}
+          <div className="py-3 flex justify-between items-center gap-2">
+            {/* Rating, Hourly Rate & Mock Discount - left side */}
+            {source === "internal-interview" ? <div /> : (
+              <div className="flex items-center gap-3">
+                {/* Rating */}
+                <div className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded">
+                  <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                  <span className="text-xs font-medium text-gray-700">{rating}</span>
+                </div>
+                {/* Hourly Rate */}
+                <span className="text-sm font-semibold text-custom-blue">{hourlyRate}</span>
+
+              </div>
+            )}
 
             <Button
               variant={isSelected ? "destructive" : "customblue"}
@@ -2332,75 +2324,63 @@ function OutsourcedInterviewerModal({
                     <span className="text-sm font-medium text-gray-700">Availability Date & Time</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-gray-500">Date:</label>
+                    <div className="flex-1 min-w-[200px]">
                       <input
-                        type="date"
+                        type="datetime-local"
                         value={(() => {
-                          if (!localDate) return "";
-                          const [d, m, y] = localDate.split("-");
-                          return `${y}-${m}-${d}`;
-                        })()}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val) {
-                            const [y, m, d] = val.split("-");
-                            setLocalDate(`${d}-${m}-${y}`);
-                          }
-                        }}
-                        className="px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-gray-500">From:</label>
-                      <input
-                        type="time"
-                        value={(() => {
-                          if (!localStartTime) return "";
+                          if (!localDate || !localStartTime) return "";
                           try {
+                            const [d, m, y] = localDate.split("-");
                             const [time, period] = localStartTime.split(" ");
-                            let [h, m] = time.split(":").map(Number);
+                            let [h, min] = time.split(":").map(Number);
                             if (period === "PM" && h !== 12) h += 12;
                             if (period === "AM" && h === 12) h = 0;
-                            return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+                            return `${y}-${m}-${d}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
                           } catch { return ""; }
                         })()}
                         onChange={(e) => {
                           const val = e.target.value;
                           if (val) {
-                            let [h, m] = val.split(":").map(Number);
-                            const period = h >= 12 ? "PM" : "AM";
-                            h = h % 12 || 12;
-                            setLocalStartTime(`${h}:${String(m).padStart(2, "0")} ${period}`);
+                            try {
+                              const dateObj = new Date(val);
+                              const d = String(dateObj.getDate()).padStart(2, "0");
+                              const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+                              const y = dateObj.getFullYear();
+                              setLocalDate(`${d}-${m}-${y}`);
+
+                              let h = dateObj.getHours();
+                              const min = dateObj.getMinutes();
+                              const period = h >= 12 ? "PM" : "AM";
+                              h = h % 12 || 12;
+                              setLocalStartTime(`${h}:${String(min).padStart(2, "0")} ${period}`);
+
+                              // Preserve the existing duration (gap between start & end)
+                              let durationMs = 60 * 60000; // default 60 min
+                              if (localStartTime && localEndTime) {
+                                try {
+                                  const parseT = (t) => {
+                                    const [tp, pr] = t.split(" ");
+                                    let [th, tm] = tp.split(":").map(Number);
+                                    if (pr === "PM" && th !== 12) th += 12;
+                                    if (pr === "AM" && th === 12) th = 0;
+                                    return th * 60 + tm;
+                                  };
+                                  const diff = (parseT(localEndTime) - parseT(localStartTime)) * 60000;
+                                  if (diff > 0) durationMs = diff;
+                                } catch { }
+                              }
+                              const endObj = new Date(dateObj.getTime() + durationMs);
+                              let eh = endObj.getHours();
+                              const emin = endObj.getMinutes();
+                              const ePeriod = eh >= 12 ? "PM" : "AM";
+                              eh = eh % 12 || 12;
+                              setLocalEndTime(`${eh}:${String(emin).padStart(2, "0")} ${ePeriod}`);
+                            } catch (err) {
+                              console.error("Error parsing datetime-local:", err);
+                            }
                           }
                         }}
-                        className="px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-gray-500">To:</label>
-                      <input
-                        type="time"
-                        value={(() => {
-                          if (!localEndTime) return "";
-                          try {
-                            const [time, period] = localEndTime.split(" ");
-                            let [h, m] = time.split(":").map(Number);
-                            if (period === "PM" && h !== 12) h += 12;
-                            if (period === "AM" && h === 12) h = 0;
-                            return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-                          } catch { return ""; }
-                        })()}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val) {
-                            let [h, m] = val.split(":").map(Number);
-                            const period = h >= 12 ? "PM" : "AM";
-                            h = h % 12 || 12;
-                            setLocalEndTime(`${h}:${String(m).padStart(2, "0")} ${period}`);
-                          }
-                        }}
-                        className="px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                   </div>
