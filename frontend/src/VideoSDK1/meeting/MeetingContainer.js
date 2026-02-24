@@ -10,7 +10,7 @@ import { BottomBar } from "./components/BottomBar";
 import { SidebarConatiner } from "../components/sidebar/SidebarContainer";
 import { ChatPanel } from "../components/sidebar/ChatPanel";
 import { ParticipantPanel } from "../components/sidebar/ParticipantPanel";
-import { ExternalLink } from "lucide-react";
+import { Briefcase, ExternalLink } from "lucide-react";
 import { ParticipantView } from "../components/ParticipantView";
 import { PresenterView } from "../components/PresenterView";
 import { nameTructed, trimSnackBarText } from "../utils/helper";
@@ -37,6 +37,7 @@ import { openPanelInNewTab } from "../utils/openInNewTab";
 import QuestionBank from "../../Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank";
 import InterviewsMiniTabComponent from "../../Pages/Dashboard-Part/Tabs/Feedback/MiniTabs/Interviews";
 import CandidateMiniTab from "../../Pages/Dashboard-Part/Tabs/Feedback/MiniTabs/Candidate";
+import PositionDetails from "../../Pages/videoCall/PositionDetails";
 
 export function MeetingContainer({
   onMeetingLeave,
@@ -111,6 +112,7 @@ export function MeetingContainer({
   const getSidebarWidth = (mode) => {
     switch (mode) {
       case "CANDIDATE":
+      case "POSITION":
       case "FEEDBACK":
       case "INTERVIEWACTIONS":
       case "QUESTIONBANK":
@@ -341,6 +343,14 @@ export function MeetingContainer({
         // show: isCandidate || isInterviewer || isSchedule,
       },
       {
+        id: "position",
+        label: "Position Details",
+        tooltip: "Position Details",
+        icon: <Briefcase className="w-4 h-4" />,
+        show: isInterviewer || isSchedule,
+        // show: isCandidate || isInterviewer || isSchedule,
+      },
+      {
         id: "feedback",
         label: "Feedback Form",
         tooltip: "Feedback Form",
@@ -546,6 +556,7 @@ export function MeetingContainer({
             >
               {[
                 "CANDIDATE",
+                "POSITION",
                 "FEEDBACK",
                 "INTERVIEWACTIONS",
                 "QUESTIONBANK",
@@ -556,6 +567,9 @@ export function MeetingContainer({
                     <div className="flex items-center">
                       {sideBarMode === "CANDIDATE" && (
                         <User className="h-5 w-5 mr-2" />
+                      )}
+                      {sideBarMode === "POSITION" && (
+                        <Briefcase className="h-5 w-5 mr-2" />
                       )}
                       {sideBarMode === "FEEDBACK" && (
                         <ClipboardCheck className="h-5 w-5 mr-2" />
@@ -568,6 +582,7 @@ export function MeetingContainer({
                       )}
                       <h3 className="text-lg font-medium">
                         {sideBarMode === "CANDIDATE" && "Candidate Details"}
+                        {sideBarMode === "POSITION" && "Position Details"}
                         {sideBarMode === "FEEDBACK" && "Interview Feedback"}
                         {sideBarMode === "INTERVIEWACTIONS" &&
                           "Interview Actions"}
@@ -617,6 +632,9 @@ export function MeetingContainer({
                       // candidateData={candidateData}
                       // positionData={positionData}
                       />
+                    )
+                      : sideBarMode === "POSITION" ? (
+                      <PositionDetails />
                     ) : sideBarMode === "FEEDBACK" ? (
                       <FeedbackForm
                         custom={true}

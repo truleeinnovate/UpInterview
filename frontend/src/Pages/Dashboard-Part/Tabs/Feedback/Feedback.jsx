@@ -553,6 +553,7 @@ const Feedback = () => {
 
   const handleAddFeedback = () => {
     // navigate("/dashboard/feedbacks/add");
+    navigate("/feedback/new");
     setIsFeedbackCreationOpen(true);
   };
 
