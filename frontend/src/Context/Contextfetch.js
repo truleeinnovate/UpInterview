@@ -423,63 +423,63 @@ const CustomProvider = ({ children }) => {
   //   },
   // });
 
-  const addOrUpdateUser = useMutation({
-    mutationFn: async ({ userData, file, isFileRemoved, editMode }) => {
-      const payload = {
-        UserData: {
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userData.email,
-          tenantId: userData.tenantId, // Will be null for super admins
-          phone: userData.phone,
-          roleId: userData.roleId,
-          countryCode: userData.countryCode,
-          status: userData.status,
-          isProfileCompleted: false,
-          isEmailVerified: true,
-          type: userData.type, // Include type
-          ...(editMode && { _id: userData._id }), // Only include _id in edit mode
-          editMode,
-        },
-        contactData: {
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userData.email,
-          phone: userData.phone,
-          tenantId: userData.tenantId, // Will be null for super admins
-          countryCode: userData.countryCode,
-        },
-      };
+  // const addOrUpdateUser = useMutation({
+  //   mutationFn: async ({ userData, file, isFileRemoved, editMode }) => {
+  //     const payload = {
+  //       UserData: {
+  //         firstName: userData.firstName,
+  //         lastName: userData.lastName,
+  //         email: userData.email,
+  //         tenantId: userData.tenantId, // Will be null for super admins
+  //         phone: userData.phone,
+  //         roleId: userData.roleId,
+  //         countryCode: userData.countryCode,
+  //         status: userData.status,
+  //         isProfileCompleted: false,
+  //         isEmailVerified: true,
+  //         type: userData.type, // Include type
+  //         ...(editMode && { _id: userData._id }), // Only include _id in edit mode
+  //         editMode,
+  //       },
+  //       contactData: {
+  //         firstName: userData.firstName,
+  //         lastName: userData.lastName,
+  //         email: userData.email,
+  //         phone: userData.phone,
+  //         tenantId: userData.tenantId, // Will be null for super admins
+  //         countryCode: userData.countryCode,
+  //       },
+  //     };
 
-      const response = await axios.post(
-        `${config.REACT_APP_API_URL}/Organization/new-user-Creation`,
-        payload
-      );
+  //     const response = await axios.post(
+  //       `${config.REACT_APP_API_URL}/Organization/new-user-Creation`,
+  //       payload
+  //     );
 
-      // UPLOADING FILES LIKE IMAGES AND RESUMES
-      if (isFileRemoved && !file) {
-        await uploadFile(null, "image", "contact", response.data.contactId);
-      } else if (file instanceof File) {
-        await uploadFile(file, "image", "contact", response.data.contactId);
-      }
+  //     // UPLOADING FILES LIKE IMAGES AND RESUMES
+  //     if (isFileRemoved && !file) {
+  //       await uploadFile(null, "image", "contact", response.data.contactId);
+  //     } else if (file instanceof File) {
+  //       await uploadFile(file, "image", "contact", response.data.contactId);
+  //     }
 
-      // Send welcome email only for new user creation
-      if (!editMode) {
-        await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
-          email: userData.email,
-          type: "usercreatepass",
-        });
-      }
+  //     // Send welcome email only for new user creation
+  //     if (!editMode) {
+  //       await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
+  //         email: userData.email,
+  //         type: "usercreatepass",
+  //       });
+  //     }
 
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["users"]);
-    },
-    onError: (error) => {
-      console.error("User operation error:", error);
-    },
-  });
+  //     return response.data;
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries(["users"]);
+  //   },
+  //   onError: (error) => {
+  //     console.error("User operation error:", error);
+  //   },
+  // });
 
   // Mutation for toggling user status
   const toggleUserStatus = useMutation({

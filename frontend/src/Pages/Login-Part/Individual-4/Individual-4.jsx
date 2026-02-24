@@ -32,69 +32,86 @@ import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode.js";
 const FooterButtons = ({
   onNext,
   onPrev,
+  onSkip,
   currentStep,
   isFreelancer,
   isInternalInterviewer,
+  showSkip = false,
   isSubmitting = false,
 }) => {
   const lastStep = isInternalInterviewer ? 3 : isFreelancer ? 3 : 1;
   const isLastStep = currentStep === lastStep;
   return (
     <div className="flex justify-between space-x-3 mt-4 mb-4 sm:text-sm">
-      {currentStep > 0 ? (
-        <button
-          type="button"
-          onClick={onPrev}
-          disabled={isSubmitting}
-          className={`border ${isSubmitting
+      <div className="flex space-x-3">
+        {currentStep > 0 && (
+          <button
+            type="button"
+            onClick={onPrev}
+            disabled={isSubmitting}
+            className={`border ${isSubmitting
               ? "border-gray-300 text-gray-300 cursor-not-allowed"
               : "border-custom-blue text-custom-blue hover:bg-gray-50"
-            } rounded px-6 sm:px-3 py-1 transition-colors duration-200`}
-        >
-          Prev
-        </button>
-      ) : (
-        <div></div>
-      )}
-      <button
-        onClick={onNext}
-        disabled={isSubmitting}
-        className={`px-6 sm:px-3 py-1.5 rounded text-white flex items-center justify-center min-w-24 ${isSubmitting
+              } rounded px-6 sm:px-3 py-1 transition-colors duration-200`}
+          >
+            Prev
+          </button>
+        )}
+      </div>
+      <div className="flex space-x-3">
+        {showSkip && (
+          <button
+            type="button"
+            onClick={onSkip}
+            disabled={isSubmitting}
+            className={`border ${isSubmitting
+              ? "border-gray-300 text-gray-300 cursor-not-allowed"
+              : "border-gray-500 text-gray-500 hover:bg-gray-50"
+              } rounded px-6 sm:px-3 py-1 transition-colors duration-200`}
+          >
+            Skip
+          </button>
+        )}
+        <button
+          onClick={onNext}
+          disabled={isSubmitting}
+          className={`px-6 sm:px-3 py-1.5 rounded text-white flex items-center justify-center min-w-24 ${isSubmitting
             ? "bg-custom-blue/60 cursor-not-allowed"
             : "bg-custom-blue hover:bg-custom-blue/90"
-          } transition-colors duration-200`}
-        type="button"
-      >
-        {isSubmitting ? (
-          <div className="flex items-center">
-            <svg
-              className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            {isLastStep ? "Saving..." : "Processing..."}
-          </div>
-        ) : isLastStep ? (
-          "Save"
-        ) : (
-          "Next"
-        )}
-      </button>
+            } transition-colors duration-200`}
+          type="button"
+        >
+          {isSubmitting ? (
+            <div className="flex items-center">
+              <svg
+                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              {isLastStep ? "Saving..." : "Processing..."}
+            </div>
+          ) : isLastStep ? (
+            "Save"
+          ) : (
+            "Next"
+          )}
+        </button>
+      </div>
     </div>
   );
 };
@@ -427,9 +444,13 @@ const MultiStepForm = () => {
       setFilePreview(linkedInData.pictureUrl || filePreview);
     }
   }, [matchedContact, linkedInData]);
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const organization = tokenPayload?.organization;
+
   const showLimitedSteps =
     isProfileCompleteStateOrg && roleName !== "Internal_Interviewer";
   const isInternalInterviewer = roleName === "Internal_Interviewer";
+  const showSkip = organization === true && !isInternalInterviewer;
   // v1.0.1 <------------------------------------------------------------------------------------------
   const requiresResume = Boolean(Freelancer) && !isInternalInterviewer;
   // v1.0.1 ------------------------------------------------------------------------------------------>
@@ -748,7 +769,7 @@ const MultiStepForm = () => {
         } else if (interviewDetailsData.professionalTitle.length > 100) {
           currentErrors.professionalTitle =
             "Professional Title cannot exceed 100 characters";
-        } 
+        }
         if (!interviewDetailsData.bio?.trim()) {
           currentErrors.bio = "Professional Bio is required";
         } else if (interviewDetailsData.bio.length < 150) {
@@ -817,6 +838,9 @@ const MultiStepForm = () => {
       const hasRateErrors = (errors, currentStep) => {
         // Only check rate errors if we're on step 2 (interview details)
         if (currentStep !== 2) return false;
+
+        // Skip rate errors if it's an organization sub-user completion flow
+        if (isProfileCompleteStateOrg) return false;
 
         if (!errors.rates) return false;
 
@@ -1278,6 +1302,59 @@ const MultiStepForm = () => {
       setIsSubmitting(false);
     }
   };
+  const handleSkip = async () => {
+    if (isSubmittingRef.current) return;
+    try {
+      isSubmittingRef.current = true;
+      setIsSubmitting(true);
+      setFormLoading(true);
+
+      const requestData = {
+        userData: {
+          firstName: basicDetailsData.firstName,
+          lastName: basicDetailsData.lastName,
+          email: basicDetailsData.email,
+          isFreelancer: isInternalInterviewer ? false : Freelancer,
+        },
+        contactData: {
+          firstName: basicDetailsData.firstName,
+          lastName: basicDetailsData.lastName,
+          email: basicDetailsData.email,
+        },
+        ownerId: matchedContact?.ownerId,
+        isSkip: true,
+        isProfileCompleteStateOrg: true,
+      };
+
+      const response = await axios.post(
+        `${config.REACT_APP_API_URL}/Individual/Signup`,
+        requestData,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        if (response.data.token) {
+          await clearAllAuth();
+          await setAuthCookies({ authToken: response.data.token });
+        }
+        notify.success("Account activated successfully.");
+        navigate("/home");
+      }
+    } catch (error) {
+      console.error("Error in handleSkip:", error);
+      notify.error("Failed to activate account.");
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+      setFormLoading(false);
+    }
+  };
+
   const handlePrevStep = () => {
     if (currentStep === 0) {
       navigate("/select-profession", {
@@ -1492,6 +1569,7 @@ const MultiStepForm = () => {
                       <InterviewDetails
                         errors={errors}
                         setErrors={setErrors}
+                        isProfileCompleteStateOrg={isProfileCompleteStateOrg}
                         additionalDetailsData={additionalDetailsData}
                         // selectedTechnologyies={selectedTechnologyies}
                         // setSelectedTechnologyies={setSelectedTechnologyies}
@@ -1534,9 +1612,11 @@ const MultiStepForm = () => {
             <FooterButtons
               onNext={handleNextStep}
               onPrev={handlePrevStep}
+              onSkip={handleSkip}
               currentStep={currentStep}
               isFreelancer={Freelancer || isInternalInterviewer}
               isInternalInterviewer={isInternalInterviewer}
+              showSkip={showSkip}
               isSubmitting={isSubmitting}
             />
           </div>

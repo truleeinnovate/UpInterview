@@ -445,19 +445,19 @@ const BasicDetailsEditPage = ({
       }
     }
 
-// Step 2: Run full form validation
-  const validationErrors = validateFormMyProfile(formData);
+    // Step 2: Run full form validation
+    const validationErrors = validateFormMyProfile(formData);
 
-  // Debug: always log to confirm
-  // console.log("Validation Errors:", validationErrors);
+    // Debug: always log to confirm
+    // console.log("Validation Errors:", validationErrors);
 
-  setErrors(validationErrors);
+    setErrors(validationErrors);
 
-  // If there are ANY errors → stop submission
-  if (!isEmptyObject(validationErrors)) {
-    scrollToFirstError(validationErrors, fieldRefs);
-    return;
-  }
+    // If there are ANY errors → stop submission
+    if (!isEmptyObject(validationErrors)) {
+      scrollToFirstError(validationErrors, fieldRefs);
+      return;
+    }
 
     const cleanFormData = {
       email: formData.email.trim() || "",
@@ -501,6 +501,7 @@ const BasicDetailsEditPage = ({
 
           const dataWithNewEmail = {
             ...cleanFormData,
+            email: originalEmail, // Keep original email until verified
             newEmail: formData.email.trim(),
           };
 
@@ -661,7 +662,7 @@ const BasicDetailsEditPage = ({
     }
   };
 
-  
+
 
   // v1.0.1 <------------------------------------------------------------------------------
   // v1.0.2 <------------------------------------------------------------------------------------
@@ -828,7 +829,7 @@ const BasicDetailsEditPage = ({
 
             <LoadingButton
               type="submit"
-            onClick={handleSave}
+              onClick={handleSave}
               isLoading={loading}
               loadingText="Updating..."
             >

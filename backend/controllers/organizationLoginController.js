@@ -49,6 +49,14 @@ const organizationUserCreation = async (req, res) => {
         .json({ message: "User and Contact data are required" });
     }
 
+    // Trim and lowercase email
+    if (UserData.email) {
+      UserData.email = UserData.email.trim().toLowerCase();
+    }
+    if (contactData.email) {
+      contactData.email = contactData.email.trim().toLowerCase();
+    }
+
     const {
       firstName,
       lastName,
@@ -156,7 +164,7 @@ const organizationUserCreation = async (req, res) => {
         roleId: new mongoose.Types.ObjectId(roleId), // Ensure ObjectId
         countryCode,
         //   status: status || "active",
-        status: status,
+        status: isSuperAdmin ? "active" : "inactive",
         isEmailVerified: isEmailVerified || false,
         // <-------------------------------v1.0.3
         ...(isSuperAdmin
@@ -331,6 +339,7 @@ const loginOrganization = async (req, res) => {
       tenantId: user.tenantId.toString(),
       authToken,
       isProfileCompleted: user?.isProfileCompleted,
+      isSkipped: user?.isSkipped || false,
       roleName,
       contactEmailFromOrg: contact?.email || null,
       isEmailVerified: user.isEmailVerified,
@@ -1165,67 +1174,67 @@ const getAllOrganizations = async (req, res) => {
       // VALUE FILTER
       ...(valueFilter
         ? [
-            {
-              $match: (() => {
-                const [prefix, ...rest] = valueFilter.split(":");
-                const val = rest.join(":").toLowerCase().trim();
+          {
+            $match: (() => {
+              const [prefix, ...rest] = valueFilter.split(":");
+              const val = rest.join(":").toLowerCase().trim();
 
-                if (prefix === "role") {
-                  return {
-                    "contact.currentRole": {
+              if (prefix === "role") {
+                return {
+                  "contact.currentRole": {
+                    $regex: new RegExp(`^${val}$`, "i"),
+                  },
+                };
+              } else if (prefix === "tech") {
+                return {
+                  "contact.currentRole": {
+                    $elemMatch: {
                       $regex: new RegExp(`^${val}$`, "i"),
                     },
-                  };
-                } else if (prefix === "tech") {
-                  return {
-                    "contact.currentRole": {
-                      $elemMatch: {
-                        $regex: new RegExp(`^${val}$`, "i"),
-                      },
-                    },
-                  };
-                }
+                  },
+                };
+              }
 
-                return {};
-              })(),
-            },
-          ]
+              return {};
+            })(),
+          },
+        ]
         : []),
 
       // FILTERS
       ...(subscriptionStatus
         ? [
-            {
-              $match: {
-                "subscription.status": {
-                  $in: subscriptionStatus.split(","),
-                },
+          {
+            $match: {
+              "subscription.status": {
+                $in: subscriptionStatus.split(","),
               },
             },
-          ]
+          },
+        ]
         : []),
 
       ...(plan
         ? [
-            {
-              $match: {
-                planName: { $in: plan.split(",") },
-              },
+          {
+            $match: {
+              planName: { $in: plan.split(",") },
             },
-          ]
+          },
+        ]
         : []),
 
       ...(minUsers || maxUsers
         ? [
-            {
-              $match: {
-                $and: [
-                  minUsers ? { usersCount: { $gte: parseInt(minUsers) } } : {},
-                  maxUsers ? { usersCount: { $lte: parseInt(maxUsers) } } : {},
-                ],
-              },
+          {
+            $match: {
+              $and: [
+                minUsers ? { usersCount: { $gte: parseInt(minUsers) } } : {},
+                maxUsers ? { usersCount: { $lte: parseInt(maxUsers) } } : {},
+              ],
             },
-          ]
+          },
+        ]
         : []),
 
       {

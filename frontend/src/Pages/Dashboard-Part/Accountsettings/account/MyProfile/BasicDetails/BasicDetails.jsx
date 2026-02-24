@@ -88,9 +88,8 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
     <div className="mx-2">
       {/* v1.0.1 <-------------------> */}
       <div
-        className={`flex items-center justify-end ${
-          mode !== "users" ? "py-2" : ""
-        }`}
+        className={`flex items-center justify-end ${mode !== "users" ? "py-2" : ""
+          }`}
       >
         {mode === "users" && (
           <div className="flex gap-2">
@@ -134,7 +133,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
           }}
           // v1.0.1 <---------------------------------------------------------------------------------------------
           className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md ml-2 my-4 transition-colors"
-          // v1.0.1 <--------------------------------------------------------------------------------------------->
+        // v1.0.1 <--------------------------------------------------------------------------------------------->
         >
           Edit
         </button>
@@ -143,38 +142,6 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
 
       {/* Pending Verification Banner */}
 
-      {contactData.newEmail && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 mt-2 rounded-lg">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <svg
-                className="h-5 w-5 text-yellow-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">
-                Pending Email Verification
-              </h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <p>
-                  A verification email has been sent to{" "}
-                  <span className="font-semibold">{contactData.newEmail}</span>.
-                  Please check and verify your new email address.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* v1.0.1 <------------------------------------------------------------------------------ */}
       <div
@@ -182,11 +149,46 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-gray-500">Email</p>
+            <div className="flex items-center gap-2 mb-0.5">
+              <p className="text-sm text-gray-500">Email</p>
+              {contactData.isEmailVerified && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700 border border-green-200" title="Email is verified">
+                  <svg
+                    className="w-3 h-3 mr-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Verified
+                </span>
+              )}
+              {contactData.newEmail && (
+                <span
+                  className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-yellow-100 text-yellow-700 border border-yellow-200 cursor-help"
+                  title={`Verification pending for: ${contactData.newEmail}`}
+                >
+                  <svg
+                    className="w-3 h-3 mr-0.5 animate-pulse"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Pending
+                </span>
+              )}
+            </div>
             <p className="font-medium sm:text-sm whitespace-pre-line break-words">
-              {contactData.newEmail
-                ? "Not Verified"
-                : contactData.email || "Not Provided"}
+              {contactData.email || "Not Provided"}
             </p>
           </div>
 
@@ -195,7 +197,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
             <p className="font-medium sm:text-sm">
               {contactData.firstName
                 ? contactData.firstName.charAt(0).toUpperCase() +
-                  contactData.firstName.slice(1)
+                contactData.firstName.slice(1)
                 : "Not Provided"}
             </p>
           </div>
@@ -205,7 +207,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
             <p className="font-medium">
               {contactData.lastName
                 ? contactData.lastName.charAt(0).toUpperCase() +
-                  contactData.lastName.slice(1)
+                contactData.lastName.slice(1)
                 : "Not Provided"}
             </p>
           </div>
@@ -275,7 +277,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
             <p className="text-sm text-gray-500">Portfolio URL</p>
             <p
               className="text-sm   hover:underline truncate min-w-0 flex-1"
-              // className="font-medium truncate sm:text-sm"
+            // className="font-medium truncate sm:text-sm"
             >
               {contactData.portfolioUrl || "Not Provided"}
             </p>

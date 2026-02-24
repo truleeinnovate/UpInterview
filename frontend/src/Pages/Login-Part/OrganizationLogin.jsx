@@ -37,7 +37,7 @@ const OrganizationLogin = () => {
     const [isResending, setIsResending] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-    
+
     // Refs for input fields
     const emailRef = useRef(null);
     const passwordRef = useRef(null);
@@ -122,102 +122,6 @@ const OrganizationLogin = () => {
         return () => clearTimeout(timer);
     }, [countdown]);
 
-    // const handleLogin = async (e) => {
-    //   e.preventDefault();
-    //   if (!validateLogin()) return;
-
-    //   setIsLoading(true);
-
-    //   try {
-    //     const response = await axios.post(`${config.REACT_APP_API_URL}/Organization/Login`, {
-    //       email: email.trim().toLowerCase(),
-    //       password,
-    //     });
-
-    //     const {
-    //       token,
-    //       isEmailVerified,
-    //       status,
-    //       isProfileCompleted,
-    //       roleName,
-    //       contactEmailFromOrg,
-    //       roleType,//only check for super admin comes here
-    //     } = response.data;
-
-    //     setAuthCookies(token);
-
-    //     if (!isEmailVerified) {
-    //       setIsEmailVerified(false);
-    //       await handleResendVerification();
-    //       setCountdown(60);
-    //       return;
-    //     }
-
-    //     // Check if user is internal based on roleType
-    //     if (roleType === 'internal') {
-    //       navigate('/admin-dashboard');
-    //       return;
-    //     }
-
-    //     // Handle successful login cases
-    //     switch (status) {
-    //       case 'submitted':
-    //       case 'payment_pending':
-    //         navigate('/subscription-plans');
-    //         break;
-    //       case 'active':
-    //         if (isProfileCompleted === false && roleName) {
-    //           navigate('/create-profile', {
-    //             state: { isProfileCompleteStateOrg: true, roleName, contactEmailFromOrg }
-    //           });
-    //         } else {
-    //           navigate('/home');
-    //         }
-    //         break;
-    //       default:
-    //         navigate('/');
-    //     }
-
-    //   } catch (error) {
-    //     setIsLoading(false);
-
-    //     // Clear previous errors
-    //     setErrors({ email: '', password: '' });
-
-    //     if (error.response) {
-    //       const { status, data } = error.response;
-
-    //       if (status === 400) {
-    //         // Use backend-provided field errors if available
-    //         if (data.fields) {
-    //           setErrors(data.fields);
-    //         }
-    //         // Fallback for generic invalid credentials message
-    //         else if (data.message === 'Invalid email or password') {
-    //           setErrors({
-    //             email: 'Invalid credentials',
-    //             password: 'Invalid credentials'
-    //           });
-    //         }
-    //       }
-    //       else if (status === 403) {
-    //         if (data.isEmailVerified === false) {
-    //           setIsEmailVerified(false);
-    //           await handleResendVerification();
-    //           setCountdown(60);
-    //         } else {
-    //           toast.error(data.message || 'Access denied');
-    //         }
-    //       }
-    //       else if (status >= 500) {
-    //         toast.error('Login failed. Please try again later.');
-    //       }
-    //     } else {
-    //       toast.error('Network error. Please check your connection.');
-    //     }
-    //   }
-    // };
-
     // <------------------- v1.0.0 - removed consoles in this total function
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -260,6 +164,7 @@ const OrganizationLogin = () => {
                 isEmailVerified,
                 status,
                 isProfileCompleted,
+                isSkipped,
                 roleName,
                 contactEmailFromOrg,
                 roleType,
@@ -325,7 +230,7 @@ const OrganizationLogin = () => {
                     // console.log('Redirecting to subdomain...');
                     const protocol = window.location.protocol;
                     let targetPath = "/";
-                    if (status === "active" && isProfileCompleted !== false) {
+                    if (status === "active" && (isProfileCompleted !== false || isSkipped)) {
                         targetPath = "/home";
                     } else if (status === "submitted" || status === "payment_pending") {
                         // Check if user already has an active subscription
@@ -335,8 +240,8 @@ const OrganizationLogin = () => {
                                 { headers: { Authorization: `Bearer ${response.data.token}` } }
                             );
                             const subscription = subRes?.data?.customerSubscription?.[0];
-                            
-                            if (subscription && subscription.status === 'active') {
+
+                            if (subscription && subscription.status === "active") {
                                 targetPath = "/home";
                             } else {
                                 targetPath = "/subscription-plans";
@@ -345,7 +250,7 @@ const OrganizationLogin = () => {
                             console.error("Error checking subscription:", error);
                             targetPath = "/subscription-plans"; // Fallback to subscription plans
                         }
-                    } else if (isProfileCompleted === false && roleName) {
+                    } else if (isProfileCompleted === false && roleName && !isSkipped) {
                         targetPath = "/create-profile";
                     }
 
@@ -383,7 +288,7 @@ const OrganizationLogin = () => {
                                     { headers: { Authorization: `Bearer ${response.data.token}` } }
                                 );
                                 const subscription = subRes?.data?.customerSubscription?.[0];
-                                
+
                                 if (subscription && subscription.status === 'active') {
                                     navigate("/home");
                                 } else {
@@ -406,7 +311,7 @@ const OrganizationLogin = () => {
                             { headers: { Authorization: `Bearer ${response.data.token}` } }
                         );
                         const subscription = subRes?.data?.customerSubscription?.[0];
-                        
+
                         if (subscription && subscription.status === 'active') {
                             navigate("/home");
                         } else {
@@ -418,7 +323,7 @@ const OrganizationLogin = () => {
                     }
                     break;
                 case "active":
-                    if (isProfileCompleted === false && roleName) {
+                    if (isProfileCompleted === false && roleName && !isSkipped) {
                         navigate("/create-profile", {
                             state: {
                                 isProfileCompleteStateOrg: true,
@@ -472,135 +377,6 @@ const OrganizationLogin = () => {
     return (
         <div>
             {/* <----------------- v1.0.1 */}
-            {/* <div className="grid grid-cols-2 sm:grid-cols-1 items-center">
-        <div>
-          <Slideshow />
-        </div>
-        <div className="flex text-sm flex-col sm:mt-5 sm:mb-5 sm:px-[7%] px-[20%] md:px-[10%]">
-          <div>
-            <p className="text-2xl font-semibold mb-7 text-center">Welcome Back</p>
-            {isEmailVerified ? (
-              <form onSubmit={handleLogin}>
-                <div className="relative mb-4">
-                  <input
-                    type="email"
-                    id="email"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                    placeholder=" "
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setErrors((prev) => ({ ...prev, email: '' }));
-                    }}
-                    onBlur={(e) => handleBlur('email', e.target.value)}
-                    autoComplete="email"
-                  />
-                  <label htmlFor="email" className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3">
-                    Work Email
-                  </label>
-                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                </div>
-                <div className="relative mb-4">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    className={`block rounded px-3 pb-1.5 pt-4 w-full text-sm text-gray-900 bg-white border ${errors.password ? 'border-red-500' : 'border-gray-300'} appearance-none focus:outline-none focus:ring-0 focus:border-gray-300 peer`}
-                    placeholder=" "
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setErrors((prev) => ({ ...prev, password: '' }));
-                    }}
-                    onBlur={(e) => handleBlur('password', e.target.value)}
-                    autoComplete="current-password"
-                  />
-                  <label htmlFor="password" className="absolute text-sm text-gray-500 duration-300 transform -translate-y-3 scale-75 top-3 z-10 origin-[0] start-3 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={togglePasswordVisibility}
-                    className="absolute right-3 top-3 text-gray-500"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                  {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-                </div>
-                <div className="mb-5">
-                  <p
-                    className="text-custom-blue cursor-pointer text-xs hover:underline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/forgetPassword');
-                    }}
-                    style={{ display: 'inline-block' }} // Ensures only the text area is clickable
-                  >
-                    Forgot Password?
-                  </p>
-                </div>
-                <div className="flex flex-col space-y-2">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`w-full text-sm bg-custom-blue text-white rounded px-3 py-[10px] transition-colors duration-300 flex items-center justify-center ${isLoading ? 'opacity-80' : 'hover:bg-custom-blue hover:bg-opacity-50'}`}
-                  >
-                    {isLoading ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Authenticating...
-                      </>
-                    ) : 'Login'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/select-user-type')}
-                    disabled={isLoading}
-                    className={`w-full text-sm bg-white text-custom-blue border border-gray-400 rounded px-3 py-[10px] transition-colors duration-300 ${isLoading ? 'opacity-50' : 'hover:bg-gray-100'}`}
-                  >
-                    Cancel
-                  </button>
-                </div>
-                <div className="flex justify-center mt-4">
-                  <p className="text-sm mb-4">
-                    If not registered | <span className="cursor-pointer text-custom-blue hover:underline" onClick={() => navigate('/organization-signup')}>Sign Up</span>
-                  </p>
-                </div>
-              </form>
-            ) : (
-              <div className="text-center">
-                <p className="text-lg mb-2">
-                  We've already sent a verification email to <span className="font-semibold">{email}</span>.
-                </p>
-                <p className="text-sm text-gray-600 mb-4">
-                  If you didn’t receive it, you can resend the email below.
-                </p>
-                <div className="flex justify-center gap-4">
-                  <button
-                    onClick={handleResendVerification}
-                    disabled={isResending || countdown > 0}
-                    className={`px-4 py-2 rounded-md transition-colors ${isResending || countdown > 0
-                      ? 'bg-blue-400 cursor-not-allowed'
-                      : 'bg-blue-500 hover:bg-blue-600 text-white'
-                      }`}
-                  >
-                    {isResending ? 'Resending...' : countdown > 0 ? `Resend in ${countdown}s` : 'Resend Email'}
-                  </button>
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors text-gray-700"
-                  >
-                    Back to Login
-                  </button>
-                </div>
-              </div>
-
-            )}
-          </div>
-        </div>
-      </div> */}
             {/* <div showBackButton={true} backPath="/"> */}
             <div className="min-h-screen flex">
                 {/* Left side - Hero Image and Content */}
@@ -1063,7 +839,8 @@ const OrganizationLogin = () => {
                                             name="email"
                                             value={email}
                                             onChange={(e) => {
-                                                setEmail(e.target.value);
+                                                const value = e.target.value.replace(/\s/g, "").toLowerCase();
+                                                setEmail(value);
                                                 setErrors((prev) => ({ ...prev, email: "" }));
                                             }}
                                             onBlur={(e) => handleBlur("email", e.target.value)}
@@ -1076,7 +853,7 @@ const OrganizationLogin = () => {
                                     </div>
 
                                     <div>
-                                        
+
                                         <div className="relative">
                                             <InputField
                                                 label="Password 🔐"
@@ -1084,7 +861,8 @@ const OrganizationLogin = () => {
                                                 name="password"
                                                 value={password}
                                                 onChange={(e) => {
-                                                    setPassword(e.target.value);
+                                                    const value = e.target.value.replace(/\s/g, "");
+                                                    setPassword(value);
                                                     setErrors((prev) => ({ ...prev, password: "" }));
                                                 }}
                                                 onBlur={(e) => handleBlur("password", e.target.value)}

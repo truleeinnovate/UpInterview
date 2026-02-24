@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 import AuthCookieManager from "../../../../../../utils/AuthCookieManager/AuthCookieManager";
+
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 // import { useMasterData } from "../../../../../../apiHooks/useMasterData";
 
 // Format skill name with proper capitalization
@@ -62,6 +65,8 @@ const InterviewUserDetails = ({
   const [contactData, setContactData] = useState({});
 
   const ownerId = AuthCookieManager.getCurrentUserId();
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const organization = tokenPayload?.organization;
 
   // Always call the hook to comply with React rules
   const { userProfile } = useUserProfile(usersId ? usersId : "");
@@ -126,9 +131,8 @@ const InterviewUserDetails = ({
   return (
     <div className="mx-2">
       <div
-        className={`flex items-center justify-end my-4 ${
-          mode === "users" ? "justify-end" : "py-2"
-        }`}
+        className={`flex items-center justify-end my-4 ${mode === "users" ? "justify-end" : "py-2"
+          }`}
       >
         {/* <h3 className={`text-lg font-medium ${mode === "users" ? "hidden" : ""}`}>
                     Interview Details
@@ -221,10 +225,10 @@ const InterviewUserDetails = ({
                     <div className="relative group">
                       <span
                         className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs cursor-default"
-                        // title={contactData.skills
-                        //   .slice(3)
-                        //   .map((skill) => formatSkill(skill))
-                        //   .join(", ")}
+                      // title={contactData.skills
+                      //   .slice(3)
+                      //   .map((skill) => formatSkill(skill))
+                      //   .join(", ")}
                       >
                         +{contactData.skills.length - 3} more
                       </span>
@@ -269,15 +273,15 @@ const InterviewUserDetails = ({
                   "0"}{" "}
                 Years */}
                 {contactData?.previousExperienceConductingInterviewsYears || "0"}{" "}
-                {Number(contactData?.previousExperienceConductingInterviewsYears) === 1 
-                  ? "Year" 
+                {Number(contactData?.previousExperienceConductingInterviewsYears) === 1
+                  ? "Year"
                   : "Years"}
               </p>
             </div>
           )}
 
           {/* Row 3: Rates and Interview Formats */}
-          {contactData?.rates &&
+          {!organization && contactData?.rates &&
             Object.entries(contactData.rates).map(([level, rate]) => {
               const shouldShow =
                 (level === "junior" && showJuniorLevel) || // Always show junior level

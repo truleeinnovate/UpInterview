@@ -845,7 +845,7 @@ const getSuperAdminUsers = async (req, res) => {
       .lean()
       .select(
         "ownerId profileId phone countryCode gender imageData linkedinUrl portfolioUrl " +
-          "location introduction professionalTitle bio roleId"
+        "location introduction professionalTitle bio roleId"
       );
 
     // MAP CONTACT INFO BY OWNER ID (align with getUniqueUserByOwnerId)
@@ -1263,6 +1263,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
       lastName: contact.lastName || "",
       email: users.email || "",
       newEmail: users.newEmail || "",
+      isEmailVerified: users.isEmailVerified || false,
       countryCode: contact.countryCode || "",
       gender: contact.gender || "",
       phone: contact.phone || "",

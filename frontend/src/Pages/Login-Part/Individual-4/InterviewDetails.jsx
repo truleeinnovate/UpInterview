@@ -34,6 +34,7 @@ const InterviewDetails = ({
   setIsMockInterviewSelected,
   yearsOfExperience = 0,
   setAdditionalDetailsData,
+  isProfileCompleteStateOrg,
 }) => {
   const [showCustomDiscount, setShowCustomDiscount] = useState(false);
   const [customDiscountValue, setCustomDiscountValue] = useState("");
@@ -944,7 +945,6 @@ const InterviewDetails = ({
             onDeleteSkill={() => { }}
             onUpdateEntry={() => { }}
           />
-       
 
           {/* Selected Skills Display - Full width */}
           <div className="w-full mt-4">
@@ -1010,7 +1010,7 @@ const InterviewDetails = ({
               </div>
             )}
           </div>
-             {errors.skills && (
+          {errors.skills && (
             <p className="text-red-500 text-xs">{errors.skills}</p>
           )}
         </div>
@@ -1299,118 +1299,120 @@ const InterviewDetails = ({
                     </p>
                 </div> */}
 
-        <div>
-          <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Hourly Rates by Experience Level{" "}
-              <span className="text-red-500">*</span>
-            </label>
-            {/* Exchange Rate Info - Simplified */}
-            <div className="text-xs text-gray-600 mb-4">
-              {isRateLoading ? (
-                <span>Loading exchange rate...</span>
-              ) : (
-                <span>
-                  Approximately 1 USD = {Number(exchangeRate).toFixed(2)} INR
-                </span>
+        {!isProfileCompleteStateOrg && (
+          <div>
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Hourly Rates by Experience Level{" "}
+                <span className="text-red-500">*</span>
+              </label>
+              {/* Exchange Rate Info - Simplified */}
+              <div className="text-xs text-gray-600 mb-4">
+                {isRateLoading ? (
+                  <span>Loading exchange rate...</span>
+                ) : (
+                  <span>
+                    Approximately 1 USD = {Number(exchangeRate).toFixed(2)} INR
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {levelsConfig.map(
+                (level) =>
+                  level.showCondition && (
+                    <div key={level.key} className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <label
+                          htmlFor={`${level.key}_rate`}
+                          className="text-sm font-medium text-gray-700"
+                        >
+                          {level.label}
+                        </label>
+                        <span className="text-xs text-gray-500">
+                          {getRateRanges(level.rangeKey)?.usd &&
+                            getRateRanges(level.rangeKey)?.inr && (
+                              <span>
+                                Range: ${getRateRanges(level.rangeKey).usd.min}-$
+                                {getRateRanges(level.rangeKey).usd.max} (
+                                {`₹${getRateRanges(level.rangeKey).inr.min}–${getRateRanges(level.rangeKey).inr.max
+                                  }`}
+                                )
+                              </span>
+                            )}
+                        </span>
+                      </div>
+
+                      <div className="flex sm:flex-col w-full">
+                        {/* USD Input */}
+                        <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            USD
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              name={`${level.key}_usd`}
+                              id={`${level.key}_usd`}
+                              value={
+                                interviewDetailsData.rates?.[level.key]?.usd || ""
+                              }
+                              onChange={handleRateChange(level.key, "usd")}
+                              onBlur={handleRateBlur(level, "usd")}
+                              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                              placeholder="Enter USD rate"
+                            />
+                          </div>
+                          {errors.rates?.[level.key]?.usd && (
+                            <p className="mt-1 text-xs text-red-500">
+                              {errors.rates[level.key].usd}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* INR Input */}
+                        <div className="w-1/2 sm:w-full pl-2 sm:pl-0">
+                          <label className="block text-xs font-medium text-gray-500 mb-1">
+                            INR
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              name={`${level.key}_inr`}
+                              id={`${level.key}_inr`}
+                              value={
+                                interviewDetailsData.rates?.[level.key]?.inr || ""
+                              }
+                              onChange={handleRateChange(level.key, "inr")}
+                              onBlur={handleRateBlur(level, "inr")}
+                              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                              placeholder="Enter INR rate"
+                            />
+                          </div>
+                          {errors.rates?.[level.key]?.inr && (
+                            <p className="mt-1 text-xs text-red-500">
+                              {errors.rates[level.key].inr}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ),
               )}
             </div>
+
+            <p className="mt-2 text-xs text-gray-500">
+              {expYears < 3 &&
+                `You can set rates for junior-level candidates based on your experience.`}
+              {expYears >= 3 &&
+                expYears <= 6 &&
+                "You can set rates for both junior and mid-level candidates based on your experience."}
+              {expYears >= 7 &&
+                "You can set rates for junior, mid and senior-level candidates based on your experience."}
+            </p>
           </div>
-
-          <div className="space-y-4">
-            {levelsConfig.map(
-              (level) =>
-                level.showCondition && (
-                  <div key={level.key} className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <label
-                        htmlFor={`${level.key}_rate`}
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        {level.label}
-                      </label>
-                      <span className="text-xs text-gray-500">
-                        {getRateRanges(level.rangeKey)?.usd &&
-                          getRateRanges(level.rangeKey)?.inr && (
-                            <span>
-                              Range: ${getRateRanges(level.rangeKey).usd.min}-$
-                              {getRateRanges(level.rangeKey).usd.max} (
-                              {`₹${getRateRanges(level.rangeKey).inr.min}–${getRateRanges(level.rangeKey).inr.max
-                                }`}
-                              )
-                            </span>
-                          )}
-                      </span>
-                    </div>
-
-                    <div className="flex sm:flex-col w-full">
-                      {/* USD Input */}
-                      <div className="w-1/2 sm:w-full pr-2 sm:pr-0">
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          USD
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            name={`${level.key}_usd`}
-                            id={`${level.key}_usd`}
-                            value={
-                              interviewDetailsData.rates?.[level.key]?.usd || ""
-                            }
-                            onChange={handleRateChange(level.key, "usd")}
-                            onBlur={handleRateBlur(level, "usd")}
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            placeholder="Enter USD rate"
-                          />
-                        </div>
-                        {errors.rates?.[level.key]?.usd && (
-                          <p className="mt-1 text-xs text-red-500">
-                            {errors.rates[level.key].usd}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* INR Input */}
-                      <div className="w-1/2 sm:w-full pl-2 sm:pl-0">
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          INR
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            name={`${level.key}_inr`}
-                            id={`${level.key}_inr`}
-                            value={
-                              interviewDetailsData.rates?.[level.key]?.inr || ""
-                            }
-                            onChange={handleRateChange(level.key, "inr")}
-                            onBlur={handleRateBlur(level, "inr")}
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            placeholder="Enter INR rate"
-                          />
-                        </div>
-                        {errors.rates?.[level.key]?.inr && (
-                          <p className="mt-1 text-xs text-red-500">
-                            {errors.rates[level.key].inr}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ),
-            )}
-          </div>
-
-          <p className="mt-2 text-xs text-gray-500">
-            {expYears < 3 &&
-              `You can set rates for junior-level candidates based on your experience.`}
-            {expYears >= 3 &&
-              expYears <= 6 &&
-              "You can set rates for both junior and mid-level candidates based on your experience."}
-            {expYears >= 7 &&
-              "You can set rates for junior, mid and senior-level candidates based on your experience."}
-          </p>
-        </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1686,8 +1688,8 @@ const InterviewDetails = ({
             </div>
             <p
               className={`mt-1.5 text-xs text-custom-blue ${showCustomDiscount && errors.mock_interview_discount
-                  ? "mt-7"
-                  : "mt-1.5"
+                ? "mt-7"
+                : "mt-1.5"
                 }`}
             >
               Offer a discount for mock interviews to attract more candidates
@@ -1741,7 +1743,7 @@ const InterviewDetails = ({
                 setErrors((prev) => ({
                   ...prev,
                   bio: "Professional Bio is required",
-              }));
+                }));
               } else if (value.length < 150) {
                 setErrors((prev) => ({
                   ...prev,
@@ -1771,8 +1773,8 @@ const InterviewDetails = ({
             {interviewDetailsData.bio?.length > 0 && (
               <p
                 className={`text-xs ${interviewDetailsData.bio.length < 150 || errors.bio
-                    ? "text-red-500"
-                    : "text-gray-500"
+                  ? "text-red-500"
+                  : "text-gray-500"
                   }`}
               >
                 {interviewDetailsData.bio.length}/500
