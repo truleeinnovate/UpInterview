@@ -209,6 +209,7 @@ const MockSchedulelater = () => {
   const [isResumeRemoved, setIsResumeRemoved] = useState(false);
 
   const [resumeError, setResumeError] = useState("");
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // 1. Add these new state variables near other time-related states
   // Add these:
@@ -549,6 +550,7 @@ const MockSchedulelater = () => {
           if (dateTimePart) {
             const startTime = parseCustomDateTime(dateTimePart.trim());
             if (startTime) {
+              setStartTime(startTime.toISOString());
               const endTime = calculateEndTime(
                 startTime.toISOString(),
                 round.duration || "60",
@@ -579,13 +581,16 @@ const MockSchedulelater = () => {
           },
         });
       }
+      setIsInitialLoad(false);
     } else if (!id) {
+      setIsInitialLoad(false);
       updateTimes(formData.rounds.duration);
     }
   }, [id, mockInterview, isMockLoading, createdMockInterviewId, data]);
 
 
   useEffect(() => {
+    if (isInitialLoad) return;
     if (interviewType === "scheduled") {
       const minVal = twoHoursFromNowLocal();
       if (!scheduledDate || scheduledDate < minVal) {
@@ -594,7 +599,7 @@ const MockSchedulelater = () => {
         setTimeout(() => updateTimes(formData.rounds?.duration || 60), 100);
       }
     }
-  }, [interviewType]);
+  }, [interviewType, isInitialLoad]);
 
   function formatStartTimeForZoom(combinedDateTime) {
     if (!combinedDateTime) return null;
@@ -1453,8 +1458,8 @@ const MockSchedulelater = () => {
         scheduledDate: newScheduledDate,
         combinedDateTime: newCombinedDateTime,
         startTime: newStartTime,
-        // selectedInterviewers: [],
-        // endTime: newEndTime,
+        selectedInterviewers: [],
+        endTime: newEndTime,
       });
       // Close confirmation popup and clear pending change
       setShowDateChangeConfirmation(false);
@@ -1596,6 +1601,25 @@ const MockSchedulelater = () => {
     setInterviewerClear(false);
     setPendingDateChange(null);
   };
+
+
+  // Add this useEffect near other useEffects
+  useEffect(() => {
+    // If page refreshes after a successful save, navigate back
+    // Check if mock was just saved (rounds exist and status is not Draft)
+    if (
+      id &&
+      mockInterview &&
+      !isMockLoading &&
+      !isEdit &&
+      !isReschedule &&
+      !isRequestSent &&
+      mockInterview?.rounds?.[0]?.status &&
+      mockInterview.rounds[0].status !== "Draft"
+    ) {
+      navigate("/mock-interviews");
+    }
+  }, [mockInterview, isMockLoading]);
 
   // Page 2: Save round + create meeting
   // const handleSubmit = async (e) => {
@@ -2002,13 +2026,15 @@ const MockSchedulelater = () => {
       setShowDateChangeConfirmation(false);
       setPendingDateChange(null);
 
+
+
       if (meetingLink) {
         setShowExternalNotification(true);
-      }
-      else if (type === "confirmClearinterviwers") {
+      } else if (type === "confirmClearinterviwers") {
         setShowDateChangeConfirmation(false);
         setPendingDateChange(null);
       }
+
       else {
         navigate("/mock-interviews");
       }
@@ -2287,7 +2313,7 @@ const MockSchedulelater = () => {
 
   // No longer needed - handled by DropdownWithSearchField onChange
   // const handleTechnologySelect = (technology) => {
-  //   setFormData((prevFormData) => ({
+  //   setFo;l;rmData((prevFormData) => ({
   //     ...prevFormData,
   //     technology: technology.TechnologyMasterName,
   //   }));
@@ -2680,22 +2706,7 @@ const MockSchedulelater = () => {
     }
   };
 
-  const formatForDatetimeLocal = (date) => {
-    const pad = (n) => String(n).padStart(2, "0");
-    const y = date.getFullYear();
-    const m = pad(date.getMonth() + 1);
-    const d = pad(date.getDate());
-    const hh = pad(date.getHours());
-    const mm = pad(date.getMinutes());
-    return `${y}-${m}-${d}T${hh}:${mm}`;
-  };
 
-  const twoHoursFromNowLocal = () => {
-    const d = new Date();
-    d.setHours(d.getHours() + 2);
-    d.setSeconds(0, 0); // strip seconds/millis for consistency
-    return formatForDatetimeLocal(d);
-  };
 
   // Add this near other state declarations
   const dateChangeTimeoutRef = useRef(null);
@@ -2704,7 +2715,6 @@ const MockSchedulelater = () => {
   const [originalQuestions, setOriginalQuestions] = useState([]);
   const [originalScheduledDate, setOriginalScheduledDate] = useState(scheduledDate);
   const [originalInterviewType, setOriginalInterviewType] = useState(interviewType);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [modalResetKey, setModalResetKey] = useState(0);
 
   useEffect(() => {
@@ -2846,7 +2856,6 @@ const MockSchedulelater = () => {
 
     // Proceed immediately
     if (externalInterviewers.length > 0) {
-      setExternalInterviewers([]);
       setExternalInterviewers([]);
       setExternalMaxHourlyRate(0);
       setSelectedInterviewType(null);

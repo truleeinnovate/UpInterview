@@ -46,6 +46,10 @@ import { getStatusBadgeColor } from "../CommonCode-AllTabs/StatusBadge.jsx";
 import FeedbackFormModal from "../Feedback/FeedbackFormModel.jsx";
 import { createJoinMeetingUrl } from "../Interview-New/components/joinMeeting";
 import Loading from "../../../../Components/Loading.js";
+import { useInterviews } from "../../../../apiHooks/useInterviews.js";
+import { useQueryClient } from "@tanstack/react-query";
+
+
 
 const MockInterviewDetails = () => {
   const { id } = useParams();
@@ -54,7 +58,7 @@ const MockInterviewDetails = () => {
   });
 
   const navigate = useNavigate();
-
+  const queryClient = useQueryClient();
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [selectCandidateView, setSelectCandidateView] = useState(false);
   const [expandedRounds, setExpandedRounds] = useState({});
@@ -83,6 +87,9 @@ const MockInterviewDetails = () => {
 
   const [showMoreActions, setShowMoreActions] = useState(false);
   const updateRoundStatus = useUpdateRoundStatus();
+  const { validateRoundStatus } = useInterviews();
+  // State for tracking validation
+  const [isValidating, setIsValidating] = useState(false);
 
   const moreActionsRef = useRef(null);
 
@@ -218,19 +225,43 @@ const MockInterviewDetails = () => {
     comment = null,
     roundOutcome = null,
   ) => {
-    // For cancellation/no-show, we need to ensure we pass a reason
-    if ((newStatus === "Cancelled" || newStatus === "NoShow") && !reasonValue) {
-      if (newStatus === "Cancelled") {
-        // setActionInProgress(true);
-        setCancelReasonModalOpen(true);
-      } else if (newStatus === "NoShow") {
-        // setActionInProgress(true);
-        setNoShowReasonModalOpen(true);
-      }
-      return;
-    }
+
 
     try {
+      console.log("mockinterview", mockinterview)
+      console.log("rounds", rounds)
+
+
+      const validationResponse = await validateRoundStatus({
+        roundId: rounds[0]?._id,
+        status: rounds[0]?.status,
+        type: "mockinterview"
+      });
+
+      console.log("validationResponse", validationResponse)
+      // If validation fails (should not happen as axios will throw on 400)
+      if (!validationResponse.success) {
+        notify.error(validationResponse.message || "Status mismatch");
+
+        // 🔹 REFRESH MOCK INTERVIEW DETAILS
+        queryClient.invalidateQueries(["mockinterview", mockinterview?._id]);
+        queryClient.invalidateQueries(["mockinterviews", mockinterview?._id]);
+        setIsValidating(false);
+        return;
+      }
+
+      // For cancellation/no-show, we need to ensure we pass a reason
+      if ((newStatus === "Cancelled" || newStatus === "NoShow") && !reasonValue) {
+        if (newStatus === "Cancelled") {
+          // setActionInProgress(true);
+          setCancelReasonModalOpen(true);
+        } else if (newStatus === "NoShow") {
+          // setActionInProgress(true);
+          setNoShowReasonModalOpen(true);
+        }
+        return;
+      }
+
       // Build the payload based on status
       const payload = {
         // roundId: round?.rounds[0]?._id,

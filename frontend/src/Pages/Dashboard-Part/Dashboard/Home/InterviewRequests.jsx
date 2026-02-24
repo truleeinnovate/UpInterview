@@ -27,7 +27,7 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { notify } from "../../../../services/toastService";
-import { formatDateTime, } from "../../../../utils/dateFormatter";
+import { formatDateTime } from "../../../../utils/dateFormatter";
 
 
 

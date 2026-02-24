@@ -530,16 +530,7 @@ const RoundFormInterviews = () => {
     }
   }, [duration]);
 
-  //<-----v1.0.4----
-  // Default and enforce scheduledDate when switching to "scheduled"
-  // useEffect(() => {
-  //   if (interviewType === "scheduled") {
-  //     const minVal = twoHoursFromNowLocal();
-  //     if (!scheduledDate || scheduledDate < minVal) {
-  //       setScheduledDate(minVal);
-  //     }
-  //   }
-  // }, [interviewType]);
+
 
   useEffect(() => {
     if (interviewType === "scheduled") {
@@ -3503,8 +3494,8 @@ const RoundFormInterviews = () => {
                                                                           <div
                                                                             key={option._id || optIdx}
                                                                             className={`text-sm p-2 rounded border ${option.isCorrect
-                                                                              ? "bg-green-50 border-green-200 text-green-800"
-                                                                              : "bg-gray-50 border-gray-200 text-gray-700"
+                                                                                ? "bg-green-50 border-green-200 text-green-800"
+                                                                                : "bg-gray-50 border-gray-200 text-gray-700"
                                                                               }`}
                                                                           >
                                                                             {option?.optionText}

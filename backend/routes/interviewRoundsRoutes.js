@@ -3,6 +3,7 @@ const {
   saveInterviewRound,
   updateInterviewRound,
   updateInterviewRoundStatus,
+  getValdiateRoundStatus,
 } = require("../controllers/interviewRoundsController");
 const router = express.Router();
 const loggingService = require("../middleware/loggingService");
@@ -21,6 +22,8 @@ router.patch(
   loggingService.internalLoggingMiddleware,
   updateInterviewRound
 );
+
+router.post("/validate-status-change", getValdiateRoundStatus);
 
 // Update interview round status
 router.patch("/:roundId/status", updateInterviewRoundStatus);
