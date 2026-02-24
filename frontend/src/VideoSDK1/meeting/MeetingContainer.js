@@ -666,6 +666,7 @@ export function MeetingContainer({
           <BottomBar
             bottomBarHeight={bottomBarHeight}
             setIsMeetingLeft={setIsMeetingLeft}
+            isSchedule={isSchedule}
           />
         </div>
       </div>

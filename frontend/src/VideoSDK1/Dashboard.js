@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { MeetingProvider } from "@videosdk.live/react-sdk";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MeetingAppProvider } from "./MeetingAppContextDef";
@@ -96,6 +96,53 @@ const Dashboard = () => {
 
   const interviewRoundData =
     interviewData?.rounds?.[0] || mockinterview?.rounds?.[0] || {};
+
+  // Check if meeting time + grace period has expired (block rejoining)
+  const isMeetingExpired = useMemo(() => {
+    if (!interviewRoundData?.dateTime || !interviewRoundData?.duration) return false;
+
+    const dateTimeStr = interviewRoundData.dateTime;
+    let startPart = dateTimeStr;
+    if (dateTimeStr.includes(" - ")) {
+      startPart = dateTimeStr.split(" - ")[0].trim();
+    }
+
+    // Parse DD-MM-YYYY HH:MM AM/PM format
+    let startTime = new Date(startPart);
+    if (isNaN(startTime.getTime())) {
+      const match = startPart.match(
+        /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)?$/i
+      );
+      if (match) {
+        const [, day, month, year, hours, minutes, ampm] = match;
+        let h = parseInt(hours, 10);
+        const m = parseInt(minutes, 10);
+        if (ampm) {
+          if (ampm.toUpperCase() === "PM" && h !== 12) h += 12;
+          if (ampm.toUpperCase() === "AM" && h === 12) h = 0;
+        }
+        startTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), h, m);
+      }
+    }
+
+    if (isNaN(startTime.getTime())) return false;
+
+    const durationMin = parseInt(interviewRoundData.duration, 10);
+    if (isNaN(durationMin) || durationMin <= 0) return false;
+
+    // Grace end = start + duration + 10 min grace
+    const graceEnd = new Date(startTime.getTime() + (durationMin + 10) * 60 * 1000);
+    const now = new Date();
+
+    console.log("[Dashboard] Meeting expiry check:", {
+      startTime: startTime.toLocaleString(),
+      graceEnd: graceEnd.toLocaleString(),
+      now: now.toLocaleString(),
+      expired: now > graceEnd,
+    });
+
+    return now > graceEnd;
+  }, [interviewRoundData?.dateTime, interviewRoundData?.duration]);
 
   const NameCandidate = urlData?.isCandidate &&
     candidateData?.FirstName || candidateData?.LastName
@@ -606,7 +653,29 @@ const Dashboard = () => {
           theme="light"
         />
         <MeetingAppProvider>
-          {isMeetingStarted ? (
+          {isMeetingExpired ? (
+            /* Meeting Ended Screen - blocks all rejoining */
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center p-8 bg-white rounded-2xl shadow-2xl max-w-md mx-4">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Meeting Has Ended</h2>
+                <p className="text-gray-500 mb-6">
+                  This meeting's scheduled time and grace period have expired. You can no longer join this call.
+                </p>
+                <button
+                  onClick={() => window.close()}
+                  className="px-6 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ) : isMeetingStarted ? (
             <>
               <MeetingProvider
                 config={{

@@ -24,20 +24,92 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
     const hasEndedRef = useRef(false);
     const shownNotificationsRef = useRef({});
 
+    // Robust date parser that handles:
+    // 1. "24-02-2026 11:37 AM - 11:57 AM" (combined range format from RoundForm)
+    // 2. "24-02-2026 11:37 AM" (DD-MM-YYYY HH:MM AM/PM)
+    // 3. ISO strings
+    const parseDateTime = (dateTimeStr) => {
+        if (!dateTimeStr) return null;
+
+        // Step 1: If it contains " - ", extract only the start part
+        let startPart = dateTimeStr;
+        if (dateTimeStr.includes(" - ")) {
+            startPart = dateTimeStr.split(" - ")[0].trim();
+        }
+
+        console.log("[MeetingTimer] Parsing start part:", startPart);
+
+        // Step 2: Try standard Date parse (ISO format, etc.)
+        let parsed = new Date(startPart);
+        if (!isNaN(parsed.getTime())) return parsed;
+
+        // Step 3: Handle DD-MM-YYYY HH:MM AM/PM format (e.g., "24-02-2026 11:37 AM")
+        const ddmmyyyyMatch = startPart.match(
+            /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)?$/i
+        );
+        if (ddmmyyyyMatch) {
+            const [, day, month, year, hours, minutes, ampm] = ddmmyyyyMatch;
+            let h = parseInt(hours, 10);
+            const m = parseInt(minutes, 10);
+
+            if (ampm) {
+                if (ampm.toUpperCase() === "PM" && h !== 12) h += 12;
+                if (ampm.toUpperCase() === "AM" && h === 12) h = 0;
+            }
+
+            parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), h, m);
+            if (!isNaN(parsed.getTime())) return parsed;
+        }
+
+        // Step 4: Handle YYYY-MM-DD HH:MM AM/PM format
+        const yyyymmddMatch = startPart.match(
+            /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})\s+(\d{1,2}):(\d{2})\s*(AM|PM)?$/i
+        );
+        if (yyyymmddMatch) {
+            const [, year, month, day, hours, minutes, ampm] = yyyymmddMatch;
+            let h = parseInt(hours, 10);
+            const m = parseInt(minutes, 10);
+
+            if (ampm) {
+                if (ampm.toUpperCase() === "PM" && h !== 12) h += 12;
+                if (ampm.toUpperCase() === "AM" && h === 12) h = 0;
+            }
+
+            parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), h, m);
+            if (!isNaN(parsed.getTime())) return parsed;
+        }
+
+        console.error("[MeetingTimer] Could not parse dateTime:", dateTimeStr);
+        return null;
+    };
+
     // Parse the scheduled end time and grace end time
     const getTimeBoundaries = useCallback(() => {
         if (!interviewRoundData) return null;
 
         const { dateTime, duration } = interviewRoundData;
-        if (!dateTime || !duration) return null;
 
-        // Parse dateTime string (can be ISO string or various date formats)
-        const startTime = new Date(dateTime);
-        if (isNaN(startTime.getTime())) return null;
+        // Debug logging
+        console.log("[MeetingTimer] interviewRoundData:", interviewRoundData);
+        console.log("[MeetingTimer] dateTime:", dateTime, "| duration:", duration);
 
-        // duration is stored as a string like "60" (minutes)
+        if (!dateTime || !duration) {
+            console.warn("[MeetingTimer] Missing dateTime or duration, timer disabled.");
+            return null;
+        }
+
+        const startTime = parseDateTime(dateTime);
+        if (!startTime) {
+            console.error("[MeetingTimer] Failed to parse dateTime:", dateTime);
+            return null;
+        }
+
+        // duration is stored as a string like "60" or "20" (minutes)
         const durationMinutes = parseInt(duration, 10);
-        if (isNaN(durationMinutes) || durationMinutes <= 0) return null;
+        if (isNaN(durationMinutes) || durationMinutes <= 0) {
+            console.error("[MeetingTimer] Invalid duration:", duration);
+            return null;
+        }
 
         // Scheduled end = start + duration
         const scheduledEnd = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
@@ -50,6 +122,15 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
 
         // 5 min before grace end (= scheduled end + 5 min)
         const fiveMinCountdown = new Date(graceEnd.getTime() - 5 * 60 * 1000);
+
+        console.log("[MeetingTimer] Time boundaries:", {
+            startTime: startTime.toLocaleString(),
+            scheduledEnd: scheduledEnd.toLocaleString(),
+            graceEnd: graceEnd.toLocaleString(),
+            tenMinWarning: tenMinWarning.toLocaleString(),
+            fiveMinCountdown: fiveMinCountdown.toLocaleString(),
+            now: new Date().toLocaleString(),
+        });
 
         return {
             startTime,
@@ -74,7 +155,7 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
         if (hasEndedRef.current) return;
         hasEndedRef.current = true;
 
-        notify.critical("⏰ Meeting time has expired. Ending call...");
+        notify.critical("⏰ Meeting ended. Closing call...");
 
         try {
             end();
@@ -133,7 +214,7 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
             if (now >= scheduledEnd && now < fiveMinCountdown) {
                 if (!shownNotificationsRef.current.graceStarted) {
                     shownNotificationsRef.current.graceStarted = true;
-                    notify.critical("⚠️ Scheduled time is over. 10-minute grace period has started.");
+                    notify.critical("Grace period started (10 min)");
                 }
                 return;
             }
@@ -142,7 +223,7 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
             if (now >= tenMinWarning && now < scheduledEnd) {
                 if (!shownNotificationsRef.current.tenMinWarning) {
                     shownNotificationsRef.current.tenMinWarning = true;
-                    notify.warning("⏰ 10 minutes remaining before scheduled end time.");
+                    notify.critical("10 minutes remaining before scheduled end time.");
                 }
                 return;
             }

@@ -78,6 +78,7 @@ const MockInterviewRoundSchema = new mongoose.Schema(
         "InProgress",
         "Completed",
         "InCompleted",
+        "Incomplete",
         "Cancelled",
         "NoShow",
         "FeedbackPending",
@@ -108,6 +109,8 @@ const MockInterviewRoundSchema = new mongoose.Schema(
     // Extra
     meetingId: String,
     meetPlatform: String,
+    recordingUrl: String, // VideoSDK cloud recording download URL (latest)
+    recordingUrls: [String], // All recording URLs for this round
 
     // NoShow job tracking
     noShowJobId: { type: String, default: null },

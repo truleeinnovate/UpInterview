@@ -30,6 +30,8 @@ import {
   SkipForward,
   ClipboardList,
   Hourglass,
+  Video,
+  X,
 } from "lucide-react";
 
 // import StatusBadge from '../../CommonCode-AllTabs/StatusBadge';
@@ -145,6 +147,12 @@ const RoundCard = ({
   const [completedReasonModalOpen, setCompletedReasonModalOpen] =
     useState(false);
   const [selectedReasonModalOpen, setSelectedReasonModalOpen] = useState(false);
+
+  // Meeting video recording states
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [videoUrls, setVideoUrls] = useState(round?.recordingUrls || (round?.recordingUrl ? [round.recordingUrl] : []));
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const [fetchingVideo, setFetchingVideo] = useState(false);
 
   // Assessment action popup states
   const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
@@ -1747,11 +1755,10 @@ const RoundCard = ({
                                                             {question.snapshot?.options?.map((option, optIdx) => (
                                                               <div
                                                                 key={option._id || optIdx}
-                                                                className={`text-sm p-2 rounded border ${
-                                                                  option.isCorrect
-                                                                    ? "bg-green-50 border-green-200 text-green-800"
-                                                                    : "bg-gray-50 border-gray-200 text-gray-700"
-                                                                }`}
+                                                                className={`text-sm p-2 rounded border ${option.isCorrect
+                                                                  ? "bg-green-50 border-green-200 text-green-800"
+                                                                  : "bg-gray-50 border-gray-200 text-gray-700"
+                                                                  }`}
                                                               >
                                                                 {option.optionText}
                                                                 {option.isCorrect && (
@@ -2253,6 +2260,44 @@ const RoundCard = ({
                       </button>
                     )}
 
+                  {/* Meeting Video - only show after meeting has ended */}
+                  {round?.roundTitle !== "Assessment" &&
+                    !["In Progress", "Scheduled", "Draft", "scheduled", "draft", "RequestSent"].includes(round?.status) && (
+                      <button
+                        onClick={async () => {
+                          if (videoUrls.length > 0) {
+                            setActiveVideoIndex(0);
+                            setShowVideoModal(true);
+                            return;
+                          }
+                          if (!round?.meetingId && !round._id) return;
+                          setFetchingVideo(true);
+                          try {
+                            const res = await axios.get(
+                              `${config.REACT_APP_API_URL}/interview-rounds/${round._id}/recording`
+                            );
+                            const urls = res.data?.recordingUrls || (res.data?.recordingUrl ? [res.data.recordingUrl] : []);
+                            if (urls.length > 0) {
+                              setVideoUrls(urls);
+                              setActiveVideoIndex(0);
+                              setShowVideoModal(true);
+                            } else {
+                              notify.info("No recording available for this round yet.");
+                            }
+                          } catch (err) {
+                            console.error("Error fetching recording:", err);
+                            notify.error("Failed to fetch recording.");
+                          } finally {
+                            setFetchingVideo(false);
+                          }
+                        }}
+                        disabled={fetchingVideo}
+                        className="inline-flex items-center px-3 py-2 border border-violet-300 text-sm rounded-md text-violet-700 bg-violet-50 hover:bg-violet-100 disabled:opacity-50"
+                      >
+                        <Video className="h-4 w-4 mr-1" />
+                        {fetchingVideo ? "Loading..." : "Meeting Video"}
+                      </button>
+                    )}
 
                 </div>
               </div>
@@ -2265,6 +2310,52 @@ const RoundCard = ({
           )}
         </div>
       </div>
+
+      {/* Meeting Video Player Modal */}
+      {showVideoModal && videoUrls.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <Video className="h-5 w-5 text-violet-600" /> Meeting Recording
+              </h3>
+              <button
+                onClick={() => setShowVideoModal(false)}
+                className="p-1 rounded-full hover:bg-gray-100 transition"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+            {/* Tabs for multiple recordings */}
+            {videoUrls.length > 1 && (
+              <div className="flex gap-1 px-5 pt-3 pb-1 bg-white">
+                {videoUrls.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveVideoIndex(idx)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeVideoIndex === idx
+                      ? "bg-violet-600 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                  >
+                    Part {idx + 1}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="p-4 bg-gray-50">
+              <video
+                key={activeVideoIndex}
+                src={videoUrls[activeVideoIndex]}
+                controls
+                autoPlay
+                className="w-full rounded-lg"
+                style={{ maxHeight: '70vh' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/*  cancelllation modal */}
       <RoundActivityModal
