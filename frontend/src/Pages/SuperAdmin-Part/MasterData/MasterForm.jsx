@@ -7,6 +7,8 @@ import { X, Plus, Trash2, Upload, ChevronDown } from "lucide-react";
 import Papa from "papaparse";
 import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { notify } from "../../../services/toastService";
+import { useMasterData } from "../../../apiHooks/useMasterData";
+import DropdownSelect from "../../../Components/Dropdowns/DropdownSelect";
 
 const StatusDropdown = ({ value, onChange }) => {
   const [open, setOpen] = useState(false);
@@ -26,8 +28,8 @@ const StatusDropdown = ({ value, onChange }) => {
           {value === true
             ? "Active"
             : value === false
-            ? "Inactive"
-            : "Select Status"}
+              ? "Inactive"
+              : "Select Status"}
         </span>
         <ChevronDown
           className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`}
@@ -70,6 +72,11 @@ const MasterForm = ({
   const [csvData, setCsvData] = useState(null);
   const [fields, setFields] = useState([]);
 
+  // ----------------- Related roles ---------------------------------------------
+  const { currentRoles, loadCurrentRoles, isCurrentRolesFetching } =
+    useMasterData({}, "adminPortal", "roles");
+  // ----------------- Related roles ---------------------------------------------
+
   // v1.0.1 <---------------------------------------------------
   // Add inside MasterForm
   const [dragActive, setDragActive] = useState(false);
@@ -95,7 +102,7 @@ const MasterForm = ({
 
     // default validation for other masters
     return Object.values(row).some(
-      (val) => val && val.toString().trim() !== ""
+      (val) => val && val.toString().trim() !== "",
     );
   };
 
@@ -162,7 +169,7 @@ const MasterForm = ({
 
       if (!item[nameFieldKey]?.trim()) {
         notify.error(
-          `${capitalizeFirstLetter(type)} Name is required ${entryNum}`
+          `${capitalizeFirstLetter(type)} Name is required ${entryNum}`,
         );
         return false;
       }
@@ -174,6 +181,10 @@ const MasterForm = ({
         }
         if (!item.roleCategory?.trim()) {
           notify.error(`Role Category is required ${entryNum}`);
+          return false;
+        }
+        if (!item.relatedRoles || item.relatedRoles.length === 0) {
+          notify.error(`Related Roles are required ${entryNum}`);
           return false;
         }
       }
@@ -217,6 +228,7 @@ const MasterForm = ({
     if (type === "roles") {
       base.roleLabel = "";
       base.roleCategory = "";
+      base.relatedRoles = [];
     }
 
     if (type === "category") base.isActive = null;
@@ -233,7 +245,7 @@ const MasterForm = ({
           initialData.map((item, i) => ({
             id: Date.now() + i,
             data: { ...item },
-          }))
+          })),
         );
         setFormData(initialData[0] || {}); // keep a fallback
       } else if (!Array.isArray(initialData)) {
@@ -274,8 +286,8 @@ const MasterForm = ({
     const { name, value } = e.target;
     setFields((prev) =>
       prev.map((f) =>
-        f.id === id ? { ...f, data: { ...f.data, [name]: value } } : f
-      )
+        f.id === id ? { ...f, data: { ...f.data, [name]: value } } : f,
+      ),
     );
   };
 
@@ -283,6 +295,31 @@ const MasterForm = ({
 
   const removeField = (id) =>
     setFields((prev) => prev.filter((f) => f.id !== id));
+
+  // --------------------------------------- Related roles -----------------------------------------
+  const handleSelectChange = (selectedOptions, id, isSingleEdit = false) => {
+    const values = selectedOptions
+      ? selectedOptions.map((opt) => opt.value)
+      : [];
+
+    if (isSingleEdit) {
+      setFormData({ ...formData, relatedRoles: values });
+    } else {
+      setFields((prev) =>
+        prev.map((f) =>
+          f.id === id ? { ...f, data: { ...f.data, relatedRoles: values } } : f,
+        ),
+      );
+    }
+  };
+
+  // Transform currentRoles for the dropdown
+  const roleOptions =
+    currentRoles?.map((role) => ({
+      label: role.roleLabel,
+      value: role.roleName,
+    })) || [];
+  // --------------------------------------- Related roles -----------------------------------------
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -318,7 +355,7 @@ const MasterForm = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg px-6 relative max-h-[90%] overflow-y-auto py-12">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-xl px-6 relative max-h-[90%] overflow-y-auto py-12">
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
@@ -429,8 +466,8 @@ const MasterForm = ({
                                           roleLabel: e.target.value,
                                         },
                                       }
-                                    : field
-                                )
+                                    : field,
+                                ),
                               )
                             }
                             className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-custom-blue outline-none"
@@ -456,12 +493,32 @@ const MasterForm = ({
                                           roleCategory: e.target.value,
                                         },
                                       }
-                                    : field
-                                )
+                                    : field,
+                                ),
                               )
                             }
                             className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-custom-blue outline-none"
                             required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-700 text-sm font-medium mb-1">
+                            Related Roles <RequiredStar />
+                          </label>
+                          <DropdownSelect
+                            isMulti
+                            placeholder="Select related roles..."
+                            options={roleOptions}
+                            isLoading={isCurrentRolesFetching}
+                            onMenuOpen={() => loadCurrentRoles()}
+                            value={roleOptions.filter((opt) =>
+                              f.data.relatedRoles?.includes(opt.value),
+                            )}
+                            onChange={(selected) =>
+                              handleSelectChange(selected, f.id)
+                            }
+                            closeMenuOnSelect={false}
+                            required={true}
                           />
                         </div>
                       </>
@@ -488,8 +545,8 @@ const MasterForm = ({
                                           Category: e.target.value,
                                         },
                                       }
-                                    : field
-                                )
+                                    : field,
+                                ),
                               )
                             }
                             className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-custom-blue outline-none"
@@ -517,8 +574,8 @@ const MasterForm = ({
                                           name: e.target.value,
                                         },
                                       }
-                                    : field
-                                )
+                                    : field,
+                                ),
                               )
                             }
                             className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-custom-blue outline-none"
@@ -543,8 +600,8 @@ const MasterForm = ({
                                       ...field,
                                       data: { ...field.data, isActive: val },
                                     }
-                                  : field
-                              )
+                                  : field,
+                              ),
                             )
                           }
                         />
@@ -667,6 +724,26 @@ const MasterForm = ({
                           required
                         />
                       </div>
+                      <div className="mt-3">
+                        <label className="block text-gray-700 text-sm font-medium mb-1">
+                          Related Roles <RequiredStar />
+                        </label>
+                        <DropdownSelect
+                          isMulti
+                          placeholder="Select related roles..."
+                          options={roleOptions}
+                          isLoading={isCurrentRolesFetching}
+                          onMenuOpen={() => loadCurrentRoles()}
+                          value={roleOptions.filter((opt) =>
+                            formData.relatedRoles?.includes(opt.value),
+                          )}
+                          onChange={(selected) =>
+                            handleSelectChange(selected, null, true)
+                          }
+                          closeMenuOnSelect={false}
+                          required={true}
+                        />
+                      </div>
                     </>
                   )}
 
@@ -703,10 +780,10 @@ const MasterForm = ({
               {mode === "edit"
                 ? "Update"
                 : csvData
-                ? "Upload CSV"
-                : fields.length > 1
-                ? "Save All"
-                : "Create"}
+                  ? "Upload CSV"
+                  : fields.length > 1
+                    ? "Save All"
+                    : "Create"}
             </button>
           </div>
         </form>

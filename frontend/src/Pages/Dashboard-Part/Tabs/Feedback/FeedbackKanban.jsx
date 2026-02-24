@@ -6,14 +6,12 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  User,
-  Calendar,
   Eye,
-  Edit,
   CheckCircle,
   Clock,
   XCircle,
   AlertCircle,
+  Pencil,
 } from "lucide-react";
 import { Star } from "lucide-react";
 import Cookies from "js-cookie";
@@ -217,23 +215,21 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
                                   )}
                               </span>
                             </div>
-                            <div className="inline-flex items-center justify-start space-x-2 mt-3 bg-custom-blue/10 px-2 py-1 rounded-md">
+                            <div className="inline-flex items-center justify-start space-x-2 mt-3">
                               <button
-                                className="text-[#217989] hover:text-[#1a616e] text-xs"
+                                className="text-custom-blue hover:bg-custom-blue/10  p-2 rounded-lg"
                                 onClick={() => onView(item)}
                               >
-                                <Eye className="w-3 h-3 inline mr-1" />
-                                View
+                                <Eye className="w-4 h-4 inline text-custom-blue" />
                               </button>
                               {item.status === "draft" &&
                                 item?.ownerId?._id === tokenPayload.userId && (
                                   <>
                                     <button
-                                      className="text-green-500 hover:text-gray-600 text-xs"
+                                      className="text-green-500 hover:bg-green-50 p-2 rounded-lg"
                                       onClick={() => onEdit(item)}
                                     >
-                                      <Edit className="w-4 h-4 inline mr-1" />
-                                      Edit
+                                      <Pencil className="w-4 h-4 inline text-green-500" />
                                     </button>
                                   </>
                                 )}

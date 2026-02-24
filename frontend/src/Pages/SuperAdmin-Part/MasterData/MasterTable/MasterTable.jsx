@@ -42,10 +42,10 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const menuRef = useRef(null);
 
   const mainActions = kanbanActions.filter((a) =>
-    ["view", "edit"].includes(a.key)
+    ["view", "edit"].includes(a.key),
   );
   const overflowActions = kanbanActions.filter(
-    (a) => !["view", "edit"].includes(a.key)
+    (a) => !["view", "edit"].includes(a.key),
   );
 
   //  Close menu when clicking outside
@@ -69,8 +69,8 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
             : action.key === "edit"
-            ? "text-green-600 hover:bg-green-600/10"
-            : "text-blue-600 bg-green-600/10";
+              ? "text-green-600 hover:bg-green-600/10"
+              : "text-blue-600 bg-green-600/10";
 
         return (
           <button
@@ -339,14 +339,14 @@ const MasterTable = ({ permissions = {} }) => {
         // Update existing master
         const res = await axios.put(
           `${config.REACT_APP_API_URL}/master-data/${type}/${selectedMaster._id}`,
-          payload
+          payload,
         );
         notify.success(`Master updated successfully!`);
       } else {
         // Create new master
         const res = await axios.post(
           `${config.REACT_APP_API_URL}/master-data/${type}`,
-          payload
+          payload,
         );
         // console.log("Created master:", res);
         notify.success(`Master created successfully!`);
@@ -385,7 +385,7 @@ const MasterTable = ({ permissions = {} }) => {
     setIsLoading(true);
     try {
       const res = await axios.delete(
-        `${config.REACT_APP_API_URL}/master-data/${type}/${deleteTarget._id}`
+        `${config.REACT_APP_API_URL}/master-data/${type}/${deleteTarget._id}`,
       );
 
       if (res.status === 200) {
@@ -641,6 +641,44 @@ const MasterTable = ({ permissions = {} }) => {
                   : "N/A"}
               </span>
             ),
+          },
+          {
+            key: "relatedRoles",
+            header: "Related Roles",
+            render: (value, row) => {
+              const roles = row.relatedRoles || [];
+
+              return roles.length > 0 ? (
+                <div
+                  className="flex items-center gap-1 cursor-default"
+                  title={roles
+                    .map((role) => capitalizeFirstLetter(role))
+                    .join(", ")}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue text-xs rounded-full font-medium">
+                      {roles[0].length > 15
+                        ? capitalizeFirstLetter(roles[0].slice(0, 15)) + "..."
+                        : capitalizeFirstLetter(roles[0])}
+                    </span>
+
+                    {roles.length > 1 && (
+                      <span
+                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full cursor-default font-medium"
+                        title={roles
+                          .slice(1)
+                          .map((r) => capitalizeFirstLetter(r))
+                          .join(", ")}
+                      >
+                        +{roles.length - 1}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <span className="text-gray-400 text-xs italic">N/A</span>
+              );
+            },
           },
         ]
       : []),
@@ -967,7 +1005,7 @@ const MasterTable = ({ permissions = {} }) => {
               loading={isLoading}
               emptyState="No master data found."
               kanbanTitle={getMasterTitles(type)}
-              customHeight = "calc(100vh - 282px)"
+              customHeight="calc(100vh - 282px)"
             />
           </div>
         )}

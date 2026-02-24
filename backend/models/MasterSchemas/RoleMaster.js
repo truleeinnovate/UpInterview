@@ -12,6 +12,7 @@ const RoleMasterSchema = new mongoose.Schema(
     // CreatedDate: { type: Date, default: Date.now },
     // CreatedBy: String,
     // ModifiedDate: { type: Date, default: Date.now },
+    relatedRoles: [{ type: String }],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users",

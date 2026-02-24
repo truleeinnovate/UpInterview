@@ -228,6 +228,10 @@ const FeedbackFormModel = lazy(
   () => import("./Pages/Dashboard-Part/Tabs/Feedback/FeedbackFormModel.jsx"),
 );
 
+const AddFeedbackForm = lazy(
+  () => import("./Pages/Dashboard-Part/Tabs/Feedback/AddFeedbackForm.jsx"),
+);
+
 const Companies = lazy(
   () => import("./Pages/Dashboard-Part/Tabs/Companies/Companies.jsx"),
 );
@@ -1237,6 +1241,15 @@ const MainAppRoutes = ({
                   element={
                     <>
                       <FeedbackFormModel /> <FeedbackTab />
+                    </>
+                  }
+                />
+
+                <Route
+                  path="/feedback/new"
+                  element={
+                    <>
+                      <AddFeedbackForm /> <FeedbackTab />
                     </>
                   }
                 />
