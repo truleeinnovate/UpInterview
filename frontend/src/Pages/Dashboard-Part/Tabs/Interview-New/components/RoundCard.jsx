@@ -2295,7 +2295,7 @@ const RoundCard = ({
                         className="inline-flex items-center px-3 py-2 border border-violet-300 text-sm rounded-md text-violet-700 bg-violet-50 hover:bg-violet-100 disabled:opacity-50"
                       >
                         <Video className="h-4 w-4 mr-1" />
-                        {fetchingVideo ? "Loading..." : "Meeting Video"}
+                        {fetchingVideo ? "Loading..." : "View Recording"}
                       </button>
                     )}
 
@@ -2314,7 +2314,7 @@ const RoundCard = ({
       {/* Meeting Video Player Modal */}
       {showVideoModal && videoUrls.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl mx-4 overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <Video className="h-5 w-5 text-violet-600" /> Meeting Recording
@@ -2350,7 +2350,7 @@ const RoundCard = ({
                 controls
                 autoPlay
                 className="w-full rounded-lg"
-                style={{ maxHeight: '70vh' }}
+                style={{ maxHeight: '80vh' }}
               />
             </div>
           </div>
