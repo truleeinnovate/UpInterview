@@ -30,7 +30,11 @@ import {
 
 const AccountSettingsSidebar = () => {
   const { checkPermission, isInitialized, loading } = usePermissionCheck();
-  const { effectivePermissions, superAdminPermissions } = usePermissions();
+  const {
+    effectivePermissions,
+    superAdminPermissions,
+    effectivePermissions_RoleName,
+  } = usePermissions();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -216,7 +220,8 @@ const AccountSettingsSidebar = () => {
   // Redirect to appropriate tab on initial load
   useEffect(() => {
     if (location.pathname === "/account-settings") {
-      if (organization && userType !== "superAdmin") {
+      const isAdmin = effectivePermissions_RoleName === "Admin";
+      if (organization && isAdmin && userType !== "superAdmin") {
         // console.log('🎯 Sidebar: Redirecting to /account-settings/profile');
         navigate("/account-settings/profile", { replace: true });
       } else {

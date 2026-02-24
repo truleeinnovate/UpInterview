@@ -21,22 +21,44 @@ exports.individualLogin = async (req, res) => {
       isInternalInterviewer,
       ownerId,
       tenantData,
+      isSkip,
     } = req.body;
 
     const currentStep = req.body.currentStep || 0;
 
     // ---------------- STEP VALIDATION ----------------
-    const { error } = validateIndividualSignup(currentStep, contactData);
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: error.details.map((err) => err.message),
-      });
+    if (!isSkip) {
+      const { error } = validateIndividualSignup(currentStep, contactData);
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation failed",
+          errors: error.details.map((err) => err.message),
+        });
+      }
     }
 
-    // ---------------- ROLE ASSIGNMENT ----------------
+    // ---------------- ROLE ASSIGNMENT & ACTIVATION ----------------
     let updatedUserData = { ...userData };
+
+    // Account Activation for Org Users
+    if (isProfileCompleteStateOrg === true) {
+      updatedUserData.status = 'active';
+      if (isSkip) {
+        updatedUserData.isSkipped = true;
+      }
+
+      // If NOT skipping, check if we should mark profile as completed
+      if (!isSkip) {
+        if (
+          (userData.isFreelancer && currentStep === 3) || // freelancers at step 3
+          (!userData.isFreelancer && currentStep === 1) // non-freelancers at step 1
+        ) {
+          updatedUserData.isProfileCompleted = true;
+        }
+      }
+    }
+
     if (
       isProfileCompleteStateOrg === false ||
       isProfileCompleteStateOrg === undefined
@@ -97,51 +119,51 @@ exports.individualLogin = async (req, res) => {
     }
 
     // ---------------- OUTSOURCE INTERVIEWER ----------------
-let newInterviewer = null;
+    let newInterviewer = null;
 
-if (currentStep === 3 && userData.isFreelancer) {
-  // 🔹 Check if already exists for this owner
-  const existingInterviewer = await OutsourceInterviewer.findOne({
-    ownerId,
-  }).lean();
+    if (currentStep === 3 && userData.isFreelancer) {
+      // 🔹 Check if already exists for this owner
+      const existingInterviewer = await OutsourceInterviewer.findOne({
+        ownerId,
+      }).lean();
 
-  if (!existingInterviewer) {
-    const outsourceRequestCode = await generateUniqueId(
-      "OINT",
-      OutsourceInterviewer,
-      "outsourceRequestCode"
-    );
+      if (!existingInterviewer) {
+        const outsourceRequestCode = await generateUniqueId(
+          "OINT",
+          OutsourceInterviewer,
+          "outsourceRequestCode"
+        );
 
-    newInterviewer = new OutsourceInterviewer({
-      outsourceRequestCode,
-      ownerId,
-      contactId: savedContact._id,
-      requestedRate:
-        savedContact.rates ||
-        contactData.rates || {
-          junior: { usd: 0, inr: 0, isVisible: true },
-          mid: { usd: 0, inr: 0, isVisible: true },
-          senior: { usd: 0, inr: 0, isVisible: true },
-        },
-      feedback: [
-        {
-          givenBy: ownerId,
-          rating: 4.5,
-          comments: "",
-          createdAt: new Date(),
-        },
-      ],
-      status: "underReview",
-      createdBy: ownerId,
-      currency: "INR",
-    });
+        newInterviewer = new OutsourceInterviewer({
+          outsourceRequestCode,
+          ownerId,
+          contactId: savedContact._id,
+          requestedRate:
+            savedContact.rates ||
+            contactData.rates || {
+              junior: { usd: 0, inr: 0, isVisible: true },
+              mid: { usd: 0, inr: 0, isVisible: true },
+              senior: { usd: 0, inr: 0, isVisible: true },
+            },
+          feedback: [
+            {
+              givenBy: ownerId,
+              rating: 4.5,
+              comments: "",
+              createdAt: new Date(),
+            },
+          ],
+          status: "underReview",
+          createdBy: ownerId,
+          currency: "INR",
+        });
 
-    await newInterviewer.save();
-  } else {
-    // 🔹 Skip creation if already exists
-    newInterviewer = existingInterviewer;
-  }
-}
+        await newInterviewer.save();
+      } else {
+        // 🔹 Skip creation if already exists
+        newInterviewer = existingInterviewer;
+      }
+    }
 
 
     // ---------------- TOKEN GENERATION ----------------

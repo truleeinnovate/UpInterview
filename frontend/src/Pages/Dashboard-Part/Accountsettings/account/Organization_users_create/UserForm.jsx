@@ -95,7 +95,7 @@ const UserForm = ({ mode }) => {
     tenantId: tenantId,
     imageData: "",
     countryCode: "+91",
-    status: "active",
+    status: "",
     userType, // Include type in userData
   });
 
@@ -121,7 +121,7 @@ const UserForm = ({ mode }) => {
       tenantId: userType === "superAdmin" ? null : tenantId,
       imageData: "",
       countryCode: "+91",
-      status: "active",
+      status: "",
       userType,
     });
     setFile(null);
@@ -183,7 +183,7 @@ const UserForm = ({ mode }) => {
         roleId: initialUserData.roleId || "",
         tenantId: userType === "superAdmin" ? null : tenantId,
         countryCode: initialUserData.countryCode || "+91",
-        status: initialUserData.status || "active",
+        status: initialUserData.status || "",
         contactId: initialUserData.contactId || "",
         userType,
       });
@@ -191,7 +191,7 @@ const UserForm = ({ mode }) => {
       setFilePreview(initialUserData?.imageData?.path);
     }
     // ------------------------------ v1.0.0 >
-  }, [editMode, initialUserData, tenantId, userType, organizationRoles]);
+  }, [editMode, initialUserData, tenantId, userType]);
   // ------------------------------ v1.0.0 >
 
   // Clean up timeouts
@@ -261,12 +261,14 @@ const UserForm = ({ mode }) => {
 
   // Form submission
   const handleSubmit = async (e) => {
+    console.log("submitting form");
     e.preventDefault();
     //if (isLoading) return;
     setIsLoading(true);
 
     const validationErrors = await validateUserForm(userData, editMode);
     setErrors(validationErrors);
+    console.log("validationErrors", validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
       scrollToFirstError(validationErrors, fieldRefs); //<-----v1.0.2------>
@@ -318,7 +320,7 @@ const UserForm = ({ mode }) => {
       )} */}
 
       <div className="sm:px-4 md:px-4 p-6 mb-10">
-        <form id="user-form" onSubmit={handleSubmit}>
+        <form id="user-form">
           {errors.form && (
             <p className="text-red-500 text-sm mb-6 text-center">
               {errors.form}
@@ -395,6 +397,7 @@ const UserForm = ({ mode }) => {
                 onChange={handleChange}
                 error={errors.firstName}
                 disabled={isLoading}
+                required
               />
             </div>
 
@@ -495,11 +498,11 @@ const UserForm = ({ mode }) => {
               Cancel
             </Button>
             <LoadingButton
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               form="user-form"
-              className={`bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               disabled={isLoading}
               isLoading={isLoading}
               loadingText={editMode ? "Updating..." : "Saving..."}

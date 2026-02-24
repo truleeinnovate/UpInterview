@@ -1,6 +1,7 @@
 const sendEmail = require("../../utils/sendEmail");
 const notificationMiddleware = require("../../middleware/notificationMiddleware");
 const { Users } = require("../../models/Users");
+const { Contacts } = require("../../models/Contacts");
 const jwt = require("jsonwebtoken");
 const emailTemplateModel = require("../../models/EmailTemplatemodel");
 const config = require("../../config");
@@ -543,8 +544,8 @@ exports.verifyEmailChange = async (req, res) => {
     await user.save();
 
     // Update Contacts collection
-    await Contact.updateOne(
-      { contactId: userId },
+    await Contacts.updateOne(
+      { ownerId: userId },
       { $set: { email: newEmail } }
     );
 

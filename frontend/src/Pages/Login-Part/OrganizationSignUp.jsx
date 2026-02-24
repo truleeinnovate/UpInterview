@@ -158,8 +158,14 @@ export const Organization = () => {
   };
 
   const handleChange = (field, value) => {
+    // Prevent spaces in email and password fields
+    if (["email", "password", "confirmPassword"].includes(field)) {
+      value = value.replace(/\s/g, "");
+    }
+
     if (field === "email") {
-      setSelectedEmail(value);
+      const lowercasedEmail = value.toLowerCase();
+      setSelectedEmail(lowercasedEmail);
       setErrors((prev) => ({ ...prev, email: "" }));
     } else if (field === "profileId") {
       setSelectedProfileId(value);
@@ -337,7 +343,7 @@ export const Organization = () => {
   //  -------------------------------------- v1.0.1 >
 
   const handleEmailInput = (e) => {
-    const email = e.target.value;
+    const email = e.target.value.replace(/\s/g, "").toLowerCase();
     setSelectedEmail(email);
     setErrors((prev) => ({ ...prev, email: "" }));
     // Remove profileId generation from here to prevent partial updates
@@ -1553,11 +1559,10 @@ export const Organization = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className={`w-full text-lg font-medium rounded-lg py-3 transition-all duration-300 flex items-center justify-center ${
-                        isSubmitting
+                      className={`w-full text-lg font-medium rounded-lg py-3 transition-all duration-300 flex items-center justify-center ${isSubmitting
                           ? "bg-gray-400 cursor-not-allowed transform scale-95"
                           : "bg-custom-blue hover:bg-custom-blue/90 text-white transform hover:scale-105"
-                      }`}
+                        }`}
                     >
                       {isSubmitting ? (
                         <>
@@ -1623,11 +1628,10 @@ export const Organization = () => {
                       <button
                         onClick={handleResendVerification}
                         disabled={isResending || countdown > 0}
-                        className={`w-full px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
-                          isResending || countdown > 0
+                        className={`w-full px-4 py-3 rounded-lg font-medium transition-all duration-300 ${isResending || countdown > 0
                             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                             : "bg-custom-blue hover:bg-custom-blue/90 text-white transform hover:scale-105"
-                        }`}
+                          }`}
                       >
                         {isResending ? (
                           <span className="flex items-center justify-center">

@@ -13,7 +13,7 @@ export const validateUserForm = async (userData) => {
       errors.email = 'Email already registered';
     }
   }
-
+  if (!userData.firstName) errors.firstName = "First Name is required";
   if (!userData.lastName) errors.lastName = "Last Name is required";
   if (!userData.phone) {
     errors.phone = "Phone Number is required";
@@ -21,6 +21,10 @@ export const validateUserForm = async (userData) => {
     errors.phone = "Invalid Phone Number";
   }
   if (!userData.roleId) errors.roleId = "Role is required";
+  // if (!userData.linkedinUrl) {
+  //   errors.linkedinUrl = "LinkedIn URL is required";
+  // }
+
 
   return errors;
 };

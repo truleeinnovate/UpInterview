@@ -105,7 +105,7 @@ export const useRolesQuery = ({ filters = {}, fetchAllRoles = false } = {}) => {
     refetchOnWindowFocus: false, // Prevent refetch on focus
     refetchOnMount: false, // Prevent refetch on mount if cached
     refetchOnReconnect: false, // Prevent refetch on reconnect
-     refetchInterval: 1000, // Refetch every 30 seconds
+    refetchInterval: 30000, // Refetch every 30 seconds
     refetchIntervalInBackground: true, // Continue polling when tab is not active
   });
 };
@@ -146,7 +146,7 @@ export const useUpdateRole = () => {
       } else {
         const authToken = AuthCookieManager.getAuthToken();
         const tenantId = authToken ? JSON.parse(atob(authToken.split('.')[1])).tenantId : null;
-        
+
         // First check if override exists
         const overrideResponse = await axios.get(
           `${config.REACT_APP_API_URL}/role-overrides?tenantId=${tenantId}&roleName=${roleData.roleName}`

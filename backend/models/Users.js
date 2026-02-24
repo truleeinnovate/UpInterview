@@ -34,6 +34,7 @@ const UsersSchema = new mongoose.Schema({
     profileId: { type: String },
     status: { type: String, enum: ['active', 'inactive',], default: 'inactive' },
     isEmailVerified: { type: Boolean, default: false },
+    isSkipped: { type: Boolean, default: false },
     createdBy: { type: String },
     modifiedBy: { type: String },
     isProfileCompleted: { type: Boolean },
