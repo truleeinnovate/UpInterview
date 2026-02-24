@@ -363,8 +363,8 @@ const WebCamBTN = () => {
   );
 };
 
-export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
-  
+export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = false }) {
+
   const RaiseHandBTN = ({ isMobile, isTab }) => {
     const { publish } = usePubSub("RAISE_HAND");
     const RaiseHand = () => {
@@ -394,62 +394,113 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
 
   const RecordingBTN = () => {
     const { startRecording, stopRecording, recordingState } = useMeeting();
-    const defaultOptions = {
-      loop: true,
-      autoplay: true,
-      animationData: recordingBlink,
-      rendererSettings: {
-        preserveAspectRatio: "xMidYMid slice",
-      },
-      height: 64,
-      width: 160,
-    };
 
     const isRecording = useIsRecording();
     const isRecordingRef = useRef(isRecording);
+
+    // Timer state
+    const [elapsedSeconds, setElapsedSeconds] = useState(0);
+    const timerRef = useRef(null);
 
     useEffect(() => {
       isRecordingRef.current = isRecording;
     }, [isRecording]);
 
-    const { isRequestProcessing } = useMemo(
-      () => ({
-        isRequestProcessing:
-          recordingState === Constants.recordingEvents.RECORDING_STARTING ||
-          recordingState === Constants.recordingEvents.RECORDING_STOPPING,
-      }),
+    // Start/stop timer based on recording state
+    useEffect(() => {
+      if (isRecording) {
+        setElapsedSeconds(0);
+        timerRef.current = setInterval(() => {
+          setElapsedSeconds((prev) => prev + 1);
+        }, 1000);
+      } else {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      }
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+      };
+    }, [isRecording]);
+
+    const formatTime = (totalSeconds) => {
+      const mins = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+      const secs = (totalSeconds % 60).toString().padStart(2, "0");
+      return `${mins}:${secs}`;
+    };
+
+    const isRequestProcessing = useMemo(
+      () =>
+        recordingState === Constants.recordingEvents.RECORDING_STARTING ||
+        recordingState === Constants.recordingEvents.RECORDING_STOPPING,
       [recordingState]
     );
 
     const _handleClick = () => {
-      const isRecording = isRecordingRef.current;
-
-      if (isRecording) {
+      const isRec = isRecordingRef.current;
+      if (isRec) {
         stopRecording();
       } else {
         startRecording();
       }
     };
 
+    const tooltipText = recordingState === Constants.recordingEvents.RECORDING_STARTED
+      ? "Stop Recording"
+      : recordingState === Constants.recordingEvents.RECORDING_STARTING
+        ? "Starting Recording"
+        : recordingState === Constants.recordingEvents.RECORDING_STOPPED
+          ? "Start Recording"
+          : recordingState === Constants.recordingEvents.RECORDING_STOPPING
+            ? "Stopping Recording"
+            : "Start Recording";
+
     return (
-      <OutlinedButton
-        Icon={RecordingIcon}
-        onClick={_handleClick}
-        isFocused={isRecording}
-        tooltip={
-          recordingState === Constants.recordingEvents.RECORDING_STARTED
-            ? "Stop Recording"
-            : recordingState === Constants.recordingEvents.RECORDING_STARTING
-              ? "Starting Recording"
-              : recordingState === Constants.recordingEvents.RECORDING_STOPPED
-                ? "Start Recording"
-                : recordingState === Constants.recordingEvents.RECORDING_STOPPING
-                  ? "Stopping Recording"
-                  : "Start Recording"
-        }
-        lottieOption={isRecording ? defaultOptions : null}
-        isRequestProcessing={isRequestProcessing}
-      />
+      <div
+        onClick={isRequestProcessing ? undefined : _handleClick}
+        title={tooltipText}
+        className={`flex items-center justify-center gap-1.5 rounded-lg cursor-pointer transition-all duration-200 select-none m-1 ${isRequestProcessing ? "opacity-60 cursor-not-allowed" : ""
+          }`}
+        style={{
+          padding: isRecording ? "6px 12px" : "6px 10px",
+          background: isRecording ? "#dc2626" : "#2d3748",
+          border: isRecording ? "2px solid #f87171" : "2px solid rgba(255,255,255,0.2)",
+          height: 40,
+        }}
+      >
+        {/* Red/white dot */}
+        <span
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: isRecording ? "#fff" : "#ef4444",
+            animation: isRecording ? "pulse 1.5s ease-in-out infinite" : "none",
+            display: "inline-block",
+            flexShrink: 0,
+          }}
+        />
+        <span
+          style={{
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {isRequestProcessing
+            ? recordingState === Constants.recordingEvents.RECORDING_STARTING
+              ? "Starting..."
+              : "Stopping..."
+            : isRecording
+              ? formatTime(elapsedSeconds)
+              : "REC"}
+        </span>
+      </div>
     );
   };
 
@@ -470,12 +521,12 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
       };
     }, []);
 
- const handleScreenShare = async () => {
+    const handleScreenShare = async () => {
       if (isProcessing) return;
-      
+
       try {
         setIsProcessing(true);
-        
+
         // If already sharing, stop sharing
         if (localScreenShareOn) {
           await toggleScreenShare();
@@ -486,14 +537,14 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
           // }
           return;
         }
-        
+
         console.log('Starting screen share...', {
           isLocalPresenting: mMeeting?.localParticipant?.id === presenterId,
           presenterId,
           localScreenShareOn,
           meetingState: mMeeting
         });
-        
+
         // Request screen share with system audio if available
         const stream = await navigator.mediaDevices.getDisplayMedia({
           video: {
@@ -514,11 +565,11 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
           console.error('Screen share error:', err);
           throw err;
         });
-        
+
         console.log('Screen share stream obtained:', stream);
         setLocalScreenShareStream(stream);
         // screenShareStreamRef.current = stream;
-        
+
         // Handle stream ended (user stops sharing)
         stream.getVideoTracks().forEach(track => {
           track.onended = () => {
@@ -533,10 +584,10 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
             // }
           };
         });
-        
+
         // Start screen share through VideoSDK
         await toggleScreenShare(stream);
-        
+
       } catch (error) {
         console.error('Screen share failed:', error);
         setLocalScreenShareStream(null);
@@ -553,13 +604,13 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
       <MobileIconButton
         id="screen-share-btn"
         tooltipTitle={
-          localScreenShareOn 
-            ? "Stop Presenting" 
+          localScreenShareOn
+            ? "Stop Presenting"
             : "Present Screen"
         }
         buttonText={
-          localScreenShareOn 
-            ? "Stop Presenting" 
+          localScreenShareOn
+            ? "Stop Presenting"
             : "Present Screen"
         }
         isFocused={localScreenShareOn}
@@ -573,8 +624,8 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
         onClick={handleScreenShare}
         isFocused={localScreenShareOn}
         tooltip={
-          localScreenShareOn 
-            ? "Stop Presenting" 
+          localScreenShareOn
+            ? "Stop Presenting"
             : "Present Screen"
         }
         disabled={isProcessing} // Always enable the button to allow starting screen share
@@ -582,7 +633,7 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
     );
   };
 
-   const LeaveBTN = () => {
+  const LeaveBTN = () => {
     const { leave } = useMeeting();
 
     return (
@@ -665,17 +716,19 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft }) {
         <div className="flex items-center">
           {/* First group */}
           <div className="flex items-center space-x-4">
-            {/* <ControlButton><RecordingBTN {...buttonProps} /></ControlButton> */}
+            {isSchedule && (
+              <RecordingBTN {...buttonProps} />
+            )}
             <ControlButton><RaiseHandBTN isMobile={false} isTab={false} {...buttonProps} /></ControlButton>
           </div>
-          
+
           {/* Middle group with mic and webcam - centered */}
           <div className="flex items-center mx-6">
             <ControlButton className="mr-2"><MicBTN {...buttonProps} /></ControlButton>
             <div className="h-8 bg-gray-600 mx-2"></div>
             <ControlButton className="ml-2"><WebCamBTN {...buttonProps} /></ControlButton>
           </div>
-          
+
           {/* Last group */}
           <div className="flex items-center space-x-4">
             <ControlButton><ScreenShareBTN isMobile={false} isTab={false} {...buttonProps} /></ControlButton>

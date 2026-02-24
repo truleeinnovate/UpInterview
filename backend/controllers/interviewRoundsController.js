@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds");
+const { MockInterviewRound } = require("../models/Mockinterview/mockinterviewRound");
 const { Interview } = require("../models/Interview/Interview.js");
 const InterviewRequest = require("../models/InterviewRequest.js");
 const Wallet = require("../models/WalletTopup");
@@ -34,7 +35,6 @@ const {
 const {
   scheduleOrRescheduleNoShow,
 } = require("../services/interviews/roundNoShowScheduler");
-const { MockInterviewRound } = require("../models/Mockinterview/mockinterviewRound.js");
 // const {
 // handleInterviewerRequestFlow
 // } = require("../utils/Interviews/handleInterviewerRequestFlow.js");
@@ -2978,7 +2978,128 @@ const validateRoundCreationBasedOnParallelScheduling = async ({
   }
 };
 
-;
+
+// Fetch recording from VideoSDK and save URL to round
+const fetchAndSaveRecording = async (req, res) => {
+  try {
+    const { roundId } = req.params;
+
+    if (!roundId) {
+      return res.status(400).json({ success: false, message: "roundId is required" });
+    }
+
+    // Try InterviewRounds first, then MockInterviewRound as fallback
+    let round = await InterviewRounds.findById(roundId).lean();
+    let RoundModel = InterviewRounds;
+    if (!round) {
+      round = await MockInterviewRound.findById(roundId).lean();
+      RoundModel = MockInterviewRound;
+    }
+    if (!round) {
+      return res.status(404).json({ success: false, message: "Round not found" });
+    }
+
+    if (!round.meetingId) {
+      return res.status(400).json({ success: false, message: "No meetingId found for this round" });
+    }
+
+    // If we already have recording URLs saved, return them
+    if (round.recordingUrls && round.recordingUrls.length > 0) {
+      return res.status(200).json({
+        success: true,
+        recordingUrl: round.recordingUrl,
+        recordingUrls: round.recordingUrls,
+        message: "Recordings already saved",
+      });
+    }
+
+    // Generate JWT token for VideoSDK API
+    const jwt = require("jsonwebtoken");
+    const apiKey = process.env.VIDEOSDK_API_KEY;
+    const secret = process.env.VIDEOSDK_SECRET;
+
+    if (!apiKey || !secret) {
+      console.error("[Recording] Missing VIDEOSDK_API_KEY or VIDEOSDK_SECRET in .env");
+      return res.status(500).json({ success: false, message: "VideoSDK credentials not configured" });
+    }
+
+    const token = jwt.sign(
+      { apikey: apiKey, permissions: ["allow_join"] },
+      secret,
+      { algorithm: "HS256", expiresIn: "1h" }
+    );
+
+    // Fetch recordings from VideoSDK API
+    const response = await fetch(
+      `https://api.videosdk.live/v2/recordings?roomId=${round.meetingId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[Recording] VideoSDK API error:", response.status, errorText);
+      return res.status(502).json({
+        success: false,
+        message: "Failed to fetch recording from VideoSDK",
+        error: errorText,
+      });
+    }
+
+    const data = await response.json();
+    console.log("[Recording] VideoSDK response:", JSON.stringify(data, null, 2));
+
+    // VideoSDK returns { pageInfo: {}, data: [{ file: { fileUrl, ... }, ... }] }
+    const recordings = data?.data || [];
+
+    if (!recordings.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No recordings found for this meeting",
+      });
+    }
+
+    // Collect ALL recording file URLs
+    const allRecordingUrls = recordings
+      .map((rec) => rec?.file?.fileUrl || rec?.fileUrl || null)
+      .filter(Boolean);
+
+    if (!allRecordingUrls.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Recording file URLs not available yet. They may still be processing.",
+      });
+    }
+
+    // Save all recording URLs (latest first) to the round
+    const latestUrl = allRecordingUrls[0];
+    await RoundModel.findByIdAndUpdate(roundId, {
+      $set: { recordingUrl: latestUrl, recordingUrls: allRecordingUrls },
+    });
+
+    console.log(`[Recording] Saved ${allRecordingUrls.length} recording URL(s) for round ${roundId}`);
+
+    return res.status(200).json({
+      success: true,
+      recordingUrl: latestUrl,
+      recordingUrls: allRecordingUrls,
+      message: "Recording URL(s) saved successfully",
+    });
+  } catch (error) {
+    console.error("[Recording] fetchAndSaveRecording error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
 
 module.exports = {
   saveInterviewRound,
@@ -2986,6 +3107,7 @@ module.exports = {
   updateInterviewRoundStatus,
   buildSmartRoundUpdate,
   getRoundScoreFromOutcome,
-  getValdiateRoundStatus
+  getValdiateRoundStatus,
+  fetchAndSaveRecording,
   // parseDateTimeString,
 };

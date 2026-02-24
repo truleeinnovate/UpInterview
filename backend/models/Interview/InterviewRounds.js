@@ -117,6 +117,7 @@ const interviewRoundSchema = new mongoose.Schema(
         "Rescheduled",
         "Completed",
         "InCompleted",
+        "Incomplete",
 
         // "",
         // "Rejected",
@@ -162,6 +163,8 @@ const interviewRoundSchema = new mongoose.Schema(
      * ---------------------------------- */
     meetingId: String,
     meetPlatform: String,
+    recordingUrl: String, // VideoSDK cloud recording download URL (latest)
+    recordingUrls: [String], // All recording URLs for this round
     assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" },
     scheduleAssessmentId: {
       type: mongoose.Schema.Types.ObjectId,
