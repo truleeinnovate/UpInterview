@@ -226,7 +226,7 @@ const CsvDropZone = ({ onDataLoad }) => {
       );
 
       notify.success("CSV uploaded successfully!");
-      console.log("Server response:", response.data);
+      // console.log("Server response:", response.data);
     } catch (error) {
       console.error("Upload Error:", error.response?.data || error);
       notify.error("Error uploading CSV.");
@@ -395,7 +395,7 @@ function RateCardModal({ rateCard, onClose, mode = "create" }) {
   //   "QA & Testing",
   //   "Specialized Skills",
   // ];
-  console.log("Technologies Master Data:", currentRoles);
+  // console.log("Technologies Master Data:", currentRoles);
 
   const experienceLevels = ["Junior", "Mid-Level", "Senior"];
   // v1.0.3 <-------------------------------------------------------

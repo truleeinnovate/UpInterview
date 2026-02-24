@@ -112,7 +112,7 @@ const Home = () => {
           transition={{ duration: 0.5 }}
           // <---------v1.0.0
           className="space-y-6 lg:space-y-8"
-          // v1.0.0 ----------->
+        // v1.0.0 ----------->
         >
           <WelcomeSection
             selectedFilter={selectedFilter}
@@ -201,7 +201,7 @@ const Home = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             // <---------v1.0.0
             className="lg:w-96 xl:w-[420px] 2xl:w-[450px] flex-shrink-0 space-y-6 lg:space-y-8"
-            // v1.0.0 ----------->
+          // v1.0.0 ----------->
           >
             <TaskList />
             <InterviewerSchedule />

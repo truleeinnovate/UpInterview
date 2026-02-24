@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { Calendar, Clock, User, Briefcase, Users, Hash, KeyRound, Stamp, PictureInPicture, StampIcon, User2, CreditCard, DollarSign, FileText, CheckCircle, ChevronRight, ListChecks, AlertCircle, History, Mail, Phone, GraduationCap, Building2, MapPin, School, Circle, Edit } from 'lucide-react';
+import { Calendar, Clock, User, Briefcase, Users, Hash, KeyRound, Stamp, PictureInPicture, StampIcon, User2, CreditCard, IndianRupee, FileText, CheckCircle, ChevronRight, ListChecks, AlertCircle, History, Mail, Phone, GraduationCap, Building2, MapPin, School, Circle, Edit } from 'lucide-react';
 import SidebarPopup from '../../../Components/Shared/SidebarPopup/SidebarPopup.jsx';
 import StatusBadge from '../../../Components/SuperAdminComponents/common/StatusBadge.jsx';
 import axios from 'axios';
@@ -21,7 +21,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
   const [showCandidateSidebar, setShowCandidateSidebar] = useState(false);
   const [showPositionSidebar, setShowPositionSidebar] = useState(false);
   const [candidateData, setCandidateData] = useState(null);
-  console.log("intData----", interviewData);
+  // console.log("intData----", interviewData);
   const [positionData, setPositionData] = useState(null);
   //console.log("positionDat--",positionData);
   const [loading, setLoading] = useState(false);
@@ -581,7 +581,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <DollarSign className="w-5 h-5 text-gray-400 mt-0.5" />
+              <IndianRupee className="w-5 h-5 text-gray-400 mt-0.5" />
               <div>
                 <p className="text-xs text-gray-500">Salary Range</p>
                 <p className="text-sm font-medium text-gray-900">
@@ -1145,8 +1145,23 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                             <DetailItem
                               label="Amount"
                               value={`₹${formatAmount(tx.amount)}`}
-                              icon={<DollarSign className="w-4 h-4" />}
+                              icon={<IndianRupee className="w-4 h-4" />}
                             />
+                            {tx.gstAmount > 0 && (
+                              <DetailItem
+                                label="GST"
+                                value={`₹${formatAmount(tx.gstAmount)}`}
+                                icon={<IndianRupee className="w-4 h-4" />}
+                              />
+                            )}
+                            {(tx.totalAmount > 0 || (tx.amount > 0 && tx.gstAmount > 0)) && (
+                              <div>
+                                <p className="text-xs font-medium text-teal-600 uppercase tracking-wider mb-0.5">Total</p>
+                                <p className={`text-sm font-semibold ${tx.type === 'refund' ? 'text-green-600' : tx.type === 'hold' || tx.type === 'debited' ? 'text-red-600' : 'text-gray-900'}`}>
+                                  {tx.type === 'hold' || tx.type === 'debited' ? '-' : ''}₹{formatAmount(tx.totalAmount || (Number(tx.amount || 0) + Number(tx.gstAmount || 0)))}
+                                </p>
+                              </div>
+                            )}
                             <DetailItem
                               label="Date"
                               value={tx.createdAt ? new Date(tx.createdAt).toLocaleString() : 'N/A'}
@@ -1175,7 +1190,7 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                                   <DetailItem
                                     label="Hourly Rate"
                                     value={`₹${formatAmount(tx.metadata.hourlyRate)}`}
-                                    icon={<DollarSign className="w-4 h-4" />}
+                                    icon={<IndianRupee className="w-4 h-4" />}
                                   />
                                 )}
                                 {tx.metadata.durationInMinutes && (
@@ -1186,6 +1201,102 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                                   />
                                 )}
                                 {/* Add more metadata fields as needed */}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Settlement Details for settled transactions */}
+                          {tx.type === 'debited' && tx.metadata?.settlementStatus === 'completed' && (
+                            <div className="pt-4 border-t border-gray-100">
+                              <h5 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                                Settlement Details
+                              </h5>
+                              <div className="grid grid-cols-2 gap-4">
+                                <DetailItem
+                                  label="Policy Applied"
+                                  value={tx.metadata.settlementPolicyName || 'N/A'}
+                                  icon={<FileText className="w-4 h-4" />}
+                                />
+                                <DetailItem
+                                  label="Payout %"
+                                  value={`${tx.metadata.settlementPayPercent || 0}%`}
+                                  icon={<IndianRupee className="w-4 h-4" />}
+                                />
+                                <DetailItem
+                                  label="Scenario"
+                                  value={tx.metadata.settlementScenario || 'N/A'}
+                                  icon={<AlertCircle className="w-4 h-4" />}
+                                />
+                                <DetailItem
+                                  label="Paid to Interviewer"
+                                  value={`₹${formatAmount(tx.metadata.settlementAmountPaidToInterviewer || 0)}`}
+                                  icon={<IndianRupee className="w-4 h-4" />}
+                                />
+                                <DetailItem
+                                  label="Refund to Org"
+                                  value={`₹${formatAmount(tx.metadata.settlementRefundAmount || 0)}`}
+                                  icon={<IndianRupee className="w-4 h-4" />}
+                                />
+                                <DetailItem
+                                  label="Service Charge"
+                                  value={`₹${formatAmount(tx.metadata.settlementServiceCharge || 0)}`}
+                                  icon={<IndianRupee className="w-4 h-4" />}
+                                />
+                                {tx.metadata.isMockInterview && tx.metadata.mockDiscountPercentage > 0 && (
+                                  <>
+                                    <DetailItem
+                                      label="Mock Discount %"
+                                      value={`${tx.metadata.mockDiscountPercentage}%`}
+                                      icon={<Hash className="w-4 h-4" />}
+                                    />
+                                    <DetailItem
+                                      label="Mock Discount Amt"
+                                      value={`₹${formatAmount(tx.metadata.mockDiscountAmount || 0)}`}
+                                      icon={<IndianRupee className="w-4 h-4" />}
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Hold Details for unsettled hold transactions */}
+                          {tx.type === 'hold' && tx.status !== 'completed' && tx.metadata && (
+                            <div className="pt-4 border-t border-gray-100">
+                              <h5 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+                                Hold Details
+                              </h5>
+                              <div className="grid grid-cols-2 gap-4">
+                                {tx.gstAmount > 0 && (
+                                  <DetailItem
+                                    label="GST Amount"
+                                    value={`₹${formatAmount(tx.gstAmount)}`}
+                                    icon={<IndianRupee className="w-4 h-4" />}
+                                  />
+                                )}
+                                {tx.totalAmount > 0 && (
+                                  <DetailItem
+                                    label="Total (incl. GST)"
+                                    value={`₹${formatAmount(tx.totalAmount)}`}
+                                    icon={<IndianRupee className="w-4 h-4" />}
+                                  />
+                                )}
+                                {tx.metadata.isMockInterview && tx.metadata.mockDiscountPercentage > 0 && (
+                                  <>
+                                    <DetailItem
+                                      label="Mock Discount"
+                                      value={`${tx.metadata.mockDiscountPercentage}% (₹${formatAmount(tx.metadata.mockDiscountAmount || 0)})`}
+                                      icon={<Hash className="w-4 h-4" />}
+                                    />
+                                    {tx.metadata.originalAmountBeforeDiscount > 0 && (
+                                      <DetailItem
+                                        label="Orig. Amount"
+                                        value={`₹${formatAmount(tx.metadata.originalAmountBeforeDiscount)}`}
+                                        icon={<IndianRupee className="w-4 h-4" />}
+                                      />
+                                    )}
+                                  </>
+                                )}
                               </div>
                             </div>
                           )}
@@ -1465,6 +1576,71 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                   </div>
                 </div>
 
+                {/* Settlement Policy & Context Info */}
+                {!settlementLoading && !settlementResult && settlementPreview && (
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
+                    <h4 className="text-sm font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Settlement Policy & Context
+                    </h4>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                      <div>
+                        <span className="text-indigo-700 font-medium">Round Status:</span>
+                        <p className="text-indigo-900 mt-0.5">{settlementPreview.roundStatus || interviewData.status}</p>
+                      </div>
+                      <div>
+                        <span className="text-indigo-700 font-medium">Current Action:</span>
+                        <p className="text-indigo-900 mt-0.5">{settlementPreview.currentAction || interviewData.currentAction || 'None'}</p>
+                      </div>
+                      <div>
+                        <span className="text-indigo-700 font-medium">Policy Applied:</span>
+                        <p className="text-indigo-900 mt-0.5 font-semibold">{settlementPreview.settlementPolicyName || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="text-indigo-700 font-medium">Payout Percentage:</span>
+                        <p className="text-indigo-900 mt-0.5 font-semibold">{settlementPreview.payPercent}%</p>
+                      </div>
+                      <div>
+                        <span className="text-indigo-700 font-medium">Interview Type:</span>
+                        <p className="text-indigo-900 mt-0.5">{settlementPreview.isMockInterview ? '🎭 Mock Interview' : '💼 Normal Interview'}</p>
+                      </div>
+                      <div>
+                        <span className="text-indigo-700 font-medium">Base Hold Amount:</span>
+                        <p className="text-indigo-900 mt-0.5">₹{formatAmount(settlementPreview.baseAmount || 0)}</p>
+                      </div>
+                      {settlementPreview.gstFromHold > 0 && (
+                        <div>
+                          <span className="text-indigo-700 font-medium">GST Collected:</span>
+                          <p className="text-indigo-900 mt-0.5">₹{formatAmount(settlementPreview.gstFromHold)}</p>
+                        </div>
+                      )}
+                      {settlementPreview.totalHoldAmount > 0 && (
+                        <div>
+                          <span className="text-indigo-700 font-medium">Total Hold (Base + GST):</span>
+                          <p className="text-indigo-900 mt-0.5">₹{formatAmount(settlementPreview.totalHoldAmount)}</p>
+                        </div>
+                      )}
+                      {/* Mock Discount Info - only visible for mock interviews */}
+                      {settlementPreview.isMockInterview && settlementPreview.mockDiscountPercentage > 0 && (
+                        <>
+                          <div>
+                            <span className="text-indigo-700 font-medium">Mock Discount:</span>
+                            <p className="text-indigo-900 mt-0.5">{settlementPreview.mockDiscountPercentage}%</p>
+                          </div>
+                          <div>
+                            <span className="text-indigo-700 font-medium">Original Amount (Before Discount):</span>
+                            <p className="text-indigo-900 mt-0.5">₹{formatAmount(settlementPreview.originalAmountBeforeDiscount || 0)}</p>
+                          </div>
+                          <div>
+                            <span className="text-indigo-700 font-medium">Discount Amount:</span>
+                            <p className="text-indigo-900 mt-0.5 text-green-700">-₹{formatAmount(settlementPreview.mockDiscountAmount || 0)}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Settlement Calculation - Editable */}
                 {!settlementLoading && !settlementResult && settlementPreview && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-5">
@@ -1541,22 +1717,47 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                 )}
 
                 {settlementResult && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                     <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                    <h4 className="text-lg font-semibold text-green-900 mb-3">Settlement Successful!</h4>
-                    <div className="text-left space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Paid to Interviewer:</span>
-                        <span className="font-medium">₹{formatAmount(settlementResult.settlementAmount)}</span>
+                    <h4 className="text-lg font-semibold text-green-900 mb-3 text-center">Settlement Successful!</h4>
+                    <div className="space-y-2 text-sm">
+                      {/* Policy Info */}
+                      <div className="flex justify-between bg-white rounded px-3 py-2">
+                        <span className="text-gray-600">Policy Applied:</span>
+                        <span className="font-medium">{settlementResult.settlementPolicyName || settlementResult.settlementScenario || 'N/A'}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Refunded:</span>
-                        <span className="font-medium">₹{formatAmount(settlementResult.refundAmount)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Payout %:</span>
+                      <div className="flex justify-between bg-white rounded px-3 py-2">
+                        <span className="text-gray-600">Payout %:</span>
                         <span className="font-medium">{settlementResult.payPercent}%</span>
                       </div>
+                      {/* Amount Breakdown */}
+                      <div className="flex justify-between bg-white rounded px-3 py-2">
+                        <span className="text-gray-600">Gross Settlement:</span>
+                        <span className="font-medium">₹{formatAmount(settlementResult.grossSettlementAmount)}</span>
+                      </div>
+                      <div className="flex justify-between bg-white rounded px-3 py-2">
+                        <span className="text-gray-600">Service Charge:</span>
+                        <span className="font-medium text-red-600">-₹{formatAmount(settlementResult.serviceCharge)}</span>
+                      </div>
+                      <div className="flex justify-between bg-white rounded px-3 py-2">
+                        <span className="text-gray-600">GST on Service Charge:</span>
+                        <span className="font-medium text-red-600">-₹{formatAmount(settlementResult.serviceChargeGst)}</span>
+                      </div>
+                      <div className="flex justify-between bg-green-100 rounded px-3 py-2 border border-green-300">
+                        <span className="text-green-800 font-semibold">Net to Interviewer:</span>
+                        <span className="font-bold text-green-800">₹{formatAmount(settlementResult.settlementAmount)}</span>
+                      </div>
+                      <div className="flex justify-between bg-blue-50 rounded px-3 py-2 border border-blue-200">
+                        <span className="text-blue-800 font-medium">Refunded to Org:</span>
+                        <span className="font-bold text-blue-800">₹{formatAmount(settlementResult.refundAmount)}</span>
+                      </div>
+                      {/* Mock Discount Info - only for mock interviews */}
+                      {settlementResult.isMockInterview && settlementResult.mockDiscountPercentage > 0 && (
+                        <div className="flex justify-between bg-purple-50 rounded px-3 py-2 border border-purple-200">
+                          <span className="text-purple-800 font-medium">Mock Discount:</span>
+                          <span className="font-bold text-purple-800">{settlementResult.mockDiscountPercentage}% (₹{formatAmount(settlementResult.mockDiscountAmount)})</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

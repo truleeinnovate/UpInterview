@@ -707,13 +707,11 @@ exports.acceptInterviewRequest = async (req, res) => {
         changes,
         OutsourceAccepted: true,
       });
-      await scheduleOrRescheduleNoShow(round); //calling agenda to trigger round
-
       console.log("updatePayload updatePayload", updatePayload);
 
       // ✅ IMPORTANT: atomic update (NO manual history push)
       if (updatePayload) {
-        await RoundModel.findByIdAndUpdate(
+        const updatedRoundDoc = await RoundModel.findByIdAndUpdate(
           roundId,
           {
             status: scheduleAction,
@@ -732,6 +730,15 @@ exports.acceptInterviewRequest = async (req, res) => {
             runValidators: true,
           },
         );
+
+        // ✅ Schedule NoShow AFTER DB update so round has correct status
+        try {
+          const isMock = Boolean(request.isMockInterview);
+          await scheduleOrRescheduleNoShow(updatedRoundDoc, { isMock });
+          console.log(`[Accept] ✅ NoShow scheduled for ${isMock ? 'mock' : 'regular'} round:`, roundId);
+        } catch (noShowErr) {
+          console.error("[Accept] ❌ NoShow scheduling error:", noShowErr);
+        }
       }
 
       // round.interviewers.push(contactId);

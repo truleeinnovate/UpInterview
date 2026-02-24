@@ -95,9 +95,9 @@ export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
         return null;
       }
 
-      console.log("roundId", roundId);
-      console.log("interviewerId", interviewerId);
-      console.log("interviewType", interviewType);
+      // console.log("roundId", roundId);
+      // console.log("interviewerId", interviewerId);
+      // console.log("interviewType", interviewType);
 
       // Build URL with query parameters
       // let url = `${process.env.REACT_APP_API_URL}/feedback/round/${roundId}`;
@@ -130,7 +130,7 @@ export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
       //     // 'Authorization': `Bearer ${Cookies.get('authToken')}`
       //   },
       // });
-      console.log("response response", response)
+      // console.log("response response", response)
 
       if (response.data.success) {
         return response.data.data;

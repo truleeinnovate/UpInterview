@@ -16,6 +16,7 @@ import { PresenterView } from "../components/PresenterView";
 import { nameTructed, trimSnackBarText } from "../utils/helper";
 import WaitingToJoinScreen from "../components/screens/WaitingToJoinScreen";
 import ConfirmBox from "../components/ConfirmBox";
+import { MeetingTimer } from "./components/MeetingTimer";
 import useIsMobile from "../hooks/useIsMobile";
 import useIsTab from "../hooks/useIsTab";
 import { useMediaQuery } from "react-responsive";
@@ -45,6 +46,7 @@ export function MeetingContainer({
   isSchedule = false,
   candidateData,
   positionData,
+  interviewRoundData,
 }) {
   const { setSelectedMic, setSelectedWebcam, setSelectedSpeaker } =
     useMeetingAppContext();
@@ -446,7 +448,14 @@ export function MeetingContainer({
           >
             {typeof localParticipantAllowedJoin === "boolean" ? (
               localParticipantAllowedJoin ? (
-                <div className="flex flex-col h-full w-full">
+                <div className="flex flex-col h-full w-full relative">
+                  {/* Meeting Timer - Shown to all participants */}
+                  {interviewRoundData && (
+                    <MeetingTimer
+                      interviewRoundData={interviewRoundData}
+                      setIsMeetingLeft={setIsMeetingLeft}
+                    />
+                  )}
                   <div className="flex-1 overflow-hidden">
                     {isPresenting ? (
                       <div className="flex flex-col h-full">

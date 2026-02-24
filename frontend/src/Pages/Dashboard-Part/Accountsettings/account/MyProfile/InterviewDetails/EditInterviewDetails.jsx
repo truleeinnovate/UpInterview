@@ -277,7 +277,7 @@ const EditInterviewDetails = ({
       // This allows us to filter client-side for roleName array matching
       const apiUrl = `${baseUrl}/rate-cards`;
 
-      console.log("Fetching all rate cards from:", apiUrl);
+      // console.log("Fetching all rate cards from:", apiUrl);
 
       const response = await axios.get(apiUrl, {
         withCredentials: true,
@@ -292,7 +292,7 @@ const EditInterviewDetails = ({
           ? response.data
           : [response.data];
 
-        console.log("Total rate cards fetched:", rateCardsData.length);
+        // console.log("Total rate cards fetched:", rateCardsData.length);
 
         // Filter rate cards to match the selected technology/role
         // Only use the new structure (roleName array)
@@ -307,16 +307,16 @@ const EditInterviewDetails = ({
           const normalizedSelectedValue = normalizeString(techName);
 
           // Debug logging
-          console.log(
-            "Matching techName:",
-            techName,
-            "normalized:",
-            normalizedSelectedValue,
-          );
-          console.log("Card data:", {
-            roleName: card.roleName,
-            category: card.category,
-          });
+          // console.log(
+          //   "Matching techName:",
+          //   techName,
+          //   "normalized:",
+          //   normalizedSelectedValue,
+          // );
+          // console.log("Card data:", {
+          //   roleName: card.roleName,
+          //   category: card.category,
+          // });
 
           // Check new structure (roleName array)
           if (card.roleName && Array.isArray(card.roleName)) {
@@ -345,7 +345,7 @@ const EditInterviewDetails = ({
           return false;
         });
 
-        console.log("Filtered rate cards:", filteredRateCards);
+        // console.log("Filtered rate cards:", filteredRateCards);
         console.log(
           "Total rate cards before filtering:",
           rateCardsData.length,
@@ -546,7 +546,7 @@ const EditInterviewDetails = ({
         return null;
       }
 
-      console.log("Found rate card:", rateCard);
+      // console.log("Found rate card:", rateCard);
 
       // Find the level data
       const levelData = rateCard.levels.find((lvl) => lvl.level === level);
@@ -555,7 +555,7 @@ const EditInterviewDetails = ({
         return null;
       }
 
-      console.log("Level data found:", levelData);
+      // console.log("Level data found:", levelData);
 
       // Handle new data structure (direct properties) or fallback to old structure (nested rateRange)
       if (
@@ -569,7 +569,7 @@ const EditInterviewDetails = ({
           inr: { min: levelData.inrMin, max: levelData.inrMax },
           usd: { min: levelData.usdMin, max: levelData.usdMax },
         };
-        console.log("Using new data structure, rates:", rates);
+        // console.log("Using new data structure, rates:", rates);
         return rates;
       } else if (levelData.rateRange) {
         // Old data structure (fallback)
@@ -580,7 +580,7 @@ const EditInterviewDetails = ({
         return levelData.rateRange;
       }
 
-      console.log("No valid rate structure found in level data");
+      // console.log("No valid rate structure found in level data");
       return null;
     },
     [rateCards],
@@ -1015,8 +1015,8 @@ const EditInterviewDetails = ({
   };
 
   const handleTechnologyChange = (selectedValue) => {
-    console.log("=== TECHNOLOGY SELECTION ===");
-    console.log("Selected Technology/Role:", selectedValue);
+    // console.log("=== TECHNOLOGY SELECTION ===");
+    // console.log("Selected Technology/Role:", selectedValue);
 
     if (selectedValue) {
       // Find the technology from services or create a temporary one
@@ -1063,7 +1063,7 @@ const EditInterviewDetails = ({
           },
         };
 
-        console.log("Initial rates set to:", newFormData.rates);
+        // console.log("Initial rates set to:", newFormData.rates);
         return newFormData;
       });
 
@@ -1079,7 +1079,7 @@ const EditInterviewDetails = ({
       }));
 
       // Fetch rate cards for the selected technology
-      console.log("Fetching rate cards for:", selectedValue);
+      // console.log("Fetching rate cards for:", selectedValue);
       fetchRateCards(selectedValue)
         .then(() => {
           console.log("Rate cards fetched for:", selectedValue);
@@ -1088,7 +1088,7 @@ const EditInterviewDetails = ({
           console.error("Error fetching rate cards:", error);
         });
     } else {
-      console.log("Technology selection cleared");
+      // console.log("Technology selection cleared");
       setSelectedCandidates("");
       setFormData((prev) => ({
         ...prev,
@@ -1109,9 +1109,9 @@ const EditInterviewDetails = ({
   // Apply rates when rateCards are updated
   useEffect(() => {
     if (rateCards.length > 0 && formData.currentRole) {
-      console.log("=== APPLYING RATES ===");
-      console.log("Current Role:", formData.currentRole);
-      console.log("Rate Cards Found:", rateCards.length);
+      // console.log("=== APPLYING RATES ===");
+      // console.log("Current Role:", formData.currentRole);
+      // console.log("Rate Cards Found:", rateCards.length);
 
       const juniorRange = getRateRanges("Junior") || {
         usd: { min: 0 },
@@ -1126,10 +1126,10 @@ const EditInterviewDetails = ({
         inr: { min: 0 },
       };
 
-      console.log("Rate Ranges Extracted:");
-      console.log("Junior Range:", juniorRange);
-      console.log("Mid-Level Range:", midRange);
-      console.log("Senior Range:", seniorRange);
+      // console.log("Rate Ranges Extracted:");
+      // console.log("Junior Range:", juniorRange);
+      // console.log("Mid-Level Range:", midRange);
+      // console.log("Senior Range:", seniorRange);
 
       const newRates = {
         junior: {
@@ -1149,8 +1149,8 @@ const EditInterviewDetails = ({
         },
       };
 
-      console.log("FINAL RATES BEING SET:", newRates);
-      console.log("========================");
+      // console.log("FINAL RATES BEING SET:", newRates);
+      // console.log("========================");
 
       setFormData((prev) => ({
         ...prev,

@@ -12,7 +12,7 @@ const { PREDEFINED_SKILLS, SALESFORCE_CERTIFICATIONS, TECH_CERTIFICATIONS } = re
  */
 async function parseResume(pdfBuffer, fileName, position = null) {
     try {
-        console.log("Starting to parse resume:", fileName);
+        // console.log("Starting to parse resume:", fileName);
 
         const text = await extractText(pdfBuffer, fileName);
 
@@ -24,7 +24,7 @@ async function parseResume(pdfBuffer, fileName, position = null) {
             };
         }
 
-        console.log("Text extracted, parsing data...");
+        // console.log("Text extracted, parsing data...");
 
         const name = extractName(text, fileName);
         const email = extractEmail(text);
@@ -56,7 +56,7 @@ async function parseResume(pdfBuffer, fileName, position = null) {
             resumeText: text,
         };
 
-        console.log("Successfully parsed resume:", fileName, "Found", skills.length, "skills");
+        // console.log("Successfully parsed resume:", fileName, "Found", skills.length, "skills");
         return parsedData;
     } catch (error) {
         console.error("Error in parseResume for", fileName, ":", error);
@@ -168,7 +168,7 @@ function extractName(text, filename) {
 
     if (lines.length === 0) return null;
 
-    console.log("First few raw lines for name extraction:");
+    // console.log("First few raw lines for name extraction:");
     lines.slice(0, 4).forEach((l, i) => console.log(`  Line ${i + 1}: "${l}"`));
 
     const header = lines[0];
@@ -264,7 +264,7 @@ function extractName(text, filename) {
         return namePart;
     }
 
-    console.log("No good name candidate after cleaning - will fallback to filename");
+    // console.log("No good name candidate after cleaning - will fallback to filename");
     return null;
 }
 

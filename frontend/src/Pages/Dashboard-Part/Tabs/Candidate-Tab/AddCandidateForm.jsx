@@ -85,8 +85,8 @@ const AddCandidateForm = ({
   shouldCreateApplication = false, // ← new prop, default false
   onSaveStart, // ← new callback
 }) => {
-  console.log("mode", mode);
-  console.log("candidateId", candidateId);
+  // console.log("mode", mode);
+  // console.log("candidateId", candidateId);
 
   const pageType = "adminPortal";
   const {
@@ -557,12 +557,12 @@ const AddCandidateForm = ({
       return;
     }
 
-    console.log("SCREENING PRE-FILL RUNNING — full data:", {
-      skillsCount: screeningData.parsed_skills?.length,
-      experience: screeningData.parsed_experience,
-      education: screeningData.parsed_education,
-      name: screeningData.candidate_name,
-    });
+    // console.log("SCREENING PRE-FILL RUNNING — full data:", {
+    //   skillsCount: screeningData.parsed_skills?.length,
+    //   experience: screeningData.parsed_experience,
+    //   education: screeningData.parsed_education,
+    //   name: screeningData.candidate_name,
+    // });
 
     const sd = screeningData;
 
@@ -645,11 +645,11 @@ const AddCandidateForm = ({
       resume: sd.resume_file || null,
     };
 
-    console.log("Setting formData with:", {
-      skills: newFormData.skills.length,
-      experience: newFormData.CurrentExperience,
-      name: `${newFormData.FirstName} ${newFormData.LastName}`,
-    });
+    // console.log("Setting formData with:", {
+    //   skills: newFormData.skills.length,
+    //   experience: newFormData.CurrentExperience,
+    //   name: `${newFormData.FirstName} ${newFormData.LastName}`,
+    // });
 
     // Apply form data
     setFormData((prev) => ({ ...prev, ...newFormData }));
@@ -1346,15 +1346,15 @@ const AddCandidateForm = ({
       // ────────────────────────────────────────────────
 
       // Debug: Log EVERY variable that affects the final decision
-      console.log("=== DEBUG: shouldCreateApplicationFinal calculation ===");
-      console.log("source:", source);
-      console.log("positionId:", positionId ? "exists" : "missing");
-      console.log("candidateResponse.status:", candidateResponse.status);
-      console.log(
-        "shouldCreateApplication prop (from viewer):",
-        shouldCreateApplication,
-      );
-      console.log("candidateResponse full:", candidateResponse); // ← see the real status
+      // console.log("=== DEBUG: shouldCreateApplicationFinal calculation ===");
+      // console.log("source:", source);
+      // console.log("positionId:", positionId ? "exists" : "missing");
+      // console.log("candidateResponse.status:", candidateResponse.status);
+      // console.log(
+      //   "shouldCreateApplication prop (from viewer):",
+      //   shouldCreateApplication,
+      // );
+      // console.log("candidateResponse full:", candidateResponse); // ← see the real status
 
       const isSuccess = [
         "success",
@@ -1362,7 +1362,7 @@ const AddCandidateForm = ({
         "no_changes",
       ].includes(candidateResponse.status);
 
-      console.log("isSuccess (after checking status):", isSuccess);
+      // console.log("isSuccess (after checking status):", isSuccess);
 
       const shouldCreateApplicationFinal =
         source === "candidate-screening" &&
@@ -1371,18 +1371,18 @@ const AddCandidateForm = ({
         shouldCreateApplication &&
         isOrganization; // Only create application for organization users
 
-      console.log(
-        "shouldCreateApplicationFinal FINAL result:",
-        shouldCreateApplicationFinal,
-      );
-      console.log("Reason breakdown:");
-      console.log(
-        "  - source === 'candidate-screening' →",
-        source === "candidate-screening",
-      );
-      console.log("  - !!positionId →", !!positionId);
-      console.log("  - isSuccess →", isSuccess);
-      console.log("  - shouldCreateApplication →", shouldCreateApplication);
+      // console.log(
+      //   "shouldCreateApplicationFinal FINAL result:",
+      //   shouldCreateApplicationFinal,
+      // );
+      // console.log("Reason breakdown:");
+      // console.log(
+      //   "  - source === 'candidate-screening' →",
+      //   source === "candidate-screening",
+      // );
+      // console.log("  - !!positionId →", !!positionId);
+      // console.log("  - isSuccess →", isSuccess);
+      // console.log("  - shouldCreateApplication →", shouldCreateApplication);
 
       // 2. ONLY if from candidate screening → create application
       let appResult = null;
@@ -1414,7 +1414,7 @@ const AddCandidateForm = ({
           };
 
           appResult = await createApplication(appPayload);
-          console.log("Application & ScreeningResult created:", appResult);
+          // console.log("Application & ScreeningResult created:", appResult);
           notify.success(
             "Application and screening result created successfully",
           );

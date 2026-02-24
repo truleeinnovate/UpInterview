@@ -11,7 +11,7 @@ const PDFParser = require("pdf2json");
 async function extractTextFromPDF(pdfBuffer) {
     return new Promise((resolve, reject) => {
         try {
-            console.log("Extracting text from PDF, buffer size:", pdfBuffer.length, "bytes");
+            // console.log("Extracting text from PDF, buffer size:", pdfBuffer.length, "bytes");
 
             const pdfParser = new PDFParser();
 
@@ -49,7 +49,7 @@ async function extractTextFromPDF(pdfBuffer) {
                     }
 
                     fullText = cleanExtractedText(fullText);
-                    console.log("Extracted text length:", fullText.length, "characters");
+                    // console.log("Extracted text length:", fullText.length, "characters");
                     resolve(fullText);
                 } catch (parseError) {
                     console.error("Error processing PDF data:", parseError);
@@ -73,14 +73,14 @@ async function extractTextFromPDF(pdfBuffer) {
  */
 async function extractTextFromDOCX(docxBuffer) {
     try {
-        console.log("Extracting text from DOCX, buffer size:", docxBuffer.length, "bytes");
+        // console.log("Extracting text from DOCX, buffer size:", docxBuffer.length, "bytes");
 
         const mammoth = require("mammoth");
         const result = await mammoth.extractRawText({ buffer: docxBuffer });
         let fullText = result.value || "";
 
         fullText = cleanExtractedText(fullText);
-        console.log("Extracted text length:", fullText.length, "characters");
+        // console.log("Extracted text length:", fullText.length, "characters");
         return fullText;
     } catch (error) {
         console.error("Error extracting text from DOCX:", error);

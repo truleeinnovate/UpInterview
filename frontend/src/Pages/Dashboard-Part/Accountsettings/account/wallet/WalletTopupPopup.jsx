@@ -33,7 +33,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
 
   const mode = location?.state
   const modeState = mode?.mode
-  console.log("mode", mode)
+  // console.log("mode", mode)
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);

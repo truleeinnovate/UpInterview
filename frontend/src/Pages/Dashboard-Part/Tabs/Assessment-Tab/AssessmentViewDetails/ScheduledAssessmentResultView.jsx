@@ -290,7 +290,7 @@ function AssessmentResultView({
 
           <div className="divide-y divide-gray-200 max-h-[calc(100vh-116px)] overflow-y-auto">
             {candidate.sections.map((candidateSection, index) => {
-              console.log("Candidate section data:", candidateSection);
+              // console.log("Candidate section data:", candidateSection);
 
               return (
                 <div

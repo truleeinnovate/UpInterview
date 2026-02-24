@@ -195,7 +195,7 @@ function RoundFormTemplates() {
           setTemplate(response);
           if (roundId) {
             const round = rounds_res.rounds.find((r) => r._id === roundId);
-            console.log("round round", round);
+            // console.log("round round", round);
             // const foundGroup = groups?.find(
             //   (g) => g?._id === round?.interviewerGroupId,
             // );
@@ -882,14 +882,14 @@ function RoundFormTemplates() {
     try {
       let formattedInterviewers = [];
 
-      console.log("formData.interviewers before", formData.interviewers);
+      // console.log("formData.interviewers before", formData.interviewers);
       formattedInterviewers = formData.interviewers.map((interviewer) =>
         organization
           ? interviewer?.contactId?._id || interviewer?._id
           : interviewer?.contactId || interviewer?._id,
       );
 
-      console.log("formattedInterviewers after", formattedInterviewers);
+      // console.log("formattedInterviewers after", formattedInterviewers);
       // }
 
       const isAssessment = formData.roundTitle === "Assessment";

@@ -131,7 +131,7 @@ const InterviewRequests = () => {
       });
     },
     onSuccess: async (data, variables) => {
-      console.log("data data", data);
+      // console.log("data data", data);
 
       // Show success toast
       notify.success("The interview has been successfully scheduled with you.");
@@ -223,7 +223,7 @@ const InterviewRequests = () => {
         </div>
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="flex items-center space-x-2 text-sm bg-custom-blue text-white hover:text-white hover:bg-custom-blue/90 font-medium px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105"
+          className="flex items-center space-x-2 text-sm bg-custom-blue text-white hover:text-white hover:bg-custom-blue/90 font-medium px-4 py-2 rounded-md transition-all duration-300 hover:scale-105"
         >
           <span className="sm:hidden">View All Requests</span>
           <span className="md:hidden lg:hidden xl:hidden 2xl:hidden sm:text-sm">

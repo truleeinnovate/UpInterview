@@ -15,7 +15,7 @@ const InterviewProgress = ({
   const sortedRounds = [...rounds].sort((a, b) => a.sequence - b.sequence);
 
   const getStatusIcon = (round) => {
-    console.log("round", round.status);
+    // console.log("round", round.status);
     switch (round?.status) {
       // Active/In-Progress statuses
       case "Draft":

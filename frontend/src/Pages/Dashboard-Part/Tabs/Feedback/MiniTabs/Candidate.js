@@ -46,7 +46,7 @@ const CandidateMiniTab = ({
 
   const isMockInterview = urlData?.interviewType === "mockinterview" || interviewType === "mockinterview" || feedback?.isMockInterview;
 
-  console.log("feedback", feedback)
+  // console.log("feedback", feedback)
 
   // ✅ ALWAYS call hooks
   const {
@@ -88,8 +88,8 @@ const CandidateMiniTab = ({
       : feedback.positionId || {}
     : null;
 
-  console.log("candidateData candidateData CandidateMiniTab", candidateData);
-  console.log("positionData in candidate details ", positionData);
+  // console.log("candidateData candidateData CandidateMiniTab", candidateData);
+  // console.log("positionData in candidate details ", positionData);
   const [expandedSections, setExpandedSections] = useState({
     skills: true,
     certificates: false,

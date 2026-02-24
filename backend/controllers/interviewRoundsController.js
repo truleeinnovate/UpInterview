@@ -1811,6 +1811,10 @@ const updateInterviewRoundStatus = async (req, res) => {
       extraUpdate.$set.interviewerType = "";
     }
 
+    // Manual NoShow / InCompleted — NO auto-settlement
+    // Settlement for manually-triggered NoShow/InCompleted is done by SuperAdmin only.
+    // The scheduler-triggered NoShow/InCompleted (in roundNoShow.job.js) handles auto-settlement.
+
     // Handle Evaluated action - save roundOutcome and evaluation reason
     if (action === "Evaluated") {
       if (roundOutcome) {

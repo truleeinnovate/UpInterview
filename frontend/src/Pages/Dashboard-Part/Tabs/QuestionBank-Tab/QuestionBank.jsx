@@ -36,7 +36,7 @@ const QuestionBank = ({
   const [interviewQuestionsList, setInterviewQuestionsList] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  console.log("interviewQuestionsLists", interviewQuestionsLists);
+  // console.log("interviewQuestionsLists", interviewQuestionsLists);
 
   // Permission check after all hooks
   if (!isInitialized || !checkPermission("QuestionBank")) {

@@ -54,7 +54,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
   // Get first 3 interviewers only
   const displayInterviewers = formattedInterviewers?.slice(0, 3);
 
-  console.log("Formatted Interviewers: ", formattedInterviewers);
+  // console.log("Formatted Interviewers: ", formattedInterviewers);
 
   // Auto-rotate slides
   useEffect(() => {
@@ -86,7 +86,7 @@ const DashboardOutsourceInterviewers = ({ setShowOutsourcePopup }) => {
         </div>
         <button
           onClick={() => setShowOutsourcePopup(true)}
-          className="flex items-center sm:space-x-1 space-x-2 bg-custom-blue text-white sm:text-xs px-3 py-1.5 sm:rounded-lg rounded-xl hover:bg-custom-blue/90 transition-all duration-300"
+          className="flex items-center sm:space-x-1 space-x-2 bg-custom-blue text-white sm:text-xs px-3 py-1.5 rounded-md hover:bg-custom-blue/90 transition-all duration-300"
         >
           <span className="text-sm font-medium">View All</span>
           <ChevronRight className="w-[18px] h-[18px]" />

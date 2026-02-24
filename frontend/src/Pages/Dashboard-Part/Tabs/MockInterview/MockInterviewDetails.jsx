@@ -269,10 +269,10 @@ const MockInterviewDetails = () => {
         action: newStatus,
       };
 
-      console.log("payload", rounds[0]?._id);
-      console.log("payload", mockinterview?._id);
+      // console.log("payload", rounds[0]?._id);
+      // console.log("payload", mockinterview?._id);
 
-      console.log("payload", payload);
+      // console.log("payload", payload);
 
       // Add cancellation / NoShow reason if provided
       if (
@@ -294,7 +294,7 @@ const MockInterviewDetails = () => {
         }
       }
 
-      console.log("payload", payload);
+      // console.log("payload", payload);
 
       const response = await updateRoundStatus.mutateAsync({
         mockInterviewId: mockinterview?._id,

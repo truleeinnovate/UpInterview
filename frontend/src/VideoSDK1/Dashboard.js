@@ -644,6 +644,7 @@ const Dashboard = () => {
                   isSchedule={urlData?.isSchedule || false}
                   candidateData={candidateData}
                   positionData={positionData}
+                  interviewRoundData={interviewRoundData}
                 />
               </MeetingProvider>
             </>

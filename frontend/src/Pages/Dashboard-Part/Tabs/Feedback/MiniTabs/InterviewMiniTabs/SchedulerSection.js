@@ -112,7 +112,7 @@ const SchedulerSectionComponent = ({
 
   }, [feedbackData, interviewdata]);
 
-  console.log("feedbackDataResponse", feedbackDataResponse)
+  // console.log("feedbackDataResponse", feedbackDataResponse)
 
   const isSubmitted = feedbackDataResponse?.status === "submitted" || feedbackDataResponse?.status === "Submitted";
   const isReadOnly = isViewMode || isSubmitted;
@@ -149,7 +149,7 @@ const SchedulerSectionComponent = ({
         (r) => String(r._id) === String(q._id) || r.questionId === q.questionId,
       );
 
-      console.log("preselectedResponse question", preselectedResponse);
+      // console.log("preselectedResponse question", preselectedResponse);
 
       if (feedback) {
         const backendAnswerType =

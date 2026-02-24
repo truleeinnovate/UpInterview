@@ -46,7 +46,7 @@ export default function CandidateViewer({
     totalResults = 1, // Default to 1 (force navigation) if not provided
     showNavigation = false // Control visibility of Breadcrumb and Info Box
 }) {
-    console.log("position", position);
+    // console.log("position", position);
 
     const [showCandidateForm, setShowCandidateForm] = useState(false);
     const isExistingCandidate = candidate.match_status === 'existing';
@@ -84,12 +84,12 @@ export default function CandidateViewer({
             position?._id
         );
 
-    console.log("useApplicationFilter called with:", {
-        candidateId: candidate?.existing_candidate_id,
-        positionId: position?._id,
-        candidateIdType: typeof candidate?.existing_candidate_id,
-        positionIdType: typeof position?._id,
-    });
+    // console.log("useApplicationFilter called with:", {
+    //     candidateId: candidate?.existing_candidate_id,
+    //     positionId: position?._id,
+    //     candidateIdType: typeof candidate?.existing_candidate_id,
+    //     positionIdType: typeof position?._id,
+    // });
     // Filter applications based on selected position (only when position is selected)
     const hasActiveApplication = useMemo(() => {
         if (!position._id || filteredApplications.length === 0) return false;
@@ -149,7 +149,7 @@ export default function CandidateViewer({
         setIsSavingApplication(false); // Reset loading state
         // vvv Detect success from AddCandidateForm vvv
         if (savedData?.createdApplication) {
-            console.log("Creation Success Data:", savedData); // Add debugging
+            // console.log("Creation Success Data:", savedData); // Add debugging
             setCreationSuccessData(savedData);
             setShowCandidateForm(false);
             return; // Stay in the popup

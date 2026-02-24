@@ -10,7 +10,7 @@ const RegionalTaxDetails = () => {
   const { id } = useParams();
 
   const { data: taxConfig, isLoading } = useRegionalTaxConfigById(id);
-  console.log("TAX CONFIG ============================> ", taxConfig);
+  // console.log("TAX CONFIG ============================> ", taxConfig);
 
   if (isLoading) {
     return (

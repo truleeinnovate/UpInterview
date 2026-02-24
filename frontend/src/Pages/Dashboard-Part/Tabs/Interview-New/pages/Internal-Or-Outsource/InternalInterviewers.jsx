@@ -473,7 +473,7 @@ const InternalInterviews = ({
     });
   };
 
-  console.log("Selected Interviewers:", filteredAndPrioritizedInterviewers);
+  // console.log("Selected Interviewers:", filteredAndPrioritizedInterviewers);
 
   // const handleScheduleClick = () => {
   //   const groupName = selectedInterviewers[0]?.name || '';
@@ -526,7 +526,7 @@ const InternalInterviews = ({
   //   return teamsData.filter((team) => selectedTeamIds.includes(team._id));
   // }, [teamsData, selectedTeamIds]);
 
-  console.log("Filtered & Prioritized Interviewers:", interviewers);
+  // console.log("Filtered & Prioritized Interviewers:", interviewers);
 
   return (
     // v1.0.3 <----------------------------------------------------------------------------------

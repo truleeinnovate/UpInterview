@@ -55,7 +55,7 @@ export const OutsourcedInterviewerCard = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  console.log("interviewer dashboard", source, interviewer);
+  // console.log("interviewer dashboard", source, interviewer);
 
   const firstName =
     source === "internal-interview"
@@ -256,23 +256,12 @@ export const OutsourcedInterviewerCard = ({
 
               </div>
 
-              {source === "internal-interview" ? null : (
-                <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                  {/* Rating */}
-                  <div className="flex items-center gap-1 bg-yellow-100 p-1 rounded">
-                    <span className="flex items-center justify-center w-5 h-5 rounded-full">
-                      <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
-                    </span>
-                    <span className="text-xs font-medium text-gray-700">
-                      {rating}
-                    </span>
-                  </div>
-
-                  {/* Hourly Rate - right below rating */}
-                  <span className="text-sm font-medium text-custom-blue">
-                    {hourlyRate}
-                  </span>
-                </div>
+              {/* Rating and hourly rate moved to bottom with Select button */}
+              {/* Mock Interview Discount */}
+              {navigatedfrom === "mock-interview" && interviewer?.contact?.mock_interview_discount && (
+                <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded">
+                  {interviewer.contact.mock_interview_discount}% off
+                </span>
               )}
             </div>
           </div>
@@ -472,17 +461,20 @@ export const OutsourcedInterviewerCard = ({
       {/* Buttons section - with side gaps like internal UI */}
       {navigatedfrom !== "dashboard" && (
         <div className="border-t border-gray-100 mt-4 mx-4">
-          <div className="py-3 flex justify-end items-center gap-2">
-            {/* {source === "internal-interview" ? null : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onViewDetails}
-                className="text-custom-blue hover:text-custom-blue/80"
-              >
-                <ExternalLink className="h-3 w-3 mr-1" /> View Details
-              </Button>
-            )} */}
+          <div className="py-3 flex justify-between items-center gap-2">
+            {/* Rating, Hourly Rate & Mock Discount - left side */}
+            {source === "internal-interview" ? <div /> : (
+              <div className="flex items-center gap-3">
+                {/* Rating */}
+                <div className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded">
+                  <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                  <span className="text-xs font-medium text-gray-700">{rating}</span>
+                </div>
+                {/* Hourly Rate */}
+                <span className="text-sm font-semibold text-custom-blue">{hourlyRate}</span>
+
+              </div>
+            )}
 
             <Button
               variant={isSelected ? "destructive" : "customblue"}
@@ -508,6 +500,7 @@ function OutsourcedInterviewerModal({
   source,
   navigatedfrom,
   previousSelectedInterviewers,
+  onDateTimeChange,
 
   // positionData,
   // candidateData,
@@ -530,6 +523,15 @@ function OutsourcedInterviewerModal({
   const userId = tokenPayload?.userId;
   // const { data: walletBalance, refetch } = useWallet();
   const [temRole, setTemRole] = useState("")
+
+  // Role-based filtering state (multi-select with removable chips)
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const hasInitializedRolesRef = useRef(false);
+
+  // Date/Time selection state for availability view
+  const [localDate, setLocalDate] = useState("");
+  const [localStartTime, setLocalStartTime] = useState("");
+  const [localEndTime, setLocalEndTime] = useState("");
 
   // console.log("currentRole", currentRole)
 
@@ -591,7 +593,7 @@ function OutsourcedInterviewerModal({
   const {
     currentRoles,
     isCurrentRolesFetching,
-
+    loadCurrentRoles,
   } = useMasterData({}, pageType);
 
 
@@ -602,6 +604,57 @@ function OutsourcedInterviewerModal({
     }
     // console.log("currentRoles", currentRoles);
   }, [currentRoles, currentRole]);
+
+  // Initialize selectedRoles from parent currentRole - ONLY ONCE
+  useEffect(() => {
+    if (currentRole && currentRole.trim() !== "" && currentRoles?.length > 0 && !hasInitializedRolesRef.current) {
+      hasInitializedRolesRef.current = true;
+      const matchedRole = currentRoles?.find((item) => item.roleName === currentRole);
+      if (matchedRole) {
+        setSelectedRoles([{ roleName: matchedRole.roleName, roleLabel: matchedRole.roleLabel || matchedRole.roleName, fromParent: true }]);
+      } else {
+        setSelectedRoles([{ roleName: currentRole, roleLabel: currentRole, fromParent: true }]);
+      }
+    }
+  }, [currentRole, currentRoles]);
+
+  // Parse dateTime prop into local date/time state for availability view
+  useEffect(() => {
+    if (dateTime) {
+      try {
+        const [datePart, ...timeParts] = dateTime.split(" ");
+        const timeRange = timeParts.join(" ");
+        const [startTimeStr, endTimeStr] = timeRange.split("-").map((t) => t.trim());
+        dateTimeFromParentRef.current = { date: datePart, start: startTimeStr || "", end: endTimeStr || "" };
+        setLocalDate(datePart);
+        setLocalStartTime(startTimeStr || "");
+        setLocalEndTime(endTimeStr || "");
+      } catch (e) {
+        console.error("Error parsing dateTime:", e);
+      }
+    }
+  }, [dateTime]);
+
+  // Ref to track parent dateTime to avoid syncing back what came from parent
+  const dateTimeFromParentRef = useRef({ date: "", start: "", end: "" });
+
+  // Sync local date/time changes back to RoundForm via onDateTimeChange
+  useEffect(() => {
+    if (!localDate || !localStartTime || !localEndTime || !onDateTimeChange) return;
+
+    // Only sync if the values differ from what the parent sent
+    const parentRef = dateTimeFromParentRef.current;
+    if (
+      localDate === parentRef.date &&
+      localStartTime === parentRef.start &&
+      localEndTime === parentRef.end
+    ) {
+      return; // No change from parent's value, don't sync back
+    }
+
+    const newCombinedDateTime = `${localDate} ${localStartTime} - ${localEndTime}`;
+    onDateTimeChange(newCombinedDateTime);
+  }, [localDate, localStartTime, localEndTime, onDateTimeChange]);
 
 
   // Auto-refresh wallet balance on window focus
@@ -832,7 +885,7 @@ function OutsourcedInterviewerModal({
             );
           }
 
-          console.log("skillFilteredInterviewers", skillFilteredInterviewers)
+          // console.log("skillFilteredInterviewers", skillFilteredInterviewers)
 
           // Filter for approved interviewers
           const approvedInterviewers = skillFilteredInterviewers.filter(
@@ -843,7 +896,7 @@ function OutsourcedInterviewerModal({
             "✅ Approved interviewers count:",
             approvedInterviewers.length,
           );
-          console.log("✅ Approved interviewers:", approvedInterviewers);
+          // console.log("✅ Approved interviewers:", approvedInterviewers);
 
           setBaseInterviewers(approvedInterviewers);
           setFilteredInterviewers(approvedInterviewers);
@@ -863,7 +916,12 @@ function OutsourcedInterviewerModal({
 
         // console.log("📅 Processing dateTime:", dateTime);
 
-        const [datePart, ...timeParts] = dateTime.split(" ");
+        // Use local date/time state if available, otherwise fall back to prop
+        const effectiveDateTime = (localDate && localStartTime && localEndTime)
+          ? `${localDate} ${localStartTime} - ${localEndTime}`
+          : dateTime;
+
+        const [datePart, ...timeParts] = effectiveDateTime.split(" ");
         const timeRange = timeParts.join(" ");
 
         const [startTimeStr, endTimeStr] = timeRange
@@ -1018,7 +1076,7 @@ function OutsourcedInterviewerModal({
           (i) => i.matchedSkills > 0,
         );
 
-        console.log("✅ Tech+Skill Matched Interviewers:", techSkillFiltered);
+        // console.log("✅ Tech+Skill Matched Interviewers:", techSkillFiltered);
         console.log(
           "✅ Skill-Only Matched Interviewers:",
           nonTechSkillFiltered
@@ -1045,7 +1103,7 @@ function OutsourcedInterviewerModal({
 
         let approvedInterviewers;
 
-        console.log("combinedInterviewers", combinedInterviewers)
+        // console.log("combinedInterviewers", combinedInterviewers)
 
         if (navigatedfrom === "mock-interview") {
           approvedInterviewers = combinedInterviewers.filter(
@@ -1112,6 +1170,9 @@ function OutsourcedInterviewerModal({
     interviewers,
     candidateExperience,
     userId,
+    localDate,
+    localStartTime,
+    localEndTime,
   ]);
 
   // Filter interviewers based on search term and applied rate range
@@ -1135,7 +1196,7 @@ function OutsourcedInterviewerModal({
     };
 
     let filtered = [...baseInterviewers]; // always start fresh from base
-    console.log("Applying filters with selectedRole:", filtered);
+    // console.log("Applying filters with selectedRole:", filtered);
     // 1. Role filter — live
     // if (selectedRole) {
     //   filtered = filtered.filter((interviewer) => {
@@ -1746,9 +1807,26 @@ function OutsourcedInterviewerModal({
       let matchScore = 0;
       let skillsMatchCount = 0;
       let isCurrentRoleMatch = false;
+      let isSelectedRoleMatch = false;
 
-      // Check current role match
-      if (currentRole && currentRole.trim() !== "") {
+      // Check selected roles match (multi-role OR logic)
+      if (selectedRoles.length > 0) {
+        const interviewerRole = (
+          interviewer.contact?.currentRole ||
+          interviewer.contact?.roleLabel ||
+          interviewer.contact?.roleName ||
+          ""
+        ).toLowerCase().trim();
+
+        isSelectedRoleMatch = selectedRoles.some((role) => {
+          const roleName = (role?.roleName || "").toLowerCase().trim();
+          return interviewerRole === roleName;
+        });
+        if (isSelectedRoleMatch) matchScore += 50;
+      }
+
+      // Check current role match (fallback when no selectedRoles)
+      if (currentRole && currentRole.trim() !== "" && selectedRoles.length === 0) {
         const interviewerRole =
           interviewer.contact?.currentRole ||
           interviewer.contact?.roleLabel ||
@@ -1791,6 +1869,7 @@ function OutsourcedInterviewerModal({
         matchScore,
         skillsMatchCount,
         isCurrentRoleMatch,
+        isSelectedRoleMatch,
         hasSkillsMatch: skillsMatchCount > 0,
       };
     });
@@ -1802,32 +1881,46 @@ function OutsourcedInterviewerModal({
     });
 
     // FILTERING LOGIC:
-    // - If skills are present -> filter by skills only
-    // - If no skills -> filter by current role only
+    // - If selected roles are present -> filter by selected roles (OR logic)
+    // - If skills are present -> also filter by skills
+    // - If both -> show interviewers matching roles OR skills
     let finalFilteredInterviewers = [];
 
     if (isFiltersApplied) {
-      if (tempSelectedSkills.length > 0) {
-        // Skills are present - filter by skills only
+      const hasRoles = selectedRoles.length > 0;
+      const hasSkills = tempSelectedSkills.length > 0;
+
+      if (hasRoles && hasSkills) {
+        // Show interviewers matching selected roles OR skills
+        finalFilteredInterviewers = scoredInterviewers.filter(
+          interviewer => interviewer.isSelectedRoleMatch || interviewer.hasSkillsMatch
+        );
+      } else if (hasSkills) {
+        // Skills only - filter by skills
         finalFilteredInterviewers = scoredInterviewers.filter(
           interviewer => interviewer.hasSkillsMatch
         );
-
-        // Sort by number of skills matched
-        finalFilteredInterviewers.sort((a, b) =>
-          b.skillsMatchCount - a.skillsMatchCount
+      } else if (hasRoles) {
+        // Roles only - filter by selected roles
+        finalFilteredInterviewers = scoredInterviewers.filter(
+          interviewer => interviewer.isSelectedRoleMatch
         );
-      }
-      else if (currentRole && currentRole.trim() !== "") {
-        // No skills - filter by current role only
+      } else if (currentRole && currentRole.trim() !== "") {
+        // No selections - filter by current role
         finalFilteredInterviewers = scoredInterviewers.filter(
           interviewer => interviewer.isCurrentRoleMatch
         );
-      }
-      else {
-        // No filters - show all
+      } else {
+        // No filters at all
         finalFilteredInterviewers = scoredInterviewers;
       }
+
+      // Sort: role matches first, then by skills matched count
+      finalFilteredInterviewers.sort((a, b) => {
+        if (a.isSelectedRoleMatch && !b.isSelectedRoleMatch) return -1;
+        if (!a.isSelectedRoleMatch && b.isSelectedRoleMatch) return 1;
+        return b.skillsMatchCount - a.skillsMatchCount;
+      });
     } else {
       // Filters not applied - show all
       finalFilteredInterviewers = scoredInterviewers;
@@ -1844,6 +1937,7 @@ function OutsourcedInterviewerModal({
     isFiltersApplied,
     candidateExperience,
     currentRole,
+    selectedRoles,
   ]);
 
   const handleSelectClick = (interviewer) => {
@@ -1899,7 +1993,7 @@ function OutsourcedInterviewerModal({
       // Calculate rates from ONLY the selected interviewers
       const selectedRates = selectedInterviewersLocal.map((interviewer) => {
         const contact = interviewer?.contact;
-        console.log("Contact:", contact?.yearsOfExperience);
+        // console.log("Contact:", contact?.yearsOfExperience);
         if (!contact?.rates) return 0;
 
         let experienceLevel;
@@ -1917,11 +2011,11 @@ function OutsourcedInterviewerModal({
 
       // Use the highest rate among selected interviewers ONLY
       baseRequiredAmount = Math.max(...selectedRates, 0);
-      console.log("Selected Rates:", selectedRates);
-      console.log("Max Rate from Selected Interviewers:", baseRequiredAmount);
+      // console.log("Selected Rates:", selectedRates);
+      // console.log("Max Rate from Selected Interviewers:", baseRequiredAmount);
     }
 
-    console.log("Base Required Amount (without GST):", baseRequiredAmount);
+    // console.log("Base Required Amount (without GST):", baseRequiredAmount);
 
     // Apply GST using same formula as backend helper (computeBaseGstGross)
     const base = Number(baseRequiredAmount || 0);
@@ -2095,10 +2189,10 @@ function OutsourcedInterviewerModal({
 
   // console.log("currentRoles===", currentRoles);
 
-  console.log("skills...", skills);
+  // console.log("skills...", skills);
   // console.log("skillsData...", skillsData);
 
-  console.log("filteredInterviewers", filteredInterviewers);
+  // console.log("filteredInterviewers", filteredInterviewers);
 
   return (
     <>
@@ -2222,6 +2316,7 @@ function OutsourcedInterviewerModal({
                     </div>
                   )}
                 </div>
+
 
                 <div className="w-full flex  justify-between items-center mt-4">
                   <div className="flex items-center gap-6 w-full">
@@ -2483,6 +2578,70 @@ function OutsourcedInterviewerModal({
                         /> */}
                       </div>
 
+                      {/* Date & Time Selection */}
+                      <div className="md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Scheduled Date & Time
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={(() => {
+                            if (!localDate || !localStartTime) return "";
+                            try {
+                              const [d, m, y] = localDate.split("-");
+                              const [time, period] = localStartTime.split(" ");
+                              let [h, min] = time.split(":").map(Number);
+                              if (period === "PM" && h !== 12) h += 12;
+                              if (period === "AM" && h === 12) h = 0;
+                              return `${y}-${m}-${d}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+                            } catch { return ""; }
+                          })()}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val) {
+                              try {
+                                const dateObj = new Date(val);
+                                const d = String(dateObj.getDate()).padStart(2, "0");
+                                const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+                                const y = dateObj.getFullYear();
+                                setLocalDate(`${d}-${m}-${y}`);
+
+                                let h = dateObj.getHours();
+                                const min = dateObj.getMinutes();
+                                const period = h >= 12 ? "PM" : "AM";
+                                h = h % 12 || 12;
+                                setLocalStartTime(`${h}:${String(min).padStart(2, "0")} ${period}`);
+
+                                // Preserve the existing duration (gap between start & end)
+                                let durationMs = 60 * 60000; // default 60 min
+                                if (localStartTime && localEndTime) {
+                                  try {
+                                    const parseT = (t) => {
+                                      const [tp, pr] = t.split(" ");
+                                      let [th, tm] = tp.split(":").map(Number);
+                                      if (pr === "PM" && th !== 12) th += 12;
+                                      if (pr === "AM" && th === 12) th = 0;
+                                      return th * 60 + tm;
+                                    };
+                                    const diff = (parseT(localEndTime) - parseT(localStartTime)) * 60000;
+                                    if (diff > 0) durationMs = diff;
+                                  } catch { }
+                                }
+                                const endObj = new Date(dateObj.getTime() + durationMs);
+                                let eh = endObj.getHours();
+                                const emin = endObj.getMinutes();
+                                const ePeriod = eh >= 12 ? "PM" : "AM";
+                                eh = eh % 12 || 12;
+                                setLocalEndTime(`${eh}:${String(emin).padStart(2, "0")} ${ePeriod}`);
+                              } catch (err) {
+                                console.error("Error parsing datetime-local:", err);
+                              }
+                            }
+                          }}
+                          className="w-full h-[38px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+
                       {/* Parent Skills Reset Button */}
                       {skills && skills.length > 0 && (
                         <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-2 flex items-end mt-6">
@@ -2646,28 +2805,101 @@ function OutsourcedInterviewerModal({
                         })}
                       </div>
                     )}
-                    {
-                      currentRole &&
+                    {/* Role Filter Dropdown + Chips */}
+                    <div className="flex mt-4 flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-gray-500 mr-1">
+                        Roles:
+                      </span>
+                      {selectedRoles.map((role) => (
+                        <span
+                          key={role.roleName}
+                          className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${role.fromParent
+                            ? "bg-blue-100 border-blue-200 text-blue-800"
+                            : "bg-gray-100 border-gray-200 text-gray-800"
+                            }`}
+                        >
+                          {role.roleLabel || role.roleName}
+                          <button
+                            onClick={() => {
+                              setSelectedRoles((prev) =>
+                                prev.filter((r) => r.roleName !== role.roleName)
+                              );
+                            }}
+                            className={`ml-1 ${role.fromParent
+                              ? "text-blue-500 hover:text-red-500"
+                              : "text-gray-500 hover:text-red-500"
+                              }`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                      {/* Add Role Dropdown */}
+                      <div className="inline-block min-w-[140px]">
+                        <DropdownWithSearchField
+                          value={null}
+                          options={
+                            currentRoles
+                              ?.filter(
+                                (role) =>
+                                  !selectedRoles.some(
+                                    (s) => s.roleName === role.roleName
+                                  )
+                              )
+                              ?.map((role) => ({
+                                value: role.roleName,
+                                label: role.roleLabel || role.roleName,
+                              })) || []
+                          }
+                          onChange={(option) => {
+                            if (!option) return;
+                            const value = option?.value || option?.target?.value;
+                            if (!value) return;
+
+                            const matchedRole = currentRoles?.find(
+                              (r) => r.roleName === value
+                            );
+                            setSelectedRoles((prev) => {
+                              if (prev.some((r) => r.roleName === value)) return prev;
+                              return [
+                                ...prev,
+                                {
+                                  roleName: value,
+                                  roleLabel: matchedRole?.roleLabel || value,
+                                  fromParent: false,
+                                },
+                              ];
+                            });
+                            setIsFiltersApplied(true);
+                          }}
+                          onMenuOpen={() => {
+                            loadCurrentRoles();
+                          }}
+                          loading={isCurrentRolesFetching}
+                          placeholder="+ Add role"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Date & Time Chip */}
+                    {localDate && localStartTime && (
                       <div className="flex mt-4 flex-wrap items-center gap-1.5">
                         <span className="text-xs text-gray-500 mr-1">
-                          Current Role:
+                          Date & Time:
                         </span>
                         <span className="flex items-center gap-1 rounded-full bg-gray-100 border px-2.5 py-1 text-xs text-gray-800">
-                          {temRole}
-                          {/* <button
-                              onClick={() => {
-                                setCurrentRole(null);
-                              }}
-                              className="ml-1 text-gray-500 hover:text-red-500"
-                            >
-                              <X className="h-3 w-3" />
-                            </button> */}
+                          {(() => {
+                            try {
+                              const [d, m, y] = localDate.split("-");
+                              return `${d}-${m}-${y}`;
+                            } catch { return localDate; }
+                          })()}
+                          {" "}
+                          {localStartTime}
+                          {localEndTime ? ` - ${localEndTime}` : ""}
                         </span>
                       </div>
-
-                    }
-
-
+                    )}
 
                     {/* Selected Skills */}
                     {/* {tempSelectedSkills.length > 0 && (

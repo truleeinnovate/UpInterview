@@ -550,7 +550,7 @@ const AddSupportForm = ({ mode }) => {
       await addOrUpdateCandidate.mutateAsync({ id, data, file });
       // Reset form and close
       resetFormData();
-      console.log("Form reset completed");
+      // console.log("Form reset completed");
 
       // console.log("Navigation to candidate list completed");
     } catch (error) {
@@ -586,7 +586,7 @@ const AddSupportForm = ({ mode }) => {
 
     // Prepare candidate data
     const currentDateTime = format(new Date(), "dd MMM, yyyy - hh:mm a");
-    console.log("Current date and time:", currentDateTime);
+    // console.log("Current date and time:", currentDateTime);
 
     const data = {
       FirstName: formData.FirstName,

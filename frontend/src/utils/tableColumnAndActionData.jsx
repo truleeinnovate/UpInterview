@@ -1440,8 +1440,8 @@ export const getFeedbackActions = (navigate, options = {}) => {
             // show: (row) => row.status === "draft",
             show: (row) => {
                 if (!tokenPayload) return false;
-                console.log("row", row);
-                console.log("tokenPayload", tokenPayload);
+                // console.log("row", row);
+                // console.log("tokenPayload", tokenPayload);
 
                 return row.status === "draft" && row?.ownerId?._id === tokenPayload.userId;
             },
